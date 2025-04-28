@@ -11,8 +11,7 @@ add the following to the end: cgroup_enable=memory cgroup_memory=1
 ## Main Node
 ```bash
 sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.31 sh -s - --tls-san "no-proxy.maxstash.io" --disable traefik
-
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.31 sh -s - --tls-san "no-proxy.maxstash.io" --disable traefik --kube-apiserver-arg service-node-port-range=25565-32767
 echo "alias k=\"sudo k3s kubectl\"" >> .bashrc
 ```
 
