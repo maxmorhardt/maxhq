@@ -48,3 +48,9 @@ Delete k3s worker node:
 ```bash
 /usr/local/bin/k3s-agent-uninstall.sh
 ```
+
+Install nginx ingress:
+```bash
+# Inside k8s repo
+sh /k3s/ingress.sh
+```
