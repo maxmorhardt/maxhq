@@ -22,6 +22,7 @@ For kube config:
 ```bash
 # On local machine, replace server field with DNS or IP
 cat /etc/rancher/k3s/k3s.yaml
+# Eventually get kubeconfig from rancher
 ```
 
 ## Worker Node
