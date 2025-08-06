@@ -9,7 +9,7 @@ add the following to the end: cgroup_enable=memory cgroup_memory=1
 ## Main Node
 ```bash
 sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.33 sh -s - --tls-san "10.0.0.160" --disable traefik --kube-apiserver-arg service-node-port-range=25565-32767
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.33 sh -s - --tls-san "10.0.0.160" --disable traefik --kube-apiserver-arg service-node-port-range=5432-25565
 echo "alias k=\"sudo k3s kubectl\"" >> .bashrc
 ```
 
