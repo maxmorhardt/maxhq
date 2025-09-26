@@ -1,0 +1,79 @@
+fullnameOverride: squares
+
+image:
+  repository: maxmorhardt/squares
+  tag: '0.0.1'
+  pullPolicy: Always
+  replicas: 1
+  revisionHistoryLimit: 2
+  readinessProbe:
+    path: /
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 5
+    successThreshold: 1
+  livenessProbe:
+    path: /
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 5
+    successThreshold: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+  name: http
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: squares.maxstash.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: squares.maxstash.io-tls
+      hosts:
+        - squares.maxstash.io
+  
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 32Mi
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPU: 90
+
+pdb:
+  minAvailable: 1
+
+metrics:
+  image:
+    name: nginx-exporter
+    repository: nginx/nginx-prometheus-exporter
+    tag: latest
+    pullPolicy: Always
+    args:
+      - "--nginx.scrape-uri=http://127.0.0.1:9000/metrics"
+  resources:
+    limits:
+      cpu: 20m
+      memory: 64Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+  service:
+    type: ClusterIP
+    port: 9113
+    targetPort: 9113
+    name: metrics
