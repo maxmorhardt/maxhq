@@ -56,9 +56,9 @@ Install nginx ingress:
 
 Upgrades:
 ```bash
-# SCP rehydrate.sh and upgrade-<NODE_TYPE>.sh in nodes
+# SCP rehydrate.sh in nodes
 mv rehydrate.sh /usr/local/bin
-mv upgrade-<NODE_TYPE>.sh /usr/local/bin
-chmod +x /usr/local/bin/rehydrate.sh /usr/local/bin/upgrade-<NODE_TYPE>.sh
-# Run scripts whenever required
+chmod +x /usr/local/bin/rehydrate.sh
 ```
+
+- K3s upgrades can be done through Rancher UI in the Cluster Management tab
