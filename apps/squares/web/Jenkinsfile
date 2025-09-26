@@ -15,10 +15,11 @@ pipeline {
 	environment {
 		GITHUB_URL = 'https://github.com/maxmorhardt/squares'
 
-		DOCKER_REGISTRY = 'registry-1.docker.io'
+		DOCKER_REGISTRY = 'docker.io'
 		DOCKER_REGISTRY_FULL = "oci://${env.DOCKER_REGISTRY}"
 
 		APP_NAME = "squares"
+		CHART_NAME = "$APP_NAME-chart"
 		NAMESPACE = "maxstash-apps"
 	}
 
@@ -81,15 +82,29 @@ pipeline {
 			}
 		}
 
+		stage('Helm CI') {
+			steps {
+				script {
+					withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+						sh '''
+							cd helm
+
+							echo "$DOCKER_PASSWORD" | helm registry login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
+
+							helm package $APP_NAME --app-version=$DOCKER_VERSION --version=$HELM_VERSION
+							helm push ./$CHART_NAME-${HELM_VERSION}.tgz $DOCKER_REGISTRY_FULL/$DOCKER_USERNAME
+						'''
+					}
+				}
+			}
+		}
+
 		stage('CD') {
 			steps {
 				script {
 					withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
 						sh """
-							cd helm/$APP_NAME
-
-							helm package . --app-version=$DOCKER_VERSION --version=$HELM_VERSION
-							helm upgrade $APP_NAME $APP_NAME-${HELM_VERSION}.tgz \
+							helm upgrade $APP_NAME $DOCKER_REGISTRY_FULL/$DOCKER_USERNAME/$CHART_NAME \
 								--version $HELM_VERSION \
 								--install \
 								--atomic \
