@@ -92,7 +92,7 @@ pipeline {
 							echo "$DOCKER_PASSWORD" | helm registry login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
 
 							helm package $APP_NAME --app-version=$DOCKER_VERSION --version=$HELM_VERSION
-							helm push ./$CHART_NAME-${DOCKER_VERSION}.tgz $DOCKER_REGISTRY_FULL/$DOCKER_USERNAME
+							helm push ./$CHART_NAME-${HELM_VERSION}.tgz $DOCKER_REGISTRY_FULL/$DOCKER_USERNAME
 						'''
 					}
 				}
