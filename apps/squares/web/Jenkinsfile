@@ -54,15 +54,14 @@ pipeline {
 		stage('Node CI') {
 			steps {
 				script {
-					withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-						sh """
-							node -v
-							npm -v
+					sh """
+						node -v
+						npm -v
 
-							npm install
-							npm run build
-						"""
-					}
+						npm install
+						npm test
+						npm run build
+					"""
 				}
 			}
 		}

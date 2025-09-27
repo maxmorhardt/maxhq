@@ -9,7 +9,6 @@ ENV NODE_ENV="production"
 COPY dist/ dist/
 COPY package.json .
 
-RUN npm install --omit=dev
 RUN chown -R node:node /app
 
 FROM --platform=linux/arm64 nginx:alpine
