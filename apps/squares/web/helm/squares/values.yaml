@@ -52,6 +52,7 @@ hpa:
   minReplicas: 1
   maxReplicas: 3
   targetCPU: 90
+  targetRAM: 90
 
 pdb:
   minAvailable: 1
