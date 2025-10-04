@@ -1,4 +1,10 @@
 import MenuIcon from '@mui/icons-material/Menu';
+import HomeIcon from '@mui/icons-material/Home';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import ArticleIcon from '@mui/icons-material/Article';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
@@ -13,9 +19,20 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import LoginIcon from '@mui/icons-material/Login';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
 
-const pages = ['Products', 'Pricing', 'Blog'];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const pages = [
+  { name: 'Products', icon: <HomeIcon fontSize="small" /> },
+  { name: 'Pricing', icon: <AttachMoneyIcon fontSize="small" /> },
+  { name: 'Blog', icon: <ArticleIcon fontSize="small" /> },
+];
+
+const settings = [
+  { name: 'Profile', icon: <AccountCircleIcon fontSize="small" /> },
+  { name: 'Account', icon: <SettingsIcon fontSize="small" /> },
+  { name: 'Logout', icon: <LogoutIcon fontSize="small" /> },
+];
 
 function Header() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
@@ -23,13 +40,8 @@ function Header() {
 
   const auth = useAuth();
 
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElNav(event.currentTarget);
-  };
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
-  };
-
+  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorElNav(event.currentTarget);
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorElUser(event.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
@@ -43,9 +55,7 @@ function Header() {
   const handleSettingClick = (setting: string) => {
     if (setting === 'Account') {
       window.location.href = "https://auth.maxstash.io/realms/maxstash/account";
-    }
-		
-    if (setting === 'Logout') {
+    } else if (setting === 'Logout') {
       auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
     }
 
@@ -97,21 +107,30 @@ function Header() {
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography sx={{ textAlign: 'center' }}>{page}</Typography>
+                <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {page.icon}
+                    <Typography>{page.name}</Typography>
+                  </Box>
                 </MenuItem>
               ))}
 
               {/* Mobile Login/Register */}
-              {!auth.isAuthenticated && <Divider /> }
-							{!auth.isAuthenticated && ( 
+							{!auth.isAuthenticated && <Divider />}
+							{!auth.isAuthenticated && (
 								<MenuItem onClick={() => { auth.signinRedirect(); handleCloseNavMenu(); }}>
-									<Typography sx={{ textAlign: 'center' }}>Login</Typography>
+									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+										<LoginIcon fontSize="small" />
+										<Typography>Login</Typography>
+									</Box>
 								</MenuItem>
 							)}
-							{!auth.isAuthenticated && ( 
+							{!auth.isAuthenticated && (
 								<MenuItem onClick={() => { handleRegister(); handleCloseNavMenu(); }}>
-									<Typography sx={{ textAlign: 'center' }}>Register</Typography>
+									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+										<HowToRegIcon fontSize="small" />
+										<Typography>Register</Typography>
+									</Box>
 								</MenuItem>
 							)}
             </Menu>
@@ -143,11 +162,12 @@ function Header() {
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
-                key={page}
+                key={page.name}
                 onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
+                sx={{ my: 2, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}
               >
-                {page}
+                {page.icon}
+                {page.name}
               </Button>
             ))}
           </Box>
@@ -156,19 +176,10 @@ function Header() {
           <Box sx={{ flexGrow: 0 }}>
             {!auth.isAuthenticated ? (
               <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-                <Button
-                  color="inherit"
-                  sx={{ marginRight: 2 }}
-                  onClick={() => auth.signinRedirect()}
-                  variant="outlined"
-                >
+                <Button color="inherit" sx={{ mr: 2 }} onClick={() => auth.signinRedirect()} variant="outlined">
                   Login
                 </Button>
-                <Button
-                  color="primary"
-                  onClick={handleRegister}
-                  variant="contained"
-                >
+                <Button color="primary" onClick={handleRegister} variant="contained">
                   Register
                 </Button>
               </Box>
@@ -192,8 +203,11 @@ function Header() {
                   onClose={handleCloseUserMenu}
                 >
                   {settings.map((setting) => (
-                    <MenuItem key={setting} onClick={() => handleSettingClick(setting)}>
-                      <Typography sx={{ textAlign: 'center' }}>{setting}</Typography>
+                    <MenuItem key={setting.name} onClick={() => handleSettingClick(setting.name)}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {setting.icon}
+                        <Typography>{setting.name}</Typography>
+                      </Box>
                     </MenuItem>
                   ))}
                 </Menu>
@@ -207,4 +221,3 @@ function Header() {
 }
 
 export default Header;
-

@@ -23,10 +23,12 @@ function SquaresGrid() {
       newGrid[selectedCell.row][selectedCell.col] = tempValue.slice(0, 3);
       setGrid(newGrid);
     }
+
     setModalOpen(false);
   };
 
-  const labels = Array.from({ length: 10 }, (_, i) => i);
+  const xLabels = Array.from({ length: 10 }, () => "-");
+	const yLabels = Array.from({ length: 10 }, () => "-");
 
   return (
     <>
@@ -35,9 +37,9 @@ function SquaresGrid() {
         <Box sx={{ display: "flex", justifyContent: "center" }}>
 					{/* Empty box for top left */}
 					<Box sx={{ marginLeft: { xs: 4.85, sm: 6.75, md: 8.5 } }}/>
-          {labels.map((label) => (
+          {xLabels.map((label) => (
             <Box
-              key={`x-${label}`}
+              key={label}
               sx={{
                 fontWeight: "bold",
                 fontSize: { xs: 10, sm: 12, md: 14 },
@@ -65,7 +67,7 @@ function SquaresGrid() {
                 fontSize: { xs: 10, sm: 12, md: 14 },
               }}
             >
-              {rowIndex}
+              {yLabels[rowIndex]}
             </Box>
 
             {/* Row of cells */}
