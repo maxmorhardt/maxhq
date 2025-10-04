@@ -1,4 +1,5 @@
 import MenuIcon from '@mui/icons-material/Menu';
+import { Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -11,6 +12,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
@@ -19,6 +21,8 @@ function Header() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
+  const auth = useAuth();
+
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
   };
@@ -26,21 +30,37 @@ function Header() {
     setAnchorElUser(event.currentTarget);
   };
 
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
+  const handleCloseNavMenu = () => setAnchorElNav(null);
+  const handleCloseUserMenu = () => setAnchorElUser(null);
+
+  const handleRegister = () => {
+    const { authority, client_id } = auth.settings;
+    const redirectUri = window.location.origin;
+    const registrationUrl = `${authority}/protocol/openid-connect/registrations?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+    window.location.href = registrationUrl;
   };
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
+  const handleSettingClick = (setting: string) => {
+    if (setting === 'Account') {
+      window.location.href = "https://auth.maxstash.io/realms/maxstash/account";
+    }
+		
+    if (setting === 'Logout') {
+      auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
+    }
+
+    handleCloseUserMenu();
   };
 
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-					<Box sx={{ margin: 0, padding: 0, display: { xs: 'none', md: 'flex' }, mr: 2 }}>
-						<img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: "auto" }} />
-					</Box>
+          {/* Desktop logo */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, mr: 2 }}>
+            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
+          </Box>
+
           <Typography
             variant="h6"
             noWrap
@@ -57,29 +77,21 @@ function Header() {
             Squares
           </Typography>
 
+          {/* Mobile menu */}
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
+              aria-label="menu"
               onClick={handleOpenNavMenu}
               color="inherit"
             >
-							<MenuIcon />
+              <MenuIcon />
             </IconButton>
             <Menu
               id="menu-appbar"
               anchorEl={anchorElNav}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-              }}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
               sx={{ display: { xs: 'block', md: 'none' } }}
@@ -89,11 +101,27 @@ function Header() {
                   <Typography sx={{ textAlign: 'center' }}>{page}</Typography>
                 </MenuItem>
               ))}
+
+              {/* Mobile Login/Register */}
+              {!auth.isAuthenticated && <Divider /> }
+							{!auth.isAuthenticated && ( 
+								<MenuItem onClick={() => { auth.signinRedirect(); handleCloseNavMenu(); }}>
+									<Typography sx={{ textAlign: 'center' }}>Login</Typography>
+								</MenuItem>
+							)}
+							{!auth.isAuthenticated && ( 
+								<MenuItem onClick={() => { handleRegister(); handleCloseNavMenu(); }}>
+									<Typography sx={{ textAlign: 'center' }}>Register</Typography>
+								</MenuItem>
+							)}
             </Menu>
           </Box>
-					<Box sx={{ margin: 0, padding: 0, display: { xs: 'flex', md: 'none' }, mr: 2 }}>
-						<img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: "auto" }} />
-					</Box>
+
+          {/* Mobile logo */}
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, mr: 2 }}>
+            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
+          </Box>
+
           <Typography
             variant="h5"
             noWrap
@@ -110,6 +138,8 @@ function Header() {
           >
             Squares
           </Typography>
+
+          {/* Page links (desktop) */}
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
@@ -121,34 +151,54 @@ function Header() {
               </Button>
             ))}
           </Box>
+
+          {/* Auth section (desktop only) */}
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography sx={{ textAlign: 'center' }}>{setting}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
+            {!auth.isAuthenticated ? (
+              <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                <Button
+                  color="inherit"
+                  sx={{ marginRight: 2 }}
+                  onClick={() => auth.signinRedirect()}
+                  variant="outlined"
+                >
+                  Login
+                </Button>
+                <Button
+                  color="primary"
+                  onClick={handleRegister}
+                  variant="contained"
+                >
+                  Register
+                </Button>
+              </Box>
+            ) : (
+              <>
+                <Tooltip title="Open settings">
+                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                    <Avatar
+                      alt={auth.user?.profile?.name || 'User'}
+                      src={auth.user?.profile?.picture || '/static/images/avatar/2.jpg'}
+                    />
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  sx={{ mt: '45px' }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  {settings.map((setting) => (
+                    <MenuItem key={setting} onClick={() => handleSettingClick(setting)}>
+                      <Typography sx={{ textAlign: 'center' }}>{setting}</Typography>
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </>
+            )}
           </Box>
         </Toolbar>
       </Container>
@@ -157,3 +207,4 @@ function Header() {
 }
 
 export default Header;
+

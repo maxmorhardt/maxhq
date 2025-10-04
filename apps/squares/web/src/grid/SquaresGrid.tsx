@@ -34,7 +34,7 @@ function SquaresGrid() {
         {/* Top row with X-axis labels */}
         <Box sx={{ display: "flex", justifyContent: "center" }}>
 					{/* Empty box for top left */}
-					<Box sx={{ marginLeft: { xs: 5, sm: 7, md: 9} }}/>
+					<Box sx={{ marginLeft: { xs: 4.85, sm: 6.75, md: 8.5 } }}/>
           {labels.map((label) => (
             <Box
               key={`x-${label}`}

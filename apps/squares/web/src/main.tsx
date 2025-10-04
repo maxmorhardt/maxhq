@@ -18,7 +18,7 @@ const oidcConfig: AuthProviderProps = {
 	redirect_uri: import.meta.env.PROD ? 'https://squares.maxstash.io' : 'http://localhost:3000',
 	onSigninCallback: () => {
 		window.history.replaceState({}, document.title, window.location.pathname);
-	}
+	},
 };
 
 const router = createBrowserRouter(
@@ -31,11 +31,11 @@ const router = createBrowserRouter(
 
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
-		<ThemeProvider theme={darkTheme}>
-			<CssBaseline />
-			<AuthProvider {...oidcConfig}>
-				<RouterProvider router={router} />
-			</AuthProvider>
-		</ThemeProvider>
+		<AuthProvider {...oidcConfig}>
+			<ThemeProvider theme={darkTheme}>
+				<CssBaseline />
+					<RouterProvider router={router} />
+			</ThemeProvider>
+		</AuthProvider>
 	</StrictMode>,
 );
