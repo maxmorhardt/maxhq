@@ -1,10 +1,10 @@
-import MenuIcon from '@mui/icons-material/Menu';
-import HomeIcon from '@mui/icons-material/Home';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import ArticleIcon from '@mui/icons-material/Article';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import SettingsIcon from '@mui/icons-material/Settings';
+import HomeIcon from '@mui/icons-material/Home';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
@@ -19,22 +19,18 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import LoginIcon from '@mui/icons-material/Login';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
 
 const pages = [
-  { name: 'Products', icon: <HomeIcon fontSize="small" /> },
-  { name: 'Pricing', icon: <AttachMoneyIcon fontSize="small" /> },
-  { name: 'Blog', icon: <ArticleIcon fontSize="small" /> },
+  { name: 'Home', icon: <HomeIcon fontSize="small" /> },
+  { name: 'Grids', icon: <AttachMoneyIcon fontSize="small" /> },
 ];
 
 const settings = [
-  { name: 'Profile', icon: <AccountCircleIcon fontSize="small" /> },
   { name: 'Account', icon: <SettingsIcon fontSize="small" /> },
   { name: 'Logout', icon: <LogoutIcon fontSize="small" /> },
 ];
 
-function Header() {
+export default function Header() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
@@ -164,7 +160,7 @@ function Header() {
               <Button
                 key={page.name}
                 onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}
+                sx={{ my: 2, mx: 1, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}
               >
                 {page.icon}
                 {page.name}
@@ -172,7 +168,7 @@ function Header() {
             ))}
           </Box>
 
-          {/* Auth section (desktop only) */}
+          {/* Auth section (desktop) */}
           <Box sx={{ flexGrow: 0 }}>
             {!auth.isAuthenticated ? (
               <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
@@ -187,10 +183,7 @@ function Header() {
               <>
                 <Tooltip title="Open settings">
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar
-                      alt={auth.user?.profile?.name || 'User'}
-                      src={auth.user?.profile?.picture || '/static/images/avatar/2.jpg'}
-                    />
+                    <Avatar alt={auth.user?.profile?.name} />
                   </IconButton>
                 </Tooltip>
                 <Menu
@@ -219,5 +212,3 @@ function Header() {
     </AppBar>
   );
 }
-
-export default Header;

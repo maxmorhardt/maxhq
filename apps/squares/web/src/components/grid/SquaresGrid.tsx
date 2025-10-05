@@ -1,5 +1,6 @@
-import { Box, Button, Dialog, DialogContent, DialogTitle, TextField, useTheme } from "@mui/material";
+import { Box, Button, useTheme } from "@mui/material";
 import { useState } from "react";
+import EditCell from './EditCell';
 
 function SquaresGrid() {
   const theme = useTheme();
@@ -23,28 +24,26 @@ function SquaresGrid() {
       newGrid[selectedCell.row][selectedCell.col] = tempValue.slice(0, 3);
       setGrid(newGrid);
     }
-
     setModalOpen(false);
   };
 
   const xLabels = Array.from({ length: 10 }, () => "-");
-	const yLabels = Array.from({ length: 10 }, () => "-");
+  const yLabels = Array.from({ length: 10 }, () => "-");
 
   return (
     <>
       <Box sx={{ p: 2 }}>
         {/* Top row with X-axis labels */}
         <Box sx={{ display: "flex", justifyContent: "center" }}>
-					{/* Empty box for top left */}
-					<Box sx={{ marginLeft: { xs: 4.85, sm: 6.75, md: 8.5 } }}/>
-          {xLabels.map((label) => (
+          <Box sx={{ marginLeft: { xs: 4.85, sm: 6.75, md: 8.5 } }} />
+          {xLabels.map((label, i) => (
             <Box
-              key={label}
+              key={i}
               sx={{
                 fontWeight: "bold",
                 fontSize: { xs: 10, sm: 12, md: 14 },
-								margin: { xs: 0.1, sm: 0.3, md: 0.3 },
-								minWidth: { xs: 30, sm: 45, md: 60 },
+                margin: { xs: 0.1, sm: 0.3, md: 0.3 },
+                minWidth: { xs: 30, sm: 45, md: 60 },
               }}
             >
               {label}
@@ -58,7 +57,6 @@ function SquaresGrid() {
             key={rowIndex}
             sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-            {/* Y-axis label */}
             <Box
               sx={{
                 mr: 1,
@@ -70,7 +68,6 @@ function SquaresGrid() {
               {yLabels[rowIndex]}
             </Box>
 
-            {/* Row of cells */}
             {rowData.map((cellData, colIndex) => (
               <Button
                 key={`${rowIndex}-${colIndex}`}
@@ -94,34 +91,13 @@ function SquaresGrid() {
         ))}
       </Box>
 
-      {/* Edit modal */}
-      <Dialog open={modalOpen} onClose={() => setModalOpen(false)}>
-        <DialogTitle>Edit Cell</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            value={tempValue}
-            onChange={(e) => {
-              const raw = e.target.value.toUpperCase();
-              const filtered = raw.replace(/[^A-Z0-9]/g, "");
-              setTempValue(filtered.slice(0, 3));
-            }}
-            slotProps={{
-              input: {
-                inputProps: { maxLength: 3 },
-                style: { textAlign: "center" },
-              },
-            }}
-            fullWidth
-          />
-          <Box mt={2} display="flex" justifyContent="flex-end" gap={1}>
-            <Button onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button variant="contained" onClick={handleSave}>
-              Save
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
+      <EditCell
+        open={modalOpen}
+        value={tempValue}
+        onChange={setTempValue}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+      />
     </>
   );
 }

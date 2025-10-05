@@ -2,9 +2,10 @@ import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AuthProvider, type AuthProviderProps } from 'react-oidc-context';
-import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import './index.css';
+import LandingPage from './pages/landing/LandingPage';
 
 const darkTheme = createTheme({
   palette: {
@@ -21,13 +22,17 @@ const oidcConfig: AuthProviderProps = {
 	},
 };
 
-const router = createBrowserRouter(
-	createRoutesFromElements(
-		<Route path='/' element={<App />}>
-
-		</Route>
-	)
-);
+const router = createBrowserRouter([
+	{
+		path: '/',
+		element: <App />,
+		children: [
+			{ 
+				index: true, element: <LandingPage /> 
+			},
+		],
+	},
+]);
 
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
