@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@mui/material";
-import CreateGrid from '../../components/grid/CreateGrid';
-import api from '../../config/axios';
-import type { APIError } from '../../types/error';
+import CreateGrid from "../../components/grid/CreateGrid";
+import type { APIError } from "../../types/error";
+import { createGrid } from '../../service/gridService';
 
 export default function LandingPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -11,12 +11,11 @@ export default function LandingPage() {
   const handleCreateGrid = async (name: string) => {
     setLoading(true);
     try {
-      const response = await api.post("/grids", { name });
-      console.log("Grid created:", response.data);
+      const grid = await createGrid(name);
+      console.log("grid created:", grid);
       setModalOpen(false);
     } catch (err: unknown) {
-      const apiError: APIError = err as unknown as APIError
-      console.error("Failed to create grid:", apiError);
+      const apiError = err as APIError;
       alert(apiError.message);
     } finally {
       setLoading(false);

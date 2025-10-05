@@ -1,24 +1,17 @@
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import HomeIcon from '@mui/icons-material/Home';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
-import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
-import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import HeaderAuth from './HeaderAuth';
+import HeaderMenu from './HeaderMenu';
 
 const pages = [
   { name: 'Home', icon: <HomeIcon fontSize="small" /> },
@@ -50,7 +43,7 @@ export default function Header() {
 
   const handleSettingClick = (setting: string) => {
     if (setting === 'Account') {
-      window.location.href = "https://auth.maxstash.io/realms/maxstash/account";
+			window.open("https://auth.maxstash.io/realms/maxstash/account", "_blank")
     } else if (setting === 'Logout') {
       auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
     }
@@ -84,53 +77,13 @@ export default function Header() {
           </Typography>
 
           {/* Mobile menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-            <IconButton
-              size="large"
-              aria-label="menu"
-              onClick={handleOpenNavMenu}
-              color="inherit"
-            >
-              <MenuIcon />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorElNav}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-              open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
-              sx={{ display: { xs: 'block', md: 'none' } }}
-            >
-              {pages.map((page) => (
-                <MenuItem key={page.name} onClick={handleCloseNavMenu}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {page.icon}
-                    <Typography>{page.name}</Typography>
-                  </Box>
-                </MenuItem>
-              ))}
-
-              {/* Mobile Login/Register */}
-							{!auth.isAuthenticated && <Divider />}
-							{!auth.isAuthenticated && (
-								<MenuItem onClick={() => { auth.signinRedirect(); handleCloseNavMenu(); }}>
-									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-										<LoginIcon fontSize="small" />
-										<Typography>Login</Typography>
-									</Box>
-								</MenuItem>
-							)}
-							{!auth.isAuthenticated && (
-								<MenuItem onClick={() => { handleRegister(); handleCloseNavMenu(); }}>
-									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-										<HowToRegIcon fontSize="small" />
-										<Typography>Register</Typography>
-									</Box>
-								</MenuItem>
-							)}
-            </Menu>
-          </Box>
+          <HeaderMenu 
+						handleOpenNavMenu={handleOpenNavMenu} 
+						handleCloseNavMenu={handleCloseNavMenu} 
+						handleRegister={handleRegister} 
+						anchorElNav={anchorElNav}
+						pages={pages}
+					/>
 
           {/* Mobile logo */}
           <Box sx={{ display: { xs: 'flex', md: 'none' }, mr: 2 }}>
@@ -168,45 +121,15 @@ export default function Header() {
             ))}
           </Box>
 
-          {/* Auth section (desktop) */}
-          <Box sx={{ flexGrow: 0 }}>
-            {!auth.isAuthenticated ? (
-              <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-                <Button color="inherit" sx={{ mr: 2 }} onClick={() => auth.signinRedirect()} variant="outlined">
-                  Login
-                </Button>
-                <Button color="primary" onClick={handleRegister} variant="contained">
-                  Register
-                </Button>
-              </Box>
-            ) : (
-              <>
-                <Tooltip title="Open settings">
-                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar alt={auth.user?.profile?.name} />
-                  </IconButton>
-                </Tooltip>
-                <Menu
-                  sx={{ mt: '45px' }}
-                  id="menu-appbar"
-                  anchorEl={anchorElUser}
-                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  open={Boolean(anchorElUser)}
-                  onClose={handleCloseUserMenu}
-                >
-                  {settings.map((setting) => (
-                    <MenuItem key={setting.name} onClick={() => handleSettingClick(setting.name)}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {setting.icon}
-                        <Typography>{setting.name}</Typography>
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Menu>
-              </>
-            )}
-          </Box>
+          {/* Auth section */}
+          <HeaderAuth
+						handleOpenUserMenu={handleOpenUserMenu}
+						handleCloseUserMenu={handleCloseUserMenu}
+						handleRegister={handleRegister} 
+						handleSettingClick={handleSettingClick}
+						anchorElUser={anchorElUser}
+						settings={settings}
+					/>
         </Toolbar>
       </Container>
     </AppBar>
