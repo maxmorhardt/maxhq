@@ -1,43 +1,70 @@
 import { Box, Button, useTheme } from "@mui/material";
-import { useState } from "react";
-import EditCell from './EditCell';
+import { useCallback, useEffect, useState } from "react";
+import type { Grid, GridCell } from "../../types/grid";
+import EditCell from "./EditCell";
 
-export default function SquaresGrid() {
+interface SquaresGridProps {
+  grid: Grid;
+  onCellUpdate?: (cell: GridCell) => void;
+}
+
+export default function SquaresGrid({ grid, onCellUpdate }: SquaresGridProps) {
   const theme = useTheme();
-  const [grid, setGrid] = useState<string[][]>(
-    Array.from({ length: 10 }, () => Array(10).fill(""))
-  );
+  const numRows = grid.yLabels.length;
+  const numCols = grid.xLabels.length;
 
+	const buildGridArray = useCallback(() => {
+		const arr: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(""));
+		grid.cells.forEach(cell => {
+			if (cell.row < numRows && cell.col < numCols) {
+				arr[cell.row][cell.col] = cell.value;
+			}
+		});
+		return arr;
+	}, [grid, numRows, numCols]);
+
+  const [localGrid, setLocalGrid] = useState<string[][]>(buildGridArray());
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [tempValue, setTempValue] = useState("");
 
+  useEffect(() => {
+    setLocalGrid(buildGridArray());
+  }, [buildGridArray, grid]);
+
   const handleCellClick = (row: number, col: number) => {
     setSelectedCell({ row, col });
-    setTempValue(grid[row][col]);
+    setTempValue(localGrid[row][col]);
     setModalOpen(true);
   };
 
   const handleSave = () => {
     if (selectedCell) {
-      const newGrid = [...grid];
-      newGrid[selectedCell.row][selectedCell.col] = tempValue.slice(0, 3);
-      setGrid(newGrid);
+      const newGrid = localGrid.map((row, r) =>
+        row.map((cell, c) =>
+          r === selectedCell.row && c === selectedCell.col ? tempValue.slice(0, 3) : cell
+        )
+      );
+      setLocalGrid(newGrid);
+
+      const updatedCell = grid.cells.find(
+        c => c.row === selectedCell.row && c.col === selectedCell.col
+      );
+
+      if (updatedCell) {
+        onCellUpdate?.({ ...updatedCell, value: tempValue.slice(0, 3) });
+      }
     }
     setModalOpen(false);
   };
-
-  const xLabels = Array.from({ length: 10 }, () => "-");
-  const yLabels = Array.from({ length: 10 }, () => "-");
 
   return (
     <>
       <Box sx={{ p: 2 }}>
         {/* Top row with x axis labels */}
         <Box sx={{ display: "flex", justifyContent: "center" }}>
-					{/* Empty box to line up x axis labels */}
           <Box sx={{ marginLeft: { xs: 4.85, sm: 6.75, md: 8.5 } }} />
-          {xLabels.map((label, i) => (
+          {grid.xLabels.map((label, i) => (
             <Box
               key={i}
               sx={{
@@ -47,13 +74,13 @@ export default function SquaresGrid() {
                 minWidth: { xs: 30, sm: 45, md: 60 },
               }}
             >
-              {label}
+              {label === -1 ? "-" : label}
             </Box>
           ))}
         </Box>
 
         {/* Rows with y axis + grid */}
-        {grid.map((rowData, rowIndex) => (
+        {localGrid.map((rowData, rowIndex) => (
           <Box
             key={rowIndex}
             sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -66,7 +93,7 @@ export default function SquaresGrid() {
                 fontSize: { xs: 10, sm: 12, md: 14 },
               }}
             >
-              {yLabels[rowIndex]}
+              {grid.yLabels[rowIndex] === -1 ? "-" : grid.yLabels[rowIndex]}
             </Box>
 
             {rowData.map((cellData, colIndex) => (

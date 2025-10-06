@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CreateGrid from "../../components/grid/CreateGrid";
@@ -9,7 +9,7 @@ export default function LandingPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-	
+
   const navigate = useNavigate();
 
   const handleCreateGrid = async (name: string) => {
@@ -18,7 +18,6 @@ export default function LandingPage() {
 
     try {
       const grid = await createGrid(name);
-      console.log("grid created:", grid);
       setModalOpen(false);
       navigate(`/grids/${grid.id}`);
     } catch (err: unknown) {
@@ -31,10 +30,12 @@ export default function LandingPage() {
 
   return (
     <>
-      <Button variant="contained" onClick={() => setModalOpen(true)}>
-        Get Started
-      </Button>
-
+			<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+				<Button variant="contained" onClick={() => setModalOpen(true)}>
+					Get Started
+				</Button>
+			</Box>
+		
       <CreateGrid
         open={modalOpen}
         onClose={() => setModalOpen(false)}

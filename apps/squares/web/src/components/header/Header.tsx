@@ -1,4 +1,4 @@
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import GridViewIcon from '@mui/icons-material/GridView';
 import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -10,13 +10,13 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router-dom';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
-import { useNavigate } from 'react-router-dom';
 
 const pages = [
   { name: 'Home', icon: <HomeIcon fontSize="small" />, navigate: '' },
-  { name: 'Grids', icon: <AttachMoneyIcon fontSize="small" />, navigate: '' },
+  { name: 'Grids', icon: <GridViewIcon />, navigate: '' },
 ];
 
 const settings = [

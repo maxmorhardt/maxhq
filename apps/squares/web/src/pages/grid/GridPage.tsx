@@ -1,11 +1,12 @@
-import { Box, CircularProgress, Paper, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useParams } from "react-router-dom";
+import SquaresGrid from '../../components/grid/SquaresGrid';
+import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { getGridById } from "../../service/gridService";
 import type { APIError } from "../../types/error";
 import type { Grid } from '../../types/grid';
-import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 
 export default function GridPage() {
   const auth = useAuth();
@@ -66,28 +67,6 @@ export default function GridPage() {
   }
 
   return (
-    <Box mt={4} mx={2}>
-      <Typography variant="h4" gutterBottom>
-        Grid: {grid.id}
-      </Typography>
-
-      <Box display="grid" gridTemplateColumns={`repeat(${grid.data[0].length}, 40px)`} gap={1}>
-        {grid.data.flat().map((cell: string, index: number) => (
-          <Paper
-            key={index}
-            sx={{
-              width: 40,
-              height: 40,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: cell ? "primary.main" : "grey.300",
-            }}
-          >
-            {cell}
-          </Paper>
-        ))}
-      </Box>
-    </Box>
+    <SquaresGrid grid={grid}/>
   );
 }
