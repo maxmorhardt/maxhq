@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import LandingPage from './pages/landing/LandingPage';
+import GridPage from './pages/grid/GridPage';
 
 const darkTheme = createTheme({
   palette: {
@@ -23,15 +24,14 @@ const oidcConfig: AuthProviderProps = {
 };
 
 const router = createBrowserRouter([
-	{
-		path: '/',
-		element: <App />,
-		children: [
-			{ 
-				index: true, element: <LandingPage /> 
-			},
-		],
-	},
+  {
+    path: '/',
+    element: <App />,
+    children: [
+      { index: true, element: <LandingPage /> },
+      { path: 'grids/:id', element: <GridPage /> },
+    ],
+  },
 ]);
 
 createRoot(document.getElementById('root')!).render(

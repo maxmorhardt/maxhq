@@ -9,13 +9,14 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import type { JSX } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderMenuProps {
 	handleOpenNavMenu: (event: React.MouseEvent<HTMLElement>) => void
 	handleCloseNavMenu: () => void
 	handleRegister: () => void
 	anchorElNav: null | HTMLElement
-	pages: { name: string, icon: JSX.Element}[]
+	pages: { name: string, icon: JSX.Element, navigate: string }[]
 }
 
 export default function HeaderMenu({
@@ -26,6 +27,7 @@ export default function HeaderMenu({
 	pages
 }: HeaderMenuProps) {
 	const auth = useAuth();
+	const navigate = useNavigate();
 
 	return (
 		<Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -47,7 +49,9 @@ export default function HeaderMenu({
 				sx={{ display: { xs: 'block', md: 'none' } }}
 			>
 				{pages.map(page => (
-					<MenuItem key={page.name} onClick={handleCloseNavMenu}>
+					<MenuItem key={page.name} onClick={() => {
+						navigate(page.navigate)
+					}}>
 						<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 							{page.icon}
 							<Typography>{page.name}</Typography>

@@ -12,10 +12,11 @@ import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
+import { useNavigate } from 'react-router-dom';
 
 const pages = [
-  { name: 'Home', icon: <HomeIcon fontSize="small" /> },
-  { name: 'Grids', icon: <AttachMoneyIcon fontSize="small" /> },
+  { name: 'Home', icon: <HomeIcon fontSize="small" />, navigate: '' },
+  { name: 'Grids', icon: <AttachMoneyIcon fontSize="small" />, navigate: '' },
 ];
 
 const settings = [
@@ -26,6 +27,8 @@ const settings = [
 export default function Header() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+
+	const navigate = useNavigate();
 
   const auth = useAuth();
 
@@ -112,7 +115,10 @@ export default function Header() {
             {pages.map((page) => (
               <Button
                 key={page.name}
-                onClick={handleCloseNavMenu}
+                onClick={() => {
+									handleCloseNavMenu();
+									navigate(page.navigate)
+								}}
                 sx={{ my: 2, mx: 1, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}
               >
                 {page.icon}
