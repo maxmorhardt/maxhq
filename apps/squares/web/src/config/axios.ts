@@ -2,7 +2,7 @@ import axios from "axios";
 import { User } from "oidc-client-ts";
 
 const api = axios.create({
-  baseURL: import.meta.env.PROD ? "https://sqaures-api.maxstash.io" : "http://localhost:8080",
+  baseURL: import.meta.env.PROD ? "https://squares-api.maxstash.io" : "http://localhost:8080",
   headers: { "Content-Type": "application/json" },
 	withCredentials: true,
   timeout: 10000,
