@@ -2,7 +2,7 @@ import { Box, Button, useTheme } from "@mui/material";
 import { useState } from "react";
 import EditCell from './EditCell';
 
-function SquaresGrid() {
+export default function SquaresGrid() {
   const theme = useTheme();
   const [grid, setGrid] = useState<string[][]>(
     Array.from({ length: 10 }, () => Array(10).fill(""))
@@ -33,8 +33,9 @@ function SquaresGrid() {
   return (
     <>
       <Box sx={{ p: 2 }}>
-        {/* Top row with X-axis labels */}
+        {/* Top row with x axis labels */}
         <Box sx={{ display: "flex", justifyContent: "center" }}>
+					{/* Empty box to line up x axis labels */}
           <Box sx={{ marginLeft: { xs: 4.85, sm: 6.75, md: 8.5 } }} />
           {xLabels.map((label, i) => (
             <Box
@@ -51,7 +52,7 @@ function SquaresGrid() {
           ))}
         </Box>
 
-        {/* Rows with Y-axis + grid */}
+        {/* Rows with y axis + grid */}
         {grid.map((rowData, rowIndex) => (
           <Box
             key={rowIndex}
@@ -101,5 +102,3 @@ function SquaresGrid() {
     </>
   );
 }
-
-export default SquaresGrid;

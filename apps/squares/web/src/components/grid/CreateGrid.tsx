@@ -1,16 +1,24 @@
-import { Box, Button, Dialog, DialogContent, DialogTitle, TextField, Typography, CircularProgress } from "@mui/material";
+import { Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 
 interface CreateGridProps {
-  open: boolean;
-  onClose: () => void;
-  onCreate: (name: string) => void;
-  loading?: boolean;
+  open: boolean
+  onClose: () => void
+  onCreate: (name: string) => void
+  loading?: boolean
+  errorMessage?: string
 }
 
-export default function CreateGrid({ open, onClose, onCreate, loading = false }: CreateGridProps) {
+export default function CreateGrid({
+  open,
+  onClose,
+  onCreate,
+  loading = false,
+  errorMessage,
+}: CreateGridProps) {
   const auth = useAuth();
+	
   const [gridName, setGridName] = useState("");
   const [error, setError] = useState("");
 
@@ -25,9 +33,8 @@ export default function CreateGrid({ open, onClose, onCreate, loading = false }:
       return;
     }
 
-    onCreate(gridName.trim());
-    setGridName("");
     setError("");
+    onCreate(gridName.trim());
   };
 
   return (
@@ -36,7 +43,7 @@ export default function CreateGrid({ open, onClose, onCreate, loading = false }:
       <DialogContent>
         {!auth.isAuthenticated && (
           <Typography color="error" sx={{ mb: 2 }}>
-            You must be logged in to create a grid.
+            You must be logged in to create a grid
           </Typography>
         )}
 
@@ -44,15 +51,15 @@ export default function CreateGrid({ open, onClose, onCreate, loading = false }:
           <TextField
             label="Grid Name"
             value={gridName}
-            onChange={e => setGridName(e.target.value)}
+            onChange={(e) => setGridName(e.target.value)}
             fullWidth
             autoFocus
             disabled={loading}
           />
 
-          {error && (
+          {(error || errorMessage) && (
             <Typography color="error">
-              {error}
+              {error || errorMessage}
             </Typography>
           )}
 
@@ -66,7 +73,7 @@ export default function CreateGrid({ open, onClose, onCreate, loading = false }:
               disabled={loading || !auth.isAuthenticated}
               sx={{ minWidth: 100, position: "relative" }}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Create"}
+              {loading ? <CircularProgress size={18} color="inherit" sx={{ marginRight: 1 }} /> : ""} Create
             </Button>
           </Box>
         </Box>
