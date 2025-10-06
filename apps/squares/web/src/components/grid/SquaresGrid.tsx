@@ -1,5 +1,6 @@
 import { Box, Button, useTheme } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
+import { updateCell } from "../../service/gridService";
 import type { Grid, GridCell } from "../../types/grid";
 import EditCell from "./EditCell";
 
@@ -10,23 +11,26 @@ interface SquaresGridProps {
 
 export default function SquaresGrid({ grid, onCellUpdate }: SquaresGridProps) {
   const theme = useTheme();
+
   const numRows = grid.yLabels.length;
   const numCols = grid.xLabels.length;
 
-	const buildGridArray = useCallback(() => {
-		const arr: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(""));
-		grid.cells.forEach(cell => {
-			if (cell.row < numRows && cell.col < numCols) {
-				arr[cell.row][cell.col] = cell.value;
-			}
-		});
-		return arr;
-	}, [grid, numRows, numCols]);
+  const buildGridArray = useCallback(() => {
+    const arr: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(""));
+    grid.cells.forEach(cell => {
+      if (cell.row < numRows && cell.col < numCols) {
+        arr[cell.row][cell.col] = cell.value;
+      }
+    });
+    return arr;
+  }, [grid, numRows, numCols]);
 
   const [localGrid, setLocalGrid] = useState<string[][]>(buildGridArray());
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [tempValue, setTempValue] = useState("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLocalGrid(buildGridArray());
@@ -35,28 +39,44 @@ export default function SquaresGrid({ grid, onCellUpdate }: SquaresGridProps) {
   const handleCellClick = (row: number, col: number) => {
     setSelectedCell({ row, col });
     setTempValue(localGrid[row][col]);
+    setError("");
     setModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (selectedCell) {
-      const newGrid = localGrid.map((row, r) =>
-        row.map((cell, c) =>
-          r === selectedCell.row && c === selectedCell.col ? tempValue.slice(0, 3) : cell
-        )
-      );
-      setLocalGrid(newGrid);
+	const handleSave = async () => {
+		if (!selectedCell) return;
 
-      const updatedCell = grid.cells.find(
-        c => c.row === selectedCell.row && c.col === selectedCell.col
-      );
+		const newValue = tempValue.slice(0, 3);
+		const updatedCell = grid.cells.find(
+			c => c.row === selectedCell.row && c.col === selectedCell.col
+		);
 
-      if (updatedCell) {
-        onCellUpdate?.({ ...updatedCell, value: tempValue.slice(0, 3) });
-      }
-    }
-    setModalOpen(false);
-  };
+		if (!updatedCell) return;
+
+		setLoading(true);
+		setError("");
+
+		try {
+			// Pass cell id and new value separately
+			const cellFromServer = await updateCell(updatedCell, newValue);
+
+			// Update local grid after success
+			const newGrid = localGrid.map((row, r) =>
+				row.map((cellData, c) =>
+					r === selectedCell.row && c === selectedCell.col ? cellFromServer.value : cellData
+				)
+			);
+			setLocalGrid(newGrid);
+			onCellUpdate?.(cellFromServer);
+			setModalOpen(false);
+		} catch (err: unknown) {
+			const apiError = err as { message?: string };
+			setError(apiError.message || "Failed to update cell");
+		} finally {
+			setLoading(false);
+		}
+	};
+
 
   return (
     <>
@@ -125,6 +145,8 @@ export default function SquaresGrid({ grid, onCellUpdate }: SquaresGridProps) {
         onChange={setTempValue}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
+        loading={loading}
+        errorMessage={error}
       />
     </>
   );

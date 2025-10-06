@@ -22,7 +22,7 @@ export default function LandingPage() {
       navigate(`/grids/${grid.id}`);
     } catch (err: unknown) {
       const apiError = err as APIError;
-      setErrorMessage(apiError.message || "Failed to create grid");
+      setErrorMessage(apiError.message);
     } finally {
       setLoading(false);
     }

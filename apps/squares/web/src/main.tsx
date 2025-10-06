@@ -5,8 +5,9 @@ import { AuthProvider, type AuthProviderProps } from 'react-oidc-context';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import './index.css';
-import LandingPage from './pages/landing/LandingPage';
 import GridPage from './pages/grid/GridPage';
+import GridsPage from './pages/grids/GridsPage';
+import LandingPage from './pages/landing/LandingPage';
 
 const darkTheme = createTheme({
   palette: {
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <LandingPage /> },
+			{ path: 'grids', element: <GridsPage /> },
       { path: 'grids/:id', element: <GridPage /> },
     ],
   },

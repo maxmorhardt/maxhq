@@ -16,8 +16,7 @@ export interface GridCell {
   row: number
   col: number
   value: string
+	owner: string
   createdAt: string
   updatedAt: string
-  createdBy: string
-  updatedBy: string
 }

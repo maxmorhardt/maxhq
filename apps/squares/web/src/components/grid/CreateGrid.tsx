@@ -18,7 +18,6 @@ export default function CreateGrid({
   errorMessage,
 }: CreateGridProps) {
   const auth = useAuth();
-	
   const [gridName, setGridName] = useState("");
   const [error, setError] = useState("");
 
@@ -73,7 +72,8 @@ export default function CreateGrid({
               disabled={loading || !auth.isAuthenticated}
               sx={{ minWidth: 100, position: "relative" }}
             >
-              {loading ? <CircularProgress size={18} color="inherit" sx={{ marginRight: 1 }} /> : ""} Create
+              {loading ? <CircularProgress size={18} color="inherit" sx={{ marginRight: 1 }} /> : ""}
+							Create
             </Button>
           </Box>
         </Box>

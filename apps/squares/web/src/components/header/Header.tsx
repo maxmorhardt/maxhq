@@ -16,7 +16,7 @@ import HeaderMenu from './HeaderMenu';
 
 const pages = [
   { name: 'Home', icon: <HomeIcon fontSize="small" />, navigate: '' },
-  { name: 'Grids', icon: <GridViewIcon />, navigate: '' },
+  { name: 'Grids', icon: <GridViewIcon />, navigate: '/grids' },
 ];
 
 const settings = [
