@@ -1,38 +1,40 @@
-import GridViewIcon from '@mui/icons-material/GridView';
-import HomeIcon from '@mui/icons-material/Home';
-import LogoutIcon from '@mui/icons-material/Logout';
-import SettingsIcon from '@mui/icons-material/Settings';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import { useState } from 'react';
-import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
-import HeaderAuth from './HeaderAuth';
-import HeaderMenu from './HeaderMenu';
+import GridViewIcon from "@mui/icons-material/GridView";
+import HomeIcon from "@mui/icons-material/Home";
+import LogoutIcon from "@mui/icons-material/Logout";
+import SettingsIcon from "@mui/icons-material/Settings";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import { useState } from "react";
+import { useAuth } from "react-oidc-context";
+import { useNavigate } from "react-router-dom";
+import HeaderAuth from "./HeaderAuth";
+import HeaderMenu from "./HeaderMenu";
 
 const pages = [
-  { name: 'Home', icon: <HomeIcon fontSize="small" />, navigate: '' },
-  { name: 'Grids', icon: <GridViewIcon />, navigate: '/grids' },
+  { name: "Home", icon: <HomeIcon fontSize="small" />, navigate: "" },
+  { name: "Grids", icon: <GridViewIcon />, navigate: "/grids" },
 ];
 
 const settings = [
-  { name: 'Account', icon: <SettingsIcon fontSize="small" /> },
-  { name: 'Logout', icon: <LogoutIcon fontSize="small" /> },
+  { name: "Account", icon: <SettingsIcon fontSize="small" /> },
+  { name: "Logout", icon: <LogoutIcon fontSize="small" /> },
 ];
 
 export default function Header() {
-	const auth = useAuth();
-	const navigate = useNavigate();
+  const auth = useAuth();
+  const navigate = useNavigate();
 
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorElNav(event.currentTarget);
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorElUser(event.currentTarget);
+  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) =>
+    setAnchorElNav(event.currentTarget);
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) =>
+    setAnchorElUser(event.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
@@ -44,9 +46,9 @@ export default function Header() {
   };
 
   const handleSettingClick = (setting: string) => {
-    if (setting === 'Account') {
-			window.open("https://auth.maxstash.io/realms/maxstash/account", "_blank")
-    } else if (setting === 'Logout') {
+    if (setting === "Account") {
+      window.open("https://auth.maxstash.io/realms/maxstash/account", "_blank");
+    } else if (setting === "Logout") {
       auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
     }
 
@@ -58,8 +60,8 @@ export default function Header() {
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {/* Desktop logo */}
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, mr: 2 }}>
-            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
+          <Box sx={{ display: { xs: "none", md: "flex" }, mr: 2 }}>
+            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: "auto" }} />
           </Box>
 
           <Typography
@@ -67,29 +69,29 @@ export default function Header() {
             noWrap
             sx={{
               mr: 2,
-              display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
+              display: { xs: "none", md: "flex" },
+              fontFamily: "monospace",
               fontWeight: 700,
-              letterSpacing: '.1em',
-              color: 'inherit',
-              textDecoration: 'none',
+              letterSpacing: ".1em",
+              color: "inherit",
+              textDecoration: "none",
             }}
           >
             Squares
           </Typography>
 
           {/* Mobile menu */}
-          <HeaderMenu 
-						handleOpenNavMenu={handleOpenNavMenu} 
-						handleCloseNavMenu={handleCloseNavMenu} 
-						handleRegister={handleRegister} 
-						anchorElNav={anchorElNav}
-						pages={pages}
-					/>
+          <HeaderMenu
+            handleOpenNavMenu={handleOpenNavMenu}
+            handleCloseNavMenu={handleCloseNavMenu}
+            handleRegister={handleRegister}
+            anchorElNav={anchorElNav}
+            pages={pages}
+          />
 
           {/* Mobile logo */}
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, mr: 2 }}>
-            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
+          <Box sx={{ display: { xs: "flex", md: "none" }, mr: 2 }}>
+            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: "auto" }} />
           </Box>
 
           <Typography
@@ -97,28 +99,28 @@ export default function Header() {
             noWrap
             sx={{
               mr: 2,
-              display: { xs: 'flex', md: 'none' },
+              display: { xs: "flex", md: "none" },
               flexGrow: 1,
-              fontFamily: 'monospace',
+              fontFamily: "monospace",
               fontWeight: 700,
-              letterSpacing: '.1em',
-              color: 'inherit',
-              textDecoration: 'none',
+              letterSpacing: ".1em",
+              color: "inherit",
+              textDecoration: "none",
             }}
           >
             Squares
           </Typography>
 
           {/* Page links (desktop) */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
               <Button
                 key={page.name}
                 onClick={() => {
-									handleCloseNavMenu();
-									navigate(page.navigate)
-								}}
-                sx={{ my: 2, mx: 1, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}
+                  handleCloseNavMenu();
+                  navigate(page.navigate);
+                }}
+                sx={{ my: 2, mx: 1, color: "white", display: "flex", alignItems: "center", gap: 1 }}
               >
                 {page.icon}
                 {page.name}
@@ -128,13 +130,13 @@ export default function Header() {
 
           {/* Auth section */}
           <HeaderAuth
-						handleOpenUserMenu={handleOpenUserMenu}
-						handleCloseUserMenu={handleCloseUserMenu}
-						handleRegister={handleRegister} 
-						handleSettingClick={handleSettingClick}
-						anchorElUser={anchorElUser}
-						settings={settings}
-					/>
+            handleOpenUserMenu={handleOpenUserMenu}
+            handleCloseUserMenu={handleCloseUserMenu}
+            handleRegister={handleRegister}
+            handleSettingClick={handleSettingClick}
+            anchorElUser={anchorElUser}
+            settings={settings}
+          />
         </Toolbar>
       </Container>
     </AppBar>

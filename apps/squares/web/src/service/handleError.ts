@@ -17,7 +17,7 @@ export function handleError(err: unknown): APIError {
   const request = err.request;
 
   if (response?.data) {
-    return response.data
+    return response.data;
   }
 
   if (response) {

@@ -1,35 +1,41 @@
-import { Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectCellLoading, selectCurrentCell } from '../../features/grids/gridSelectors';
-import { updateCell } from '../../features/grids/gridThunks';
-import type { APIError } from '../../types/error';
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { selectCellLoading, selectCurrentCell } from "../../features/grids/gridSelectors";
+import { updateCell } from "../../features/grids/gridThunks";
+import type { APIError } from "../../types/error";
 
 interface EditCellProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
-export default function EditCell({
-  open,
-  onClose,
-}: EditCellProps) {
-	const dispatch = useAppDispatch();
+export default function EditCell({ open, onClose }: EditCellProps) {
+  const dispatch = useAppDispatch();
 
-	const currentCell = useAppSelector(selectCurrentCell);
-	const loading = useAppSelector(selectCellLoading);
+  const currentCell = useAppSelector(selectCurrentCell);
+  const loading = useAppSelector(selectCellLoading);
 
   const [error, setError] = useState("");
-	const [value, setValue] = useState(currentCell?.value || "")
+  const [value, setValue] = useState(currentCell?.value || "");
 
-	useEffect(() => {
-		setValue(currentCell?.value || "");
-		setError("");
-	}, [currentCell]);
+  useEffect(() => {
+    setValue(currentCell?.value || "");
+    setError("");
+  }, [currentCell]);
 
-	if (!currentCell) {
-		return;
-	}
+  if (!currentCell) {
+    return;
+  }
 
   const handleSave = async () => {
     if (!value.trim()) {
@@ -38,10 +44,10 @@ export default function EditCell({
     }
 
     try {
-      await dispatch(updateCell({ id: currentCell.id, value: value})).unwrap();
-      onClose()
+      await dispatch(updateCell({ id: currentCell.id, value: value })).unwrap();
+      onClose();
     } catch (err: unknown) {
-			const apiError = err as APIError;
+      const apiError = err as APIError;
       setError(apiError.message);
     }
   };
@@ -54,7 +60,7 @@ export default function EditCell({
           <TextField
             autoFocus
             value={value}
-            onChange={e => {
+            onChange={(e) => {
               const raw = e.target.value.toUpperCase();
               const filtered = raw.replace(/[^A-Z0-9]/g, "");
               setValue(filtered.slice(0, 3));
@@ -62,14 +68,14 @@ export default function EditCell({
             fullWidth
             disabled={loading}
             slotProps={{
-							input: {
-								inputProps: { maxLength: 3 },
-								style: { textAlign: "center" },
-							},
-						}}
+              input: {
+                inputProps: { maxLength: 3 },
+                style: { textAlign: "center" },
+              },
+            }}
           />
 
-          {(error) && (
+          {error && (
             <Typography color="error" sx={{ fontSize: 12 }}>
               {error}
             </Typography>

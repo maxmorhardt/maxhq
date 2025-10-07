@@ -1,27 +1,33 @@
-import { Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useState } from "react";
 import { useAuth } from "react-oidc-context";
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectGridError, selectGridLoading } from '../../features/grids/gridSelectors';
-import { createGrid } from '../../features/grids/gridThunks';
-import type { APIError } from '../../types/error';
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { selectGridError, selectGridLoading } from "../../features/grids/gridSelectors";
+import { createGrid } from "../../features/grids/gridThunks";
+import type { APIError } from "../../types/error";
 
 interface CreateGridProps {
-  open: boolean
-  onClose: (id: string) => void
+  open: boolean;
+  onClose: (id: string) => void;
 }
 
-export default function CreateGrid({
-  open,
-  onClose
-}: CreateGridProps) {
+export default function CreateGrid({ open, onClose }: CreateGridProps) {
   const auth = useAuth();
 
-	const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-	const loading = useAppSelector(selectGridLoading);
+  const loading = useAppSelector(selectGridLoading);
   const errorMessage = useAppSelector(selectGridError);
-	
+
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
@@ -37,14 +43,14 @@ export default function CreateGrid({
     }
 
     setError("");
-    
-		try {
-			const grid = await dispatch(createGrid(name)).unwrap();
-			onClose(grid.id);
-		} catch (err: unknown) {
-			const apiError = err as APIError
-			setError(apiError.message);
-		}
+
+    try {
+      const grid = await dispatch(createGrid(name)).unwrap();
+      onClose(grid.id);
+    } catch (err: unknown) {
+      const apiError = err as APIError;
+      setError(apiError.message);
+    }
   };
 
   return (
@@ -68,9 +74,7 @@ export default function CreateGrid({
           />
 
           {(error || errorMessage) && (
-            <Typography color="error">
-              {error || errorMessage}
-            </Typography>
+            <Typography color="error">{error || errorMessage}</Typography>
           )}
 
           <Box display="flex" justifyContent="flex-end" gap={2}>
@@ -83,8 +87,12 @@ export default function CreateGrid({
               disabled={loading || !auth.isAuthenticated}
               sx={{ minWidth: 100, position: "relative" }}
             >
-              {loading ? <CircularProgress size={18} color="inherit" sx={{ marginRight: 1 }} /> : ""}
-							Create
+              {loading ? (
+                <CircularProgress size={18} color="inherit" sx={{ marginRight: 1 }} />
+              ) : (
+                ""
+              )}
+              Create
             </Button>
           </Box>
         </Box>

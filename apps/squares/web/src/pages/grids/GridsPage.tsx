@@ -1,50 +1,38 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
-import { useAxiosAuth } from "../../axios/useAxiosAuth";
-import { getGridsByUser } from "../../service/gridService";
-import type { APIError } from "../../types/error";
-import type { Grid } from '../../types/grid';
-import GridsTable from '../../components/grid/GridTable';
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { useAxiosAuth } from "../../axios/api";
+import GridsTable from "../../components/grid/GridTable";
+import {
+  selectGridError,
+  selectGridLoading,
+  selectGrids,
+} from "../../features/grids/gridSelectors";
+import { fetchGridsByUser } from "../../features/grids/gridThunks";
 
 export default function GridsPage() {
   const auth = useAuth();
   const isInterceptorReady = useAxiosAuth();
+  const dispatch = useAppDispatch();
 
-  const [grids, setGrids] = useState<Grid[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const grids = useAppSelector(selectGrids);
+  const loading = useAppSelector(selectGridLoading);
+  const error = useAppSelector(selectGridError);
 
   useEffect(() => {
     if (!auth.isAuthenticated || !isInterceptorReady) {
-			return;
-		}
+      return;
+    }
 
-    const fetchGrids = async () => {
-      setLoading(true);
-      try {
-        const username = auth.user?.profile?.preferred_username;
-        if (!username) {
-          setError("User not found");
-          return;
-        }
+    const user = auth.user?.profile?.preferred_username;
+    if (!user) {
+      return;
+    }
 
-        const res = await getGridsByUser(username);
-        setGrids(res);
-        setError("");
-      } catch (err: unknown) {
-        const apiError = err as APIError;
-        console.error("Failed to fetch grids:", apiError);
-        setError(apiError.message || "Failed to fetch grids");
-      } finally {
-        setLoading(false);
-      }
-    };
+    dispatch(fetchGridsByUser(user));
+  }, [auth.isAuthenticated, auth.user?.profile?.preferred_username, dispatch, isInterceptorReady]);
 
-    fetchGrids();
-  }, [auth.isAuthenticated, auth.user?.profile?.preferred_username, isInterceptorReady]);
-
-  // ✅ Show loading until both OIDC and interceptor are ready
   if (!isInterceptorReady || auth.isLoading || loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>

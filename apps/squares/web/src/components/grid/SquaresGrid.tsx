@@ -1,9 +1,9 @@
 import { Box, Button, useTheme } from "@mui/material";
 import { useState } from "react";
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { setCurrentCell } from '../../features/grids/gridThunks';
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setCurrentCell } from "../../features/grids/gridThunks";
 import EditCell from "./EditCell";
-import { selectCurrentGrid } from '../../features/grids/gridSelectors';
+import { selectCurrentGrid } from "../../features/grids/gridSelectors";
 
 export default function SquaresGrid() {
   const theme = useTheme();
@@ -14,28 +14,28 @@ export default function SquaresGrid() {
   const [open, setOpen] = useState(false);
 
   if (!grid) {
-		return;
-	}
+    return;
+  }
 
   const numRows = grid.yLabels.length;
   const numCols = grid.xLabels.length;
 
   const gridMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(""));
-  grid.cells.forEach(cell => {
+  grid.cells.forEach((cell) => {
     if (cell.row < numRows && cell.col < numCols) {
       gridMatrix[cell.row][cell.col] = cell.value;
     }
   });
 
   const handleCellClick = async (row: number, col: number) => {
-		const cell = grid.cells.find((c) => c.row === row && c.col === col);
+    const cell = grid.cells.find((c) => c.row === row && c.col === col);
 
-		if (!cell) {
-			return;
-		}
+    if (!cell) {
+      return;
+    }
 
-		await dispatch(setCurrentCell(cell))
-		setOpen(true)
+    await dispatch(setCurrentCell(cell));
+    setOpen(true);
   };
 
   return (
@@ -43,9 +43,9 @@ export default function SquaresGrid() {
       <Box>
         {/* x-axis */}
         <Box sx={{ display: "flex", justifyContent: "center" }}>
-					{/* empty box to align labels */}
+          {/* empty box to align labels */}
           <Box sx={{ marginRight: { xs: 1.5, sm: 1.5, md: 1.75 } }} />
-					{/* labels */}
+          {/* labels */}
           {grid.xLabels.map((label, i) => (
             <Box
               key={i}
@@ -67,7 +67,7 @@ export default function SquaresGrid() {
             key={rowIndex}
             sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-						{/* labels */}
+            {/* labels */}
             <Box
               sx={{
                 mr: 1,
@@ -79,7 +79,7 @@ export default function SquaresGrid() {
               {grid.yLabels[rowIndex] === -1 ? "-" : grid.yLabels[rowIndex]}
             </Box>
 
-						{/* cell data */}
+            {/* cell data */}
             {rowData.map((cellData, colIndex) => (
               <Button
                 key={`${rowIndex}-${colIndex}`}
@@ -103,10 +103,7 @@ export default function SquaresGrid() {
         ))}
       </Box>
 
-      <EditCell
-        open={open}
-        onClose={() => setOpen(false)}
-      />
+      <EditCell open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
