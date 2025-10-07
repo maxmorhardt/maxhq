@@ -1,39 +1,49 @@
 import { Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, TextField, Typography } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectCellLoading, selectCurrentCell } from '../../features/grids/gridSelectors';
+import { updateCell } from '../../features/grids/gridThunks';
+import type { APIError } from '../../types/error';
 
 interface EditCellProps {
   open: boolean
-  value: string
-  onChange: (val: string) => void
   onClose: () => void
-  onSave: () => void
-  loading?: boolean
-  errorMessage?: string
 }
 
 export default function EditCell({
   open,
-  value,
-  onChange,
   onClose,
-  onSave,
-  loading = false,
-  errorMessage,
 }: EditCellProps) {
+	const dispatch = useAppDispatch();
+
+	const currentCell = useAppSelector(selectCurrentCell);
+	const loading = useAppSelector(selectCellLoading);
+
   const [error, setError] = useState("");
+	const [value, setValue] = useState(currentCell?.value || "")
 
-  useEffect(() => {
-    setError("");
-  }, [open, value, errorMessage]);
+	useEffect(() => {
+		setValue(currentCell?.value || "");
+		setError("");
+	}, [currentCell]);
 
-  const handleSave = () => {
+	if (!currentCell) {
+		return;
+	}
+
+  const handleSave = async () => {
     if (!value.trim()) {
       setError("Cell value is required");
       return;
     }
 
-    setError("");
-    onSave();
+    try {
+      await dispatch(updateCell({ id: currentCell.id, value: value})).unwrap();
+      onClose()
+    } catch (err: unknown) {
+			const apiError = err as APIError;
+      setError(apiError.message);
+    }
   };
 
   return (
@@ -47,7 +57,7 @@ export default function EditCell({
             onChange={e => {
               const raw = e.target.value.toUpperCase();
               const filtered = raw.replace(/[^A-Z0-9]/g, "");
-              onChange(filtered.slice(0, 3));
+              setValue(filtered.slice(0, 3));
             }}
             fullWidth
             disabled={loading}
@@ -59,9 +69,9 @@ export default function EditCell({
 						}}
           />
 
-          {(error || errorMessage) && (
+          {(error) && (
             <Typography color="error" sx={{ fontSize: 12 }}>
-              {error || errorMessage}
+              {error}
             </Typography>
           )}
 

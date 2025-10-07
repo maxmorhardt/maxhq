@@ -1,44 +1,29 @@
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { useEffect, useState } from "react";
+import { Box, CircularProgress, Typography } from "@mui/material";
+import { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import { useParams } from "react-router-dom";
-import SquaresGrid from '../../components/grid/SquaresGrid';
-import { useAxiosAuth } from '../../hooks/useAxiosAuth';
-import { getGridById } from "../../service/gridService";
-import type { APIError } from "../../types/error";
-import type { Grid } from '../../types/grid';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import SquaresGrid from "../../components/grid/SquaresGrid";
+import { selectCurrentGrid, selectGridError, selectGridLoading } from '../../features/grids/gridSelectors';
+import { fetchGridById } from '../../features/grids/gridThunks';
+import { useAxiosAuth } from '../../axios/useAxiosAuth';
 
 export default function GridPage() {
   const auth = useAuth();
-
-	const isInterceptorReady = useAxiosAuth();
+  const isInterceptorReady = useAxiosAuth();
+  const dispatch = useAppDispatch();
 
   const { id } = useParams<{ id: string }>();
 
-  const [grid, setGrid] = useState<Grid | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const loading = useAppSelector(selectGridLoading);
+  const error = useAppSelector(selectGridError);
+  const currentGrid = useAppSelector(selectCurrentGrid);
 
   useEffect(() => {
-    if (!auth.isAuthenticated || !isInterceptorReady || !id) {
-			return;
-		}
-
-    const fetchGrid = async () => {
-      setLoading(true);
-      try {
-        const data = await getGridById(id);
-        setGrid(data);
-      } catch (err: unknown) {
-        const apiError = err as APIError;
-        setError(apiError.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGrid();
-  }, [auth.isAuthenticated, isInterceptorReady, id]);
+    if (auth.isAuthenticated && isInterceptorReady && id) {
+      dispatch(fetchGridById(id));
+    }
+  }, [auth.isAuthenticated, isInterceptorReady, id, dispatch]);
 
   if (loading) {
     return (
@@ -58,15 +43,21 @@ export default function GridPage() {
     );
   }
 
-  if (!grid) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <Typography>No grid data found</Typography>
-      </Box>
-    );
+  if (!currentGrid) {
+    return
   }
 
   return (
-    <SquaresGrid grid={grid}/>
+    <Box sx={{ textAlign: 'center' }}>
+      <Typography sx={{
+				fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
+				fontWeight: 700,
+				mt: 1
+			}}>
+        {currentGrid.name}
+      </Typography>
+
+      <SquaresGrid />
+    </Box>
   );
 }

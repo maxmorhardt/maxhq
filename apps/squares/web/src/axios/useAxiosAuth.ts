@@ -1,6 +1,6 @@
-import { useAuth } from "react-oidc-context";
 import { useEffect, useState } from "react";
-import { setupAxiosInterceptors } from "../config/axios";
+import { useAuth } from "react-oidc-context";
+import { setupAxiosInterceptors } from './api';
 
 export function useAxiosAuth() {
   const auth = useAuth();

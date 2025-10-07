@@ -1,7 +1,7 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
-import { useAxiosAuth } from "../../hooks/useAxiosAuth";
+import { useAxiosAuth } from "../../axios/useAxiosAuth";
 import { getGridsByUser } from "../../service/gridService";
 import type { APIError } from "../../types/error";
 import type { Grid } from '../../types/grid';
@@ -16,8 +16,9 @@ export default function GridsPage() {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    // ✅ Wait until both OIDC and interceptor are ready
-    if (!auth.isAuthenticated || !isInterceptorReady) return;
+    if (!auth.isAuthenticated || !isInterceptorReady) {
+			return;
+		}
 
     const fetchGrids = async () => {
       setLoading(true);
