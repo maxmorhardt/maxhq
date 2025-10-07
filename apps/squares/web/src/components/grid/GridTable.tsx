@@ -9,9 +9,9 @@ import {
   Paper,
   Typography,
   Link as MuiLink,
-} from "@mui/material";
-import { Link } from "react-router-dom";
-import type { Grid } from "../../types/grid";
+} from '@mui/material';
+import { Link } from 'react-router-dom';
+import type { Grid } from '../../types/grid';
 
 interface GridsTableProps {
   grids: Grid[];
@@ -20,7 +20,7 @@ interface GridsTableProps {
 export default function GridsTable({ grids }: GridsTableProps) {
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2, textAlign: { xs: "center", sm: "left" } }}>
+      <Typography variant="h6" sx={{ mb: 2, textAlign: { xs: 'center', sm: 'left' } }}>
         Grids Overview
       </Typography>
 
@@ -43,8 +43,8 @@ export default function GridsTable({ grids }: GridsTableProps) {
                     {grid.name}
                   </MuiLink>
                 </TableCell>
-                <TableCell>{grid.xLabels.join(", ")}</TableCell>
-                <TableCell>{grid.yLabels.join(", ")}</TableCell>
+                <TableCell>{grid.xLabels.join(', ')}</TableCell>
+                <TableCell>{grid.yLabels.join(', ')}</TableCell>
                 <TableCell>{grid.createdBy}</TableCell>
               </TableRow>
             ))}

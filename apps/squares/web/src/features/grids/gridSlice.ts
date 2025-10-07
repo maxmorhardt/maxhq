@@ -1,13 +1,13 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
-import { createSlice } from "@reduxjs/toolkit";
-import type { Grid, GridCell } from "../../types/grid";
+import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import type { Grid, GridCell } from '../../types/grid';
 import {
   createGrid,
   fetchGridById,
   fetchGridsByUser,
   setCurrentCell,
   updateCell,
-} from "./gridThunks";
+} from './gridThunks';
 
 interface GridState {
   grids: Grid[];
@@ -26,7 +26,7 @@ const initialState: GridState = {
 };
 
 const gridSlice = createSlice({
-  name: "grids",
+  name: 'grids',
   initialState,
   reducers: {
     clearError(state) {
@@ -45,7 +45,7 @@ const gridSlice = createSlice({
       })
       .addCase(fetchGridsByUser.rejected, (state, action) => {
         state.gridLoading = false;
-        state.error = action.payload?.message || "Error fetching grids";
+        state.error = action.payload?.message || 'Error fetching grids';
       });
 
     builder
@@ -60,7 +60,7 @@ const gridSlice = createSlice({
       })
       .addCase(fetchGridById.rejected, (state, action) => {
         state.gridLoading = false;
-        state.error = action.payload?.message || "Error fetching grid";
+        state.error = action.payload?.message || 'Error fetching grid';
       });
 
     builder
@@ -74,7 +74,7 @@ const gridSlice = createSlice({
       })
       .addCase(createGrid.rejected, (state, action) => {
         state.gridLoading = false;
-        state.error = action.payload?.message || "Error creating grid";
+        state.error = action.payload?.message || 'Error creating grid';
       });
 
     builder.addCase(setCurrentCell.fulfilled, (state, action) => {
@@ -104,7 +104,7 @@ const gridSlice = createSlice({
       })
       .addCase(updateCell.rejected, (state, action) => {
         state.cellLoading = false;
-        state.error = action.payload?.message || "Error creating grid";
+        state.error = action.payload?.message || 'Error creating grid';
       });
   },
 });

@@ -1,15 +1,15 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect } from "react";
-import { useAuth } from "react-oidc-context";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useAxiosAuth } from "../../axios/api";
-import GridsTable from "../../components/grid/GridTable";
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { useEffect } from 'react';
+import { useAuth } from 'react-oidc-context';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAxiosAuth } from '../../axios/api';
+import GridsTable from '../../components/grid/GridTable';
 import {
   selectGridError,
   selectGridLoading,
   selectGrids,
-} from "../../features/grids/gridSelectors";
-import { fetchGridsByUser } from "../../features/grids/gridThunks";
+} from '../../features/grids/gridSelectors';
+import { fetchGridsByUser } from '../../features/grids/gridThunks';
 
 export default function GridsPage() {
   const auth = useAuth();
@@ -35,7 +35,7 @@ export default function GridsPage() {
 
   if (!isInterceptorReady || auth.isLoading || loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
         <CircularProgress />
       </Box>
     );

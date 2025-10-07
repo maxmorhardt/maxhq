@@ -1,9 +1,9 @@
-import { Box, Button, useTheme } from "@mui/material";
-import { useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { setCurrentCell } from "../../features/grids/gridThunks";
-import EditCell from "./EditCell";
-import { selectCurrentGrid } from "../../features/grids/gridSelectors";
+import { Box, Button, useTheme } from '@mui/material';
+import { useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { setCurrentCell } from '../../features/grids/gridThunks';
+import EditCell from './EditCell';
+import { selectCurrentGrid } from '../../features/grids/gridSelectors';
 
 export default function SquaresGrid() {
   const theme = useTheme();
@@ -20,7 +20,7 @@ export default function SquaresGrid() {
   const numRows = grid.yLabels.length;
   const numCols = grid.xLabels.length;
 
-  const gridMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(""));
+  const gridMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
   grid.cells.forEach((cell) => {
     if (cell.row < numRows && cell.col < numCols) {
       gridMatrix[cell.row][cell.col] = cell.value;
@@ -42,7 +42,7 @@ export default function SquaresGrid() {
     <>
       <Box>
         {/* x-axis */}
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           {/* empty box to align labels */}
           <Box sx={{ marginRight: { xs: 1.5, sm: 1.5, md: 1.75 } }} />
           {/* labels */}
@@ -50,13 +50,13 @@ export default function SquaresGrid() {
             <Box
               key={i}
               sx={{
-                fontWeight: "bold",
+                fontWeight: 'bold',
                 fontSize: { xs: 10, sm: 12, md: 14 },
                 margin: { xs: 0.1, sm: 0.3, md: 0.3 },
                 minWidth: { xs: 30, sm: 45, md: 60 },
               }}
             >
-              {label === -1 ? "-" : label}
+              {label === -1 ? '-' : label}
             </Box>
           ))}
         </Box>
@@ -65,18 +65,18 @@ export default function SquaresGrid() {
         {gridMatrix.map((rowData, rowIndex) => (
           <Box
             key={rowIndex}
-            sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             {/* labels */}
             <Box
               sx={{
                 mr: 1,
-                textAlign: "center",
-                fontWeight: "bold",
+                textAlign: 'center',
+                fontWeight: 'bold',
                 fontSize: { xs: 10, sm: 12, md: 14 },
               }}
             >
-              {grid.yLabels[rowIndex] === -1 ? "-" : grid.yLabels[rowIndex]}
+              {grid.yLabels[rowIndex] === -1 ? '-' : grid.yLabels[rowIndex]}
             </Box>
 
             {/* cell data */}

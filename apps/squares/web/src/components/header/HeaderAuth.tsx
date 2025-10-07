@@ -1,13 +1,13 @@
-import Avatar from "@mui/material/Avatar";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import type { JSX } from "react";
-import { useAuth } from "react-oidc-context";
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import type { JSX } from 'react';
+import { useAuth } from 'react-oidc-context';
 
 interface HeaderAuthProps {
   handleOpenUserMenu: (event: React.MouseEvent<HTMLElement>) => void;
@@ -31,7 +31,7 @@ export default function HeaderAuth({
   return (
     <Box sx={{ flexGrow: 0 }}>
       {!auth.isAuthenticated ? (
-        <Box sx={{ display: { xs: "none", md: "flex" } }}>
+        <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
           <Button
             color="inherit"
             sx={{ mr: 2 }}
@@ -52,17 +52,17 @@ export default function HeaderAuth({
             </IconButton>
           </Tooltip>
           <Menu
-            sx={{ mt: "45px" }}
+            sx={{ mt: '45px' }}
             id="menu-appbar"
             anchorEl={anchorElUser}
-            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             open={Boolean(anchorElUser)}
             onClose={handleCloseUserMenu}
           >
             {settings.map((setting) => (
               <MenuItem key={setting.name} onClick={() => handleSettingClick(setting.name)}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {setting.icon}
                   <Typography>{setting.name}</Typography>
                 </Box>

@@ -1,15 +1,15 @@
-import HowToRegIcon from "@mui/icons-material/HowToReg";
-import LoginIcon from "@mui/icons-material/Login";
-import MenuIcon from "@mui/icons-material/Menu";
-import { Divider } from "@mui/material";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Typography from "@mui/material/Typography";
-import type { JSX } from "react";
-import { useAuth } from "react-oidc-context";
-import { useNavigate } from "react-router-dom";
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import LoginIcon from '@mui/icons-material/Login';
+import MenuIcon from '@mui/icons-material/Menu';
+import { Divider } from '@mui/material';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
+import type { JSX } from 'react';
+import { useAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderMenuProps {
   handleOpenNavMenu: (event: React.MouseEvent<HTMLElement>) => void;
@@ -30,18 +30,18 @@ export default function HeaderMenu({
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
+    <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
       <IconButton size="large" aria-label="menu" onClick={handleOpenNavMenu} color="inherit">
         <MenuIcon />
       </IconButton>
       <Menu
         id="menu-appbar"
         anchorEl={anchorElNav}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         open={Boolean(anchorElNav)}
         onClose={handleCloseNavMenu}
-        sx={{ display: { xs: "block", md: "none" } }}
+        sx={{ display: { xs: 'block', md: 'none' } }}
       >
         {pages.map((page) => (
           <MenuItem
@@ -50,7 +50,7 @@ export default function HeaderMenu({
               navigate(page.navigate);
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {page.icon}
               <Typography>{page.name}</Typography>
             </Box>
@@ -66,7 +66,7 @@ export default function HeaderMenu({
               handleCloseNavMenu();
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LoginIcon fontSize="small" />
               <Typography>Login</Typography>
             </Box>
@@ -79,7 +79,7 @@ export default function HeaderMenu({
               handleCloseNavMenu();
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <HowToRegIcon fontSize="small" />
               <Typography>Register</Typography>
             </Box>

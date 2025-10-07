@@ -1,5 +1,5 @@
-import type { RootState } from "../../app/store";
-import type { Grid, GridCell } from "../../types/grid";
+import type { RootState } from '../../app/store';
+import type { Grid, GridCell } from '../../types/grid';
 
 export const selectGrids = (state: RootState): Grid[] => state.grid.grids;
 export const selectCurrentGrid = (state: RootState): Grid | null | undefined =>

@@ -1,7 +1,7 @@
-import { Box, Button } from "@mui/material";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import CreateGrid from "../../components/grid/CreateGrid";
+import { Box, Button } from '@mui/material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import CreateGrid from '../../components/grid/CreateGrid';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <Button variant="contained" onClick={() => setOpen(true)}>
           Get Started
         </Button>

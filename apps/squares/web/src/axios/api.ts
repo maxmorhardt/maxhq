@@ -1,10 +1,10 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { useAuth } from "react-oidc-context";
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 
 const api = axios.create({
-  baseURL: import.meta.env.PROD ? "https://squares-api.maxstash.io" : "http://localhost:8080",
-  headers: { "Content-Type": "application/json" },
+  baseURL: import.meta.env.PROD ? 'https://squares-api.maxstash.io' : 'http://localhost:8080',
+  headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
   timeout: 10000,
 });

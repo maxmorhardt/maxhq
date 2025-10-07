@@ -1,6 +1,6 @@
-import api from "../axios/api";
-import type { Grid, GridCell } from "../types/grid";
-import { handleError } from "./handleError";
+import api from '../axios/api';
+import type { Grid, GridCell } from '../types/grid';
+import { handleError } from './handleError';
 
 export async function getGridsByUser(user: string): Promise<Grid[]> {
   try {
@@ -22,7 +22,7 @@ export async function getGridById(id: string): Promise<Grid> {
 
 export async function createGridByName(name: string) {
   try {
-    const res = await api.post("/grids", { name: name });
+    const res = await api.post('/grids', { name: name });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

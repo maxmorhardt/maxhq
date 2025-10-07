@@ -7,12 +7,12 @@ import {
   DialogTitle,
   TextField,
   Typography,
-} from "@mui/material";
-import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { selectCellLoading, selectCurrentCell } from "../../features/grids/gridSelectors";
-import { updateCell } from "../../features/grids/gridThunks";
-import type { APIError } from "../../types/error";
+} from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectCellLoading, selectCurrentCell } from '../../features/grids/gridSelectors';
+import { updateCell } from '../../features/grids/gridThunks';
+import type { APIError } from '../../types/error';
 
 interface EditCellProps {
   open: boolean;
@@ -25,12 +25,12 @@ export default function EditCell({ open, onClose }: EditCellProps) {
   const currentCell = useAppSelector(selectCurrentCell);
   const loading = useAppSelector(selectCellLoading);
 
-  const [error, setError] = useState("");
-  const [value, setValue] = useState(currentCell?.value || "");
+  const [error, setError] = useState('');
+  const [value, setValue] = useState(currentCell?.value || '');
 
   useEffect(() => {
-    setValue(currentCell?.value || "");
-    setError("");
+    setValue(currentCell?.value || '');
+    setError('');
   }, [currentCell]);
 
   if (!currentCell) {
@@ -39,7 +39,7 @@ export default function EditCell({ open, onClose }: EditCellProps) {
 
   const handleSave = async () => {
     if (!value.trim()) {
-      setError("Cell value is required");
+      setError('Cell value is required');
       return;
     }
 
@@ -54,15 +54,15 @@ export default function EditCell({ open, onClose }: EditCellProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 20, fontWeight: "bold" }}>Edit Cell</DialogTitle>
+      <DialogTitle sx={{ fontSize: 20, fontWeight: 'bold' }}>Edit Cell</DialogTitle>
       <DialogContent>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TextField
             autoFocus
             value={value}
             onChange={(e) => {
               const raw = e.target.value.toUpperCase();
-              const filtered = raw.replace(/[^A-Z0-9]/g, "");
+              const filtered = raw.replace(/[^A-Z0-9]/g, '');
               setValue(filtered.slice(0, 3));
             }}
             fullWidth
@@ -70,7 +70,7 @@ export default function EditCell({ open, onClose }: EditCellProps) {
             slotProps={{
               input: {
                 inputProps: { maxLength: 3 },
-                style: { textAlign: "center" },
+                style: { textAlign: 'center' },
               },
             }}
           />
@@ -89,7 +89,7 @@ export default function EditCell({ open, onClose }: EditCellProps) {
               variant="contained"
               onClick={handleSave}
               disabled={loading}
-              sx={{ position: "relative", minWidth: 100 }}
+              sx={{ position: 'relative', minWidth: 100 }}
             >
               {loading && <CircularProgress size={18} color="inherit" sx={{ mr: 1 }} />}
               Save

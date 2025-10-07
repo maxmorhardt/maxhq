@@ -1,5 +1,5 @@
-import { isAxiosError } from "axios";
-import type { APIError } from "../types/error";
+import { isAxiosError } from 'axios';
+import type { APIError } from '../types/error';
 
 export function handleError(err: unknown): APIError {
   const now = new Date().toISOString();
@@ -7,9 +7,9 @@ export function handleError(err: unknown): APIError {
   if (!isAxiosError(err)) {
     return {
       code: 0,
-      message: (err as Error)?.message ?? "Unknown error occurred",
+      message: (err as Error)?.message ?? 'Unknown error occurred',
       timestamp: now,
-      requestId: "unknown",
+      requestId: 'unknown',
     };
   }
 
@@ -25,23 +25,23 @@ export function handleError(err: unknown): APIError {
       code: response.status ?? 0,
       message: `Request failed with status ${response.status}`,
       timestamp: now,
-      requestId: (response.headers?.["x-request-id"] as string) ?? "",
+      requestId: (response.headers?.['x-request-id'] as string) ?? '',
     };
   }
 
   if (request) {
     return {
       code: 0,
-      message: "Network error: Unable to reach the server",
+      message: 'Network error: Unable to reach the server',
       timestamp: now,
-      requestId: "",
+      requestId: '',
     };
   }
 
   return {
     code: 0,
-    message: err.message ?? "Request setup error",
+    message: err.message ?? 'Request setup error',
     timestamp: now,
-    requestId: "",
+    requestId: '',
   };
 }

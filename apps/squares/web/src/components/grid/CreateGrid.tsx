@@ -7,13 +7,13 @@ import {
   DialogTitle,
   TextField,
   Typography,
-} from "@mui/material";
-import { useState } from "react";
-import { useAuth } from "react-oidc-context";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { selectGridError, selectGridLoading } from "../../features/grids/gridSelectors";
-import { createGrid } from "../../features/grids/gridThunks";
-import type { APIError } from "../../types/error";
+} from '@mui/material';
+import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectGridError, selectGridLoading } from '../../features/grids/gridSelectors';
+import { createGrid } from '../../features/grids/gridThunks';
+import type { APIError } from '../../types/error';
 
 interface CreateGridProps {
   open: boolean;
@@ -28,21 +28,21 @@ export default function CreateGrid({ open, onClose }: CreateGridProps) {
   const loading = useAppSelector(selectGridLoading);
   const errorMessage = useAppSelector(selectGridError);
 
-  const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError("Grid name is required");
+      setError('Grid name is required');
       return;
     }
 
     if (!auth.isAuthenticated || !auth.user) {
-      setError("You must be logged in to create a grid");
+      setError('You must be logged in to create a grid');
       return;
     }
 
-    setError("");
+    setError('');
 
     try {
       const grid = await dispatch(createGrid(name)).unwrap();
@@ -55,7 +55,7 @@ export default function CreateGrid({ open, onClose }: CreateGridProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontSize: 24, fontWeight: "bold" }}>Create New Grid</DialogTitle>
+      <DialogTitle sx={{ fontSize: 24, fontWeight: 'bold' }}>Create New Grid</DialogTitle>
       <DialogContent>
         {!auth.isAuthenticated && (
           <Typography color="error" sx={{ mb: 2 }}>
@@ -63,7 +63,7 @@ export default function CreateGrid({ open, onClose }: CreateGridProps) {
           </Typography>
         )}
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
           <TextField
             label="Grid Name"
             value={name}
@@ -78,19 +78,19 @@ export default function CreateGrid({ open, onClose }: CreateGridProps) {
           )}
 
           <Box display="flex" justifyContent="flex-end" gap={2}>
-            <Button onClick={() => onClose("")} sx={{ minWidth: 100 }} disabled={loading}>
+            <Button onClick={() => onClose('')} sx={{ minWidth: 100 }} disabled={loading}>
               Cancel
             </Button>
             <Button
               variant="contained"
               onClick={handleCreate}
               disabled={loading || !auth.isAuthenticated}
-              sx={{ minWidth: 100, position: "relative" }}
+              sx={{ minWidth: 100, position: 'relative' }}
             >
               {loading ? (
                 <CircularProgress size={18} color="inherit" sx={{ marginRight: 1 }} />
               ) : (
-                ""
+                ''
               )}
               Create
             </Button>

@@ -1,16 +1,16 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect } from "react";
-import { useAuth } from "react-oidc-context";
-import { useParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useAxiosAuth } from "../../axios/api";
-import SquaresGrid from "../../components/grid/SquaresGrid";
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { useEffect } from 'react';
+import { useAuth } from 'react-oidc-context';
+import { useParams } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAxiosAuth } from '../../axios/api';
+import SquaresGrid from '../../components/grid/SquaresGrid';
 import {
   selectCurrentGrid,
   selectGridError,
   selectGridLoading,
-} from "../../features/grids/gridSelectors";
-import { fetchGridById } from "../../features/grids/gridThunks";
+} from '../../features/grids/gridSelectors';
+import { fetchGridById } from '../../features/grids/gridThunks';
 
 export default function GridPage() {
   const auth = useAuth();
@@ -52,10 +52,10 @@ export default function GridPage() {
   }
 
   return (
-    <Box sx={{ textAlign: "center" }}>
+    <Box sx={{ textAlign: 'center' }}>
       <Typography
         sx={{
-          fontSize: { xs: "1rem", sm: "1.5rem", md: "2rem" },
+          fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
           fontWeight: 700,
           mt: 1,
         }}
