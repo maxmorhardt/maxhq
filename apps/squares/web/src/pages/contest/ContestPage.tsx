@@ -1,21 +1,21 @@
-import { Box, CircularProgress, Typography, Chip } from '@mui/material';
+import { Box, Chip, CircularProgress, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { useAxiosAuth } from '../../axios/api';
-import SquaresGrid from '../../components/grid/SquaresGrid';
-import { updateCellFromWebSocket } from '../../features/grids/gridSlice';
-import type { GridChannelResponse } from '../../types/grid';
+import SquaresContest from '../../components/contest/SquaresContest';
 import {
-  selectCurrentGrid,
-  selectGridError,
-  selectGridLoading,
-} from '../../features/grids/gridSelectors';
-import { fetchGridById } from '../../features/grids/gridThunks';
+  selectContestError,
+  selectContestLoading,
+  selectCurrentContest,
+} from '../../features/contests/contestSelectors';
+import { updateSquareFromWebSocket } from '../../features/contests/contestSlice';
+import { fetchContestById } from '../../features/contests/contestThunks';
+import type { ContestChannelResponse } from '../../types/contest';
 
-export default function GridPage() {
+export default function ContestPage() {
   const auth = useAuth();
   const isInterceptorReady = useAxiosAuth();
   const dispatch = useAppDispatch();
@@ -29,7 +29,7 @@ export default function GridPage() {
 
     const baseURL = import.meta.env.PROD ? 'wss://squares-api.maxstash.io' : 'ws://localhost:8080';
 
-    return `${baseURL}/ws/grids/${id}`;
+    return `${baseURL}/ws/contests/${id}`;
   };
 
   const { lastMessage, readyState } = useWebSocket(getSocketUrl() ?? null, {
@@ -41,14 +41,14 @@ export default function GridPage() {
   useEffect(() => {
     if (lastMessage?.data) {
       try {
-        const message: GridChannelResponse = JSON.parse(lastMessage.data);
+        const message: ContestChannelResponse = JSON.parse(lastMessage.data);
 
         switch (message.type) {
-          case 'cell_update':
-            if (message.cellId && message.gridId === id) {
+          case 'square_update':
+            if (message.squareId && message.contestId === id) {
               dispatch(
-                updateCellFromWebSocket({
-                  id: message.cellId,
+                updateSquareFromWebSocket({
+                  id: message.squareId,
                   value: message.value,
                 })
               );
@@ -64,13 +64,13 @@ export default function GridPage() {
   const isConnected = readyState === ReadyState.OPEN;
   const isConnecting = readyState === ReadyState.CONNECTING;
 
-  const loading = useAppSelector(selectGridLoading);
-  const error = useAppSelector(selectGridError);
-  const currentGrid = useAppSelector(selectCurrentGrid);
+  const loading = useAppSelector(selectContestLoading);
+  const error = useAppSelector(selectContestError);
+  const currentContest = useAppSelector(selectCurrentContest);
 
   useEffect(() => {
     if (auth.isAuthenticated && isInterceptorReady && id) {
-      dispatch(fetchGridById(id));
+      dispatch(fetchContestById(id));
     }
   }, [auth.isAuthenticated, isInterceptorReady, id, dispatch]);
 
@@ -92,7 +92,7 @@ export default function GridPage() {
     );
   }
 
-  if (!currentGrid) {
+  if (!currentContest) {
     return;
   }
 
@@ -111,7 +111,7 @@ export default function GridPage() {
             fontWeight: 700,
           }}
         >
-          {currentGrid.name}
+          {currentContest.name}
         </Typography>
 
         <Chip
@@ -128,7 +128,7 @@ export default function GridPage() {
         />
       </Box>
 
-      <SquaresGrid />
+      <SquaresContest />
     </Box>
   );
 }

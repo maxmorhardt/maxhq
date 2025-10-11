@@ -3,22 +3,22 @@ import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { useAxiosAuth } from '../../axios/api';
-import GridsTable from '../../components/grid/GridTable';
+import ContestsTable from '../../components/contest/ContestsTable';
 import {
-  selectGridError,
-  selectGridLoading,
-  selectGrids,
-} from '../../features/grids/gridSelectors';
-import { fetchGridsByUser } from '../../features/grids/gridThunks';
+  selectContestError,
+  selectContestLoading,
+  selectContests,
+} from '../../features/contests/contestSelectors';
+import { fetchContestsByUser } from '../../features/contests/contestThunks';
 
-export default function GridsPage() {
+export default function ContestsPage() {
   const auth = useAuth();
   const isInterceptorReady = useAxiosAuth();
   const dispatch = useAppDispatch();
 
-  const grids = useAppSelector(selectGrids);
-  const loading = useAppSelector(selectGridLoading);
-  const error = useAppSelector(selectGridError);
+  const contests = useAppSelector(selectContests);
+  const loading = useAppSelector(selectContestLoading);
+  const error = useAppSelector(selectContestError);
 
   useEffect(() => {
     if (!auth.isAuthenticated || !isInterceptorReady) {
@@ -30,7 +30,7 @@ export default function GridsPage() {
       return;
     }
 
-    dispatch(fetchGridsByUser(user));
+    dispatch(fetchContestsByUser(user));
   }, [auth.isAuthenticated, auth.user?.profile?.preferred_username, dispatch, isInterceptorReady]);
 
   if (!isInterceptorReady || auth.isLoading || loading) {
@@ -49,5 +49,5 @@ export default function GridsPage() {
     );
   }
 
-  return <GridsTable grids={grids} />;
+  return <ContestsTable contests={contests} />;
 }

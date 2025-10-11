@@ -1,40 +1,40 @@
 import { Box, Button, useTheme } from '@mui/material';
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { setCurrentCell } from '../../features/grids/gridThunks';
-import EditCell from './EditCell';
-import { selectCurrentGrid } from '../../features/grids/gridSelectors';
+import { selectCurrentContest } from '../../features/contests/contestSelectors';
+import { setCurrentSquare } from '../../features/contests/contestThunks';
+import EditSquare from './EditSquare';
 
-export default function SquaresGrid() {
+export default function SquaresContest() {
   const theme = useTheme();
   const dispatch = useAppDispatch();
 
-  const grid = useAppSelector(selectCurrentGrid);
+  const contest = useAppSelector(selectCurrentContest);
 
   const [open, setOpen] = useState(false);
 
-  if (!grid) {
+  if (!contest) {
     return;
   }
 
-  const numRows = grid.yLabels.length;
-  const numCols = grid.xLabels.length;
+  const numRows = contest.yLabels.length;
+  const numCols = contest.xLabels.length;
 
-  const gridMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
-  grid.cells.forEach((cell) => {
-    if (cell.row < numRows && cell.col < numCols) {
-      gridMatrix[cell.row][cell.col] = cell.value;
+  const contestMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
+  contest.squares.forEach((square) => {
+    if (square.row < numRows && square.col < numCols) {
+      contestMatrix[square.row][square.col] = square.value;
     }
   });
 
-  const handleCellClick = async (row: number, col: number) => {
-    const cell = grid.cells.find((c) => c.row === row && c.col === col);
+  const handleSquareClick = async (row: number, col: number) => {
+    const square = contest.squares.find((s) => s.row === row && s.col === col);
 
-    if (!cell) {
+    if (!square) {
       return;
     }
 
-    await dispatch(setCurrentCell(cell));
+    await dispatch(setCurrentSquare(square));
     setOpen(true);
   };
 
@@ -46,7 +46,7 @@ export default function SquaresGrid() {
           {/* empty box to align labels */}
           <Box sx={{ marginRight: { xs: 1.5, sm: 1.5, md: 1.75 } }} />
           {/* labels */}
-          {grid.xLabels.map((label, i) => (
+          {contest.xLabels.map((label, i) => (
             <Box
               key={i}
               sx={{
@@ -62,7 +62,7 @@ export default function SquaresGrid() {
         </Box>
 
         {/* y-axis */}
-        {gridMatrix.map((rowData, rowIndex) => (
+        {contestMatrix.map((rowData, rowIndex) => (
           <Box
             key={rowIndex}
             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -76,14 +76,14 @@ export default function SquaresGrid() {
                 fontSize: { xs: 10, sm: 12, md: 14 },
               }}
             >
-              {grid.yLabels[rowIndex] === -1 ? '-' : grid.yLabels[rowIndex]}
+              {contest.yLabels[rowIndex] === -1 ? '-' : contest.yLabels[rowIndex]}
             </Box>
 
-            {/* cell data */}
-            {rowData.map((cellData, colIndex) => (
+            {/* square data */}
+            {rowData.map((squareData, colIndex) => (
               <Button
                 key={`${rowIndex}-${colIndex}`}
-                onClick={() => handleCellClick(rowIndex, colIndex)}
+                onClick={() => handleSquareClick(rowIndex, colIndex)}
                 sx={{
                   bgcolor: theme.palette.background.paper,
                   color: theme.palette.text.primary,
@@ -96,14 +96,14 @@ export default function SquaresGrid() {
                   fontSize: { xs: 10, sm: 12, md: 14 },
                 }}
               >
-                {cellData}
+                {squareData}
               </Button>
             ))}
           </Box>
         ))}
       </Box>
 
-      <EditCell open={open} onClose={() => setOpen(false)} />
+      <EditSquare open={open} onClose={() => setOpen(false)} />
     </>
   );
 }

@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { gridReducer } from '../features/grids/gridSlice';
+import { contestReducer } from '../features/contests/contestSlice';
 
 export const store = configureStore({
   reducer: {
-    grid: gridReducer,
+    contest: contestReducer,
   },
 });
 

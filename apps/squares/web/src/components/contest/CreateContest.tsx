@@ -11,42 +11,42 @@ import {
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectGridError, selectGridLoading } from '../../features/grids/gridSelectors';
-import { createGrid } from '../../features/grids/gridThunks';
+import { selectContestError, selectContestLoading } from '../../features/contests/contestSelectors';
+import { createContest } from '../../features/contests/contestThunks';
 import type { APIError } from '../../types/error';
 
-interface CreateGridProps {
+interface CreateContestProps {
   open: boolean;
   onClose: (id: string) => void;
 }
 
-export default function CreateGrid({ open, onClose }: CreateGridProps) {
+export default function CreateContest({ open, onClose }: CreateContestProps) {
   const auth = useAuth();
 
   const dispatch = useAppDispatch();
 
-  const loading = useAppSelector(selectGridLoading);
-  const errorMessage = useAppSelector(selectGridError);
+  const loading = useAppSelector(selectContestLoading);
+  const errorMessage = useAppSelector(selectContestError);
 
   const [name, setName] = useState('');
   const [error, setError] = useState('');
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError('Grid name is required');
+      setError('Contest name is required');
       return;
     }
 
     if (!auth.isAuthenticated || !auth.user) {
-      setError('You must be logged in to create a grid');
+      setError('You must be logged in to create a contest');
       return;
     }
 
     setError('');
 
     try {
-      const grid = await dispatch(createGrid(name)).unwrap();
-      onClose(grid.id);
+      const contest = await dispatch(createContest(name)).unwrap();
+      onClose(contest.id);
     } catch (err: unknown) {
       const apiError = err as APIError;
       setError(apiError.message);
@@ -55,17 +55,17 @@ export default function CreateGrid({ open, onClose }: CreateGridProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontSize: 24, fontWeight: 'bold' }}>Create New Grid</DialogTitle>
+      <DialogTitle sx={{ fontSize: 24, fontWeight: 'bold' }}>Create New Contest</DialogTitle>
       <DialogContent>
         {!auth.isAuthenticated && (
           <Typography color="error" sx={{ mb: 2 }}>
-            You must be logged in to create a grid
+            You must be logged in to create a contest
           </Typography>
         )}
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
           <TextField
-            label="Grid Name"
+            label="Contest Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             fullWidth

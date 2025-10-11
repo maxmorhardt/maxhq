@@ -1,27 +1,27 @@
 import {
   Box,
+  Link as MuiLink,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Typography,
-  Link as MuiLink,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import type { Grid } from '../../types/grid';
+import type { Contest } from '../../types/contest';
 
-interface GridsTableProps {
-  grids: Grid[];
+interface ContestsTableProps {
+  contests: Contest[];
 }
 
-export default function GridsTable({ grids }: GridsTableProps) {
+export default function ContestsTable({ contests }: ContestsTableProps) {
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h6" sx={{ mb: 2, textAlign: { xs: 'center', sm: 'left' } }}>
-        Grids Overview
+        Contests Overview
       </Typography>
 
       <TableContainer component={Paper}>
@@ -36,16 +36,16 @@ export default function GridsTable({ grids }: GridsTableProps) {
           </TableHead>
 
           <TableBody>
-            {grids.map((grid) => (
-              <TableRow key={grid.id}>
+            {contests.map((contest) => (
+              <TableRow key={contest.id}>
                 <TableCell>
-                  <MuiLink component={Link} to={`/grids/${grid.id}`} underline="hover">
-                    {grid.name}
+                  <MuiLink component={Link} to={`/contests/${contest.id}`} underline="hover">
+                    {contest.name}
                   </MuiLink>
                 </TableCell>
-                <TableCell>{grid.xLabels.join(', ')}</TableCell>
-                <TableCell>{grid.yLabels.join(', ')}</TableCell>
-                <TableCell>{grid.createdBy}</TableCell>
+                <TableCell>{contest.xLabels.join(', ')}</TableCell>
+                <TableCell>{contest.yLabels.join(', ')}</TableCell>
+                <TableCell>{contest.createdBy}</TableCell>
               </TableRow>
             ))}
           </TableBody>

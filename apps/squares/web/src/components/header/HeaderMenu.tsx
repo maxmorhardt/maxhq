@@ -1,7 +1,7 @@
+import AddIcon from '@mui/icons-material/Add';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LoginIcon from '@mui/icons-material/Login';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Divider } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -15,6 +15,7 @@ interface HeaderMenuProps {
   handleOpenNavMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseNavMenu: () => void;
   handleRegister: () => void;
+  handleCreateContest: () => void;
   anchorElNav: null | HTMLElement;
   pages: { name: string; icon: JSX.Element; navigate: string }[];
 }
@@ -23,6 +24,7 @@ export default function HeaderMenu({
   handleOpenNavMenu,
   handleCloseNavMenu,
   handleRegister,
+  handleCreateContest,
   anchorElNav,
   pages,
 }: HeaderMenuProps) {
@@ -43,22 +45,37 @@ export default function HeaderMenu({
         onClose={handleCloseNavMenu}
         sx={{ display: { xs: 'block', md: 'none' } }}
       >
-        {pages.map((page) => (
+        {auth.isAuthenticated &&
+          pages.map((page) => (
+            <MenuItem
+              key={page.name}
+              onClick={() => {
+                navigate(page.navigate);
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {page.icon}
+                <Typography>{page.name}</Typography>
+              </Box>
+            </MenuItem>
+          ))}
+
+        {/* Create Contest (Mobile) */}
+        {auth.isAuthenticated && (
           <MenuItem
-            key={page.name}
             onClick={() => {
-              navigate(page.navigate);
+              handleCreateContest();
+              handleCloseNavMenu();
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {page.icon}
-              <Typography>{page.name}</Typography>
+              <AddIcon fontSize="small" />
+              <Typography>Create Contest</Typography>
             </Box>
           </MenuItem>
-        ))}
+        )}
 
         {/* Mobile Login/Register */}
-        {!auth.isAuthenticated && <Divider />}
         {!auth.isAuthenticated && (
           <MenuItem
             onClick={() => {

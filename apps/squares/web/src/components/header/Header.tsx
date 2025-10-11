@@ -1,5 +1,5 @@
+import AddIcon from '@mui/icons-material/Add';
 import GridViewIcon from '@mui/icons-material/GridView';
-import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AppBar from '@mui/material/AppBar';
@@ -11,13 +11,11 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
+import CreateContest from '../contest/CreateContest';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 
-const pages = [
-  { name: 'Home', icon: <HomeIcon fontSize="small" />, navigate: '' },
-  { name: 'Grids', icon: <GridViewIcon />, navigate: '/grids' },
-];
+const pages = [{ name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' }];
 
 const settings = [
   { name: 'Account', icon: <SettingsIcon fontSize="small" /> },
@@ -30,6 +28,7 @@ export default function Header() {
 
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const [createContestOpen, setCreateContestOpen] = useState(false);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) =>
     setAnchorElNav(event.currentTarget);
@@ -55,90 +54,149 @@ export default function Header() {
     handleCloseUserMenu();
   };
 
+  const handleCreateContest = () => {
+    if (auth.isAuthenticated) {
+      setCreateContestOpen(true);
+    } else {
+      auth.signinRedirect();
+    }
+  };
+
+  const handleCreateContestClose = (id: string) => {
+    setCreateContestOpen(false);
+    if (id) {
+      navigate(`/contests/${id}`);
+    }
+  };
+
   return (
-    <AppBar position="static">
-      <Container maxWidth="xl">
-        <Toolbar disableGutters>
-          {/* Desktop logo */}
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, mr: 2 }}>
-            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
-          </Box>
+    <>
+      <AppBar position="static">
+        <Container maxWidth="xl">
+          <Toolbar disableGutters>
+            {/* Desktop logo */}
+            <Box
+              sx={{ display: { xs: 'none', md: 'flex' }, mr: 2, cursor: 'pointer' }}
+              onClick={() => navigate('/')}
+            >
+              <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
+            </Box>
 
-          <Typography
-            variant="h6"
-            noWrap
-            sx={{
-              mr: 2,
-              display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.1em',
-              color: 'inherit',
-              textDecoration: 'none',
-            }}
-          >
-            Squares
-          </Typography>
+            <Typography
+              variant="h6"
+              noWrap
+              onClick={() => navigate('/')}
+              sx={{
+                mr: 2,
+                display: { xs: 'none', md: 'flex' },
+                fontFamily: 'monospace',
+                fontWeight: 700,
+                letterSpacing: '.1em',
+                color: 'inherit',
+                textDecoration: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Squares
+            </Typography>
 
-          {/* Mobile menu */}
-          <HeaderMenu
-            handleOpenNavMenu={handleOpenNavMenu}
-            handleCloseNavMenu={handleCloseNavMenu}
-            handleRegister={handleRegister}
-            anchorElNav={anchorElNav}
-            pages={pages}
-          />
+            {/* Mobile menu */}
+            <HeaderMenu
+              handleOpenNavMenu={handleOpenNavMenu}
+              handleCloseNavMenu={handleCloseNavMenu}
+              handleRegister={handleRegister}
+              handleCreateContest={handleCreateContest}
+              anchorElNav={anchorElNav}
+              pages={pages}
+            />
 
-          {/* Mobile logo */}
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, mr: 2 }}>
-            <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
-          </Box>
+            {/* Mobile logo */}
+            <Box
+              sx={{ display: { xs: 'flex', md: 'none' }, mr: 2, cursor: 'pointer' }}
+              onClick={() => navigate('/')}
+            >
+              <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
+            </Box>
 
-          <Typography
-            variant="h5"
-            noWrap
-            sx={{
-              mr: 2,
-              display: { xs: 'flex', md: 'none' },
-              flexGrow: 1,
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.1em',
-              color: 'inherit',
-              textDecoration: 'none',
-            }}
-          >
-            Squares
-          </Typography>
+            <Typography
+              variant="h5"
+              noWrap
+              onClick={() => navigate('/')}
+              sx={{
+                mr: 2,
+                display: { xs: 'flex', md: 'none' },
+                flexGrow: 1,
+                fontFamily: 'monospace',
+                fontWeight: 700,
+                letterSpacing: '.1em',
+                color: 'inherit',
+                textDecoration: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Squares
+            </Typography>
 
-          {/* Page links (desktop) */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
+            {/* Page links (desktop) */}
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {auth.isAuthenticated &&
+                pages.map((page) => (
+                  <Button
+                    key={page.name}
+                    onClick={() => {
+                      handleCloseNavMenu();
+                      navigate(page.navigate);
+                    }}
+                    sx={{
+                      my: 2,
+                      mx: 1,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    {page.icon}
+                    {page.name}
+                  </Button>
+                ))}
+            </Box>
+
+            {/* Create Contest Button (desktop) */}
+            {auth.isAuthenticated && (
               <Button
-                key={page.name}
-                onClick={() => {
-                  handleCloseNavMenu();
-                  navigate(page.navigate);
+                variant="contained"
+                onClick={handleCreateContest}
+                sx={{
+                  mr: 2,
+                  display: { xs: 'none', md: 'flex' },
+                  alignItems: 'center',
+                  gap: 1,
+                  backgroundColor: 'secondary.main',
+                  '&:hover': {
+                    backgroundColor: 'secondary.dark',
+                  },
                 }}
-                sx={{ my: 2, mx: 1, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}
               >
-                {page.icon}
-                {page.name}
+                <AddIcon fontSize="small" />
+                Create Contest
               </Button>
-            ))}
-          </Box>
+            )}
 
-          {/* Auth section */}
-          <HeaderAuth
-            handleOpenUserMenu={handleOpenUserMenu}
-            handleCloseUserMenu={handleCloseUserMenu}
-            handleRegister={handleRegister}
-            handleSettingClick={handleSettingClick}
-            anchorElUser={anchorElUser}
-            settings={settings}
-          />
-        </Toolbar>
-      </Container>
-    </AppBar>
+            {/* Auth section */}
+            <HeaderAuth
+              handleOpenUserMenu={handleOpenUserMenu}
+              handleCloseUserMenu={handleCloseUserMenu}
+              handleRegister={handleRegister}
+              handleSettingClick={handleSettingClick}
+              anchorElUser={anchorElUser}
+              settings={settings}
+            />
+          </Toolbar>
+        </Container>
+      </AppBar>
+
+      <CreateContest open={createContestOpen} onClose={handleCreateContestClose} />
+    </>
   );
 }

@@ -1,18 +1,18 @@
-export interface Grid {
+export interface Contest {
   id: string;
   name: string;
   xLabels: number[];
   yLabels: number[];
-  cells: GridCell[];
+  squares: Square[];
   createdAt: string;
   updatedAt: string;
   createdBy: string;
   updatedBy: string;
 }
 
-export interface GridCell {
+export interface Square {
   id: string;
-  gridId: string;
+  contestId: string;
   row: number;
   col: number;
   value: string;
@@ -21,10 +21,10 @@ export interface GridCell {
   updatedAt: string;
 }
 
-export interface GridChannelResponse {
+export interface ContestChannelResponse {
   type: string;
-  gridId: string;
-  cellId: string;
+  contestId: string;
+  squareId: string;
   value: string;
   updatedBy: string;
   timestamp: string;

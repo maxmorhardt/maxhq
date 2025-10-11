@@ -10,41 +10,41 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectCellLoading, selectCurrentCell } from '../../features/grids/gridSelectors';
-import { updateCell } from '../../features/grids/gridThunks';
+import { selectCurrentSquare, selectSquareLoading } from '../../features/contests/contestSelectors';
+import { updateSquare } from '../../features/contests/contestThunks';
 import type { APIError } from '../../types/error';
 
-interface EditCellProps {
+interface EditSquareProps {
   open: boolean;
   onClose: () => void;
 }
 
-export default function EditCell({ open, onClose }: EditCellProps) {
+export default function EditSquare({ open, onClose }: EditSquareProps) {
   const dispatch = useAppDispatch();
 
-  const currentCell = useAppSelector(selectCurrentCell);
-  const loading = useAppSelector(selectCellLoading);
+  const currentSquare = useAppSelector(selectCurrentSquare);
+  const loading = useAppSelector(selectSquareLoading);
 
   const [error, setError] = useState('');
-  const [value, setValue] = useState(currentCell?.value || '');
+  const [value, setValue] = useState(currentSquare?.value || '');
 
   useEffect(() => {
-    setValue(currentCell?.value || '');
+    setValue(currentSquare?.value || '');
     setError('');
-  }, [currentCell]);
+  }, [currentSquare]);
 
-  if (!currentCell) {
+  if (!currentSquare) {
     return;
   }
 
   const handleSave = async () => {
     if (!value.trim()) {
-      setError('Cell value is required');
+      setError('Square value is required');
       return;
     }
 
     try {
-      await dispatch(updateCell({ id: currentCell.id, value: value })).unwrap();
+      await dispatch(updateSquare({ id: currentSquare.id, value: value })).unwrap();
       onClose();
     } catch (err: unknown) {
       const apiError = err as APIError;
@@ -54,7 +54,7 @@ export default function EditCell({ open, onClose }: EditCellProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 20, fontWeight: 'bold' }}>Edit Cell</DialogTitle>
+      <DialogTitle sx={{ fontSize: 20, fontWeight: 'bold' }}>Edit Square</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TextField

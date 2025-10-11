@@ -8,8 +8,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import { store } from './app/store';
 import './index.css';
-import GridPage from './pages/grid/GridPage';
-import GridsPage from './pages/grids/GridsPage';
+import ContestPage from './pages/contest/ContestPage';
+import ContestsPage from './pages/contests/ContestsPage';
 import LandingPage from './pages/landing/LandingPage';
 
 const darkTheme = createTheme({
@@ -35,8 +35,8 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <LandingPage /> },
-      { path: 'grids', element: <GridsPage /> },
-      { path: 'grids/:id', element: <GridPage /> },
+      { path: 'contests', element: <ContestsPage /> },
+      { path: 'contests/:id', element: <ContestPage /> },
     ],
   },
 ]);
