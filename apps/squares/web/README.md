@@ -1,69 +1,47 @@
-# React + TypeScript + Vite
+# Squares Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+![Material-UI](https://img.shields.io/badge/MUI-%230081CB.svg?style=for-the-badge&logo=mui&logoColor=white)
+![Redux](https://img.shields.io/badge/redux-%23593d88.svg?style=for-the-badge&logo=redux&logoColor=white)
+![WebSocket](https://img.shields.io/badge/websocket-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
 
-Currently, two official plugins are available:
+## Overview
+A real-time collaborative grid application frontend built with React and TypeScript. Features OIDC authentication, Material-UI components, and WebSocket connections for real-time collaboration across multiple users.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
+- **React 19** with TypeScript for modern frontend development
+- **OIDC Authentication** with react-oidc-context
+- **Material-UI Components** for consistent design system
+- **Redux Toolkit** for state management
+- **Real-time Collaboration** via WebSocket connections
+- **Responsive Design** with mobile-first approach
+- **Hot Module Replacement** with Vite for fast development
+- **ESLint & TypeScript** for code quality and type safety
 
-## Expanding the ESLint configuration
+## Architecture
+The application uses WebSocket connections to enable real-time collaborative editing. When a user updates a cell, the change is immediately sent to the backend via HTTP request and then broadcasted to all connected clients through WebSocket messages, ensuring synchronized grid state across all users.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Dependencies
+This application requires the following services to be running:
+- **Squares API Backend** for data persistence and WebSocket handling
+- **OIDC Provider** (e.g., Keycloak) for authentication
+- **Modern Web Browser** with WebSocket support
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Development
+1. Install dependencies: `npm install`
+2. Start the development server: `npm run dev`
+3. Open browser to `http://localhost:3000`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+## Production Build
+Build the application for production deployment:
+```bash
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+## Deployment
+The application includes Docker configuration and Helm charts in the `helm/` directory for Kubernetes deployment. Configure your environment-specific values and deploy with:
+```bash
+helm install squares ./helm/squares
 ```
