@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { User } from 'oidc-client-ts';
 import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 
@@ -9,39 +10,18 @@ const api = axios.create({
   timeout: 10000,
 });
 
-export const setupAxiosInterceptors = (auth: ReturnType<typeof useAuth>) => {
+export const setupAxiosInterceptors = (user: User | null | undefined) => {
+  api.interceptors.request.clear();
+  
   api.interceptors.request.use(
     (config) => {
-      if (auth.user?.access_token) {
-        config.headers.Authorization = `Bearer ${auth.user.access_token}`;
+      if (user?.access_token) {
+        config.headers.Authorization = `Bearer ${user.access_token}`;
       }
 
       return config;
     },
     (error) => Promise.reject(error)
-  );
-
-  api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
-
-        if (auth.isAuthenticated) {
-          try {
-            const refreshedUser = await auth.signinSilent?.();
-            if (refreshedUser?.access_token) {
-              originalRequest.headers.Authorization = `Bearer ${refreshedUser.access_token}`;
-              return api(originalRequest);
-            }
-          } catch {
-            auth.signinRedirect();
-          }
-        }
-      }
-      return Promise.reject(error);
-    }
   );
 };
 
@@ -50,13 +30,11 @@ export const useAxiosAuth = () => {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!ready) {
-      setupAxiosInterceptors(auth);
-      setReady(true);
-    }
-  }, [auth, ready]);
+    setupAxiosInterceptors(auth.user);
+    setReady(!!auth.user?.access_token || !auth.isAuthenticated);
+  }, [auth.user, auth.isAuthenticated]);
 
-  return ready;
+  return ready && !auth.isLoading;
 };
 
 export default api;

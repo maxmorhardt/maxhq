@@ -1,4 +1,5 @@
 import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
+import { WebStorageStateStore } from 'oidc-client-ts';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AuthProvider, type AuthProviderProps } from 'react-oidc-context';
@@ -21,6 +22,8 @@ const oidcConfig: AuthProviderProps = {
   authority: 'https://auth.maxstash.io/realms/maxstash',
   client_id: 'squares',
   redirect_uri: import.meta.env.PROD ? 'https://squares.maxstash.io' : 'http://localhost:3000',
+	automaticSilentRenew: true,
+  userStore: new WebStorageStateStore({ store: window.localStorage }),
   onSigninCallback: () => {
     window.history.replaceState({}, document.title, window.location.pathname);
   },

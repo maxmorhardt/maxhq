@@ -29,7 +29,7 @@ export default function GridPage() {
     }
   }, [auth.isAuthenticated, isInterceptorReady, id, dispatch]);
 
-  if (loading) {
+  if (!isInterceptorReady || loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
         <CircularProgress />
