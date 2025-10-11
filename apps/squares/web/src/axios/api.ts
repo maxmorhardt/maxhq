@@ -12,7 +12,7 @@ const api = axios.create({
 
 export const setupAxiosInterceptors = (user: User | null | undefined) => {
   api.interceptors.request.clear();
-  
+
   api.interceptors.request.use(
     (config) => {
       if (user?.access_token) {

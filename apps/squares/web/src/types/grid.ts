@@ -20,3 +20,12 @@ export interface GridCell {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface GridChannelResponse {
+  type: string;
+  gridId: string;
+  cellId: string;
+  value: string;
+  updatedBy: string;
+  timestamp: string;
+}
