@@ -32,6 +32,16 @@ const gridSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+    updateCellFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
+      if (!state.currentGrid) return;
+
+      const { id, value } = action.payload;
+      const cellIndex = state.currentGrid.cells.findIndex((cell) => cell.id === id);
+
+      if (cellIndex !== -1) {
+        state.currentGrid.cells[cellIndex].value = value;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -109,4 +119,5 @@ const gridSlice = createSlice({
   },
 });
 
+export const { clearError, updateCellFromWebSocket } = gridSlice.actions;
 export const gridReducer = gridSlice.reducer;

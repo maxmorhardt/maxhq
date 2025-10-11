@@ -22,7 +22,7 @@ const oidcConfig: AuthProviderProps = {
   authority: 'https://auth.maxstash.io/realms/maxstash',
   client_id: 'squares',
   redirect_uri: import.meta.env.PROD ? 'https://squares.maxstash.io' : 'http://localhost:3000',
-	automaticSilentRenew: true,
+  automaticSilentRenew: true,
   userStore: new WebStorageStateStore({ store: window.localStorage }),
   onSigninCallback: () => {
     window.history.replaceState({}, document.title, window.location.pathname);
