@@ -10,7 +10,9 @@ export default function LandingHero() {
     if (auth.isAuthenticated) {
       navigate('/contests/create');
     } else {
-      auth.signinRedirect();
+      auth.signinRedirect({
+        redirect_uri: `${window.location.origin}/contests/create`,
+      });
     }
   };
 

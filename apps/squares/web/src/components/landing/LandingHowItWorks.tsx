@@ -66,7 +66,13 @@ export default function LandingHowItWorks() {
           Get your squares game running in 4 simple steps
         </Typography>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: { xs: 1, sm: 1, md: 3 } }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: { xs: 1, sm: 1, md: 3 },
+          }}
+        >
           {howItWorksSteps.map((step, index) => (
             <HowItWorksStep
               key={index}
