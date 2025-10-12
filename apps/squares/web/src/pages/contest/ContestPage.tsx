@@ -52,7 +52,6 @@ export default function ContestPage() {
       },
       onContestUpdate: (message) => {
         if (
-          message.squareId &&
           message.contestId === currentContest?.id &&
           message.value !== undefined
         ) {

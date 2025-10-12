@@ -39,19 +39,13 @@ const contestSlice = createSlice({
       state,
       action: PayloadAction<{ xLabels?: number[]; yLabels?: number[] }>
     ) {
-      if (!state.currentContest) {
+			const { xLabels, yLabels } = action.payload;
+      if (!state.currentContest || xLabels === undefined || yLabels === undefined) {
         return;
       }
 
-      const { xLabels, yLabels } = action.payload;
-
-      if (xLabels !== undefined) {
-        state.currentContest.xLabels = xLabels;
-      }
-
-      if (yLabels !== undefined) {
-        state.currentContest.yLabels = yLabels;
-      }
+			state.currentContest.xLabels = xLabels;
+			state.currentContest.yLabels = yLabels;
     },
     updateSquareFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
       if (!state.currentContest) {
@@ -78,7 +72,7 @@ const contestSlice = createSlice({
       })
       .addCase(fetchContestsByUser.rejected, (state, action) => {
         state.contestLoading = false;
-        state.error = action.payload?.message || 'Error fetching contests';
+        state.error = action.payload?.message ?? 'Error fetching contests';
       });
 
     builder
@@ -93,7 +87,7 @@ const contestSlice = createSlice({
       })
       .addCase(fetchContestById.rejected, (state, action) => {
         state.contestLoading = false;
-        state.error = action.payload?.message || 'Error fetching contest';
+        state.error = action.payload?.message ?? 'Error fetching contest';
       });
 
     builder
@@ -107,7 +101,7 @@ const contestSlice = createSlice({
       })
       .addCase(createContest.rejected, (state, action) => {
         state.contestLoading = false;
-        state.error = action.payload?.message || 'Error creating contest';
+        state.error = action.payload?.message ?? 'Error creating contest';
       });
 
     builder
@@ -135,7 +129,7 @@ const contestSlice = createSlice({
       })
       .addCase(updateSquare.rejected, (state, action) => {
         state.squareLoading = false;
-        state.error = action.payload?.message || 'Error updating square';
+        state.error = action.payload?.message ?? 'Error updating square';
       });
 
     builder
@@ -151,7 +145,7 @@ const contestSlice = createSlice({
         state.currentContest.yLabels = action.payload.yLabels;
       })
       .addCase(randomizeLabels.rejected, (state, action) => {
-        state.error = action.payload?.message || 'Error randomizing labels';
+        state.error = action.payload?.message ?? 'Error randomizing labels';
       });
   },
 });
