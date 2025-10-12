@@ -18,8 +18,6 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
 
   try {
     const message: ContestChannelResponse = JSON.parse(eventParams.lastMessage.data);
-    console.log(message);
-
     switch (message.type) {
       case 'square_update':
         eventParams.onSquareUpdate(message);
@@ -33,6 +31,9 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
         break;
 
       case 'disconnect':
+        if (eventParams.onDisconnect) {
+          eventParams.onDisconnect(message);
+        }
         break;
 
       case 'keepalive':

@@ -1,5 +1,5 @@
 import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
@@ -23,16 +23,29 @@ export default function ContestPage() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
+  const lastProcessedMessageRef = useRef<string | null>(null);
 
   const { id } = useParams<{ id: string }>();
 
-  const { lastMessage, readyState } = useWebSocket(getSocketUrl(id, auth), {
-    protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
-    reconnectAttempts: auth.isAuthenticated ? 5 : 0,
-    reconnectInterval: 5000,
-  });
+  const socketUrl = getSocketUrl(id, auth);
+  const shouldConnect = Boolean(id && auth.user?.access_token);
 
-	const isConnected = readyState === ReadyState.OPEN;
+  const webSocketOptions = useMemo(
+    () => ({
+      protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
+      reconnectAttempts: 5,
+      reconnectInterval: 5000,
+      shouldReconnect: () => shouldConnect,
+    }),
+    [auth.user?.access_token, shouldConnect]
+  );
+
+  const { lastMessage, readyState } = useWebSocket(
+    shouldConnect ? socketUrl : null,
+    webSocketOptions
+  );
+
+  const isConnected = readyState === ReadyState.OPEN;
   const isConnecting = readyState === ReadyState.CONNECTING;
 
   const loading = useAppSelector(selectContestLoading);
@@ -40,6 +53,15 @@ export default function ContestPage() {
   const currentContest = useAppSelector(selectCurrentContest);
 
   useEffect(() => {
+    if (!lastMessage?.data) {
+      return;
+    }
+
+    if (lastProcessedMessageRef.current === lastMessage.data) {
+      return;
+    }
+
+    lastProcessedMessageRef.current = lastMessage.data;
     contestSocketEventHandler({
       lastMessage,
       onSquareUpdate: (message) => {
@@ -70,8 +92,13 @@ export default function ContestPage() {
           );
         }
       },
+      onDisconnect: (message) => {
+        if (message.contestId === currentContest?.id) {
+          showToast('Disconnected from contest updates', 'warning');
+        }
+      },
     });
-  }, [lastMessage, dispatch, currentContest?.id]);
+  }, [lastMessage, dispatch, currentContest?.id, showToast]);
 
   useEffect(() => {
     if (!id) {
@@ -88,12 +115,16 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
-	const handleRandomizeLabels = async () => {
+  const handleRandomizeLabels = async () => {
     if (!id) {
       return;
     }
 
-    dispatch(randomizeLabels(id));
+    await dispatch(randomizeLabels(id))
+      .unwrap()
+      .then(() => {
+        showToast('Labels randomized successfully', 'success');
+      });
   };
 
   const handleChooseWinner = () => {
