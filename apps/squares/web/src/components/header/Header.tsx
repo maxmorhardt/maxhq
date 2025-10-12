@@ -1,7 +1,8 @@
-import AddIcon from '@mui/icons-material/Add';
 import GridViewIcon from '@mui/icons-material/GridView';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
+import InfoIcon from '@mui/icons-material/Info';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -15,7 +16,11 @@ import CreateContest from '../contest/CreateContest';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 
-const pages = [{ name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' }];
+const pages = [
+  { name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' },
+  { name: 'Learn More', icon: <InfoIcon />, navigate: '/learn-more' },
+  { name: 'Contact', icon: <ContactMailIcon />, navigate: '/contact' },
+];
 
 const settings = [
   { name: 'Account', icon: <SettingsIcon fontSize="small" /> },
@@ -52,14 +57,6 @@ export default function Header() {
     }
 
     handleCloseUserMenu();
-  };
-
-  const handleCreateContest = () => {
-    if (auth.isAuthenticated) {
-      setCreateContestOpen(true);
-    } else {
-      auth.signinRedirect();
-    }
   };
 
   const handleCreateContestClose = (id: string) => {
@@ -106,7 +103,6 @@ export default function Header() {
               handleOpenNavMenu={handleOpenNavMenu}
               handleCloseNavMenu={handleCloseNavMenu}
               handleRegister={handleRegister}
-              handleCreateContest={handleCreateContest}
               anchorElNav={anchorElNav}
               pages={pages}
             />
@@ -140,8 +136,12 @@ export default function Header() {
 
             {/* Page links (desktop) */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-              {auth.isAuthenticated &&
-                pages.map((page) => (
+              {pages.map((page) => {
+                // Show Contests only when authenticated, but Learn More and Contact for everyone
+                if (page.name === 'Contests' && !auth.isAuthenticated) {
+                  return null;
+                }
+                return (
                   <Button
                     key={page.name}
                     onClick={() => {
@@ -160,26 +160,9 @@ export default function Header() {
                     {page.icon}
                     {page.name}
                   </Button>
-                ))}
+                );
+              })}
             </Box>
-
-            {/* Create Contest Button (desktop) */}
-            {auth.isAuthenticated && (
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleCreateContest}
-                sx={{
-                  mr: 2,
-                  display: { xs: 'none', md: 'flex' },
-                  fontSize: '0.6rem',
-                  padding: '4px 8px',
-                }}
-              >
-                <AddIcon sx={{ mr: 0.5 }} fontSize="small" />
-                Create Contest
-              </Button>
-            )}
 
             {/* Auth section */}
             <HeaderAuth

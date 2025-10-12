@@ -11,6 +11,8 @@ import './index.css';
 import ContestPage from './pages/contest/ContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import LandingPage from './pages/landing/LandingPage';
+import ContactPage from './pages/contact/ContactPage';
+import LearnMorePage from './pages/learn/LearnMorePage';
 
 const darkTheme = createTheme({
   palette: {
@@ -37,6 +39,8 @@ const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: 'contests', element: <ContestsPage /> },
       { path: 'contests/:id', element: <ContestPage /> },
+      { path: 'contact', element: <ContactPage /> },
+      { path: 'learn-more', element: <LearnMorePage /> },
     ],
   },
 ]);

@@ -1,4 +1,3 @@
-import AddIcon from '@mui/icons-material/Add';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LoginIcon from '@mui/icons-material/Login';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -15,7 +14,6 @@ interface HeaderMenuProps {
   handleOpenNavMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseNavMenu: () => void;
   handleRegister: () => void;
-  handleCreateContest: () => void;
   anchorElNav: null | HTMLElement;
   pages: { name: string; icon: JSX.Element; navigate: string }[];
 }
@@ -24,7 +22,6 @@ export default function HeaderMenu({
   handleOpenNavMenu,
   handleCloseNavMenu,
   handleRegister,
-  handleCreateContest,
   anchorElNav,
   pages,
 }: HeaderMenuProps) {
@@ -59,21 +56,6 @@ export default function HeaderMenu({
               </Box>
             </MenuItem>
           ))}
-
-        {/* Create Contest (Mobile) */}
-        {auth.isAuthenticated && (
-          <MenuItem
-            onClick={() => {
-              handleCreateContest();
-              handleCloseNavMenu();
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AddIcon fontSize="small" />
-              <Typography>Create Contest</Typography>
-            </Box>
-          </MenuItem>
-        )}
 
         {/* Mobile Login/Register */}
         {!auth.isAuthenticated && (
