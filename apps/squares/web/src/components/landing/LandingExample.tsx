@@ -1,12 +1,12 @@
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import LandingSectionContainer from './LandingSectionContainer';
+import ExampleCard from './ExampleCard';
 
 export default function LandingExample() {
   return (
-    <LandingSectionContainer>
+    <LandingSectionContainer variant="lightBlue">
       <Typography
         variant="h3"
-        component="h3"
         gutterBottom
         sx={{
           textAlign: 'center',
@@ -17,6 +17,7 @@ export default function LandingExample() {
       >
         See It In Action
       </Typography>
+
       <Typography
         variant="h6"
         sx={{
@@ -40,57 +41,20 @@ export default function LandingExample() {
             mb: 4,
           }}
         >
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              borderRadius: 3,
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-            }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'white' }}>
-              🏈 Game Situation
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1, color: 'rgba(255,255,255,0.9)' }}>
+          <ExampleCard title="🏈 Game Situation">
+            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)' }}>
               End of 1st Quarter
             </Typography>
-          </Paper>
+          </ExampleCard>
 
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              borderRadius: 3,
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-            }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'white' }}>
-              📊 Current Score
-            </Typography>
+          <ExampleCard title="📊 Current Score">
             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)' }}>
               Home Team <strong>14</strong> - Away Team <strong>7</strong>
             </Typography>
-          </Paper>
+          </ExampleCard>
         </Box>
 
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            backgroundColor: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(10px)',
-            border: '2px solid rgba(255,255,255,0.3)',
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'white' }}>
-            🎯 Winning Square
-          </Typography>
+        <ExampleCard title="🎯 Winning Square" isCentered>
           <Typography variant="body1" sx={{ mb: 2, color: 'rgba(255,255,255,0.9)' }}>
             Last digits: <strong>4</strong> (Home) × <strong>7</strong> (Away)
           </Typography>
@@ -104,7 +68,7 @@ export default function LandingExample() {
           >
             Square (4,7) Wins! 🏆
           </Typography>
-        </Paper>
+        </ExampleCard>
       </Box>
     </LandingSectionContainer>
   );

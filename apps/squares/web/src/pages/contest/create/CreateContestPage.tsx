@@ -10,7 +10,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { EmojiEvents, SportsSoccer, Groups, Add, ArrowBack } from '@mui/icons-material';
+import { EmojiEvents, SportsSoccer, Groups, ArrowBack } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
@@ -62,7 +62,6 @@ export default function CreateContestPage() {
         })
       ).unwrap();
 
-      // Navigate to the new contest
       navigate(`/contests/${contest.id}`);
     } catch (err: unknown) {
       const apiError = err as APIError;
@@ -74,23 +73,6 @@ export default function CreateContestPage() {
     <Container maxWidth="lg" sx={{ py: 8 }}>
       {/* Header */}
       <Box sx={{ textAlign: 'center', mb: 8 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <Add sx={{ fontSize: 40, color: 'white' }} />
-          </Box>
-        </Box>
         <Typography
           variant="h2"
           sx={{

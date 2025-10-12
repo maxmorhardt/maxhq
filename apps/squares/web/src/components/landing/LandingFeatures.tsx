@@ -3,7 +3,7 @@ import LandingSectionContainer from './LandingSectionContainer';
 
 export default function LandingFeatures() {
   return (
-    <LandingSectionContainer backgroundGradient='linear-gradient(135deg, #0f1419 0%, #1a2332 100%)'>
+    <LandingSectionContainer variant="black">
       <Typography
         variant="h3"
         component="h2"

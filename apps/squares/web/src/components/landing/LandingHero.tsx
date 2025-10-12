@@ -1,6 +1,7 @@
 import { Box, Button, Container, Typography } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
+import { gradients } from '../../types/gradients';
 
 export default function LandingHero() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function LandingHero() {
   return (
     <Box
       sx={{
-        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%)',
+        background: gradients['lightBlue'],
         py: { xs: 10, md: 16 },
       }}
     >

@@ -18,13 +18,13 @@ export default function LandingCallToAction() {
   };
 
   return (
-    <LandingSectionContainer>
+    <LandingSectionContainer variant="lightBlue">
       <Typography
         variant="h3"
         gutterBottom
         sx={{
           fontWeight: 700,
-          color: 'text.primary',
+          color: 'white',
           mb: 2,
           textShadow: '0 2px 4px rgba(0,0,0,0.3)',
         }}
