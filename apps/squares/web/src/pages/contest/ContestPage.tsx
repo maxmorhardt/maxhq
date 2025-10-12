@@ -10,7 +10,7 @@ import {
   selectContestLoading,
   selectCurrentContest,
 } from '../../features/contests/contestSelectors';
-import { fetchContestById } from '../../features/contests/contestThunks';
+import { fetchContestById, randomizeLabels } from '../../features/contests/contestThunks';
 import { contestSocketEventHandler, getSocketUrl } from '../../service/wsService';
 import {
   updateContestFromWebSocket,
@@ -71,7 +71,11 @@ export default function ContestPage() {
   const isConnecting = readyState === ReadyState.CONNECTING;
 
   const handleRandomizeLabels = () => {
-    console.log('Randomize labels clicked');
+		if (!id) {
+			return;
+		}
+		
+    dispatch(randomizeLabels(id));
   };
 
   const handleChooseWinner = () => {

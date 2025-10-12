@@ -3,6 +3,7 @@ import {
   createContestByName,
   getContestById,
   getContestsByUser,
+  randomizeContestLabels,
   updateSquareValueById,
 } from '../../service/contestService';
 import type { Contest, CreateContestRequest, Square } from '../../types/contest';
@@ -57,3 +58,15 @@ export const updateSquare = createAsyncThunk<
     return rejectWithValue(err as APIError);
   }
 });
+
+export const randomizeLabels = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
+  'contests/randomizeLabels',
+  async (id, { rejectWithValue }) => {
+    try {
+      const contest = await randomizeContestLabels(id);
+      return contest;
+    } catch (err: unknown) {
+      return rejectWithValue(err as APIError);
+    }
+  }
+);

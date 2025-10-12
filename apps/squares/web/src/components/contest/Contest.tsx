@@ -20,11 +20,13 @@ export default function Contest() {
   const numCols = contest.xLabels.length;
 
   const contestMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
-  contest.squares.forEach((square) => {
-    if (square.row < numRows && square.col < numCols) {
-      contestMatrix[square.row][square.col] = square.value;
-    }
-  });
+	if (contest.squares) {
+		contest.squares.forEach((square) => {
+			if (square.row < numRows && square.col < numCols) {
+				contestMatrix[square.row][square.col] = square.value;
+			}
+		});
+	}
 
   const handleSquareClick = async (row: number, col: number) => {
     const square = contest.squares.find((s) => s.row === row && s.col === col);

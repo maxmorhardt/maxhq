@@ -5,6 +5,7 @@ import {
   createContest,
   fetchContestById,
   fetchContestsByUser,
+  randomizeLabels,
   updateSquare,
 } from './contestThunks';
 
@@ -38,7 +39,9 @@ const contestSlice = createSlice({
       state,
       action: PayloadAction<{ xLabels?: number[]; yLabels?: number[] }>
     ) {
-      if (!state.currentContest) return;
+      if (!state.currentContest) {
+				return;
+			}
 
       const { xLabels, yLabels } = action.payload;
 
@@ -51,7 +54,9 @@ const contestSlice = createSlice({
       }
     },
     updateSquareFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
-      if (!state.currentContest) return;
+      if (!state.currentContest) {
+				return;
+			}
 
       const { id, value } = action.payload;
       const squareIndex = state.currentContest.squares.findIndex((square) => square.id === id);
@@ -114,7 +119,9 @@ const contestSlice = createSlice({
         state.squareLoading = false;
         const updatedSquare = action.payload;
 
-        if (!state.currentContest) return;
+        if (!state.currentContest) {
+					return;
+				}
 
         const index = state.currentContest.squares.findIndex(
           (s) => s.row === updatedSquare.row && s.col === updatedSquare.col
@@ -129,6 +136,17 @@ const contestSlice = createSlice({
       .addCase(updateSquare.rejected, (state, action) => {
         state.squareLoading = false;
         state.error = action.payload?.message || 'Error updating square';
+      });
+
+    builder
+      .addCase(randomizeLabels.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(randomizeLabels.fulfilled, (state, action: PayloadAction<Contest>) => {
+        state.currentContest = action.payload;
+      })
+      .addCase(randomizeLabels.rejected, (state, action) => {
+        state.error = action.payload?.message || 'Error randomizing labels';
       });
   },
 });

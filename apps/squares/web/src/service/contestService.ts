@@ -37,3 +37,12 @@ export async function updateSquareValueById(id: string, value: string): Promise<
     throw handleError(err);
   }
 }
+
+export async function randomizeContestLabels(id: string): Promise<Contest> {
+  try {
+    const res = await api.post<Contest>(`/contests/${id}/randomize-labels`);
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
