@@ -3,11 +3,19 @@ export interface Contest {
   name: string;
   xLabels: number[];
   yLabels: number[];
+  homeTeam?: string;
+  awayTeam?: string;
   squares: Square[];
   createdAt: string;
   updatedAt: string;
   createdBy: string;
   updatedBy: string;
+}
+
+export interface CreateContestRequest {
+  name: string;
+  homeTeam?: string;
+  awayTeam?: string;
 }
 
 export interface Square {

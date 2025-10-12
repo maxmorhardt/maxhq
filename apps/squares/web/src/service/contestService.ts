@@ -1,5 +1,5 @@
 import api from '../axios/api';
-import type { Contest, Square } from '../types/contest';
+import type { Contest, CreateContestRequest, Square } from '../types/contest';
 import { handleError } from './handleError';
 
 export async function getContestsByUser(user: string): Promise<Contest[]> {
@@ -20,9 +20,9 @@ export async function getContestById(id: string): Promise<Contest> {
   }
 }
 
-export async function createContestByName(name: string) {
+export async function createContestByName(request: CreateContestRequest) {
   try {
-    const res = await api.post('/contests', { name: name });
+    const res = await api.post('/contests', request);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -31,7 +31,7 @@ export async function createContestByName(name: string) {
 
 export async function updateSquareValueById(id: string, value: string): Promise<Square> {
   try {
-    const res = await api.patch<Square>(`/contests/square/${id}`, { value: value });
+    const res = await api.post<Square>(`/contests/square/${id}`, { value: value });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

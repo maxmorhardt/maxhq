@@ -29,6 +29,8 @@ export default function CreateContest({ open, onClose }: CreateContestProps) {
   const errorMessage = useAppSelector(selectContestError);
 
   const [name, setName] = useState('');
+  const [homeTeam, setHomeTeam] = useState('');
+  const [awayTeam, setAwayTeam] = useState('');
   const [error, setError] = useState('');
 
   const handleCreate = async () => {
@@ -45,7 +47,13 @@ export default function CreateContest({ open, onClose }: CreateContestProps) {
     setError('');
 
     try {
-      const contest = await dispatch(createContest(name)).unwrap();
+      const contest = await dispatch(
+        createContest({
+          name: name.trim(),
+          homeTeam: homeTeam.trim() || undefined,
+          awayTeam: awayTeam.trim() || undefined,
+        })
+      ).unwrap();
       onClose(contest.id);
     } catch (err: unknown) {
       const apiError = err as APIError;
@@ -54,7 +62,7 @@ export default function CreateContest({ open, onClose }: CreateContestProps) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={() => onClose('')} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ fontSize: 24, fontWeight: 'bold' }}>Create New Contest</DialogTitle>
       <DialogContent>
         {!auth.isAuthenticated && (
@@ -71,6 +79,25 @@ export default function CreateContest({ open, onClose }: CreateContestProps) {
             fullWidth
             autoFocus
             disabled={loading}
+            required
+          />
+
+          <TextField
+            label="Home Team (Optional)"
+            value={homeTeam}
+            onChange={(e) => setHomeTeam(e.target.value)}
+            fullWidth
+            disabled={loading}
+            placeholder="e.g., Chiefs"
+          />
+
+          <TextField
+            label="Away Team (Optional)"
+            value={awayTeam}
+            onChange={(e) => setAwayTeam(e.target.value)}
+            fullWidth
+            disabled={loading}
+            placeholder="e.g., Bills"
           />
 
           {(error || errorMessage) && (

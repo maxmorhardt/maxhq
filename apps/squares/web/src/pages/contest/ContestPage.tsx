@@ -1,11 +1,11 @@
-import { Box, Chip, CircularProgress, Typography } from '@mui/material';
+import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { useAxiosAuth } from '../../axios/api';
-import SquaresContest from '../../components/contest/SquaresContest';
+import Contest from '../../components/contest/Contest';
 import {
   selectContestError,
   selectContestLoading,
@@ -28,7 +28,6 @@ export default function ContestPage() {
     }
 
     const baseURL = import.meta.env.PROD ? 'wss://squares-api.maxstash.io' : 'ws://localhost:8080';
-
     return `${baseURL}/ws/contests/${id}`;
   };
 
@@ -38,6 +37,10 @@ export default function ContestPage() {
     reconnectInterval: 5000,
   });
 
+  const loading = useAppSelector(selectContestLoading);
+  const error = useAppSelector(selectContestError);
+  const currentContest = useAppSelector(selectCurrentContest);
+
   useEffect(() => {
     if (lastMessage?.data) {
       try {
@@ -45,7 +48,7 @@ export default function ContestPage() {
 
         switch (message.type) {
           case 'square_update':
-            if (message.squareId && message.contestId === id) {
+            if (message.squareId && message.contestId === currentContest?.id) {
               dispatch(
                 updateSquareFromWebSocket({
                   id: message.squareId,
@@ -59,14 +62,20 @@ export default function ContestPage() {
         console.error('Error parsing WebSocket message:', lastMessage.data);
       }
     }
-  }, [lastMessage, dispatch, id]);
+  }, [lastMessage, dispatch, currentContest?.id]);
 
   const isConnected = readyState === ReadyState.OPEN;
   const isConnecting = readyState === ReadyState.CONNECTING;
 
-  const loading = useAppSelector(selectContestLoading);
-  const error = useAppSelector(selectContestError);
-  const currentContest = useAppSelector(selectCurrentContest);
+  const handleRandomizeLabels = () => {
+    // TODO: Implement randomize labels functionality
+    console.log('Randomize labels clicked');
+  };
+
+  const handleChooseWinner = () => {
+    // TODO: Implement choose winner functionality
+    console.log('Choose winner clicked');
+  };
 
   useEffect(() => {
     if (auth.isAuthenticated && isInterceptorReady && id) {
@@ -97,38 +106,61 @@ export default function ContestPage() {
   }
 
   return (
-    <Box sx={{ textAlign: 'center' }}>
-      <Box
+    <Box sx={{ textAlign: 'center', position: 'relative' }}>
+      <Typography
         sx={{
-          position: 'relative',
-          mb: 2,
-          px: 2,
+          fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
+          fontWeight: 700,
+          textAlign: 'center',
+          flex: 1,
+          mt: 2,
+          mb: 1,
         }}
       >
-        <Typography
-          sx={{
-            fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
-            fontWeight: 700,
-          }}
-        >
-          {currentContest.name}
-        </Typography>
+        {currentContest.name}
+      </Typography>
 
-        <Chip
-          label={isConnected ? 'Live' : isConnecting ? 'Connecting' : 'Offline'}
-          color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
-          size="small"
-          variant={isConnected ? 'filled' : 'outlined'}
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            right: 16,
-            transform: 'translateY(-50%)',
-          }}
-        />
+      <Chip
+        label={isConnected ? 'Live' : isConnecting ? 'Connecting' : 'Offline'}
+        color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
+        size="small"
+        variant={isConnected ? 'filled' : 'outlined'}
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 14,
+        }}
+      />
+
+      <Contest />
+      
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Stack direction="row" spacing={2} justifyContent="center">
+          <Button
+            variant="outlined"
+            onClick={handleRandomizeLabels}
+            disabled={loading}
+            sx={{
+              minWidth: { xs: 120, sm: 140 },
+              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+            }}
+          >
+            Randomize Labels
+          </Button>
+          
+          <Button
+            variant="contained"
+            onClick={handleChooseWinner}
+            disabled={loading}
+            sx={{
+              minWidth: { xs: 120, sm: 140 },
+              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+            }}
+          >
+            Choose Winner
+          </Button>
+        </Stack>
       </Box>
-
-      <SquaresContest />
     </Box>
   );
 }

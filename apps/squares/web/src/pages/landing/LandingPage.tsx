@@ -1,8 +1,8 @@
 import {
-  GridOn as GridIcon,
-  Groups as GroupsIcon,
-  Shuffle as ShuffleIcon,
-  EmojiEvents as TrophyIcon,
+	GridOn as GridIcon,
+	Groups as GroupsIcon,
+	Shuffle as ShuffleIcon,
+	EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 import { Box, Button, Container, Paper, Typography } from '@mui/material';
 import { useState } from 'react';
@@ -203,7 +203,7 @@ export default function LandingPage() {
         </Box>
       </Container>
 
-      <CreateContest open={open} onClose={(id: string) => handleOnClose(id)} />
+      <CreateContest open={open} onClose={handleOnClose} />
     </>
   );
 }

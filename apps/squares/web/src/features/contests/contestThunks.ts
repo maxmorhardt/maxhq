@@ -5,7 +5,7 @@ import {
   getContestsByUser,
   updateSquareValueById,
 } from '../../service/contestService';
-import type { Contest, Square } from '../../types/contest';
+import type { Contest, CreateContestRequest, Square } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
 export const fetchContestsByUser = createAsyncThunk<Contest[], string, { rejectValue: APIError }>(
@@ -20,29 +20,26 @@ export const fetchContestsByUser = createAsyncThunk<Contest[], string, { rejectV
   }
 );
 
-export const fetchContestById = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
-  'contests/fetchById',
-  async (id, { rejectWithValue }) => {
-    try {
-      const contest = await getContestById(id);
-      return contest;
-    } catch (err: unknown) {
-      return rejectWithValue(err as APIError);
-    }
+export const fetchContestById = createAsyncThunk(
+  'contests/fetchContestById',
+  async (id: string) => {
+    const response = await getContestById(id);
+    return response;
   }
 );
 
-export const createContest = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
-  'contests/create',
-  async (name, { rejectWithValue }) => {
-    try {
-      const contest = await createContestByName(name);
-      return contest;
-    } catch (err: unknown) {
-      return rejectWithValue(err as APIError);
-    }
+export const createContest = createAsyncThunk<
+  Contest,
+  CreateContestRequest,
+  { rejectValue: APIError }
+>('contests/create', async (params, { rejectWithValue }) => {
+  try {
+    const contest = await createContestByName(params);
+    return contest;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
   }
-);
+});
 
 export const setCurrentSquare = createAsyncThunk<Square, Square>(
   'contests/setCurrentSquare',

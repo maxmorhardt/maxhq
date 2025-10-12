@@ -25,13 +25,14 @@ export default function ContestsPage() {
       return;
     }
 
-    const user = auth.user?.profile?.preferred_username;
-    if (!user) {
-      return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userObj = auth.user as any;
+    const username = userObj?.profile?.preferred_username || userObj?.preferred_username || userObj?.sub || '';
+    
+    if (username) {
+      dispatch(fetchContestsByUser(username));
     }
-
-    dispatch(fetchContestsByUser(user));
-  }, [auth.isAuthenticated, auth.user?.profile?.preferred_username, dispatch, isInterceptorReady]);
+  }, [auth.isAuthenticated, auth.user, dispatch, isInterceptorReady]);
 
   if (!isInterceptorReady || auth.isLoading || loading) {
     return (
