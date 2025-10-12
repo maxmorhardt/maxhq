@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
-import { setCurrentSquare } from '../../features/contests/contestThunks';
+import { setCurrentSquare } from '../../features/contests/contestSlice';
 import EditSquare from '../square/EditSquare';
 import Square from '../square/Square';
 
@@ -48,7 +48,7 @@ export default function Contest() {
             mb: { xs: 2, sm: 3 },
           }}
         >
-          { contest.homeTeam || 'Home' }
+          {contest.homeTeam ?? 'Home'}
         </Box>
 
         <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
@@ -65,15 +65,16 @@ export default function Contest() {
               whiteSpace: 'nowrap',
             }}
           >
-            { contest.awayTeam || 'Away' }
+            {contest.awayTeam ?? 'Away'}
           </Box>
 
+          {/* squares */}
           <Box>
             {contestMatrix.map((rowData, rowIndex) => (
-              <Box key={`second-${rowIndex}`} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box key={`${rowIndex}`} sx={{ display: 'flex', alignItems: 'center' }}>
                 {rowData.map((squareData, colIndex) => (
                   <Square
-                    key={`second-${rowIndex}-${colIndex}`}
+                    key={`${rowIndex}-${colIndex}`}
                     rowIndex={rowIndex}
                     colIndex={colIndex}
                     squareData={squareData}

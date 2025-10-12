@@ -31,7 +31,7 @@ export const useAxiosAuth = () => {
 
   useEffect(() => {
     setupAxiosInterceptors(auth.user);
-    setReady(!!auth.user?.access_token || !auth.isAuthenticated);
+    setReady(Boolean(auth.isAuthenticated && auth.user?.access_token));
   }, [auth.user, auth.isAuthenticated]);
 
   return ready && !auth.isLoading;

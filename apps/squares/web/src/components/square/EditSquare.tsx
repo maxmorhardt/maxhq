@@ -26,10 +26,10 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
   const loading = useAppSelector(selectSquareLoading);
 
   const [error, setError] = useState('');
-  const [value, setValue] = useState(currentSquare?.value || '');
+  const [value, setValue] = useState(currentSquare?.value ?? '');
 
   useEffect(() => {
-    setValue(currentSquare?.value || '');
+    setValue(currentSquare?.value ?? '');
     setError('');
   }, [currentSquare]);
 
@@ -38,11 +38,6 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
   }
 
   const handleSave = async () => {
-    if (!value.trim()) {
-      setError('Square value is required');
-      return;
-    }
-
     try {
       await dispatch(updateSquare({ id: currentSquare.id, value: value })).unwrap();
       onClose();

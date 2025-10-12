@@ -4,36 +4,28 @@ import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { useAxiosAuth } from '../../axios/api';
 import Contest from '../../components/contest/Contest';
 import {
   selectContestError,
   selectContestLoading,
   selectCurrentContest,
 } from '../../features/contests/contestSelectors';
-import { updateSquareFromWebSocket } from '../../features/contests/contestSlice';
 import { fetchContestById } from '../../features/contests/contestThunks';
-import type { ContestChannelResponse } from '../../types/contest';
+import { contestSocketEventHandler, getSocketUrl } from '../../service/wsService';
+import {
+  updateContestFromWebSocket,
+  updateSquareFromWebSocket,
+} from '../../features/contests/contestSlice';
 
 export default function ContestPage() {
   const auth = useAuth();
-  const isInterceptorReady = useAxiosAuth();
   const dispatch = useAppDispatch();
 
   const { id } = useParams<{ id: string }>();
 
-  const getSocketUrl = () => {
-    if (!id || !auth.user?.access_token) {
-      return '';
-    }
-
-    const baseURL = import.meta.env.PROD ? 'wss://squares-api.maxstash.io' : 'ws://localhost:8080';
-    return `${baseURL}/ws/contests/${id}`;
-  };
-
-  const { lastMessage, readyState } = useWebSocket(getSocketUrl() ?? null, {
+  const { lastMessage, readyState } = useWebSocket(getSocketUrl(id, auth), {
     protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
-    reconnectAttempts: 5,
+    reconnectAttempts: auth.isAuthenticated ? 5 : 0,
     reconnectInterval: 5000,
   });
 
@@ -42,48 +34,59 @@ export default function ContestPage() {
   const currentContest = useAppSelector(selectCurrentContest);
 
   useEffect(() => {
-    if (lastMessage?.data) {
-      try {
-        const message: ContestChannelResponse = JSON.parse(lastMessage.data);
-
-        switch (message.type) {
-          case 'square_update':
-            if (message.squareId && message.contestId === currentContest?.id) {
-              dispatch(
-                updateSquareFromWebSocket({
-                  id: message.squareId,
-                  value: message.value,
-                })
-              );
-            }
-            break;
+    contestSocketEventHandler({
+      lastMessage,
+      onSquareUpdate: (message) => {
+        if (
+          message.squareId &&
+          message.contestId === currentContest?.id &&
+          message.value !== undefined
+        ) {
+          dispatch(
+            updateSquareFromWebSocket({
+              id: message.squareId,
+              value: message.value,
+            })
+          );
         }
-      } catch {
-        console.error('Error parsing WebSocket message:', lastMessage.data);
-      }
-    }
+      },
+      onContestUpdate: (message) => {
+        if (
+          message.squareId &&
+          message.contestId === currentContest?.id &&
+          message.value !== undefined
+        ) {
+          dispatch(
+            updateContestFromWebSocket({
+              xLabels: message.xLabels || [],
+              yLabels: message.yLabels || [],
+            })
+          );
+        }
+      },
+    });
   }, [lastMessage, dispatch, currentContest?.id]);
 
   const isConnected = readyState === ReadyState.OPEN;
   const isConnecting = readyState === ReadyState.CONNECTING;
 
   const handleRandomizeLabels = () => {
-    // TODO: Implement randomize labels functionality
     console.log('Randomize labels clicked');
   };
 
   const handleChooseWinner = () => {
-    // TODO: Implement choose winner functionality
     console.log('Choose winner clicked');
   };
 
   useEffect(() => {
-    if (auth.isAuthenticated && isInterceptorReady && id) {
-      dispatch(fetchContestById(id));
+    if (!id) {
+      return;
     }
-  }, [auth.isAuthenticated, isInterceptorReady, id, dispatch]);
 
-  if (!isInterceptorReady || loading) {
+    dispatch(fetchContestById(id));
+  }, [id, dispatch]);
+
+  if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
         <CircularProgress />
@@ -133,7 +136,7 @@ export default function ContestPage() {
       />
 
       <Contest />
-      
+
       <Box sx={{ mt: 4, mb: 4 }}>
         <Stack direction="row" spacing={2} justifyContent="center">
           <Button
@@ -147,7 +150,7 @@ export default function ContestPage() {
           >
             Randomize Labels
           </Button>
-          
+
           <Button
             variant="contained"
             onClick={handleChooseWinner}

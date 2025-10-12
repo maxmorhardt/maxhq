@@ -11,7 +11,7 @@ import {
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectContestError, selectContestLoading } from '../../features/contests/contestSelectors';
+import { selectContestLoading } from '../../features/contests/contestSelectors';
 import { createContest } from '../../features/contests/contestThunks';
 import type { APIError } from '../../types/error';
 
@@ -26,7 +26,6 @@ export default function CreateContest({ open, onClose }: CreateContestProps) {
   const dispatch = useAppDispatch();
 
   const loading = useAppSelector(selectContestLoading);
-  const errorMessage = useAppSelector(selectContestError);
 
   const [name, setName] = useState('');
   const [homeTeam, setHomeTeam] = useState('');
@@ -50,8 +49,8 @@ export default function CreateContest({ open, onClose }: CreateContestProps) {
       const contest = await dispatch(
         createContest({
           name: name.trim(),
-          homeTeam: homeTeam.trim() || undefined,
-          awayTeam: awayTeam.trim() || undefined,
+          homeTeam: homeTeam.trim() ?? null,
+          awayTeam: awayTeam.trim() ?? null,
         })
       ).unwrap();
       onClose(contest.id);
@@ -100,9 +99,7 @@ export default function CreateContest({ open, onClose }: CreateContestProps) {
             placeholder="e.g., Bills"
           />
 
-          {(error || errorMessage) && (
-            <Typography color="error">{error || errorMessage}</Typography>
-          )}
+          {error && <Typography color="error">{error}</Typography>}
 
           <Box display="flex" justifyContent="flex-end" gap={2}>
             <Button onClick={() => onClose('')} sx={{ minWidth: 100 }} disabled={loading}>

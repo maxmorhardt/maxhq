@@ -5,7 +5,6 @@ import {
   createContest,
   fetchContestById,
   fetchContestsByUser,
-  setCurrentSquare,
   updateSquare,
 } from './contestThunks';
 
@@ -31,6 +30,25 @@ const contestSlice = createSlice({
   reducers: {
     clearError(state) {
       state.error = null;
+    },
+    setCurrentSquare(state, action: PayloadAction<Square>) {
+      state.currentSquare = action.payload;
+    },
+    updateContestFromWebSocket(
+      state,
+      action: PayloadAction<{ xLabels?: number[]; yLabels?: number[] }>
+    ) {
+      if (!state.currentContest) return;
+
+      const { xLabels, yLabels } = action.payload;
+
+      if (xLabels !== undefined) {
+        state.currentContest.xLabels = xLabels;
+      }
+
+      if (yLabels !== undefined) {
+        state.currentContest.yLabels = yLabels;
+      }
     },
     updateSquareFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
       if (!state.currentContest) return;
@@ -87,10 +105,6 @@ const contestSlice = createSlice({
         state.error = action.payload?.message || 'Error creating contest';
       });
 
-    builder.addCase(setCurrentSquare.fulfilled, (state, action) => {
-      state.currentSquare = action.payload;
-    });
-
     builder
       .addCase(updateSquare.pending, (state) => {
         state.squareLoading = true;
@@ -119,5 +133,10 @@ const contestSlice = createSlice({
   },
 });
 
-export const { clearError, updateSquareFromWebSocket } = contestSlice.actions;
+export const {
+  clearError,
+  setCurrentSquare,
+  updateContestFromWebSocket,
+  updateSquareFromWebSocket,
+} = contestSlice.actions;
 export const contestReducer = contestSlice.reducer;

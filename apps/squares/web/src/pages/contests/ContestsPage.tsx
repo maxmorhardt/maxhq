@@ -27,8 +27,9 @@ export default function ContestsPage() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userObj = auth.user as any;
-    const username = userObj?.profile?.preferred_username || userObj?.preferred_username || userObj?.sub || '';
-    
+    const username =
+      userObj?.profile?.preferred_username || userObj?.preferred_username || userObj?.sub || '';
+
     if (username) {
       dispatch(fetchContestsByUser(username));
     }

@@ -55,7 +55,7 @@ export default function Square({
         </Box>
       )}
 
-			{/* Square */}
+      {/* Square */}
       <Button
         key={`${rowIndex}-${colIndex}`}
         onClick={() => handleSquareClick(rowIndex, colIndex)}

@@ -20,11 +20,15 @@ export const fetchContestsByUser = createAsyncThunk<Contest[], string, { rejectV
   }
 );
 
-export const fetchContestById = createAsyncThunk(
+export const fetchContestById = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
   'contests/fetchContestById',
-  async (id: string) => {
-    const response = await getContestById(id);
-    return response;
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await getContestById(id);
+      return response;
+    } catch (err: unknown) {
+      return rejectWithValue(err as APIError);
+    }
   }
 );
 
@@ -40,13 +44,6 @@ export const createContest = createAsyncThunk<
     return rejectWithValue(err as APIError);
   }
 });
-
-export const setCurrentSquare = createAsyncThunk<Square, Square>(
-  'contests/setCurrentSquare',
-  async (square) => {
-    return square;
-  }
-);
 
 export const updateSquare = createAsyncThunk<
   Square,

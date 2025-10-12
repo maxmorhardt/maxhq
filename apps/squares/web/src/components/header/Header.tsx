@@ -26,8 +26,8 @@ export default function Header() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
-  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
+  const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
   const [createContestOpen, setCreateContestOpen] = useState(false);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) =>
@@ -64,6 +64,7 @@ export default function Header() {
 
   const handleCreateContestClose = (id: string) => {
     setCreateContestOpen(false);
+
     if (id) {
       navigate(`/contests/${id}`);
     }
@@ -166,19 +167,16 @@ export default function Header() {
             {auth.isAuthenticated && (
               <Button
                 variant="contained"
+                size="small"
                 onClick={handleCreateContest}
                 sx={{
                   mr: 2,
                   display: { xs: 'none', md: 'flex' },
-                  alignItems: 'center',
-                  gap: 1,
-                  backgroundColor: 'secondary.main',
-                  '&:hover': {
-                    backgroundColor: 'secondary.dark',
-                  },
+                  fontSize: '0.6rem',
+                  padding: '4px 8px',
                 }}
               >
-                <AddIcon fontSize="small" />
+                <AddIcon sx={{ mr: 0.5 }} fontSize="small" />
                 Create Contest
               </Button>
             )}

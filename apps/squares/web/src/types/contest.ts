@@ -32,8 +32,10 @@ export interface Square {
 export interface ContestChannelResponse {
   type: string;
   contestId: string;
-  squareId: string;
-  value: string;
+  squareId?: string;
+  value?: string;
+  xLabels?: number[];
+  yLabels?: number[];
   updatedBy: string;
   timestamp: string;
 }
