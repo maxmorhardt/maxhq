@@ -9,6 +9,7 @@ import {
   CardContent,
   CircularProgress,
   Alert,
+  useTheme,
 } from '@mui/material';
 import { EmojiEvents, SportsSoccer, Groups, ArrowBack } from '@mui/icons-material';
 import { useState } from 'react';
@@ -23,6 +24,7 @@ export default function CreateContestPage() {
   const auth = useAuth();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const theme = useTheme();
 
   const loading = useAppSelector(selectContestLoading);
 
@@ -78,7 +80,7 @@ export default function CreateContestPage() {
           sx={{
             fontWeight: 700,
             mb: 2,
-            background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%)',
+            background: theme.customBackgrounds.gradients.textGradient,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -109,7 +111,7 @@ export default function CreateContestPage() {
             color: 'rgba(255,255,255,0.7)',
             '&:hover': {
               color: 'white',
-              backgroundColor: 'rgba(255,255,255,0.1)',
+              backgroundColor: theme.customBackgrounds.glass.medium,
             },
           }}
         >
@@ -129,7 +131,7 @@ export default function CreateContestPage() {
           elevation={0}
           sx={{
             p: 4,
-            background: 'rgba(255,255,255,0.05)',
+            background: theme.customBackgrounds.glass.light,
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 3,
@@ -273,12 +275,12 @@ export default function CreateContestPage() {
                 sx={{
                   flex: 2,
                   py: 1.5,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: theme.customBackgrounds.gradients.primary,
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                    background: theme.customBackgrounds.gradients.secondary,
                   },
                   '&:disabled': {
-                    background: 'rgba(255,255,255,0.1)',
+                    background: theme.customBackgrounds.glass.medium,
                     color: 'rgba(255,255,255,0.3)',
                   },
                 }}

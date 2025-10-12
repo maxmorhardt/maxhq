@@ -1,6 +1,5 @@
-import { Box, Container } from '@mui/material';
+import { Box, Container, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
-import { gradients } from '../../types/gradients';
 
 interface LandingSectionContainerProps {
   variant?: 'lightBlue' | 'black';
@@ -11,6 +10,19 @@ export default function LandingSectionContainer({
   children,
   variant = 'black',
 }: LandingSectionContainerProps) {
+  const theme = useTheme();
+
+  const getBackground = () => {
+    switch (variant) {
+      case 'lightBlue':
+        return theme.customBackgrounds.gradients.lightBlue;
+      case 'black':
+        return theme.customBackgrounds.gradients.black;
+      default:
+        return theme.customBackgrounds.gradients.black;
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ pb: 16 }}>
       <Box
@@ -18,10 +30,10 @@ export default function LandingSectionContainer({
           textAlign: 'center',
           py: 8,
           px: 4,
-          background: gradients[variant],
+          background: getBackground(),
           borderRadius: 4,
           position: 'relative',
-          border: '1px solid rgba(255,255,255,0.1)',
+          border: theme.customBorders.glass,
         }}
       >
         {children}

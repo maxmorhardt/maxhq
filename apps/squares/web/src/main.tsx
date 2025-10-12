@@ -1,4 +1,4 @@
-import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 import { WebStorageStateStore } from 'oidc-client-ts';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -8,18 +8,13 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import { store } from './app/store';
 import './index.css';
+import ContactPage from './pages/contact/ContactPage';
 import ContestPage from './pages/contest/ContestPage';
 import CreateContestPage from './pages/contest/create/CreateContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import LandingPage from './pages/landing/LandingPage';
-import ContactPage from './pages/contact/ContactPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
-
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
+import { theme } from './theme/theme';
 
 const oidcConfig: AuthProviderProps = {
   authority: 'https://auth.maxstash.io/realms/maxstash',
@@ -51,7 +46,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
       <AuthProvider {...oidcConfig}>
-        <ThemeProvider theme={darkTheme}>
+        <ThemeProvider theme={theme}>
           <CssBaseline />
           <RouterProvider router={router} />
         </ThemeProvider>

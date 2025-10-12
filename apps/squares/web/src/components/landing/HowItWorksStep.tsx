@@ -1,5 +1,5 @@
 import type { SvgIconComponent } from '@mui/icons-material';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
 
 interface HowItWorksStepProps {
   icon: SvgIconComponent;
@@ -14,6 +14,8 @@ export default function HowItWorksStep({
   description,
   backgroundColor,
 }: HowItWorksStepProps) {
+  const theme = useTheme();
+
   return (
     <Paper
       elevation={0}
@@ -23,11 +25,10 @@ export default function HowItWorksStep({
         border: '1px solid',
         borderColor: 'divider',
         position: 'relative',
-        transition: 'all 0.3s ease',
+        transition: theme.customTransitions.default,
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
-          borderColor: 'primary.main',
+          transform: theme.customTransforms.hoverLiftMedium,
+          boxShadow: theme.customShadows.interactive,
         },
       }}
     >

@@ -1,11 +1,11 @@
-import { Box, Button, Container, Typography } from '@mui/material';
+import { Box, Button, Container, Typography, useTheme } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
-import { gradients } from '../../types/gradients';
 
 export default function LandingHero() {
   const navigate = useNavigate();
   const auth = useAuth();
+  const theme = useTheme();
 
   const handleGetStarted = () => {
     if (auth.isAuthenticated) {
@@ -20,8 +20,9 @@ export default function LandingHero() {
   return (
     <Box
       sx={{
-        background: gradients['lightBlue'],
+        background: theme.customBackgrounds.gradients.lightBlue,
         py: { xs: 10, md: 16 },
+        mb: 8,
       }}
     >
       <Container maxWidth="lg">
@@ -33,7 +34,7 @@ export default function LandingHero() {
               fontWeight: 800,
               fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
               mb: 4,
-              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              textShadow: theme.customShadows.text,
             }}
           >
             Squares
@@ -65,13 +66,13 @@ export default function LandingHero() {
                 fontSize: '1.2rem',
                 fontWeight: 600,
                 color: 'text.primary',
-                backgroundColor: 'rgba(255,255,255,0.15)',
+                backgroundColor: theme.customBackgrounds.glass.heavy,
                 '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+                  backgroundColor: theme.customBackgrounds.glass.hover,
+                  transform: theme.customTransforms.hoverLiftSmall,
+                  boxShadow: theme.customShadows.interactive,
                 },
-                transition: 'all 0.3s ease',
+                transition: theme.customTransitions.default,
               }}
             >
               Create Your First Contest

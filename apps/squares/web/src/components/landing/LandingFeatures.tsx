@@ -1,7 +1,46 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import LandingSectionContainer from './LandingSectionContainer';
+import FeatureCard from './FeatureCard';
+
+type GradientType = 'primary' | 'pink' | 'cyan' | 'mint' | 'secondary' | 'lightBlue' | 'black';
+
+interface Feature {
+  emoji: string;
+  gradient: GradientType;
+  title: string;
+  description: string;
+}
+
+const features: Feature[] = [
+  {
+    emoji: '⚡',
+    gradient: 'primary',
+    title: 'Real-time Updates',
+    description: 'See changes instantly as players fill out squares with live synchronization',
+  },
+  {
+    emoji: '🔗',
+    gradient: 'pink',
+    title: 'Easy Sharing',
+    description: 'Share contests with a simple link - no accounts required for participants',
+  },
+  {
+    emoji: '📱',
+    gradient: 'cyan',
+    title: 'Mobile Friendly',
+    description: 'Works perfectly on phones, tablets, and computers with responsive design',
+  },
+  {
+    emoji: '🆓',
+    gradient: 'mint',
+    title: 'Free to Use',
+    description: 'Create unlimited contests for all your gatherings at no cost',
+  },
+];
 
 export default function LandingFeatures() {
+  const theme = useTheme();
+
   return (
     <LandingSectionContainer variant="black">
       <Typography
@@ -13,7 +52,7 @@ export default function LandingFeatures() {
           mb: 2,
           fontWeight: 700,
           color: 'white',
-          background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%)',
+          background: theme.customBackgrounds.gradients.textGradient,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -21,11 +60,12 @@ export default function LandingFeatures() {
       >
         Why Choose Our Platform?
       </Typography>
+
       <Typography
         variant="h6"
         sx={{
           textAlign: 'center',
-          color: 'rgba(255,255,255,0.7)',
+          color: theme.customColors.textMuted,
           mb: 6,
           maxWidth: 600,
           mx: 'auto',
@@ -42,117 +82,15 @@ export default function LandingFeatures() {
           gap: 4,
         }}
       >
-        <Box sx={{ textAlign: 'center' }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 3,
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-              ⚡
-            </Typography>
-          </Box>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
-            Real-time Updates
-          </Typography>
-          <Typography variant="body1" sx={{ lineHeight: 1.6, color: 'rgba(255,255,255,0.7)' }}>
-            See changes instantly as players fill out squares with live synchronization
-          </Typography>
-        </Box>
-
-        <Box sx={{ textAlign: 'center' }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 3,
-              boxShadow: '0 4px 12px rgba(245, 87, 108, 0.2)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-              🔗
-            </Typography>
-          </Box>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
-            Easy Sharing
-          </Typography>
-          <Typography variant="body1" sx={{ lineHeight: 1.6, color: 'rgba(255,255,255,0.7)' }}>
-            Share contests with a simple link - no accounts required for participants
-          </Typography>
-        </Box>
-
-        <Box sx={{ textAlign: 'center' }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 3,
-              boxShadow: '0 4px 12px rgba(79, 172, 254, 0.2)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-              📱
-            </Typography>
-          </Box>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
-            Mobile Friendly
-          </Typography>
-          <Typography variant="body1" sx={{ lineHeight: 1.6, color: 'rgba(255,255,255,0.7)' }}>
-            Works perfectly on phones, tablets, and computers with responsive design
-          </Typography>
-        </Box>
-
-        <Box sx={{ textAlign: 'center' }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 3,
-              boxShadow: '0 4px 12px rgba(168, 237, 234, 0.2)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-              🆓
-            </Typography>
-          </Box>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
-            Free to Use
-          </Typography>
-          <Typography variant="body1" sx={{ lineHeight: 1.6, color: 'rgba(255,255,255,0.7)' }}>
-            Create unlimited contests for all your gatherings at no cost
-          </Typography>
-        </Box>
+        {features.map((feature, index) => (
+          <FeatureCard
+            key={index}
+            emoji={feature.emoji}
+            gradient={feature.gradient}
+            title={feature.title}
+            description={feature.description}
+          />
+        ))}
       </Box>
     </LandingSectionContainer>
   );

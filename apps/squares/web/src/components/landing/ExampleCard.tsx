@@ -1,4 +1,4 @@
-import { Paper, Typography } from '@mui/material';
+import { Paper, Typography, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
 
 interface ExampleCardProps {
@@ -8,15 +8,17 @@ interface ExampleCardProps {
 }
 
 export default function ExampleCard({ title, children, isCentered = false }: ExampleCardProps) {
+  const theme = useTheme();
+
   return (
     <Paper
       elevation={0}
       sx={{
         p: 4,
         borderRadius: 3,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.2)',
+        backgroundColor: theme.customBackgrounds.glass.medium,
+        backdropFilter: theme.customFilters.blurMedium,
+        border: theme.customBorders.glass,
         textAlign: isCentered ? 'center' : 'left',
       }}
     >

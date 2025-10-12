@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, useTheme } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import LandingSectionContainer from './LandingSectionContainer';
@@ -6,6 +6,7 @@ import LandingSectionContainer from './LandingSectionContainer';
 export default function LandingCallToAction() {
   const navigate = useNavigate();
   const auth = useAuth();
+  const theme = useTheme();
 
   const handleGetStarted = () => {
     if (auth.isAuthenticated) {
@@ -26,16 +27,17 @@ export default function LandingCallToAction() {
           fontWeight: 700,
           color: 'white',
           mb: 2,
-          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          textShadow: theme.customShadows.text,
         }}
       >
         Ready to Get Started?
       </Typography>
+
       <Typography
         variant="h6"
         sx={{
           mb: 4,
-          color: 'rgba(255,255,255,0.9)',
+          color: theme.customColors.textMuted,
           maxWidth: 500,
           mx: 'auto',
           fontWeight: 400,
@@ -45,6 +47,7 @@ export default function LandingCallToAction() {
         Create your first contest in seconds and share it with your friends and family for an
         unforgettable game experience.
       </Typography>
+
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
         <Button
           variant="contained"
@@ -52,21 +55,16 @@ export default function LandingCallToAction() {
           onClick={handleGetStarted}
           sx={{
             px: 6,
-            py: 2,
-            fontSize: '1.1rem',
+            fontSize: '1.2rem',
             fontWeight: 600,
-            borderRadius: 3,
-            textTransform: 'none',
-            background: 'rgba(255,255,255,0.2)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            color: 'white',
-            boxShadow: '0 4px 12px rgba(255,255,255,0.1)',
+            color: 'text.primary',
+            backgroundColor: theme.customBackgrounds.glass.heavy,
             '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 16px rgba(255,255,255,0.2)',
-              background: 'rgba(255,255,255,0.25)',
+              backgroundColor: theme.customBackgrounds.glass.hover,
+              transform: theme.customTransforms.hoverLiftSmall,
+              boxShadow: theme.customShadows.interactive,
             },
+            transition: theme.customTransitions.default,
           }}
         >
           Create Contest Now
