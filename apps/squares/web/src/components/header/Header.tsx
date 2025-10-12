@@ -1,7 +1,7 @@
 import GridViewIcon from '@mui/icons-material/GridView';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ContactMailIcon from '@mui/icons-material/ContactMail';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import InfoIcon from '@mui/icons-material/Info';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -12,14 +12,13 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
-import CreateContest from '../contest/CreateContest';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 
 const pages = [
   { name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' },
   { name: 'Learn More', icon: <InfoIcon />, navigate: '/learn-more' },
-  { name: 'Contact', icon: <ContactMailIcon />, navigate: '/contact' },
+  { name: 'Contact', icon: <ContactSupportIcon />, navigate: '/contact' },
 ];
 
 const settings = [
@@ -33,7 +32,6 @@ export default function Header() {
 
   const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
-  const [createContestOpen, setCreateContestOpen] = useState(false);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) =>
     setAnchorElNav(event.currentTarget);
@@ -57,14 +55,6 @@ export default function Header() {
     }
 
     handleCloseUserMenu();
-  };
-
-  const handleCreateContestClose = (id: string) => {
-    setCreateContestOpen(false);
-
-    if (id) {
-      navigate(`/contests/${id}`);
-    }
   };
 
   return (
@@ -137,10 +127,10 @@ export default function Header() {
             {/* Page links (desktop) */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {pages.map((page) => {
-                // Show Contests only when authenticated, but Learn More and Contact for everyone
                 if (page.name === 'Contests' && !auth.isAuthenticated) {
-                  return null;
+                  return;
                 }
+
                 return (
                   <Button
                     key={page.name}
@@ -176,8 +166,6 @@ export default function Header() {
           </Toolbar>
         </Container>
       </AppBar>
-
-      <CreateContest open={createContestOpen} onClose={handleCreateContestClose} />
     </>
   );
 }

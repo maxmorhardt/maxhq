@@ -5,30 +5,18 @@ import {
   EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 import { Box, Button, Container, Paper, Typography } from '@mui/material';
-import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
-import CreateContest from '../../components/contest/CreateContest';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  const [open, setOpen] = useState(false);
-
   const handleGetStarted = () => {
     if (auth.isAuthenticated) {
-      setOpen(true);
+      navigate('/contests/create');
     } else {
       auth.signinRedirect();
-    }
-  };
-
-  const handleOnClose = (id: string) => {
-    setOpen(false);
-
-    if (id) {
-      navigate(`/contests/${id}`);
     }
   };
 
@@ -46,10 +34,10 @@ export default function LandingPage() {
       >
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 2 }}>
-            <Typography 
-              variant="h1" 
-              component="h1" 
-              sx={{ 
+            <Typography
+              variant="h1"
+              component="h1"
+              sx={{
                 fontWeight: 800,
                 fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
                 mb: 3,
@@ -60,27 +48,27 @@ export default function LandingPage() {
             </Typography>
             <Typography
               variant="h4"
-              sx={{ 
-                mb: 4, 
+              sx={{
+                mb: 4,
                 fontWeight: 300,
-                maxWidth: 700, 
+                maxWidth: 700,
                 mx: 'auto',
                 opacity: 0.95,
                 fontSize: { xs: '1.2rem', md: '1.5rem' },
                 lineHeight: 1.4,
               }}
             >
-              The ultimate football squares game for any gathering. Create contests,
-              fill squares, and win big during the big game!
+              The ultimate football squares game for any gathering. Create contests, fill squares,
+              and win big during the big game!
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Button
                 variant="contained"
                 size="large"
                 onClick={handleGetStarted}
-                sx={{ 
-                  px: 6, 
-                  py: 2, 
+                sx={{
+                  px: 6,
+                  py: 2,
                   fontSize: '1.2rem',
                   fontWeight: 600,
                   color: 'white',
@@ -119,56 +107,31 @@ export default function LandingPage() {
             </Box>
           </Box>
         </Container>
-        
+
         {/* Decorative Background Elements */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -50,
-            right: -50,
-            width: 200,
-            height: 200,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(20px)',
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: -100,
-            left: -100,
-            width: 300,
-            height: 300,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.05)',
-            backdropFilter: 'blur(30px)',
-          }}
-        />
       </Box>
 
       <Container maxWidth="lg" sx={{ py: 8 }}>
-
         {/* How It Works Section */}
         <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography 
-            variant="h3" 
-            component="h2" 
-            gutterBottom 
-            sx={{ 
-              fontWeight: 700, 
+          <Typography
+            variant="h3"
+            component="h2"
+            gutterBottom
+            sx={{
+              fontWeight: 700,
               mb: 2,
-              color: 'text.primary'
+              color: 'text.primary',
             }}
           >
             How It Works
           </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: 'text.secondary', 
-              mb: 6, 
-              maxWidth: 600, 
+          <Typography
+            variant="h6"
+            sx={{
+              color: 'text.secondary',
+              mb: 6,
+              maxWidth: 600,
               mx: 'auto',
               fontWeight: 400,
             }}
@@ -177,10 +140,10 @@ export default function LandingPage() {
           </Typography>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 4, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
                 borderRadius: 3,
                 border: '1px solid',
                 borderColor: 'divider',
@@ -190,7 +153,7 @@ export default function LandingPage() {
                   transform: 'translateY(-4px)',
                   boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
                   borderColor: 'primary.main',
-                }
+                },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -217,10 +180,10 @@ export default function LandingPage() {
               </Box>
             </Paper>
 
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 4, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
                 borderRadius: 3,
                 border: '1px solid',
                 borderColor: 'divider',
@@ -229,7 +192,7 @@ export default function LandingPage() {
                   transform: 'translateY(-4px)',
                   boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
                   borderColor: 'primary.main',
-                }
+                },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -256,10 +219,10 @@ export default function LandingPage() {
               </Box>
             </Paper>
 
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 4, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
                 borderRadius: 3,
                 border: '1px solid',
                 borderColor: 'divider',
@@ -268,7 +231,7 @@ export default function LandingPage() {
                   transform: 'translateY(-4px)',
                   boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
                   borderColor: 'primary.main',
-                }
+                },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -295,10 +258,10 @@ export default function LandingPage() {
               </Box>
             </Paper>
 
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 4, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
                 borderRadius: 3,
                 border: '1px solid',
                 borderColor: 'divider',
@@ -307,7 +270,7 @@ export default function LandingPage() {
                   transform: 'translateY(-4px)',
                   boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
                   borderColor: 'primary.main',
-                }
+                },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -337,8 +300,8 @@ export default function LandingPage() {
         </Box>
 
         {/* Example Section */}
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
             mb: 8,
             p: 6,
             borderRadius: 4,
@@ -348,12 +311,12 @@ export default function LandingPage() {
             overflow: 'hidden',
           }}
         >
-          <Typography 
-            variant="h3" 
-            component="h3" 
-            gutterBottom 
-            sx={{ 
-              textAlign: 'center', 
+          <Typography
+            variant="h3"
+            component="h3"
+            gutterBottom
+            sx={{
+              textAlign: 'center',
               mb: 2,
               fontWeight: 700,
               textShadow: '0 2px 4px rgba(0,0,0,0.3)',
@@ -361,9 +324,9 @@ export default function LandingPage() {
           >
             See It In Action
           </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               textAlign: 'center',
               mb: 6,
               maxWidth: 600,
@@ -376,11 +339,18 @@ export default function LandingPage() {
           </Typography>
 
           <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4, mb: 4 }}>
-              <Paper 
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                gap: 4,
+                mb: 4,
+              }}
+            >
+              <Paper
                 elevation={0}
-                sx={{ 
-                  p: 4, 
+                sx={{
+                  p: 4,
                   borderRadius: 3,
                   backgroundColor: 'rgba(255,255,255,0.1)',
                   backdropFilter: 'blur(10px)',
@@ -395,10 +365,10 @@ export default function LandingPage() {
                 </Typography>
               </Paper>
 
-              <Paper 
+              <Paper
                 elevation={0}
-                sx={{ 
-                  p: 4, 
+                sx={{
+                  p: 4,
                   borderRadius: 3,
                   backgroundColor: 'rgba(255,255,255,0.1)',
                   backdropFilter: 'blur(10px)',
@@ -414,10 +384,10 @@ export default function LandingPage() {
               </Paper>
             </Box>
 
-            <Paper 
+            <Paper
               elevation={0}
-              sx={{ 
-                p: 4, 
+              sx={{
+                p: 4,
                 borderRadius: 3,
                 backgroundColor: 'rgba(255,255,255,0.15)',
                 backdropFilter: 'blur(10px)',
@@ -431,9 +401,9 @@ export default function LandingPage() {
               <Typography variant="body1" sx={{ mb: 2, color: 'rgba(255,255,255,0.9)' }}>
                 Last digits: <strong>4</strong> (Home) × <strong>7</strong> (Away)
               </Typography>
-              <Typography 
-                variant="h5" 
-                sx={{ 
+              <Typography
+                variant="h5"
+                sx={{
                   fontWeight: 'bold',
                   color: '#FFD700',
                   textShadow: '0 2px 4px rgba(0,0,0,0.3)',
@@ -443,40 +413,14 @@ export default function LandingPage() {
               </Typography>
             </Paper>
           </Box>
-
-          {/* Decorative elements */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -50,
-              right: -50,
-              width: 150,
-              height: 150,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(20px)',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: -80,
-              left: -80,
-              width: 200,
-              height: 200,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(30px)',
-            }}
-          />
         </Box>
 
         {/* Features Section */}
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
             background: 'linear-gradient(135deg, #0f1419 0%, #1a2332 100%)',
-            borderRadius: 4, 
-            p: 6, 
+            borderRadius: 4,
+            p: 6,
             mb: 8,
             position: 'relative',
             overflow: 'hidden',
@@ -484,12 +428,12 @@ export default function LandingPage() {
             boxShadow: '0 24px 48px rgba(0,0,0,0.3)',
           }}
         >
-          <Typography 
-            variant="h3" 
-            component="h2" 
-            gutterBottom 
-            sx={{ 
-              textAlign: 'center', 
+          <Typography
+            variant="h3"
+            component="h2"
+            gutterBottom
+            sx={{
+              textAlign: 'center',
               mb: 2,
               fontWeight: 700,
               color: 'white',
@@ -501,11 +445,11 @@ export default function LandingPage() {
           >
             Why Choose Our Platform?
           </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               textAlign: 'center',
-              color: 'rgba(255,255,255,0.7)', 
+              color: 'rgba(255,255,255,0.7)',
               mb: 6,
               maxWidth: 600,
               mx: 'auto',
@@ -515,7 +459,13 @@ export default function LandingPage() {
             Built for simplicity, designed for everyone
           </Typography>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr 1fr' }, gap: 4 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr 1fr' },
+              gap: 4,
+            }}
+          >
             <Box sx={{ textAlign: 'center' }}>
               <Box
                 sx={{
@@ -528,7 +478,7 @@ export default function LandingPage() {
                   justifyContent: 'center',
                   mx: 'auto',
                   mb: 3,
-                  boxShadow: '0 12px 32px rgba(102, 126, 234, 0.4)',
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
@@ -556,7 +506,7 @@ export default function LandingPage() {
                   justifyContent: 'center',
                   mx: 'auto',
                   mb: 3,
-                  boxShadow: '0 12px 32px rgba(245, 87, 108, 0.4)',
+                  boxShadow: '0 4px 12px rgba(245, 87, 108, 0.2)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
@@ -578,13 +528,13 @@ export default function LandingPage() {
                   width: 80,
                   height: 80,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                  background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   mx: 'auto',
                   mb: 3,
-                  boxShadow: '0 12px 32px rgba(79, 172, 254, 0.4)',
+                  boxShadow: '0 4px 12px rgba(79, 172, 254, 0.2)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
@@ -606,13 +556,13 @@ export default function LandingPage() {
                   width: 80,
                   height: 80,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                  background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   mx: 'auto',
                   mb: 3,
-                  boxShadow: '0 12px 32px rgba(67, 233, 123, 0.4)',
+                  boxShadow: '0 4px 12px rgba(168, 237, 234, 0.2)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
@@ -631,9 +581,9 @@ export default function LandingPage() {
         </Box>
 
         {/* Call to Action */}
-        <Box 
-          sx={{ 
-            textAlign: 'center', 
+        <Box
+          sx={{
+            textAlign: 'center',
             py: 8,
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: 4,
@@ -642,10 +592,10 @@ export default function LandingPage() {
             boxShadow: '0 24px 48px rgba(102, 126, 234, 0.3)',
           }}
         >
-          <Typography 
-            variant="h3" 
-            gutterBottom 
-            sx={{ 
+          <Typography
+            variant="h3"
+            gutterBottom
+            sx={{
               fontWeight: 700,
               color: 'white',
               mb: 2,
@@ -654,10 +604,10 @@ export default function LandingPage() {
           >
             Ready to Get Started?
           </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              mb: 4, 
+          <Typography
+            variant="h6"
+            sx={{
+              mb: 4,
               color: 'rgba(255,255,255,0.9)',
               maxWidth: 500,
               mx: 'auto',
@@ -665,16 +615,16 @@ export default function LandingPage() {
               lineHeight: 1.5,
             }}
           >
-            Create your first contest in seconds and share it with your friends and family for an 
+            Create your first contest in seconds and share it with your friends and family for an
             unforgettable game experience.
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button 
-              variant="contained" 
-              size="large" 
-              onClick={handleGetStarted} 
-              sx={{ 
-                px: 6, 
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleGetStarted}
+              sx={{
+                px: 6,
                 py: 2,
                 fontSize: '1.1rem',
                 fontWeight: 600,
@@ -684,34 +634,50 @@ export default function LandingPage() {
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255,255,255,0.3)',
                 color: 'white',
-                boxShadow: '0 8px 24px rgba(255,255,255,0.2)',
+                boxShadow: '0 4px 12px rgba(255,255,255,0.1)',
                 '&:hover': {
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 32px rgba(255,255,255,0.3)',
+                  boxShadow: '0 6px 16px rgba(255,255,255,0.2)',
                   background: 'rgba(255,255,255,0.25)',
-                }
+                },
               }}
             >
               Create Contest Now
             </Button>
           </Box>
-          
+
           {/* Trust indicators */}
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 4, flexWrap: 'wrap', opacity: 0.9 }}>
-            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}>
+          <Box
+            sx={{
+              mt: 4,
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 4,
+              flexWrap: 'wrap',
+              opacity: 0.9,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}
+            >
               ✅ No credit card required
             </Typography>
-            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}>
-              ✅ Setup in under 2 minutes  
+            <Typography
+              variant="body2"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}
+            >
+              ✅ Setup in under 2 minutes
             </Typography>
-            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}>
+            <Typography
+              variant="body2"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}
+            >
               ✅ Works on all devices
             </Typography>
           </Box>
         </Box>
       </Container>
-
-      <CreateContest open={open} onClose={handleOnClose} />
     </>
   );
 }

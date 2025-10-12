@@ -9,6 +9,7 @@ import App from './App';
 import { store } from './app/store';
 import './index.css';
 import ContestPage from './pages/contest/ContestPage';
+import CreateContestPage from './pages/contest/CreateContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import LandingPage from './pages/landing/LandingPage';
 import ContactPage from './pages/contact/ContactPage';
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <LandingPage /> },
       { path: 'contests', element: <ContestsPage /> },
+      { path: 'contests/create', element: <CreateContestPage /> },
       { path: 'contests/:id', element: <ContestPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },

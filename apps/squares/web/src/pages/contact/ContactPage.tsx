@@ -21,7 +21,7 @@ export default function ContactPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,7 +56,8 @@ export default function ContactPage() {
             fontWeight: 400,
           }}
         >
-          Have a question or need help? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+          Have a question or need help? We'd love to hear from you. Send us a message and we'll
+          respond as soon as possible.
         </Typography>
       </Box>
 
@@ -74,9 +75,15 @@ export default function ContactPage() {
           <Typography variant="h5" sx={{ color: 'white', mb: 3, fontWeight: 600 }}>
             Send us a message
           </Typography>
-          
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+          >
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}
+            >
               <TextField
                 fullWidth
                 label="Your Name"

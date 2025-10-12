@@ -1,6 +1,7 @@
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LoginIcon from '@mui/icons-material/Login';
 import MenuIcon from '@mui/icons-material/Menu';
+import { Divider } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -42,12 +43,17 @@ export default function HeaderMenu({
         onClose={handleCloseNavMenu}
         sx={{ display: { xs: 'block', md: 'none' } }}
       >
-        {auth.isAuthenticated &&
-          pages.map((page) => (
+        {pages.map((page) => {
+          if (page.name === 'Contests' && !auth.isAuthenticated) {
+            return null;
+          }
+
+          return (
             <MenuItem
               key={page.name}
               onClick={() => {
                 navigate(page.navigate);
+                handleCloseNavMenu();
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -55,9 +61,11 @@ export default function HeaderMenu({
                 <Typography>{page.name}</Typography>
               </Box>
             </MenuItem>
-          ))}
+          );
+        })}
 
         {/* Mobile Login/Register */}
+        {!auth.isAuthenticated && <Divider />}
         {!auth.isAuthenticated && (
           <MenuItem
             onClick={() => {
