@@ -39,13 +39,13 @@ const contestSlice = createSlice({
       state,
       action: PayloadAction<{ xLabels?: number[]; yLabels?: number[] }>
     ) {
-			const { xLabels, yLabels } = action.payload;
+      const { xLabels, yLabels } = action.payload;
       if (!state.currentContest || xLabels === undefined || yLabels === undefined) {
         return;
       }
 
-			state.currentContest.xLabels = xLabels;
-			state.currentContest.yLabels = yLabels;
+      state.currentContest.xLabels = xLabels;
+      state.currentContest.yLabels = yLabels;
     },
     updateSquareFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
       if (!state.currentContest) {

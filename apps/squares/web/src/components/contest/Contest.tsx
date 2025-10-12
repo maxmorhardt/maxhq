@@ -1,8 +1,8 @@
 import { Box } from '@mui/material';
 import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { setCurrentSquare } from '../../features/contests/contestSlice';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import EditSquare from '../square/EditSquare';
 import Square from '../square/Square';
 
@@ -20,12 +20,11 @@ export default function Contest() {
   const numCols = contest.xLabels.length;
 
   const contestMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
-	contest.squares.forEach((square) => {
-		if (square.row < numRows && square.col < numCols) {
-			contestMatrix[square.row][square.col] = square.value;
-		}
-	});
-  
+  contest.squares.forEach((square) => {
+    if (square.row < numRows && square.col < numCols) {
+      contestMatrix[square.row][square.col] = square.value;
+    }
+  });
 
   const handleSquareClick = async (row: number, col: number) => {
     const square = contest.squares.find((s) => s.row === row && s.col === col);

@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { selectCurrentSquare, selectSquareLoading } from '../../features/contests/contestSelectors';
 import { updateSquare } from '../../features/contests/contestThunks';
 import type { APIError } from '../../types/error';

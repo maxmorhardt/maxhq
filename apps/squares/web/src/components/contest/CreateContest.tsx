@@ -10,9 +10,9 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectContestLoading } from '../../features/contests/contestSelectors';
 import { createContest } from '../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import type { APIError } from '../../types/error';
 
 interface CreateContestProps {

@@ -3,23 +3,27 @@ import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import Contest from '../../components/contest/Contest';
+import { Toast } from '../../components/toast/Toast';
 import {
   selectContestError,
   selectContestLoading,
   selectCurrentContest,
 } from '../../features/contests/contestSelectors';
-import { fetchContestById, randomizeLabels } from '../../features/contests/contestThunks';
-import { contestSocketEventHandler, getSocketUrl } from '../../service/wsService';
 import {
+  clearError,
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
 } from '../../features/contests/contestSlice';
+import { fetchContestById, randomizeLabels } from '../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+import { useToast } from '../../hooks/useToast';
+import { contestSocketEventHandler, getSocketUrl } from '../../service/wsService';
 
 export default function ContestPage() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
+  const { toast, showToast, hideToast } = useToast();
 
   const { id } = useParams<{ id: string }>();
 
@@ -53,12 +57,13 @@ export default function ContestPage() {
       onContestUpdate: (message) => {
         if (
           message.contestId === currentContest?.id &&
-          message.value !== undefined
+          message.xLabels !== undefined &&
+          message.yLabels !== undefined
         ) {
           dispatch(
             updateContestFromWebSocket({
-              xLabels: message.xLabels ?? [],
-              yLabels: message.yLabels ?? [],
+              xLabels: message.xLabels,
+              yLabels: message.yLabels,
             })
           );
         }
@@ -69,16 +74,16 @@ export default function ContestPage() {
   const isConnected = readyState === ReadyState.OPEN;
   const isConnecting = readyState === ReadyState.CONNECTING;
 
-  const handleRandomizeLabels = () => {
+  const handleRandomizeLabels = async () => {
     if (!id) {
       return;
     }
 
-    dispatch(randomizeLabels(id));
+    dispatch(randomizeLabels(id)).unwrap();
   };
 
   const handleChooseWinner = () => {
-    console.log('Choose winner clicked');
+    showToast('Choose winner feature coming soon!', 'info');
   };
 
   useEffect(() => {
@@ -89,20 +94,17 @@ export default function ContestPage() {
     dispatch(fetchContestById(id));
   }, [id, dispatch]);
 
+  useEffect(() => {
+    if (error) {
+      showToast(error, 'error');
+      dispatch(clearError());
+    }
+  }, [dispatch, error, showToast]);
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
         <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <Typography color="error" variant="h6">
-          {error}
-        </Typography>
       </Box>
     );
   }
@@ -167,6 +169,13 @@ export default function ContestPage() {
           </Button>
         </Stack>
       </Box>
+
+      <Toast
+        open={toast.open}
+        message={toast.message}
+        severity={toast.severity}
+        onClose={hideToast}
+      />
     </Box>
   );
 }
