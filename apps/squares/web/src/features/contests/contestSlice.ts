@@ -40,8 +40,8 @@ const contestSlice = createSlice({
       action: PayloadAction<{ xLabels?: number[]; yLabels?: number[] }>
     ) {
       if (!state.currentContest) {
-				return;
-			}
+        return;
+      }
 
       const { xLabels, yLabels } = action.payload;
 
@@ -55,8 +55,8 @@ const contestSlice = createSlice({
     },
     updateSquareFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
       if (!state.currentContest) {
-				return;
-			}
+        return;
+      }
 
       const { id, value } = action.payload;
       const squareIndex = state.currentContest.squares.findIndex((square) => square.id === id);
@@ -120,8 +120,8 @@ const contestSlice = createSlice({
         const updatedSquare = action.payload;
 
         if (!state.currentContest) {
-					return;
-				}
+          return;
+        }
 
         const index = state.currentContest.squares.findIndex(
           (s) => s.row === updatedSquare.row && s.col === updatedSquare.col
@@ -143,7 +143,12 @@ const contestSlice = createSlice({
         state.error = null;
       })
       .addCase(randomizeLabels.fulfilled, (state, action: PayloadAction<Contest>) => {
-        state.currentContest = action.payload;
+        if (!state.currentContest) {
+          return;
+        }
+
+        state.currentContest.xLabels = action.payload.xLabels;
+        state.currentContest.yLabels = action.payload.yLabels;
       })
       .addCase(randomizeLabels.rejected, (state, action) => {
         state.error = action.payload?.message || 'Error randomizing labels';

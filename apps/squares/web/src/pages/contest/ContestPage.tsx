@@ -58,8 +58,8 @@ export default function ContestPage() {
         ) {
           dispatch(
             updateContestFromWebSocket({
-              xLabels: message.xLabels || [],
-              yLabels: message.yLabels || [],
+              xLabels: message.xLabels ?? [],
+              yLabels: message.yLabels ?? [],
             })
           );
         }
@@ -71,10 +71,10 @@ export default function ContestPage() {
   const isConnecting = readyState === ReadyState.CONNECTING;
 
   const handleRandomizeLabels = () => {
-		if (!id) {
-			return;
-		}
-		
+    if (!id) {
+      return;
+    }
+
     dispatch(randomizeLabels(id));
   };
 
