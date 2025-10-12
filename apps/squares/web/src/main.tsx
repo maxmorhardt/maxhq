@@ -9,7 +9,7 @@ import App from './App';
 import { store } from './app/store';
 import './index.css';
 import ContestPage from './pages/contest/ContestPage';
-import CreateContestPage from './pages/contest/CreateContestPage';
+import CreateContestPage from './pages/contest/create/CreateContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import LandingPage from './pages/landing/LandingPage';
 import ContactPage from './pages/contact/ContactPage';

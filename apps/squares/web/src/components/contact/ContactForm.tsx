@@ -1,0 +1,181 @@
+import { Box, Button, Paper, TextField, Typography } from '@mui/material';
+import { Send } from '@mui/icons-material';
+import { useState } from 'react';
+
+interface ContactFormProps {
+  onSubmit?: (formData: { name: string; email: string; subject: string; message: string }) => void;
+}
+
+export default function ContactForm({ onSubmit }: ContactFormProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement form submission
+    console.log('Form submitted:', formData);
+    if (onSubmit) {
+      onSubmit(formData);
+    }
+  };
+
+  return (
+    <Paper
+      sx={{
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 3,
+        p: 4,
+      }}
+    >
+      <Typography variant="h5" sx={{ color: 'white', mb: 3, fontWeight: 600 }}>
+        Send us a message
+      </Typography>
+
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+          <TextField
+            fullWidth
+            label="Your Name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            required
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                '& fieldset': {
+                  borderColor: 'rgba(255,255,255,0.3)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255,255,255,0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgba(255,255,255,0.7)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255,255,255,0.7)',
+              },
+            }}
+          />
+          <TextField
+            fullWidth
+            label="Email Address"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            required
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                '& fieldset': {
+                  borderColor: 'rgba(255,255,255,0.3)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255,255,255,0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgba(255,255,255,0.7)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255,255,255,0.7)',
+              },
+            }}
+          />
+        </Box>
+
+        <TextField
+          fullWidth
+          label="Subject"
+          name="subject"
+          value={formData.subject}
+          onChange={handleInputChange}
+          required
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              color: 'white',
+              '& fieldset': {
+                borderColor: 'rgba(255,255,255,0.3)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(255,255,255,0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'rgba(255,255,255,0.7)',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: 'rgba(255,255,255,0.7)',
+            },
+          }}
+        />
+
+        <TextField
+          fullWidth
+          label="Message"
+          name="message"
+          multiline
+          rows={6}
+          value={formData.message}
+          onChange={handleInputChange}
+          required
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              color: 'white',
+              '& fieldset': {
+                borderColor: 'rgba(255,255,255,0.3)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(255,255,255,0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'rgba(255,255,255,0.7)',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: 'rgba(255,255,255,0.7)',
+            },
+          }}
+        />
+
+        <Button
+          type="submit"
+          variant="contained"
+          startIcon={<Send />}
+          sx={{
+            alignSelf: 'flex-start',
+            px: 4,
+            py: 1.5,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            fontWeight: 600,
+            borderRadius: 2,
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+              transform: 'translateY(-1px)',
+            },
+          }}
+        >
+          Send Message
+        </Button>
+      </Box>
+    </Paper>
+  );
+}

@@ -14,10 +14,10 @@ import { EmojiEvents, SportsSoccer, Groups, Add, ArrowBack } from '@mui/icons-ma
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
-import { selectContestLoading } from '../../features/contests/contestSelectors';
-import { createContest } from '../../features/contests/contestThunks';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import type { APIError } from '../../types/error';
+import { selectContestLoading } from '../../../features/contests/contestSelectors';
+import { createContest } from '../../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
+import type { APIError } from '../../../types/error';
 
 export default function CreateContestPage() {
   const auth = useAuth();
