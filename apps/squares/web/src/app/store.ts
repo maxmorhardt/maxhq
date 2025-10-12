@@ -1,10 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../features/contests/contestSlice';
+import { toastReducer } from '../features/toast/toastSlice';
+
+const rootReducer = {
+  contest: contestReducer,
+  toast: toastReducer,
+};
 
 export const store = configureStore({
-  reducer: {
-    contest: contestReducer,
-  },
+  reducer: rootReducer,
 });
 
 export type AppStore = typeof store;

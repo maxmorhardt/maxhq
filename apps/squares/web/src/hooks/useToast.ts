@@ -1,29 +1,23 @@
-import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '../app/store';
+import { addToast, removeToast } from '../features/toast/toastSlice';
 
 export function useToast() {
-  const [toast, setToast] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'error' | 'warning' | 'info' | 'success';
-  }>({
-    open: false,
-    message: '',
-    severity: 'info',
-  });
+  const dispatch = useDispatch<AppDispatch>();
 
   const showToast = (
     message: string,
-    severity: 'error' | 'warning' | 'info' | 'success' = 'info'
+    severity: 'error' | 'warning' | 'info' | 'success' = 'info',
+    duration?: number
   ) => {
-    setToast({ open: true, message, severity });
+    dispatch(addToast({ message, severity, duration }));
   };
 
-  const hideToast = () => {
-    setToast((prev) => ({ ...prev, open: false }));
+  const hideToast = (id: string) => {
+    dispatch(removeToast(id));
   };
 
   return {
-    toast,
     showToast,
     hideToast,
   };
