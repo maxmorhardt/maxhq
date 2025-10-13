@@ -1,17 +1,16 @@
+import { ArrowBack, EmojiEvents, Groups, SportsSoccer } from '@mui/icons-material';
 import {
+  Alert,
   Box,
   Button,
+  Card,
+  CardContent,
+  CircularProgress,
   Container,
   Paper,
   TextField,
   Typography,
-  Card,
-  CardContent,
-  CircularProgress,
-  Alert,
-  useTheme,
 } from '@mui/material';
-import { EmojiEvents, SportsSoccer, Groups, ArrowBack } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
@@ -19,12 +18,12 @@ import { selectContestLoading } from '../../../features/contests/contestSelector
 import { createContest } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import type { APIError } from '../../../types/error';
+import { gradients } from '../../../types/gradients';
 
 export default function CreateContestPage() {
   const auth = useAuth();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const theme = useTheme();
 
   const loading = useAppSelector(selectContestLoading);
 
@@ -80,7 +79,7 @@ export default function CreateContestPage() {
           sx={{
             fontWeight: 700,
             mb: 2,
-            background: theme.customBackgrounds.gradients.textGradient,
+            background: gradients.textGradient,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -111,7 +110,7 @@ export default function CreateContestPage() {
             color: 'rgba(255,255,255,0.7)',
             '&:hover': {
               color: 'white',
-              backgroundColor: theme.customBackgrounds.glass.medium,
+              backgroundColor: 'rgba(255,255,255,0.1)',
             },
           }}
         >
@@ -131,7 +130,7 @@ export default function CreateContestPage() {
           elevation={0}
           sx={{
             p: 4,
-            background: theme.customBackgrounds.glass.light,
+            background: 'rgba(255,255,255,0.05)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 3,
@@ -275,12 +274,12 @@ export default function CreateContestPage() {
                 sx={{
                   flex: 2,
                   py: 1.5,
-                  background: theme.customBackgrounds.gradients.primary,
+                  background: gradients.primary,
                   '&:hover': {
-                    background: theme.customBackgrounds.gradients.secondary,
+                    background: gradients.secondary,
                   },
                   '&:disabled': {
-                    background: theme.customBackgrounds.glass.medium,
+                    background: 'rgba(255,255,255,0.1)',
                     color: 'rgba(255,255,255,0.3)',
                   },
                 }}

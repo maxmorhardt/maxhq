@@ -1,23 +1,8 @@
-import { Box, Button, Typography, useTheme } from '@mui/material';
-import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { Box, Typography } from '@mui/material';
 import LandingSectionContainer from './LandingSectionContainer';
+import LandingCreateContestButton from './LandingCreateContestButton';
 
 export default function LandingCallToAction() {
-  const navigate = useNavigate();
-  const auth = useAuth();
-  const theme = useTheme();
-
-  const handleGetStarted = () => {
-    if (auth.isAuthenticated) {
-      navigate('/contests/create');
-    } else {
-      auth.signinRedirect({
-        redirect_uri: `${window.location.origin}/contests/create`,
-      });
-    }
-  };
-
   return (
     <LandingSectionContainer variant="lightBlue">
       <Typography
@@ -27,7 +12,7 @@ export default function LandingCallToAction() {
           fontWeight: 700,
           color: 'white',
           mb: 2,
-          textShadow: theme.customShadows.text,
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
         }}
       >
         Ready to Get Started?
@@ -37,7 +22,7 @@ export default function LandingCallToAction() {
         variant="h6"
         sx={{
           mb: 4,
-          color: theme.customColors.textMuted,
+          color: 'rgba(255,255,255,0.8)',
           maxWidth: 500,
           mx: 'auto',
           fontWeight: 400,
@@ -49,26 +34,7 @@ export default function LandingCallToAction() {
       </Typography>
 
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleGetStarted}
-          sx={{
-            px: 6,
-            fontSize: '1.2rem',
-            fontWeight: 600,
-            color: 'text.primary',
-            backgroundColor: theme.customBackgrounds.glass.heavy,
-            '&:hover': {
-              backgroundColor: theme.customBackgrounds.glass.hover,
-              transform: theme.customTransforms.hoverLiftSmall,
-              boxShadow: theme.customShadows.interactive,
-            },
-            transition: theme.customTransitions.default,
-          }}
-        >
-          Create Contest Now
-        </Button>
+        <LandingCreateContestButton text="Create Contest Now" />
       </Box>
 
       <Box
@@ -78,25 +44,17 @@ export default function LandingCallToAction() {
           justifyContent: 'center',
           gap: 4,
           flexWrap: 'wrap',
-          opacity: 0.9,
+          color: 'white',
+          opacity: 0.95,
         }}
       >
-        <Typography
-          variant="body2"
-          sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}
-        >
+        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           ✅ No credit card required
         </Typography>
-        <Typography
-          variant="body2"
-          sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}
-        >
+        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           ✅ Setup in under 2 minutes
         </Typography>
-        <Typography
-          variant="body2"
-          sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(255,255,255,0.8)' }}
-        >
+        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           ✅ Works on all devices
         </Typography>
       </Box>

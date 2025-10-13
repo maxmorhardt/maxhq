@@ -1,40 +1,28 @@
-import { Box, Button, Container, Typography, useTheme } from '@mui/material';
-import { useAuth } from 'react-oidc-context';
+import { Box, Button, Container, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { gradients } from '../../types/gradients';
+import LandingCreateContestButton from './LandingCreateContestButton';
 
 export default function LandingHero() {
   const navigate = useNavigate();
-  const auth = useAuth();
-  const theme = useTheme();
-
-  const handleGetStarted = () => {
-    if (auth.isAuthenticated) {
-      navigate('/contests/create');
-    } else {
-      auth.signinRedirect({
-        redirect_uri: `${window.location.origin}/contests/create`,
-      });
-    }
-  };
 
   return (
     <Box
       sx={{
-        background: theme.customBackgrounds.gradients.lightBlue,
+        background: gradients.lightBlue,
         py: { xs: 10, md: 16 },
         mb: 8,
       }}
     >
       <Container maxWidth="lg">
-        <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 2 }}>
+        <Box sx={{ textAlign: 'center', position: 'relative' }}>
           <Typography
             variant="h1"
-            component="h1"
             sx={{
               fontWeight: 800,
               fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
               mb: 4,
-              textShadow: theme.customShadows.text,
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
             }}
           >
             Squares
@@ -57,26 +45,7 @@ export default function LandingHero() {
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleGetStarted}
-              sx={{
-                px: 6,
-                fontSize: '1.2rem',
-                fontWeight: 600,
-                color: 'text.primary',
-                backgroundColor: theme.customBackgrounds.glass.heavy,
-                '&:hover': {
-                  backgroundColor: theme.customBackgrounds.glass.hover,
-                  transform: theme.customTransforms.hoverLiftSmall,
-                  boxShadow: theme.customShadows.interactive,
-                },
-                transition: theme.customTransitions.default,
-              }}
-            >
-              Create Your First Contest
-            </Button>
+            <LandingCreateContestButton text="Create Your First Contest" />
             <Button
               variant="outlined"
               size="large"

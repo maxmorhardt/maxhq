@@ -1,4 +1,4 @@
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { WebStorageStateStore } from 'oidc-client-ts';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -14,7 +14,6 @@ import CreateContestPage from './pages/contest/create/CreateContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
-import { theme } from './theme/theme';
 
 const oidcConfig: AuthProviderProps = {
   authority: 'https://auth.maxstash.io/realms/maxstash',
@@ -26,6 +25,12 @@ const oidcConfig: AuthProviderProps = {
     window.history.replaceState({}, document.title, window.location.pathname);
   },
 };
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
 
 const router = createBrowserRouter([
   {

@@ -1,6 +1,7 @@
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import LandingSectionContainer from './LandingSectionContainer';
 import FeatureCard from './FeatureCard';
+import { gradients } from '../../types/gradients';
 
 type GradientType = 'primary' | 'pink' | 'cyan' | 'mint' | 'secondary' | 'lightBlue' | 'black';
 
@@ -39,8 +40,6 @@ const features: Feature[] = [
 ];
 
 export default function LandingFeatures() {
-  const theme = useTheme();
-
   return (
     <LandingSectionContainer variant="black">
       <Typography
@@ -52,7 +51,7 @@ export default function LandingFeatures() {
           mb: 2,
           fontWeight: 700,
           color: 'white',
-          background: theme.customBackgrounds.gradients.textGradient,
+          background: gradients.textGradient,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -65,7 +64,7 @@ export default function LandingFeatures() {
         variant="h6"
         sx={{
           textAlign: 'center',
-          color: theme.customColors.textMuted,
+          color: 'rgba(255,255,255,0.8)',
           mb: 6,
           maxWidth: 600,
           mx: 'auto',

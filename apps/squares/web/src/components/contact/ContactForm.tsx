@@ -1,5 +1,5 @@
-import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import { Send } from '@mui/icons-material';
+import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 
 interface ContactFormProps {
@@ -13,6 +13,24 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
     subject: '',
     message: '',
   });
+
+  const textFieldSx = {
+    '& .MuiOutlinedInput-root': {
+      color: 'white',
+      '& fieldset': {
+        borderColor: 'rgba(255,255,255,0.3)',
+      },
+      '&:hover fieldset': {
+        borderColor: 'rgba(255,255,255,0.5)',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: 'rgba(255,255,255,0.7)',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: 'rgba(255,255,255,0.7)',
+    },
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,7 +51,7 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
       sx={{
         background: 'rgba(255,255,255,0.05)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid rgba(255,255,255,0.15)',
         borderRadius: 3,
         p: 4,
       }}
@@ -55,23 +73,7 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
             value={formData.name}
             onChange={handleInputChange}
             required
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': {
-                  borderColor: 'rgba(255,255,255,0.3)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(255,255,255,0.5)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'rgba(255,255,255,0.7)',
-                },
-              },
-              '& .MuiInputLabel-root': {
-                color: 'rgba(255,255,255,0.7)',
-              },
-            }}
+            sx={textFieldSx}
           />
           <TextField
             fullWidth
@@ -81,23 +83,7 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
             value={formData.email}
             onChange={handleInputChange}
             required
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': {
-                  borderColor: 'rgba(255,255,255,0.3)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(255,255,255,0.5)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'rgba(255,255,255,0.7)',
-                },
-              },
-              '& .MuiInputLabel-root': {
-                color: 'rgba(255,255,255,0.7)',
-              },
-            }}
+            sx={textFieldSx}
           />
         </Box>
 
@@ -108,23 +94,7 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
           value={formData.subject}
           onChange={handleInputChange}
           required
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              '& fieldset': {
-                borderColor: 'rgba(255,255,255,0.3)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255,255,255,0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgba(255,255,255,0.7)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255,255,255,0.7)',
-            },
-          }}
+          sx={textFieldSx}
         />
 
         <TextField
@@ -136,23 +106,7 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
           value={formData.message}
           onChange={handleInputChange}
           required
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              '& fieldset': {
-                borderColor: 'rgba(255,255,255,0.3)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255,255,255,0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgba(255,255,255,0.7)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255,255,255,0.7)',
-            },
-          }}
+          sx={textFieldSx}
         />
 
         <Button
@@ -161,16 +115,6 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
           startIcon={<Send />}
           sx={{
             alignSelf: 'flex-start',
-            px: 4,
-            py: 1.5,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            fontWeight: 600,
-            borderRadius: 2,
-            '&:hover': {
-              background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-              transform: 'translateY(-1px)',
-            },
           }}
         >
           Send Message

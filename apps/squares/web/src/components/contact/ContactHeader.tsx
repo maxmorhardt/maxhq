@@ -8,7 +8,7 @@ export default function ContactHeader() {
         sx={{
           fontWeight: 700,
           mb: 2,
-          background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%)',
+          background: 'white',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -19,7 +19,7 @@ export default function ContactHeader() {
       <Typography
         variant="h6"
         sx={{
-          color: 'rgba(255,255,255,0.8)',
+          opacity: 0.8,
           maxWidth: 600,
           mx: 'auto',
           fontWeight: 400,

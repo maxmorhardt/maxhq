@@ -40,11 +40,10 @@ const howItWorksSteps = [
 
 export default function LandingHowItWorks() {
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
+    <Container maxWidth="lg" sx={{ mb: 8 }}>
+      <Box sx={{ textAlign: 'center' }}>
         <Typography
           variant="h3"
-          gutterBottom
           sx={{
             fontWeight: 700,
             mb: 2,
