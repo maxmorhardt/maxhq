@@ -12,6 +12,7 @@ import ContactPage from './pages/contact/ContactPage';
 import ContestPage from './pages/contests/contest/ContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import CreateContestPage from './pages/contests/create/CreateContestPage';
+import ErrorPage from './pages/error/ErrorPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
 
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+		errorElement: <ErrorPage />,
     children: [
       { index: true, element: <LandingPage /> },
       { path: 'contests', element: <ContestsPage /> },

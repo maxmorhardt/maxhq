@@ -7,7 +7,7 @@ interface ContactFormProps {
 }
 
 export default function ContactForm({ onSubmit }: ContactFormProps) {
-	const theme = useTheme();
+  const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',

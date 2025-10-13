@@ -4,8 +4,16 @@ import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import Contest from '../../../components/contest/Contest';
-import { selectContestError, selectContestLoading, selectCurrentContest } from '../../../features/contests/contestSelectors';
-import { clearError, updateContestFromWebSocket, updateSquareFromWebSocket } from '../../../features/contests/contestSlice';
+import {
+  selectContestError,
+  selectContestLoading,
+  selectCurrentContest,
+} from '../../../features/contests/contestSelectors';
+import {
+  clearError,
+  updateContestFromWebSocket,
+  updateSquareFromWebSocket,
+} from '../../../features/contests/contestSlice';
 import { fetchContestById, randomizeLabels } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';

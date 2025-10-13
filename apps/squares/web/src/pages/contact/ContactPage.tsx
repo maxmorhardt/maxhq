@@ -67,15 +67,15 @@ export default function ContactPage() {
         <ContactForm onSubmit={handleFormSubmit} />
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-					{contactMethods.map((method) => (
-						<ContactInfoCard
-							key={method.title}
-							icon={method.icon}
-							title={method.title}
-							details={method.details}
-						/>
-					))}
-				</Box>
+          {contactMethods.map((method) => (
+            <ContactInfoCard
+              key={method.title}
+              icon={method.icon}
+              title={method.title}
+              details={method.details}
+            />
+          ))}
+        </Box>
       </Box>
     </Container>
   );
