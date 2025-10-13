@@ -23,7 +23,7 @@ export default function LandingSectionContainer({
   };
 
   return (
-    <Container maxWidth="lg" sx={{ pb: 8 }}>
+    <Container maxWidth="lg" sx={{ pb: 14 }}>
       <Box
         sx={{
           textAlign: 'center',
