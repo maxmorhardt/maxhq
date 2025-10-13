@@ -7,6 +7,7 @@ export const gradients = {
   pink: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
   cyan: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
   mint: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+  background: 'linear-gradient(135deg, #121212 0%, #1e1e1e 100%)',
 };
 
 export type GradientType = keyof typeof gradients;

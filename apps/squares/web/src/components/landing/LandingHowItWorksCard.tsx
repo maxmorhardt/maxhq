@@ -1,29 +1,32 @@
 import type { SvgIconComponent } from '@mui/icons-material';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
 
-interface HowItWorksStepProps {
+interface LandingHowItWorksCardProps {
   icon: SvgIconComponent;
   title: string;
   description: string;
   backgroundColor: string;
 }
 
-export default function HowItWorksStep({
+export default function LandingHowItWorksCard({
   icon: Icon,
   title,
   description,
   backgroundColor,
-}: HowItWorksStepProps) {
+}: LandingHowItWorksCardProps) {
+  const theme = useTheme();
+
   return (
     <Paper
       elevation={0}
       sx={{
         p: 4,
         borderRadius: 3,
-        border: '1px solid',
         borderColor: 'divider',
         position: 'relative',
         transition: 'all 0.3s ease',
+        background: theme.palette.grey[900],
+        border: `1px solid ${theme.palette.grey[800]}`,
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: '0 12px 32px rgba(255,255,255,0.1)',

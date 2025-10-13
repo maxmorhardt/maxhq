@@ -1,10 +1,10 @@
 import { EmojiEvents, GridOn, Groups, Shuffle } from '@mui/icons-material';
 import { Box, Button, Container, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ExampleCard from '../../components/landing/ExampleCard';
-import FeatureCard from '../../components/landing/FeatureCard';
-import HowItWorksStep from '../../components/landing/HowItWorksStep';
+import LandingExampleCard from '../../components/landing/LandingExampleCard';
+import LandingFeatureCard from '../../components/landing/LandingFeatureCard';
 import LandingCreateContestButton from '../../components/landing/LandingCreateContestButton';
+import LandingHowItWorksCard from '../../components/landing/LandingHowItWorksCard';
 import LandingSectionContainer from '../../components/landing/LandingSectionContainer';
 import { gradients } from '../../types/gradients';
 
@@ -140,7 +140,7 @@ export default function LandingPage() {
       </Box>
 
       {/* how it works */}
-      <Container maxWidth="lg" sx={{ mb: 8 }}>
+      <Container maxWidth="lg" sx={{ mb: 14 }}>
         <Box sx={{ textAlign: 'center' }}>
           <Typography
             variant="h3"
@@ -169,11 +169,11 @@ export default function LandingPage() {
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-              gap: { xs: 1, sm: 1, md: 3 },
+              gap: { xs: 2, sm: 2, md: 3 },
             }}
           >
             {howItWorksSteps.map((step, index) => (
-              <HowItWorksStep
+              <LandingHowItWorksCard
                 key={index}
                 icon={step.icon}
                 title={step.title}
@@ -223,20 +223,20 @@ export default function LandingPage() {
               mb: 4,
             }}
           >
-            <ExampleCard title="🏈 Game Situation">
+            <LandingExampleCard title="🏈 Game Situation">
               <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)' }}>
                 End of 1st Quarter
               </Typography>
-            </ExampleCard>
+            </LandingExampleCard>
 
-            <ExampleCard title="📊 Current Score">
+            <LandingExampleCard title="📊 Current Score">
               <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)' }}>
                 Home Team <strong>14</strong> - Away Team <strong>7</strong>
               </Typography>
-            </ExampleCard>
+            </LandingExampleCard>
           </Box>
 
-          <ExampleCard title="🎯 Winning Square" isCentered>
+          <LandingExampleCard title="🎯 Winning Square" isCentered>
             <Typography variant="body1" sx={{ mb: 2, color: 'rgba(255,255,255,0.8)' }}>
               Last digits: <strong>4</strong> (Home) × <strong>7</strong> (Away)
             </Typography>
@@ -244,13 +244,13 @@ export default function LandingPage() {
               variant="h5"
               sx={{
                 fontWeight: 600,
-                color: 'white',
+                color: 'gold',
                 textShadow: '0 2px 4px rgba(0,0,0,0.3)',
               }}
             >
               Square (4,7) Wins! 🏆
             </Typography>
-          </ExampleCard>
+          </LandingExampleCard>
         </Box>
       </LandingSectionContainer>
 
@@ -296,7 +296,7 @@ export default function LandingPage() {
           }}
         >
           {features.map((feature, index) => (
-            <FeatureCard
+            <LandingFeatureCard
               key={index}
               emoji={feature.emoji}
               gradient={feature.gradient}

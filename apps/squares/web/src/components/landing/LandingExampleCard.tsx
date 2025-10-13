@@ -1,13 +1,17 @@
 import { Paper, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 
-interface ExampleCardProps {
+interface LandingExampleCardProps {
   title: string;
   children: ReactNode;
   isCentered?: boolean;
 }
 
-export default function ExampleCard({ title, children, isCentered = false }: ExampleCardProps) {
+export default function LandingExampleCard({
+  title,
+  children,
+  isCentered = false,
+}: LandingExampleCardProps) {
   return (
     <Paper
       elevation={0}

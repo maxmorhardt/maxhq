@@ -1,14 +1,19 @@
 import { Box, Typography } from '@mui/material';
 import GradientIcon from '../common/GradientIcon';
 
-interface FeatureCardProps {
+interface LandingFeatureCardProps {
   emoji: string;
   gradient: 'primary' | 'pink' | 'cyan' | 'mint' | 'secondary' | 'lightBlue' | 'black';
   title: string;
   description: string;
 }
 
-export default function FeatureCard({ emoji, gradient, title, description }: FeatureCardProps) {
+export default function LandingFeatureCard({
+  emoji,
+  gradient,
+  title,
+  description,
+}: LandingFeatureCardProps) {
   return (
     <Box sx={{ textAlign: 'center' }}>
       <GradientIcon character={emoji} gradient={gradient} />

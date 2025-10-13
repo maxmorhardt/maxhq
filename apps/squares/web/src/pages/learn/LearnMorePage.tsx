@@ -1,24 +1,45 @@
 import {
-  Box,
-  Container,
-  Typography,
-  Card,
-  CardContent,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
-import {
-  Sports,
-  People,
-  Timeline,
-  Security,
-  DeviceHub,
-  ExpandMore,
-  Tune,
+	DeviceHub,
+	People,
+	Security,
+	Sports,
+	Timeline,
+	Tune
 } from '@mui/icons-material';
+import {
+	Box,
+	Container,
+	Typography
+} from '@mui/material';
+import LearnFAQs from '../../components/learn/LearnFAQs';
+import LearnFeatureCard from '../../components/learn/LearnFeatureCard';
+import LearnHowItWorksCard from '../../components/learn/LearnHowItWorksCard';
 
 export default function LearnMorePage() {
+  const howItWorksSteps = [
+    {
+      stepNumber: 1,
+      title: 'Create the Grid',
+      description:
+        'Set up a 10x10 grid with 100 squares. Each square represents a potential winning combination.',
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    },
+    {
+      stepNumber: 2,
+      title: 'Players Choose Squares',
+      description:
+        'Participants select their squares by clicking on the grid. Each square can only be claimed once.',
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    },
+    {
+      stepNumber: 3,
+      title: 'Determine Winners',
+      description:
+        "Winners are determined by the last digit of each team's score at the end of each quarter.",
+      gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    },
+  ];
+
   const features = [
     {
       icon: <Sports sx={{ color: '#667eea' }} />,
@@ -93,16 +114,14 @@ export default function LearnMorePage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
-      {/* Header */}
+      {/* header */}
       <Box sx={{ textAlign: 'center', mb: 8 }}>
         <Typography
           variant="h2"
           sx={{
             fontWeight: 700,
-            mb: 2,
-            background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            mb: 4,
+            background: 'white',
             backgroundClip: 'text',
           }}
         >
@@ -111,7 +130,7 @@ export default function LearnMorePage() {
         <Typography
           variant="h6"
           sx={{
-            color: 'rgba(255,255,255,0.8)',
+            color: 'white',
             maxWidth: 800,
             mx: 'auto',
             fontWeight: 400,
@@ -123,7 +142,7 @@ export default function LearnMorePage() {
         </Typography>
       </Box>
 
-      {/* How It Works Section */}
+      {/* how it works */}
       <Box sx={{ mb: 10 }}>
         <Typography
           variant="h3"
@@ -140,120 +159,19 @@ export default function LearnMorePage() {
         <Box
           sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 4 }}
         >
-          <Card
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-              height: '100%',
-            }}
-          >
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 3,
-                }}
-              >
-                <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-                  1
-                </Typography>
-              </Box>
-              <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>
-                Create the Grid
-              </Typography>
-              <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
-                Set up a 10x10 grid with 100 squares. Each square represents a potential winning
-                combination.
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Card
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-              height: '100%',
-            }}
-          >
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 3,
-                }}
-              >
-                <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-                  2
-                </Typography>
-              </Box>
-              <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>
-                Players Choose Squares
-              </Typography>
-              <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
-                Participants select their squares by clicking on the grid. Each square can only be
-                claimed once.
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Card
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-              height: '100%',
-            }}
-          >
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 3,
-                }}
-              >
-                <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-                  3
-                </Typography>
-              </Box>
-              <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>
-                Determine Winners
-              </Typography>
-              <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
-                Winners are determined by the last digit of each team's score at the end of each
-                quarter.
-              </Typography>
-            </CardContent>
-          </Card>
+          {howItWorksSteps.map((step) => (
+            <LearnHowItWorksCard
+              key={step.stepNumber}
+              stepNumber={step.stepNumber}
+              title={step.title}
+              description={step.description}
+              gradient={step.gradient}
+            />
+          ))}
         </Box>
       </Box>
 
-      {/* Features Section */}
+      {/* features */}
       <Box sx={{ mb: 10 }}>
         <Typography
           variant="h3"
@@ -269,39 +187,17 @@ export default function LearnMorePage() {
 
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
           {features.map((feature) => (
-            <Card
-              sx={{
-                background: 'rgba(255,255,255,0.05)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 3,
-                height: '100%',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 12px 32px rgba(255,255,255,0.1)',
-                },
-              }}
-            >
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                  <Box sx={{ mt: 0.5 }}>{feature.icon}</Box>
-                  <Box>
-                    <Typography variant="h6" sx={{ color: 'white', mb: 1, fontWeight: 600 }}>
-                      {feature.title}
-                    </Typography>
-                    <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
-                      {feature.description}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+            <LearnFeatureCard
+              key={feature.title}
+              icon={feature.icon}
+              title={feature.title}
+              description={feature.description}
+            />
           ))}
         </Box>
       </Box>
 
-      {/* FAQ Section */}
+      {/* faqs */}
       <Box>
         <Typography
           variant="h3"
@@ -317,40 +213,7 @@ export default function LearnMorePage() {
 
         <Box sx={{ maxWidth: 800, mx: 'auto' }}>
           {faqs.map((faq, index) => (
-            <Accordion
-              key={index}
-              sx={{
-                background: 'rgba(255,255,255,0.05)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '12px !important',
-                mb: 2,
-                '&:before': {
-                  display: 'none',
-                },
-                '&.Mui-expanded': {
-                  margin: '0 0 16px 0',
-                },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMore sx={{ color: 'white' }} />}
-                sx={{
-                  '& .MuiAccordionSummary-content': {
-                    margin: '16px 0',
-                  },
-                }}
-              >
-                <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
-                  {faq.question}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.7 }}>
-                  {faq.answer}
-                </Typography>
-              </AccordionDetails>
-            </Accordion>
+            <LearnFAQs key={index} question={faq.question} answer={faq.answer} index={index} />
           ))}
         </Box>
       </Box>

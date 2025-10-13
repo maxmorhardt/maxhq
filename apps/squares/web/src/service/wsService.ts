@@ -18,6 +18,7 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
 
   try {
     const message: ContestChannelResponse = JSON.parse(eventParams.lastMessage.data);
+
     switch (message.type) {
       case 'square_update':
         eventParams.onSquareUpdate(message);
