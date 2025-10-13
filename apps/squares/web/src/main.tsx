@@ -9,9 +9,9 @@ import App from './App';
 import { store } from './app/store';
 import './index.css';
 import ContactPage from './pages/contact/ContactPage';
-import ContestPage from './pages/contest/ContestPage';
-import CreateContestPage from './pages/contest/create/CreateContestPage';
+import ContestPage from './pages/contests/contest/ContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
+import CreateContestPage from './pages/contests/create/CreateContestPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
 

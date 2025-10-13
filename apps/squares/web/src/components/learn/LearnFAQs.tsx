@@ -4,15 +4,13 @@ import { Accordion, AccordionDetails, AccordionSummary, Typography, useTheme } f
 interface LearnFAQsProps {
   question: string;
   answer: string;
-  index: number;
 }
 
-export default function LearnFAQs({ question, answer, index }: LearnFAQsProps) {
-	const theme = useTheme();
-	
+export default function LearnFAQs({ question, answer }: LearnFAQsProps) {
+  const theme = useTheme();
+
   return (
     <Accordion
-      key={index}
       sx={{
         background: theme.palette.grey[900],
         border: `1px solid ${theme.palette.grey[800]}`,

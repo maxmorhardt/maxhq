@@ -1,15 +1,15 @@
 import { ArrowBack, EmojiEvents, Groups, SportsSoccer } from '@mui/icons-material';
 import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Container,
-  Paper,
-  TextField,
-  Typography,
+	Alert,
+	Box,
+	Button,
+	Card,
+	CardContent,
+	CircularProgress,
+	Container,
+	Paper,
+	TextField,
+	Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';

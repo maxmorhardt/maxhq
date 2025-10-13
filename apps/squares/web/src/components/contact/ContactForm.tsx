@@ -1,5 +1,5 @@
 import { Send } from '@mui/icons-material';
-import { Box, Button, Paper, TextField, Typography } from '@mui/material';
+import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 
 interface ContactFormProps {
@@ -7,30 +7,13 @@ interface ContactFormProps {
 }
 
 export default function ContactForm({ onSubmit }: ContactFormProps) {
+	const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
     message: '',
   });
-
-  const textFieldSx = {
-    '& .MuiOutlinedInput-root': {
-      color: 'white',
-      '& fieldset': {
-        borderColor: 'rgba(255,255,255,0.3)',
-      },
-      '&:hover fieldset': {
-        borderColor: 'rgba(255,255,255,0.5)',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: 'rgba(255,255,255,0.7)',
-      },
-    },
-    '& .MuiInputLabel-root': {
-      color: 'rgba(255,255,255,0.7)',
-    },
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -49,9 +32,8 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
   return (
     <Paper
       sx={{
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.15)',
+        background: theme.palette.grey[900],
+        border: `1px solid ${theme.palette.grey[800]}`,
         borderRadius: 3,
         p: 4,
       }}
@@ -73,8 +55,8 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
             value={formData.name}
             onChange={handleInputChange}
             required
-            sx={textFieldSx}
           />
+
           <TextField
             fullWidth
             label="Email Address"
@@ -83,7 +65,6 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
             value={formData.email}
             onChange={handleInputChange}
             required
-            sx={textFieldSx}
           />
         </Box>
 
@@ -94,7 +75,6 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
           value={formData.subject}
           onChange={handleInputChange}
           required
-          sx={textFieldSx}
         />
 
         <TextField
@@ -106,7 +86,6 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
           value={formData.message}
           onChange={handleInputChange}
           required
-          sx={textFieldSx}
         />
 
         <Button

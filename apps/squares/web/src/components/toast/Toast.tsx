@@ -16,7 +16,14 @@ export function Toast({ open, message, severity, onClose, autoHideDuration = 300
       onClose={onClose}
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
     >
-      <Alert onClose={onClose} severity={severity} variant="filled" sx={{ width: '100%' }}>
+      <Alert
+        onClose={onClose}
+        severity={severity}
+        variant="filled"
+        sx={{
+          color: 'white',
+        }}
+      >
         {message}
       </Alert>
     </Snackbar>

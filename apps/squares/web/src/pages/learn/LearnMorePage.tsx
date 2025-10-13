@@ -1,16 +1,5 @@
-import {
-	DeviceHub,
-	People,
-	Security,
-	Sports,
-	Timeline,
-	Tune
-} from '@mui/icons-material';
-import {
-	Box,
-	Container,
-	Typography
-} from '@mui/material';
+import { DeviceHub, People, Security, Sports, Timeline, Tune } from '@mui/icons-material';
+import { Box, Container, Typography } from '@mui/material';
 import LearnFAQs from '../../components/learn/LearnFAQs';
 import LearnFeatureCard from '../../components/learn/LearnFeatureCard';
 import LearnHowItWorksCard from '../../components/learn/LearnHowItWorksCard';
@@ -81,7 +70,7 @@ export default function LearnMorePage() {
 
   const faqs = [
     {
-      question: 'What is a squares game?',
+      question: 'What is Squares?',
       answer:
         "Squares (also called Super Bowl squares) is a popular betting pool game. Players buy squares in a 10x10 grid, and winners are determined based on the last digit of each team's score at the end of each quarter.",
     },
@@ -213,7 +202,7 @@ export default function LearnMorePage() {
 
         <Box sx={{ maxWidth: 800, mx: 'auto' }}>
           {faqs.map((faq, index) => (
-            <LearnFAQs key={index} question={faq.question} answer={faq.answer} index={index} />
+            <LearnFAQs key={index} question={faq.question} answer={faq.answer} />
           ))}
         </Box>
       </Box>
