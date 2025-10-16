@@ -1,10 +1,10 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
-  createContestByName,
-  getContestById,
-  getContestsByUser,
-  randomizeContestLabels,
-  updateSquareValueById,
+	createNewContest,
+	getContestById,
+	getContestsByUser,
+	randomizeContestLabels,
+	updateSquareValueById
 } from '../../service/contestService';
 import type { Contest, CreateContestRequest, Square } from '../../types/contest';
 import type { APIError } from '../../types/error';
@@ -39,7 +39,7 @@ export const createContest = createAsyncThunk<
   { rejectValue: APIError }
 >('contests/create', async (params, { rejectWithValue }) => {
   try {
-    const contest = await createContestByName(params);
+    const contest = await createNewContest(params);
     return contest;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);

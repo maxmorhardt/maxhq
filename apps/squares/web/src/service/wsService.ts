@@ -37,9 +37,6 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
         }
         break;
 
-      case 'keepalive':
-        break;
-
       default:
         console.log('Unknown WebSocket message type:', message.type);
         break;

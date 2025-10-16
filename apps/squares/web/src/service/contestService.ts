@@ -20,9 +20,9 @@ export async function getContestById(id: string): Promise<Contest> {
   }
 }
 
-export async function createContestByName(request: CreateContestRequest) {
+export async function createNewContest(request: CreateContestRequest) {
   try {
-    const res = await api.post('/contests', request);
+    const res = await api.put('/contests', request);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -31,7 +31,7 @@ export async function createContestByName(request: CreateContestRequest) {
 
 export async function updateSquareValueById(id: string, value: string): Promise<Square> {
   try {
-    const res = await api.post<Square>(`/contests/square/${id}`, { value: value });
+    const res = await api.patch<Square>(`/contests/square/${id}`, { value: value });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
