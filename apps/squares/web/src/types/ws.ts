@@ -1,4 +1,3 @@
-
 import type { WSUpdate } from './contest';
 
 export interface HandleWSEventParams {

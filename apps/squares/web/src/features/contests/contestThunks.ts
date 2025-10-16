@@ -1,10 +1,10 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
-	createNewContest,
-	getContestById,
-	getContestsByUser,
-	randomizeContestLabels,
-	updateSquareValueById
+  createNewContest,
+  getContestById,
+  getContestsByUser,
+  randomizeContestLabels,
+  updateSquareValueById,
 } from '../../service/contestService';
 import type { Contest, CreateContestRequest, Square } from '../../types/contest';
 import type { APIError } from '../../types/error';

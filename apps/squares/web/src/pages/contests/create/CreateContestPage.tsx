@@ -52,10 +52,10 @@ export default function CreateContestPage() {
       return;
     }
 
-		if (!auth.user?.profile?.preferred_username) {
-			setError('User is missing a username');
-			return;
-		}
+    if (!auth.user?.profile?.preferred_username) {
+      setError('User is missing a username');
+      return;
+    }
 
     setError('');
 
@@ -63,7 +63,7 @@ export default function CreateContestPage() {
       const contest = await dispatch(
         createContest({
           name: formData.name.trim(),
-					ownerId: auth.user.profile.preferred_username,
+          ownerId: auth.user.profile.preferred_username,
           homeTeam: formData.homeTeam.trim() || undefined,
           awayTeam: formData.awayTeam.trim() || undefined,
         })

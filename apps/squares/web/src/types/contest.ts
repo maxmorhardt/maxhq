@@ -6,7 +6,7 @@ export interface Contest {
   homeTeam?: string;
   awayTeam?: string;
   squares: Square[];
-	ownerId: string;
+  ownerId: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -15,7 +15,7 @@ export interface Contest {
 
 export interface CreateContestRequest {
   name: string;
-	ownerId: string;
+  ownerId: string;
   homeTeam?: string;
   awayTeam?: string;
 }
@@ -34,21 +34,21 @@ export interface Square {
 export interface WSUpdate {
   type: string;
   contestId: string;
-	connectionId: string;
-	updatedBy: string;
-	timestamp: string;
-	square?: SquareWSUpdate;
-	contest?: ContestWSUpdate;
+  connectionId: string;
+  updatedBy: string;
+  timestamp: string;
+  square?: SquareWSUpdate;
+  contest?: ContestWSUpdate;
 }
 
 export interface SquareWSUpdate {
-	squareId: string;
-	value: string;
+  squareId: string;
+  value: string;
 }
 
 export interface ContestWSUpdate {
-	homeTeam?: string;
-	awayTeam?: string;
-	xLabels?: number[];
-	yLabels?: number[];
+  homeTeam?: string;
+  awayTeam?: string;
+  xLabels?: number[];
+  yLabels?: number[];
 }

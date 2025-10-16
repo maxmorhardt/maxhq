@@ -18,7 +18,7 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
 
   try {
     const message: WSUpdate = JSON.parse(eventParams.lastMessage.data);
-		console.log('WebSocket message received:', message);
+    console.log('WebSocket message received:', message);
     switch (message.type) {
       case 'square_update':
         eventParams.onSquareUpdate(message);
