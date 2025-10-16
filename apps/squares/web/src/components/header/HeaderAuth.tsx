@@ -35,7 +35,11 @@ export default function HeaderAuth({
           <Button
             color="inherit"
             sx={{ mr: 2 }}
-            onClick={() => auth.signinRedirect()}
+            onClick={() =>
+              auth.signinRedirect({
+                redirect_uri: window.location.href,
+              })
+            }
             variant="outlined"
           >
             Login

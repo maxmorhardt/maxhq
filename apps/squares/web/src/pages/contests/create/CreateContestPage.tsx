@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import { selectContestLoading } from '../../../features/contests/contestSelectors';
+import { clearError } from '../../../features/contests/contestSlice';
 import { createContest } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import type { APIError } from '../../../types/error';
@@ -63,7 +64,7 @@ export default function CreateContestPage() {
       const contest = await dispatch(
         createContest({
           name: formData.name.trim(),
-          ownerId: auth.user.profile.preferred_username,
+          owner: auth.user.profile.preferred_username,
           homeTeam: formData.homeTeam.trim() || undefined,
           awayTeam: formData.awayTeam.trim() || undefined,
         })
@@ -73,6 +74,7 @@ export default function CreateContestPage() {
     } catch (err: unknown) {
       const apiError = err as APIError;
       setError(apiError.message);
+      dispatch(clearError());
     }
   };
 

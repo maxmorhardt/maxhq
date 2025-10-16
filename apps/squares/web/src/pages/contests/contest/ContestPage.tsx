@@ -28,7 +28,7 @@ export default function ContestPage() {
   const { id } = useParams<{ id: string }>();
 
   const socketUrl = getSocketUrl(id, auth);
-  const shouldConnect = Boolean(id && auth.user?.access_token);
+  const shouldConnect = Boolean(id && auth.isAuthenticated && auth.user?.access_token);
 
   const webSocketOptions = useMemo(
     () => ({

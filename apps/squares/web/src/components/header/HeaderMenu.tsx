@@ -69,7 +69,9 @@ export default function HeaderMenu({
         {!auth.isAuthenticated && (
           <MenuItem
             onClick={() => {
-              auth.signinRedirect();
+              auth.signinRedirect({
+                redirect_uri: window.location.href,
+              });
               handleCloseNavMenu();
             }}
           >

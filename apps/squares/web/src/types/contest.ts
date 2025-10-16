@@ -15,7 +15,7 @@ export interface Contest {
 
 export interface CreateContestRequest {
   name: string;
-  ownerId: string;
+  owner: string;
   homeTeam?: string;
   awayTeam?: string;
 }

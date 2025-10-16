@@ -51,7 +51,7 @@ export default function Header() {
     if (setting === 'Account') {
       window.open('https://auth.maxstash.io/realms/maxstash/account', '_blank');
     } else if (setting === 'Logout') {
-      auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
+      auth.signoutRedirect({ post_logout_redirect_uri: window.location.href });
     }
 
     handleCloseUserMenu();
