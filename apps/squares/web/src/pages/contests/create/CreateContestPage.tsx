@@ -52,12 +52,18 @@ export default function CreateContestPage() {
       return;
     }
 
+		if (!auth.user?.profile?.preferred_username) {
+			setError('User is missing a username');
+			return;
+		}
+
     setError('');
 
     try {
       const contest = await dispatch(
         createContest({
           name: formData.name.trim(),
+					ownerId: auth.user.profile.preferred_username,
           homeTeam: formData.homeTeam.trim() || undefined,
           awayTeam: formData.awayTeam.trim() || undefined,
         })

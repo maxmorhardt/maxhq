@@ -66,14 +66,14 @@ export default function ContestPage() {
       lastMessage,
       onSquareUpdate: (message) => {
         if (
-          message.squareId &&
+          message.square?.squareId &&
           message.contestId === currentContest?.id &&
-          message.value !== undefined
+          message.square?.value !== undefined
         ) {
           dispatch(
             updateSquareFromWebSocket({
-              id: message.squareId,
-              value: message.value,
+              id: message.square.squareId,
+              value: message.square.value,
             })
           );
         }
@@ -81,13 +81,13 @@ export default function ContestPage() {
       onContestUpdate: (message) => {
         if (
           message.contestId === currentContest?.id &&
-          message.xLabels !== undefined &&
-          message.yLabels !== undefined
+          message.contest?.xLabels !== undefined &&
+          message.contest?.yLabels !== undefined
         ) {
           dispatch(
             updateContestFromWebSocket({
-              xLabels: message.xLabels,
-              yLabels: message.yLabels,
+              xLabels: message.contest.xLabels,
+              yLabels: message.contest.yLabels,
             })
           );
         }

@@ -1,6 +1,6 @@
 import type { useAuth } from 'react-oidc-context';
-import type { ContestChannelResponse } from '../types/contest';
 import type { HandleWSEventParams } from '../types/ws';
+import type { WSUpdate } from '../types/contest';
 
 export function getSocketUrl(id: string | undefined, auth: ReturnType<typeof useAuth>) {
   if (!id || !auth.user?.access_token) {
@@ -17,8 +17,8 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
   }
 
   try {
-    const message: ContestChannelResponse = JSON.parse(eventParams.lastMessage.data);
-
+    const message: WSUpdate = JSON.parse(eventParams.lastMessage.data);
+		console.log('WebSocket message received:', message);
     switch (message.type) {
       case 'square_update':
         eventParams.onSquareUpdate(message);
