@@ -5,20 +5,20 @@ import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import Contest from '../../../components/contest/Contest';
 import {
-	selectContestError,
-	selectContestLoading,
-	selectCurrentContest,
+  selectContestError,
+  selectContestLoading,
+  selectCurrentContest,
 } from '../../../features/contests/contestSelectors';
 import {
-	clearError,
-	updateContestFromWebSocket,
-	updateSquareFromWebSocket,
+  clearError,
+  updateContestFromWebSocket,
+  updateSquareFromWebSocket,
 } from '../../../features/contests/contestSlice';
 import { fetchContestById, randomizeLabels } from '../../../features/contests/contestThunks';
 import {
-	setConnectionDetails,
-	setDisconnectionDetails,
-	setLatestMessage,
+  setConnectionDetails,
+  setDisconnectionDetails,
+  setLatestMessage,
 } from '../../../features/ws/wsSlice';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
@@ -141,7 +141,7 @@ export default function ContestPage() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" mt={4}>
+      <Box display="flex" justifyContent="center" mt={6}>
         <CircularProgress />
       </Box>
     );

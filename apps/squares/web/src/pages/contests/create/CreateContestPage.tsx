@@ -1,14 +1,14 @@
 import { ArrowBack, EmojiEvents, Groups } from '@mui/icons-material';
 import {
-	Alert,
-	Box,
-	Button,
-	CircularProgress,
-	Container,
-	Paper,
-	TextField,
-	Typography,
-	useTheme,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Paper,
+  TextField,
+  Typography,
+  useTheme,
 } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';

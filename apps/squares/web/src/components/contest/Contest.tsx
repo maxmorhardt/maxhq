@@ -42,10 +42,11 @@ export default function Contest() {
         {/* x axis header */}
         <Box
           sx={{
+            mt: { xs: 1, sm: 2, md: 3 },
+            ml: { xs: 1.5, sm: 2, md: 3 },
             fontSize: { xs: 12, sm: 14 },
             fontWeight: 'bold',
             color: 'primary.main',
-            mb: { xs: 2, sm: 3 },
           }}
         >
           {contest.homeTeam ?? 'Home'}
@@ -56,7 +57,7 @@ export default function Contest() {
           <Box
             sx={{
               position: 'absolute',
-              left: { xs: -55, sm: -65 },
+              left: { xs: -30, sm: -45 },
               top: '50%',
               transform: 'translateY(-50%) rotate(-90deg)',
               fontSize: { xs: 12, sm: 14 },
@@ -69,7 +70,7 @@ export default function Contest() {
           </Box>
 
           {/* squares */}
-          <Box>
+          <Box sx={{ ml: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2.5, sm: 3.5, md: 4 } }}>
             {contestMatrix.map((rowData, rowIndex) => (
               <Box key={`${rowIndex}`} sx={{ display: 'flex', alignItems: 'center' }}>
                 {rowData.map((squareData, colIndex) => (
