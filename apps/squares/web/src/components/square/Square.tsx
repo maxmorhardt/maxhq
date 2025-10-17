@@ -65,10 +65,10 @@ export default function Square({
           border: `1px solid ${theme.palette.divider}`,
           borderRadius: 1,
           padding: 0,
-          margin: { xs: 0.1, sm: 0.3 },
-          minWidth: { xs: 30, sm: 45 },
-          minHeight: { xs: 30, sm: 45 },
-          fontSize: { xs: 10, sm: 12 },
+          margin: { xs: 0.1, sm: 0.3, md: 0.4 },
+          minWidth: { xs: 30, sm: 45, md: 50 },
+          minHeight: { xs: 30, sm: 45, md: 50 },
+          fontSize: { xs: 10, sm: 12, md: 15 },
         }}
       >
         {squareData}

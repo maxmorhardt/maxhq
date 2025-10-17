@@ -5,16 +5,21 @@ import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import Contest from '../../../components/contest/Contest';
 import {
-  selectContestError,
-  selectContestLoading,
-  selectCurrentContest,
+	selectContestError,
+	selectContestLoading,
+	selectCurrentContest,
 } from '../../../features/contests/contestSelectors';
 import {
-  clearError,
-  updateContestFromWebSocket,
-  updateSquareFromWebSocket,
+	clearError,
+	updateContestFromWebSocket,
+	updateSquareFromWebSocket,
 } from '../../../features/contests/contestSlice';
 import { fetchContestById, randomizeLabels } from '../../../features/contests/contestThunks';
+import {
+	setConnectionDetails,
+	setDisconnectionDetails,
+	setLatestMessage,
+} from '../../../features/ws/wsSlice';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import { contestSocketEventHandler, getSocketUrl } from '../../../service/wsService';
@@ -76,6 +81,7 @@ export default function ContestPage() {
               value: message.square.value,
             })
           );
+          dispatch(setLatestMessage(message));
         }
       },
       onContestUpdate: (message) => {
@@ -90,12 +96,14 @@ export default function ContestPage() {
               yLabels: message.contest.yLabels,
             })
           );
+          dispatch(setLatestMessage(message));
         }
       },
+      onConnect: (message) => {
+        dispatch(setConnectionDetails(message));
+      },
       onDisconnect: (message) => {
-        if (message.contestId === currentContest?.id) {
-          showToast('Disconnected from contest updates', 'warning');
-        }
+        dispatch(setDisconnectionDetails(message));
       },
     });
   }, [lastMessage, dispatch, currentContest?.id, showToast]);
