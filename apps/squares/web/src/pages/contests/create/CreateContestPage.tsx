@@ -1,14 +1,14 @@
-import { ArrowBack, EmojiEvents, Groups, SportsSoccer } from '@mui/icons-material';
+import { ArrowBack, EmojiEvents, Groups } from '@mui/icons-material';
 import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Paper,
-  TextField,
-  Typography,
-  useTheme,
+	Alert,
+	Box,
+	Button,
+	CircularProgress,
+	Container,
+	Paper,
+	TextField,
+	Typography,
+	useTheme,
 } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
@@ -27,12 +27,6 @@ const infoCards = [
     title: "What's Next?",
     details:
       "After creating your contest, you'll be able to customize the grid, set entry fees, and invite participants to join.",
-  },
-  {
-    icon: <SportsSoccer sx={{ mr: 2, color: '#4facfe' }} />,
-    title: 'Team Names',
-    details:
-      'Team names are optional but help participants identify with the game. You can always add or change them later.',
   },
   {
     icon: <Groups sx={{ mr: 2, color: '#f093fb' }} />,
@@ -119,7 +113,8 @@ export default function CreateContestPage() {
         </Typography>
         <Typography
           sx={{
-            color: 'rgba(255,255,255,0.8)',
+            color: 'white',
+            opacity: 0.8,
             maxWidth: 600,
             mx: 'auto',
             fontSize: { xs: '0.9rem', sm: '1.1rem' },
@@ -159,7 +154,7 @@ export default function CreateContestPage() {
             borderRadius: 3,
           }}
         >
-          <Typography sx={{ mb: 2, fontWeight: 600, fontSize: { xs: '1.1rem', sm: '1.8rem' } }}>
+          <Typography sx={{ mb: 2, fontWeight: 600, fontSize: { xs: '1.1rem', sm: '2.1rem' } }}>
             Contest Details
           </Typography>
 
@@ -249,7 +244,14 @@ export default function CreateContestPage() {
         </Paper>
 
         {/* info cards */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: { xs: 2, sm: 2, md: 2, lg: 4 },
+            alignSelf: 'center',
+          }}
+        >
           {infoCards.map((card) => (
             <FormCard key={card.title} icon={card.icon} title={card.title} details={card.details} />
           ))}

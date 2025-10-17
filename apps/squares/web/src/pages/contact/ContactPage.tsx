@@ -34,10 +34,9 @@ export default function ContactPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography
-          variant="h2"
           sx={{
             fontWeight: 700,
             mb: 2,
@@ -45,6 +44,7 @@ export default function ContactPage() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
+            fontSize: { xs: '2rem', sm: '3rem' },
           }}
         >
           Contact Us
