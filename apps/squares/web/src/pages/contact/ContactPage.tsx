@@ -1,7 +1,7 @@
-import { Box, Container, Typography } from '@mui/material';
-import ContactForm from '../../components/contact/ContactForm';
-import ContactInfoCard from '../../components/contact/ContactInfo';
 import { Email, LocationOn, Phone } from '@mui/icons-material';
+import { Box, Container, Typography } from '@mui/material';
+import FormCard from '../../components/common/FormCard';
+import ContactForm from '../../components/contact/ContactForm';
 
 const iconColor = '#667eea';
 
@@ -68,7 +68,7 @@ export default function ContactPage() {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {contactMethods.map((method) => (
-            <ContactInfoCard
+            <FormCard
               key={method.title}
               icon={method.icon}
               title={method.title}

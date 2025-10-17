@@ -3,17 +3,17 @@ import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
   CircularProgress,
   Container,
   Paper,
   TextField,
   Typography,
+  useTheme,
 } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
+import FormCard from '../../../components/common/FormCard';
 import { selectContestLoading } from '../../../features/contests/contestSelectors';
 import { clearError } from '../../../features/contests/contestSlice';
 import { createContest } from '../../../features/contests/contestThunks';
@@ -21,7 +21,29 @@ import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import type { APIError } from '../../../types/error';
 import { gradients } from '../../../types/gradients';
 
+const infoCards = [
+  {
+    icon: <EmojiEvents sx={{ mr: 2, color: '#ffd700' }} />,
+    title: "What's Next?",
+    details:
+      "After creating your contest, you'll be able to customize the grid, set entry fees, and invite participants to join.",
+  },
+  {
+    icon: <SportsSoccer sx={{ mr: 2, color: '#4facfe' }} />,
+    title: 'Team Names',
+    details:
+      'Team names are optional but help participants identify with the game. You can always add or change them later.',
+  },
+  {
+    icon: <Groups sx={{ mr: 2, color: '#f093fb' }} />,
+    title: 'Share & Invite',
+    details:
+      'Once created, you can share your contest link with friends and colleagues to get them involved.',
+  },
+];
+
 export default function CreateContestPage() {
+  const theme = useTheme();
   const auth = useAuth();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -80,7 +102,7 @@ export default function CreateContestPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
-      {/* Header */}
+      {/* header */}
       <Box sx={{ textAlign: 'center', mb: 8 }}>
         <Typography
           variant="h2"
@@ -98,7 +120,7 @@ export default function CreateContestPage() {
         <Typography
           variant="h6"
           sx={{
-            color: 'rgba(255,255,255,0.7)',
+            color: 'rgba(255,255,255,0.8)',
             maxWidth: 600,
             mx: 'auto',
             lineHeight: 1.6,
@@ -109,13 +131,13 @@ export default function CreateContestPage() {
         </Typography>
       </Box>
 
-      {/* Back Button */}
+      {/* back button */}
       <Box sx={{ mb: 4 }}>
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate('/contests')}
           sx={{
-            color: 'rgba(255,255,255,0.7)',
+            color: 'rgba(255,255,255,0.8)',
             '&:hover': {
               color: 'white',
               backgroundColor: 'rgba(255,255,255,0.1)',
@@ -133,14 +155,12 @@ export default function CreateContestPage() {
           gap: 4,
         }}
       >
-        {/* Main Form */}
+        {/* form */}
         <Paper
-          elevation={0}
           sx={{
             p: 4,
-            background: 'rgba(255,255,255,0.05)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: theme.palette.grey[900],
+            border: `1px solid ${theme.palette.grey[800]}`,
             borderRadius: 3,
           }}
         >
@@ -174,26 +194,6 @@ export default function CreateContestPage() {
               required
               disabled={loading}
               placeholder="e.g., Super Bowl 2025, Office Pool, Championship Game"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  background: 'rgba(255,255,255,0.05)',
-                  '& fieldset': {
-                    borderColor: 'rgba(255,255,255,0.2)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255,255,255,0.3)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#667eea',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255,255,255,0.7)',
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: 'white',
-                },
-              }}
             />
 
             <TextField
@@ -204,26 +204,6 @@ export default function CreateContestPage() {
               fullWidth
               disabled={loading}
               placeholder="e.g., Chiefs, Cowboys, Patriots"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  background: 'rgba(255,255,255,0.05)',
-                  '& fieldset': {
-                    borderColor: 'rgba(255,255,255,0.2)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255,255,255,0.3)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#667eea',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255,255,255,0.7)',
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: 'white',
-                },
-              }}
             />
 
             <TextField
@@ -234,26 +214,6 @@ export default function CreateContestPage() {
               fullWidth
               disabled={loading}
               placeholder="e.g., Bills, Packers, Steelers"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  background: 'rgba(255,255,255,0.05)',
-                  '& fieldset': {
-                    borderColor: 'rgba(255,255,255,0.2)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255,255,255,0.3)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#667eea',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255,255,255,0.7)',
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: 'white',
-                },
-              }}
             />
 
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
@@ -265,12 +225,8 @@ export default function CreateContestPage() {
                 sx={{
                   flex: 1,
                   py: 1.5,
-                  borderColor: 'rgba(255,255,255,0.3)',
-                  color: 'rgba(255,255,255,0.7)',
-                  '&:hover': {
-                    borderColor: 'rgba(255,255,255,0.5)',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                  },
+                  borderColor: gradients.background,
+                  color: 'rgba(255,255,255,0.8)',
                 }}
               >
                 Cancel
@@ -282,96 +238,26 @@ export default function CreateContestPage() {
                 sx={{
                   flex: 2,
                   py: 1.5,
-                  background: gradients.primary,
-                  '&:hover': {
-                    background: gradients.secondary,
-                  },
-                  '&:disabled': {
-                    background: 'rgba(255,255,255,0.1)',
-                    color: 'rgba(255,255,255,0.3)',
-                  },
                 }}
               >
                 {loading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <CircularProgress size={18} color="inherit" />
-                    Creating...
                   </Box>
                 ) : (
-                  'Create Contest'
+                  ''
                 )}
+                Create Contest
               </Button>
             </Box>
           </Box>
         </Paper>
 
-        {/* Info Cards */}
+        {/* info cards */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <Card
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <EmojiEvents sx={{ mr: 2, color: '#ffd700' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  What's Next?
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-                After creating your contest, you'll be able to customize the grid, set entry fees,
-                and invite participants to join.
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Card
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <SportsSoccer sx={{ mr: 2, color: '#4facfe' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Team Names
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-                Team names are optional but help participants identify with the game. You can always
-                add or change them later.
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Card
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Groups sx={{ mr: 2, color: '#f093fb' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Share & Invite
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-                Once created, you can share your contest link with friends and colleagues to get
-                them involved.
-              </Typography>
-            </CardContent>
-          </Card>
+          {infoCards.map((card) => (
+            <FormCard key={card.title} icon={card.icon} title={card.title} details={card.details} />
+          ))}
         </Box>
       </Box>
     </Container>

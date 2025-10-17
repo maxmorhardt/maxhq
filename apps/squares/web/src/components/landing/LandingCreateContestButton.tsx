@@ -2,13 +2,7 @@ import { Button, useTheme } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 
-interface LandingCreateContestButtonProps {
-  text?: string;
-}
-
-export default function LandingCreateContestButton({
-  text = 'Create Contest',
-}: LandingCreateContestButtonProps) {
+export default function LandingCreateContestButton() {
   const navigate = useNavigate();
   const theme = useTheme();
   const auth = useAuth();
@@ -29,8 +23,9 @@ export default function LandingCreateContestButton({
       size="large"
       onClick={handleClick}
       sx={{
-        px: 6,
-        fontSize: '1.2rem',
+        px: { xs: 2, sm: 4 },
+        py: { xs: 1, sm: 2 },
+        fontSize: { xs: '.8rem', sm: '1.2rem' },
         fontWeight: 600,
         color: 'white',
         background: theme.palette.primary.dark,
@@ -40,7 +35,7 @@ export default function LandingCreateContestButton({
         },
       }}
     >
-      {text}
+      Create a Contest
     </Button>
   );
 }

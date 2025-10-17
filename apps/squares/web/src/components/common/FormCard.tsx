@@ -6,7 +6,7 @@ interface ContactInfoCardProps {
   details: string;
 }
 
-export default function ContactInfoCard({ icon, title, details }: ContactInfoCardProps) {
+export default function FormCard({ icon, title, details }: ContactInfoCardProps) {
   const theme = useTheme();
 
   return (

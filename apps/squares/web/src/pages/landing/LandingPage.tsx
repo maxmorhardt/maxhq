@@ -118,15 +118,15 @@ export default function LandingPage() {
               and win big during the big game!
             </Typography>
 
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <LandingCreateContestButton text="Create Your First Contest" />
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'nowrap' }}>
+              <LandingCreateContestButton />
               <Button
                 variant="outlined"
                 size="large"
                 sx={{
-                  px: 4,
-                  py: 2,
-                  fontSize: '1.1rem',
+                  px: { xs: 2, sm: 4 },
+                  py: { xs: 1, sm: 2 },
+                  fontSize: { xs: '.8rem', sm: '1.2rem' },
                   fontWeight: 500,
                   color: 'text.primary',
                 }}
@@ -338,7 +338,7 @@ export default function LandingPage() {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <LandingCreateContestButton text="Create Contest Now" />
+          <LandingCreateContestButton />
         </Box>
 
         <Box
