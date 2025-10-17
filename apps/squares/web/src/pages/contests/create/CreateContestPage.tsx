@@ -101,11 +101,10 @@ export default function CreateContestPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* header */}
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
+      <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 4 } }}>
         <Typography
-          variant="h2"
           sx={{
             fontWeight: 700,
             mb: 2,
@@ -113,17 +112,17 @@ export default function CreateContestPage() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
+            fontSize: { xs: '2rem', sm: '3rem' },
           }}
         >
           Create New Contest
         </Typography>
         <Typography
-          variant="h6"
           sx={{
             color: 'rgba(255,255,255,0.8)',
             maxWidth: 600,
             mx: 'auto',
-            lineHeight: 1.6,
+            fontSize: { xs: '0.9rem', sm: '1.1rem' },
           }}
         >
           Set up your squares contest in minutes. Add teams, customize settings, and invite
@@ -132,16 +131,12 @@ export default function CreateContestPage() {
       </Box>
 
       {/* back button */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 2 }}>
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate('/contests')}
           sx={{
             color: 'rgba(255,255,255,0.8)',
-            '&:hover': {
-              color: 'white',
-              backgroundColor: 'rgba(255,255,255,0.1)',
-            },
           }}
         >
           Back to Contests
@@ -164,7 +159,7 @@ export default function CreateContestPage() {
             borderRadius: 3,
           }}
         >
-          <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
+          <Typography sx={{ mb: 2, fontWeight: 600, fontSize: { xs: '1.1rem', sm: '1.8rem' } }}>
             Contest Details
           </Typography>
 
@@ -183,7 +178,7 @@ export default function CreateContestPage() {
           <Box
             component="form"
             onSubmit={handleSubmit}
-            sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <TextField
               name="name"
@@ -216,7 +211,7 @@ export default function CreateContestPage() {
               placeholder="e.g., Bills, Packers, Steelers"
             />
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
               <Button
                 type="button"
                 variant="outlined"
@@ -254,7 +249,7 @@ export default function CreateContestPage() {
         </Paper>
 
         {/* info cards */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {infoCards.map((card) => (
             <FormCard key={card.title} icon={card.icon} title={card.title} details={card.details} />
           ))}
