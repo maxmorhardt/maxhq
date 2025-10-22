@@ -48,7 +48,7 @@ export default function ContestsPage() {
           alignItems: 'center',
         }}
       >
-        <CircularProgress sx={{ color: 'white', mt: 6 }} />
+        <CircularProgress sx={{ mt: 24 }} />
       </Box>
     );
   }

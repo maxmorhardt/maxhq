@@ -141,7 +141,7 @@ export default function ContestPage() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" mt={6}>
+      <Box display="flex" justifyContent="center" mt={24}>
         <CircularProgress />
       </Box>
     );

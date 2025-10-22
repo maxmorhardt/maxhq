@@ -43,7 +43,7 @@ export default function Contest() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-					p: 1
+          p: 1,
         }}
       >
         <Paper

@@ -17,7 +17,7 @@ export default function Square({
   xLabel,
   yLabel,
 }: SquareProps) {
-	const theme = useTheme();
+  const theme = useTheme();
 
   return (
     <Box sx={{ position: 'relative' }}>

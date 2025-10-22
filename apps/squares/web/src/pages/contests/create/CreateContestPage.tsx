@@ -232,7 +232,7 @@ export default function CreateContestPage() {
               >
                 {loading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CircularProgress size={18} color="inherit" />
+                    <CircularProgress size={18} color="inherit" sx={{ mr: 1 }} />
                   </Box>
                 ) : (
                   ''
