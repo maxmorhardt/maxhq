@@ -17,7 +17,7 @@ export default function Square({
   xLabel,
   yLabel,
 }: SquareProps) {
-  const theme = useTheme();
+	const theme = useTheme();
 
   return (
     <Box sx={{ position: 'relative' }}>
@@ -43,7 +43,7 @@ export default function Square({
         <Box
           sx={{
             position: 'absolute',
-            left: { xs: -12, sm: -18, md: -20 },
+            left: { xs: -10, sm: -13, md: -16 },
             top: '50%',
             transform: 'translateY(-50%)',
             fontSize: { xs: 8, sm: 12, md: 14 },
@@ -60,15 +60,32 @@ export default function Square({
         key={`${rowIndex}-${colIndex}`}
         onClick={() => handleSquareClick(rowIndex, colIndex)}
         sx={{
-          bgcolor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
-          border: `1px solid ${theme.palette.divider}`,
-          borderRadius: 1,
+          color: 'white',
+          background: squareData ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+          backdropFilter: 'blur(10px)',
+          border: squareData
+            ? '1px solid rgba(255,255,255,0.2)'
+            : '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 1.5,
           padding: 0,
           margin: { xs: 0.1, sm: 0.3, md: 0.4 },
           minWidth: { xs: 28, sm: 45, md: 50 },
           minHeight: { xs: 28, sm: 45, md: 50 },
           fontSize: { xs: 9, sm: 11, md: 14 },
+          fontWeight: squareData ? 600 : 400,
+          boxShadow: squareData ? '0 4px 16px rgba(255,255,255,0.1)' : '0 2px 8px rgba(0,0,0,0.2)',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            background: squareData ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
+            transform: 'translateY(-2px)',
+            boxShadow: squareData
+              ? '0 8px 24px rgba(255,255,255,0.2)'
+              : '0 4px 16px rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.3)',
+          },
+          '&:active': {
+            transform: 'translateY(0px)',
+          },
         }}
       >
         {squareData}

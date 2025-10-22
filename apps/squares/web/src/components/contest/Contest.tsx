@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import { useState } from 'react';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { setCurrentSquare } from '../../features/contests/contestSlice';
@@ -38,41 +38,42 @@ export default function Contest() {
 
   return (
     <>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* x axis header */}
-        <Box
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+					p: 1
+        }}
+      >
+        <Paper
           sx={{
-            mt: { xs: 1, sm: 2, md: 3 },
-            ml: { xs: 1.5, sm: 2, md: 3 },
-            fontSize: { xs: 12, sm: 14 },
-            fontWeight: 'bold',
-            color: 'primary.main',
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 3,
+            p: { xs: 2.25, sm: 3, md: 4 },
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           }}
         >
-          {contest.homeTeam ?? 'Home'}
-        </Box>
-
-        <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-          {/* y axis header */}
+          {/* Squares Grid */}
           <Box
             sx={{
-              position: 'absolute',
-              left: { xs: -30, sm: -45 },
-              top: '50%',
-              transform: 'translateY(-50%) rotate(-90deg)',
-              fontSize: { xs: 12, sm: 14 },
-              fontWeight: 'bold',
-              color: 'primary.main',
-              whiteSpace: 'nowrap',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 0.5,
             }}
           >
-            {contest.awayTeam ?? 'Away'}
-          </Box>
-
-          {/* squares */}
-          <Box sx={{ ml: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2.5, sm: 3.5, md: 4 } }}>
             {contestMatrix.map((rowData, rowIndex) => (
-              <Box key={`${rowIndex}`} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box
+                key={`${rowIndex}`}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
                 {rowData.map((squareData, colIndex) => (
                   <Square
                     key={`${rowIndex}-${colIndex}`}
@@ -87,7 +88,7 @@ export default function Contest() {
               </Box>
             ))}
           </Box>
-        </Box>
+        </Paper>
       </Box>
 
       <EditSquare open={open} onClose={() => setOpen(false)} />
