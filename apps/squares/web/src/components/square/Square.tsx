@@ -73,14 +73,11 @@ export default function Square({
           minHeight: { xs: 28, sm: 45, md: 50 },
           fontSize: { xs: 9, sm: 11, md: 14 },
           fontWeight: squareData ? 600 : 400,
-          boxShadow: squareData ? '0 4px 16px rgba(255,255,255,0.1)' : '0 2px 8px rgba(0,0,0,0.2)',
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
             background: squareData ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
             transform: 'translateY(-2px)',
-            boxShadow: squareData
-              ? '0 8px 24px rgba(255,255,255,0.2)'
-              : '0 4px 16px rgba(255,255,255,0.1)',
+            boxShadow: `0 0 10px ${theme.palette.primary.main}`,
             border: '1px solid rgba(255,255,255,0.3)',
           },
           '&:active': {

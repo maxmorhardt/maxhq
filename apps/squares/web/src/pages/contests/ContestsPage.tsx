@@ -11,6 +11,7 @@ import { fetchContestsByUser } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
+import { clearError } from '../../features/contests/contestSlice';
 
 export default function ContestsPage() {
   const auth = useAuth();
@@ -25,8 +26,9 @@ export default function ContestsPage() {
   useEffect(() => {
     if (error) {
       showToast(error, 'error');
+			dispatch(clearError());
     }
-  }, [error, showToast]);
+  }, [error, showToast, dispatch]);
 
   useEffect(() => {
     if (!auth.isAuthenticated || !isInterceptorReady) {

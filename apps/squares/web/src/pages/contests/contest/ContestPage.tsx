@@ -156,7 +156,8 @@ export default function ContestPage() {
       <Typography
         sx={{
           fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
-          fontWeight: 700,
+          fontWeight: 800,
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
           textAlign: 'center',
           flex: 1,
           mt: 2,
