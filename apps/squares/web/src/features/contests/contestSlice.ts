@@ -1,12 +1,13 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import type { Contest, Square } from '../../types/contest';
+import type { Contest, PaginatedContestsResponse, Square } from '../../types/contest';
 import {
-  createContest,
-  fetchContestById,
-  fetchContestsByUser,
-  randomizeLabels,
-  updateSquare,
+	createContest,
+	fetchContestById,
+	fetchContests,
+	fetchContestsByUser,
+	randomizeLabels,
+	updateSquare,
 } from './contestThunks';
 
 interface ContestState {
@@ -16,6 +17,14 @@ interface ContestState {
   contestLoading: boolean;
   squareLoading: boolean;
   error: string | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
 }
 
 const initialState: ContestState = {
@@ -23,6 +32,14 @@ const initialState: ContestState = {
   contestLoading: false,
   squareLoading: false,
   error: null,
+  pagination: {
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
 };
 
 const contestSlice = createSlice({
@@ -62,14 +79,50 @@ const contestSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchContests.pending, (state) => {
+        state.contestLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchContests.fulfilled,
+        (state, action: PayloadAction<PaginatedContestsResponse>) => {
+          state.contestLoading = false;
+          state.contests = action.payload.contests;
+          state.pagination = {
+            page: action.payload.page,
+            limit: action.payload.limit,
+            total: action.payload.total,
+            totalPages: action.payload.totalPages,
+            hasNext: action.payload.hasNext,
+            hasPrevious: action.payload.hasPrevious,
+          };
+        }
+      )
+      .addCase(fetchContests.rejected, (state, action) => {
+        state.contestLoading = false;
+        state.error = action.payload?.message ?? 'Error fetching contests';
+      });
+
+    builder
       .addCase(fetchContestsByUser.pending, (state) => {
         state.contestLoading = true;
         state.error = null;
       })
-      .addCase(fetchContestsByUser.fulfilled, (state, action: PayloadAction<Contest[]>) => {
-        state.contestLoading = false;
-        state.contests = action.payload;
-      })
+      .addCase(
+        fetchContestsByUser.fulfilled,
+        (state, action: PayloadAction<PaginatedContestsResponse>) => {
+          state.contestLoading = false;
+          state.contests = action.payload.contests;
+          state.pagination = {
+            page: action.payload.page,
+            limit: action.payload.limit,
+            total: action.payload.total,
+            totalPages: action.payload.totalPages,
+            hasNext: action.payload.hasNext,
+            hasPrevious: action.payload.hasPrevious,
+          };
+        }
+      )
       .addCase(fetchContestsByUser.rejected, (state, action) => {
         state.contestLoading = false;
         state.error = action.payload?.message ?? 'Error fetching contests';

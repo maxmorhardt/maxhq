@@ -1,14 +1,18 @@
 import { Box, Paper } from '@mui/material';
 import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { setCurrentSquare } from '../../features/contests/contestSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import EditSquare from '../square/EditSquare';
 import Square from '../square/Square';
+import { useToast } from '../../hooks/useToast';
 
 export default function Contest() {
+  const auth = useAuth();
   const dispatch = useAppDispatch();
   const contest = useAppSelector(selectCurrentContest);
+  const { showToast } = useToast();
 
   const [open, setOpen] = useState(false);
 
@@ -27,8 +31,17 @@ export default function Contest() {
   });
 
   const handleSquareClick = async (row: number, col: number) => {
+    if (!auth.isAuthenticated) {
+      auth.signinRedirect({
+        redirect_uri: window.location.href,
+      });
+
+      return;
+    }
+
     const square = contest.squares.find((s) => s.row === row && s.col === col);
     if (!square) {
+      showToast('Square not found', 'error');
       return;
     }
 

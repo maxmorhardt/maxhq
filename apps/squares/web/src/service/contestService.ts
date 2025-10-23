@@ -1,10 +1,40 @@
 import api from '../axios/api';
-import type { Contest, CreateContestRequest, Square } from '../types/contest';
+import type {
+  Contest,
+  CreateContestRequest,
+  PaginatedContestsResponse,
+  PaginationParams,
+  Square,
+} from '../types/contest';
 import { handleError } from './handleError';
 
-export async function getContestsByUser(user: string): Promise<Contest[]> {
+export async function getContests(
+  pagination: PaginationParams
+): Promise<PaginatedContestsResponse> {
   try {
-    const res = await api.get<Contest[]>(`/contests/user/${user}`);
+    const res = await api.get<PaginatedContestsResponse>('/contests', {
+      params: {
+        page: pagination.page,
+        limit: pagination.limit,
+      },
+    });
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function getContestsByUser(
+  user: string,
+  pagination: PaginationParams
+): Promise<PaginatedContestsResponse> {
+  try {
+    const res = await api.get<PaginatedContestsResponse>(`/contests/user/${user}`, {
+      params: {
+        page: pagination.page,
+        limit: pagination.limit,
+      },
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

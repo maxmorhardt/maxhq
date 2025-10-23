@@ -1,49 +1,56 @@
+import { Add, Delete, Edit } from '@mui/icons-material';
 import {
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
-  Typography,
-  Tooltip,
-  Chip,
+	Box,
+	Button,
+	Chip,
+	IconButton,
+	Paper,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TablePagination,
+	TableRow,
+	Tooltip,
+	Typography,
+	useTheme,
 } from '@mui/material';
-import { Edit, Add, Visibility } from '@mui/icons-material';
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Contest } from '../../types/contest';
 
 interface ContestsTableProps {
   contests: Contest[];
+  totalCount: number;
+  page: number;
+  rowsPerPage: number;
+  onPageChange: (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => void;
+  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default function ContestsTable({ contests }: ContestsTableProps) {
-  const [page, setPage] = useState(0);
-  const rowsPerPage = 10; // Fixed rows per page;
+export default function ContestsTable({
+  contests,
+  totalCount,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
+}: ContestsTableProps) {
+  const theme = useTheme();
   const navigate = useNavigate();
 
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage);
+  const headerSx = {
+    color: 'white',
+    fontWeight: 600,
+    fontSize: { xs: '0.75rem', md: '0.875rem' },
   };
 
   const handleRowClick = (contestId: string) => {
     navigate(`/contests/${contestId}`);
   };
 
-  const paginatedContests = contests.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
   return (
-    <Box
-      sx={{
-        p: 3,
-      }}
-    >
+    <Box sx={{ p: 3 }}>
       <Box
         sx={{
           display: 'flex',
@@ -51,90 +58,61 @@ export default function ContestsTable({ contests }: ContestsTableProps) {
           alignItems: 'center',
           mb: 3,
           flexWrap: 'wrap',
-          gap: 2,
         }}
       >
         <Typography
-          variant="h4"
           sx={{
             color: 'white',
-            fontWeight: 700,
-            background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
+            fontWeight: 800,
+            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+            fontSize: { xs: '1.5rem', sm: '2rem' },
           }}
         >
-          Contests
+          My Contests
         </Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
           onClick={() => navigate('/contests/create')}
-          sx={{
-            background: 'rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: 'white',
-            fontWeight: 600,
-            px: 3,
-            py: 1,
-            borderRadius: 2,
-            textTransform: 'none',
-            '&:hover': {
-              background: 'rgba(255,255,255,0.15)',
-              transform: 'translateY(-1px)',
-            },
-          }}
         >
-          Create
+          Create Contest
         </Button>
       </Box>
 
       {/* Table */}
       <Paper
         sx={{
-          background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(20px)',
+          background: theme.palette.grey[900],
           border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 2,
-          overflow: 'hidden',
+          borderRadius: 3,
         }}
       >
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+              <TableRow sx={{}}>
+                <TableCell sx={headerSx}>Name</TableCell>
                 <TableCell
-                  sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: '0.875rem' }}
-                >
-                  Name
-                </TableCell>
-                <TableCell
-                  sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: '0.875rem' }}
+                  sx={{
+                    ...headerSx,
+                    display: { xs: 'none', md: 'table-cell' },
+                  }}
                 >
                   Home Team
                 </TableCell>
                 <TableCell
-                  sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: '0.875rem' }}
+                  sx={{
+                    ...headerSx,
+                    display: { xs: 'none', md: 'table-cell' },
+                  }}
                 >
                   Away Team
                 </TableCell>
-                <TableCell
-                  sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: '0.875rem' }}
-                >
-                  Created By
-                </TableCell>
-                <TableCell
-                  sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: '0.875rem' }}
-                >
-                  Status
-                </TableCell>
+                <TableCell sx={headerSx}>Created By</TableCell>
+                <TableCell sx={headerSx}>Status</TableCell>
                 <TableCell
                   sx={{
-                    color: 'rgba(255,255,255,0.9)',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
+                    ...headerSx,
                     textAlign: 'right',
                   }}
                 >
@@ -143,27 +121,54 @@ export default function ContestsTable({ contests }: ContestsTableProps) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedContests.map((contest, index) => (
+              {contests.map((contest, index) => (
                 <TableRow
                   key={contest.id}
                   onClick={() => handleRowClick(contest.id)}
                   sx={{
                     cursor: 'pointer',
-                    backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    backgroundColor: index % 2 === 0 ? '' : 'rgba(255,255,255,0.02)',
                     '&:hover': {
                       backgroundColor: 'rgba(255,255,255,0.08)',
                     },
                     transition: 'all 0.2s ease-in-out',
                   }}
                 >
-                  <TableCell sx={{ color: 'white', fontWeight: 500 }}>{contest.name}</TableCell>
-                  <TableCell sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <TableCell
+                    sx={{
+                      color: 'rgba(255,255,255,0.8)',
+                      fontWeight: 500,
+                      fontSize: { xs: '0.75rem', md: '0.875rem' },
+                    }}
+                  >
+                    {contest.name}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: 'rgba(255,255,255,0.8)',
+                      display: { xs: 'none', md: 'table-cell' },
+                      fontSize: { xs: '0.75rem', md: '0.875rem' },
+                    }}
+                  >
                     {contest.homeTeam || ''}
                   </TableCell>
-                  <TableCell sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <TableCell
+                    sx={{
+                      color: 'rgba(255,255,255,0.8)',
+                      display: { xs: 'none', md: 'table-cell' },
+                      fontSize: { xs: '0.75rem', md: '0.875rem' },
+                    }}
+                  >
                     {contest.awayTeam || ''}
                   </TableCell>
-                  <TableCell sx={{ color: 'rgba(255,255,255,0.8)' }}>{contest.createdBy}</TableCell>
+                  <TableCell
+                    sx={{
+                      color: 'rgba(255,255,255,0.8)',
+                      fontSize: { xs: '0.75rem', md: '0.875rem' },
+                    }}
+                  >
+                    {contest.createdBy}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label="Active"
@@ -172,29 +177,17 @@ export default function ContestsTable({ contests }: ContestsTableProps) {
                         background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
                         color: 'white',
                         fontWeight: 500,
+                        fontSize: { xs: '0.65rem', md: '0.75rem' },
+                        '& .MuiChip-label': {
+                          fontSize: { xs: '0.65rem', md: '0.75rem' },
+                        },
                       }}
                     />
                   </TableCell>
                   <TableCell sx={{ textAlign: 'right' }}>
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                      <Tooltip title="View Contest">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRowClick(contest.id);
-                          }}
-                          sx={{
-                            color: 'rgba(255,255,255,0.7)',
-                            '&:hover': {
-                              color: 'white',
-                              backgroundColor: 'rgba(255,255,255,0.1)',
-                            },
-                          }}
-                        >
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                    <Box
+                      sx={{ display: 'flex', gap: { xs: 0.5, md: 1 }, justifyContent: 'flex-end' }}
+                    >
                       <Tooltip title="Edit Contest">
                         <IconButton
                           size="small"
@@ -205,13 +198,36 @@ export default function ContestsTable({ contests }: ContestsTableProps) {
                           }}
                           sx={{
                             color: 'rgba(255,255,255,0.7)',
+                            fontSize: { xs: '1rem', md: '1.25rem' },
+                            padding: { xs: '4px', md: '8px' },
                             '&:hover': {
                               color: 'white',
                               backgroundColor: 'rgba(255,255,255,0.1)',
                             },
                           }}
                         >
-                          <Edit fontSize="small" />
+                          <Edit fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Contest">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // TODO: Add delete functionality
+                            console.log('Delete contest:', contest.id);
+                          }}
+                          sx={{
+                            color: 'rgba(255,255,255,0.7)',
+                            fontSize: { xs: '1rem', md: '1.25rem' },
+                            padding: { xs: '4px', md: '8px' },
+                            '&:hover': {
+                              color: '#ff4444',
+                              backgroundColor: 'rgba(255,68,68,0.1)',
+                            },
+                          }}
+                        >
+                          <Delete fontSize="inherit" />
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -225,25 +241,12 @@ export default function ContestsTable({ contests }: ContestsTableProps) {
         {/* Pagination */}
         <TablePagination
           component="div"
-          count={contests.length}
+          count={totalCount}
           page={page}
-          onPageChange={handleChangePage}
+          onPageChange={onPageChange}
           rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={() => {}} // Disabled
-          rowsPerPageOptions={[]}
-          sx={{
-            color: 'rgba(255,255,255,0.8)',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            '& .MuiTablePagination-actions button': {
-              color: 'rgba(255,255,255,0.8)',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.1)',
-              },
-              '&.Mui-disabled': {
-                color: 'rgba(255,255,255,0.3)',
-              },
-            },
-          }}
+          onRowsPerPageChange={onRowsPerPageChange}
+          rowsPerPageOptions={[5, 10, 25]}
         />
       </Paper>
     </Box>

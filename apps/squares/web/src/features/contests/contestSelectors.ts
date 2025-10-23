@@ -9,3 +9,4 @@ export const selectCurrentSquare = (state: RootState): Square | null | undefined
 export const selectContestLoading = (state: RootState): boolean => state.contest.contestLoading;
 export const selectSquareLoading = (state: RootState): boolean => state.contest.squareLoading;
 export const selectContestError = (state: RootState): string | null => state.contest.error;
+export const selectContestPagination = (state: RootState) => state.contest.pagination;

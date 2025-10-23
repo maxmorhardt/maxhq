@@ -1,25 +1,46 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
-  createNewContest,
-  getContestById,
-  getContestsByUser,
-  randomizeContestLabels,
-  updateSquareValueById,
+	createNewContest,
+	getContestById,
+	getContests,
+	getContestsByUser,
+	randomizeContestLabels,
+	updateSquareValueById,
 } from '../../service/contestService';
-import type { Contest, CreateContestRequest, Square } from '../../types/contest';
+import type {
+	Contest,
+	CreateContestRequest,
+	PaginatedContestsResponse,
+	PaginationParams,
+	Square,
+} from '../../types/contest';
 import type { APIError } from '../../types/error';
 
-export const fetchContestsByUser = createAsyncThunk<Contest[], string, { rejectValue: APIError }>(
-  'contests/fetchByUser',
-  async (username, { rejectWithValue }) => {
-    try {
-      const contests = await getContestsByUser(username);
-      return contests;
-    } catch (err: unknown) {
-      return rejectWithValue(err as APIError);
-    }
+export const fetchContests = createAsyncThunk<
+  PaginatedContestsResponse,
+  PaginationParams,
+  { rejectValue: APIError }
+>('contests/fetchContests', async (pagination, { rejectWithValue }) => {
+  try {
+    const response = await getContests(pagination);
+    return response;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
   }
-);
+});
+
+export const fetchContestsByUser = createAsyncThunk<
+  PaginatedContestsResponse,
+  { username: string; pagination: PaginationParams },
+  { rejectValue: APIError }
+>('contests/fetchByUser', async ({ username, pagination }, { rejectWithValue }) => {
+  try {
+    const response = await getContestsByUser(username, pagination);
+    return response;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
+  }
+});
 
 export const fetchContestById = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
   'contests/fetchContestById',

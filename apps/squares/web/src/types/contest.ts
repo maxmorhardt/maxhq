@@ -52,3 +52,18 @@ export interface ContestWSUpdate {
   xLabels?: number[];
   yLabels?: number[];
 }
+
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export interface PaginatedContestsResponse {
+  contests: Contest[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
