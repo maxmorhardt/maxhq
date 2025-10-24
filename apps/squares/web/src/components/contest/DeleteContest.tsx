@@ -1,17 +1,17 @@
 import { Warning } from '@mui/icons-material';
 import {
-	Box,
-	Button,
-	CircularProgress,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
-	Typography
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
 } from '@mui/material';
 import {
-	selectCurrentContest,
-	selectDeleteContestLoading
+  selectCurrentContest,
+  selectDeleteContestLoading,
 } from '../../features/contests/contestSelectors';
 import { deleteContest } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
@@ -31,7 +31,7 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
     return;
   }
 
-	// errors will be shown in toast from contests page
+  // errors will be shown in toast from contests page
   const handleConfirm = () => {
     dispatch(deleteContest(currentContest.id))
       .unwrap()

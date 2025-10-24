@@ -29,11 +29,17 @@ export default function ContestPage() {
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
   const lastProcessedMessageRef = useRef<string | null>(null);
-
   const { id } = useParams<{ id: string }>();
 
-  const socketUrl = getSocketUrl(id, auth);
-  const shouldConnect = Boolean(id && auth.isAuthenticated && auth.user?.access_token);
+  const loading = useAppSelector(selectContestLoading);
+  const error = useAppSelector(selectContestError);
+  const currentContest = useAppSelector(selectCurrentContest);
+
+  const socketUrl = useMemo(() => getSocketUrl(id, auth), [id, auth]);
+  const shouldConnect = useMemo(
+    () => Boolean(id && auth.isAuthenticated && auth.user?.access_token && currentContest),
+    [id, auth.isAuthenticated, auth.user?.access_token, currentContest]
+  );
 
   const webSocketOptions = useMemo(
     () => ({
@@ -52,10 +58,6 @@ export default function ContestPage() {
 
   const isConnected = readyState === ReadyState.OPEN;
   const isConnecting = readyState === ReadyState.CONNECTING;
-
-  const loading = useAppSelector(selectContestLoading);
-  const error = useAppSelector(selectContestError);
-  const currentContest = useAppSelector(selectCurrentContest);
 
   useEffect(() => {
     if (!lastMessage?.data) {
