@@ -8,6 +8,7 @@ import {
   fetchContests,
   fetchContestsByUser,
   randomizeLabels,
+  updateContest,
   updateSquare,
 } from './contestThunks';
 
@@ -206,6 +207,26 @@ const contestSlice = createSlice({
       .addCase(randomizeLabels.rejected, (state, action) => {
         state.error = action.payload?.message ?? 'Error randomizing labels';
       });
+
+    builder
+      .addCase(updateContest.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateContest.fulfilled, (state, action: PayloadAction<Contest>) => {
+        if (state.currentContest && state.currentContest.id === action.payload.id) {
+          state.currentContest = action.payload;
+        }
+        
+        // Also update in the contests array if it exists
+        const index = state.contests.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.contests[index] = action.payload;
+        }
+      })
+      .addCase(updateContest.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error updating contest';
+      });
+
     builder
       .addCase(deleteContest.pending, (state) => {
         state.deleteContestLoading = true;

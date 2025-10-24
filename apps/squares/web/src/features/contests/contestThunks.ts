@@ -6,6 +6,7 @@ import {
   getContests,
   getContestsByUser,
   randomizeContestLabels,
+  updateContestById,
   updateSquareValueById,
 } from '../../service/contestService';
 import type {
@@ -92,6 +93,19 @@ export const randomizeLabels = createAsyncThunk<Contest, string, { rejectValue: 
     }
   }
 );
+
+export const updateContest = createAsyncThunk<
+  Contest,
+  { id: string; updates: Partial<Contest> },
+  { rejectValue: APIError }
+>('contests/updateContest', async ({ id, updates }, { rejectWithValue }) => {
+  try {
+    const contest = await updateContestById(id, updates);
+    return contest;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
+  }
+});
 
 export const deleteContest = createAsyncThunk<void, string, { rejectValue: APIError }>(
   'contests/deleteContest',

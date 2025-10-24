@@ -18,10 +18,12 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from 'react-oidc-context';
 import { setCurrentContest } from '../../features/contests/contestSlice';
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import type { Contest } from '../../types/contest';
 import DeleteContest from './DeleteContest';
+import EditContest from './EditContest';
 
 interface ContestsTableProps {
   contests: Contest[];
@@ -43,8 +45,10 @@ export default function ContestsTable({
   const theme = useTheme();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const auth = useAuth();
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const headerSx = {
     color: 'white',
@@ -59,6 +63,11 @@ export default function ContestsTable({
   const handleDelete = (contest: Contest) => {
     dispatch(setCurrentContest(contest));
     setDeleteModalOpen(true);
+  };
+
+  const handleEdit = (contest: Contest) => {
+    dispatch(setCurrentContest(contest));
+    setEditModalOpen(true);
   };
 
   return (
@@ -184,10 +193,14 @@ export default function ContestsTable({
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label="Active"
+                        label={contest.status || 'ACTIVE'}
                         size="small"
                         sx={{
-                          background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                          background: 
+                            contest.status === 'FINISHED' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' :
+                            contest.status === 'CANCELLED' ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)' :
+                            contest.status === 'LOCKED' || ['Q1', 'Q2', 'Q3', 'Q4'].includes(contest.status || '') ? 'linear-gradient(135deg, #feca57 0%, #ff9ff3 100%)' :
+                            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', // ACTIVE
                           color: 'white',
                           fontWeight: 500,
                           fontSize: { xs: '0.65rem', md: '0.75rem' },
@@ -205,47 +218,50 @@ export default function ContestsTable({
                           justifyContent: 'flex-end',
                         }}
                       >
-                        <Tooltip title="Edit Contest">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // TODO: Add edit functionality
-                              console.log('Edit contest:', contest.id);
-                            }}
-                            sx={{
-                              color: 'rgba(255,255,255,0.7)',
-                              fontSize: { xs: '1rem', md: '1.25rem' },
-                              padding: { xs: '4px', md: '8px' },
-                              '&:hover': {
-                                color: 'white',
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                              },
-                            }}
-                          >
-                            <Edit fontSize="inherit" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete Contest">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(contest);
-                            }}
-                            sx={{
-                              color: 'rgba(255,255,255,0.7)',
-                              fontSize: { xs: '1rem', md: '1.25rem' },
-                              padding: { xs: '4px', md: '8px' },
-                              '&:hover': {
-                                color: '#ff4444',
-                                backgroundColor: 'rgba(255,68,68,0.1)',
-                              },
-                            }}
-                          >
-                            <Delete fontSize="inherit" />
-                          </IconButton>
-                        </Tooltip>
+                        {auth.user?.profile?.preferred_username === contest.owner && (
+                          <Tooltip title="Edit Contest">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(contest);
+                              }}
+                              sx={{
+                                color: 'rgba(255,255,255,0.7)',
+                                fontSize: { xs: '1rem', md: '1.25rem' },
+                                padding: { xs: '4px', md: '8px' },
+                                '&:hover': {
+                                  color: 'white',
+                                  backgroundColor: 'rgba(255,255,255,0.1)',
+                                },
+                              }}
+                            >
+                              <Edit fontSize="inherit" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {auth.user?.profile?.preferred_username === contest.owner && (
+                          <Tooltip title="Delete Contest">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(contest);
+                              }}
+                              sx={{
+                                color: 'rgba(255,255,255,0.7)',
+                                fontSize: { xs: '1rem', md: '1.25rem' },
+                                padding: { xs: '4px', md: '8px' },
+                                '&:hover': {
+                                  color: '#ff4444',
+                                  backgroundColor: 'rgba(255,68,68,0.1)',
+                                },
+                              }}
+                            >
+                              <Delete fontSize="inherit" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -268,6 +284,7 @@ export default function ContestsTable({
       </Box>
 
       <DeleteContest open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} />
+      <EditContest open={editModalOpen} onClose={() => setEditModalOpen(false)} />
     </>
   );
 }

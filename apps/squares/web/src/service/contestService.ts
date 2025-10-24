@@ -68,6 +68,15 @@ export async function updateSquareValueById(id: string, value: string): Promise<
   }
 }
 
+export async function updateContestById(id: string, updates: Partial<Contest>): Promise<Contest> {
+  try {
+    const res = await api.patch<Contest>(`/contests/${id}`, updates);
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
 export async function randomizeContestLabels(id: string): Promise<Contest> {
   try {
     const res = await api.post<Contest>(`/contests/${id}/randomize-labels`);

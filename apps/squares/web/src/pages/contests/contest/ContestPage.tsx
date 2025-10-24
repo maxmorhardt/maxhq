@@ -1,10 +1,12 @@
-import { Box, Chip, CircularProgress, Typography } from '@mui/material';
-import { useEffect, useMemo, useRef } from 'react';
+import { Edit } from '@mui/icons-material';
+import { Box, Chip, CircularProgress, IconButton, Typography } from '@mui/material';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import GenericErrorDisplay from '../../../components/common/GenericErrorDisplay';
-import Contest from '../../../components/contest/Contest';
+import ContestComponent from '../../../components/contest/Contest';
+import EditContest from '../../../components/contest/EditContest';
 import {
   selectContestError,
   selectContestLoading,
@@ -31,10 +33,14 @@ export default function ContestPage() {
   const { showToast } = useToast();
   const lastProcessedMessageRef = useRef<string | null>(null);
   const { id } = useParams<{ id: string }>();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+	const [dispatchCalled, setDispatchCalled] = useState(false);
 
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
   const currentContest = useAppSelector(selectCurrentContest);
+
+  const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
 
   const immutable = useMemo(() => {
     if (!currentContest) {
@@ -47,7 +53,7 @@ export default function ContestPage() {
     // return immutableStatuses.includes(currentContest.status || '');
 
     // For demonstration: always mutable (you can change this to true to test)
-    return true;
+    return false;
   }, [currentContest]);
 
   const socketUrl = useMemo(() => getSocketUrl(id, auth), [id, auth]);
@@ -131,6 +137,7 @@ export default function ContestPage() {
     }
 
     dispatch(fetchContestById(id));
+		setDispatchCalled(true);
   }, [id, dispatch]);
 
   useEffect(() => {
@@ -140,7 +147,7 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
-  if (loading) {
+  if (!dispatchCalled || loading) {
     return (
       <Box display="flex" justifyContent="center" mt={24}>
         <CircularProgress />
@@ -148,7 +155,7 @@ export default function ContestPage() {
     );
   }
 
-  if (!currentContest && !loading) {
+  if (dispatchCalled && !loading && !currentContest) {
     return <GenericErrorDisplay />;
   }
 
@@ -169,7 +176,7 @@ export default function ContestPage() {
       </Typography>
 
       <Chip
-        label={isConnected ? 'Live' : isConnecting ? 'Connecting' : 'Offline'}
+        label={isConnected ? 'Live' : isConnected ? 'Connecting' : 'Offline'}
         color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
         size="small"
         variant={isConnected ? 'filled' : 'outlined'}
@@ -180,7 +187,29 @@ export default function ContestPage() {
         }}
       />
 
-      <Contest immutable={immutable} />
+      {/* Edit button for contest owner */}
+      {isOwner && (
+        <IconButton
+          onClick={() => setEditModalOpen(true)}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 14,
+            color: 'white',
+          }}
+          size="small"
+        >
+          <Edit />
+        </IconButton>
+      )}
+
+      <ContestComponent immutable={immutable} />
+
+      {/* Edit Contest Modal */}
+      <EditContest
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+      />
     </Box>
   );
 }
