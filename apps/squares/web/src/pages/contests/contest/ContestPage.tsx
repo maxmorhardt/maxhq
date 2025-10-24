@@ -2,7 +2,7 @@ import { Edit } from '@mui/icons-material';
 import { Box, Chip, CircularProgress, IconButton, Typography } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import GenericErrorDisplay from '../../../components/common/GenericErrorDisplay';
 import ContestComponent from '../../../components/contest/Contest';
@@ -30,6 +30,7 @@ import { contestSocketEventHandler, getSocketUrl } from '../../../service/wsServ
 export default function ContestPage() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const lastProcessedMessageRef = useRef<string | null>(null);
   const { id } = useParams<{ id: string }>();
@@ -122,6 +123,16 @@ export default function ContestPage() {
           dispatch(setLatestMessage(message));
         }
       },
+      onContestDeleted: (message) => {
+        if (message.contestId === currentContest?.id) {
+          showToast('Contest has been deleted', 'warning');
+          if (!auth.isAuthenticated) {
+            navigate('/');
+          } else {
+            navigate('/contests');
+          }
+        }
+      },
       onConnect: (message) => {
         dispatch(setConnectionDetails(message));
       },
@@ -129,7 +140,7 @@ export default function ContestPage() {
         dispatch(setDisconnectionDetails(message));
       },
     });
-  }, [lastMessage, dispatch, currentContest?.id, showToast]);
+  }, [lastMessage, dispatch, currentContest?.id, showToast, navigate, auth.isAuthenticated]);
 
   useEffect(() => {
     if (!id) {

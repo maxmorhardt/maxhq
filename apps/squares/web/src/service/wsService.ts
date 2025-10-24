@@ -28,6 +28,10 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
         eventParams.onContestUpdate(message);
         break;
 
+      case 'contest_deleted':
+        eventParams.onContestDeleted(message);
+        break;
+
       case 'connected':
         eventParams.onConnect(message);
         break;
