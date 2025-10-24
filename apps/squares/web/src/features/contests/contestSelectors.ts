@@ -10,3 +10,5 @@ export const selectContestLoading = (state: RootState): boolean => state.contest
 export const selectSquareLoading = (state: RootState): boolean => state.contest.squareLoading;
 export const selectContestError = (state: RootState): string | null => state.contest.error;
 export const selectContestPagination = (state: RootState) => state.contest.pagination;
+export const selectDeleteContestLoading = (state: RootState): boolean =>
+  state.contest.deleteContestLoading;

@@ -1,18 +1,19 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
-	createNewContest,
-	getContestById,
-	getContests,
-	getContestsByUser,
-	randomizeContestLabels,
-	updateSquareValueById,
+  createNewContest,
+  deleteContestById,
+  getContestById,
+  getContests,
+  getContestsByUser,
+  randomizeContestLabels,
+  updateSquareValueById,
 } from '../../service/contestService';
 import type {
-	Contest,
-	CreateContestRequest,
-	PaginatedContestsResponse,
-	PaginationParams,
-	Square,
+  Contest,
+  CreateContestRequest,
+  PaginatedContestsResponse,
+  PaginationParams,
+  Square,
 } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
@@ -86,6 +87,17 @@ export const randomizeLabels = createAsyncThunk<Contest, string, { rejectValue: 
     try {
       const contest = await randomizeContestLabels(id);
       return contest;
+    } catch (err: unknown) {
+      return rejectWithValue(err as APIError);
+    }
+  }
+);
+
+export const deleteContest = createAsyncThunk<void, string, { rejectValue: APIError }>(
+  'contests/deleteContest',
+  async (id, { rejectWithValue }) => {
+    try {
+      await deleteContestById(id);
     } catch (err: unknown) {
       return rejectWithValue(err as APIError);
     }

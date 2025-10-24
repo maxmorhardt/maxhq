@@ -76,3 +76,11 @@ export async function randomizeContestLabels(id: string): Promise<Contest> {
     throw handleError(err);
   }
 }
+
+export async function deleteContestById(id: string): Promise<void> {
+  try {
+    await api.delete<void>(`/contests/${id}`);
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}

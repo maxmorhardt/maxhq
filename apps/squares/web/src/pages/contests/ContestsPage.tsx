@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import ContestsTable from '../../components/contest/ContestsTable';
 import {
-	selectContestError,
-	selectContestLoading,
-	selectContestPagination,
-	selectContests,
+  selectContestError,
+  selectContestLoading,
+  selectContestPagination,
+  selectContests,
 } from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
 import { fetchContestsByUser } from '../../features/contests/contestThunks';
@@ -53,7 +53,10 @@ export default function ContestsPage() {
     }
   }, [auth.isAuthenticated, auth.user, dispatch, isInterceptorReady, page, rowsPerPage]);
 
-  const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+  const handleChangePage = (
+    _event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
     setPage(newPage);
   };
 
@@ -62,7 +65,34 @@ export default function ContestsPage() {
     setPage(0);
   };
 
-  if (!isInterceptorReady || auth.isLoading || loading) {
+  if (auth.isLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress sx={{ mt: 24 }} />
+      </Box>
+    );
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <ContestsTable
+        contests={contests}
+        totalCount={pagination.total}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+    );
+  }
+
+  if (!isInterceptorReady || loading) {
     return (
       <Box
         sx={{

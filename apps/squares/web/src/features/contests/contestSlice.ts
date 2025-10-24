@@ -2,12 +2,13 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import type { Contest, PaginatedContestsResponse, Square } from '../../types/contest';
 import {
-	createContest,
-	fetchContestById,
-	fetchContests,
-	fetchContestsByUser,
-	randomizeLabels,
-	updateSquare,
+  createContest,
+  deleteContest,
+  fetchContestById,
+  fetchContests,
+  fetchContestsByUser,
+  randomizeLabels,
+  updateSquare,
 } from './contestThunks';
 
 interface ContestState {
@@ -15,6 +16,7 @@ interface ContestState {
   currentContest?: Contest | null;
   currentSquare?: Square | null;
   contestLoading: boolean;
+  deleteContestLoading: boolean;
   squareLoading: boolean;
   error: string | null;
   pagination: {
@@ -30,6 +32,7 @@ interface ContestState {
 const initialState: ContestState = {
   contests: [],
   contestLoading: false,
+  deleteContestLoading: false,
   squareLoading: false,
   error: null,
   pagination: {
@@ -48,6 +51,9 @@ const contestSlice = createSlice({
   reducers: {
     clearError(state) {
       state.error = null;
+    },
+    setCurrentContest(state, action: PayloadAction<Contest | null>) {
+      state.currentContest = action.payload;
     },
     setCurrentSquare(state, action: PayloadAction<Square>) {
       state.currentSquare = action.payload;
@@ -200,11 +206,28 @@ const contestSlice = createSlice({
       .addCase(randomizeLabels.rejected, (state, action) => {
         state.error = action.payload?.message ?? 'Error randomizing labels';
       });
+    builder
+      .addCase(deleteContest.pending, (state) => {
+        state.deleteContestLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteContest.fulfilled, (state) => {
+        state.deleteContestLoading = false;
+        state.contests = state.contests.filter(
+          (contest) => contest.id !== state.currentContest?.id
+        );
+        state.currentContest = null;
+      })
+      .addCase(deleteContest.rejected, (state, action) => {
+        state.deleteContestLoading = false;
+        state.error = action.payload?.message ?? 'Error deleting contest';
+      });
   },
 });
 
 export const {
   clearError,
+  setCurrentContest,
   setCurrentSquare,
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
