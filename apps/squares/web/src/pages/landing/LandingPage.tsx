@@ -59,7 +59,7 @@ const features: Feature[] = [
     emoji: '🔗',
     gradient: 'pink',
     title: 'Easy Sharing',
-    description: 'Share contests with a simple link - no accounts required for participants',
+    description: 'Share contests with a simple link - all participants need accounts to join',
   },
   {
     emoji: '📱',

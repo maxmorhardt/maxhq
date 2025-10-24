@@ -40,7 +40,7 @@ export default function LearnMorePage() {
       icon: <People sx={{ color: '#f093fb' }} />,
       title: 'Social & Collaborative',
       description:
-        'Share your contests with friends and family. Players can join with a simple link - no account creation required for participants.',
+        'Share your contests with friends and family. Players can join with a simple link - all participants need accounts to join.',
     },
     {
       icon: <Timeline sx={{ color: '#4facfe' }} />,
@@ -82,7 +82,7 @@ export default function LearnMorePage() {
     {
       question: 'Do players need accounts?',
       answer:
-        'Only the contest creator needs an account. Participants can join and select squares using just the shared link - no registration required!',
+        'Yes, all participants need accounts to join and select squares. Both contest creators and participants must sign up to participate.',
     },
     {
       question: 'How are winners determined?',
