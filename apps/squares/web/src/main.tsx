@@ -12,7 +12,7 @@ import ContactPage from './pages/contact/ContactPage';
 import ContestPage from './pages/contests/contest/ContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import CreateContestPage from './pages/contests/create/CreateContestPage';
-import ErrorPage from './pages/error/ErrorPage';
+import NotFoundPage from './pages/error/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
 
@@ -37,7 +37,6 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
-    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <LandingPage /> },
       { path: 'contests', element: <ContestsPage /> },
@@ -45,6 +44,7 @@ const router = createBrowserRouter([
       { path: 'contests/:id', element: <ContestPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ]);

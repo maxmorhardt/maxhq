@@ -1,8 +1,9 @@
-import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Typography } from '@mui/material';
 import { useEffect, useMemo, useRef } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import GenericErrorDisplay from '../../../components/common/GenericErrorDisplay';
 import Contest from '../../../components/contest/Contest';
 import {
   selectContestError,
@@ -14,7 +15,7 @@ import {
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
 } from '../../../features/contests/contestSlice';
-import { fetchContestById, randomizeLabels } from '../../../features/contests/contestThunks';
+import { fetchContestById } from '../../../features/contests/contestThunks';
 import {
   setConnectionDetails,
   setDisconnectionDetails,
@@ -35,12 +36,25 @@ export default function ContestPage() {
   const error = useAppSelector(selectContestError);
   const currentContest = useAppSelector(selectCurrentContest);
 
+  const immutable = useMemo(() => {
+    if (!currentContest) {
+      return true;
+    }
+
+    // For now, you can manually control immutability
+    // Later, when you add status to Contest type, uncomment below:
+    // const immutableStatuses = ['LOCKED', 'Q1', 'Q2', 'Q3', 'Q4', 'FINISHED'];
+    // return immutableStatuses.includes(currentContest.status || '');
+
+    // For demonstration: always mutable (you can change this to true to test)
+    return true;
+  }, [currentContest]);
+
   const socketUrl = useMemo(() => getSocketUrl(id, auth), [id, auth]);
   const shouldConnect = useMemo(
     () => Boolean(id && auth.isAuthenticated && auth.user?.access_token && currentContest),
     [id, auth.isAuthenticated, auth.user?.access_token, currentContest]
   );
-
   const webSocketOptions = useMemo(
     () => ({
       protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
@@ -64,6 +78,7 @@ export default function ContestPage() {
       return;
     }
 
+    // ignore duplicate messages
     if (lastProcessedMessageRef.current === lastMessage.data) {
       return;
     }
@@ -125,22 +140,6 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
-  const handleRandomizeLabels = async () => {
-    if (!id) {
-      return;
-    }
-
-    await dispatch(randomizeLabels(id))
-      .unwrap()
-      .then(() => {
-        showToast('Labels randomized successfully', 'success');
-      });
-  };
-
-  const handleChooseWinner = () => {
-    showToast('Choose winner feature coming soon!', 'info');
-  };
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={24}>
@@ -149,8 +148,8 @@ export default function ContestPage() {
     );
   }
 
-  if (!currentContest) {
-    return;
+  if (!currentContest && !loading) {
+    return <GenericErrorDisplay />;
   }
 
   return (
@@ -166,7 +165,7 @@ export default function ContestPage() {
           mb: 1,
         }}
       >
-        {currentContest.name}
+        {currentContest?.name ?? ''}
       </Typography>
 
       <Chip
@@ -181,35 +180,7 @@ export default function ContestPage() {
         }}
       />
 
-      <Contest />
-
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Stack direction="row" spacing={2} justifyContent="center">
-          <Button
-            variant="outlined"
-            onClick={handleRandomizeLabels}
-            disabled={loading}
-            sx={{
-              minWidth: { xs: 120, sm: 140 },
-              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-            }}
-          >
-            Randomize Labels
-          </Button>
-
-          <Button
-            variant="contained"
-            onClick={handleChooseWinner}
-            disabled={loading}
-            sx={{
-              minWidth: { xs: 120, sm: 140 },
-              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-            }}
-          >
-            Choose Winner
-          </Button>
-        </Stack>
-      </Box>
+      <Contest immutable={immutable} />
     </Box>
   );
 }

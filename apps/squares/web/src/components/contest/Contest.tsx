@@ -7,18 +7,25 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import EditSquare from '../square/EditSquare';
 import Square from '../square/Square';
 import { useToast } from '../../hooks/useToast';
+import type { Contest } from '../../types/contest';
 
-export default function Contest() {
+interface ContestProps {
+  immutable?: boolean;
+}
+
+export default function Contest({ immutable = false }: ContestProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
-  const contest = useAppSelector(selectCurrentContest);
+  const currentContest = useAppSelector(selectCurrentContest);
   const { showToast } = useToast();
 
   const [open, setOpen] = useState(false);
 
-  if (!contest) {
+  if (!currentContest) {
     return;
   }
+
+  const contest = currentContest;
 
   const numRows = contest.yLabels.length;
   const numCols = contest.xLabels.length;
@@ -31,6 +38,10 @@ export default function Contest() {
   });
 
   const handleSquareClick = async (row: number, col: number) => {
+    if (immutable) {
+      return;
+    }
+
     if (!auth.isAuthenticated) {
       auth.signinRedirect({
         redirect_uri: window.location.href,
@@ -59,6 +70,21 @@ export default function Contest() {
           p: 1,
         }}
       >
+        {!currentContest && (
+          <Box
+            sx={{
+              mb: 2,
+              p: 2,
+              background: 'rgba(255, 193, 7, 0.1)',
+              border: '1px solid rgba(255, 193, 7, 0.3)',
+              borderRadius: 2,
+              color: '#ffc107',
+              textAlign: 'center',
+            }}
+          >
+            Contest not available - Displaying preview mode
+          </Box>
+        )}
         <Paper
           sx={{
             background: 'rgba(255,255,255,0.05)',
@@ -69,7 +95,7 @@ export default function Contest() {
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           }}
         >
-          {/* Squares Grid */}
+          {/* squares grid */}
           <Box
             sx={{
               display: 'flex',
@@ -96,6 +122,7 @@ export default function Contest() {
                     handleSquareClick={handleSquareClick}
                     xLabel={contest.xLabels[colIndex]}
                     yLabel={contest.yLabels[rowIndex]}
+                    immutable={immutable}
                   />
                 ))}
               </Box>

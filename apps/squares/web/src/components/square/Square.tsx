@@ -7,6 +7,7 @@ interface SquareProps {
   handleSquareClick: (row: number, col: number) => void;
   xLabel?: number;
   yLabel?: number;
+  immutable?: boolean;
 }
 
 export default function Square({
@@ -16,6 +17,7 @@ export default function Square({
   handleSquareClick,
   xLabel,
   yLabel,
+  immutable = false,
 }: SquareProps) {
   const theme = useTheme();
 
@@ -58,7 +60,8 @@ export default function Square({
       {/* Square */}
       <Button
         key={`${rowIndex}-${colIndex}`}
-        onClick={() => handleSquareClick(rowIndex, colIndex)}
+        onClick={immutable ? undefined : () => handleSquareClick(rowIndex, colIndex)}
+        disabled={immutable}
         sx={{
           color: 'white',
           background: squareData ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
@@ -74,14 +77,23 @@ export default function Square({
           fontSize: { xs: 9, sm: 11, md: 14 },
           fontWeight: squareData ? 600 : 400,
           transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            background: squareData ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
-            transform: 'translateY(-2px)',
-            boxShadow: `0 0 10px ${theme.palette.primary.main}`,
-            border: '1px solid rgba(255,255,255,0.3)',
-          },
-          '&:active': {
-            transform: 'translateY(0px)',
+          cursor: immutable ? 'default' : 'pointer',
+          '&:hover': immutable
+            ? {}
+            : {
+                background: squareData ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
+                transform: 'translateY(-2px)',
+                boxShadow: `0 0 10px ${theme.palette.primary.main}`,
+                border: '1px solid rgba(255,255,255,0.3)',
+              },
+          '&:active': immutable
+            ? {}
+            : {
+                transform: 'translateY(0px)',
+              },
+          '&.Mui-disabled': {
+            color: 'white',
+            opacity: 0.8,
           },
         }}
       >
