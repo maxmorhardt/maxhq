@@ -35,7 +35,7 @@ export default function ContestPage() {
   const lastProcessedMessageRef = useRef<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const [editModalOpen, setEditModalOpen] = useState(false);
-	const [dispatchCalled, setDispatchCalled] = useState(false);
+  const [dispatchCalled, setDispatchCalled] = useState(false);
 
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
@@ -148,7 +148,7 @@ export default function ContestPage() {
     }
 
     dispatch(fetchContestById(id));
-		setDispatchCalled(true);
+    setDispatchCalled(true);
   }, [id, dispatch]);
 
   useEffect(() => {
@@ -217,10 +217,7 @@ export default function ContestPage() {
       <ContestComponent immutable={immutable} />
 
       {/* Edit Contest Modal */}
-      <EditContest
-        open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-      />
+      <EditContest open={editModalOpen} onClose={() => setEditModalOpen(false)} />
     </Box>
   );
 }

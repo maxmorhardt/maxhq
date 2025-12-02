@@ -17,11 +17,12 @@ import {
   useTheme,
 } from '@mui/material';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router-dom';
 import { setCurrentContest } from '../../features/contests/contestSlice';
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import type { Contest } from '../../types/contest';
+import { getStatusLabel, getStatusOption } from '../../utils/contestStatus';
 import DeleteContest from './DeleteContest';
 import EditContest from './EditContest';
 
@@ -193,14 +194,10 @@ export default function ContestsTable({
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={contest.status || 'ACTIVE'}
+                        label={getStatusLabel(contest.status)}
                         size="small"
                         sx={{
-                          background: 
-                            contest.status === 'FINISHED' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' :
-                            contest.status === 'CANCELLED' ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)' :
-                            contest.status === 'LOCKED' || ['Q1', 'Q2', 'Q3', 'Q4'].includes(contest.status || '') ? 'linear-gradient(135deg, #feca57 0%, #ff9ff3 100%)' :
-                            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', // ACTIVE
+                          bgcolor: getStatusOption(contest.status).color,
                           color: 'white',
                           fontWeight: 500,
                           fontSize: { xs: '0.65rem', md: '0.75rem' },

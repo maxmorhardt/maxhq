@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
+  clearSquareById,
   createNewContest,
   deleteContestById,
   getContestById,
@@ -71,16 +72,28 @@ export const createContest = createAsyncThunk<
 
 export const updateSquare = createAsyncThunk<
   Square,
-  { id: string; value: string },
+  { id: string; value: string; owner: string },
   { rejectValue: APIError }
->('contests/updateSquare', async ({ id, value }, { rejectWithValue }) => {
+>('contests/updateSquare', async ({ id, value, owner }, { rejectWithValue }) => {
   try {
-    const square = await updateSquareValueById(id, value);
+    const square = await updateSquareValueById(id, value, owner);
     return square;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
   }
 });
+
+export const clearSquare = createAsyncThunk<Square, string, { rejectValue: APIError }>(
+  'contests/clearSquare',
+  async (id, { rejectWithValue }) => {
+    try {
+      const square = await clearSquareById(id);
+      return square;
+    } catch (err: unknown) {
+      return rejectWithValue(err as APIError);
+    }
+  }
+);
 
 export const randomizeLabels = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
   'contests/randomizeLabels',

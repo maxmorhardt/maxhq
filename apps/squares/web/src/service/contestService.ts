@@ -59,9 +59,25 @@ export async function createNewContest(request: CreateContestRequest) {
   }
 }
 
-export async function updateSquareValueById(id: string, value: string): Promise<Square> {
+export async function updateSquareValueById(
+  id: string,
+  value: string,
+  owner: string
+): Promise<Square> {
   try {
-    const res = await api.patch<Square>(`/contests/square/${id}`, { value: value });
+    const res = await api.patch<Square>(`/contests/square/${id}`, {
+      value: value,
+      owner: owner,
+    });
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function clearSquareById(id: string): Promise<Square> {
+  try {
+    const res = await api.post<Square>(`/contests/square/${id}/clear`);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

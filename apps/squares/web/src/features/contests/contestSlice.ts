@@ -2,6 +2,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import type { Contest, PaginatedContestsResponse, Square } from '../../types/contest';
 import {
+  clearSquare,
   createContest,
   deleteContest,
   fetchContestById,
@@ -193,6 +194,32 @@ const contestSlice = createSlice({
       });
 
     builder
+      .addCase(clearSquare.pending, (state) => {
+        state.squareLoading = true;
+        state.error = null;
+      })
+      .addCase(clearSquare.fulfilled, (state, action: PayloadAction<Square>) => {
+        state.squareLoading = false;
+        const clearedSquare = action.payload;
+
+        if (!state.currentContest) {
+          return;
+        }
+
+        const index = state.currentContest.squares.findIndex(
+          (s) => s.row === clearedSquare.row && s.col === clearedSquare.col
+        );
+
+        if (index !== -1) {
+          state.currentContest.squares[index] = clearedSquare;
+        }
+      })
+      .addCase(clearSquare.rejected, (state, action) => {
+        state.squareLoading = false;
+        state.error = action.payload?.message ?? 'Error clearing square';
+      });
+
+    builder
       .addCase(randomizeLabels.pending, (state) => {
         state.error = null;
       })
@@ -216,9 +243,9 @@ const contestSlice = createSlice({
         if (state.currentContest && state.currentContest.id === action.payload.id) {
           state.currentContest = action.payload;
         }
-        
+
         // Also update in the contests array if it exists
-        const index = state.contests.findIndex(c => c.id === action.payload.id);
+        const index = state.contests.findIndex((c) => c.id === action.payload.id);
         if (index !== -1) {
           state.contests[index] = action.payload;
         }

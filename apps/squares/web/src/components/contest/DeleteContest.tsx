@@ -99,12 +99,22 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
       </DialogContent>
 
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={onClose} variant="outlined" disabled={loading}>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          disabled={loading}
+          sx={{ minHeight: 35, minWidth: 100 }}
+        >
           Cancel
         </Button>
-        <Button onClick={handleConfirm} variant="contained" disabled={loading} color="error">
-          {loading ? <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} /> : ''}
-          Yes, Delete
+        <Button
+          onClick={handleConfirm}
+          variant="contained"
+          disabled={loading}
+          color="error"
+          sx={{ minHeight: 35, minWidth: 100 }}
+        >
+          {loading ? <CircularProgress size={16} color="inherit" /> : 'Yes, Delete'}
         </Button>
       </DialogActions>
     </Dialog>

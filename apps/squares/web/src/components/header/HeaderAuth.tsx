@@ -52,7 +52,10 @@ export default function HeaderAuth({
         <>
           <Tooltip title="Open settings">
             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              <Avatar alt={auth.user?.profile?.name} src={auth.user?.profile?.name} />
+              <Avatar
+                alt={auth.user?.profile?.name?.toUpperCase()}
+                src={auth.user?.profile?.name?.toUpperCase()}
+              />
             </IconButton>
           </Tooltip>
           <Menu

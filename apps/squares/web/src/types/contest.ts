@@ -1,4 +1,12 @@
-export type ContestStatus = 'ACTIVE' | 'LOCKED' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'CANCELLED';
+export type ContestStatus =
+  | 'ACTIVE'
+  | 'LOCKED'
+  | 'Q1'
+  | 'Q2'
+  | 'Q3'
+  | 'Q4'
+  | 'FINISHED'
+  | 'CANCELLED';
 
 export interface Contest {
   id: string;

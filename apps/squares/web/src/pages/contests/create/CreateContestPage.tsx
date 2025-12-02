@@ -230,14 +230,7 @@ export default function CreateContestPage() {
                   py: 1.5,
                 }}
               >
-                {loading ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CircularProgress size={18} color="inherit" sx={{ mr: 1 }} />
-                  </Box>
-                ) : (
-                  ''
-                )}
-                Create Contest
+                {loading ? <CircularProgress size={18} color="inherit" /> : 'Create Contest'}
               </Button>
             </Box>
           </Box>
