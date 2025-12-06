@@ -79,7 +79,6 @@ export default function EditContest({ open, onClose }: EditContestProps) {
       onClose();
     } catch (error) {
       console.error('Failed to update contest:', error);
-      showToast('Failed to update contest', 'error');
     } finally {
       setLoading(false);
     }
