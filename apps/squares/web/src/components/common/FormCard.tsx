@@ -1,7 +1,8 @@
 import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import type { ReactNode } from 'react';
 
 interface ContactInfoCardProps {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   details: string;
 }

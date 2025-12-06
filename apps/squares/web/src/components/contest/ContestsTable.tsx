@@ -16,7 +16,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import { setCurrentContest } from '../../features/contests/contestSlice';
@@ -31,8 +31,8 @@ interface ContestsTableProps {
   totalCount: number;
   page: number;
   rowsPerPage: number;
-  onPageChange: (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => void;
-  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onPageChange: (event: MouseEvent<HTMLButtonElement> | null, newPage: number) => void;
+  onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 export default function ContestsTable({

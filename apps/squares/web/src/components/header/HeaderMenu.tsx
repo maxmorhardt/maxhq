@@ -7,12 +7,12 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
-import type { JSX } from 'react';
+import type { JSX, MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderMenuProps {
-  handleOpenNavMenu: (event: React.MouseEvent<HTMLElement>) => void;
+  handleOpenNavMenu: (event: MouseEvent<HTMLElement>) => void;
   handleCloseNavMenu: () => void;
   handleRegister: () => void;
   anchorElNav: null | HTMLElement;

@@ -6,11 +6,11 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import type { JSX } from 'react';
+import type { JSX, MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 
 interface HeaderAuthProps {
-  handleOpenUserMenu: (event: React.MouseEvent<HTMLElement>) => void;
+  handleOpenUserMenu: (event: MouseEvent<HTMLElement>) => void;
   handleCloseUserMenu: () => void;
   handleRegister: () => void;
   handleSettingClick: (setting: string) => void;

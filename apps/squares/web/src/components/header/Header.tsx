@@ -1,15 +1,15 @@
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import GridViewIcon from '@mui/icons-material/GridView';
+import InfoIcon from '@mui/icons-material/Info';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ContactSupportIcon from '@mui/icons-material/ContactSupport';
-import InfoIcon from '@mui/icons-material/Info';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import HeaderAuth from './HeaderAuth';
@@ -33,9 +33,8 @@ export default function Header() {
   const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
 
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) =>
-    setAnchorElNav(event.currentTarget);
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) =>
+  const handleOpenNavMenu = (event: MouseEvent<HTMLElement>) => setAnchorElNav(event.currentTarget);
+  const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) =>
     setAnchorElUser(event.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);

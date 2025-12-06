@@ -1,0 +1,173 @@
+/* Animated mesh gradient background for CTA */
+@keyframes mesh-wave {
+  0%,
+  100% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  33% {
+    transform: translate(10%, -10%) scale(1.1);
+  }
+  66% {
+    transform: translate(-10%, 10%) scale(0.9);
+  }
+}
+
+@keyframes mesh-wave-2 {
+  0%,
+  100% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  33% {
+    transform: translate(-15%, 15%) scale(1.05);
+  }
+  66% {
+    transform: translate(15%, -15%) scale(0.95);
+  }
+}
+
+@keyframes mesh-wave-3 {
+  0%,
+  100% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(5%, -5%) scale(1.15) rotate(5deg);
+  }
+}
+
+@keyframes float-particles {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(30px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.cta-animated-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mesh-gradient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+}
+
+.mesh-gradient-blob:nth-child(1) {
+  width: 400px;
+  height: 400px;
+  top: 20%;
+  left: -100px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+  animation: mesh-wave 20s ease-in-out infinite;
+}
+
+.mesh-gradient-blob:nth-child(2) {
+  width: 500px;
+  height: 500px;
+  top: 50%;
+  right: -150px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  animation: mesh-wave-2 25s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.mesh-gradient-blob:nth-child(3) {
+  width: 700px;
+  height: 700px;
+  bottom: -250px;
+  left: 30%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, transparent 70%);
+  animation: mesh-wave-3 30s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+.floating-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: float-particles linear infinite;
+}
+
+.floating-particle:nth-child(4) {
+  left: 10%;
+  bottom: 0;
+  animation-duration: 15s;
+  animation-delay: 0s;
+}
+
+.floating-particle:nth-child(5) {
+  left: 25%;
+  bottom: 0;
+  animation-duration: 18s;
+  animation-delay: 2s;
+  width: 6px;
+  height: 6px;
+}
+
+.floating-particle:nth-child(6) {
+  left: 40%;
+  bottom: 0;
+  animation-duration: 20s;
+  animation-delay: 4s;
+}
+
+.floating-particle:nth-child(7) {
+  left: 55%;
+  bottom: 0;
+  animation-duration: 16s;
+  animation-delay: 1s;
+  width: 5px;
+  height: 5px;
+}
+
+.floating-particle:nth-child(8) {
+  left: 70%;
+  bottom: 0;
+  animation-duration: 22s;
+  animation-delay: 3s;
+}
+
+.floating-particle:nth-child(9) {
+  left: 85%;
+  bottom: 0;
+  animation-duration: 19s;
+  animation-delay: 5s;
+  width: 3px;
+  height: 3px;
+}
+
+.floating-particle:nth-child(10) {
+  left: 15%;
+  bottom: 0;
+  animation-duration: 17s;
+  animation-delay: 6s;
+}
+
+.floating-particle:nth-child(11) {
+  left: 60%;
+  bottom: 0;
+  animation-duration: 21s;
+  animation-delay: 2.5s;
+  width: 7px;
+  height: 7px;
+}

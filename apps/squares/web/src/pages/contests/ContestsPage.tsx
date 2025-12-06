@@ -1,5 +1,5 @@
 import { Box, CircularProgress } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import ContestsTable from '../../components/contest/ContestsTable';
 import {
@@ -53,14 +53,11 @@ export default function ContestsPage() {
     }
   }, [auth.isAuthenticated, auth.user, dispatch, isInterceptorReady, page, rowsPerPage]);
 
-  const handleChangePage = (
-    _event: React.MouseEvent<HTMLButtonElement> | null,
-    newPage: number
-  ) => {
+  const handleChangePage = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };

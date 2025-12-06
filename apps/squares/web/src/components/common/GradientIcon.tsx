@@ -1,13 +1,15 @@
 import { Box, Typography } from '@mui/material';
 import { gradients, type GradientType } from '../../types/gradients';
+import type { ReactNode } from 'react';
 
 interface GradientIconProps {
-  character: string;
+  character?: string;
+  icon?: ReactNode;
   gradient: GradientType;
   size?: number;
 }
 
-export default function GradientIcon({ character, gradient, size = 80 }: GradientIconProps) {
+export default function GradientIcon({ character, icon, gradient, size = 80 }: GradientIconProps) {
   return (
     <Box
       sx={{
@@ -24,9 +26,13 @@ export default function GradientIcon({ character, gradient, size = 80 }: Gradien
         border: '1px solid rgba(255,255,255,0.15)',
       }}
     >
-      <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-        {character}
-      </Typography>
+      {icon ? (
+        <Box sx={{ color: 'white', display: 'flex', fontSize: size * 0.5 }}>{icon}</Box>
+      ) : (
+        <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
+          {character}
+        </Typography>
+      )}
     </Box>
   );
 }

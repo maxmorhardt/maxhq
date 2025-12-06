@@ -1,6 +1,6 @@
 import { Send } from '@mui/icons-material';
 import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/material';
-import { useState } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 interface ContactFormProps {
   onSubmit?: (formData: { name: string; email: string; subject: string; message: string }) => void;
@@ -15,12 +15,12 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
     message: '',
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     // TODO: Implement form submission
     console.log('Form submitted:', formData);

@@ -7,7 +7,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentSquare, selectSquareLoading } from '../../features/contests/contestSelectors';
 
@@ -74,7 +74,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     }
   };
 
-  const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleValueChange = (event: ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value);
     if (error && event.target.value.trim()) {
       setError(false);
@@ -102,17 +102,24 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontSize: 20, fontWeight: 'bold' }}>Edit Square</DialogTitle>
       <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          label="Initials"
-          fullWidth
-          variant="outlined"
-          value={value}
-          onChange={handleValueChange}
-          error={error}
-          disabled={isReadOnly}
-        />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }}
+        >
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Initials"
+            fullWidth
+            variant="outlined"
+            value={value}
+            onChange={handleValueChange}
+            error={error}
+            disabled={isReadOnly}
+          />
+        </form>
 
         {currentSquare?.owner && currentSquare.owner.trim() && (
           <Typography
