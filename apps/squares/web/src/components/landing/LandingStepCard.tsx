@@ -25,25 +25,26 @@ export default function LandingStepCard({
       sx={{
         display: 'flex',
         flexDirection: { xs: 'column', md: 'row' },
-        alignItems: 'center',
-        gap: 4,
-        mb: 6,
+        alignItems: { xs: 'stretch', md: 'center' },
+        gap: { xs: 2, md: 4 },
+        mb: { xs: 4, md: 6 },
       }}
     >
       <Box
         sx={{
           flex: '0 0 auto',
-          width: { xs: 80, md: 100 },
-          height: { xs: 80, md: 100 },
+          width: { xs: 60, md: 100 },
+          height: { xs: 60, md: 100 },
           borderRadius: '50%',
           background: gradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: { xs: '2rem', md: '2.5rem' },
+          fontSize: { xs: '1.5rem', md: '2.5rem' },
           fontWeight: 900,
           color: 'white',
           boxShadow: `0 2px 8px ${shadowColor}`,
+          alignSelf: { xs: 'center', md: 'auto' },
         }}
       >
         {step}
@@ -52,8 +53,8 @@ export default function LandingStepCard({
         sx={{
           flex: 1,
           background: gradientLight,
-          borderRadius: 3,
-          p: 4,
+          borderRadius: { xs: 2, md: 3 },
+          p: { xs: 2.5, md: 4 },
           border: '2px solid',
           borderColor: 'divider',
           transition: 'all 0.3s ease',
@@ -67,8 +68,9 @@ export default function LandingStepCard({
           variant="h5"
           sx={{
             fontWeight: 700,
-            mb: 2,
+            mb: { xs: 1.5, md: 2 },
             color: 'text.primary',
+            fontSize: { xs: '1.1rem', md: '1.5rem' },
           }}
         >
           {title}

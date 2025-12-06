@@ -12,6 +12,7 @@ import { Box, Button, Container, Typography, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandingCreateContestButton from '../../components/landing/LandingCreateContestButton';
+import LandingCTABadge from '../../components/landing/LandingCTABadge';
 import LandingFeatureCard from '../../components/landing/LandingFeatureCard';
 import LandingHowItWorksCard from '../../components/landing/LandingHowItWorksCard';
 import LandingStepCard from '../../components/landing/LandingStepCard';
@@ -146,7 +147,7 @@ export default function LandingPage() {
                 sx={{
                   px: { xs: 2, sm: 4 },
                   py: { xs: 1, sm: 2 },
-                  fontSize: { xs: '.8rem', sm: '1.2rem' },
+                  fontSize: { xs: '1rem', sm: '1.2rem' },
                   fontWeight: 500,
                   color: 'text.primary',
                 }}
@@ -242,7 +243,7 @@ export default function LandingPage() {
           >
             <Typography
               variant="body1"
-              sx={{ color: 'text.secondary', fontSize: '1.05rem', lineHeight: 1.7 }}
+              sx={{ color: 'text.secondary', fontSize: { xs: '0.95rem', md: '1.05rem' }, lineHeight: 1.7 }}
             >
               As the quarter ends, check the current score. For this example, it's the{' '}
               <strong>end of the 1st Quarter</strong>.
@@ -259,7 +260,7 @@ export default function LandingPage() {
           >
             <Typography
               variant="body1"
-              sx={{ color: 'text.secondary', fontSize: '1.05rem', lineHeight: 1.7 }}
+              sx={{ color: 'text.secondary', fontSize: { xs: '0.95rem', md: '1.05rem' }, lineHeight: 1.7 }}
             >
               The scoreboard shows <strong>Home Team: 14</strong> and <strong>Away Team: 7</strong>.
               These numbers determine the winning square.
@@ -276,21 +277,21 @@ export default function LandingPage() {
           >
             <Typography
               variant="body1"
-              sx={{ color: 'text.secondary', fontSize: '1.05rem', lineHeight: 1.7, mb: 3 }}
+              sx={{ color: 'text.secondary', fontSize: { xs: '0.95rem', md: '1.05rem' }, lineHeight: 1.7, mb: { xs: 2, md: 3 } }}
             >
               Take the <strong>last digit</strong> of each score:
             </Typography>
             <Box
               sx={{
                 display: 'flex',
-                gap: 2,
+                gap: { xs: 1, md: 2 },
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexWrap: 'wrap',
-                mb: 3,
-                p: 4,
+                mb: { xs: 2, md: 3 },
+                p: { xs: 2, md: 4 },
                 background: theme.palette.grey[900],
-                borderRadius: 3,
+                borderRadius: { xs: 2, md: 3 },
                 border: '2px solid rgba(76, 175, 80, 0.3)',
               }}
             >
@@ -299,11 +300,12 @@ export default function LandingPage() {
                 sx={{
                   fontWeight: 700,
                   color: '#64B5F6',
+                  fontSize: { xs: '1.5rem', md: '2.125rem' },
                 }}
               >
-                <span style={{ fontSize: '1.5rem', color: 'rgba(255, 255, 255, 0.3)' }}>1</span>4
+                <span style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.3)' }}>1</span>4
               </Typography>
-              <Typography variant="h5" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
+              <Typography variant="h5" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                 ×
               </Typography>
               <Typography
@@ -311,13 +313,14 @@ export default function LandingPage() {
                 sx={{
                   fontWeight: 700,
                   color: '#64B5F6',
+                  fontSize: { xs: '1.5rem', md: '2.125rem' },
                 }}
               >
-                <span style={{ fontSize: '1.5rem', color: 'rgba(255, 255, 255, 0.3)' }}>0</span>7
+                <span style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.3)' }}>0</span>7
               </Typography>
               <Typography
                 variant="h5"
-                sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 1, fontWeight: 600 }}
+                sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: { xs: 0.5, md: 1 }, fontWeight: 600, fontSize: { xs: '1.25rem', md: '1.5rem' } }}
               >
                 =
               </Typography>
@@ -326,11 +329,12 @@ export default function LandingPage() {
                 sx={{
                   fontWeight: 900,
                   color: '#66BB6A',
-                  px: 3,
-                  py: 1,
+                  px: { xs: 2, md: 3 },
+                  py: { xs: 0.5, md: 1 },
                   borderRadius: 2,
                   background: 'rgba(102, 187, 106, 0.2)',
                   border: '2px solid #66BB6A',
+                  fontSize: { xs: '1.5rem', md: '2.125rem' },
                 }}
               >
                 (4, 7)
@@ -342,7 +346,8 @@ export default function LandingPage() {
                 fontWeight: 700,
                 color: 'success.main',
                 textAlign: 'center',
-                mt: 2,
+                mt: { xs: 1.5, md: 2 },
+                fontSize: { xs: '1rem', md: '1.25rem' },
               }}
             >
               Square (4, 7) Wins This Quarter! 🏆
@@ -480,98 +485,16 @@ export default function LandingPage() {
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: { xs: 2, sm: 4 },
+                gap: { xs: 1, sm: 4 },
                 flexWrap: 'wrap',
                 px: 2,
+                maxWidth: { xs: '400px', sm: 'none' },
+                mx: 'auto',
               }}
             >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  px: 3,
-                  py: 1.5,
-                  borderRadius: 3,
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: { xs: '0.9rem', sm: '1rem' },
-                  }}
-                >
-                  ✅ No credit card required
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  px: 3,
-                  py: 1.5,
-                  borderRadius: 3,
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: { xs: '0.9rem', sm: '1rem' },
-                  }}
-                >
-                  ✅ Setup in under 2 minutes
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  px: 3,
-                  py: 1.5,
-                  borderRadius: 3,
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: { xs: '0.9rem', sm: '1rem' },
-                  }}
-                >
-                  ✅ Works on all devices
-                </Typography>
-              </Box>
+              <LandingCTABadge text="No credit card required" />
+              <LandingCTABadge text="Setup in under 2 minutes" />
+              <LandingCTABadge text="Works on all devices" />
             </Box>
           </Box>
         </Container>

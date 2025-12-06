@@ -25,7 +25,7 @@ export default function LandingCreateContestButton() {
       sx={{
         px: { xs: 2, sm: 4 },
         py: { xs: 1, sm: 2 },
-        fontSize: { xs: '.8rem', sm: '1.2rem' },
+        fontSize: { xs: '1rem', sm: '1.2rem' },
         fontWeight: 600,
         color: 'white',
         background: theme.palette.primary.dark,
