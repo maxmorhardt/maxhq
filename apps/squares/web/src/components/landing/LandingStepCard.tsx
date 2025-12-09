@@ -24,8 +24,8 @@ export default function LandingStepCard({
     <Box
       sx={{
         display: 'flex',
-        flexDirection: { xs: 'column', md: 'row' },
-        alignItems: { xs: 'stretch', md: 'center' },
+        flexDirection: 'row',
+        alignItems: { xs: 'flex-start', md: 'center' },
         gap: { xs: 2, md: 4 },
         mb: { xs: 4, md: 6 },
       }}
@@ -33,18 +33,18 @@ export default function LandingStepCard({
       <Box
         sx={{
           flex: '0 0 auto',
-          width: { xs: 60, md: 100 },
-          height: { xs: 60, md: 100 },
+          width: { xs: 50, md: 100 },
+          height: { xs: 50, md: 100 },
           borderRadius: '50%',
           background: gradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: { xs: '1.5rem', md: '2.5rem' },
+          fontSize: { xs: '1.25rem', md: '2.5rem' },
           fontWeight: 900,
           color: 'white',
           boxShadow: `0 2px 8px ${shadowColor}`,
-          alignSelf: { xs: 'center', md: 'auto' },
+          mt: { xs: 0.5, md: 0 },
         }}
       >
         {step}
