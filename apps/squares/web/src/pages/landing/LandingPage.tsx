@@ -1,12 +1,12 @@
 import {
-	AttachMoney,
-	Bolt,
-	EmojiEvents,
-	GridOn,
-	Groups,
-	Link,
-	PhoneAndroid,
-	Shuffle,
+  AttachMoney,
+  Bolt,
+  EmojiEvents,
+  GridOn,
+  Groups,
+  Link,
+  PhoneAndroid,
+  Shuffle,
 } from '@mui/icons-material';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
@@ -97,7 +97,7 @@ const features: Feature[] = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-	const theme = useTheme();
+  const theme = useTheme();
 
   return (
     <>
@@ -243,7 +243,11 @@ export default function LandingPage() {
           >
             <Typography
               variant="body1"
-              sx={{ color: 'text.secondary', fontSize: { xs: '0.95rem', md: '1.05rem' }, lineHeight: 1.7 }}
+              sx={{
+                color: 'text.secondary',
+                fontSize: { xs: '0.95rem', md: '1.05rem' },
+                lineHeight: 1.7,
+              }}
             >
               As the quarter ends, check the current score. For this example, it's the{' '}
               <strong>end of the 1st Quarter</strong>.
@@ -260,7 +264,11 @@ export default function LandingPage() {
           >
             <Typography
               variant="body1"
-              sx={{ color: 'text.secondary', fontSize: { xs: '0.95rem', md: '1.05rem' }, lineHeight: 1.7 }}
+              sx={{
+                color: 'text.secondary',
+                fontSize: { xs: '0.95rem', md: '1.05rem' },
+                lineHeight: 1.7,
+              }}
             >
               The scoreboard shows <strong>Home Team: 14</strong> and <strong>Away Team: 7</strong>.
               These numbers determine the winning square.
@@ -277,7 +285,12 @@ export default function LandingPage() {
           >
             <Typography
               variant="body1"
-              sx={{ color: 'text.secondary', fontSize: { xs: '0.95rem', md: '1.05rem' }, lineHeight: 1.7, mb: { xs: 2, md: 3 } }}
+              sx={{
+                color: 'text.secondary',
+                fontSize: { xs: '0.95rem', md: '1.05rem' },
+                lineHeight: 1.7,
+                mb: { xs: 2, md: 3 },
+              }}
             >
               Take the <strong>last digit</strong> of each score:
             </Typography>
@@ -303,9 +316,24 @@ export default function LandingPage() {
                   fontSize: { xs: '1.5rem', md: '2.125rem' },
                 }}
               >
-                <span style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.3)' }}>1</span>4
+                <span
+                  style={{
+                    fontSize: 'clamp(1rem, 3vw, 1.5rem)',
+                    color: 'rgba(255, 255, 255, 0.3)',
+                  }}
+                >
+                  1
+                </span>
+                4
               </Typography>
-              <Typography variant="h5" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontWeight: 600,
+                  fontSize: { xs: '1.25rem', md: '1.5rem' },
+                }}
+              >
                 ×
               </Typography>
               <Typography
@@ -316,11 +344,24 @@ export default function LandingPage() {
                   fontSize: { xs: '1.5rem', md: '2.125rem' },
                 }}
               >
-                <span style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.3)' }}>0</span>7
+                <span
+                  style={{
+                    fontSize: 'clamp(1rem, 3vw, 1.5rem)',
+                    color: 'rgba(255, 255, 255, 0.3)',
+                  }}
+                >
+                  0
+                </span>
+                7
               </Typography>
               <Typography
                 variant="h5"
-                sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: { xs: 0.5, md: 1 }, fontWeight: 600, fontSize: { xs: '1.25rem', md: '1.5rem' } }}
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  mx: { xs: 0.5, md: 1 },
+                  fontWeight: 600,
+                  fontSize: { xs: '1.25rem', md: '1.5rem' },
+                }}
               >
                 =
               </Typography>

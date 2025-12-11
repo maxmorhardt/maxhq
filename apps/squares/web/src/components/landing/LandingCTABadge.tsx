@@ -20,7 +20,7 @@ export default function LandingCTABadge({ text }: LandingCTABadgeProps) {
         border: '1px solid rgba(255, 255, 255, 0.2)',
         transition: 'all 0.3s ease',
         flex: { xs: '1 1 100%', sm: '0 0 auto' },
-				maxWidth: { xs: '14em', sm: 'none' },
+        maxWidth: { xs: '14em', sm: 'none' },
         '&:hover': {
           background: 'rgba(255, 255, 255, 0.25)',
           transform: 'translateY(-2px)',

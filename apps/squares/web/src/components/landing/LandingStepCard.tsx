@@ -44,7 +44,7 @@ export default function LandingStepCard({
           fontWeight: 900,
           color: 'white',
           boxShadow: `0 2px 8px ${shadowColor}`,
-          mt: { xs: 0.5, md: 0 },
+          m: 'auto',
         }}
       >
         {step}
