@@ -1,7 +1,7 @@
-import { Box, CircularProgress } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import ContestsTable from '../../components/contest/ContestsTable';
+import ContestsTableSkeleton from '../../components/contest/ContestsTableSkeleton';
 import {
   selectContestError,
   selectContestLoading,
@@ -63,17 +63,7 @@ export default function ContestsPage() {
   };
 
   if (auth.isLoading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <CircularProgress sx={{ mt: 24 }} />
-      </Box>
-    );
+    return <ContestsTableSkeleton />;
   }
 
   if (!auth.isAuthenticated) {
@@ -90,17 +80,7 @@ export default function ContestsPage() {
   }
 
   if (!isInterceptorReady || loading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <CircularProgress sx={{ mt: 24 }} />
-      </Box>
-    );
+    return <ContestsTableSkeleton />;
   }
 
   return (
