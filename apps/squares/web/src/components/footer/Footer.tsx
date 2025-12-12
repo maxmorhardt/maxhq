@@ -12,8 +12,7 @@ export default function Footer() {
         py: 4,
         px: 2,
         mt: 'auto',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        backgroundColor: 'rgba(0,0,0,0.2)',
+        borderTop: '1px solid rgba(255,255,255,0.1)'
       }}
     >
       <Container maxWidth="lg">
