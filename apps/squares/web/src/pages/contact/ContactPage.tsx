@@ -34,8 +34,8 @@ export default function ContactPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography
           variant="h2"
           sx={{
@@ -43,12 +43,13 @@ export default function ContactPage() {
             mb: 2,
             background: 'white',
             backgroundClip: 'text',
+            fontSize: { xs: '2rem', md: '2.5rem' },
           }}
         >
           Contact Us
         </Typography>
         <Typography
-          variant="h6"
+          variant="body1"
           sx={{
             opacity: 0.8,
             maxWidth: 600,
@@ -61,7 +62,7 @@ export default function ContactPage() {
         </Typography>
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 6 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 4 }}>
         <ContactForm onSubmit={handleFormSubmit} />
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

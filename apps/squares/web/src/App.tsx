@@ -2,6 +2,7 @@ import { Box, GlobalStyles } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import './App.css';
 import ScrollToTop from './components/common/ScrollToTop';
+import Footer from './components/footer/Footer';
 import Header from './components/header/Header';
 import { ToastProvider } from './components/toast/ToastProvider';
 import { useAxiosAuth } from './hooks/useAxiosAuth';
@@ -29,10 +30,15 @@ export default function App() {
         sx={{
           background: gradients.background,
           minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <Header />
-        <Outlet />
+        <Box sx={{ flex: 1 }}>
+          <Outlet />
+        </Box>
+        <Footer />
         <ToastProvider />
       </Box>
     </>

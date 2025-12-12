@@ -106,18 +106,18 @@
   background: rgba(255, 255, 255, 0.6);
   border-radius: 50%;
   animation: float-particles linear infinite;
+  bottom: -20px;
+  opacity: 0;
 }
 
 .floating-particle:nth-child(4) {
   left: 10%;
-  bottom: 0;
   animation-duration: 15s;
   animation-delay: 0s;
 }
 
 .floating-particle:nth-child(5) {
   left: 25%;
-  bottom: 0;
   animation-duration: 18s;
   animation-delay: 2s;
   width: 6px;
@@ -126,14 +126,12 @@
 
 .floating-particle:nth-child(6) {
   left: 40%;
-  bottom: 0;
   animation-duration: 20s;
   animation-delay: 4s;
 }
 
 .floating-particle:nth-child(7) {
   left: 55%;
-  bottom: 0;
   animation-duration: 16s;
   animation-delay: 1s;
   width: 5px;
@@ -142,14 +140,12 @@
 
 .floating-particle:nth-child(8) {
   left: 70%;
-  bottom: 0;
   animation-duration: 22s;
   animation-delay: 3s;
 }
 
 .floating-particle:nth-child(9) {
   left: 85%;
-  bottom: 0;
   animation-duration: 19s;
   animation-delay: 5s;
   width: 3px;
@@ -158,14 +154,12 @@
 
 .floating-particle:nth-child(10) {
   left: 15%;
-  bottom: 0;
   animation-duration: 17s;
   animation-delay: 6s;
 }
 
 .floating-particle:nth-child(11) {
   left: 60%;
-  bottom: 0;
   animation-duration: 21s;
   animation-delay: 2.5s;
   width: 7px;
