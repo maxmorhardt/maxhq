@@ -12,7 +12,7 @@ export default function Footer() {
         py: 4,
         px: 2,
         mt: 'auto',
-        borderTop: '1px solid rgba(255,255,255,0.1)'
+        borderTop: '1px solid rgba(255,255,255,0.1)',
       }}
     >
       <Container maxWidth="lg">
@@ -38,19 +38,6 @@ export default function Footer() {
 
           <Stack direction="row" spacing={3}>
             <Link
-              onClick={() => navigate('/contests')}
-              sx={{
-                color: 'rgba(255,255,255,0.7)',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                '&:hover': {
-                  color: 'white',
-                },
-              }}
-            >
-              Contests
-            </Link>
-            <Link
               onClick={() => navigate('/learn-more')}
               sx={{
                 color: 'rgba(255,255,255,0.7)',
@@ -75,6 +62,32 @@ export default function Footer() {
               }}
             >
               Contact
+            </Link>
+            <Link
+              onClick={() => navigate('/privacy-policy')}
+              sx={{
+                color: 'rgba(255,255,255,0.7)',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                '&:hover': {
+                  color: 'white',
+                },
+              }}
+            >
+              Privacy
+            </Link>
+            <Link
+              onClick={() => navigate('/terms-of-service')}
+              sx={{
+                color: 'rgba(255,255,255,0.7)',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                '&:hover': {
+                  color: 'white',
+                },
+              }}
+            >
+              Terms
             </Link>
           </Stack>
         </Stack>

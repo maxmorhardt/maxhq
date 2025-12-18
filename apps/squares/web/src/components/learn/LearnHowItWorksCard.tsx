@@ -1,14 +1,14 @@
 import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 
 interface LearnHowItWorksCardProps {
-  gradient?: string;
+  color?: string;
   stepNumber: number;
   title: string;
   description: string;
 }
 
 export default function LearnHowItWorksCard({
-  gradient,
+  color,
   stepNumber,
   title,
   description,
@@ -29,7 +29,7 @@ export default function LearnHowItWorksCard({
             width: 80,
             height: 80,
             borderRadius: '50%',
-            background: gradient,
+            background: color,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

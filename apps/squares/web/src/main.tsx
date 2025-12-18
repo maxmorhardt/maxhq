@@ -15,6 +15,8 @@ import CreateContestPage from './pages/contests/create/CreateContestPage';
 import NotFoundPage from './pages/error/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
+import PrivacyPolicyPage from './pages/privacy/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/terms/TermsOfServicePage';
 
 const oidcConfig: AuthProviderProps = {
   authority: 'https://auth.maxstash.io/realms/maxstash',
@@ -44,6 +46,8 @@ const router = createBrowserRouter([
       { path: 'contests/:id', element: <ContestPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },
+      { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
+      { path: 'terms-of-service', element: <TermsOfServicePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

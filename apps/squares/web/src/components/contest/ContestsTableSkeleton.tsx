@@ -59,23 +59,47 @@ export default function ContestsTableSkeleton() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><Skeleton variant="text" /></TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" /></TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" /></TableCell>
-                <TableCell><Skeleton variant="text" /></TableCell>
-                <TableCell><Skeleton variant="text" /></TableCell>
-                <TableCell><Skeleton variant="text" /></TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {[...Array(5)].map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell><Skeleton variant="text" /></TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" /></TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" /></TableCell>
-                  <TableCell><Skeleton variant="text" /></TableCell>
-                  <TableCell><Skeleton variant="rectangular" width={80} height={24} /></TableCell>
-                  <TableCell><Skeleton variant="circular" width={32} height={32} /></TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="rectangular" width={80} height={24} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="circular" width={32} height={32} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

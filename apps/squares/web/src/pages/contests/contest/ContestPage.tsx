@@ -1,12 +1,14 @@
-import { Edit } from '@mui/icons-material';
-import { Box, Chip, CircularProgress, IconButton, Typography } from '@mui/material';
+import { Alert, Box, Chip, Typography } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import GenericErrorDisplay from '../../../components/common/GenericErrorDisplay';
 import ContestComponent from '../../../components/contest/Contest';
-import EditContest from '../../../components/contest/EditContest';
+import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
+import ContestDetails from '../../../components/contest/ContestDetails';
+import HowToPlay from '../../../components/contest/HowToPlay';
+import WinnersBoard from '../../../components/contest/WinnersBoard';
 import {
   selectContestError,
   selectContestLoading,
@@ -34,7 +36,6 @@ export default function ContestPage() {
   const { showToast } = useToast();
   const lastProcessedMessageRef = useRef<string | null>(null);
   const { id } = useParams<{ id: string }>();
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [dispatchCalled, setDispatchCalled] = useState(false);
 
   const loading = useAppSelector(selectContestLoading);
@@ -42,20 +43,6 @@ export default function ContestPage() {
   const currentContest = useAppSelector(selectCurrentContest);
 
   const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
-
-  const immutable = useMemo(() => {
-    if (!currentContest) {
-      return true;
-    }
-
-    // For now, you can manually control immutability
-    // Later, when you add status to Contest type, uncomment below:
-    // const immutableStatuses = ['LOCKED', 'Q1', 'Q2', 'Q3', 'Q4', 'FINISHED'];
-    // return immutableStatuses.includes(currentContest.status || '');
-
-    // For demonstration: always mutable (you can change this to true to test)
-    return false;
-  }, [currentContest]);
 
   const socketUrl = useMemo(() => getSocketUrl(id, auth), [id, auth]);
   const shouldConnect = useMemo(
@@ -159,11 +146,7 @@ export default function ContestPage() {
   }, [dispatch, error, showToast]);
 
   if (!dispatchCalled || loading) {
-    return (
-      <Box display="flex" justifyContent="center" mt={24}>
-        <CircularProgress />
-      </Box>
-    );
+    return <ContestPageSkeleton />;
   }
 
   if (dispatchCalled && !loading && !currentContest) {
@@ -172,6 +155,20 @@ export default function ContestPage() {
 
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
+      {/* Not logged in alert - Top Left */}
+      {!auth.isAuthenticated && (
+        <Alert
+          severity="info"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 14,
+          }}
+        >
+          Must sign in to play
+        </Alert>
+      )}
+
       <Typography
         sx={{
           fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
@@ -198,26 +195,67 @@ export default function ContestPage() {
         }}
       />
 
-      {/* Edit button for contest owner */}
-      {isOwner && (
-        <IconButton
-          onClick={() => setEditModalOpen(true)}
+      {/* Three-column layout */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: 3,
+          width: '100%',
+          maxWidth: '1600px',
+          margin: '0 auto',
+          alignItems: { xs: 'center', lg: 'flex-start' },
+          justifyContent: 'center',
+          p: 1,
+        }}
+      >
+        {/* Left Sidebar - How to Play */}
+        <Box sx={{ display: { xs: 'none', lg: 'block' }, flex: '0 0 280px' }}>
+          <HowToPlay />
+        </Box>
+
+        {/* Center - Contest Grid */}
+        <Box
           sx={{
-            position: 'absolute',
-            top: 0,
-            left: 14,
-            color: 'white',
+            display: 'flex',
+            justifyContent: 'center',
+            flex: { xs: '1 1 auto', lg: '0 0 auto' },
           }}
-          size="small"
         >
-          <Edit />
-        </IconButton>
-      )}
+          <ContestComponent />
+        </Box>
 
-      <ContestComponent immutable={immutable} />
+        {/* Right Sidebar - Winners Board & Contest Details */}
+        <Box
+          sx={{
+            display: { xs: 'none', lg: 'flex' },
+            flexDirection: 'column',
+            gap: 3,
+            flex: '0 0 280px',
+          }}
+        >
+          <WinnersBoard />
+          <ContestDetails isOwner={isOwner} />
+        </Box>
+      </Box>
 
-      {/* Edit Contest Modal */}
-      <EditContest open={editModalOpen} onClose={() => setEditModalOpen(false)} />
+      {/* Mobile: Sidebars underneath contest grid */}
+      <Box
+        sx={{
+          display: { xs: 'flex', lg: 'none' },
+          flexDirection: 'column',
+          gap: 3,
+          width: '100%',
+          maxWidth: { xs: '360px', sm: '490px', md: '600px' },
+          margin: '0 auto',
+          p: 1,
+          mb: 2,
+        }}
+      >
+        <HowToPlay />
+        <WinnersBoard />
+        <ContestDetails isOwner={isOwner} />
+      </Box>
     </Box>
   );
 }

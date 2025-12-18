@@ -15,14 +15,13 @@ export default function LandingCTABadge({ text }: LandingCTABadgeProps) {
         px: { xs: 1.5, sm: 3 },
         py: { xs: 0.9, sm: 1.5 },
         borderRadius: 2,
-        background: 'rgba(255, 255, 255, 0.15)',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         transition: 'all 0.3s ease',
         flex: { xs: '1 1 100%', sm: '0 0 auto' },
         maxWidth: { xs: '14em', sm: 'none' },
         '&:hover': {
-          background: 'rgba(255, 255, 255, 0.25)',
+          background: 'rgba(255, 255, 255, 0.1)',
           transform: 'translateY(-2px)',
         },
       }}

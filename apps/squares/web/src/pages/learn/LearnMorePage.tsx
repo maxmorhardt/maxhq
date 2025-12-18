@@ -11,21 +11,21 @@ export default function LearnMorePage() {
       title: 'Create the Grid',
       description:
         'Set up a 10x10 grid with 100 squares. Each square represents a potential winning combination.',
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: '#60a5fa',
     },
     {
       stepNumber: 2,
       title: 'Players Choose Squares',
       description:
         'Participants select their squares by clicking on the grid. Each square can only be claimed once.',
-      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      color: '#fb923c',
     },
     {
       stepNumber: 3,
       title: 'Determine Winners',
       description:
         "Winners are determined by the last digit of each team's score at the end of each quarter.",
-      gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      color: '#22c55e',
     },
   ];
 
@@ -154,7 +154,7 @@ export default function LearnMorePage() {
               stepNumber={step.stepNumber}
               title={step.title}
               description={step.description}
-              gradient={step.gradient}
+              color={step.color}
             />
           ))}
         </Box>

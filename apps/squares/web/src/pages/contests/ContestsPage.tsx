@@ -1,5 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { Box, Alert } from '@mui/material';
 import ContestsTable from '../../components/contest/ContestsTable';
 import ContestsTableSkeleton from '../../components/contest/ContestsTableSkeleton';
 import {
@@ -68,14 +69,20 @@ export default function ContestsPage() {
 
   if (!auth.isAuthenticated) {
     return (
-      <ContestsTable
-        contests={contests}
-        totalCount={pagination.total}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+      <>
+        <Box sx={{ px: 3, pt: 3 }}>
+          <Alert severity="warning">Sign in to view your contests</Alert>
+        </Box>
+
+        <ContestsTable
+          contests={contests}
+          totalCount={pagination.total}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </>
     );
   }
 
