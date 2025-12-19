@@ -5,8 +5,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import GenericErrorDisplay from '../../../components/common/GenericErrorDisplay';
 import ContestComponent from '../../../components/contest/Contest';
-import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
 import ContestDetails from '../../../components/contest/ContestDetails';
+import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
 import HowToPlay from '../../../components/contest/HowToPlay';
 import WinnersBoard from '../../../components/contest/WinnersBoard';
 import {
@@ -155,20 +155,20 @@ export default function ContestPage() {
 
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
-      {/* Not logged in alert - Top Left */}
-      {!auth.isAuthenticated && (
-        <Alert
-          severity="info"
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 14,
-          }}
-        >
-          Must sign in to play
-        </Alert>
-      )}
+      {/* Connection status */}
+      <Chip
+        label={isConnected ? 'Live' : isConnected ? 'Connecting' : 'Offline'}
+        color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
+        size="small"
+        variant={isConnected ? 'filled' : 'outlined'}
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 14,
+        }}
+      />
 
+      {/* Contest title */}
       <Typography
         sx={{
           fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
@@ -183,19 +183,39 @@ export default function ContestPage() {
         {currentContest?.name ?? ''}
       </Typography>
 
-      <Chip
-        label={isConnected ? 'Live' : isConnected ? 'Connecting' : 'Offline'}
-        color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
-        size="small"
-        variant={isConnected ? 'filled' : 'outlined'}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          right: 14,
-        }}
-      />
+      {/* Not logged in alert */}
+      {!auth.isAuthenticated && (
+        <>
+          <Box
+            sx={{
+              display: { xs: 'none', lg: 'block' },
+              position: 'absolute',
+              top: 0,
+              left: 14,
+            }}
+          >
+            <Alert severity="info">Sign in to claim squares</Alert>
+          </Box>
 
-      {/* Three-column layout */}
+          <Box
+            sx={{
+              display: { xs: 'flex', lg: 'none' },
+              justifyContent: 'center',
+            }}
+          >
+            <Alert
+              severity="info"
+              sx={{
+                minWidth: { xs: '22rem', sm: '35rem', md: '40rem' },
+              }}
+            >
+              Sign in to claim squares and play
+            </Alert>
+          </Box>
+        </>
+      )}
+
+      {/* Layout for contest and cards */}
       <Box
         sx={{
           display: 'flex',
@@ -209,9 +229,9 @@ export default function ContestPage() {
           p: 1,
         }}
       >
-        {/* Left Sidebar - How to Play */}
+        {/* Left Sidebar - Contest Details */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, flex: '0 0 280px' }}>
-          <HowToPlay />
+          <ContestDetails isOwner={isOwner} />
         </Box>
 
         {/* Center - Contest Grid */}
@@ -225,17 +245,17 @@ export default function ContestPage() {
           <ContestComponent />
         </Box>
 
-        {/* Right Sidebar - Winners Board & Contest Details */}
+        {/* Right Sidebar - Winners Board & How to Play */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
             flexDirection: 'column',
-            gap: 3,
+            gap: 1.5,
             flex: '0 0 280px',
           }}
         >
           <WinnersBoard />
-          <ContestDetails isOwner={isOwner} />
+          <HowToPlay />
         </Box>
       </Box>
 
@@ -249,12 +269,12 @@ export default function ContestPage() {
           maxWidth: { xs: '360px', sm: '490px', md: '600px' },
           margin: '0 auto',
           p: 1,
-          mb: 2,
+          mb: 3,
         }}
       >
-        <HowToPlay />
-        <WinnersBoard />
         <ContestDetails isOwner={isOwner} />
+        <WinnersBoard />
+        <HowToPlay />
       </Box>
     </Box>
   );

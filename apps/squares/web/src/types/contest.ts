@@ -1,12 +1,4 @@
-export type ContestStatus =
-  | 'ACTIVE'
-  | 'LOCKED'
-  | 'Q1'
-  | 'Q2'
-  | 'Q3'
-  | 'Q4'
-  | 'FINISHED'
-  | 'CANCELLED';
+export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'CANCELLED';
 
 export interface Contest {
   id: string;
@@ -15,7 +7,7 @@ export interface Contest {
   yLabels: number[];
   homeTeam?: string;
   awayTeam?: string;
-  status?: ContestStatus;
+  status: ContestStatus;
   squares: Square[];
   owner: string;
   createdAt: string;

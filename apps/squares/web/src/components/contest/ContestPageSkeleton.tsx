@@ -5,18 +5,25 @@ export default function ContestPageSkeleton() {
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
       {/* Title Skeleton */}
       <Box sx={{ mt: 2, mb: 1, display: 'flex', justifyContent: 'center' }}>
-        <Skeleton variant="text" width={300} height={48} sx={{ fontSize: '2rem' }} />
+        <Skeleton
+          variant="text"
+          sx={{
+            fontSize: { xs: '1.5rem', sm: '2rem' },
+            width: { xs: 200, sm: 300 },
+            height: { xs: 36, sm: 48 },
+          }}
+        />
       </Box>
 
       {/* Status Chip Skeleton */}
       <Skeleton
         variant="rounded"
-        width={60}
-        height={24}
         sx={{
+          width: { xs: 50, sm: 60 },
+          height: { xs: 20, sm: 24 },
           position: 'absolute',
-          top: 0,
-          right: 14,
+          top: { xs: 4, sm: 0 },
+          right: { xs: 8, sm: 14 },
         }}
       />
 
@@ -34,7 +41,7 @@ export default function ContestPageSkeleton() {
           p: 1,
         }}
       >
-        {/* Left Sidebar Skeleton */}
+        {/* Left Sidebar Skeleton - Contest Details */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, flex: '0 0 280px' }}>
           <Paper
             sx={{
@@ -42,12 +49,15 @@ export default function ContestPageSkeleton() {
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 3,
-              p: 3,
+              p: 2.5,
               boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             }}
           >
             <Skeleton variant="text" width={150} height={32} sx={{ mb: 2 }} />
-            <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+              <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1 }} />
+            </Box>
           </Paper>
         </Box>
 
@@ -94,12 +104,12 @@ export default function ContestPageSkeleton() {
           </Paper>
         </Box>
 
-        {/* Right Sidebar Skeletons */}
+        {/* Right Sidebar Skeletons - Winners Board & How to Play */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
             flexDirection: 'column',
-            gap: 3,
+            gap: 1.5,
             flex: '0 0 280px',
           }}
         >
@@ -110,39 +120,36 @@ export default function ContestPageSkeleton() {
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 3,
-              p: 3,
+              p: 2.5,
               boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             }}
           >
             <Skeleton variant="text" width={150} height={32} sx={{ mb: 2 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
               {[...Array(4)].map((_, index) => (
                 <Skeleton
                   key={index}
                   variant="rectangular"
-                  height={60}
-                  sx={{ borderRadius: 1.5 }}
+                  height={52}
+                  sx={{ borderRadius: 1.2 }}
                 />
               ))}
             </Box>
           </Paper>
 
-          {/* Contest Controls Skeleton */}
+          {/* How to Play Skeleton */}
           <Paper
             sx={{
               background: 'rgba(255,255,255,0.05)',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 3,
-              p: 3,
+              p: 2.5,
               boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             }}
           >
             <Skeleton variant="text" width={150} height={32} sx={{ mb: 2 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1 }} />
-            </Box>
+            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
           </Paper>
         </Box>
       </Box>
@@ -160,19 +167,22 @@ export default function ContestPageSkeleton() {
           mb: 2,
         }}
       >
-        {/* How to Play Skeleton */}
+        {/* Contest Details Skeleton */}
         <Paper
           sx={{
             background: 'rgba(255,255,255,0.05)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 3,
-            p: 3,
+            p: 2.5,
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           }}
         >
           <Skeleton variant="text" width={150} height={32} sx={{ mb: 2 }} />
-          <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+            <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1 }} />
+          </Box>
         </Paper>
 
         {/* Winners Board Skeleton */}
@@ -182,34 +192,31 @@ export default function ContestPageSkeleton() {
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 3,
-            p: 3,
+            p: 2.5,
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           }}
         >
           <Skeleton variant="text" width={150} height={32} sx={{ mb: 2 }} />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
             {[...Array(4)].map((_, index) => (
-              <Skeleton key={index} variant="rectangular" height={60} sx={{ borderRadius: 1.5 }} />
+              <Skeleton key={index} variant="rectangular" height={52} sx={{ borderRadius: 1.2 }} />
             ))}
           </Box>
         </Paper>
 
-        {/* Contest Controls Skeleton */}
+        {/* How to Play Skeleton */}
         <Paper
           sx={{
             background: 'rgba(255,255,255,0.05)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 3,
-            p: 3,
+            p: 2.5,
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           }}
         >
           <Skeleton variant="text" width={150} height={32} sx={{ mb: 2 }} />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
-            <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1 }} />
-          </Box>
+          <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
         </Paper>
       </Box>
     </Box>

@@ -1,4 +1,4 @@
-import { Box, Typography, Divider, Paper } from '@mui/material';
+import { Box, Typography, Divider, Paper, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
 
 interface ContestSidebarCardProps {
@@ -14,15 +14,15 @@ export default function ContestSidebarCard({
   title,
   children,
 }: ContestSidebarCardProps) {
+  const theme = useTheme();
+
   return (
     <Paper
       sx={{
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(20px)',
+        background: theme.palette.grey[900],
         border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 3,
-        p: 3,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        p: 2.5,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -32,12 +32,15 @@ export default function ContestSidebarCard({
           sx={{
             fontWeight: 'bold',
             color: 'white',
+            fontSize: '1.05rem',
           }}
         >
           {title}
         </Typography>
       </Box>
+
       <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
+
       {children}
     </Paper>
   );

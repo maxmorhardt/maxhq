@@ -99,8 +99,6 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     switch (status) {
       case 'ACTIVE':
         return 'Players can join and modify squares';
-      case 'LOCKED':
-        return 'Board locked, labels will be randomized automatically';
       case 'Q1':
       case 'Q2':
       case 'Q3':
@@ -179,6 +177,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
             onChange={(e) => setContestName(e.target.value)}
             placeholder="Enter contest name"
             required
+            slotProps={{ htmlInput: { maxLength: 20 } }}
           />
 
           {/* Team Names */}
@@ -189,6 +188,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
               value={homeTeam}
               onChange={(e) => setHomeTeam(e.target.value)}
               placeholder="Enter home team name"
+              slotProps={{ htmlInput: { maxLength: 20 } }}
             />
             <TextField
               fullWidth
@@ -196,6 +196,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
               value={awayTeam}
               onChange={(e) => setAwayTeam(e.target.value)}
               placeholder="Enter away team name"
+              slotProps={{ htmlInput: { maxLength: 20 } }}
             />
           </Box>
 
@@ -255,10 +256,10 @@ export default function EditContest({ open, onClose }: EditContestProps) {
               <Button
                 variant="outlined"
                 startIcon={<Lock />}
-                onClick={() => setStatus('LOCKED')}
-                disabled={status === 'LOCKED'}
+                onClick={() => setStatus('Q1')}
+                disabled={status === 'Q1'}
               >
-                Lock Board
+                Start Q1
               </Button>
               <Button variant="outlined" startIcon={<Shuffle />} disabled={status === 'ACTIVE'}>
                 Randomize Labels

@@ -15,12 +15,6 @@ export const statusOptions: StatusOption[] = [
     color: '#4caf50',
   },
   {
-    value: 'LOCKED',
-    label: 'Locked',
-    description: 'Board is locked, labels will be randomized',
-    color: '#ff9800',
-  },
-  {
     value: 'Q1',
     label: 'Quarter 1',
     description: 'First quarter in progress',
@@ -58,16 +52,15 @@ export const statusOptions: StatusOption[] = [
   },
 ];
 
-export function getStatusLabel(status: ContestStatus | undefined): string {
-  if (!status) return 'Active';
-
-  const option = statusOptions.find((opt) => opt.value === status);
-  return option?.label || status;
-}
-
-export function getStatusOption(status: ContestStatus | undefined): StatusOption {
-  if (!status) return statusOptions[0]; // Return 'Active' as default
+export function getStatusOption(status: ContestStatus): StatusOption {
+  if (!status) {
+    return statusOptions[0];
+  }
 
   const option = statusOptions.find((opt) => opt.value === status);
   return option || statusOptions[0];
+}
+
+export function getStatusLabel(status: ContestStatus): string {
+  return getStatusOption(status).label;
 }

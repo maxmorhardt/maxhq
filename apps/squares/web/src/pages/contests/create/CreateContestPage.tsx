@@ -184,6 +184,7 @@ export default function CreateContestPage() {
               required
               disabled={loading}
               placeholder="e.g., Super Bowl 2025, Office Pool, Championship Game"
+              slotProps={{ htmlInput: { maxLength: 20 } }}
             />
 
             <TextField
@@ -194,6 +195,7 @@ export default function CreateContestPage() {
               fullWidth
               disabled={loading}
               placeholder="e.g., Chiefs, Cowboys, Patriots"
+              slotProps={{ htmlInput: { maxLength: 20 } }}
             />
 
             <TextField
@@ -204,6 +206,7 @@ export default function CreateContestPage() {
               fullWidth
               disabled={loading}
               placeholder="e.g., Bills, Packers, Steelers"
+              slotProps={{ htmlInput: { maxLength: 20 } }}
             />
 
             <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
