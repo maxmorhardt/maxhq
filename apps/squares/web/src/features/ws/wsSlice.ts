@@ -29,7 +29,7 @@ const wsSlice = createSlice({
       state.lastMessage = action.payload;
     },
     setDisconnectionDetails(state, action: PayloadAction<WSUpdate>) {
-      state.connectionId = action.payload.connectionId;
+      state.connectionId = action.payload.connectionId || null;
       state.lastMessage = action.payload;
     },
     setError(state, action: PayloadAction<string | null>) {

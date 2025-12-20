@@ -40,7 +40,7 @@ export interface Square {
 }
 
 export interface WSUpdate {
-  type: 'square_update' | 'contest_update' | 'quarter_result_update' | 'connected' | 'disconnected';
+  type: 'square_update' | 'contest_update' | 'quarter_result_update' | 'connected' | 'disconnected' | 'contest_deleted' | 'disconnect';
   contestId: string;
   connectionId?: string;
   updatedBy: string;
