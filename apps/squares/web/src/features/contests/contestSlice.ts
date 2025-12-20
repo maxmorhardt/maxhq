@@ -8,7 +8,7 @@ import {
   fetchContestById,
   fetchContests,
   fetchContestsByUser,
-  randomizeLabels,
+  startContestThunk,
   updateContest,
   updateSquare,
 } from './contestThunks';
@@ -221,19 +221,18 @@ const contestSlice = createSlice({
       });
 
     builder
-      .addCase(randomizeLabels.pending, (state) => {
+      .addCase(startContestThunk.pending, (state) => {
         state.error = null;
       })
-      .addCase(randomizeLabels.fulfilled, (state, action: PayloadAction<Contest>) => {
+      .addCase(startContestThunk.fulfilled, (state, action: PayloadAction<Contest>) => {
         if (!state.currentContest) {
           return;
         }
 
-        state.currentContest.xLabels = action.payload.xLabels;
-        state.currentContest.yLabels = action.payload.yLabels;
+        state.currentContest = action.payload;
       })
-      .addCase(randomizeLabels.rejected, (state, action) => {
-        state.error = action.payload?.message ?? 'Error randomizing labels';
+      .addCase(startContestThunk.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error starting contest';
       });
 
     builder

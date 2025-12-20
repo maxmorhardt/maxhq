@@ -1,4 +1,4 @@
-export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'CANCELLED';
+export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'DELETED';
 
 export interface Contest {
   id: string;
@@ -9,6 +9,7 @@ export interface Contest {
   awayTeam?: string;
   status: ContestStatus;
   squares: Square[];
+  quarterResults?: QuarterResult[];
   owner: string;
   createdAt: string;
   updatedAt: string;
@@ -30,18 +31,23 @@ export interface Square {
   col: number;
   value: string;
   owner: string;
+  ownerFirstName: string;
+  ownerLastName: string;
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
 }
 
 export interface WSUpdate {
-  type: 'square_update' | 'contest_update' | 'contest_deleted' | 'connected' | 'disconnect';
+  type: 'square_update' | 'contest_update' | 'quarter_result_update' | 'connected' | 'disconnected';
   contestId: string;
-  connectionId: string;
+  connectionId?: string;
   updatedBy: string;
   timestamp: string;
   square?: SquareWSUpdate;
   contest?: ContestWSUpdate;
+  quarterResult?: QuarterResultWSUpdate;
 }
 
 export interface SquareWSUpdate {
@@ -54,6 +60,19 @@ export interface ContestWSUpdate {
   awayTeam?: string;
   xLabels?: number[];
   yLabels?: number[];
+  status?: ContestStatus;
+}
+
+export interface QuarterResultWSUpdate {
+  quarter: number;
+  homeTeamScore: number;
+  awayTeamScore: number;
+  winnerRow: number;
+  winnerCol: number;
+  winner: string;
+  winnerFirstName: string;
+  winnerLastName: string;
+  status: ContestStatus;
 }
 
 export interface PaginationParams {
@@ -69,4 +88,38 @@ export interface PaginatedContestsResponse {
   totalPages: number;
   hasNext: boolean;
   hasPrevious: boolean;
+}
+
+export interface QuarterResult {
+  id: string;
+  contestId: string;
+  quarter: number;
+  homeTeamScore: number;
+  awayTeamScore: number;
+  winnerRow: number;
+  winnerCol: number;
+  winner: string;
+  winnerFirstName: string;
+  winnerLastName: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+}
+
+export interface RecordQuarterResultRequest {
+  quarter: number;
+  homeTeamScore: number;
+  awayTeamScore: number;
+}
+
+export interface UpdateSquareRequest {
+  value: string;
+  owner: string;
+}
+
+export interface UpdateContestRequest {
+  name?: string;
+  homeTeam?: string;
+  awayTeam?: string;
 }

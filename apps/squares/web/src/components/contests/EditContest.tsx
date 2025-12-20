@@ -22,7 +22,7 @@ import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { updateContest } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
-import type { Contest, ContestStatus } from '../../types/contest';
+import type { ContestStatus } from '../../types/contest';
 import { gradients } from '../../types/gradients';
 import { statusOptions, getStatusOption } from '../../utils/contestStatus';
 
@@ -67,11 +67,10 @@ export default function EditContest({ open, onClose }: EditContestProps) {
 
     setLoading(true);
     try {
-      const updates: Partial<Contest> = {
-        name: contestName.trim() || undefined,
+      const updates = {
+        name: contestName.trim(),
         homeTeam: homeTeam.trim() || undefined,
         awayTeam: awayTeam.trim() || undefined,
-        status,
       };
 
       await dispatch(updateContest({ id: contest.id, updates })).unwrap();
@@ -106,8 +105,8 @@ export default function EditContest({ open, onClose }: EditContestProps) {
         return 'Quarter in progress, winners can be selected';
       case 'FINISHED':
         return 'Contest complete, all winners determined';
-      case 'CANCELLED':
-        return 'Contest cancelled, no winners';
+      case 'DELETED':
+        return 'Contest deleted, no winners';
       default:
         return '';
     }
@@ -275,7 +274,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
                 variant="outlined"
                 startIcon={<Cancel />}
                 color="error"
-                onClick={() => setStatus('CANCELLED')}
+                onClick={() => setStatus('DELETED')}
               >
                 Cancel Contest
               </Button>

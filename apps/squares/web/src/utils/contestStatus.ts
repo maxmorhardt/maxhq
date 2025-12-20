@@ -45,9 +45,9 @@ export const statusOptions: StatusOption[] = [
     color: '#9c27b0',
   },
   {
-    value: 'CANCELLED',
-    label: 'Cancelled',
-    description: 'Contest has been cancelled',
+    value: 'DELETED',
+    label: 'Deleted',
+    description: 'Contest has been deleted',
     color: '#f44336',
   },
 ];

@@ -3,7 +3,7 @@ import { Box, Button, Divider, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
-import { updateContest } from '../../features/contests/contestThunks';
+import { startContestThunk } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
 import { updateSquareValueById } from '../../service/contestService';
@@ -33,7 +33,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
     (s) => s.value && s.value.trim() !== ''
   ).length;
 
-  const isCanceled = contestStatus === 'CANCELLED';
+  const isCanceled = contestStatus === 'DELETED';
   const isFinished = contestStatus === 'FINISHED';
   const isActive = contestStatus === 'ACTIVE';
   const isInGame = ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
@@ -44,7 +44,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
   const showScoreInputs = isInGame;
 
   const getStatusDisplay = () => {
-    if (isCanceled) return 'Canceled';
+    if (isCanceled) return 'Deleted';
     if (isFinished) return 'Finished';
     if (isInGame) return `In Progress • ${contestStatus}`;
     return `Active • ${filledSquares}/${totalSquares} Squares Filled`;
@@ -74,13 +74,8 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
     setIsStartingQ1(true);
 
     try {
-      // Update the status to Q1
-      await dispatch(
-        updateContest({
-          id: currentContest.id,
-          updates: { status: 'Q1' },
-        })
-      ).unwrap();
+      // Call the startContest API which will transition from ACTIVE to Q1 and randomize labels
+      await dispatch(startContestThunk(currentContest.id)).unwrap();
 
       showToast('Quarter 1 started!', 'success');
     } catch (error) {
@@ -110,7 +105,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
       for (let i = 0; i < emptySquares.length; i++) {
         const square = emptySquares[i];
 
-        await updateSquareValueById(square.id, initials, owner);
+        await updateSquareValueById(currentContest.id, square.id, { value: initials, owner });
 
         // Small delay to avoid overwhelming the server
         if (i % 10 === 9) {

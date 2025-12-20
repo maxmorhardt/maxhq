@@ -54,7 +54,8 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
       setError(false);
       dispatch(
         updateSquare({
-          id: currentSquare.id,
+          contestId: currentSquare.contestId,
+          squareId: currentSquare.id,
           value: value,
           owner: auth.user.profile.preferred_username,
         })
@@ -66,7 +67,12 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
   const handleClear = async () => {
     if (currentSquare) {
       try {
-        await dispatch(clearSquare(currentSquare.id)).unwrap();
+        await dispatch(
+          clearSquare({
+            contestId: currentSquare.contestId,
+            squareId: currentSquare.id,
+          })
+        ).unwrap();
         onClose();
       } catch (error) {
         console.error('Failed to clear square:', error);

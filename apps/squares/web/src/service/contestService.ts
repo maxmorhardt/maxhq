@@ -4,7 +4,11 @@ import type {
   CreateContestRequest,
   PaginatedContestsResponse,
   PaginationParams,
+  QuarterResult,
+  RecordQuarterResultRequest,
   Square,
+  UpdateContestRequest,
+  UpdateSquareRequest,
 } from '../types/contest';
 import { handleError } from './handleError';
 
@@ -60,31 +64,31 @@ export async function createNewContest(request: CreateContestRequest) {
 }
 
 export async function updateSquareValueById(
-  id: string,
-  value: string,
-  owner: string
+  contestId: string,
+  squareId: string,
+  request: UpdateSquareRequest
 ): Promise<Square> {
   try {
-    const res = await api.patch<Square>(`/contests/square/${id}`, {
-      value: value,
-      owner: owner,
-    });
+    const res = await api.patch<Square>(`/contests/${contestId}/squares/${squareId}`, request);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
   }
 }
 
-export async function clearSquareById(id: string): Promise<Square> {
+export async function clearSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
-    const res = await api.post<Square>(`/contests/square/${id}/clear`);
+    const res = await api.post<Square>(`/contests/${contestId}/squares/${squareId}/clear`);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
   }
 }
 
-export async function updateContestById(id: string, updates: Partial<Contest>): Promise<Contest> {
+export async function updateContestById(
+  id: string,
+  updates: UpdateContestRequest
+): Promise<Contest> {
   try {
     const res = await api.patch<Contest>(`/contests/${id}`, updates);
     return res.data;
@@ -93,9 +97,21 @@ export async function updateContestById(id: string, updates: Partial<Contest>): 
   }
 }
 
-export async function randomizeContestLabels(id: string): Promise<Contest> {
+export async function startContest(id: string): Promise<Contest> {
   try {
-    const res = await api.post<Contest>(`/contests/${id}/randomize-labels`);
+    const res = await api.post<Contest>(`/contests/${id}/start`);
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function recordQuarterResult(
+  contestId: string,
+  request: RecordQuarterResultRequest
+): Promise<QuarterResult> {
+  try {
+    const res = await api.post<QuarterResult>(`/contests/${contestId}/quarter-result`, request);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

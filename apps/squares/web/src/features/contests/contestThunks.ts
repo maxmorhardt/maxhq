@@ -6,7 +6,7 @@ import {
   getContestById,
   getContests,
   getContestsByUser,
-  randomizeContestLabels,
+  startContest,
   updateContestById,
   updateSquareValueById,
 } from '../../service/contestService';
@@ -16,6 +16,7 @@ import type {
   PaginatedContestsResponse,
   PaginationParams,
   Square,
+  UpdateContestRequest,
 } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
@@ -72,34 +73,35 @@ export const createContest = createAsyncThunk<
 
 export const updateSquare = createAsyncThunk<
   Square,
-  { id: string; value: string; owner: string },
+  { contestId: string; squareId: string; value: string; owner: string },
   { rejectValue: APIError }
->('contests/updateSquare', async ({ id, value, owner }, { rejectWithValue }) => {
+>('contests/updateSquare', async ({ contestId, squareId, value, owner }, { rejectWithValue }) => {
   try {
-    const square = await updateSquareValueById(id, value, owner);
+    const square = await updateSquareValueById(contestId, squareId, { value, owner });
     return square;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
   }
 });
 
-export const clearSquare = createAsyncThunk<Square, string, { rejectValue: APIError }>(
-  'contests/clearSquare',
-  async (id, { rejectWithValue }) => {
-    try {
-      const square = await clearSquareById(id);
-      return square;
-    } catch (err: unknown) {
-      return rejectWithValue(err as APIError);
-    }
+export const clearSquare = createAsyncThunk<
+  Square,
+  { contestId: string; squareId: string },
+  { rejectValue: APIError }
+>('contests/clearSquare', async ({ contestId, squareId }, { rejectWithValue }) => {
+  try {
+    const square = await clearSquareById(contestId, squareId);
+    return square;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
   }
-);
+});
 
-export const randomizeLabels = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
-  'contests/randomizeLabels',
+export const startContestThunk = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
+  'contests/startContest',
   async (id, { rejectWithValue }) => {
     try {
-      const contest = await randomizeContestLabels(id);
+      const contest = await startContest(id);
       return contest;
     } catch (err: unknown) {
       return rejectWithValue(err as APIError);
@@ -109,7 +111,7 @@ export const randomizeLabels = createAsyncThunk<Contest, string, { rejectValue: 
 
 export const updateContest = createAsyncThunk<
   Contest,
-  { id: string; updates: Partial<Contest> },
+  { id: string; updates: UpdateContestRequest },
   { rejectValue: APIError }
 >('contests/updateContest', async ({ id, updates }, { rejectWithValue }) => {
   try {

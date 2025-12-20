@@ -1,8 +1,8 @@
 import { useEffect, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Box, Alert } from '@mui/material';
-import ContestsTable from '../../components/contest/ContestsTable';
-import ContestsTableSkeleton from '../../components/contest/ContestsTableSkeleton';
+import ContestsTable from '../../components/contests/ContestsTable';
+import ContestsTableSkeleton from '../../components/contests/ContestsTableSkeleton';
 import {
   selectContestError,
   selectContestLoading,
