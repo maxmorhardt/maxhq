@@ -1,6 +1,6 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import type { Contest, PaginatedContestsResponse, Square } from '../../types/contest';
+import type { Contest, ContestStatus, PaginatedContestsResponse, QuarterResult, Square } from '../../types/contest';
 import {
   clearSquare,
   createContest,
@@ -8,6 +8,7 @@ import {
   fetchContestById,
   fetchContests,
   fetchContestsByUser,
+  recordQuarterResultThunk,
   startContestThunk,
   updateContest,
   updateSquare,
@@ -269,6 +270,38 @@ const contestSlice = createSlice({
       .addCase(deleteContest.rejected, (state, action) => {
         state.deleteContestLoading = false;
         state.error = action.payload?.message ?? 'Error deleting contest';
+      });
+
+    builder
+      .addCase(recordQuarterResultThunk.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(recordQuarterResultThunk.fulfilled, (state, action: PayloadAction<QuarterResult>) => {
+        if (!state.currentContest) {
+          return;
+        }
+        // Add the quarter result to the contest
+        if (!state.currentContest.quarterResults) {
+          state.currentContest.quarterResults = [];
+        }
+        state.currentContest.quarterResults.push(action.payload);
+        
+        // Update contest status based on the quarter that was just recorded
+        // Backend moves to next quarter or FINISHED after recording
+        const quarterStatusMap: Record<number, ContestStatus> = {
+          1: 'Q2',
+          2: 'Q3',
+          3: 'Q4',
+          4: 'FINISHED',
+        };
+        
+        const nextStatus = quarterStatusMap[action.payload.quarter];
+        if (nextStatus) {
+          state.currentContest.status = nextStatus;
+        }
+      })
+      .addCase(recordQuarterResultThunk.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error recording quarter result';
       });
   },
 });

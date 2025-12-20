@@ -46,7 +46,14 @@ export default function ContestPage() {
 
   const socketUrl = useMemo(() => getSocketUrl(id, auth), [id, auth]);
   const shouldConnect = useMemo(
-    () => Boolean(id && auth.isAuthenticated && auth.user?.access_token && currentContest),
+    () => Boolean(
+      id && 
+      auth.isAuthenticated && 
+      auth.user?.access_token && 
+      currentContest &&
+      currentContest.status !== 'FINISHED' &&
+      currentContest.status !== 'DELETED'
+    ),
     [id, auth.isAuthenticated, auth.user?.access_token, currentContest]
   );
   const webSocketOptions = useMemo(
@@ -254,7 +261,7 @@ export default function ContestPage() {
             flex: '0 0 280px',
           }}
         >
-          <WinnersBoard />
+          <WinnersBoard quarterResults={currentContest?.quarterResults} />
           <HowToPlay />
         </Box>
       </Box>
@@ -273,7 +280,7 @@ export default function ContestPage() {
         }}
       >
         <ContestDetails isOwner={isOwner} />
-        <WinnersBoard />
+        <WinnersBoard quarterResults={currentContest?.quarterResults} />
         <HowToPlay />
       </Box>
     </Box>

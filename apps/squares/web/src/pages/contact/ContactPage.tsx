@@ -1,7 +1,10 @@
 import { Email, LocationOn, Phone } from '@mui/icons-material';
 import { Box, Container, Typography } from '@mui/material';
+import { useState } from 'react';
 import FormCard from '../../components/common/FormCard';
 import ContactForm from '../../components/contact/ContactForm';
+import { submitContactForm } from '../../service/contestService';
+import { useToast } from '../../hooks/useToast';
 
 const iconColor = '#667eea';
 
@@ -24,13 +27,27 @@ const contactMethods = [
 ];
 
 export default function ContactPage() {
-  const handleFormSubmit = (formData: {
+  const { showToast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleFormSubmit = async (formData: {
     name: string;
     email: string;
     subject: string;
     message: string;
   }) => {
-    console.log('Form submitted:', formData);
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await submitContactForm(formData);
+      showToast(response.message, 'success');
+    } catch (error) {
+      console.error('Failed to submit contact form:', error);
+      showToast('Failed to submit contact form. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -63,7 +80,7 @@ export default function ContactPage() {
       </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 4 }}>
-        <ContactForm onSubmit={handleFormSubmit} />
+        <ContactForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {contactMethods.map((method) => (

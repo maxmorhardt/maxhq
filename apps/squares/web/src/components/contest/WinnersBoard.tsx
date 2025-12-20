@@ -1,27 +1,36 @@
 import { Box, Typography } from '@mui/material';
+import type { QuarterResult } from '../../types/contest';
 import ContestSidebarCard from './ContestSidebarCard';
 
 const MAX_NAME_LENGTH = 20;
 
-interface Winner {
-  id: string;
-  name: string;
-  square: string;
-  quarter: string;
-}
-
 interface WinnersBoardProps {
-  winners?: Winner[];
+  quarterResults?: QuarterResult[];
 }
 
-export default function WinnersBoard({ winners = [] }: WinnersBoardProps) {
+export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps) {
+  const getQuarterLabel = (quarter: number) => {
+    return `Q${quarter}`;
+  };
+
+  const getWinnerName = (result: QuarterResult) => {
+    if (result.winnerFirstName && result.winnerLastName) {
+      return `${result.winnerFirstName} ${result.winnerLastName}`;
+    }
+    return result.winner || 'Unknown';
+  };
+
+  const getSquareLabel = (result: QuarterResult) => {
+    return `(${result.winnerRow}, ${result.winnerCol})`;
+  };
+
   return (
     <ContestSidebarCard icon={<span style={{ fontSize: '1.3rem' }}>🏆</span>} title="Winners Board">
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
-        {winners.length > 0 ? (
-          winners.map((winner) => (
+        {quarterResults.length > 0 ? (
+          quarterResults.map((result) => (
             <Box
-              key={winner.id}
+              key={result.id}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -50,7 +59,7 @@ export default function WinnersBoard({ winners = [] }: WinnersBoardProps) {
                     fontSize: '0.75rem',
                   }}
                 >
-                  {winner.quarter}
+                  {getQuarterLabel(result.quarter)}
                 </Typography>
               </Box>
 
@@ -62,15 +71,15 @@ export default function WinnersBoard({ winners = [] }: WinnersBoardProps) {
                     fontSize: '0.875rem',
                   }}
                 >
-                  {winner.name.length > MAX_NAME_LENGTH
-                    ? `${winner.name.substring(0, MAX_NAME_LENGTH)}...`
-                    : winner.name}
+                  {getWinnerName(result).length > MAX_NAME_LENGTH
+                    ? `${getWinnerName(result).substring(0, MAX_NAME_LENGTH)}...`
+                    : getWinnerName(result)}
                 </Typography>
                 <Typography
                   variant="caption"
                   sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' }}
                 >
-                  Square {winner.square}
+                  Square {getSquareLabel(result)}
                 </Typography>
               </Box>
               {/* Spacer to balance the quarter badge on the left */}

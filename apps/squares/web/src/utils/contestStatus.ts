@@ -42,7 +42,7 @@ export const statusOptions: StatusOption[] = [
     value: 'FINISHED',
     label: 'Finished',
     description: 'Contest is complete',
-    color: '#9c27b0',
+    color: '#ffa726',
   },
   {
     value: 'DELETED',

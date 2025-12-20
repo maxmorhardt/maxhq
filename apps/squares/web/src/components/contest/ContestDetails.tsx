@@ -3,7 +3,7 @@ import { Box, Button, Divider, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
-import { startContestThunk } from '../../features/contests/contestThunks';
+import { recordQuarterResultThunk, startContestThunk } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
 import { updateSquareValueById } from '../../service/contestService';
@@ -50,22 +50,37 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
     return `Active • ${filledSquares}/${totalSquares} Squares Filled`;
   };
 
-  const handleScoreSubmit = () => {
+  const handleScoreSubmit = async () => {
+    if (!currentContest) return;
+
     const home = parseInt(homeScore, 10);
     const away = parseInt(awayScore, 10);
 
     if (isNaN(home) || isNaN(away)) {
-      showToast('Please enter valid scores', 'error');
       return;
     }
 
     if (home < 0 || away < 0) {
-      showToast('Scores cannot be negative', 'error');
       return;
     }
 
-    // TODO: Dispatch action to update scores
-    showToast(`Score update: ${home}-${away} (coming soon)`, 'info');
+    try {
+      await dispatch(
+        recordQuarterResultThunk({
+          contestId: currentContest.id,
+          request: {
+            homeTeamScore: home,
+            awayTeamScore: away,
+          },
+        })
+      ).unwrap();
+
+      showToast('Quarter score recorded successfully', 'success');
+      setHomeScore('');
+      setAwayScore('');
+    } catch (error) {
+      console.error('Failed to record quarter result:', error);
+    }
   };
 
   const handleStartQ1 = async () => {
@@ -80,7 +95,6 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
       showToast('Quarter 1 started!', 'success');
     } catch (error) {
       console.error('Failed to start Q1:', error);
-      showToast('Failed to start Quarter 1', 'error');
     } finally {
       setIsStartingQ1(false);
     }
@@ -116,7 +130,6 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
       showToast(`Auto-filled ${emptySquares.length} squares!`, 'success');
     } catch (error) {
       console.error('Auto-fill error:', error);
-      showToast('Failed to auto-fill squares', 'error');
     } finally {
       setIsAutoFilling(false);
     }

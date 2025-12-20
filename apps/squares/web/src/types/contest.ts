@@ -108,7 +108,6 @@ export interface QuarterResult {
 }
 
 export interface RecordQuarterResultRequest {
-  quarter: number;
   homeTeamScore: number;
   awayTeamScore: number;
 }
@@ -122,4 +121,15 @@ export interface UpdateContestRequest {
   name?: string;
   homeTeam?: string;
   awayTeam?: string;
+}
+
+export interface ContactRequest {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export interface ContactResponse {
+  message: string;
 }

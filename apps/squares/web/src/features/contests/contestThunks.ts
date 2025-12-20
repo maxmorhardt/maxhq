@@ -6,6 +6,7 @@ import {
   getContestById,
   getContests,
   getContestsByUser,
+  recordQuarterResult,
   startContest,
   updateContestById,
   updateSquareValueById,
@@ -15,6 +16,8 @@ import type {
   CreateContestRequest,
   PaginatedContestsResponse,
   PaginationParams,
+  QuarterResult,
+  RecordQuarterResultRequest,
   Square,
   UpdateContestRequest,
 } from '../../types/contest';
@@ -132,3 +135,16 @@ export const deleteContest = createAsyncThunk<void, string, { rejectValue: APIEr
     }
   }
 );
+
+export const recordQuarterResultThunk = createAsyncThunk<
+  QuarterResult,
+  { contestId: string; request: RecordQuarterResultRequest },
+  { rejectValue: APIError }
+>('contests/recordQuarterResult', async ({ contestId, request }, { rejectWithValue }) => {
+  try {
+    const result = await recordQuarterResult(contestId, request);
+    return result;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
+  }
+});

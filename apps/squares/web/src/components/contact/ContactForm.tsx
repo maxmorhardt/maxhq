@@ -3,10 +3,11 @@ import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/materi
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 interface ContactFormProps {
-  onSubmit?: (formData: { name: string; email: string; subject: string; message: string }) => void;
+  onSubmit?: (formData: { name: string; email: string; subject: string; message: string }) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
-export default function ContactForm({ onSubmit }: ContactFormProps) {
+export default function ContactForm({ onSubmit, isSubmitting = false }: ContactFormProps) {
   const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
@@ -20,12 +21,17 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: Implement form submission
-    console.log('Form submitted:', formData);
     if (onSubmit) {
-      onSubmit(formData);
+      await onSubmit(formData);
+      // Clear form on successful submission
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: '',
+      });
     }
   };
 
@@ -92,11 +98,12 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
           type="submit"
           variant="contained"
           startIcon={<Send />}
+          disabled={isSubmitting}
           sx={{
             alignSelf: 'flex-start',
           }}
         >
-          Send Message
+          {isSubmitting ? 'Sending...' : 'Send Message'}
         </Button>
       </Box>
     </Paper>

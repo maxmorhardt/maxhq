@@ -125,3 +125,14 @@ export async function deleteContestById(id: string): Promise<void> {
     throw handleError(err);
   }
 }
+
+export async function submitContactForm(
+  request: { name: string; email: string; subject: string; message: string }
+): Promise<{ message: string }> {
+  try {
+    const res = await api.post<{ message: string }>('/contact', request);
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
