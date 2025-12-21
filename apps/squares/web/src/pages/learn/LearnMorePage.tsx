@@ -12,21 +12,21 @@ export default function LearnMorePage() {
       title: 'Create the Grid',
       description:
         'Set up a 10x10 grid with 100 squares. Each square represents a potential winning combination.',
-      color: '#60a5fa',
+      color: '#ffa040',
     },
     {
       stepNumber: 2,
       title: 'Players Choose Squares',
       description:
         'Participants select their squares by clicking on the grid. Each square can only be claimed once.',
-      color: '#bfbd31ff',
+      color: '#40d4ff',
     },
     {
       stepNumber: 3,
       title: 'Determine Winners',
       description:
         "Winners are determined by the last digit of each team's score at the end of each quarter.",
-      color: '#22c55e',
+      color: '#4ade80',
     },
   ];
 

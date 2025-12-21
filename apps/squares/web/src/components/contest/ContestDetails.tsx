@@ -251,7 +251,9 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
 
                 {/* home team score input */}
                 <TextField
-                  label="Home Team Score"
+                  label={
+                    currentContest.homeTeam ? `${currentContest.homeTeam} Score` : 'Home Team Score'
+                  }
                   type="number"
                   value={homeScore}
                   onChange={(e) => {
@@ -279,7 +281,9 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
 
                 {/* away team score input */}
                 <TextField
-                  label="Away Team Score"
+                  label={
+                    currentContest.awayTeam ? `${currentContest.awayTeam} Score` : 'Away Team Score'
+                  }
                   type="number"
                   value={awayScore}
                   onChange={(e) => {

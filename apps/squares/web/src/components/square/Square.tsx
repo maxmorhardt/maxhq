@@ -7,7 +7,6 @@ interface SquareProps {
   handleSquareClick: (row: number, col: number) => void;
   xLabel?: number;
   yLabel?: number;
-  immutable?: boolean;
   isWinner?: boolean;
 }
 
@@ -18,7 +17,6 @@ export default function Square({
   handleSquareClick,
   xLabel,
   yLabel,
-  immutable = false,
   isWinner = false,
 }: SquareProps) {
   const theme = useTheme();
@@ -63,8 +61,7 @@ export default function Square({
       {/* clickable square button with conditional styling */}
       <Button
         key={`${rowIndex}-${colIndex}`}
-        onClick={immutable ? undefined : () => handleSquareClick(rowIndex, colIndex)}
-        disabled={immutable}
+        onClick={() => handleSquareClick(rowIndex, colIndex)}
         sx={{
           color: 'white',
           background: isWinner
@@ -81,33 +78,29 @@ export default function Square({
           borderRadius: 1.5,
           padding: 0,
           margin: { xs: 0.1, sm: 0.3, md: 0.4 },
-          minWidth: { xs: 28, sm: 45, md: 50 },
-          minHeight: { xs: 28, sm: 45, md: 50 },
+          minWidth: { xs: 28, sm: 42, md: 47 },
+          minHeight: { xs: 28, sm: 42, md: 47 },
           fontSize: { xs: 9, sm: 11, md: 14 },
           fontWeight: squareData ? 600 : 400,
           transition: 'all 0.2s ease-in-out',
-          cursor: immutable ? 'default' : 'pointer',
-          '&:hover': immutable
-            ? {}
-            : {
-                background: isWinner
-                  ? 'rgba(67, 233, 123, 0.3)'
-                  : squareData
-                    ? 'rgba(255,255,255,0.15)'
-                    : 'rgba(255,255,255,0.08)',
-                transform: 'translateY(-2px)',
-                boxShadow: isWinner
-                  ? '0 0 15px rgba(67, 233, 123, 0.5)'
-                  : `0 0 10px ${theme.palette.primary.main}`,
-                border: isWinner
-                  ? '2px solid rgba(67, 233, 123, 0.8)'
-                  : '1px solid rgba(255,255,255,0.3)',
-              },
-          '&:active': immutable
-            ? {}
-            : {
-                transform: 'translateY(0px)',
-              },
+          cursor: 'pointer',
+          '&:hover': {
+            background: isWinner
+              ? 'rgba(67, 233, 123, 0.3)'
+              : squareData
+                ? 'rgba(255,255,255,0.15)'
+                : 'rgba(255,255,255,0.08)',
+            transform: 'translateY(-1px)',
+            boxShadow: isWinner
+              ? '0 0 4px rgba(67, 233, 123, 0.5)'
+              : `0 0 4px ${theme.palette.primary.main}`,
+            border: isWinner
+              ? '2px solid rgba(67, 233, 123, 0.8)'
+              : '1px solid rgba(255,255,255,0.3)',
+          },
+          '&:active': {
+            transform: 'translateY(0px)',
+          },
           '&.Mui-disabled': {
             color: 'white',
             opacity: 0.8,
