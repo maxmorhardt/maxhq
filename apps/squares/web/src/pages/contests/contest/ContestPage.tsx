@@ -200,7 +200,7 @@ export default function ContestPage() {
   // handle share button click
   const handleShare = async () => {
     const url = window.location.href;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -264,7 +264,7 @@ export default function ContestPage() {
         >
           {currentContest?.name ?? ''}
         </Typography>
-        
+
         {/* share button positioned to the right of title */}
         <IconButton
           onClick={handleShare}
