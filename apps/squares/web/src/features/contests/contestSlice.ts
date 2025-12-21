@@ -14,6 +14,7 @@ import {
   fetchContestById,
   fetchContests,
   fetchContestsByUser,
+  fetchParticipatingContests,
   startContestThunk,
   updateContest,
   updateQuarterResult,
@@ -224,6 +225,33 @@ const contestSlice = createSlice({
         state.contestLoading = false;
         state.contests = [];
         state.error = action.payload?.message ?? 'Error fetching contests';
+      });
+
+    // fetch participating contests
+    builder
+      .addCase(fetchParticipatingContests.pending, (state) => {
+        state.contestLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchParticipatingContests.fulfilled,
+        (state, action: PayloadAction<PaginatedContestsResponse>) => {
+          state.contestLoading = false;
+          state.contests = action.payload.contests;
+          state.pagination = {
+            page: action.payload.page,
+            limit: action.payload.limit,
+            total: action.payload.total,
+            totalPages: action.payload.totalPages,
+            hasNext: action.payload.hasNext,
+            hasPrevious: action.payload.hasPrevious,
+          };
+        }
+      )
+      .addCase(fetchParticipatingContests.rejected, (state, action) => {
+        state.contestLoading = false;
+        state.contests = [];
+        state.error = action.payload?.message ?? 'Error fetching participating contests';
       });
 
     // fetch single contest by id

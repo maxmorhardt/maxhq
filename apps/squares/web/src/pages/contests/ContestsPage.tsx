@@ -6,14 +6,13 @@ import ContestsTableSkeleton from '../../components/contests/ContestsTableSkelet
 import {
   selectContestError,
   selectContestLoading,
-  selectContestPagination,
-  selectContests,
 } from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
-import { fetchContestsByUser } from '../../features/contests/contestThunks';
+import { fetchContestsByUser, fetchParticipatingContests } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
+import type { Contest, PaginatedContestsResponse } from '../../types/contest';
 
 // contests page displaying user's contests in a paginated table
 export default function ContestsPage() {
@@ -21,14 +20,35 @@ export default function ContestsPage() {
   const isInterceptorReady = useAxiosAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
-  // pagination state
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  
+  // separate state for owned contests
+  const [ownedContests, setOwnedContests] = useState<Contest[]>([]);
+  const [ownedPage, setOwnedPage] = useState(0);
+  const [ownedRowsPerPage, setOwnedRowsPerPage] = useState(5);
+  const [ownedPagination, setOwnedPagination] = useState({
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrevious: false,
+  });
+  
+  // separate state for participating contests
+  const [participatingContests, setParticipatingContests] = useState<Contest[]>([]);
+  const [participatingPage, setParticipatingPage] = useState(0);
+  const [participatingRowsPerPage, setParticipatingRowsPerPage] = useState(5);
+  const [participatingPagination, setParticipatingPagination] = useState({
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrevious: false,
+  });
 
-  const contests = useAppSelector(selectContests);
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
-  const pagination = useAppSelector(selectContestPagination);
 
   // show error toast and clear from store
   useEffect(() => {
@@ -38,7 +58,7 @@ export default function ContestsPage() {
     }
   }, [error, showToast, dispatch]);
 
-  // fetch user's contests when authenticated and pagination changes
+  // fetch owned contests when authenticated and pagination changes
   useEffect(() => {
     if (!auth.isAuthenticated || !isInterceptorReady) {
       return;
@@ -50,31 +70,85 @@ export default function ContestsPage() {
         fetchContestsByUser({
           username,
           pagination: {
-            page: page + 1, // mui starts at 0
-            limit: rowsPerPage,
+            page: ownedPage + 1,
+            limit: ownedRowsPerPage,
           },
         })
-      );
+      ).then((result) => {
+        if (result.meta.requestStatus === 'fulfilled') {
+          const payload = result.payload as PaginatedContestsResponse;
+          setOwnedContests(payload.contests);
+          setOwnedPagination({
+            page: payload.page,
+            limit: payload.limit,
+            total: payload.total,
+            totalPages: payload.totalPages,
+            hasNext: payload.hasNext,
+            hasPrevious: payload.hasPrevious,
+          });
+        }
+      });
     }
-  }, [auth.isAuthenticated, auth.user, dispatch, isInterceptorReady, page, rowsPerPage]);
+  }, [auth.isAuthenticated, auth.user, dispatch, isInterceptorReady, ownedPage, ownedRowsPerPage]);
 
-  // handle pagination page change
-  const handleChangePage = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
-    setPage(newPage);
+  // fetch participating contests when authenticated and pagination changes
+  useEffect(() => {
+    if (!auth.isAuthenticated || !isInterceptorReady) {
+      return;
+    }
+
+    dispatch(
+      fetchParticipatingContests({
+        page: participatingPage + 1,
+        limit: participatingRowsPerPage,
+      })
+    ).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        const payload = result.payload as PaginatedContestsResponse;
+        setParticipatingContests(payload.contests);
+        setParticipatingPagination({
+          page: payload.page,
+          limit: payload.limit,
+          total: payload.total,
+          totalPages: payload.totalPages,
+          hasNext: payload.hasNext,
+          hasPrevious: payload.hasPrevious,
+        });
+      }
+    });
+  }, [auth.isAuthenticated, dispatch, isInterceptorReady, participatingPage, participatingRowsPerPage]);
+
+  // handle owned contests pagination
+  const handleOwnedPageChange = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setOwnedPage(newPage);
   };
 
-  // handle rows per page change and reset to first page
-  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleOwnedRowsPerPageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setOwnedRowsPerPage(parseInt(event.target.value, 10));
+    setOwnedPage(0);
+  };
+
+  // handle participating contests pagination
+  const handleParticipatingPageChange = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setParticipatingPage(newPage);
+  };
+
+  const handleParticipatingRowsPerPageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setParticipatingRowsPerPage(parseInt(event.target.value, 10));
+    setParticipatingPage(0);
   };
 
   // show skeleton while auth is loading
   if (auth.isLoading) {
-    return <ContestsTableSkeleton />;
+    return (
+      <Box>
+        <ContestsTableSkeleton title="My Contests" rowCount={2} />
+        <ContestsTableSkeleton title="Participating In" hideCreateButton={true} rowCount={2} />
+      </Box>
+    );
   }
 
-  // show warning if not authenticated but still render table
+  // show warning if not authenticated but still render tables
   if (!auth.isAuthenticated) {
     return (
       <>
@@ -83,12 +157,13 @@ export default function ContestsPage() {
         </Box>
 
         <ContestsTable
-          contests={contests}
-          totalCount={pagination.total}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+          contests={[]}
+          totalCount={0}
+          page={0}
+          rowsPerPage={5}
+          onPageChange={() => {}}
+          onRowsPerPageChange={() => {}}
+          title="My Contests"
         />
       </>
     );
@@ -96,17 +171,38 @@ export default function ContestsPage() {
 
   // show skeleton while loading or waiting for axios interceptor
   if (!isInterceptorReady || loading) {
-    return <ContestsTableSkeleton />;
+    return (
+      <Box>
+        <ContestsTableSkeleton title="My Contests" rowCount={2} />
+        <ContestsTableSkeleton title="Participating In" hideCreateButton={true} rowCount={2} />
+      </Box>
+    );
   }
 
   return (
-    <ContestsTable
-      contests={contests}
-      totalCount={pagination.total}
-      page={page}
-      rowsPerPage={rowsPerPage}
-      onPageChange={handleChangePage}
-      onRowsPerPageChange={handleChangeRowsPerPage}
-    />
+    <Box>
+      {/* owned contests table */}
+      <ContestsTable
+        contests={ownedContests}
+        totalCount={ownedPagination.total}
+        page={ownedPage}
+        rowsPerPage={ownedRowsPerPage}
+        onPageChange={handleOwnedPageChange}
+        onRowsPerPageChange={handleOwnedRowsPerPageChange}
+        title="My Contests"
+      />
+
+      {/* participating contests table */}
+      <ContestsTable
+        contests={participatingContests}
+        totalCount={participatingPagination.total}
+        page={participatingPage}
+        rowsPerPage={participatingRowsPerPage}
+        onPageChange={handleParticipatingPageChange}
+        onRowsPerPageChange={handleParticipatingRowsPerPageChange}
+        title="Participating In"
+        hideCreateButton={true}
+      />
+    </Box>
   );
 }

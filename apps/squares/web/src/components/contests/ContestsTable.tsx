@@ -33,6 +33,8 @@ interface ContestsTableProps {
   rowsPerPage: number;
   onPageChange: (event: MouseEvent<HTMLButtonElement> | null, newPage: number) => void;
   onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  title?: string;
+  hideCreateButton?: boolean;
 }
 
 export default function ContestsTable({
@@ -42,6 +44,8 @@ export default function ContestsTable({
   rowsPerPage,
   onPageChange,
   onRowsPerPageChange,
+  title = 'My Contests',
+  hideCreateButton = false,
 }: ContestsTableProps) {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -98,15 +102,17 @@ export default function ContestsTable({
               fontSize: { xs: '1.5rem', sm: '2rem' },
             }}
           >
-            My Contests
+            {title}
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => navigate('/contests/create')}
-          >
-            Create Contest
-          </Button>
+          {!hideCreateButton && (
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => navigate('/contests/create')}
+            >
+              Create Contest
+            </Button>
+          )}
         </Box>
 
         {/* table container */}

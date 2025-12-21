@@ -15,7 +15,17 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-export default function ContestsTableSkeleton() {
+interface ContestsTableSkeletonProps {
+  title?: string;
+  hideCreateButton?: boolean;
+  rowCount?: number;
+}
+
+export default function ContestsTableSkeleton({
+  title = 'My Contests',
+  hideCreateButton = false,
+  rowCount = 2,
+}: ContestsTableSkeletonProps) {
   const theme = useTheme();
   const navigate = useNavigate();
 
@@ -40,15 +50,17 @@ export default function ContestsTableSkeleton() {
             fontSize: { xs: '1.5rem', sm: '2rem' },
           }}
         >
-          My Contests
+          {title}
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => navigate('/contests/create')}
-        >
-          Create Contest
-        </Button>
+        {!hideCreateButton && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => navigate('/contests/create')}
+          >
+            Create Contest
+          </Button>
+        )}
       </Box>
       {/* skeleton table container */}
       <Paper
@@ -83,9 +95,9 @@ export default function ContestsTableSkeleton() {
                 </TableCell>
               </TableRow>
             </TableHead>
-            {/* skeleton table rows (5 loading placeholders) */}
+            {/* skeleton table rows */}
             <TableBody>
-              {[...Array(5)].map((_, index) => (
+              {[...Array(rowCount)].map((_, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     <Skeleton variant="text" />
