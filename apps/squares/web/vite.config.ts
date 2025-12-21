@@ -6,4 +6,18 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
+          'mui-icons': ['@mui/icons-material'],
+          'redux': ['@reduxjs/toolkit', 'react-redux'],
+          'router': ['react-router-dom'],
+          'axios': ['axios'],
+        },
+      },
+    },
+  },
 });
