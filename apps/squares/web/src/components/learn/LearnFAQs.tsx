@@ -10,6 +10,7 @@ export default function LearnFAQs({ question, answer }: LearnFAQsProps) {
   const theme = useTheme();
 
   return (
+    // expandable accordion for FAQ item
     <Accordion
       sx={{
         background: theme.palette.grey[900],
@@ -18,6 +19,7 @@ export default function LearnFAQs({ question, answer }: LearnFAQsProps) {
         mb: 2,
       }}
     >
+      {/* question header with expand icon */}
       <AccordionSummary
         expandIcon={<ExpandMore sx={{ color: 'white' }} />}
         sx={{
@@ -30,6 +32,7 @@ export default function LearnFAQs({ question, answer }: LearnFAQsProps) {
           {question}
         </Typography>
       </AccordionSummary>
+      {/* answer text content */}
       <AccordionDetails>
         <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.7 }}>{answer}</Typography>
       </AccordionDetails>

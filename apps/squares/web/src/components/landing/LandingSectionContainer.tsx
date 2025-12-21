@@ -9,6 +9,7 @@ export default function LandingSectionContainer({ children }: LandingSectionCont
   const theme = useTheme();
 
   return (
+    // full-width container with dark background and border
     <Container maxWidth="lg" sx={{ pb: 14 }}>
       <Box
         sx={{

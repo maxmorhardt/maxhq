@@ -19,16 +19,33 @@ export default function Contest() {
     return;
   }
 
+  // build 2d matrix for grid display
   const numRows = currentContest.yLabels.length;
   const numCols = currentContest.xLabels.length;
   const contestMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
+
+  // populate matrix with square values
   currentContest.squares.forEach((square) => {
     if (square.row < numRows && square.col < numCols) {
       contestMatrix[square.row][square.col] = square.value;
     }
   });
 
+  // check if a square position is a winner
+  const isWinningSquare = (row: number, col: number): boolean => {
+    if (!currentContest.quarterResults) {
+      return false;
+    }
+
+    return (
+      currentContest.quarterResults.filter(
+        (quarterResult) => quarterResult.winnerRow === row && quarterResult.winnerCol === col
+      ).length > 0
+    );
+  };
+
   const handleSquareClick = async (row: number, col: number) => {
+    // redirect to login if not authenticated
     if (!auth.isAuthenticated) {
       auth.signinRedirect({
         redirect_uri: window.location.href,
@@ -37,7 +54,11 @@ export default function Contest() {
       return;
     }
 
-    const square = currentContest.squares.find((s) => s.row === row && s.col === col);
+    // find and open square for editing
+    const square = currentContest.squares.find(
+      (square) => square.row === row && square.col === col
+    );
+
     if (!square) {
       showToast('Square not found', 'error');
       return;
@@ -49,6 +70,7 @@ export default function Contest() {
 
   return (
     <>
+      {/* contest grid container */}
       <Box
         sx={{
           display: 'flex',
@@ -56,6 +78,7 @@ export default function Contest() {
           alignItems: 'center',
         }}
       >
+        {/* grid paper wrapper */}
         <Paper
           sx={{
             background: 'rgba(255,255,255,0.05)',
@@ -66,6 +89,7 @@ export default function Contest() {
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           }}
         >
+          {/* grid layout */}
           <Box
             sx={{
               display: 'flex',
@@ -74,6 +98,7 @@ export default function Contest() {
               gap: 0.5,
             }}
           >
+            {/* render each row */}
             {contestMatrix.map((rowData, rowIndex) => (
               <Box
                 key={`${rowIndex}`}
@@ -83,6 +108,7 @@ export default function Contest() {
                   gap: 0.5,
                 }}
               >
+                {/* render each square in row */}
                 {rowData.map((squareData, colIndex) => (
                   <Square
                     key={`${rowIndex}-${colIndex}`}
@@ -92,6 +118,7 @@ export default function Contest() {
                     handleSquareClick={handleSquareClick}
                     xLabel={currentContest.xLabels[colIndex]}
                     yLabel={currentContest.yLabels[rowIndex]}
+                    isWinner={isWinningSquare(rowIndex, colIndex)}
                   />
                 ))}
               </Box>
@@ -100,6 +127,7 @@ export default function Contest() {
         </Paper>
       </Box>
 
+      {/* edit square modal */}
       <EditSquare open={openEditSquare} onClose={() => setOpenEditSquare(false)} />
     </>
   );

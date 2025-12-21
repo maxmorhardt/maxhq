@@ -3,7 +3,7 @@ import { Box, Paper, Skeleton } from '@mui/material';
 export default function ContestPageSkeleton() {
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
-      {/* Title Skeleton */}
+      {/* title skeleton */}
       <Box sx={{ mt: 2, mb: 1, display: 'flex', justifyContent: 'center' }}>
         <Skeleton
           variant="text"
@@ -15,7 +15,7 @@ export default function ContestPageSkeleton() {
         />
       </Box>
 
-      {/* Status Chip Skeleton */}
+      {/* status chip skeleton */}
       <Skeleton
         variant="rounded"
         sx={{
@@ -27,7 +27,7 @@ export default function ContestPageSkeleton() {
         }}
       />
 
-      {/* Three-column layout */}
+      {/* three-column layout: left sidebar, center grid, right sidebar */}
       <Box
         sx={{
           display: 'flex',
@@ -41,7 +41,7 @@ export default function ContestPageSkeleton() {
           p: 1,
         }}
       >
-        {/* Left Sidebar Skeleton - Contest Details */}
+        {/* left sidebar: contest details skeleton */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, flex: '0 0 280px' }}>
           <Paper
             sx={{
@@ -61,7 +61,7 @@ export default function ContestPageSkeleton() {
           </Paper>
         </Box>
 
-        {/* Center - Contest Grid Skeleton */}
+        {/* center: contest grid skeleton */}
         <Box
           sx={{
             display: 'flex',
@@ -104,7 +104,7 @@ export default function ContestPageSkeleton() {
           </Paper>
         </Box>
 
-        {/* Right Sidebar Skeletons - Winners Board & How to Play */}
+        {/* right sidebar: winners board and how to play skeletons */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -113,7 +113,7 @@ export default function ContestPageSkeleton() {
             flex: '0 0 280px',
           }}
         >
-          {/* Winners Board Skeleton */}
+          {/* winners board skeleton */}
           <Paper
             sx={{
               background: 'rgba(255,255,255,0.05)',
@@ -137,7 +137,7 @@ export default function ContestPageSkeleton() {
             </Box>
           </Paper>
 
-          {/* How to Play Skeleton */}
+          {/* how to play skeleton */}
           <Paper
             sx={{
               background: 'rgba(255,255,255,0.05)',
@@ -154,7 +154,7 @@ export default function ContestPageSkeleton() {
         </Box>
       </Box>
 
-      {/* Mobile: Sidebars underneath contest grid */}
+      {/* mobile: sidebars underneath contest grid */}
       <Box
         sx={{
           display: { xs: 'flex', lg: 'none' },
@@ -167,7 +167,7 @@ export default function ContestPageSkeleton() {
           mb: 2,
         }}
       >
-        {/* Contest Details Skeleton */}
+        {/* contest details skeleton */}
         <Paper
           sx={{
             background: 'rgba(255,255,255,0.05)',
@@ -185,7 +185,7 @@ export default function ContestPageSkeleton() {
           </Box>
         </Paper>
 
-        {/* Winners Board Skeleton */}
+        {/* winners board skeleton */}
         <Paper
           sx={{
             background: 'rgba(255,255,255,0.05)',
@@ -204,7 +204,7 @@ export default function ContestPageSkeleton() {
           </Box>
         </Paper>
 
-        {/* How to Play Skeleton */}
+        {/* how to play skeleton */}
         <Paper
           sx={{
             background: 'rgba(255,255,255,0.05)',

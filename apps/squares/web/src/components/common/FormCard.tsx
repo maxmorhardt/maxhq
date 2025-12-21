@@ -19,12 +19,15 @@ export default function FormCard({ icon, title, details }: ContactInfoCardProps)
       }}
     >
       <CardContent sx={{ p: 3 }}>
+        {/* icon and title header */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           {icon}
           <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
             {title}
           </Typography>
         </Box>
+
+        {/* details text */}
         <Typography sx={{ color: 'rgba(255,255,255,0.8)' }}>{details}</Typography>
       </CardContent>
     </Card>

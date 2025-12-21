@@ -19,6 +19,7 @@ export default function LegalPageTemplate({
   const theme = useTheme();
 
   const renderContent = (content: string | string[]) => {
+    // render single paragraph for string content
     if (typeof content === 'string') {
       return (
         <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.8 }}>
@@ -27,6 +28,7 @@ export default function LegalPageTemplate({
       );
     }
 
+    // render bullet list for array content
     return (
       <Box component="ul" sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 2, pl: 3 }}>
         {content.map((item, index) => (
@@ -38,7 +40,9 @@ export default function LegalPageTemplate({
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
+      {/* page header */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
+        {/* title */}
         <Typography
           variant="h2"
           sx={{
@@ -50,11 +54,14 @@ export default function LegalPageTemplate({
         >
           {title}
         </Typography>
+
+        {/* last updated date */}
         <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)' }}>
           Last updated: {lastUpdated}
         </Typography>
       </Box>
 
+      {/* content container */}
       <Paper
         sx={{
           background: theme.palette.grey[900],
@@ -63,15 +70,19 @@ export default function LegalPageTemplate({
           p: { xs: 3, md: 4 },
         }}
       >
+        {/* sections list */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {sections.map((section, index) => (
             <Box key={index}>
+              {/* section title */}
               <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
                 {section.title}
               </Typography>
 
+              {/* section content */}
               {renderContent(section.content)}
 
+              {/* add divider between sections except after the last one */}
               {index < sections.length - 1 && (
                 <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mt: 3 }} />
               )}

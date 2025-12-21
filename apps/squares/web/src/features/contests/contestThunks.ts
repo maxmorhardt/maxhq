@@ -17,12 +17,13 @@ import type {
   PaginatedContestsResponse,
   PaginationParams,
   QuarterResult,
-  RecordQuarterResultRequest,
+  QuarterResultRequest,
   Square,
   UpdateContestRequest,
 } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
+// fetch paginated list of all contests
 export const fetchContests = createAsyncThunk<
   PaginatedContestsResponse,
   PaginationParams,
@@ -36,6 +37,7 @@ export const fetchContests = createAsyncThunk<
   }
 });
 
+// fetch contests owned by specific user
 export const fetchContestsByUser = createAsyncThunk<
   PaginatedContestsResponse,
   { username: string; pagination: PaginationParams },
@@ -49,6 +51,7 @@ export const fetchContestsByUser = createAsyncThunk<
   }
 });
 
+// fetch single contest by id with all squares and details
 export const fetchContestById = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
   'contests/fetchContestById',
   async (id, { rejectWithValue }) => {
@@ -61,6 +64,7 @@ export const fetchContestById = createAsyncThunk<Contest, string, { rejectValue:
   }
 );
 
+// create new contest with name, owner, and optional team names
 export const createContest = createAsyncThunk<
   Contest,
   CreateContestRequest,
@@ -74,6 +78,7 @@ export const createContest = createAsyncThunk<
   }
 });
 
+// update square with new value and owner
 export const updateSquare = createAsyncThunk<
   Square,
   { contestId: string; squareId: string; value: string; owner: string },
@@ -87,6 +92,7 @@ export const updateSquare = createAsyncThunk<
   }
 });
 
+// clear square value and remove owner
 export const clearSquare = createAsyncThunk<
   Square,
   { contestId: string; squareId: string },
@@ -100,6 +106,7 @@ export const clearSquare = createAsyncThunk<
   }
 });
 
+// start contest and lock grid for play
 export const startContestThunk = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
   'contests/startContest',
   async (id, { rejectWithValue }) => {
@@ -112,6 +119,7 @@ export const startContestThunk = createAsyncThunk<Contest, string, { rejectValue
   }
 );
 
+// update contest details (name, teams, status)
 export const updateContest = createAsyncThunk<
   Contest,
   { id: string; updates: UpdateContestRequest },
@@ -125,6 +133,7 @@ export const updateContest = createAsyncThunk<
   }
 });
 
+// delete contest by id
 export const deleteContest = createAsyncThunk<void, string, { rejectValue: APIError }>(
   'contests/deleteContest',
   async (id, { rejectWithValue }) => {
@@ -136,9 +145,10 @@ export const deleteContest = createAsyncThunk<void, string, { rejectValue: APIEr
   }
 );
 
-export const recordQuarterResultThunk = createAsyncThunk<
+// record quarter result with scores and determine winner
+export const updateQuarterResult = createAsyncThunk<
   QuarterResult,
-  { contestId: string; request: RecordQuarterResultRequest },
+  { contestId: string; request: QuarterResultRequest },
   { rejectValue: APIError }
 >('contests/recordQuarterResult', async ({ contestId, request }, { rejectWithValue }) => {
   try {

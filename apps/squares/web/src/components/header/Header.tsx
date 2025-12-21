@@ -30,15 +30,18 @@ export default function Header() {
   const auth = useAuth();
   const navigate = useNavigate();
 
+  // anchor elements for dropdown menus
   const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
 
+  // menu toggle handlers
   const handleOpenNavMenu = (event: MouseEvent<HTMLElement>) => setAnchorElNav(event.currentTarget);
   const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) =>
     setAnchorElUser(event.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
+  // redirect to keycloak registration page
   const handleRegister = () => {
     const { authority, client_id } = auth.settings;
     const redirectUri = window.location.origin;
@@ -46,6 +49,7 @@ export default function Header() {
     window.location.href = registrationUrl;
   };
 
+  // handle account settings menu clicks
   const handleSettingClick = (setting: string) => {
     if (setting === 'Account') {
       window.open('https://auth.maxstash.io/realms/maxstash/account', '_blank');
@@ -58,10 +62,11 @@ export default function Header() {
 
   return (
     <>
+      {/* main app bar */}
       <AppBar position="static">
         <Container maxWidth="xl">
           <Toolbar disableGutters>
-            {/* Desktop logo */}
+            {/* desktop logo and brand */}
             <Box
               sx={{ display: { xs: 'none', md: 'flex' }, mr: 2, cursor: 'pointer' }}
               onClick={() => navigate('/')}
@@ -87,7 +92,7 @@ export default function Header() {
               Squares
             </Typography>
 
-            {/* Mobile menu */}
+            {/* mobile navigation menu */}
             <HeaderMenu
               handleOpenNavMenu={handleOpenNavMenu}
               handleCloseNavMenu={handleCloseNavMenu}
@@ -96,7 +101,7 @@ export default function Header() {
               pages={pages}
             />
 
-            {/* Mobile logo */}
+            {/* mobile logo and brand */}
             <Box
               sx={{ display: { xs: 'flex', md: 'none' }, mr: 2, cursor: 'pointer' }}
               onClick={() => navigate('/')}
@@ -123,9 +128,10 @@ export default function Header() {
               Squares
             </Typography>
 
-            {/* Page links (desktop) */}
+            {/* desktop navigation links */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {pages.map((page) => {
+                // hide contests link if not authenticated
                 if (page.name === 'Contests' && !auth.isAuthenticated) {
                   return;
                 }
@@ -153,7 +159,7 @@ export default function Header() {
               })}
             </Box>
 
-            {/* Auth section */}
+            {/* authentication controls (login/register or user menu) */}
             <HeaderAuth
               handleOpenUserMenu={handleOpenUserMenu}
               handleCloseUserMenu={handleCloseUserMenu}

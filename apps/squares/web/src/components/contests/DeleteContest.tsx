@@ -31,7 +31,7 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
     return;
   }
 
-  // errors will be shown in toast from contests page
+  // dispatch delete action and close modal on success
   const handleConfirm = () => {
     dispatch(deleteContest(currentContest.id))
       .unwrap()
@@ -42,6 +42,7 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      {/* dialog title with warning icon */}
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Warning
@@ -63,6 +64,7 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
         </Box>
       </DialogTitle>
 
+      {/* confirmation message and contest details */}
       <DialogContent>
         <Typography
           sx={{
@@ -76,6 +78,7 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
           Are you sure you want to delete this contest? This action cannot be undone.
         </Typography>
 
+        {/* highlighted contest name to delete */}
         {currentContest.name && (
           <Box
             sx={{
@@ -98,6 +101,7 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
         )}
       </DialogContent>
 
+      {/* cancel and confirm buttons */}
       <DialogActions sx={{ p: 2, gap: 1 }}>
         <Button
           onClick={onClose}

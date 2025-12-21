@@ -10,11 +10,21 @@ export interface Contest {
   status: ContestStatus;
   squares: Square[];
   quarterResults?: QuarterResult[];
+  participants?: ContestParticipant[];
   owner: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
   updatedBy: string;
+}
+
+export interface ContestParticipant {
+  id: string;
+  contestId: string;
+  username: string;
+  joinedAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateContestRequest {
@@ -40,7 +50,14 @@ export interface Square {
 }
 
 export interface WSUpdate {
-  type: 'square_update' | 'contest_update' | 'quarter_result_update' | 'connected' | 'disconnected' | 'contest_deleted' | 'disconnect';
+  type:
+    | 'square_update'
+    | 'contest_update'
+    | 'quarter_result_update'
+    | 'connected'
+    | 'disconnected'
+    | 'contest_deleted'
+    | 'disconnect';
   contestId: string;
   connectionId?: string;
   updatedBy: string;
@@ -107,7 +124,7 @@ export interface QuarterResult {
   updatedBy: string;
 }
 
-export interface RecordQuarterResultRequest {
+export interface QuarterResultRequest {
   homeTeamScore: number;
   awayTeamScore: number;
 }

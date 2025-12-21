@@ -6,6 +6,7 @@ interface LandingCTABadgeProps {
 
 export default function LandingCTABadge({ text }: LandingCTABadgeProps) {
   return (
+    // feature badge with checkmark icon and hover effect
     <Box
       sx={{
         display: 'flex',

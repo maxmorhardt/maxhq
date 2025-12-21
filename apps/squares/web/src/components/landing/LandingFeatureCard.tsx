@@ -1,17 +1,17 @@
 import { Box, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
-import GradientIcon from '../common/GradientIcon';
+import { gradients } from '../../types/gradients';
 
 interface LandingFeatureCardProps {
-  emoji?: string;
   icon?: ReactNode;
   gradient: 'primary' | 'pink' | 'cyan' | 'mint' | 'secondary' | 'lightBlue' | 'black' | 'green';
   title: string;
   description: string;
 }
 
+const size = 80;
+
 export default function LandingFeatureCard({
-  emoji,
   icon,
   gradient,
   title,
@@ -19,7 +19,23 @@ export default function LandingFeatureCard({
 }: LandingFeatureCardProps) {
   return (
     <Box sx={{ textAlign: 'center' }}>
-      <GradientIcon character={emoji} icon={icon} gradient={gradient} />
+      {/* circular icon container with gradient background */}
+      <Box
+        sx={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          background: gradients[gradient],
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mx: 'auto',
+          mb: 3,
+        }}
+      >
+        <Box sx={{ color: 'white', display: 'flex', fontSize: size * 0.5 }}>{icon}</Box>
+      </Box>
+      {/* feature title and description */}
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
         {title}
       </Typography>

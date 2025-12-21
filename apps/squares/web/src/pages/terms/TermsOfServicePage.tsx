@@ -1,5 +1,6 @@
 import LegalPageTemplate, { type LegalSection } from '../../components/common/LegalPageTemplate';
 
+// terms of service page using legal page template
 export default function TermsOfServicePage() {
   const sections: LegalSection[] = [
     {

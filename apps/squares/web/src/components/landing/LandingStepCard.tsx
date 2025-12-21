@@ -21,6 +21,7 @@ export default function LandingStepCard({
   shadowColor,
 }: LandingStepCardProps) {
   return (
+    // step card with numbered badge and content box
     <Box
       sx={{
         display: 'flex',
@@ -30,6 +31,7 @@ export default function LandingStepCard({
         mb: { xs: 4, md: 6 },
       }}
     >
+      {/* circular step number badge */}
       <Box
         sx={{
           flex: '0 0 auto',
@@ -49,6 +51,7 @@ export default function LandingStepCard({
       >
         {step}
       </Box>
+      {/* step content box with title and description */}
       <Box
         sx={{
           flex: 1,

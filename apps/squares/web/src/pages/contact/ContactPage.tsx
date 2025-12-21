@@ -26,24 +26,28 @@ const contactMethods = [
   },
 ];
 
+// contact page with form and contact method cards
 export default function ContactPage() {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // submit contact form and show success/error toast
   const handleFormSubmit = async (formData: {
     name: string;
     email: string;
     subject: string;
     message: string;
   }) => {
-    if (isSubmitting) return;
+    if (isSubmitting) {
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       const response = await submitContactForm(formData);
       showToast(response.message, 'success');
     } catch (error) {
-      console.error('Failed to submit contact form:', error);
+      console.log(error);
       showToast('Failed to submit contact form. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
@@ -52,6 +56,7 @@ export default function ContactPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
+      {/* page header with title and description */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography
           variant="h2"
@@ -79,9 +84,11 @@ export default function ContactPage() {
         </Typography>
       </Box>
 
+      {/* contact form and info cards side by side */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 4 }}>
         <ContactForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
 
+        {/* contact method cards */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {contactMethods.map((method) => (
             <FormCard

@@ -16,6 +16,7 @@ export default function LearnHowItWorksCard({
   const theme = useTheme();
 
   return (
+    // step card with numbered badge
     <Card
       sx={{
         background: theme.palette.grey[900],
@@ -24,6 +25,7 @@ export default function LearnHowItWorksCard({
       }}
     >
       <CardContent sx={{ p: 4, textAlign: 'center' }}>
+        {/* circular step number badge */}
         <Box
           sx={{
             width: 80,
@@ -41,6 +43,7 @@ export default function LearnHowItWorksCard({
             {stepNumber}
           </Typography>
         </Box>
+        {/* step title and description */}
         <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>
           {title}
         </Typography>

@@ -15,11 +15,13 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
 
+// contests page displaying user's contests in a paginated table
 export default function ContestsPage() {
   const auth = useAuth();
   const isInterceptorReady = useAxiosAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
+  // pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -28,6 +30,7 @@ export default function ContestsPage() {
   const error = useAppSelector(selectContestError);
   const pagination = useAppSelector(selectContestPagination);
 
+  // show error toast and clear from store
   useEffect(() => {
     if (error) {
       showToast(error, 'error');
@@ -35,6 +38,7 @@ export default function ContestsPage() {
     }
   }, [error, showToast, dispatch]);
 
+  // fetch user's contests when authenticated and pagination changes
   useEffect(() => {
     if (!auth.isAuthenticated || !isInterceptorReady) {
       return;
@@ -54,19 +58,23 @@ export default function ContestsPage() {
     }
   }, [auth.isAuthenticated, auth.user, dispatch, isInterceptorReady, page, rowsPerPage]);
 
+  // handle pagination page change
   const handleChangePage = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
     setPage(newPage);
   };
 
+  // handle rows per page change and reset to first page
   const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
+  // show skeleton while auth is loading
   if (auth.isLoading) {
     return <ContestsTableSkeleton />;
   }
 
+  // show warning if not authenticated but still render table
   if (!auth.isAuthenticated) {
     return (
       <>
@@ -86,6 +94,7 @@ export default function ContestsPage() {
     );
   }
 
+  // show skeleton while loading or waiting for axios interceptor
   if (!isInterceptorReady || loading) {
     return <ContestsTableSkeleton />;
   }

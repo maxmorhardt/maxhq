@@ -42,13 +42,13 @@ export const statusOptions: StatusOption[] = [
     value: 'FINISHED',
     label: 'Finished',
     description: 'Contest is complete',
-    color: '#ffa726',
+    color: '#9e9e9e',
   },
   {
     value: 'DELETED',
     label: 'Deleted',
     description: 'Contest has been deleted',
-    color: '#f44336',
+    color: '#f92f21ff',
   },
 ];
 

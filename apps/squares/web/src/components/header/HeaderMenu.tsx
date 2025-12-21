@@ -30,6 +30,7 @@ export default function HeaderMenu({
   const navigate = useNavigate();
 
   return (
+    // mobile menu button and dropdown
     <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
       <IconButton size="large" aria-label="menu" onClick={handleOpenNavMenu} color="inherit">
         <MenuIcon />
@@ -43,7 +44,9 @@ export default function HeaderMenu({
         onClose={handleCloseNavMenu}
         sx={{ display: { xs: 'block', md: 'none' } }}
       >
+        {/* navigation menu items */}
         {pages.map((page) => {
+          // hide contests link if not authenticated
           if (page.name === 'Contests' && !auth.isAuthenticated) {
             return null;
           }
@@ -64,7 +67,7 @@ export default function HeaderMenu({
           );
         })}
 
-        {/* Mobile Login/Register */}
+        {/* mobile login and register menu items */}
         {!auth.isAuthenticated && <Divider />}
         {!auth.isAuthenticated && (
           <MenuItem

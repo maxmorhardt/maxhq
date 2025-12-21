@@ -1,6 +1,12 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import type { Contest, ContestStatus, PaginatedContestsResponse, QuarterResult, Square } from '../../types/contest';
+import type {
+  Contest,
+  ContestStatus,
+  PaginatedContestsResponse,
+  QuarterResult,
+  Square,
+} from '../../types/contest';
 import {
   clearSquare,
   createContest,
@@ -8,21 +14,23 @@ import {
   fetchContestById,
   fetchContests,
   fetchContestsByUser,
-  recordQuarterResultThunk,
   startContestThunk,
   updateContest,
+  updateQuarterResult,
   updateSquare,
 } from './contestThunks';
 
+// redux state for contest management
 interface ContestState {
-  contests: Contest[];
-  currentContest?: Contest | null;
-  currentSquare?: Square | null;
-  contestLoading: boolean;
-  deleteContestLoading: boolean;
-  squareLoading: boolean;
-  error: string | null;
+  contests: Contest[]; // list of user's contests
+  currentContest?: Contest | null; // currently viewed contest
+  currentSquare?: Square | null; // currently selected square
+  contestLoading: boolean; // loading state for contest operations
+  deleteContestLoading: boolean; // loading state for delete operation
+  squareLoading: boolean; // loading state for square operations
+  error: string | null; // error message
   pagination: {
+    // pagination info for contests list
     page: number;
     limit: number;
     total: number;
@@ -52,41 +60,121 @@ const contestSlice = createSlice({
   name: 'contests',
   initialState,
   reducers: {
+    // clear error state
     clearError(state) {
       state.error = null;
     },
+    // set the currently viewed contest
     setCurrentContest(state, action: PayloadAction<Contest | null>) {
       state.currentContest = action.payload;
     },
+    // set the currently selected square for editing
     setCurrentSquare(state, action: PayloadAction<Square>) {
       state.currentSquare = action.payload;
     },
+    // update contest fields from websocket message
     updateContestFromWebSocket(
       state,
-      action: PayloadAction<{ xLabels?: number[]; yLabels?: number[] }>
+      action: PayloadAction<{
+        xLabels?: number[];
+        yLabels?: number[];
+        homeTeam?: string;
+        awayTeam?: string;
+        status?: ContestStatus;
+      }>
     ) {
-      const { xLabels, yLabels } = action.payload;
-      if (!state.currentContest || xLabels === undefined || yLabels === undefined) {
+      if (!state.currentContest) {
         return;
       }
 
-      state.currentContest.xLabels = xLabels;
-      state.currentContest.yLabels = yLabels;
+      const { xLabels, yLabels, homeTeam, awayTeam, status } = action.payload;
+      if (xLabels !== undefined) {
+        state.currentContest.xLabels = xLabels;
+      }
+
+      if (yLabels !== undefined) {
+        state.currentContest.yLabels = yLabels;
+      }
+
+      if (homeTeam !== undefined) {
+        state.currentContest.homeTeam = homeTeam;
+      }
+
+      if (awayTeam !== undefined) {
+        state.currentContest.awayTeam = awayTeam;
+      }
+
+      if (status !== undefined) {
+        state.currentContest.status = status;
+      }
     },
+    // update square value from websocket message
     updateSquareFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
       if (!state.currentContest) {
         return;
       }
 
       const { id, value } = action.payload;
-      const squareIndex = state.currentContest.squares.findIndex((square) => square.id === id);
 
+      const squareIndex = state.currentContest.squares.findIndex((square) => square.id === id);
       if (squareIndex !== -1) {
         state.currentContest.squares[squareIndex].value = value;
       }
     },
+    // add or update quarter result from websocket, update contest status
+    updateQuarterResultFromWebSocket(
+      state,
+      action: PayloadAction<{
+        quarter: number;
+        homeTeamScore: number;
+        awayTeamScore: number;
+        winnerRow: number;
+        winnerCol: number;
+        winner: string;
+        winnerFirstName: string;
+        winnerLastName: string;
+        status: ContestStatus;
+      }>
+    ) {
+      if (!state.currentContest) {
+        return;
+      }
+
+      if (!state.currentContest.quarterResults) {
+        state.currentContest.quarterResults = [];
+      }
+
+      const quarterResult = action.payload;
+
+      const existingIndex = state.currentContest.quarterResults.findIndex(
+        (qr) => qr.quarter === quarterResult.quarter
+      );
+
+      if (existingIndex === -1) {
+        state.currentContest.quarterResults.push({
+          id: '',
+          contestId: state.currentContest.id,
+          quarter: quarterResult.quarter,
+          homeTeamScore: quarterResult.homeTeamScore,
+          awayTeamScore: quarterResult.awayTeamScore,
+          winnerRow: quarterResult.winnerRow,
+          winnerCol: quarterResult.winnerCol,
+          winner: quarterResult.winner,
+          winnerFirstName: quarterResult.winnerFirstName,
+          winnerLastName: quarterResult.winnerLastName,
+          createdAt: '',
+          updatedAt: '',
+          createdBy: '',
+          updatedBy: '',
+        });
+      }
+
+      state.currentContest.status = quarterResult.status;
+    },
   },
+  // async thunk handlers for API operations
   extraReducers: (builder) => {
+    // fetch paginated contests list
     builder
       .addCase(fetchContests.pending, (state) => {
         state.contestLoading = true;
@@ -138,6 +226,7 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 
+    // fetch single contest by id
     builder
       .addCase(fetchContestById.pending, (state) => {
         state.contestLoading = true;
@@ -153,6 +242,7 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error fetching contest';
       });
 
+    // create new contest
     builder
       .addCase(createContest.pending, (state) => {
         state.contestLoading = true;
@@ -167,6 +257,7 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error creating contest';
       });
 
+    // update square value and owner
     builder
       .addCase(updateSquare.pending, (state) => {
         state.squareLoading = true;
@@ -195,6 +286,7 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error updating square';
       });
 
+    // clear square value and owner
     builder
       .addCase(clearSquare.pending, (state) => {
         state.squareLoading = true;
@@ -221,6 +313,7 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error clearing square';
       });
 
+    // start contest (lock grid and transition status)
     builder
       .addCase(startContestThunk.pending, (state) => {
         state.error = null;
@@ -236,6 +329,7 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error starting contest';
       });
 
+    // update contest details (name, teams, status)
     builder
       .addCase(updateContest.pending, (state) => {
         state.error = null;
@@ -245,7 +339,6 @@ const contestSlice = createSlice({
           state.currentContest = action.payload;
         }
 
-        // Also update in the contests array if it exists
         const index = state.contests.findIndex((c) => c.id === action.payload.id);
         if (index !== -1) {
           state.contests[index] = action.payload;
@@ -255,6 +348,7 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error updating contest';
       });
 
+    // delete contest by id
     builder
       .addCase(deleteContest.pending, (state) => {
         state.deleteContestLoading = true;
@@ -272,35 +366,35 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error deleting contest';
       });
 
+    // record quarter result and advance status
     builder
-      .addCase(recordQuarterResultThunk.pending, (state) => {
+      .addCase(updateQuarterResult.pending, (state) => {
         state.error = null;
       })
-      .addCase(recordQuarterResultThunk.fulfilled, (state, action: PayloadAction<QuarterResult>) => {
+      .addCase(updateQuarterResult.fulfilled, (state, action: PayloadAction<QuarterResult>) => {
         if (!state.currentContest) {
           return;
         }
-        // Add the quarter result to the contest
+
         if (!state.currentContest.quarterResults) {
           state.currentContest.quarterResults = [];
         }
+
         state.currentContest.quarterResults.push(action.payload);
-        
-        // Update contest status based on the quarter that was just recorded
-        // Backend moves to next quarter or FINISHED after recording
+
         const quarterStatusMap: Record<number, ContestStatus> = {
           1: 'Q2',
           2: 'Q3',
           3: 'Q4',
           4: 'FINISHED',
         };
-        
+
         const nextStatus = quarterStatusMap[action.payload.quarter];
         if (nextStatus) {
           state.currentContest.status = nextStatus;
         }
       })
-      .addCase(recordQuarterResultThunk.rejected, (state, action) => {
+      .addCase(updateQuarterResult.rejected, (state, action) => {
         state.error = action.payload?.message ?? 'Error recording quarter result';
       });
   },
@@ -312,5 +406,6 @@ export const {
   setCurrentSquare,
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
+  updateQuarterResultFromWebSocket,
 } = contestSlice.actions;
 export const contestReducer = contestSlice.reducer;

@@ -3,7 +3,7 @@ import { Box, Button, Divider, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
-import { recordQuarterResultThunk, startContestThunk } from '../../features/contests/contestThunks';
+import { startContestThunk, updateQuarterResult } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
 import { updateSquareValueById } from '../../service/contestService';
@@ -12,6 +12,8 @@ import ContestSidebarCard from './ContestSidebarCard';
 interface ContestDetailsProps {
   isOwner?: boolean;
 }
+
+const MAX_SCORE_LENGTH = 4;
 
 export default function ContestDetails({ isOwner = false }: ContestDetailsProps) {
   const auth = useAuth();
@@ -27,35 +29,45 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
     return;
   }
 
-  const contestStatus = currentContest.status || 'ACTIVE';
+  const contestStatus = currentContest.status;
   const totalSquares = currentContest.squares.length;
   const filledSquares = currentContest.squares.filter(
     (s) => s.value && s.value.trim() !== ''
   ).length;
 
+  // calculate status flags
   const isCanceled = contestStatus === 'DELETED';
   const isFinished = contestStatus === 'FINISHED';
   const isActive = contestStatus === 'ACTIVE';
   const isInGame = ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
   const allSquaresFilled = filledSquares >= totalSquares;
 
+  // determine which controls to show
   const showNoActions = isCanceled || isFinished;
   const showStartQ1Button = isActive && allSquaresFilled;
   const showScoreInputs = isInGame;
 
   const getStatusDisplay = () => {
-    if (isCanceled) return 'Deleted';
-    if (isFinished) return 'Finished';
-    if (isInGame) return `In Progress • ${contestStatus}`;
+    if (isCanceled) {
+      return 'Deleted';
+    } else if (isFinished) {
+      return 'Finished';
+    } else if (isInGame) {
+      return `In Progress • ${contestStatus}`;
+    }
+
     return `Active • ${filledSquares}/${totalSquares} Squares Filled`;
   };
 
   const handleScoreSubmit = async () => {
-    if (!currentContest) return;
+    if (!currentContest) {
+      return;
+    }
 
-    const home = parseInt(homeScore, 10);
-    const away = parseInt(awayScore, 10);
+    const home = parseInt(homeScore);
+    const away = parseInt(awayScore);
 
+    // validate score inputs
     if (isNaN(home) || isNaN(away)) {
       return;
     }
@@ -65,8 +77,9 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
     }
 
     try {
+      // submit quarter result to backend
       await dispatch(
-        recordQuarterResultThunk({
+        updateQuarterResult({
           contestId: currentContest.id,
           request: {
             homeTeamScore: home,
@@ -76,6 +89,8 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
       ).unwrap();
 
       showToast('Quarter score recorded successfully', 'success');
+
+      // clear input fields after successful submit
       setHomeScore('');
       setAwayScore('');
     } catch (error) {
@@ -84,14 +99,15 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
   };
 
   const handleStartQ1 = async () => {
-    if (!currentContest || isStartingQ1) return;
+    if (!currentContest || isStartingQ1) {
+      return;
+    }
 
     setIsStartingQ1(true);
 
+    // call the startContest api which will transition from ACTIVE to Q1 and randomize labels
     try {
-      // Call the startContest API which will transition from ACTIVE to Q1 and randomize labels
       await dispatch(startContestThunk(currentContest.id)).unwrap();
-
       showToast('Quarter 1 started!', 'success');
     } catch (error) {
       console.error('Failed to start Q1:', error);
@@ -101,30 +117,26 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
   };
 
   const handleAutoFill = async () => {
-    if (!currentContest || isAutoFilling) return;
+    if (!currentContest || isAutoFilling) {
+      return;
+    }
 
     setIsAutoFilling(true);
     showToast('Auto-filling squares...', 'info');
 
+    // get all empty squares
     const emptySquares = currentContest.squares.filter((s) => !s.value || s.value.trim() === '');
-
     try {
       const owner = auth.user?.profile?.preferred_username || 'debug-user';
       const userName = auth.user?.profile?.name || auth.user?.profile?.preferred_username || 'User';
 
-      // Get initials from the user's name
+      // extract initials from user name
       const nameParts = userName.split(' ');
       const initials = nameParts.map((part) => part.charAt(0).toUpperCase()).join('');
 
-      for (let i = 0; i < emptySquares.length; i++) {
-        const square = emptySquares[i];
-
+      // fill each empty square with user initials
+      for (const square of emptySquares) {
         await updateSquareValueById(currentContest.id, square.id, { value: initials, owner });
-
-        // Small delay to avoid overwhelming the server
-        if (i % 10 === 9) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
       }
 
       showToast(`Auto-filled ${emptySquares.length} squares!`, 'success');
@@ -142,7 +154,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {/* Status Display - Visible to Everyone */}
+        {/* status display visible to everyone */}
         <Box>
           <Typography
             variant="caption"
@@ -150,15 +162,16 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
           >
             Contest Status
           </Typography>
+
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
             {getStatusDisplay()}
           </Typography>
         </Box>
 
-        {/* Owner Controls Section */}
+        {/* owner controls section */}
         {isOwner && (
           <>
-            {/* No Actions State */}
+            {/* no actions state */}
             {showNoActions && (
               <Box sx={{ textAlign: 'center', py: 2 }}>
                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -167,7 +180,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
               </Box>
             )}
 
-            {/* Active State - Start Q1 Button */}
+            {/* active state start q1 button */}
             {showStartQ1Button && (
               <>
                 <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
@@ -180,6 +193,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
                 >
                   {isStartingQ1 ? 'Starting...' : 'Start Quarter 1'}
                 </Button>
+
                 <Typography
                   variant="caption"
                   sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}
@@ -189,16 +203,20 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
               </>
             )}
 
-            {/* Active State - Waiting for Squares */}
+            {/* active state waiting for squares */}
             {isActive && !allSquaresFilled && (
               <>
                 <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                {/* waiting message */}
                 <Typography
                   variant="body2"
                   sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}
                 >
                   Waiting for all squares to be filled before you can start the game.
                 </Typography>
+
+                {/* admin debug button */}
                 {canAutoFill && (
                   <Button
                     variant="outlined"
@@ -209,14 +227,6 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
                     sx={{
                       borderColor: 'rgba(255, 193, 7, 0.5)',
                       color: '#ffc107',
-                      '&:hover': {
-                        borderColor: '#ffc107',
-                        background: 'rgba(255, 193, 7, 0.1)',
-                      },
-                      '&:disabled': {
-                        borderColor: 'rgba(255,255,255,0.1)',
-                        color: 'rgba(255,255,255,0.3)',
-                      },
                     }}
                     fullWidth
                   >
@@ -226,63 +236,80 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
               </>
             )}
 
-            {/* In-Game State - Score Inputs */}
+            {/* in-game state score inputs */}
             {showScoreInputs && (
               <>
                 <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                {/* section header */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                   <SportsScore sx={{ color: '#43e97b', fontSize: '1.2rem' }} />
+
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                     Update Score
                   </Typography>
                 </Box>
+
+                {/* home team score input */}
                 <TextField
                   label="Home Team Score"
                   type="number"
                   value={homeScore}
-                  onChange={(e) => setHomeScore(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= MAX_SCORE_LENGTH) {
+                      setHomeScore(value);
+                    }
+                  }}
                   size="small"
                   fullWidth
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                    '& input[type=number]': {
+                      MozAppearance: 'textfield',
                     },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
+                    '& input[type=number]::-webkit-outer-spin-button': {
+                      WebkitAppearance: 'none',
+                      margin: 0,
+                    },
+                    '& input[type=number]::-webkit-inner-spin-button': {
+                      WebkitAppearance: 'none',
+                      margin: 0,
+                    },
                   }}
                 />
+
+                {/* away team score input */}
                 <TextField
                   label="Away Team Score"
                   type="number"
                   value={awayScore}
-                  onChange={(e) => setAwayScore(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= MAX_SCORE_LENGTH) {
+                      setAwayScore(value);
+                    }
+                  }}
                   size="small"
                   fullWidth
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                    '& input[type=number]': {
+                      MozAppearance: 'textfield',
                     },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
+                    '& input[type=number]::-webkit-outer-spin-button': {
+                      WebkitAppearance: 'none',
+                      margin: 0,
+                    },
+                    '& input[type=number]::-webkit-inner-spin-button': {
+                      WebkitAppearance: 'none',
+                      margin: 0,
+                    },
                   }}
                 />
+
+                {/* submit button */}
                 <Button
                   variant="contained"
                   onClick={handleScoreSubmit}
                   disabled={!homeScore || !awayScore}
-                  sx={{
-                    background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                    color: 'rgba(0,0,0,0.87)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #38f9d7 0%, #43e97b 100%)',
-                    },
-                    '&:disabled': {
-                      background: 'rgba(255,255,255,0.1)',
-                      color: 'rgba(255,255,255,0.3)',
-                    },
-                  }}
                   fullWidth
                 >
                   Update Score

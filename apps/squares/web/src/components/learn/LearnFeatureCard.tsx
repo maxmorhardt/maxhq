@@ -11,6 +11,7 @@ export default function LearnFeatureCard({ icon, title, description }: LearnFeat
   const theme = useTheme();
 
   return (
+    // feature card with hover lift animation
     <Card
       sx={{
         background: theme.palette.grey[900],
@@ -24,8 +25,10 @@ export default function LearnFeatureCard({ icon, title, description }: LearnFeat
       }}
     >
       <CardContent sx={{ p: 4 }}>
+        {/* icon and text layout */}
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
           <Box sx={{ mt: 0.5 }}>{icon}</Box>
+          {/* feature title and description */}
           <Box>
             <Typography variant="h6" sx={{ color: 'white', mb: 1, fontWeight: 600 }}>
               {title}

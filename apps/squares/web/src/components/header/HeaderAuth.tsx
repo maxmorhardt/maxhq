@@ -30,6 +30,7 @@ export default function HeaderAuth({
 
   return (
     <Box sx={{ flexGrow: 0 }}>
+      {/* login and register buttons for unauthenticated users */}
       {!auth.isAuthenticated ? (
         <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
           <Button
@@ -49,6 +50,7 @@ export default function HeaderAuth({
           </Button>
         </Box>
       ) : (
+        // user avatar and settings menu for authenticated users
         <>
           <Tooltip title="Open settings">
             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>

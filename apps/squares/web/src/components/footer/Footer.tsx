@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Footer() {
   const navigate = useNavigate();
+  // get current year for copyright
   const currentYear = new Date().getFullYear();
 
   return (
+    // footer container with top border
     <Box
       component="footer"
       sx={{
@@ -16,12 +18,14 @@ export default function Footer() {
       }}
     >
       <Container maxWidth="lg">
+        {/* responsive stack layout for footer content */}
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={3}
           justifyContent="space-between"
           alignItems="center"
         >
+          {/* logo and copyright section */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <img src="/squares_logo.png" alt="Logo" style={{ width: 30, height: 'auto' }} />
             <Typography
@@ -36,6 +40,7 @@ export default function Footer() {
             </Typography>
           </Box>
 
+          {/* footer navigation links */}
           <Stack direction="row" spacing={3}>
             <Link
               onClick={() => navigate('/learn-more')}

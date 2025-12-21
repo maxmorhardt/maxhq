@@ -5,13 +5,14 @@ import type {
   PaginatedContestsResponse,
   PaginationParams,
   QuarterResult,
-  RecordQuarterResultRequest,
+  QuarterResultRequest,
   Square,
   UpdateContestRequest,
   UpdateSquareRequest,
 } from '../types/contest';
 import { handleError } from './handleError';
 
+// fetch paginated list of all contests
 export async function getContests(
   pagination: PaginationParams
 ): Promise<PaginatedContestsResponse> {
@@ -28,6 +29,7 @@ export async function getContests(
   }
 }
 
+// fetch contests owned by specific user
 export async function getContestsByUser(
   user: string,
   pagination: PaginationParams
@@ -45,6 +47,7 @@ export async function getContestsByUser(
   }
 }
 
+// fetch single contest by id with all details
 export async function getContestById(id: string): Promise<Contest> {
   try {
     const res = await api.get<Contest>(`/contests/${id}`);
@@ -54,6 +57,7 @@ export async function getContestById(id: string): Promise<Contest> {
   }
 }
 
+// create new contest
 export async function createNewContest(request: CreateContestRequest) {
   try {
     const res = await api.put('/contests', request);
@@ -63,6 +67,7 @@ export async function createNewContest(request: CreateContestRequest) {
   }
 }
 
+// update square with new value and owner
 export async function updateSquareValueById(
   contestId: string,
   squareId: string,
@@ -76,6 +81,7 @@ export async function updateSquareValueById(
   }
 }
 
+// clear square value and remove owner
 export async function clearSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
     const res = await api.post<Square>(`/contests/${contestId}/squares/${squareId}/clear`);
@@ -85,6 +91,7 @@ export async function clearSquareById(contestId: string, squareId: string): Prom
   }
 }
 
+// update contest details
 export async function updateContestById(
   id: string,
   updates: UpdateContestRequest
@@ -97,6 +104,7 @@ export async function updateContestById(
   }
 }
 
+// start contest and lock grid
 export async function startContest(id: string): Promise<Contest> {
   try {
     const res = await api.post<Contest>(`/contests/${id}/start`);
@@ -106,9 +114,10 @@ export async function startContest(id: string): Promise<Contest> {
   }
 }
 
+// record quarter result and determine winner
 export async function recordQuarterResult(
   contestId: string,
-  request: RecordQuarterResultRequest
+  request: QuarterResultRequest
 ): Promise<QuarterResult> {
   try {
     const res = await api.post<QuarterResult>(`/contests/${contestId}/quarter-result`, request);
@@ -118,6 +127,7 @@ export async function recordQuarterResult(
   }
 }
 
+// delete contest by id
 export async function deleteContestById(id: string): Promise<void> {
   try {
     await api.delete<void>(`/contests/${id}`);
@@ -126,9 +136,13 @@ export async function deleteContestById(id: string): Promise<void> {
   }
 }
 
-export async function submitContactForm(
-  request: { name: string; email: string; subject: string; message: string }
-): Promise<{ message: string }> {
+// submit contact form
+export async function submitContactForm(request: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<{ message: string }> {
   try {
     const res = await api.post<{ message: string }>('/contact', request);
     return res.data;

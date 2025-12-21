@@ -4,6 +4,7 @@ import LearnFAQs from '../../components/learn/LearnFAQs';
 import LearnFeatureCard from '../../components/learn/LearnFeatureCard';
 import LearnHowItWorksCard from '../../components/learn/LearnHowItWorksCard';
 
+// learn more page with how it works, features, and faqs
 export default function LearnMorePage() {
   const howItWorksSteps = [
     {
@@ -18,7 +19,7 @@ export default function LearnMorePage() {
       title: 'Players Choose Squares',
       description:
         'Participants select their squares by clicking on the grid. Each square can only be claimed once.',
-      color: '#fb923c',
+      color: '#bfbd31ff',
     },
     {
       stepNumber: 3,
@@ -43,13 +44,13 @@ export default function LearnMorePage() {
         'Share your contests with friends and family. Players can join with a simple link - all participants need accounts to join.',
     },
     {
-      icon: <Timeline sx={{ color: '#4facfe' }} />,
+      icon: <Timeline sx={{ color: '#43e97b' }} />,
       title: 'Real-time Updates',
       description:
         'See changes instantly as players fill out squares. Live synchronization ensures everyone sees the latest game state.',
     },
     {
-      icon: <Security sx={{ color: '#43e97b' }} />,
+      icon: <Security sx={{ color: '#4facfe' }} />,
       title: 'Secure & Reliable',
       description:
         'Your contests are protected with modern security practices. Data is encrypted and safely stored in the cloud.',
@@ -103,7 +104,7 @@ export default function LearnMorePage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
-      {/* header */}
+      {/* page header with title and description */}
       <Box sx={{ textAlign: 'center', mb: 8 }}>
         <Typography
           variant="h2"
@@ -131,7 +132,7 @@ export default function LearnMorePage() {
         </Typography>
       </Box>
 
-      {/* how it works */}
+      {/* how it works section with 3-step process */}
       <Box sx={{ mb: 10 }}>
         <Typography
           variant="h3"
@@ -160,7 +161,7 @@ export default function LearnMorePage() {
         </Box>
       </Box>
 
-      {/* features */}
+      {/* platform features grid */}
       <Box sx={{ mb: 10 }}>
         <Typography
           variant="h3"
@@ -186,7 +187,7 @@ export default function LearnMorePage() {
         </Box>
       </Box>
 
-      {/* faqs */}
+      {/* frequently asked questions section */}
       <Box>
         <Typography
           variant="h3"

@@ -2,22 +2,26 @@ import { Home, Search } from '@mui/icons-material';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
+// 404 error page with navigation options
 export default function NotFoundPage() {
   const theme = useTheme();
   const navigate = useNavigate();
 
+  // navigate to home page
   const handleGoHome = () => {
     navigate('/');
   };
 
+  // navigate to contests page
   const handleGoToContests = () => {
     navigate('/contests');
   };
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
+      {/* main error message and navigation */}
       <Box sx={{ textAlign: 'center', mb: 8 }}>
-        {/* 404 */}
+        {/* 404 number display */}
         <Typography
           variant="h1"
           sx={{
@@ -30,7 +34,7 @@ export default function NotFoundPage() {
           404
         </Typography>
 
-        {/* title */}
+        {/* page not found heading */}
         <Typography
           variant="h2"
           sx={{
@@ -43,7 +47,7 @@ export default function NotFoundPage() {
           Page Not Found
         </Typography>
 
-        {/* description */}
+        {/* error description text */}
         <Typography
           variant="h6"
           sx={{
@@ -60,7 +64,7 @@ export default function NotFoundPage() {
           entered the wrong URL.
         </Typography>
 
-        {/* actions */}
+        {/* navigation action buttons */}
         <Box
           sx={{
             display: 'flex',
@@ -84,7 +88,7 @@ export default function NotFoundPage() {
         </Box>
       </Box>
 
-      {/* additional help */}
+      {/* additional help and resources box */}
       <Box
         sx={{
           background: theme.palette.grey[900],

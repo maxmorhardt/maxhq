@@ -1,9 +1,11 @@
 import { isAxiosError } from 'axios';
 import type { APIError } from '../types/error';
 
+// convert any error into standardized APIError format
 export function handleError(err: unknown): APIError {
   const now = new Date().toISOString();
 
+  // handle non-axios errors
   if (!isAxiosError(err)) {
     return {
       code: 0,
@@ -16,10 +18,12 @@ export function handleError(err: unknown): APIError {
   const response = err.response;
   const request = err.request;
 
+  // return api error from response data if available
   if (response?.data) {
     return response.data;
   }
 
+  // create error from response status
   if (response) {
     return {
       code: response.status ?? 0,
@@ -29,6 +33,7 @@ export function handleError(err: unknown): APIError {
     };
   }
 
+  // network error (no response received)
   if (request) {
     return {
       code: 0,
@@ -38,6 +43,7 @@ export function handleError(err: unknown): APIError {
     };
   }
 
+  // request setup error
   return {
     code: 0,
     message: err.message ?? 'Request setup error',

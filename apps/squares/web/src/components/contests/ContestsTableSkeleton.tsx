@@ -20,7 +20,9 @@ export default function ContestsTableSkeleton() {
   const navigate = useNavigate();
 
   return (
+    // main container
     <Box sx={{ p: 3 }}>
+      {/* header with title and create button */}
       <Box
         sx={{
           display: 'flex',
@@ -48,6 +50,7 @@ export default function ContestsTableSkeleton() {
           Create Contest
         </Button>
       </Box>
+      {/* skeleton table container */}
       <Paper
         sx={{
           background: theme.palette.grey[900],
@@ -57,6 +60,7 @@ export default function ContestsTableSkeleton() {
       >
         <TableContainer>
           <Table>
+            {/* skeleton table header */}
             <TableHead>
               <TableRow>
                 <TableCell>
@@ -79,6 +83,7 @@ export default function ContestsTableSkeleton() {
                 </TableCell>
               </TableRow>
             </TableHead>
+            {/* skeleton table rows (5 loading placeholders) */}
             <TableBody>
               {[...Array(5)].map((_, index) => (
                 <TableRow key={index}>

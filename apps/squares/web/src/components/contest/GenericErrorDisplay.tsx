@@ -6,18 +6,6 @@ export default function GenericErrorDisplay() {
   const navigate = useNavigate();
   const theme = useTheme();
 
-  const handleHome = () => {
-    navigate('/');
-  };
-
-  const handleBrowseContests = () => {
-    navigate('/contests');
-  };
-
-  const handleRetry = () => {
-    window.location.reload();
-  };
-
   return (
     <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
       <Box sx={{ mb: 6 }}>
@@ -49,15 +37,22 @@ export default function GenericErrorDisplay() {
 
         {/* actions */}
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Button variant="contained" onClick={handleRetry} startIcon={<Refresh />}>
+          {/* reload the current page */}
+          <Button
+            variant="contained"
+            onClick={() => window.location.reload()}
+            startIcon={<Refresh />}
+          >
             Try Again
           </Button>
 
-          <Button variant="outlined" onClick={handleHome} startIcon={<Home />}>
+          {/* navigate to home page */}
+          <Button variant="outlined" onClick={() => navigate('/')} startIcon={<Home />}>
             Go Home
           </Button>
 
-          <Button variant="outlined" onClick={handleBrowseContests} startIcon={<Search />}>
+          {/* navigate to contests list */}
+          <Button variant="outlined" onClick={() => navigate('/contests')} startIcon={<Search />}>
             Browse Contests
           </Button>
         </Box>

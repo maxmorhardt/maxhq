@@ -25,6 +25,7 @@ export default function ContestSidebarCard({
         p: 2.5,
       }}
     >
+      {/* card header with icon and title */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <Box sx={{ color: iconColor, display: 'flex', alignItems: 'center' }}>{icon}</Box>
         <Typography
@@ -39,8 +40,10 @@ export default function ContestSidebarCard({
         </Typography>
       </Box>
 
+      {/* divider */}
       <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
 
+      {/* card content */}
       {children}
     </Paper>
   );

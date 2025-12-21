@@ -95,13 +95,14 @@ const features: Feature[] = [
   },
 ];
 
+// landing page with hero, how it works, features, and call to action
 export default function LandingPage() {
   const navigate = useNavigate();
   const theme = useTheme();
 
   return (
     <>
-      {/* hero */}
+      {/* hero section with title, description, and action buttons */}
       <Box
         sx={{
           background: gradients.lightBlue,
@@ -160,7 +161,7 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* how it works */}
+      {/* how it works section with 4-step guide cards */}
       <Container maxWidth="lg" sx={{ mb: 14 }}>
         <Box sx={{ textAlign: 'center' }}>
           <Typography
@@ -206,7 +207,7 @@ export default function LandingPage() {
         </Box>
       </Container>
 
-      {/* see it in action */}
+      {/* see it in action section demonstrating winner determination */}
       <Container maxWidth="lg" sx={{ mb: 14 }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Typography
@@ -397,7 +398,7 @@ export default function LandingPage() {
         </Box>
       </Container>
 
-      {/* features */}
+      {/* features section showcasing platform capabilities */}
       <Container maxWidth="lg" sx={{ pb: 14 }}>
         <Box
           sx={{
@@ -452,7 +453,6 @@ export default function LandingPage() {
             {features.map((feature, index) => (
               <LandingFeatureCard
                 key={index}
-                emoji={feature.emoji}
                 icon={feature.icon}
                 gradient={feature.gradient}
                 title={feature.title}
@@ -463,7 +463,7 @@ export default function LandingPage() {
         </Box>
       </Container>
 
-      {/* call to action */}
+      {/* call to action section with animated background */}
       <Box
         sx={{
           position: 'relative',

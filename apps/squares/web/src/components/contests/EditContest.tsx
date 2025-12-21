@@ -1,4 +1,5 @@
-import { Cancel, CheckCircle, Edit, EmojiEvents, Lock, Shuffle } from '@mui/icons-material';
+import { Edit } from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
   Button,
@@ -9,10 +10,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
+  IconButton,
   TextField,
   Typography,
 } from '@mui/material';
@@ -22,9 +20,7 @@ import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { updateContest } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
-import type { ContestStatus } from '../../types/contest';
-import { gradients } from '../../types/gradients';
-import { statusOptions, getStatusOption } from '../../utils/contestStatus';
+import { getStatusOption } from '../../utils/contestStatus';
 
 interface EditContestProps {
   open: boolean;
@@ -37,25 +33,52 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   const { showToast } = useToast();
   const contest = useAppSelector(selectCurrentContest);
 
+  // form state for editable fields
   const [contestName, setContestName] = useState('');
   const [homeTeam, setHomeTeam] = useState('');
   const [awayTeam, setAwayTeam] = useState('');
-  const [status, setStatus] = useState<ContestStatus>('ACTIVE');
   const [loading, setLoading] = useState(false);
 
+  // check if current user owns the contest
   const isOwner = auth.user?.profile?.preferred_username === contest?.owner;
-  const currentStatus = statusOptions.find((s) => s.value === (contest?.status || 'ACTIVE'));
+  const currentStatus = getStatusOption(contest?.status || 'ACTIVE');
 
-  // Initialize form values when contest or modal opens
+  // calculate status flags
+  const contestStatus = contest?.status;
+  const totalSquares = contest?.squares?.length || 0;
+  const filledSquares =
+    contest?.squares?.filter((s) => s.value && s.value.trim() !== '').length || 0;
+  const isCanceled = contestStatus === 'DELETED';
+  const isFinished = contestStatus === 'FINISHED';
+  const isInGame = contestStatus && ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
+  const isDisabled = isCanceled || isFinished;
+
+  const getStatusDisplay = () => {
+    if (isCanceled) {
+      return 'Deleted';
+    }
+
+    if (isFinished) {
+      return 'Finished';
+    }
+
+    if (isInGame) {
+      return `In Progress • ${contestStatus}`;
+    }
+
+    return `Active • ${filledSquares}/${totalSquares} Squares Filled`;
+  };
+
+  // initialize form with contest data when modal opens
   useEffect(() => {
     if (contest && open) {
       setContestName(contest.name || '');
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
-      setStatus(contest.status || 'ACTIVE');
     }
   }, [contest, open]);
 
+  // validate and dispatch update action
   const handleSave = async () => {
     if (!isOwner || !contest?.id) return;
 
@@ -83,39 +106,22 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     }
   };
 
+  // reset form to original values on close
   const handleClose = () => {
     // Reset form to current values
     if (contest) {
       setContestName(contest.name || '');
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
-      setStatus(contest.status || 'ACTIVE');
     }
     onClose();
-  };
-
-  const getStatusActions = () => {
-    switch (status) {
-      case 'ACTIVE':
-        return 'Players can join and modify squares';
-      case 'Q1':
-      case 'Q2':
-      case 'Q3':
-      case 'Q4':
-        return 'Quarter in progress, winners can be selected';
-      case 'FINISHED':
-        return 'Contest complete, all winners determined';
-      case 'DELETED':
-        return 'Contest deleted, no winners';
-      default:
-        return '';
-    }
   };
 
   if (!contest) {
     return null;
   }
 
+  // show read-only message if user is not the owner
   if (!isOwner) {
     return (
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -134,41 +140,58 @@ export default function EditContest({ open, onClose }: EditContestProps) {
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {/* dialog title with edit icon and close button */}
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 2, pr: 6 }}>
         <Edit />
-        Edit Contest
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          Edit Contest
+        </Typography>
+        <IconButton
+          onClick={handleClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ pt: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Current Status Display */}
-          <Card variant="outlined" sx={{ bgcolor: 'background.paper' }}>
-            <CardContent>
+          {/* current status display card */}
+          <Card sx={{ borderRadius: 2 }}>
+            <CardContent sx={{ '&:last-child': { pb: 2 } }}>
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  mb: 2,
+                  mb: 1,
                 }}
               >
-                <Typography variant="h6">Current Status</Typography>
+                <Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 600 }}>
+                  Contest Status
+                </Typography>
                 <Chip
                   label={currentStatus?.label}
+                  size="small"
                   sx={{
-                    background: getStatusOption(contest?.status).color,
+                    background: currentStatus.color,
                     color: 'white',
-                    fontWeight: 600,
+                    fontSize: '0.8rem',
                   }}
                 />
               </Box>
-              <Typography variant="body2" color="text.secondary">
-                {currentStatus?.description}
+              <Typography variant="body1" sx={{ color: 'white', opacity: 0.9 }}>
+                {getStatusDisplay()}
               </Typography>
             </CardContent>
           </Card>
 
-          {/* Contest Name */}
+          {/* contest name input */}
           <TextField
             fullWidth
             label="Contest Name"
@@ -176,10 +199,11 @@ export default function EditContest({ open, onClose }: EditContestProps) {
             onChange={(e) => setContestName(e.target.value)}
             placeholder="Enter contest name"
             required
+            disabled={isDisabled}
             slotProps={{ htmlInput: { maxLength: 20 } }}
           />
 
-          {/* Team Names */}
+          {/* team name inputs */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               fullWidth
@@ -187,6 +211,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
               value={homeTeam}
               onChange={(e) => setHomeTeam(e.target.value)}
               placeholder="Enter home team name"
+              disabled={isDisabled}
               slotProps={{ htmlInput: { maxLength: 20 } }}
             />
             <TextField
@@ -195,104 +220,20 @@ export default function EditContest({ open, onClose }: EditContestProps) {
               value={awayTeam}
               onChange={(e) => setAwayTeam(e.target.value)}
               placeholder="Enter away team name"
+              disabled={isDisabled}
               slotProps={{ htmlInput: { maxLength: 20 } }}
             />
-          </Box>
-
-          {/* Status Selection */}
-          <FormControl fullWidth>
-            <InputLabel>Contest Status</InputLabel>
-            <Select
-              value={status}
-              label="Contest Status"
-              onChange={(e) => setStatus(e.target.value as ContestStatus)}
-            >
-              {statusOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                    <Box
-                      sx={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: '50%',
-                        bgcolor: option.color,
-                      }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body1">{option.label}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {option.description}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Status Action Info */}
-          <Card variant="outlined" sx={{ bgcolor: 'rgba(25, 118, 210, 0.04)' }}>
-            <CardContent>
-              <Typography
-                variant="subtitle2"
-                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}
-              >
-                <CheckCircle fontSize="small" />
-                What happens when you save:
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {getStatusActions()}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Box>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-              Quick Actions
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <Button
-                variant="outlined"
-                startIcon={<Lock />}
-                onClick={() => setStatus('Q1')}
-                disabled={status === 'Q1'}
-              >
-                Start Q1
-              </Button>
-              <Button variant="outlined" startIcon={<Shuffle />} disabled={status === 'ACTIVE'}>
-                Randomize Labels
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<EmojiEvents />}
-                disabled={!['Q1', 'Q2', 'Q3', 'Q4'].includes(status)}
-              >
-                Pick Winners
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Cancel />}
-                color="error"
-                onClick={() => setStatus('DELETED')}
-              >
-                Cancel Contest
-              </Button>
-            </Box>
           </Box>
         </Box>
       </DialogContent>
 
+      {/* save button */}
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button onClick={handleClose} disabled={loading}>
-          Cancel
-        </Button>
         <Button
           onClick={handleSave}
           variant="contained"
-          disabled={loading}
+          disabled={loading || isDisabled}
           sx={{
-            background: gradients.primary,
             minWidth: 100,
           }}
         >

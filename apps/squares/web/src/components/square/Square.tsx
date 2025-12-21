@@ -8,6 +8,7 @@ interface SquareProps {
   xLabel?: number;
   yLabel?: number;
   immutable?: boolean;
+  isWinner?: boolean;
 }
 
 export default function Square({
@@ -18,12 +19,14 @@ export default function Square({
   xLabel,
   yLabel,
   immutable = false,
+  isWinner = false,
 }: SquareProps) {
   const theme = useTheme();
 
   return (
+    // square cell with labels and winner highlighting
     <Box sx={{ position: 'relative' }}>
-      {/* Top label */}
+      {/* top label for x-axis */}
       {rowIndex === 0 && xLabel !== undefined && (
         <Box
           sx={{
@@ -40,7 +43,7 @@ export default function Square({
         </Box>
       )}
 
-      {/* Left label */}
+      {/* left label for y-axis */}
       {colIndex === 0 && yLabel !== undefined && (
         <Box
           sx={{
@@ -57,18 +60,24 @@ export default function Square({
         </Box>
       )}
 
-      {/* Square */}
+      {/* clickable square button with conditional styling */}
       <Button
         key={`${rowIndex}-${colIndex}`}
         onClick={immutable ? undefined : () => handleSquareClick(rowIndex, colIndex)}
         disabled={immutable}
         sx={{
           color: 'white',
-          background: squareData ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+          background: isWinner
+            ? 'rgba(67, 233, 123, 0.2)'
+            : squareData
+              ? 'rgba(255,255,255,0.1)'
+              : 'rgba(255,255,255,0.03)',
           backdropFilter: 'blur(10px)',
-          border: squareData
-            ? '1px solid rgba(255,255,255,0.2)'
-            : '1px solid rgba(255,255,255,0.08)',
+          border: isWinner
+            ? '2px solid rgba(67, 233, 123, 0.6)'
+            : squareData
+              ? '1px solid rgba(255,255,255,0.2)'
+              : '1px solid rgba(255,255,255,0.08)',
           borderRadius: 1.5,
           padding: 0,
           margin: { xs: 0.1, sm: 0.3, md: 0.4 },
@@ -81,10 +90,18 @@ export default function Square({
           '&:hover': immutable
             ? {}
             : {
-                background: squareData ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
+                background: isWinner
+                  ? 'rgba(67, 233, 123, 0.3)'
+                  : squareData
+                    ? 'rgba(255,255,255,0.15)'
+                    : 'rgba(255,255,255,0.08)',
                 transform: 'translateY(-2px)',
-                boxShadow: `0 0 10px ${theme.palette.primary.main}`,
-                border: '1px solid rgba(255,255,255,0.3)',
+                boxShadow: isWinner
+                  ? '0 0 15px rgba(67, 233, 123, 0.5)'
+                  : `0 0 10px ${theme.palette.primary.main}`,
+                border: isWinner
+                  ? '2px solid rgba(67, 233, 123, 0.8)'
+                  : '1px solid rgba(255,255,255,0.3)',
               },
           '&:active': immutable
             ? {}

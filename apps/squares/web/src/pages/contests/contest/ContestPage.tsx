@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import GenericErrorDisplay from '../../../components/common/GenericErrorDisplay';
+import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
 import ContestComponent from '../../../components/contest/Contest';
 import ContestDetails from '../../../components/contest/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
@@ -17,6 +17,7 @@ import {
 import {
   clearError,
   updateContestFromWebSocket,
+  updateQuarterResultFromWebSocket,
   updateSquareFromWebSocket,
 } from '../../../features/contests/contestSlice';
 import { fetchContestById } from '../../../features/contests/contestThunks';
@@ -29,11 +30,13 @@ import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import { contestSocketEventHandler, getSocketUrl } from '../../../service/wsService';
 
+// contest page with grid, websocket connection, and sidebar details
 export default function ContestPage() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  // track last processed message to prevent duplicates
   const lastProcessedMessageRef = useRef<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const [dispatchCalled, setDispatchCalled] = useState(false);
@@ -42,20 +45,25 @@ export default function ContestPage() {
   const error = useAppSelector(selectContestError);
   const currentContest = useAppSelector(selectCurrentContest);
 
+  // check if current user is contest owner
   const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
 
+  // build websocket url with contest id and auth token
   const socketUrl = useMemo(() => getSocketUrl(id, auth), [id, auth]);
+  // only connect if authenticated and contest is active
   const shouldConnect = useMemo(
-    () => Boolean(
-      id && 
-      auth.isAuthenticated && 
-      auth.user?.access_token && 
-      currentContest &&
-      currentContest.status !== 'FINISHED' &&
-      currentContest.status !== 'DELETED'
-    ),
+    () =>
+      Boolean(
+        id &&
+        auth.isAuthenticated &&
+        auth.user?.access_token &&
+        currentContest &&
+        currentContest.status !== 'FINISHED' &&
+        currentContest.status !== 'DELETED'
+      ),
     [id, auth.isAuthenticated, auth.user?.access_token, currentContest]
   );
+  // websocket options with auth token and reconnection settings
   const webSocketOptions = useMemo(
     () => ({
       protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
@@ -66,14 +74,17 @@ export default function ContestPage() {
     [auth.user?.access_token, shouldConnect]
   );
 
+  // connect to websocket for real-time updates
   const { lastMessage, readyState } = useWebSocket(
     shouldConnect ? socketUrl : null,
     webSocketOptions
   );
 
+  // track connection state
   const isConnected = readyState === ReadyState.OPEN;
   const isConnecting = readyState === ReadyState.CONNECTING;
 
+  // handle incoming websocket messages and dispatch to redux
   useEffect(() => {
     if (!lastMessage?.data) {
       return;
@@ -85,48 +96,78 @@ export default function ContestPage() {
     }
 
     lastProcessedMessageRef.current = lastMessage.data;
+    // route websocket messages to appropriate handlers
     contestSocketEventHandler({
       lastMessage,
+      // update square value from websocket message
       onSquareUpdate: (message) => {
         if (
-          message.square?.squareId &&
-          message.contestId === currentContest?.id &&
-          message.square?.value !== undefined
+          !message.square?.squareId ||
+          message.contestId !== currentContest?.id ||
+          message.square?.value === undefined
         ) {
-          dispatch(
-            updateSquareFromWebSocket({
-              id: message.square.squareId,
-              value: message.square.value,
-            })
-          );
-          dispatch(setLatestMessage(message));
+          return;
         }
+
+        dispatch(
+          updateSquareFromWebSocket({
+            id: message.square.squareId,
+            value: message.square.value,
+          })
+        );
+        dispatch(setLatestMessage(message));
       },
+      // update contest details from websocket message
       onContestUpdate: (message) => {
-        if (
-          message.contestId === currentContest?.id &&
-          message.contest?.xLabels !== undefined &&
-          message.contest?.yLabels !== undefined
-        ) {
-          dispatch(
-            updateContestFromWebSocket({
-              xLabels: message.contest.xLabels,
-              yLabels: message.contest.yLabels,
-            })
-          );
-          dispatch(setLatestMessage(message));
+        if (!message.contest) {
+          return;
         }
+
+        dispatch(
+          updateContestFromWebSocket({
+            xLabels: message.contest.xLabels,
+            yLabels: message.contest.yLabels,
+            homeTeam: message.contest.homeTeam,
+            awayTeam: message.contest.awayTeam,
+            status: message.contest.status,
+          })
+        );
+        dispatch(setLatestMessage(message));
       },
+      // update quarter result from websocket message
+      onQuarterResultUpdate: (message) => {
+        if (message.contestId !== currentContest?.id || !message.quarterResult) {
+          return;
+        }
+
+        dispatch(
+          updateQuarterResultFromWebSocket({
+            quarter: message.quarterResult.quarter,
+            homeTeamScore: message.quarterResult.homeTeamScore,
+            awayTeamScore: message.quarterResult.awayTeamScore,
+            winnerRow: message.quarterResult.winnerRow,
+            winnerCol: message.quarterResult.winnerCol,
+            winner: message.quarterResult.winner,
+            winnerFirstName: message.quarterResult.winnerFirstName,
+            winnerLastName: message.quarterResult.winnerLastName,
+            status: message.quarterResult.status,
+          })
+        );
+      },
+      // handle contest deletion and navigate away
       onContestDeleted: (message) => {
-        if (message.contestId === currentContest?.id) {
-          showToast('Contest has been deleted', 'warning');
-          if (!auth.isAuthenticated) {
-            navigate('/');
-          } else {
-            navigate('/contests');
-          }
+        if (message.contestId !== currentContest?.id) {
+          return;
+        }
+
+        showToast('Contest has been deleted', 'warning');
+        if (!auth.isAuthenticated) {
+          navigate('/');
+        } else {
+          navigate('/contests');
         }
       },
+      // track connection status changes
       onConnect: (message) => {
         dispatch(setConnectionDetails(message));
       },
@@ -136,6 +177,7 @@ export default function ContestPage() {
     });
   }, [lastMessage, dispatch, currentContest?.id, showToast, navigate, auth.isAuthenticated]);
 
+  // fetch contest details on mount
   useEffect(() => {
     if (!id) {
       return;
@@ -145,6 +187,7 @@ export default function ContestPage() {
     setDispatchCalled(true);
   }, [id, dispatch]);
 
+  // show error toast and clear from store
   useEffect(() => {
     if (error) {
       showToast(error, 'error');
@@ -152,17 +195,19 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
+  // show skeleton while loading
   if (!dispatchCalled || loading) {
     return <ContestPageSkeleton />;
   }
 
+  // show error if contest not found
   if (dispatchCalled && !loading && !currentContest) {
     return <GenericErrorDisplay />;
   }
 
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
-      {/* Connection status */}
+      {/* connection status indicator chip */}
       <Chip
         label={isConnected ? 'Live' : isConnected ? 'Connecting' : 'Offline'}
         color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
@@ -175,7 +220,7 @@ export default function ContestPage() {
         }}
       />
 
-      {/* Contest title */}
+      {/* contest name heading */}
       <Typography
         sx={{
           fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
@@ -190,7 +235,7 @@ export default function ContestPage() {
         {currentContest?.name ?? ''}
       </Typography>
 
-      {/* Not logged in alert */}
+      {/* sign in prompt for unauthenticated users */}
       {!auth.isAuthenticated && (
         <>
           <Box
@@ -222,7 +267,7 @@ export default function ContestPage() {
         </>
       )}
 
-      {/* Layout for contest and cards */}
+      {/* responsive layout with contest grid and sidebars */}
       <Box
         sx={{
           display: 'flex',
@@ -236,12 +281,12 @@ export default function ContestPage() {
           p: 1,
         }}
       >
-        {/* Left Sidebar - Contest Details */}
+        {/* left sidebar with contest details (desktop only) */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, flex: '0 0 280px' }}>
           <ContestDetails isOwner={isOwner} />
         </Box>
 
-        {/* Center - Contest Grid */}
+        {/* center section with contest grid */}
         <Box
           sx={{
             display: 'flex',
@@ -252,7 +297,7 @@ export default function ContestPage() {
           <ContestComponent />
         </Box>
 
-        {/* Right Sidebar - Winners Board & How to Play */}
+        {/* right sidebar with winners board and how to play (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -266,7 +311,7 @@ export default function ContestPage() {
         </Box>
       </Box>
 
-      {/* Mobile: Sidebars underneath contest grid */}
+      {/* mobile layout with sidebars underneath grid */}
       <Box
         sx={{
           display: { xs: 'flex', lg: 'none' },

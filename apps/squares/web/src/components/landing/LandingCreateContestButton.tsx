@@ -7,6 +7,7 @@ export default function LandingCreateContestButton() {
   const theme = useTheme();
   const auth = useAuth();
 
+  // navigate to create page or login if not authenticated
   const handleClick = () => {
     if (auth.isAuthenticated) {
       navigate('/contests/create');
@@ -18,6 +19,7 @@ export default function LandingCreateContestButton() {
   };
 
   return (
+    // primary CTA button with hover animation
     <Button
       variant="contained"
       size="large"

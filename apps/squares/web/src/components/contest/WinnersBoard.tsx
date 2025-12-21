@@ -13,10 +13,12 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
     return `Q${quarter}`;
   };
 
+  // prefer full name if available, fallback to username
   const getWinnerName = (result: QuarterResult) => {
     if (result.winnerFirstName && result.winnerLastName) {
       return `${result.winnerFirstName} ${result.winnerLastName}`;
     }
+
     return result.winner || 'Unknown';
   };
 
@@ -26,9 +28,11 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
 
   return (
     <ContestSidebarCard icon={<span style={{ fontSize: '1.3rem' }}>🏆</span>} title="Winners Board">
+      {/* winners list */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
         {quarterResults.length > 0 ? (
           quarterResults.map((result) => (
+            /* winner card */
             <Box
               key={result.id}
               sx={{
@@ -40,6 +44,7 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
                 border: '1px solid rgba(255,255,255,0.05)',
               }}
             >
+              {/* quarter badge */}
               <Box
                 sx={{
                   borderRadius: 1,
@@ -63,6 +68,7 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
                 </Typography>
               </Box>
 
+              {/* winner info */}
               <Box sx={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
                 <Typography
                   sx={{
@@ -71,10 +77,12 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
                     fontSize: '0.875rem',
                   }}
                 >
+                  {/* truncate long names with ellipsis */}
                   {getWinnerName(result).length > MAX_NAME_LENGTH
                     ? `${getWinnerName(result).substring(0, MAX_NAME_LENGTH)}...`
                     : getWinnerName(result)}
                 </Typography>
+
                 <Typography
                   variant="caption"
                   sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' }}
@@ -82,11 +90,12 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
                   Square {getSquareLabel(result)}
                 </Typography>
               </Box>
-              {/* Spacer to balance the quarter badge on the left */}
+              {/* spacer to balance the quarter badge on the left */}
               <Box sx={{ minWidth: 42, flexShrink: 0 }} />
             </Box>
           ))
         ) : (
+          /* empty state */
           <Box
             sx={{
               textAlign: 'center',
@@ -101,6 +110,7 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
             >
               No winners yet
             </Typography>
+
             <Typography
               variant="caption"
               sx={{

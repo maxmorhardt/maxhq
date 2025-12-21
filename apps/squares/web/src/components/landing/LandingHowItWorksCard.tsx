@@ -17,6 +17,7 @@ export default function LandingHowItWorksCard({
   const theme = useTheme();
 
   return (
+    // card with icon and description, hover lift effect
     <Paper
       elevation={0}
       sx={{
@@ -33,7 +34,9 @@ export default function LandingHowItWorksCard({
         },
       }}
     >
+      {/* icon and text content */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        {/* colored icon container */}
         <Box
           sx={{
             p: 2,
@@ -45,6 +48,7 @@ export default function LandingHowItWorksCard({
         >
           <Icon sx={{ fontSize: 32 }} />
         </Box>
+        {/* title and description text */}
         <Box sx={{ textAlign: 'left' }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
             {title}

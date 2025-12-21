@@ -48,24 +48,29 @@ export default function ContestsTable({
   const dispatch = useAppDispatch();
   const auth = useAuth();
 
+  // modal state for delete and edit dialogs
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
+  // shared styling for table headers
   const headerSx = {
     color: 'white',
     fontWeight: 600,
     fontSize: { xs: '0.75rem', md: '0.875rem' },
   };
 
+  // navigate to contest detail page
   const handleRowClick = (contestId: string) => {
     navigate(`/contests/${contestId}`);
   };
 
+  // set contest in redux and open delete modal
   const handleDelete = (contest: Contest) => {
     dispatch(setCurrentContest(contest));
     setDeleteModalOpen(true);
   };
 
+  // set contest in redux and open edit modal
   const handleEdit = (contest: Contest) => {
     dispatch(setCurrentContest(contest));
     setEditModalOpen(true);
@@ -73,7 +78,9 @@ export default function ContestsTable({
 
   return (
     <>
+      {/* main container */}
       <Box sx={{ p: 3 }}>
+        {/* header with title and create button */}
         <Box
           sx={{
             display: 'flex',
@@ -102,7 +109,7 @@ export default function ContestsTable({
           </Button>
         </Box>
 
-        {/* Table */}
+        {/* table container */}
         <Paper
           sx={{
             background: theme.palette.grey[900],
@@ -112,6 +119,7 @@ export default function ContestsTable({
         >
           <TableContainer>
             <Table>
+              {/* table header row */}
               <TableHead>
                 <TableRow>
                   <TableCell sx={headerSx}>Name</TableCell>
@@ -143,6 +151,7 @@ export default function ContestsTable({
                   </TableCell>
                 </TableRow>
               </TableHead>
+              {/* table body with contest rows */}
               <TableBody>
                 {contests.map((contest, index) => (
                   <TableRow
@@ -207,6 +216,7 @@ export default function ContestsTable({
                         }}
                       />
                     </TableCell>
+                    {/* action buttons (edit/delete) for owner only */}
                     <TableCell sx={{ textAlign: 'right' }}>
                       <Box
                         sx={{
@@ -280,6 +290,7 @@ export default function ContestsTable({
         </Paper>
       </Box>
 
+      {/* delete and edit modals */}
       <DeleteContest open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} />
       <EditContest open={editModalOpen} onClose={() => setEditModalOpen(false)} />
     </>

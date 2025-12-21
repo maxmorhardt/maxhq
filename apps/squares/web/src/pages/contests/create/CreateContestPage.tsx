@@ -36,6 +36,7 @@ const infoCards = [
   },
 ];
 
+// create contest page with form and info cards
 export default function CreateContestPage() {
   const theme = useTheme();
   const auth = useAuth();
@@ -44,6 +45,7 @@ export default function CreateContestPage() {
 
   const loading = useAppSelector(selectContestLoading);
 
+  // form state for contest name and team names
   const [formData, setFormData] = useState({
     name: '',
     homeTeam: '',
@@ -51,19 +53,23 @@ export default function CreateContestPage() {
   });
   const [error, setError] = useState('');
 
+  // update form data on input change
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // validate and submit contest creation form
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    // validate contest name
     if (!formData.name.trim()) {
       setError('Contest name is required');
       return;
     }
 
+    // validate user is authenticated
     if (!auth.isAuthenticated || !auth.user) {
       setError('You must be logged in to create a contest');
       return;
@@ -76,6 +82,7 @@ export default function CreateContestPage() {
 
     setError('');
 
+    // create contest and navigate to contest page on success
     try {
       const contest = await dispatch(
         createContest({
@@ -96,7 +103,7 @@ export default function CreateContestPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
-      {/* header */}
+      {/* page header with title and description */}
       <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 4 } }}>
         <Typography
           sx={{
@@ -125,7 +132,7 @@ export default function CreateContestPage() {
         </Typography>
       </Box>
 
-      {/* back button */}
+      {/* back to contests button */}
       <Box sx={{ mb: 2 }}>
         <Button
           startIcon={<ArrowBack />}
@@ -138,6 +145,7 @@ export default function CreateContestPage() {
         </Button>
       </Box>
 
+      {/* form and info cards grid */}
       <Box
         sx={{
           display: 'grid',
@@ -145,7 +153,7 @@ export default function CreateContestPage() {
           gap: 4,
         }}
       >
-        {/* form */}
+        {/* contest creation form with validation */}
         <Paper
           sx={{
             p: 4,
@@ -239,7 +247,7 @@ export default function CreateContestPage() {
           </Box>
         </Paper>
 
-        {/* info cards */}
+        {/* info cards explaining next steps */}
         <Box
           sx={{
             display: 'flex',

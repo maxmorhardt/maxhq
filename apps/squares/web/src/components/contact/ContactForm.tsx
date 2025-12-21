@@ -3,11 +3,16 @@ import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/materi
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 interface ContactFormProps {
-  onSubmit?: (formData: { name: string; email: string; subject: string; message: string }) => Promise<void>;
-  isSubmitting?: boolean;
+  onSubmit: (formData: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }) => Promise<void>;
+  isSubmitting: boolean;
 }
 
-export default function ContactForm({ onSubmit, isSubmitting = false }: ContactFormProps) {
+export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
   const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
@@ -16,23 +21,16 @@ export default function ContactForm({ onSubmit, isSubmitting = false }: ContactF
     message: '',
   });
 
+  // update form data with new input value
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // submit form data
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (onSubmit) {
-      await onSubmit(formData);
-      // Clear form on successful submission
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: '',
-      });
-    }
+    await onSubmit(formData);
   };
 
   return (
@@ -44,15 +42,18 @@ export default function ContactForm({ onSubmit, isSubmitting = false }: ContactF
         p: 4,
       }}
     >
+      {/* form title */}
       <Typography variant="h5" sx={{ color: 'white', mb: 3, fontWeight: 600 }}>
         Send us a message
       </Typography>
 
+      {/* contact form */}
       <Box
         component="form"
         onSubmit={handleSubmit}
         sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
       >
+        {/* name and email row */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
           <TextField
             fullWidth
@@ -74,6 +75,7 @@ export default function ContactForm({ onSubmit, isSubmitting = false }: ContactF
           />
         </Box>
 
+        {/* subject field */}
         <TextField
           fullWidth
           label="Subject"
@@ -83,6 +85,7 @@ export default function ContactForm({ onSubmit, isSubmitting = false }: ContactF
           required
         />
 
+        {/* message field */}
         <TextField
           fullWidth
           label="Message"
@@ -94,6 +97,7 @@ export default function ContactForm({ onSubmit, isSubmitting = false }: ContactF
           required
         />
 
+        {/* submit button */}
         <Button
           type="submit"
           variant="contained"

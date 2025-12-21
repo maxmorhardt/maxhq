@@ -10,12 +10,14 @@ interface ToastProps {
 
 export function Toast({ open, message, severity, onClose, autoHideDuration = 3000 }: ToastProps) {
   return (
+    // snackbar notification with auto-hide
     <Snackbar
       open={open}
       autoHideDuration={autoHideDuration}
       onClose={onClose}
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
     >
+      {/* filled alert with message and close button */}
       <Alert
         onClose={onClose}
         severity={severity}
