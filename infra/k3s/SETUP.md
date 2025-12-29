@@ -59,6 +59,22 @@ Upgrades:
 # SCP rehydrate.sh in nodes
 mv rehydrate.sh /usr/local/bin
 chmod +x /usr/local/bin/rehydrate.sh
+chown 0:0 /usr/local/bin/rehydrate.sh
+
+# Crontab config
+crontab -e
+
+# Main Node
+0 2 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+
+# Worker 1
+0 3 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+
+# Worker 2
+0 4 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+
+# Worker 3
+0 5 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 ```
 
 - K3s upgrades can be done through Rancher UI in the Cluster Management tab
