@@ -5,7 +5,7 @@ Requires=k3s.service
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/sleep 30
+ExecStartPre=sleep 60
 ExecStart=kubectl uncordon $(hostname)
 RemainAfterExit=yes
 
