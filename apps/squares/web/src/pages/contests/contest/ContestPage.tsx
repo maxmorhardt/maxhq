@@ -1,5 +1,4 @@
-import { Alert, Box, Chip, IconButton, Typography } from '@mui/material';
-import { Share } from '@mui/icons-material';
+import { Alert, Box, Chip, Typography } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,7 +8,7 @@ import ContestDetails from '../../../components/contest/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
 import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
 import HowToPlay from '../../../components/contest/HowToPlay';
-import TeamDirections from '../../../components/contest/TeamDirections';
+import ShareContest from '../../../components/contest/ShareContest';
 import WinnersBoard from '../../../components/contest/WinnersBoard';
 import {
   selectContestError,
@@ -197,36 +196,6 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
-  // handle share button click
-  const handleShare = async () => {
-    const url = window.location.href;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: currentContest?.name || 'Squares Contest',
-          text: `Join my squares contest: ${currentContest?.name || 'Contest'}`,
-          url: url,
-        });
-        showToast('Contest shared!', 'success');
-      } catch (error) {
-        // user cancelled or error occurred
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Error sharing:', error);
-        }
-      }
-    } else {
-      // fallback to clipboard copy
-      try {
-        await navigator.clipboard.writeText(url);
-        showToast('Link copied to clipboard!', 'success');
-      } catch (error) {
-        console.error('Error copying to clipboard:', error);
-        showToast('Failed to copy link', 'error');
-      }
-    }
-  };
-
   // show skeleton while loading
   if (!dispatchCalled || loading) {
     return <ContestPageSkeleton />;
@@ -252,7 +221,7 @@ export default function ContestPage() {
         }}
       />
 
-      {/* contest name heading with share button */}
+      {/* contest name heading */}
       <Box sx={{ position: 'relative', mt: 2, mb: 1 }}>
         <Typography
           sx={{
@@ -264,26 +233,6 @@ export default function ContestPage() {
         >
           {currentContest?.name ?? ''}
         </Typography>
-
-        {/* share button positioned to the right of title */}
-        <IconButton
-          onClick={handleShare}
-          size="small"
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translateY(-50%)',
-            ml: { xs: '2.5rem', sm: '4rem', md: '5rem' },
-            color: '#4facfe',
-            '&:hover': {
-              background: 'rgba(79, 172, 254, 0.1)',
-            },
-          }}
-          aria-label="Share contest"
-        >
-          <Share sx={{ fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' } }} />
-        </IconButton>
       </Box>
 
       {/* sign in prompt for unauthenticated users */}
@@ -329,7 +278,7 @@ export default function ContestPage() {
           }}
         >
           <ContestDetails isOwner={isOwner} />
-          <TeamDirections />
+          <ShareContest contestName={currentContest?.name || ''} />
         </Box>
 
         {/* center section with contest grid */}
@@ -371,10 +320,10 @@ export default function ContestPage() {
           mt: 2,
         }}
       >
+        <ShareContest contestName={currentContest?.name || ''} />
         <ContestDetails isOwner={isOwner} />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
         <HowToPlay />
-        <TeamDirections />
       </Box>
     </Box>
   );

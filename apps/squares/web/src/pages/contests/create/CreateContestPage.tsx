@@ -50,6 +50,7 @@ export default function CreateContestPage() {
     name: '',
     homeTeam: '',
     awayTeam: '',
+    defaultSquaresPerPerson: '',
   });
   const [error, setError] = useState('');
 
@@ -90,6 +91,7 @@ export default function CreateContestPage() {
           owner: auth.user.profile.preferred_username,
           homeTeam: formData.homeTeam.trim() || undefined,
           awayTeam: formData.awayTeam.trim() || undefined,
+          defaultSquaresPerPerson: formData.defaultSquaresPerPerson ? parseInt(formData.defaultSquaresPerPerson) : undefined,
         })
       ).unwrap();
 
@@ -113,7 +115,7 @@ export default function CreateContestPage() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
-            fontSize: { xs: '2rem', sm: '3rem' },
+            fontSize: { xs: '1.5rem', sm: '2rem' },
           }}
         >
           Create New Contest
@@ -215,6 +217,23 @@ export default function CreateContestPage() {
               disabled={loading}
               placeholder="e.g., Bills, Packers, Steelers"
               slotProps={{ htmlInput: { maxLength: 20 } }}
+            />
+
+            <TextField
+              name="defaultSquaresPerPerson"
+              label="Default Squares Per Person (Optional)"
+              value={formData.defaultSquaresPerPerson}
+              onChange={handleInputChange}
+              fullWidth
+              disabled={loading}
+              type="number"
+              placeholder="e.g., 5"
+              slotProps={{ 
+                htmlInput: { 
+                  min: 1,
+                  max: 100
+                } 
+              }}
             />
 
             <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>

@@ -32,6 +32,7 @@ export interface CreateContestRequest {
   owner: string;
   homeTeam?: string;
   awayTeam?: string;
+  defaultSquaresPerPerson?: number;
 }
 
 export interface Square {

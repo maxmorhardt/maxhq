@@ -3,12 +3,12 @@ import { useAuth } from 'react-oidc-context';
 import { Box, Alert } from '@mui/material';
 import ContestsTable from '../../components/contests/ContestsTable';
 import ContestsTableSkeleton from '../../components/contests/ContestsTableSkeleton';
-import {
-  selectContestError,
-  selectContestLoading,
-} from '../../features/contests/contestSelectors';
+import { selectContestError, selectContestLoading } from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
-import { fetchContestsByUser, fetchParticipatingContests } from '../../features/contests/contestThunks';
+import {
+  fetchContestsByUser,
+  fetchParticipatingContests,
+} from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
@@ -20,7 +20,7 @@ export default function ContestsPage() {
   const isInterceptorReady = useAxiosAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
-  
+
   // separate state for owned contests
   const [ownedContests, setOwnedContests] = useState<Contest[]>([]);
   const [ownedPage, setOwnedPage] = useState(0);
@@ -33,7 +33,7 @@ export default function ContestsPage() {
     hasNext: false,
     hasPrevious: false,
   });
-  
+
   // separate state for participating contests
   const [participatingContests, setParticipatingContests] = useState<Contest[]>([]);
   const [participatingPage, setParticipatingPage] = useState(0);
@@ -116,7 +116,13 @@ export default function ContestsPage() {
         });
       }
     });
-  }, [auth.isAuthenticated, dispatch, isInterceptorReady, participatingPage, participatingRowsPerPage]);
+  }, [
+    auth.isAuthenticated,
+    dispatch,
+    isInterceptorReady,
+    participatingPage,
+    participatingRowsPerPage,
+  ]);
 
   // handle owned contests pagination
   const handleOwnedPageChange = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
@@ -129,7 +135,10 @@ export default function ContestsPage() {
   };
 
   // handle participating contests pagination
-  const handleParticipatingPageChange = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+  const handleParticipatingPageChange = (
+    _event: MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
     setParticipatingPage(newPage);
   };
 
@@ -164,6 +173,17 @@ export default function ContestsPage() {
           onPageChange={() => {}}
           onRowsPerPageChange={() => {}}
           title="My Contests"
+        />
+
+        <ContestsTable
+          contests={[]}
+          totalCount={0}
+          page={0}
+          rowsPerPage={5}
+          onPageChange={() => {}}
+          onRowsPerPageChange={() => {}}
+          title="Participating In"
+          hideCreateButton={true}
         />
       </>
     );

@@ -14,10 +14,43 @@ spec:
       labels:
         {{- include "app.labels" . | nindent 8 }}
     spec:
+      {{- with .Values.image.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      {{- if .podAntiAffinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .podAntiAffinity.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "app.selectorLabels" $ | nindent 20 }}
+                topologyKey: {{ .podAntiAffinity.topologyKey }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.image.volumes }}
+      volumes:
+        {{- range . }}
+        - name: {{ .name }}
+          {{- if eq .volumeType "emptyDir" }}
+          emptyDir: {}
+          {{- end }}
+        {{- end }}
+      {{- end }}
       containers:
         - name: {{ include "app.fullname" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.image.securityContext }}
+          securityContext:
+            runAsNonRoot: {{ .runAsNonRoot }}
+            runAsUser: {{ .runAsUser }}
+            allowPrivilegeEscalation: {{ .allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ .readOnlyRootFilesystem }}
+          {{- end }}
           {{- with .Values.image.env }}
           env:
             {{- toYaml . | nindent 12 }}
@@ -26,8 +59,26 @@ spec:
             - name: {{ .Values.service.name }}
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
+          {{- with .Values.image.volumes }}
+          volumeMounts:
+            {{- range . }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.image.startupProbe }}
+          startupProbe:
+            httpGet:
+              port: {{ $.Values.service.targetPort }}
+              path: {{ .path }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            failureThreshold: {{ .failureThreshold }}
+          {{- end }}
           readinessProbe:
             httpGet:
               port: {{ .Values.service.targetPort }}
