@@ -61,6 +61,19 @@ mv rehydrate.sh /usr/local/bin
 chmod +x /usr/local/bin/rehydrate.sh
 chown 0:0 /usr/local/bin/rehydrate.sh
 
+# SCP k3s-uncordon.service to nodes
+mv k3s-uncordon.service /etc/systemd/system/
+chmod 644 /etc/systemd/system/k3s-uncordon.service
+chown 0:0 /etc/systemd/system/k3s-uncordon.service
+systemctl daemon-reload
+systemctl enable k3s-uncordon.service
+
+# SCP kubeconfig to worker nodes for draining (make sure host is the right IP/DNS first)
+mkdir -p /etc/rancher/k3s
+mv k3s.yaml /etc/rancher/k3s/k3s.yaml
+chmod 600 /etc/rancher/k3s/k3s.yaml
+chown 0:0 /etc/rancher/k3s/k3s.yaml
+
 # Crontab config
 crontab -e
 

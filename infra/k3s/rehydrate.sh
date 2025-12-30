@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
 set -e
 
 HOSTNAME=$(hostname)
@@ -23,6 +25,14 @@ log_section "Draining node gracefully"
 kubectl drain $HOSTNAME --ignore-daemonsets --delete-emptydir-data --force --timeout=300s || true
 echo "✓ Node drained"
 
+log_section "Cleaning up containerd images"
+echo "Current images:"
+k3s crictl images || true
+k3s crictl rmi --prune --timeout=180s || echo "No prunable images found"
+echo "Images after cleanup:"
+k3s crictl images || true
+echo "✓ Containerd cleanup complete"
+
 log_section "Stopping k3s services"
 /usr/local/bin/k3s-killall.sh
 echo "✓ K3s stopped"
@@ -39,14 +49,6 @@ log_section "Cleaning up unused packages"
 apt-get autoremove -y
 apt-get autoclean -y
 echo "✓ Unused packages removed"
-
-log_section "Cleaning up containerd images"
-echo "Current images:"
-k3s crictl images || true
-k3s crictl rmi --prune || echo "No prunable images found"
-echo "Images after cleanup:"
-k3s crictl images || true
-echo "✓ Containerd cleanup complete"
 
 log_section "Cleaning up system logs"
 echo "Journal disk usage before:"
