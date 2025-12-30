@@ -61,7 +61,7 @@ mv rehydrate.sh /usr/local/bin
 chmod +x /usr/local/bin/rehydrate.sh
 chown 0:0 /usr/local/bin/rehydrate.sh
 
-# SCP k3s-uncordon.service to nodes
+# SCP k3s-uncordon.service to worker nodes
 mv k3s-uncordon.service /etc/systemd/system/
 chmod 644 /etc/systemd/system/k3s-uncordon.service
 chown 0:0 /etc/systemd/system/k3s-uncordon.service
