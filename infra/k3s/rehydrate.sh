@@ -28,7 +28,7 @@ echo "✓ Node drained"
 log_section "Cleaning up containerd images"
 echo "Current images:"
 k3s crictl images || true
-k3s crictl rmi --prune --timeout=180s || echo "No prunable images found"
+k3s crictl --timeout=300s rmi --prune || echo "No prunable images found"
 echo "Images after cleanup:"
 k3s crictl images || true
 echo "✓ Containerd cleanup complete"

@@ -33,7 +33,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.33 K3S_URL=https://10.0.0.
 
 ## Port Forwarding
 The following ports should be open
-- 6443 (K8s)
+- 6443 (K8s - Only if not using LAN)
 - 80 (HTTP)
 - 443 (HTTPS)
 
