@@ -123,16 +123,16 @@ pipeline {
 
 		stage('Helm CI') {
 			steps {
-				script {
-					sh '''
-						cd helm
+				dir('helm') {
+					script {
+						sh '''
+							echo "$DOCKER_PSW" | helm registry login $DOCKER_REGISTRY \
+								--username $DOCKER_USR --password-stdin 2>/dev/null
 
-						echo "$DOCKER_PSW" | helm registry login $DOCKER_REGISTRY \
-							--username $DOCKER_USR --password-stdin 2>/dev/null
-
-						helm package $APP_NAME --app-version=$DOCKER_VERSION --version=$HELM_VERSION
-						helm push ./$CHART_NAME-${HELM_VERSION}.tgz $DOCKER_REGISTRY_FULL/$DOCKER_USR
-					'''
+							helm package $APP_NAME --app-version=$DOCKER_VERSION --version=$HELM_VERSION
+							helm push ./$CHART_NAME-${HELM_VERSION}.tgz $DOCKER_REGISTRY_FULL/$DOCKER_USR
+						'''
+					}
 				}
 			}
 		}
