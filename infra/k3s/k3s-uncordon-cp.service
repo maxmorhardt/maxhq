@@ -1,0 +1,14 @@
+[Unit]
+Description=Uncordon node after reboot
+After=k3s.service k3s.service
+Wants=k3s.service k3s.service
+
+[Service]
+Type=oneshot
+Environment="KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+ExecStartPre=sleep 60
+ExecStart=/bin/sh -c 'kubectl uncordon $(hostname)'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
