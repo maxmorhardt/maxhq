@@ -47,9 +47,8 @@ export default function Contest() {
   const handleSquareClick = async (row: number, col: number) => {
     // redirect to login if not authenticated
     if (!auth.isAuthenticated) {
-      auth.signinRedirect({
-        redirect_uri: window.location.href,
-      });
+      sessionStorage.setItem('auth_redirect_path', window.location.href);
+      auth.signinRedirect();
 
       return;
     }

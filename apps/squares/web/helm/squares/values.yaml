@@ -54,7 +54,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: '1m'
     nginx.ingress.kubernetes.io/client-body-buffer-size: '1m'
-    nginx.ingress.kubernetes.io/limit-rps: '20'
+    nginx.ingress.kubernetes.io/limit-rps: '50'
     nginx.ingress.kubernetes.io/limit-burst-multiplier: '5'
   hosts:
     - host: squares.maxstash.io
@@ -68,11 +68,11 @@ ingress:
 
 resources:
   limits:
-    cpu: 200m
-    memory: 128Mi
+    cpu: 50m
+    memory: 64Mi
   requests:
-    cpu: 200m
-    memory: 128Mi
+    cpu: 50m
+    memory: 64Mi
 
 affinity:
   podAntiAffinity:
@@ -82,10 +82,10 @@ affinity:
 
 hpa:
   enabled: true
-  minReplicas: 3
-  maxReplicas: 5
-  targetCPU: 100
-  targetRAM: 100
+  minReplicas: 5
+  maxReplicas: 20
+  targetCPU: 80
+  targetRAM: 80
 
 pdb:
   enabled: true

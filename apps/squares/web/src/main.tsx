@@ -17,11 +17,15 @@ import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
 import PrivacyPolicyPage from './pages/privacy/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/terms/TermsOfServicePage';
+import CallbackPage from './pages/auth/CallbackPage';
 
 const oidcConfig: AuthProviderProps = {
-  authority: 'https://auth.maxstash.io/realms/maxstash',
-  client_id: 'squares',
-  redirect_uri: import.meta.env.PROD ? 'https://squares.maxstash.io' : 'http://localhost:3000',
+  authority: 'https://login.maxstash.io/application/o/squares/',
+  client_id: 'SyyEj2NK971Mw1P3Cm8dZlaTmLrF119ZOK8obYQO',
+  redirect_uri: import.meta.env.PROD
+    ? 'https://squares.maxstash.io/auth/callback'
+    : 'http://localhost:3000/auth/callback',
+  scope: 'openid profile email',
   automaticSilentRenew: true,
   userStore: new WebStorageStateStore({ store: window.localStorage }),
   onSigninCallback: () => {
@@ -41,6 +45,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <LandingPage /> },
+      { path: 'auth/callback', element: <CallbackPage /> },
       { path: 'contests', element: <ContestsPage /> },
       { path: 'contests/create', element: <CreateContestPage /> },
       { path: 'contests/:id', element: <ContestPage /> },

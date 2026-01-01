@@ -12,9 +12,8 @@ export default function LandingCreateContestButton() {
     if (auth.isAuthenticated) {
       navigate('/contests/create');
     } else {
-      auth.signinRedirect({
-        redirect_uri: `${window.location.origin}/contests/create`,
-      });
+      sessionStorage.setItem('auth_redirect_path', `${window.location.origin}/contests/create`);
+      auth.signinRedirect();
     }
   };
 

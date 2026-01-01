@@ -91,7 +91,9 @@ export default function CreateContestPage() {
           owner: auth.user.profile.preferred_username,
           homeTeam: formData.homeTeam.trim() || undefined,
           awayTeam: formData.awayTeam.trim() || undefined,
-          defaultSquaresPerPerson: formData.defaultSquaresPerPerson ? parseInt(formData.defaultSquaresPerPerson) : undefined,
+          defaultSquaresPerPerson: formData.defaultSquaresPerPerson
+            ? parseInt(formData.defaultSquaresPerPerson)
+            : undefined,
         })
       ).unwrap();
 
@@ -228,11 +230,11 @@ export default function CreateContestPage() {
               disabled={loading}
               type="number"
               placeholder="e.g., 5"
-              slotProps={{ 
-                htmlInput: { 
+              slotProps={{
+                htmlInput: {
                   min: 1,
-                  max: 100
-                } 
+                  max: 100,
+                },
               }}
             />
 

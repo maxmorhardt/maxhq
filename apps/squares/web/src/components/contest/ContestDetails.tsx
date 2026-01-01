@@ -148,7 +148,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
   };
 
   const userGroups = (auth.user?.profile?.groups as string[] | undefined) || [];
-  const isAdmin = userGroups.includes('/Squares_Admin');
+  const isAdmin = userGroups.includes('squares-admin');
   const canAutoFill = isAdmin;
 
   return (
