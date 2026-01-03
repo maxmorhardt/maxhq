@@ -9,6 +9,12 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
     coverage: {
       provider: 'v8',
+      thresholds: {
+        lines: 0,
+        functions: 0,
+        branches: 0,
+        statements: 0,
+      },
       reporter: ['text', 'html', 'lcov'],
       exclude: ['node_modules/', 'src/setupTests.ts'],
     },
