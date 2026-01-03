@@ -25,7 +25,7 @@ const oidcConfig: AuthProviderProps = {
   redirect_uri: import.meta.env.PROD
     ? 'https://squares.maxstash.io/auth/callback'
     : 'http://localhost:3000/auth/callback',
-  scope: 'openid profile email',
+  scope: 'openid profile email offline_access',
   automaticSilentRenew: true,
   userStore: new WebStorageStateStore({ store: window.localStorage }),
   onSigninCallback: () => {

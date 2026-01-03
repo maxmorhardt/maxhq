@@ -7,6 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { JSX, MouseEvent } from 'react';
+import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 
 interface HeaderAuthProps {
@@ -27,6 +28,18 @@ export default function HeaderAuth({
   settings,
 }: HeaderAuthProps) {
   const auth = useAuth();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const handleLogin = () => {
+    setIsAuthenticating(true);
+    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
+    auth.signinRedirect();
+  };
+
+  const handleRegisterClick = () => {
+    setIsAuthenticating(true);
+    handleRegister();
+  };
 
   return (
     <Box sx={{ flexGrow: 0 }}>
@@ -36,15 +49,18 @@ export default function HeaderAuth({
           <Button
             color="inherit"
             sx={{ mr: 2 }}
-            onClick={() => {
-              sessionStorage.setItem('auth_redirect_path', window.location.pathname);
-              auth.signinRedirect();
-            }}
+            onClick={handleLogin}
             variant="outlined"
+            disabled={isAuthenticating}
           >
             Login
           </Button>
-          <Button color="primary" onClick={handleRegister} variant="contained">
+          <Button
+            color="primary"
+            onClick={handleRegisterClick}
+            variant="contained"
+            disabled={isAuthenticating}
+          >
             Register
           </Button>
         </Box>

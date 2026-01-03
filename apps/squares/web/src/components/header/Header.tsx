@@ -41,18 +41,27 @@ export default function Header() {
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
-  // redirect to keycloak registration page
+  // redirect to registration page
   const handleRegister = () => {
-    const { authority, client_id } = auth.settings;
-    const redirectUri = window.location.origin;
-    const registrationUrl = `${authority}/protocol/openid-connect/registrations?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
-    window.location.href = registrationUrl;
+    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
+
+    const authParams = new URLSearchParams({
+      client_id: auth.settings.client_id,
+      redirect_uri: auth.settings.redirect_uri,
+      response_type: 'code',
+      scope: auth.settings.scope || 'openid profile email offline_access',
+    });
+
+    const nextUrl = `/application/o/authorize/?${authParams.toString()}`;
+    const enrollmentUrl = `https://login.maxstash.io/if/flow/default-enrollment-flow/?next=${encodeURIComponent(nextUrl)}`;
+
+    window.location.href = enrollmentUrl;
   };
 
   // handle account settings menu clicks
   const handleSettingClick = (setting: string) => {
     if (setting === 'Account') {
-      window.open('https://auth.maxstash.io/realms/maxstash/account', '_blank');
+      window.open('https://login.maxstash.io/if/user/#/settings', '_blank');
     } else if (setting === 'Logout') {
       auth.signoutRedirect({ post_logout_redirect_uri: window.location.href });
     }
