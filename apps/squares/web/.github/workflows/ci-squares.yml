@@ -5,6 +5,10 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   node-ci:
     uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
