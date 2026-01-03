@@ -71,9 +71,9 @@ export default function CallbackPage() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 3,
-            py: 6,
-            px: 4,
+            gap: { xs: 2, sm: 3 },
+            py: { xs: 3, sm: 6 },
+            px: { xs: 2, sm: 4 },
           }}
         >
           <Box
@@ -110,7 +110,8 @@ export default function CallbackPage() {
               component="h1"
               sx={{
                 fontWeight: 600,
-                mb: 1,
+                mb: { xs: 0.5, sm: 1 },
+                fontSize: { xs: '1.5rem', sm: '2.125rem' },
                 background: '#FFF',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
@@ -119,10 +120,23 @@ export default function CallbackPage() {
             >
               Almost there!
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 0.5 }}>
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{
+                mb: 0.5,
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+              }}
+            >
               Completing your authentication
             </Typography>
-            <Typography variant="body2" color="text.disabled">
+            <Typography
+              variant="body2"
+              color="text.disabled"
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              }}
+            >
               This will only take a moment
             </Typography>
           </Box>

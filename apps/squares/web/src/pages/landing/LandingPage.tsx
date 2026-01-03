@@ -95,7 +95,6 @@ const features: Feature[] = [
   },
 ];
 
-// landing page with hero, how it works, features, and call to action
 export default function LandingPage() {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -116,7 +115,7 @@ export default function LandingPage() {
               variant="h1"
               sx={{
                 fontWeight: 800,
-                fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
+                fontSize: { xs: '3rem', md: '3.5rem', lg: '4rem' },
                 mb: 4,
                 textShadow: '0 2px 4px rgba(0,0,0,0.3)',
               }}
