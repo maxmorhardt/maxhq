@@ -12,7 +12,7 @@ jobs:
       repository: maxmorhardt/squares
       app_name: squares
 
-  docker:
+  docker-ci:
     uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
     needs: node-ci
     with:

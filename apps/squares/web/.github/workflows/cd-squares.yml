@@ -5,16 +5,17 @@ on:
     inputs:
       image_tag:
         description: 'Docker image tag to deploy'
-        required: true
+        required: false
         type: string
+        default: ''
       chart_version:
-        description: 'Helm chart version to deploy'
+        description: 'Helm chart version'
         required: false
         type: string
         default: ''
 
 jobs:
-  deploy:
+  cd:
     uses: maxmorhardt/workflows/.github/workflows/cd-helm.yml@main
     with:
       repository: maxmorhardt/squares
