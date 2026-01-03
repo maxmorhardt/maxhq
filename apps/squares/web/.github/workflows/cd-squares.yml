@@ -23,5 +23,4 @@ jobs:
       chart: oci://docker.io/maxmorhardt/squares-chart
       chart_version: ${{ inputs.chart_version }}
       image_tag: ${{ inputs.image_tag }}
-      timeout: 5m
     secrets: inherit

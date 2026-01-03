@@ -20,4 +20,5 @@ jobs:
       app_name: squares
       app_version: ${{ github.ref_name }}
       artifact_name: dist
+      artifact_path: dist
     secrets: inherit
