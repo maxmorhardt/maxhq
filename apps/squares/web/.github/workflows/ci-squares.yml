@@ -9,15 +9,15 @@ jobs:
   node-ci:
     uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
     with:
-      repository: maxmorhardt/squares
-      app_name: squares
+      repository: ${{ github.repository }}
+      app_name: ${{ github.event.repository.name }}
 
   docker-ci:
     uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
     needs: node-ci
     with:
-      repository: maxmorhardt/squares
-      app_name: squares
+      repository: ${{ github.repository }}
+      app_name: ${{ github.event.repository.name }}
       app_version: ${{ github.ref_name }}
       artifact_name: dist
       artifact_path: dist
