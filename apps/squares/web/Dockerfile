@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 nginx:alpine
+FROM nginx:alpine
 
 LABEL io.maxstash.image.source="https://github.com/maxmorhardt/squares"
 LABEL io.maxstash.image.description="Squares Frontend - Game's web application"
