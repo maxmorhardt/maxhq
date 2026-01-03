@@ -39,7 +39,7 @@ export default function CallbackPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-				mt: '8rem',
+        mt: '8rem',
       }}
     >
       <Card
