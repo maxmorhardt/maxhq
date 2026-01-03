@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../hooks/useToast';
 
 const spin = keyframes`
   0% {
@@ -21,17 +22,32 @@ export default function CallbackPage() {
   const auth = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
+  const { showToast } = useToast();
 
   useEffect(() => {
-    if (auth.isAuthenticated) {
-      const redirectPath = sessionStorage.getItem('auth_redirect_path') || '/contests';
-      sessionStorage.removeItem('auth_redirect_path');
-      navigate(redirectPath, { replace: true });
-    } else if (auth.error) {
-      console.error('Authentication error:', auth.error);
+    if (auth.isLoading) {
+      return;
+    }
+
+    try {
+      if (auth.isAuthenticated) {
+        const redirectPath = sessionStorage.getItem('auth_redirect_path') || '/contests';
+        sessionStorage.removeItem('auth_redirect_path');
+        navigate(redirectPath, { replace: true });
+        return;
+      }
+
+      if (auth.error) {
+        console.error('Authentication error:', auth.error);
+        showToast('Authentication failed. Please try again', 'error');
+        navigate('/', { replace: true });
+      }
+    } catch (error) {
+      console.error('Error during post-authentication redirect:', error);
+      showToast('Authentication failed. Please try again', 'error');
       navigate('/', { replace: true });
     }
-  }, [auth.isAuthenticated, auth.error, navigate]);
+  }, [auth.isLoading, auth.isAuthenticated, auth.error, navigate, auth, showToast]);
 
   return (
     <Box

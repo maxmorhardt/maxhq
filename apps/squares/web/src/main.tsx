@@ -28,9 +28,6 @@ const oidcConfig: AuthProviderProps = {
   scope: 'openid profile email offline_access',
   automaticSilentRenew: true,
   userStore: new WebStorageStateStore({ store: window.localStorage }),
-  onSigninCallback: () => {
-    window.history.replaceState({}, document.title, window.location.pathname);
-  },
 };
 
 const theme = createTheme({
