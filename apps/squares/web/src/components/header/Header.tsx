@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
+import { createOidcStateForRegistration } from '../../utils/oidcHelpers';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 
@@ -42,14 +43,21 @@ export default function Header() {
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
   // redirect to registration page
-  const handleRegister = () => {
+  const handleRegister = async () => {
     sessionStorage.setItem('auth_redirect_path', window.location.pathname);
 
+    // manually create OIDC state for enrollment flow
+    const { state, codeChallenge } = await createOidcStateForRegistration(auth.settings);
+
+    // build authorization URL with PKCE parameters
     const authParams = new URLSearchParams({
       client_id: auth.settings.client_id,
       redirect_uri: auth.settings.redirect_uri,
       response_type: 'code',
       scope: auth.settings.scope || 'openid profile email offline_access',
+      state: state,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
     });
 
     const nextUrl = `/application/o/authorize/?${authParams.toString()}`;
