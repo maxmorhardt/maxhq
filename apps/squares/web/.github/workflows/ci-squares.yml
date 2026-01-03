@@ -1,0 +1,23 @@
+name: Squares CI
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  node-ci:
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: maxmorhardt/squares
+      app_name: squares
+
+  docker:
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    needs: node-ci
+    with:
+      repository: maxmorhardt/squares
+      app_name: squares
+      app_version: ${{ github.ref_name }}
+      artifact_name: dist
+    secrets: inherit

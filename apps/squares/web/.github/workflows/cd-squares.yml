@@ -1,0 +1,27 @@
+name: Squares CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: true
+        type: string
+      chart_version:
+        description: 'Helm chart version to deploy'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  deploy:
+    uses: maxmorhardt/workflows/.github/workflows/cd-helm.yml@main
+    with:
+      repository: maxmorhardt/squares
+      release_name: squares
+      namespace: squares
+      chart: oci://docker.io/maxmorhardt/squares-chart
+      chart_version: ${{ inputs.chart_version }}
+      image_tag: ${{ inputs.image_tag }}
+      timeout: 5m
+    secrets: inherit

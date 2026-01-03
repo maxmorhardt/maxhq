@@ -1,4 +1,4 @@
-# Squares Frontend
+# Squares
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
@@ -18,8 +18,6 @@ A real-time collaborative grid application frontend built with React and TypeScr
 - **Material-UI Components** for consistent design system
 - **Redux Toolkit** for state management
 - **Real-time Collaboration** via WebSocket connections
-- **Responsive Design** with mobile-first approach
-- **Hot Module Replacement** with Vite for fast development
 - **ESLint & TypeScript** for code quality and type safety
 
 ## Architecture
@@ -46,12 +44,4 @@ Build the application for production deployment:
 
 ```bash
 npm run build
-```
-
-## Deployment
-
-The application includes Docker configuration and Helm charts in the `helm/` directory for Kubernetes deployment. Configure your environment-specific values and deploy with:
-
-```bash
-helm install squares ./helm/squares
 ```
