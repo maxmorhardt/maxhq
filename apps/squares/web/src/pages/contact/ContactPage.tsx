@@ -55,7 +55,7 @@ export default function ContactPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 3, mb: { xs: 4, sm: 4, md: 2 } }}>
       {/* page header with title and description */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography
@@ -65,7 +65,7 @@ export default function ContactPage() {
             mb: 2,
             background: 'white',
             backgroundClip: 'text',
-            fontSize: { xs: '2rem', md: '2.5rem' },
+            fontSize: '2.5rem',
           }}
         >
           Contact Us

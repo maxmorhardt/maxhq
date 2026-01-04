@@ -6,13 +6,20 @@ export default function Footer() {
   // get current year for copyright
   const currentYear = new Date().getFullYear();
 
+  const footerLinks = [
+    { label: 'Learn More', path: '/learn-more' },
+    { label: 'Contact', path: '/contact' },
+    { label: 'Privacy', path: '/privacy-policy' },
+    { label: 'Terms', path: '/terms-of-service' },
+  ];
+
   return (
     // footer container with top border
     <Box
       component="footer"
       sx={{
-        py: { xs: 2, sm: 4 },
-        px: { xs: 1, sm: 2 },
+        py: { xs: 2.5, sm: 4 },
+        px: 2,
         mt: 'auto',
         borderTop: '1px solid rgba(255,255,255,0.1)',
       }}
@@ -34,7 +41,7 @@ export default function Footer() {
                 color: 'rgba(255,255,255,0.7)',
                 fontFamily: 'monospace',
                 fontWeight: 700,
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                fontSize: '0.875rem',
               }}
             >
               © {currentYear} Squares
@@ -43,62 +50,23 @@ export default function Footer() {
 
           {/* footer navigation links */}
           <Stack direction="row" spacing={{ xs: 2, sm: 3 }}>
-            <Link
-              onClick={() => navigate('/learn-more')}
-              sx={{
-                color: 'rgba(255,255,255,0.7)',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                '&:hover': {
-                  color: 'white',
-                },
-              }}
-            >
-              Learn More
-            </Link>
-            <Link
-              onClick={() => navigate('/contact')}
-              sx={{
-                color: 'rgba(255,255,255,0.7)',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                '&:hover': {
-                  color: 'white',
-                },
-              }}
-            >
-              Contact
-            </Link>
-            <Link
-              onClick={() => navigate('/privacy-policy')}
-              sx={{
-                color: 'rgba(255,255,255,0.7)',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                '&:hover': {
-                  color: 'white',
-                },
-              }}
-            >
-              Privacy
-            </Link>
-            <Link
-              onClick={() => navigate('/terms-of-service')}
-              sx={{
-                color: 'rgba(255,255,255,0.7)',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                '&:hover': {
-                  color: 'white',
-                },
-              }}
-            >
-              Terms
-            </Link>
+            {footerLinks.map((link) => (
+              <Link
+                key={link.path}
+                onClick={() => navigate(link.path)}
+                sx={{
+                  color: 'rgba(255,255,255,0.7)',
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    color: 'white',
+                  },
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
           </Stack>
         </Stack>
       </Container>

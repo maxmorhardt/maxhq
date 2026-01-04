@@ -6,7 +6,7 @@ import { keyframes, useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../../hooks/useToast';
 
 const spin = keyframes`
@@ -23,6 +23,17 @@ export default function CallbackPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+
+    if (!code && !state) {
+      showToast('Invalid authentication state', 'error');
+      navigate('/', { replace: true });
+    }
+  }, [searchParams, navigate, showToast]);
 
   useEffect(() => {
     if (auth.isLoading) {
@@ -55,8 +66,7 @@ export default function CallbackPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '50vh',
-        py: 4,
+        mt: { xs: '2rem', sm: '4rem', md: '8rem' },
       }}
     >
       <Card

@@ -11,7 +11,6 @@ import {
 } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
-import { useToast } from '../../hooks/useToast';
 import type { Contest, PaginatedContestsResponse } from '../../types/contest';
 
 // contests page displaying user's contests in a paginated table
@@ -19,7 +18,6 @@ export default function ContestsPage() {
   const auth = useAuth();
   const isInterceptorReady = useAxiosAuth();
   const dispatch = useAppDispatch();
-  const { showToast } = useToast();
 
   // separate state for owned contests
   const [ownedContests, setOwnedContests] = useState<Contest[]>([]);
@@ -49,14 +47,6 @@ export default function ContestsPage() {
 
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
-
-  // show error toast and clear from store
-  useEffect(() => {
-    if (error) {
-      showToast(error, 'error');
-      dispatch(clearError());
-    }
-  }, [error, showToast, dispatch]);
 
   // fetch owned contests when authenticated and pagination changes
   useEffect(() => {
@@ -201,6 +191,15 @@ export default function ContestsPage() {
 
   return (
     <Box>
+      {/* error alert for failed data fetches */}
+      {error && (
+        <Box sx={{ px: 3, pt: 3 }}>
+          <Alert severity="error" onClose={() => dispatch(clearError())}>
+            {error}
+          </Alert>
+        </Box>
+      )}
+
       {/* owned contests table */}
       <ContestsTable
         contests={ownedContests}
