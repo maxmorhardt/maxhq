@@ -75,20 +75,21 @@ mv k3s.yaml /etc/rancher/k3s/k3s.yaml
 chmod 600 /etc/rancher/k3s/k3s.yaml
 chown 0:0 /etc/rancher/k3s/k3s.yaml
 
-# Crontab config
+# Crontab config (Tuesday 2am - 5am EST)
+sudo su
 crontab -e
 
 # Main Node
-0 2 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 2 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 1
-0 3 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 3 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 2
-0 4 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 4 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 3
-0 5 * * 0 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 5 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 ```
 
 - K3s upgrades can be done through Rancher UI in the Cluster Management tab
