@@ -55,7 +55,8 @@ export default function CallbackPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        mt: { xs: '2rem', sm: '4rem', md: '8rem' },
+        minHeight: '50vh',
+        py: 4,
       }}
     >
       <Card

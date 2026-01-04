@@ -76,6 +76,7 @@ export default function HeaderMenu({
               auth.signinRedirect();
               handleCloseNavMenu();
             }}
+            disabled={auth.isLoading}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LoginIcon fontSize="small" />
@@ -89,6 +90,7 @@ export default function HeaderMenu({
               handleRegister();
               handleCloseNavMenu();
             }}
+            disabled={auth.isLoading}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <HowToRegIcon fontSize="small" />
