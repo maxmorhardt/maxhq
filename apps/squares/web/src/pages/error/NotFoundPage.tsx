@@ -1,11 +1,13 @@
 import { Home, Search } from '@mui/icons-material';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
+import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 
 // 404 error page with navigation options
 export default function NotFoundPage() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const auth = useAuth();
 
   // navigate to home page
   const handleGoHome = () => {
@@ -76,59 +78,16 @@ export default function NotFoundPage() {
           <Button variant="contained" size="large" startIcon={<Home />} onClick={handleGoHome}>
             Go Home
           </Button>
-
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<Search />}
-            onClick={handleGoToContests}
-          >
-            Browse Contests
-          </Button>
-        </Box>
-      </Box>
-
-      {/* additional help and resources box */}
-      <Box
-        sx={{
-          background: theme.palette.grey[900],
-          border: `1px solid ${theme.palette.grey[800]}`,
-          borderRadius: 3,
-          p: 4,
-          textAlign: 'center',
-          maxWidth: 600,
-          mx: 'auto',
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'white',
-            mb: 2,
-            fontWeight: 600,
-          }}
-        >
-          Looking for something specific?
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            color: 'white',
-            opacity: 0.9,
-            mb: 3,
-            lineHeight: 1.6,
-          }}
-        >
-          Try visiting our contests page to see all available squares games, or head to the home
-          page to learn more about how Squares works.
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Button variant="text" onClick={() => navigate('/learn-more')} sx={{ fontWeight: 600 }}>
-            Learn More
-          </Button>
-          <Button variant="text" onClick={() => navigate('/contact')} sx={{ fontWeight: 600 }}>
-            Contact Support
-          </Button>
+          {auth.isAuthenticated && (
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<Search />}
+              onClick={handleGoToContests}
+            >
+              Browse Contests
+            </Button>
+          )}
         </Box>
       </Box>
     </Container>
