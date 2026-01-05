@@ -18,6 +18,7 @@ import LearnMorePage from './pages/learn/LearnMorePage';
 import PrivacyPolicyPage from './pages/privacy/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/terms/TermsOfServicePage';
 import CallbackPage from './pages/auth/CallbackPage';
+import DebugPage from './pages/debug/DebugPage';
 
 const oidcConfig: AuthProviderProps = {
   authority: 'https://login.maxstash.io/application/o/squares/',
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
       { path: 'learn-more', element: <LearnMorePage /> },
       { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
       { path: 'terms-of-service', element: <TermsOfServicePage /> },
+      { path: 'debug', element: <DebugPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
