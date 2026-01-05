@@ -1,5 +1,5 @@
 import { Box, GlobalStyles } from '@mui/material';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Outlet } from 'react-router-dom';
 import './App.css';
@@ -15,6 +15,7 @@ export default function App() {
   useAxiosAuth();
   const auth = useAuth();
   const { showToast } = useToast();
+  const hasAttemptedSilentSignin = useRef(false);
 
   // monitor auth errors and show toast
   useEffect(() => {
@@ -22,6 +23,29 @@ export default function App() {
       showToast('Authentication failed. Please try again', 'error');
     }
   }, [auth.error, auth.isLoading, showToast]);
+
+  useEffect(() => {
+    if (
+      auth.isAuthenticated ||
+      auth.isLoading ||
+      !auth.user ||
+      !auth.user.refresh_token ||
+      hasAttemptedSilentSignin.current
+    ) {
+      return;
+    }
+
+    hasAttemptedSilentSignin.current = true;
+    auth
+      .signinSilent()
+      .then(() => {
+        hasAttemptedSilentSignin.current = false;
+      })
+      .catch((error) => {
+        console.error('Silent signin failed:', error);
+        showToast('Session expired. Please log in again.', 'error');
+      });
+  }, [auth, showToast]);
 
   return (
     <>

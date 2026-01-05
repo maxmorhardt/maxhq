@@ -12,6 +12,16 @@ export default function DebugPage() {
   const [localStorageData, setLocalStorageData] = useState<StorageData[]>([]);
   const [sessionStorageData, setSessionStorageData] = useState<StorageData[]>([]);
   const [cookiesData, setCookiesData] = useState<StorageData[]>([]);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    // Update time every second for countdown
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Get localStorage data
@@ -68,7 +78,12 @@ export default function DebugPage() {
               <Box key={index}>
                 <Typography
                   variant="subtitle2"
-                  sx={{ color: 'secondary.main', fontWeight: 'bold', mb: 0.5 }}
+                  sx={{
+                    color: 'secondary.main',
+                    fontWeight: 'bold',
+                    mb: 0.5,
+                    wordBreak: 'break-all',
+                  }}
                 >
                   {item.key}
                 </Typography>
@@ -131,7 +146,7 @@ export default function DebugPage() {
               <>
                 <Divider sx={{ my: 1 }} />
                 <Typography>
-                  <strong>Current Time:</strong> {new Date().toLocaleString()}
+                  <strong>Current Time:</strong> {new Date(currentTime).toLocaleString()}
                 </Typography>
                 <Typography>
                   <strong>Token Expires At:</strong>{' '}
@@ -140,7 +155,7 @@ export default function DebugPage() {
                 <Typography>
                   <strong>Time Remaining:</strong>{' '}
                   {(() => {
-                    const now = Math.floor(Date.now() / 1000);
+                    const now = Math.floor(currentTime / 1000);
                     const expiresAt = auth.user.expires_at;
                     const remainingSeconds = expiresAt - now;
 

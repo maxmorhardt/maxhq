@@ -71,7 +71,7 @@ export default function Header() {
     if (setting === 'Account') {
       window.open('https://login.maxstash.io/if/user/#/settings', '_blank');
     } else if (setting === 'Logout') {
-      auth.signoutRedirect({ post_logout_redirect_uri: window.location.href });
+      auth.signoutSilent();
     }
 
     handleCloseUserMenu();

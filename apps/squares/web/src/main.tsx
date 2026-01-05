@@ -8,17 +8,17 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import { store } from './app/store';
 import './index.css';
+import CallbackPage from './pages/auth/CallbackPage';
 import ContactPage from './pages/contact/ContactPage';
 import ContestPage from './pages/contests/contest/ContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import CreateContestPage from './pages/contests/create/CreateContestPage';
+import DebugPage from './pages/debug/DebugPage';
 import NotFoundPage from './pages/error/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
 import PrivacyPolicyPage from './pages/privacy/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/terms/TermsOfServicePage';
-import CallbackPage from './pages/auth/CallbackPage';
-import DebugPage from './pages/debug/DebugPage';
 
 const oidcConfig: AuthProviderProps = {
   authority: 'https://login.maxstash.io/application/o/squares/',
@@ -27,7 +27,6 @@ const oidcConfig: AuthProviderProps = {
     ? 'https://squares.maxstash.io/auth/callback'
     : 'http://localhost:3000/auth/callback',
   scope: 'openid profile email offline_access',
-  automaticSilentRenew: true,
   userStore: new WebStorageStateStore({ store: window.localStorage }),
 };
 
