@@ -49,12 +49,12 @@ export default function CallbackPage() {
       }
 
       if (auth.error) {
-        console.error('Authentication error:', auth.error);
+        console.error('Auth error after loading and is authenticated checks', auth.error);
         showToast('Authentication failed. Please try again', 'error');
         navigate('/', { replace: true });
       }
     } catch (error) {
-      console.error('Error during post-authentication redirect:', error);
+      console.error('Error during post authentication redirect:', error);
       showToast('Authentication failed. Please try again', 'error');
       navigate('/', { replace: true });
     }
@@ -67,6 +67,7 @@ export default function CallbackPage() {
         alignItems: 'center',
         justifyContent: 'center',
         mt: { xs: '2rem', sm: '4rem', md: '8rem' },
+        mb: { xs: '2rem', sm: '4rem', md: '8rem' },
       }}
     >
       <Card

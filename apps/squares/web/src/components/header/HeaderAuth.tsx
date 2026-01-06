@@ -37,6 +37,9 @@ export default function HeaderAuth({
     handleRegister();
   };
 
+  // buttons disabled if loading and not signing out silently (logout timeout after 10 sec, bad ux)
+  const isAuthButtonDisabled = auth.isLoading && auth.activeNavigator !== 'signoutSilent';
+
   return (
     <Box sx={{ flexGrow: 0 }}>
       {/* login and register buttons for unauthenticated users */}
@@ -47,7 +50,7 @@ export default function HeaderAuth({
             sx={{ mr: 2 }}
             onClick={handleLogin}
             variant="outlined"
-            disabled={auth.isLoading}
+            disabled={isAuthButtonDisabled}
           >
             Login
           </Button>
@@ -55,7 +58,7 @@ export default function HeaderAuth({
             color="primary"
             onClick={handleRegisterClick}
             variant="contained"
-            disabled={auth.isLoading}
+            disabled={isAuthButtonDisabled}
           >
             Register
           </Button>

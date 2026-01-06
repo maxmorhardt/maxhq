@@ -13,17 +13,35 @@ import { gradients } from './types/gradients';
 
 export default function App() {
   useAxiosAuth();
+
   const auth = useAuth();
   const { showToast } = useToast();
+
   const hasAttemptedSilentSignin = useRef(false);
+  const lastActiveNavigator = useRef<string | undefined>(undefined);
+
+  // get active navigator before it clears
+  useEffect(() => {
+    if (auth.activeNavigator) {
+      lastActiveNavigator.current = auth.activeNavigator;
+    }
+  }, [auth.activeNavigator]);
 
   // monitor auth errors and show toast
   useEffect(() => {
-    if (!auth.isLoading && auth.error) {
-      showToast('Authentication failed. Please try again', 'error');
+    if (auth.isLoading || !auth.error) {
+      return;
     }
+
+    // only show error for signinRedirect failures
+    if (lastActiveNavigator.current !== 'signinRedirect') {
+      return;
+    }
+
+    showToast('Authentication failed. Please try again', 'error');
   }, [auth.error, auth.isLoading, showToast]);
 
+  // silent signin on load if we arent authenticated but have refresh token
   useEffect(() => {
     if (
       auth.isAuthenticated ||
@@ -36,20 +54,15 @@ export default function App() {
     }
 
     hasAttemptedSilentSignin.current = true;
-    auth
-      .signinSilent()
-      .then(() => {
-        hasAttemptedSilentSignin.current = false;
-      })
-      .catch((error) => {
-        console.error('Silent signin failed:', error);
-        showToast('Session expired. Please log in again.', 'error');
-      });
+    auth.signinSilent().then(() => {
+      hasAttemptedSilentSignin.current = false;
+    });
   }, [auth, showToast]);
 
   return (
     <>
       <ScrollToTop />
+      <ToastProvider />
       <GlobalStyles
         styles={{
           body: {
@@ -71,11 +84,12 @@ export default function App() {
         }}
       >
         <Header />
+
         <Box sx={{ flex: 1 }}>
           <Outlet />
         </Box>
+
         <Footer />
-        <ToastProvider />
       </Box>
     </>
   );
