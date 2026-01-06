@@ -15,6 +15,7 @@ interface HeaderMenuProps {
   handleOpenNavMenu: (event: MouseEvent<HTMLElement>) => void;
   handleCloseNavMenu: () => void;
   handleRegister: () => void;
+  isAuthButtonDisabled: boolean;
   anchorElNav: null | HTMLElement;
   pages: { name: string; icon: JSX.Element; navigate: string }[];
 }
@@ -23,6 +24,7 @@ export default function HeaderMenu({
   handleOpenNavMenu,
   handleCloseNavMenu,
   handleRegister,
+  isAuthButtonDisabled,
   anchorElNav,
   pages,
 }: HeaderMenuProps) {
@@ -76,7 +78,7 @@ export default function HeaderMenu({
               auth.signinRedirect();
               handleCloseNavMenu();
             }}
-            disabled={auth.isLoading}
+            disabled={isAuthButtonDisabled}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LoginIcon fontSize="small" />
@@ -90,7 +92,7 @@ export default function HeaderMenu({
               handleRegister();
               handleCloseNavMenu();
             }}
-            disabled={auth.isLoading}
+            disabled={isAuthButtonDisabled}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <HowToRegIcon fontSize="small" />

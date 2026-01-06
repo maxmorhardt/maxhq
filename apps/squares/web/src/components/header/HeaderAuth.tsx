@@ -14,6 +14,7 @@ interface HeaderAuthProps {
   handleCloseUserMenu: () => void;
   handleRegister: () => void;
   handleSettingClick: (setting: string) => void;
+  isAuthButtonDisabled: boolean;
   anchorElUser: null | HTMLElement;
   settings: { name: string; icon: JSX.Element }[];
 }
@@ -23,6 +24,7 @@ export default function HeaderAuth({
   handleCloseUserMenu,
   handleRegister,
   handleSettingClick,
+  isAuthButtonDisabled,
   anchorElUser,
   settings,
 }: HeaderAuthProps) {
@@ -36,9 +38,6 @@ export default function HeaderAuth({
   const handleRegisterClick = () => {
     handleRegister();
   };
-
-  // buttons disabled if loading and not signing out silently (logout timeout after 10 sec, bad ux)
-  const isAuthButtonDisabled = auth.isLoading && auth.activeNavigator !== 'signoutSilent';
 
   return (
     <Box sx={{ flexGrow: 0 }}>

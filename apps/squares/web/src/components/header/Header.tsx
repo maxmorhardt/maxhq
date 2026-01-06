@@ -42,6 +42,9 @@ export default function Header() {
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
+  // buttons disabled if loading and not signing out silently (logout timeout after 10 sec, bad ux)
+  const isAuthButtonDisabled = auth.isLoading && auth.activeNavigator !== 'signoutSilent';
+
   // redirect to registration page
   const handleRegister = async () => {
     sessionStorage.setItem('auth_redirect_path', window.location.pathname);
@@ -114,6 +117,7 @@ export default function Header() {
               handleOpenNavMenu={handleOpenNavMenu}
               handleCloseNavMenu={handleCloseNavMenu}
               handleRegister={handleRegister}
+              isAuthButtonDisabled={isAuthButtonDisabled}
               anchorElNav={anchorElNav}
               pages={pages}
             />
@@ -182,6 +186,7 @@ export default function Header() {
               handleCloseUserMenu={handleCloseUserMenu}
               handleRegister={handleRegister}
               handleSettingClick={handleSettingClick}
+              isAuthButtonDisabled={isAuthButtonDisabled}
               anchorElUser={anchorElUser}
               settings={settings}
             />
