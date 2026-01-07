@@ -36,17 +36,32 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
   const [value, setValue] = useState('');
   const [error, setError] = useState(false);
 
+  // helper function to extract initials from name
+  const getInitials = (name: string): string => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    const splitName = trimmed.split(/\s+/);
+    let initials = '';
+    for (let i = 0; i < splitName.length && initials.length < 3; i++) {
+      initials += splitName[i].charAt(0).toUpperCase();
+    }
+
+    return initials;
+  };
+
   // initialize with existing value or user's initials
   useEffect(() => {
     if (currentSquare?.value) {
       setValue(currentSquare.value);
-    } else {
-      const givenName = auth?.user?.profile?.given_name || '';
-      const familyName = auth?.user?.profile?.family_name || '';
-      const initials = (givenName.charAt(0) + familyName.charAt(0)).toUpperCase();
-      setValue(initials);
+      return;
     }
-  }, [currentSquare, auth?.user?.profile?.given_name, auth?.user?.profile?.family_name]);
+
+    const name = auth.user?.profile?.name || '';
+    setValue(getInitials(name));
+  }, [currentSquare, auth.user?.profile?.name]);
 
   if (!currentSquare) {
     return;
@@ -92,8 +107,16 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
 
   // update value and clear error if valid
   const handleValueChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setValue(event.target.value);
-    if (error && event.target.value.trim()) {
+    const input = event.target.value;
+
+    // filter to only alphanumeric characters, convert to uppercase, limit to 3 chars
+    const filtered = input
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toUpperCase()
+      .slice(0, 3);
+
+    setValue(filtered);
+    if (error && filtered.trim()) {
       setError(false);
     }
   };
@@ -103,10 +126,8 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     if (currentSquare?.value) {
       setValue(currentSquare.value);
     } else {
-      const givenName = auth?.user?.profile?.given_name || '';
-      const familyName = auth?.user?.profile?.family_name || '';
-      const initials = (givenName.charAt(0) + familyName.charAt(0)).toUpperCase();
-      setValue(initials);
+      const name = auth?.user?.profile?.name || '';
+      setValue(getInitials(name));
     }
 
     setError(false);
