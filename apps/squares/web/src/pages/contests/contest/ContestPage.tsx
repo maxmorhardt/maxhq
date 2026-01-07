@@ -225,7 +225,7 @@ export default function ContestPage() {
       <Box sx={{ position: 'relative', mt: 2, mb: 1 }}>
         <Typography
           sx={{
-            fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' },
+            fontSize: { xs: '0.9rem', sm: '1.5rem', md: '1.7rem' },
             fontWeight: 800,
             textShadow: '0 2px 4px rgba(0,0,0,0.3)',
             textAlign: 'center',
