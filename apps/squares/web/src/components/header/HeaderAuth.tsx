@@ -51,7 +51,7 @@ export default function HeaderAuth({
             onClick={handleLogin}
             variant="outlined"
             startIcon={
-              auth.activeNavigator !== 'signinSilent' && (
+              auth.activeNavigator === 'signinSilent' && (
                 <CircularProgress size={16} color="inherit" />
               )
             }
