@@ -1,3 +1,4 @@
+import { CircularProgress } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -49,6 +50,11 @@ export default function HeaderAuth({
             sx={{ mr: 2 }}
             onClick={handleLogin}
             variant="outlined"
+            startIcon={
+              auth.activeNavigator !== 'signinSilent' && (
+                <CircularProgress size={16} color="inherit" />
+              )
+            }
             disabled={isAuthButtonDisabled}
           >
             Login

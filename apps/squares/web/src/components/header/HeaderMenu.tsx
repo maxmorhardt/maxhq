@@ -1,7 +1,7 @@
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LoginIcon from '@mui/icons-material/Login';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Divider } from '@mui/material';
+import { CircularProgress, Divider } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -81,7 +81,11 @@ export default function HeaderMenu({
             disabled={isAuthButtonDisabled}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <LoginIcon fontSize="small" />
+              {auth.activeNavigator === 'signinSilent' ? (
+                <CircularProgress color="inherit" size={20} />
+              ) : (
+                <LoginIcon fontSize="small" />
+              )}
               <Typography>Login</Typography>
             </Box>
           </MenuItem>
