@@ -54,9 +54,7 @@ export default function App() {
     }
 
     hasAttemptedSilentSignin.current = true;
-    auth.signinSilent().then(() => {
-      hasAttemptedSilentSignin.current = false;
-    });
+    auth.signinSilent();
   }, [auth, showToast]);
 
   return (
