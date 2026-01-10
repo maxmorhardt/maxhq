@@ -22,7 +22,6 @@ For kube config:
 ```bash
 # On local machine, replace server field with DNS or IP
 cat /etc/rancher/k3s/k3s.yaml
-# Eventually get kubeconfig from rancher
 ```
 
 ## Worker Node
@@ -91,5 +90,3 @@ crontab -e
 # Worker 3
 0 5 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 ```
-
-- K3s upgrades can be done through Rancher UI in the Cluster Management tab
