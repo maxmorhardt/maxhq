@@ -11,6 +11,10 @@ add the following to the end: cgroup_enable=memory cgroup_memory=1
 # CSI for longhorn
 apt install -y open-iscsi
 systemctl enable --now iscsid
+
+# Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
 ```
 
 ## Main Node
@@ -33,8 +37,12 @@ cat /var/lib/rancher/k3s/server/token
 
 For kube config:
 ```bash
-# On local machine, replace server field with DNS or IP
+# On K3s server
 cat /etc/rancher/k3s/k3s.yaml
+
+# On local machine with Tailscale
+# Copy kubeconfig and update server to use Tailscale hostname:
+# server: https://max-main:6443
 ```
 
 ## Worker Node
@@ -44,6 +52,39 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 \
   K3S_URL=https://10.0.0.186:6443 \
   K3S_TOKEN=<token> \
   sh -s -
+```
+
+## Tailscale TLS Configuration
+
+Add Tailscale IPs to K3s certificate:
+```bash
+# Get Tailscale IP
+tailscale status
+
+# Create config file
+sudo nano /etc/rancher/k3s/config.yaml
+```
+
+Add:
+```yaml
+disable:
+  - traefik
+tls-san:
+  - "10.0.0.186"      # Control plane LAN IP
+  - "100.111.199.70"  # Tailscale control plane IP
+  - "max-main"        # Tailscale control plane hostname
+kube-apiserver-arg:
+  - "service-node-port-range=25565-32767"
+```
+
+Restart:
+```bash
+sudo systemctl restart k3s
+```
+
+Verify:
+```bash
+openssl s_client -connect 10.0.0.186:6443 </dev/null 2>/dev/null | openssl x509 -noout -text | grep -A1 "Subject Alternative Name"
 ```
 
 ## Port Forwarding
