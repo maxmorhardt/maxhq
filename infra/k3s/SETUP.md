@@ -11,16 +11,18 @@ add the following to the end: cgroup_enable=memory cgroup_memory=1
 # CSI for longhorn
 apt install -y open-iscsi
 systemctl enable --now iscsid
-
-# Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
-tailscale up
 ```
 
 ## Main Node
 ```bash
 sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 sh -s - --tls-san "10.0.0.160" --disable traefik --kube-apiserver-arg service-node-port-range=5432-25565
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 sh -s - \
+  --tls-san "10.0.0.186" \
+  --disable traefik \
+  --kube-apiserver-arg service-node-port-range=25565-32767
+
+# setup kubectl aliases
+echo "alias k=\"k3s kubectl\"" >> /root/.bashrc
 echo "alias k=\"sudo k3s kubectl\"" >> .bashrc
 ```
 
@@ -38,12 +40,14 @@ cat /etc/rancher/k3s/k3s.yaml
 ## Worker Node
 ```bash
 sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 K3S_URL=https://10.0.0.160:6443 K3S_TOKEN=<token> sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 \
+  K3S_URL=https://10.0.0.186:6443 \
+  K3S_TOKEN=<token> \
+  sh -s -
 ```
 
 ## Port Forwarding
 The following ports should be open
-- 80 (HTTP)
 - 443 (HTTPS)
 
 ## Other
@@ -55,12 +59,6 @@ Delete k3s main node:
 Delete k3s worker node: 
 ```bash
 /usr/local/bin/k3s-agent-uninstall.sh
-```
-
-Install nginx ingress:
-```bash
-# Inside k8s repo
-./k3s/ingress.sh
 ```
 
 Upgrades:
