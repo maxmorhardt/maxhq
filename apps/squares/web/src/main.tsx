@@ -22,7 +22,7 @@ import TermsOfServicePage from './pages/terms/TermsOfServicePage';
 
 const oidcConfig: AuthProviderProps = {
   authority: 'https://login.maxstash.io/application/o/squares/',
-  client_id: 'SyyEj2NK971Mw1P3Cm8dZlaTmLrF119ZOK8obYQO',
+  client_id: 'n3k9hWCDo584GSotQragu1mZ8QQyhfTv1nHHTQuZ',
   redirect_uri: import.meta.env.PROD
     ? 'https://squares.maxstash.io/auth/callback'
     : 'http://localhost:3000/auth/callback',
