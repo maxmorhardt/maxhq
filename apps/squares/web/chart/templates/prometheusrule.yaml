@@ -15,7 +15,7 @@ spec:
       rules:
         {{- range .Values.metrics.prometheusRule.rules }}
         - alert: {{ .alert }}
-          expr: {{ tpl .expr $ | quote }}
+          expr: {{ tpl .expr $ }}
           {{- if .for }}
           for: {{ .for }}
           {{- end }}
@@ -25,9 +25,7 @@ spec:
           {{- end }}
           {{- with .annotations }}
           annotations:
-            {{- range $key, $value := . }}
-            {{ $key }}: {{ tpl $value $ | quote }}
-            {{- end }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
 {{- end }}
