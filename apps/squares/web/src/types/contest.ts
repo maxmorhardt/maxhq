@@ -10,21 +10,11 @@ export interface Contest {
   status: ContestStatus;
   squares: Square[];
   quarterResults?: QuarterResult[];
-  participants?: ContestParticipant[];
   owner: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
   updatedBy: string;
-}
-
-export interface ContestParticipant {
-  id: string;
-  contestId: string;
-  username: string;
-  joinedAt: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface CreateContestRequest {

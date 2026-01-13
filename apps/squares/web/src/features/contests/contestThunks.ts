@@ -6,7 +6,6 @@ import {
   getContestById,
   getContests,
   getContestsByUser,
-  getParticipatingContests,
   recordQuarterResult,
   startContest,
   updateContestById,
@@ -46,20 +45,6 @@ export const fetchContestsByUser = createAsyncThunk<
 >('contests/fetchByUser', async ({ username, pagination }, { rejectWithValue }) => {
   try {
     const response = await getContestsByUser(username, pagination);
-    return response;
-  } catch (err: unknown) {
-    return rejectWithValue(err as APIError);
-  }
-});
-
-// fetch contests user is participating in
-export const fetchParticipatingContests = createAsyncThunk<
-  PaginatedContestsResponse,
-  PaginationParams,
-  { rejectValue: APIError }
->('contests/fetchParticipating', async (pagination, { rejectWithValue }) => {
-  try {
-    const response = await getParticipatingContests(pagination);
     return response;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);

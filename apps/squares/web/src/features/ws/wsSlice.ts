@@ -4,9 +4,9 @@ import type { WSUpdate } from '../../types/contest';
 
 // redux state for websocket connection
 interface WebSocketState {
-  connectionId: string | null; // unique connection id from server
-  lastMessage: WSUpdate | null; // most recent websocket message
-  error: string | null; // connection error message
+  connectionId: string | null;
+  lastMessage: WSUpdate | null;
+  error: string | null;
 }
 
 const initialState: WebSocketState = {

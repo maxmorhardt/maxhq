@@ -47,23 +47,6 @@ export async function getContestsByUser(
   }
 }
 
-// fetch contests user is participating in
-export async function getParticipatingContests(
-  pagination: PaginationParams
-): Promise<PaginatedContestsResponse> {
-  try {
-    const res = await api.get<PaginatedContestsResponse>('/contests/participating', {
-      params: {
-        page: pagination.page,
-        limit: pagination.limit,
-      },
-    });
-    return res.data;
-  } catch (err: unknown) {
-    throw handleError(err);
-  }
-}
-
 // fetch single contest by id with all details
 export async function getContestById(id: string): Promise<Contest> {
   try {

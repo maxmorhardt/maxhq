@@ -13,7 +13,6 @@ import ContactPage from './pages/contact/ContactPage';
 import ContestPage from './pages/contests/contest/ContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import CreateContestPage from './pages/contests/create/CreateContestPage';
-import DebugPage from './pages/debug/DebugPage';
 import NotFoundPage from './pages/error/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
@@ -50,7 +49,6 @@ const router = createBrowserRouter([
       { path: 'learn-more', element: <LearnMorePage /> },
       { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
       { path: 'terms-of-service', element: <TermsOfServicePage /> },
-      { path: 'debug', element: <DebugPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
