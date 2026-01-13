@@ -161,6 +161,29 @@ metrics:
           summary: 'Critical HTTP error rate'
           description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
 
+      # High 4xx Rate
+      - alert: HighNginx4xxRate
+        expr: |
+          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+          component: frontend
+        annotations:
+          summary: 'High client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
+
+      - alert: CriticalNginx4xxRate
+        expr: |
+          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.50
+        for: 5m
+        labels:
+          severity: critical
+          component: frontend
+        annotations:
+          summary: 'Critical client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
+
       # CPU Throttling
       - alert: HighCPUThrottling
         expr: |
