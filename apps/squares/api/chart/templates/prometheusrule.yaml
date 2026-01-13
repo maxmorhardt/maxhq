@@ -13,5 +13,21 @@ spec:
     - name: {{ include "app.fullname" . }}.rules
       interval: 30s
       rules:
-        {{- toYaml .Values.metrics.prometheusRule.rules | nindent 8 }}
+        {{- range .Values.metrics.prometheusRule.rules }}
+        - alert: {{ .alert }}
+          expr: {{ tpl .expr $ | quote }}
+          {{- if .for }}
+          for: {{ .for }}
+          {{- end }}
+          {{- with .labels }}
+          labels:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .annotations }}
+          annotations:
+            {{- range $key, $value := . }}
+            {{ $key }}: {{ tpl $value $ | quote }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
 {{- end }}
