@@ -120,26 +120,26 @@ metrics:
       # High Request Latency
       - alert: HighRequestLatency
         expr: |
-          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le)) > 1
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le, method, path)) > 1
         for: 5m
         labels:
           severity: warning
           component: api
         annotations:
-          summary: "High request latency detected"
-          description: "P99 latency is {{ $value }}s for {{ $labels.job }}"
-      
+          summary: 'High request latency detected'
+          description: 'P99 latency is {{ $value }}s for {{ $labels.method }} {{ $labels.path }} on {{ $labels.job }}'
+
       - alert: CriticalRequestLatency
         expr: |
-          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le)) > 3
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le, method, path)) > 3
         for: 5m
         labels:
           severity: critical
           component: api
         annotations:
-          summary: "Critical request latency detected"
-          description: "P99 latency is {{ $value }}s for {{ $labels.job }}"
-      
+          summary: 'Critical request latency detected'
+          description: 'P99 latency is {{ $value }}s for {{ $labels.method }} {{ $labels.path }} on {{ $labels.job }}'
+
       # High Error Rate
       - alert: HighErrorRate
         expr: |
@@ -149,9 +149,9 @@ metrics:
           severity: warning
           component: api
         annotations:
-          summary: "High HTTP error rate"
-          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
-      
+          summary: 'High HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
+
       - alert: CriticalErrorRate
         expr: |
           sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.10
@@ -160,9 +160,9 @@ metrics:
           severity: critical
           component: api
         annotations:
-          summary: "Critical HTTP error rate"
-          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
-      
+          summary: 'Critical HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
+
       # CPU Throttling
       - alert: HighCPUThrottling
         expr: |
@@ -172,9 +172,9 @@ metrics:
           severity: warning
           component: api
         annotations:
-          summary: "High CPU throttling detected"
-          description: "Pod {{ $labels.pod }} is being throttled {{ $value | humanizePercentage }} of the time"
-      
+          summary: 'High CPU throttling detected'
+          description: 'Pod {{ $labels.pod }} is being throttled {{ $value | humanizePercentage }} of the time'
+
       - alert: SevereCPUThrottling
         expr: |
           rate(container_cpu_cfs_throttled_seconds_total{pod=~"{{ include "app.fullname" . }}-.*"}[5m]) > 0.50
@@ -183,9 +183,9 @@ metrics:
           severity: critical
           component: api
         annotations:
-          summary: "Severe CPU throttling detected"
-          description: "Pod {{ $labels.pod }} is being throttled {{ $value | humanizePercentage }} of the time"
-      
+          summary: 'Severe CPU throttling detected'
+          description: 'Pod {{ $labels.pod }} is being throttled {{ $value | humanizePercentage }} of the time'
+
       # Memory Usage
       - alert: ApproachingMemoryLimit
         expr: |
@@ -195,9 +195,9 @@ metrics:
           severity: warning
           component: api
         annotations:
-          summary: "Pod approaching memory limit"
-          description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
-      
+          summary: 'Pod approaching memory limit'
+          description: 'Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit'
+
       - alert: CriticalMemoryUsage
         expr: |
           (container_memory_working_set_bytes{pod=~"{{ include "app.fullname" . }}-.*"} / container_spec_memory_limit_bytes{pod=~"{{ include "app.fullname" . }}-.*"}) > 0.95
@@ -206,9 +206,9 @@ metrics:
           severity: critical
           component: api
         annotations:
-          summary: "Pod critically close to memory limit"
-          description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
-      
+          summary: 'Pod critically close to memory limit'
+          description: 'Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit'
+
       # Pod Restarts
       - alert: PodRestartingFrequently
         expr: |
@@ -218,9 +218,9 @@ metrics:
           severity: warning
           component: api
         annotations:
-          summary: "Pod restarting frequently"
-          description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
-      
+          summary: 'Pod restarting frequently'
+          description: 'Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes'
+
       # Pod Not Ready
       - alert: PodNotReady
         expr: |
@@ -230,9 +230,9 @@ metrics:
           severity: warning
           component: api
         annotations:
-          summary: "Pod not ready"
-          description: "Pod {{ $labels.pod }} has been in {{ $labels.phase }} state for more than 10 minutes"
-      
+          summary: 'Pod not ready'
+          description: 'Pod {{ $labels.pod }} has been in {{ $labels.phase }} state for more than 10 minutes'
+
       # Deployment Replica Mismatch
       - alert: DeploymentReplicaMismatch
         expr: |
@@ -242,9 +242,9 @@ metrics:
           severity: warning
           component: api
         annotations:
-          summary: "Deployment replica mismatch"
-          description: "Deployment {{ $labels.deployment }} has {{ $value }} mismatched replicas"
-      
+          summary: 'Deployment replica mismatch'
+          description: 'Deployment {{ $labels.deployment }} has {{ $value }} mismatched replicas'
+
       # HPA Approaching Max Replicas
       - alert: HPAApproachingMaxReplicas
         expr: |
@@ -254,18 +254,40 @@ metrics:
           severity: warning
           component: api
         annotations:
-          summary: "HPA approaching max replicas"
-          description: "HPA {{ $labels.horizontalpodautoscaler }} is at {{ $value | humanizePercentage }} of max replicas"
-      
+          summary: 'HPA approaching max replicas'
+          description: 'HPA {{ $labels.horizontalpodautoscaler }} is at {{ $value | humanizePercentage }} of max replicas'
+
       # Request Rate Anomaly
       - alert: RequestRateDrop
         expr: |
-          (sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[1h] offset 5m))) < 0.2
+          (sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m] offset 1h))) < 0.2
         for: 10m
         labels:
           severity: warning
           component: api
         annotations:
-          summary: "Significant drop in request rate"
-          description: "Request rate has dropped to {{ $value | humanizePercentage }} of normal for {{ $labels.job }}"
+          summary: 'Significant drop in request rate'
+          description: 'Request rate has dropped to {{ $value | humanizePercentage }} of normal for {{ $labels.job }}'
 
+      # High 4xx Rate
+      - alert: High4xxRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: 'High client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
+
+      - alert: Critical4xxRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.50
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: 'Critical client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
