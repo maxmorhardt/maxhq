@@ -3,12 +3,16 @@ import { useEffect, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import ContestsTable from '../../components/contests/ContestsTable';
 import ContestsTableSkeleton from '../../components/contests/ContestsTableSkeleton';
-import { selectContestError, selectContestLoading } from '../../features/contests/contestSelectors';
+import {
+  selectContestError,
+  selectContestLoading,
+  selectContests,
+} from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
 import { fetchContestsByUser } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
-import type { Contest, PaginatedContestsResponse } from '../../types/contest';
+import type { PaginatedContestsResponse } from '../../types/contest';
 
 export default function ContestsPage() {
   const auth = useAuth();
@@ -16,7 +20,6 @@ export default function ContestsPage() {
   const dispatch = useAppDispatch();
 
   // owned contests state
-  const [ownedContests, setOwnedContests] = useState<Contest[]>([]);
   const [ownedPage, setOwnedPage] = useState(0);
   const [ownedRowsPerPage, setOwnedRowsPerPage] = useState(5);
   const [ownedPagination, setOwnedPagination] = useState({
@@ -30,6 +33,7 @@ export default function ContestsPage() {
 
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
+  const ownedContests = useAppSelector(selectContests);
 
   // fetch owned contests when authenticated and pagination changes
   useEffect(() => {
@@ -50,7 +54,6 @@ export default function ContestsPage() {
       ).then((result) => {
         if (result.meta.requestStatus === 'fulfilled') {
           const payload = result.payload as PaginatedContestsResponse;
-          setOwnedContests(payload.contests);
           setOwnedPagination({
             page: payload.page,
             limit: payload.limit,
