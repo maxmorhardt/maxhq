@@ -23,6 +23,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
   const [homeScore, setHomeScore] = useState('');
   const [awayScore, setAwayScore] = useState('');
   const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isStartingQ1, setIsStartingQ1] = useState(false);
 
   if (!currentContest) {
@@ -64,6 +65,8 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
       return;
     }
 
+    setIsLoading(true);
+
     const home = parseInt(homeScore);
     const away = parseInt(awayScore);
 
@@ -94,7 +97,10 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
       setHomeScore('');
       setAwayScore('');
     } catch (error) {
+      // toast handled by contest
       console.error('Failed to record quarter result:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -110,6 +116,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
       await dispatch(startContestThunk(currentContest.id)).unwrap();
       showToast('Quarter 1 started!', 'success');
     } catch (error) {
+      // toast handled by contest
       console.error('Failed to start Q1:', error);
     } finally {
       setIsStartingQ1(false);
@@ -149,7 +156,6 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
 
   const userGroups = (auth.user?.profile?.groups as string[] | undefined) || [];
   const isAdmin = userGroups.includes('squares-admin');
-  const canAutoFill = isAdmin;
 
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
@@ -217,7 +223,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
                 </Typography>
 
                 {/* admin debug button */}
-                {canAutoFill && (
+                {isAdmin && (
                   <Button
                     variant="outlined"
                     startIcon={<BugReport />}
@@ -256,6 +262,11 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
                   }
                   type="number"
                   value={homeScore}
+                  onKeyDown={(e) => {
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   onChange={(e) => {
                     const value = e.target.value;
                     if (value.length <= MAX_SCORE_LENGTH) {
@@ -286,6 +297,11 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
                   }
                   type="number"
                   value={awayScore}
+                  onKeyDown={(e) => {
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   onChange={(e) => {
                     const value = e.target.value;
                     if (value.length <= MAX_SCORE_LENGTH) {
@@ -313,7 +329,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
                 <Button
                   variant="contained"
                   onClick={handleScoreSubmit}
-                  disabled={!homeScore || !awayScore}
+                  disabled={!homeScore || !awayScore || isLoading}
                   fullWidth
                 >
                   Update Score
