@@ -123,19 +123,42 @@ mv k3s.yaml /etc/rancher/k3s/k3s.yaml
 chmod 600 /etc/rancher/k3s/k3s.yaml
 chown 0:0 /etc/rancher/k3s/k3s.yaml
 
-# Crontab config (Tuesday 2am - 5am EST)
+# Crontab config (First & Third Tuesday 2am - 3:30am EST)
 sudo su
 crontab -e
 
 # Main Node
-0 2 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 2 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 1
-0 3 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+30 2 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 2
-0 4 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 3 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 3
-0 5 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+30 3 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+```
+
+## MicroSD to NVMe Migration
+
+To migrate from microSD to NVMe for better performance:
+
+```bash
+# 1. Drain node and shutdown, then attach NVMe drive
+
+# 2. Startup and stop k3s services
+sudo /usr/local/bin/k3s-killall.sh
+
+# 3. Clone microSD to NVMe (Ensure correct drives: mmcblk0 - MicroSD, nvme0n1 NVMe)
+lsblk
+sudo dd if=/dev/mmcblk0 of=/dev/nvme0n1 bs=4M status=progress conv=fsync
+sync
+
+# 4. Expand partition to full NVMe size
+sudo growpart /dev/nvme0n1 2
+sudo e2fsck -f /dev/nvme0n1p2
+sudo resize2fs /dev/nvme0n1p2
+
+# 5. Shutdown, detach microSD, and startup from NVMe
 ```
