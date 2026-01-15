@@ -197,3 +197,12 @@ metrics:
         annotations:
           summary: 'Critical client error rate'
           description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
+
+dashboard:
+  enabled: true
+  namespace: monitoring
+  file: squares-api-dashboard.json
+  filename: squares-api-dashboard.json
+  labels:
+    grafana_dashboard: '1'
+  annotations: {}
