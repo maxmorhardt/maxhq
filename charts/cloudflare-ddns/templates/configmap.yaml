@@ -6,4 +6,4 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 data:
   cloudflare-ddns.sh: |-
-{{ .Files.Get "charts/cloudflare-ddns/cloudflare-ddns.sh" | indent 4 }}
+{{ .Files.Get "cloudflare-ddns.sh" | indent 4 }}
