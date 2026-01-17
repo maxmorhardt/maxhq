@@ -1,7 +1,7 @@
 
 schedule: '*/5 * * * *'
 
-existingSecret: ''
+existingSecret: cloudflare-ddns-env
 
 image:
   repository: alpine/curl
