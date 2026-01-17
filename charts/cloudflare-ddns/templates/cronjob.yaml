@@ -34,7 +34,7 @@ spec:
             - /scripts/cloudflare-ddns.sh
             envFrom:
             - secretRef:
-                name: {{ .Values.image.pullPolicy }}
+                name: {{ .Values.existingSecret }}
             volumeMounts:
             - name: script
               mountPath: /scripts
