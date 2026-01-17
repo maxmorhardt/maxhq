@@ -21,7 +21,7 @@ discord_notify() {
     "$DISCORD_WEBHOOK" > /dev/null
 }
 
-MSG="✕ DDNS job failed with exit code $? ($(date))"
+MSG="✕ Cloudflare DDNS job failed ($(date))"
 trap 'discord_notify err "$MSG"' ERR
 
 if [ -z "$ZONE_ID" ]; then
@@ -69,5 +69,5 @@ UPDATE_RESPONSE=$(curl -s --fail -X PUT "https://api.cloudflare.com/client/v4/zo
 	--data "{\"type\":\"A\",\"name\":\"${RECORD_NAME}\",\"content\":\"${CURRENT_IP}\",\"ttl\":120,\"proxied\":true}")
 log info "$UPDATE_RESPONSE"
 
-MSG="✓ DDNS job succcessfully updated Cloudflare IP: $CLOUDFLARE_IP -> $CURRENT_IP ($(date))"
+MSG="✓ Cloudflare DDNS job succcessfully updated Cloudflare IP: $CLOUDFLARE_IP -> $CURRENT_IP ($(date))"
 discord_notify info "$MSG"
