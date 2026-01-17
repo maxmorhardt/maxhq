@@ -25,7 +25,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 sh -s - \
   --disable traefik \
   --kube-apiserver-arg service-node-port-range=25565-32767
 
-# setup kubectl aliases
+# Setup kubectl aliases
 echo "alias k=\"k3s kubectl\"" >> /root/.bashrc
 echo "alias k=\"sudo k3s kubectl\"" >> .bashrc
 ```
@@ -109,6 +109,12 @@ mv rehydrate.sh /usr/local/bin
 chmod +x /usr/local/bin/rehydrate.sh
 chown 0:0 /usr/local/bin/rehydrate.sh
 
+mkdir -p /var/log/rehydrate
+
+echo 'DISCORD_WEBHOOK="https://discord.com/api/webhooks/XXXX/XXXX"' | tee /etc/rehydrate.env
+chmod 600 /etc/rehydrate.env
+chown 0:0 /etc/rehydrate.env
+
 # SCP k3s-uncordon.service to worker nodes
 # For control plane do the same steps but with k3s-uncordon-cp.service
 mv k3s-uncordon.service /etc/systemd/system/
@@ -123,21 +129,20 @@ mv k3s.yaml /etc/rancher/k3s/k3s.yaml
 chmod 600 /etc/rancher/k3s/k3s.yaml
 chown 0:0 /etc/rancher/k3s/k3s.yaml
 
-# Crontab config (First & Third Tuesday 2am - 3:30am EST)
-sudo su
+# Crontab config (Tuesday 2am - 3:30am EST)
 crontab -e
 
 # Main Node
-0 2 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 2 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 1
-30 2 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+30 2 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 2
-0 3 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+0 3 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 
 # Worker 3
-30 3 1-7,15-21 * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
+30 3 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
 ```
 
 ## MicroSD to NVMe Migration

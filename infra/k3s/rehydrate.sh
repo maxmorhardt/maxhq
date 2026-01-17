@@ -1,11 +1,20 @@
 #!/bin/bash
 
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-
 set -e
 
+source /etc/rehydrate.env
+
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
 HOSTNAME=$(hostname)
-START_TIME=$(date '+%Y-%m-%d %H:%M:%S')
+
+discord_notify() {
+  local MESSAGE="$1"
+  curl -s -H "Content-Type: application/json" \
+    -X POST \
+    -d "{\"content\": \"$MESSAGE\"}" \
+    "$DISCORD_WEBHOOK" > /dev/null
+}
 
 log_section() {
     echo ""
@@ -14,7 +23,21 @@ log_section() {
     echo "================================================================================"
 }
 
-log_section "NODE REHYDRATION STARTED - $HOSTNAME at $START_TIME"
+trap 'discord_notify "✕ REHYDRATION FAILED - $HOSTNAME at $(date)"; exit 1' ERR
+
+log_section "Checking rehydration schedule"
+WEEK=$(date +%V)
+MOD=$((10#$WEEK % 2))
+if [ "$MOD" -ne 0 ]; then
+  MSG="⊘ NODE REHYDRATION SKIPPED - $HOSTNAME at $(date)"
+  echo "$MSG"
+  discord_notify "$MSG"
+  exit 0
+fi
+
+MSG="▷ NODE REHYDRATION STARTED - $HOSTNAME at $(date)"
+log_section "$MSG"
+discord_notify "$MSG"
 
 log_section "Checking disk space"
 df -h / | tail -1
@@ -81,8 +104,9 @@ echo "✓ Firmware backups removed"
 log_section "Final disk space check"
 df -h / | tail -1
 
-END_TIME=$(date '+%Y-%m-%d %H:%M:%S')
-log_section "REHYDRATION COMPLETE - $HOSTNAME at $END_TIME"
+MSG="✓ REHYDRATION COMPLETE - $HOSTNAME at $(date)"
+log_section "$MSG"
+discord_notify "$MSG"
 
 echo ""
 echo "System will reboot in 5 seconds..."
