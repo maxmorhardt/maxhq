@@ -1,3 +1,4 @@
+fullnameOverride: cloudflare-ddns
 
 schedule: '*/5 * * * *'
 
