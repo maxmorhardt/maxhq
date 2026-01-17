@@ -5,9 +5,9 @@ schedule: '*/5 * * * *'
 existingSecret: cloudflare-ddns-env
 
 image:
-  repository: alpine/curl
+  repository: badouralix/curl-jq
   pullPolicy: Always
-  tag: latest
+  tag: alpine
 
 resources:
   limits:
