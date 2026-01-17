@@ -1,0 +1,34 @@
+
+schedule: '*/5 * * * *'
+
+existingSecret: ''
+
+image:
+  repository: alpine/curl
+  pullPolicy: Always
+  tag: latest
+
+resources:
+  limits:
+    cpu: 50m
+    memory: 64Mi
+  requests:
+    cpu: 25m
+    memory: 32Mi
+
+restartPolicy: OnFailure
+concurrencyPolicy: Forbid
+successfulJobsHistoryLimit: 1
+failedJobsHistoryLimit: 1
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
