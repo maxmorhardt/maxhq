@@ -1,4 +1,3 @@
-
 # Dependencies
 
 This chart has no external Helm dependencies.
@@ -18,9 +17,10 @@ metadata:
 	name: my-cloudflare-ddns-secret
 type: Opaque
 stringData:
-	ZONE_ID: "your-zone-id"
-	RECORD_NAME: "your.domain.com"
-	API_TOKEN: "your-cloudflare-api-token"
+	ZONE_ID: "zone-id"
+	RECORD_NAME: "domain.com"
+	API_TOKEN: "cloudflare-api-token"
+	DISCORD_WEBHOOK: "discord-webhook"
 ```
 
 Set `existingSecret: my-cloudflare-ddns-secret` in your values when installing the chart.
