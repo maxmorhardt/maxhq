@@ -24,7 +24,6 @@ discord_notify() {
 MSG="✕ Cloudflare CIDR job failed ($(date))"
 trap 'discord_notify err "$MSG"' ERR
 
-
 if [ -z "$DISCORD_WEBHOOK" ]; then
 	log err "DISCORD_WEBHOOK environment variable is not set"
 	exit 2
