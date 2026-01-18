@@ -16,6 +16,7 @@ spec:
           labels:
             {{- include "app.selectorLabels" . | nindent 12 }}
         spec:
+          serviceAccountName: {{ include "app.fullname" . }}
           {{- with .Values.podSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
