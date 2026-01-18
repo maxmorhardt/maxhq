@@ -5,9 +5,9 @@ schedule: '0 0 * * *'
 existingSecret: cloudflare-cidr-env
 
 image:
-  repository: badouralix/curl-jq
-  pullPolicy: Always
-  tag: alpine
+  repository: alpine/k8s
+  pullPolicy: IfNotPresent
+  tag: 1.32.11
 
 resources:
   limits:

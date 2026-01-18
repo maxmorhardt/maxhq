@@ -33,7 +33,7 @@ log info "Fetching Cloudflare IPv4 ranges..."
 CLOUDFLARE_IPV4_RANGES=$(curl -s --fail https://www.cloudflare.com/ips-v4)
 
 log info "Fetching Cloudflare IPv6 ranges..."
-CLOUDFLARE_IPV6_RANGES=$(curl -s --fail https://www.cloudflare.coms/ips-v6)
+CLOUDFLARE_IPV6_RANGES=$(curl -s --fail https://www.cloudflare.com/ips-v6)
 
 CLOUDFLARE_RANGES=$(printf "%s\n%s" "$CLOUDFLARE_IPV4_RANGES" "$CLOUDFLARE_IPV6_RANGES" | paste -sd "," -)
 log info "All Cloudflare ranges: $CLOUDFLARE_RANGES"
