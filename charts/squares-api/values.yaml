@@ -120,7 +120,7 @@ metrics:
       # High Request Latency
       - alert: HighRequestLatency
         expr: |
-          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le, method, path)) > 1
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}", path!~"/ws.*"}[5m])) by (le, method, path)) > 1
         for: 5m
         labels:
           severity: warning
@@ -131,7 +131,7 @@ metrics:
 
       - alert: CriticalRequestLatency
         expr: |
-          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le, method, path)) > 3
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}", path!~"/ws.*"}[5m])) by (le, method, path)) > 3
         for: 5m
         labels:
           severity: critical
