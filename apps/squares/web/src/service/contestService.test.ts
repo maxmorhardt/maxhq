@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import api from '../axios/api';
-import { getContests, getContestById } from './contestService';
+import { getContestsByOwner, getContestByOwnerAndName } from './contestService';
 import type { Contest, PaginatedContestsResponse } from '../types/contest';
 
 // Mock the axios api module
@@ -11,7 +11,7 @@ describe('contestService', () => {
     vi.clearAllMocks();
   });
 
-  it('should fetch paginated contests successfully', async () => {
+  it('should fetch paginated contests for owner successfully', async () => {
     const mockResponse: PaginatedContestsResponse = {
       contests: [
         {
@@ -39,17 +39,17 @@ describe('contestService', () => {
 
     vi.mocked(api.get).mockResolvedValue({ data: mockResponse });
 
-    const result = await getContests({ page: 1, limit: 10 });
+    const result = await getContestsByOwner('user123', { page: 1, limit: 10 });
 
     expect(result).toEqual(mockResponse);
     expect(result.contests).toHaveLength(1);
     expect(result.contests[0].name).toBe('Test Contest');
-    expect(api.get).toHaveBeenCalledWith('/contests', {
+    expect(api.get).toHaveBeenCalledWith('/contests/owner/user123', {
       params: { page: 1, limit: 10 },
     });
   });
 
-  it('should fetch a single contest by id', async () => {
+  it('should fetch a single contest by owner and name', async () => {
     const mockContest: Contest = {
       id: '123',
       name: 'Super Bowl Contest',
@@ -67,11 +67,11 @@ describe('contestService', () => {
 
     vi.mocked(api.get).mockResolvedValue({ data: mockContest });
 
-    const result = await getContestById('123');
+    const result = await getContestByOwnerAndName('user456', 'Super Bowl Contest');
 
     expect(result).toEqual(mockContest);
     expect(result.id).toBe('123');
     expect(result.name).toBe('Super Bowl Contest');
-    expect(api.get).toHaveBeenCalledWith('/contests/123');
+    expect(api.get).toHaveBeenCalledWith('/contests/owner/user456/name/Super Bowl Contest');
   });
 });
