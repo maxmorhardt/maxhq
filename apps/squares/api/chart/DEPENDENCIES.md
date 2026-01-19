@@ -2,7 +2,7 @@
 
 ## Required
 
-- **PostgreSQL Database** - Version 12+
+- **PostgreSQL Database** - Version 18+
 - **Redis Cache** - For sessions and caching
 - **SMTP Server** - For sending emails
 - **Environment Secret** - Name: `squares-api-env`
