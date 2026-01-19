@@ -9,7 +9,7 @@ import {
   selectContests,
 } from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
-import { fetchContestsByUser } from '../../features/contests/contestThunks';
+import { fetchContestsByOwner } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import type { PaginatedContestsResponse } from '../../types/contest';
@@ -41,11 +41,11 @@ export default function ContestsPage() {
       return;
     }
 
-    const username = auth.user?.profile?.preferred_username;
-    if (username) {
+    const owner = auth.user?.profile?.preferred_username;
+    if (owner) {
       dispatch(
-        fetchContestsByUser({
-          username,
+        fetchContestsByOwner({
+          owner,
           pagination: {
             page: ownedPage + 1,
             limit: ownedRowsPerPage,

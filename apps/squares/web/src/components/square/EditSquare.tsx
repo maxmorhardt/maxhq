@@ -196,7 +196,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
               color: 'rgba(255,255,255,0.8)',
             }}
           >
-            Owner: {currentSquare.ownerFirstName} {currentSquare.ownerLastName}
+            Owner: {currentSquare.ownerName}
           </Typography>
         )}
 

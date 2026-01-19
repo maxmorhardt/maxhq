@@ -11,9 +11,8 @@ import {
   clearSquare,
   createContest,
   deleteContest,
-  fetchContestById,
-  fetchContests,
-  fetchContestsByUser,
+  fetchContestByOwnerAndName,
+  fetchContestsByOwner,
   startContestThunk,
   updateContest,
   updateQuarterResult,
@@ -131,8 +130,7 @@ const contestSlice = createSlice({
         winnerRow: number;
         winnerCol: number;
         winner: string;
-        winnerFirstName: string;
-        winnerLastName: string;
+        winnerName: string;
         status: ContestStatus;
       }>
     ) {
@@ -160,8 +158,7 @@ const contestSlice = createSlice({
           winnerRow: quarterResult.winnerRow,
           winnerCol: quarterResult.winnerCol,
           winner: quarterResult.winner,
-          winnerFirstName: quarterResult.winnerFirstName,
-          winnerLastName: quarterResult.winnerLastName,
+          winnerName: quarterResult.winnerName,
           createdAt: '',
           updatedAt: '',
           createdBy: '',
@@ -174,14 +171,13 @@ const contestSlice = createSlice({
   },
   // async thunk handlers for API operations
   extraReducers: (builder) => {
-    // fetch paginated contests list
     builder
-      .addCase(fetchContests.pending, (state) => {
+      .addCase(fetchContestsByOwner.pending, (state) => {
         state.contestLoading = true;
         state.error = null;
       })
       .addCase(
-        fetchContests.fulfilled,
+        fetchContestsByOwner.fulfilled,
         (state, action: PayloadAction<PaginatedContestsResponse>) => {
           state.contestLoading = false;
           state.contests = action.payload.contests;
@@ -195,49 +191,24 @@ const contestSlice = createSlice({
           };
         }
       )
-      .addCase(fetchContests.rejected, (state, action) => {
-        state.contestLoading = false;
-        state.error = action.payload?.message ?? 'Error fetching contests';
-      });
-
-    builder
-      .addCase(fetchContestsByUser.pending, (state) => {
-        state.contestLoading = true;
-        state.error = null;
-      })
-      .addCase(
-        fetchContestsByUser.fulfilled,
-        (state, action: PayloadAction<PaginatedContestsResponse>) => {
-          state.contestLoading = false;
-          state.contests = action.payload.contests;
-          state.pagination = {
-            page: action.payload.page,
-            limit: action.payload.limit,
-            total: action.payload.total,
-            totalPages: action.payload.totalPages,
-            hasNext: action.payload.hasNext,
-            hasPrevious: action.payload.hasPrevious,
-          };
-        }
-      )
-      .addCase(fetchContestsByUser.rejected, (state, action) => {
+      .addCase(fetchContestsByOwner.rejected, (state, action) => {
         state.contestLoading = false;
         state.contests = [];
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 
-    // fetch single contest by id
+    // fetch single contest by owner and name
     builder
-      .addCase(fetchContestById.pending, (state) => {
+      .addCase(fetchContestByOwnerAndName.pending, (state) => {
         state.contestLoading = true;
         state.error = null;
         state.currentContest = null;
       })
-      .addCase(fetchContestById.fulfilled, (state, action: PayloadAction<Contest>) => {
+      .addCase(fetchContestByOwnerAndName.fulfilled, (state, action: PayloadAction<Contest>) => {
         state.contestLoading = false;
         state.currentContest = action.payload;
       })
-      .addCase(fetchContestById.rejected, (state, action) => {
+      .addCase(fetchContestByOwnerAndName.rejected, (state, action) => {
         state.contestLoading = false;
         state.error = action.payload?.message ?? 'Error fetching contest';
       });
@@ -378,6 +349,14 @@ const contestSlice = createSlice({
 
         if (!state.currentContest.quarterResults) {
           state.currentContest.quarterResults = [];
+        }
+
+        const existingQuarterResult = state.currentContest.quarterResults.find(
+          (qr) => qr.quarter === action.payload.quarter
+        );
+
+        if (existingQuarterResult) {
+          return;
         }
 
         state.currentContest.quarterResults.push(action.payload);

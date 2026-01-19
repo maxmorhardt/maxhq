@@ -44,7 +44,7 @@ const router = createBrowserRouter([
       { path: 'auth/callback', element: <CallbackPage /> },
       { path: 'contests', element: <ContestsPage /> },
       { path: 'contests/create', element: <CreateContestPage /> },
-      { path: 'contests/:id', element: <ContestPage /> },
+      { path: 'contests/owner/:owner/name/:name', element: <ContestPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },
       { path: 'privacy-policy', element: <PrivacyPolicyPage /> },

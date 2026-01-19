@@ -64,8 +64,8 @@ export default function ContestsTable({
   };
 
   // navigate to contest detail page
-  const handleRowClick = (contestId: string) => {
-    navigate(`/contests/${contestId}`);
+  const handleRowClick = (owner: string, name: string) => {
+    navigate(`/contests/owner/${owner}/name/${name}`);
   };
 
   // set contest in redux and open delete modal
@@ -162,7 +162,7 @@ export default function ContestsTable({
                 {contests.map((contest, index) => (
                   <TableRow
                     key={contest.id}
-                    onClick={() => handleRowClick(contest.id)}
+                    onClick={() => handleRowClick(contest.owner, contest.name)}
                     sx={{
                       cursor: 'pointer',
                       backgroundColor: index % 2 === 0 ? '' : 'rgba(255,255,255,0.02)',

@@ -22,7 +22,6 @@ export interface CreateContestRequest {
   owner: string;
   homeTeam?: string;
   awayTeam?: string;
-  defaultSquaresPerPerson?: number;
 }
 
 export interface Square {
@@ -32,8 +31,7 @@ export interface Square {
   col: number;
   value: string;
   owner: string;
-  ownerFirstName: string;
-  ownerLastName: string;
+  ownerName: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -78,8 +76,7 @@ export interface QuarterResultWSUpdate {
   winnerRow: number;
   winnerCol: number;
   winner: string;
-  winnerFirstName: string;
-  winnerLastName: string;
+  winnerName: string;
   status: ContestStatus;
 }
 
@@ -107,8 +104,7 @@ export interface QuarterResult {
   winnerRow: number;
   winnerCol: number;
   winner: string;
-  winnerFirstName: string;
-  winnerLastName: string;
+  winnerName: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -126,7 +122,6 @@ export interface UpdateSquareRequest {
 }
 
 export interface UpdateContestRequest {
-  name?: string;
   homeTeam?: string;
   awayTeam?: string;
 }

@@ -45,9 +45,6 @@ export default function EditContest({ open, onClose }: EditContestProps) {
 
   // calculate status flags
   const contestStatus = contest?.status;
-  const totalSquares = contest?.squares?.length || 0;
-  const filledSquares =
-    contest?.squares?.filter((s) => s.value && s.value.trim() !== '').length || 0;
   const isCanceled = contestStatus === 'DELETED';
   const isFinished = contestStatus === 'FINISHED';
   const isInGame = contestStatus && ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
@@ -66,13 +63,13 @@ export default function EditContest({ open, onClose }: EditContestProps) {
       return `In Progress • ${contestStatus}`;
     }
 
-    return `Active • ${filledSquares}/${totalSquares} Squares Filled`;
+    return `Active`;
   };
 
   // initialize form with contest data when modal opens
   useEffect(() => {
     if (contest && open) {
-      setContestName(contest.name || '');
+      setContestName(contest.name);
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
     }
@@ -91,7 +88,6 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     setLoading(true);
     try {
       const updates = {
-        name: contestName.trim(),
         homeTeam: homeTeam.trim() || undefined,
         awayTeam: awayTeam.trim() || undefined,
       };
@@ -110,7 +106,6 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   const handleClose = () => {
     // Reset form to current values
     if (contest) {
-      setContestName(contest.name || '');
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
     }
@@ -192,16 +187,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
           </Card>
 
           {/* contest name input */}
-          <TextField
-            fullWidth
-            label="Contest Name"
-            value={contestName}
-            onChange={(e) => setContestName(e.target.value)}
-            placeholder="Enter contest name"
-            required
-            disabled={isDisabled}
-            slotProps={{ htmlInput: { maxLength: 20 } }}
-          />
+          <TextField fullWidth label="Contest Name" value={contestName} disabled />
 
           {/* team name inputs */}
           <Box sx={{ display: 'flex', gap: 2 }}>

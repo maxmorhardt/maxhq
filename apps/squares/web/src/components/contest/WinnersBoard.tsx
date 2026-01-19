@@ -13,15 +13,6 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
     return `Q${quarter}`;
   };
 
-  // prefer full name if available, fallback to username
-  const getWinnerName = (result: QuarterResult) => {
-    if (result.winnerFirstName && result.winnerLastName) {
-      return `${result.winnerFirstName} ${result.winnerLastName}`;
-    }
-
-    return result.winner || 'Unknown';
-  };
-
   const getSquareLabel = (result: QuarterResult) => {
     return `(${result.winnerRow}, ${result.winnerCol})`;
   };
@@ -78,9 +69,9 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
                   }}
                 >
                   {/* truncate long names with ellipsis */}
-                  {getWinnerName(result).length > MAX_NAME_LENGTH
-                    ? `${getWinnerName(result).substring(0, MAX_NAME_LENGTH)}...`
-                    : getWinnerName(result)}
+                  {result.winnerName.length > MAX_NAME_LENGTH
+                    ? `${result.winnerName.substring(0, MAX_NAME_LENGTH)}...`
+                    : result.winnerName}
                 </Typography>
 
                 <Typography

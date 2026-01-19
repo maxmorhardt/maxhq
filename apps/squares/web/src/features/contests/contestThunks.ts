@@ -3,9 +3,8 @@ import {
   clearSquareById,
   createNewContest,
   deleteContestById,
-  getContestById,
-  getContests,
-  getContestsByUser,
+  getContestByOwnerAndName,
+  getContestsByOwner,
   recordQuarterResult,
   startContest,
   updateContestById,
@@ -23,28 +22,14 @@ import type {
 } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
-// fetch paginated list of all contests
-export const fetchContests = createAsyncThunk<
-  PaginatedContestsResponse,
-  PaginationParams,
-  { rejectValue: APIError }
->('contests/fetchContests', async (pagination, { rejectWithValue }) => {
-  try {
-    const response = await getContests(pagination);
-    return response;
-  } catch (err: unknown) {
-    return rejectWithValue(err as APIError);
-  }
-});
-
 // fetch contests owned by specific user
-export const fetchContestsByUser = createAsyncThunk<
+export const fetchContestsByOwner = createAsyncThunk<
   PaginatedContestsResponse,
-  { username: string; pagination: PaginationParams },
+  { owner: string; pagination: PaginationParams },
   { rejectValue: APIError }
->('contests/fetchByUser', async ({ username, pagination }, { rejectWithValue }) => {
+>('contests/fetchByUser', async ({ owner, pagination }, { rejectWithValue }) => {
   try {
-    const response = await getContestsByUser(username, pagination);
+    const response = await getContestsByOwner(owner, pagination);
     return response;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
@@ -52,17 +37,18 @@ export const fetchContestsByUser = createAsyncThunk<
 });
 
 // fetch single contest by id with all squares and details
-export const fetchContestById = createAsyncThunk<Contest, string, { rejectValue: APIError }>(
-  'contests/fetchContestById',
-  async (id, { rejectWithValue }) => {
-    try {
-      const response = await getContestById(id);
-      return response;
-    } catch (err: unknown) {
-      return rejectWithValue(err as APIError);
-    }
+export const fetchContestByOwnerAndName = createAsyncThunk<
+  Contest,
+  { owner: string; name: string },
+  { rejectValue: APIError }
+>('contests/fetchContestByOwnerAndName', async ({ owner, name }, { rejectWithValue }) => {
+  try {
+    const response = await getContestByOwnerAndName(owner, name);
+    return response;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
   }
-);
+});
 
 // create new contest with name, owner, and optional team names
 export const createContest = createAsyncThunk<

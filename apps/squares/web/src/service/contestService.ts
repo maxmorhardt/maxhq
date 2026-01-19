@@ -12,30 +12,13 @@ import type {
 } from '../types/contest';
 import { handleError } from './handleError';
 
-// fetch paginated list of all contests
-export async function getContests(
+// fetch contests owned by specific owner
+export async function getContestsByOwner(
+  owner: string,
   pagination: PaginationParams
 ): Promise<PaginatedContestsResponse> {
   try {
-    const res = await api.get<PaginatedContestsResponse>('/contests', {
-      params: {
-        page: pagination.page,
-        limit: pagination.limit,
-      },
-    });
-    return res.data;
-  } catch (err: unknown) {
-    throw handleError(err);
-  }
-}
-
-// fetch contests owned by specific user
-export async function getContestsByUser(
-  user: string,
-  pagination: PaginationParams
-): Promise<PaginatedContestsResponse> {
-  try {
-    const res = await api.get<PaginatedContestsResponse>(`/contests/user/${user}`, {
+    const res = await api.get<PaginatedContestsResponse>(`/contests/owner/${owner}`, {
       params: {
         page: pagination.page,
         limit: pagination.limit,
@@ -48,9 +31,9 @@ export async function getContestsByUser(
 }
 
 // fetch single contest by id with all details
-export async function getContestById(id: string): Promise<Contest> {
+export async function getContestByOwnerAndName(owner: string, name: string): Promise<Contest> {
   try {
-    const res = await api.get<Contest>(`/contests/${id}`);
+    const res = await api.get<Contest>(`/contests/owner/${owner}/name/${name}`);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
