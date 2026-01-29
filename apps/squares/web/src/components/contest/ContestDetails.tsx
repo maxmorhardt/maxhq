@@ -134,8 +134,8 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
     // get all empty squares
     const emptySquares = currentContest.squares.filter((s) => !s.value || s.value.trim() === '');
     try {
-      const owner = auth.user?.profile?.preferred_username || 'debug-user';
-      const userName = auth.user?.profile?.name || auth.user?.profile?.preferred_username || 'User';
+      const owner = auth.user?.profile?.sub || 'debug-user';
+      const userName = auth.user?.profile?.name || auth.user?.profile?.sub || 'User';
 
       // extract initials from user name
       const nameParts = userName.split(' ');
@@ -154,8 +154,8 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
     }
   };
 
-  const userGroups = (auth.user?.profile?.groups as string[] | undefined) || [];
-  const isAdmin = userGroups.includes('squares-admin');
+  const roles = Object.keys(auth.user?.profile?.['urn:zitadel:iam:org:project:roles'] || {});
+  const isAdmin = roles.includes('squares-admin');
 
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">

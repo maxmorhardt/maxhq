@@ -48,7 +48,7 @@ export default function ContestPage() {
   const currentContest = useAppSelector(selectCurrentContest);
 
   // check if current user is contest owner
-  const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
+  const isOwner = auth.user?.profile?.sub === currentContest?.owner;
 
   // build websocket url with contest id and auth token
   const socketUrl = useMemo(
@@ -63,23 +63,23 @@ export default function ContestPage() {
         owner &&
         name &&
         auth.isAuthenticated &&
-        auth.user?.access_token &&
+        auth.user?.id_token &&
         currentContest &&
         currentContest.status !== 'FINISHED' &&
         currentContest.status !== 'DELETED'
       ),
-    [owner, name, auth.isAuthenticated, auth.user?.access_token, currentContest]
+    [owner, name, auth.isAuthenticated, auth.user?.id_token, currentContest]
   );
 
   // websocket options with auth token and reconnection settings
   const webSocketOptions = useMemo(
     () => ({
-      protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
+      protocols: auth.user?.id_token ? [auth.user.id_token] : undefined,
       reconnectAttempts: Infinity,
       reconnectInterval: (attempt: number) => Math.min(1000 * 2 ** (attempt - 1), 30000),
       shouldReconnect: () => shouldConnect,
     }),
-    [auth.user?.access_token, shouldConnect]
+    [auth.user?.id_token, shouldConnect]
   );
 
   // connect to websocket for real-time updates
@@ -157,7 +157,8 @@ export default function ContestPage() {
             winnerRow: message.quarterResult.winnerRow,
             winnerCol: message.quarterResult.winnerCol,
             winner: message.quarterResult.winner,
-            winnerName: message.quarterResult.winnerName,
+            winnerFirstName: message.quarterResult.winnerFirstName,
+            winnerLastName: message.quarterResult.winnerLastName,
             status: message.quarterResult.status,
           })
         );

@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 export const setupAxiosInterceptors = (user: User | null | undefined) => {
-  if (!user || !user.access_token) {
+  if (!user || !user.id_token) {
     return;
   }
 
@@ -20,7 +20,7 @@ export const setupAxiosInterceptors = (user: User | null | undefined) => {
   // add authorization header to all requests
   api.interceptors.request.use(
     (config) => {
-      config.headers.Authorization = `Bearer ${user.access_token}`;
+      config.headers.Authorization = `Bearer ${user.id_token}`;
       return config;
     },
     (error) => Promise.reject(error)

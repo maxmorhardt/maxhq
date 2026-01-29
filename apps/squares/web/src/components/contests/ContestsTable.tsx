@@ -231,7 +231,7 @@ export default function ContestsTable({
                           justifyContent: 'flex-end',
                         }}
                       >
-                        {auth.user?.profile?.preferred_username === contest.owner && (
+                        {auth.user?.profile?.sub === contest.owner && (
                           <Tooltip title="Edit Contest">
                             <IconButton
                               size="small"
@@ -253,7 +253,7 @@ export default function ContestsTable({
                             </IconButton>
                           </Tooltip>
                         )}
-                        {auth.user?.profile?.preferred_username === contest.owner && (
+                        {auth.user?.profile?.sub === contest.owner && (
                           <Tooltip title="Delete Contest">
                             <IconButton
                               size="small"

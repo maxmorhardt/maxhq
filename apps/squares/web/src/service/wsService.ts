@@ -4,7 +4,7 @@ import type { HandleWSEventParams } from '../types/ws';
 
 // construct websocket url for contest connection
 export function getSocketUrl(id: string | undefined, auth: ReturnType<typeof useAuth>) {
-  if (!id || !auth.user?.access_token) {
+  if (!id || !auth.user?.id_token) {
     return null;
   }
 

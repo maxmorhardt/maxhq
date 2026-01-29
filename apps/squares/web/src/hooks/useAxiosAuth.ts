@@ -9,7 +9,7 @@ export const useAxiosAuth = () => {
 
   // configure axios with auth token when user is authenticated
   useEffect(() => {
-    if (!auth.isAuthenticated || !auth.user?.access_token) {
+    if (!auth.isAuthenticated || !auth.user?.id_token) {
       setReady(false);
       return;
     }

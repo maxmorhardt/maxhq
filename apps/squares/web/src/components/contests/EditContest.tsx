@@ -40,7 +40,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   const [loading, setLoading] = useState(false);
 
   // check if current user owns the contest
-  const isOwner = auth.user?.profile?.preferred_username === contest?.owner;
+  const isOwner = auth.user?.profile?.sub === contest?.owner;
   const currentStatus = getStatusOption(contest?.status || 'ACTIVE');
 
   // calculate status flags

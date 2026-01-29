@@ -31,7 +31,8 @@ export interface Square {
   col: number;
   value: string;
   owner: string;
-  ownerName: string;
+  ownerFirstName: string;
+  ownerLastName: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -76,7 +77,8 @@ export interface QuarterResultWSUpdate {
   winnerRow: number;
   winnerCol: number;
   winner: string;
-  winnerName: string;
+  winnerFirstName: string;
+  winnerLastName: string;
   status: ContestStatus;
 }
 
@@ -104,7 +106,8 @@ export interface QuarterResult {
   winnerRow: number;
   winnerCol: number;
   winner: string;
-  winnerName: string;
+  winnerFirstName: string;
+  winnerLastName: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;

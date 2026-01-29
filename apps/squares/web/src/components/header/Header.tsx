@@ -42,8 +42,7 @@ export default function Header() {
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
-  // buttons disabled if loading and not signing out silently (logout timeout after 10 sec, bad ux)
-  const isAuthButtonDisabled = auth.isLoading && auth.activeNavigator !== 'signoutSilent';
+  const isAuthButtonDisabled = auth.isLoading;
 
   // redirect to registration page
   const handleRegister = async () => {
@@ -72,7 +71,7 @@ export default function Header() {
   // handle account settings menu clicks
   const handleSettingClick = (setting: string) => {
     if (setting === 'Account') {
-      window.open('https://login.maxstash.io/if/user/#/settings', '_blank');
+      window.open('https://login.maxstash.io/ui/console/users/me', '_blank');
     } else if (setting === 'Logout') {
       auth.signoutSilent();
     }

@@ -41,7 +41,7 @@ export default function ContestsPage() {
       return;
     }
 
-    const owner = auth.user?.profile?.preferred_username;
+    const owner = auth.user?.profile?.sub;
     if (owner) {
       dispatch(
         fetchContestsByOwner({

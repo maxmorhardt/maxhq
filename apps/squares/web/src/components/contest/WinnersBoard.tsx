@@ -17,6 +17,16 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
     return `(${result.winnerRow}, ${result.winnerCol})`;
   };
 
+  const formatWinnerName = (result: QuarterResult) => {
+    const name = `${result.winnerFirstName} ${result.winnerLastName}`;
+    if (name.length < MAX_NAME_LENGTH) {
+      return name;
+    }
+
+    const truncatedNameLength = MAX_NAME_LENGTH - 3;
+    return `${name.substring(0, truncatedNameLength)}...`;
+  };
+
   return (
     <ContestSidebarCard icon={<span style={{ fontSize: '1.3rem' }}>🏆</span>} title="Winners Board">
       {/* winners list */}
@@ -68,10 +78,7 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
                     fontSize: '0.875rem',
                   }}
                 >
-                  {/* truncate long names with ellipsis */}
-                  {result.winnerName.length > MAX_NAME_LENGTH
-                    ? `${result.winnerName.substring(0, MAX_NAME_LENGTH)}...`
-                    : result.winnerName}
+                  {formatWinnerName(result)}
                 </Typography>
 
                 <Typography
