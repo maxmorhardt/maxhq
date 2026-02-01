@@ -74,14 +74,14 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
       return;
     }
 
-    if (currentSquare && auth?.user?.profile?.sub) {
+    if (currentSquare && auth?.user?.profile?.preferred_username) {
       setError(false);
       dispatch(
         updateSquare({
           contestId: currentSquare.contestId,
           squareId: currentSquare.id,
           value: value,
-          owner: auth.user.profile.sub,
+          owner: auth.user.profile.preferred_username,
         })
       );
       onClose();
@@ -135,7 +135,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
   };
 
   // check ownership and contest state
-  const isOwner = currentSquare?.owner === auth?.user?.profile?.sub;
+  const isOwner = currentSquare?.owner === auth?.user?.profile?.preferred_username;
   const isReadOnly = Boolean(currentSquare?.owner && !isOwner);
   const isActive = currentContest?.status === 'ACTIVE';
 
@@ -196,7 +196,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
               color: 'rgba(255,255,255,0.8)',
             }}
           >
-            Owner: {currentSquare.ownerFirstName} {currentSquare.ownerLastName}
+            Owner: {currentSquare.ownerName}
           </Typography>
         )}
 

@@ -42,7 +42,7 @@ export default function Header() {
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
-  const isAuthButtonDisabled = auth.isLoading;
+  const isAuthButtonDisabled = auth.isLoading && auth.activeNavigator !== 'signoutSilent';
 
   // redirect to registration page
   const handleRegister = async () => {
@@ -71,7 +71,7 @@ export default function Header() {
   // handle account settings menu clicks
   const handleSettingClick = (setting: string) => {
     if (setting === 'Account') {
-      window.open('https://login.maxstash.io/ui/console/users/me', '_blank');
+      window.open('https://login.maxstash.io/if/user/#/settings', '_blank');
     } else if (setting === 'Logout') {
       auth.signoutSilent();
     }

@@ -48,7 +48,7 @@ export default function ContestPage() {
   const currentContest = useAppSelector(selectCurrentContest);
 
   // check if current user is contest owner
-  const isOwner = auth.user?.profile?.sub === currentContest?.owner;
+  const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
 
   // build websocket url with contest id and auth token
   const socketUrl = useMemo(
@@ -157,8 +157,7 @@ export default function ContestPage() {
             winnerRow: message.quarterResult.winnerRow,
             winnerCol: message.quarterResult.winnerCol,
             winner: message.quarterResult.winner,
-            winnerFirstName: message.quarterResult.winnerFirstName,
-            winnerLastName: message.quarterResult.winnerLastName,
+            winnerName: message.quarterResult.winnerName,
             status: message.quarterResult.status,
           })
         );

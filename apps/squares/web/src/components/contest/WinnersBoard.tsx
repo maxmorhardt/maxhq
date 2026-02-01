@@ -18,13 +18,12 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
   };
 
   const formatWinnerName = (result: QuarterResult) => {
-    const name = `${result.winnerFirstName} ${result.winnerLastName}`;
-    if (name.length < MAX_NAME_LENGTH) {
-      return name;
+    if (result.winnerName.length < MAX_NAME_LENGTH) {
+      return result.winnerName;
     }
 
     const truncatedNameLength = MAX_NAME_LENGTH - 3;
-    return `${name.substring(0, truncatedNameLength)}...`;
+    return `${result.winnerName.substring(0, truncatedNameLength)}...`;
   };
 
   return (

@@ -130,8 +130,7 @@ const contestSlice = createSlice({
         winnerRow: number;
         winnerCol: number;
         winner: string;
-        winnerFirstName: string;
-        winnerLastName: string;
+        winnerName: string;
         status: ContestStatus;
       }>
     ) {
@@ -159,8 +158,7 @@ const contestSlice = createSlice({
           winnerRow: quarterResult.winnerRow,
           winnerCol: quarterResult.winnerCol,
           winner: quarterResult.winner,
-          winnerFirstName: quarterResult.winnerFirstName,
-          winnerLastName: quarterResult.winnerLastName,
+          winnerName: quarterResult.winnerName,
           createdAt: '',
           updatedAt: '',
           createdBy: '',
