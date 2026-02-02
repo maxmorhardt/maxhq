@@ -125,6 +125,7 @@ export async function submitContactForm(request: {
   email: string;
   subject: string;
   message: string;
+  turnstileToken: string;
 }): Promise<{ message: string }> {
   try {
     const res = await api.post<{ message: string }>('/contact', request);

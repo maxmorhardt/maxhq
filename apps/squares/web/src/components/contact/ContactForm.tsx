@@ -1,3 +1,4 @@
+import { Turnstile } from '@marsidev/react-turnstile';
 import { Send } from '@mui/icons-material';
 import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/material';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
@@ -8,6 +9,7 @@ interface ContactFormProps {
     email: string;
     subject: string;
     message: string;
+    turnstileToken: string;
   }) => Promise<void>;
   isSubmitting: boolean;
 }
@@ -20,6 +22,8 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
     subject: '',
     message: '',
   });
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const siteKey = import.meta.env.PROD ? '0x4AAAAAACKD7d5JYPJqlXPI' : '1x00000000000000000000AA';
 
   // update form data with new input value
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -30,7 +34,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
   // submit form data
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    await onSubmit({ ...formData, turnstileToken });
   };
 
   return (
@@ -43,7 +47,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
       }}
     >
       {/* form title */}
-      <Typography variant="h5" sx={{ color: 'white', mb: 3, fontWeight: 600 }}>
+      <Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>
         Send us a message
       </Typography>
 
@@ -51,7 +55,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
       <Box
         component="form"
         onSubmit={handleSubmit}
-        sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+        sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
       >
         {/* name and email row */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
@@ -91,23 +95,26 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
           label="Message"
           name="message"
           multiline
-          rows={6}
+          rows={4}
           value={formData.message}
           onChange={handleInputChange}
           required
         />
+
+        {/* turnstile verification */}
+        <Turnstile siteKey={siteKey} onSuccess={setTurnstileToken} />
 
         {/* submit button */}
         <Button
           type="submit"
           variant="contained"
           startIcon={<Send />}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !turnstileToken}
           sx={{
             alignSelf: 'flex-start',
           }}
         >
-          {isSubmitting ? 'Sending...' : 'Send Message'}
+          Send Message
         </Button>
       </Box>
     </Paper>

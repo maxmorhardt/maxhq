@@ -122,13 +122,13 @@ export default function CreateContestPage() {
           sx={{
             color: 'white',
             opacity: 0.8,
-            maxWidth: 600,
+            maxWidth: 800,
             mx: 'auto',
             fontSize: { xs: '0.9rem', sm: '1.1rem' },
           }}
         >
           Set up your squares contest in minutes. Add teams, customize settings, and invite
-          participants to join the fun.
+          participants.
         </Typography>
       </Box>
 
