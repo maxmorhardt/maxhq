@@ -5,6 +5,8 @@ LABEL io.maxstash.image.description="Squares Frontend - Game's web application"
 LABEL io.maxstash.image.vendor="Max Morhardt"
 LABEL io.maxstash.image.licenses="MIT"
 
+RUN apk upgrade --no-cache libexpat
+
 ENV NODE_ENV="production"
 
 WORKDIR /usr/share/nginx/html
