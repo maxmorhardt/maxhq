@@ -21,7 +21,7 @@ kubectl create secret generic squares-api-env \
   --from-literal=DB_READ_PASSWORD='your-password' \
   --from-literal=DB_READ_NAME='squares' \
   --from-literal=DB_READ_SSL_MODE='disable' \
-  --from-literal=REDIS_HOST='redis.example.com:6379' \
+  --from-literal=NATS_URL='nats://nats.example.com:4222' \
   --from-literal=SMTP_HOST='smtp.example.com' \
   --from-literal=SMTP_PORT='587' \
   --from-literal=SMTP_USER='noreply@example.com' \
