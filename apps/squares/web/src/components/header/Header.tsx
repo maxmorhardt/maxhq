@@ -63,7 +63,7 @@ export default function Header() {
     });
 
     const nextUrl = `/application/o/authorize/?${authParams.toString()}`;
-    const enrollmentUrl = `https://login.maxstash.io/if/flow/default-enrollment-flow/?next=${encodeURIComponent(nextUrl)}`;
+    const enrollmentUrl = `https://login.maxstash.io/if/flow/enrollment/?next=${encodeURIComponent(nextUrl)}`;
 
     window.location.href = enrollmentUrl;
   };
