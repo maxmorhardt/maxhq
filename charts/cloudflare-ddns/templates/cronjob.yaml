@@ -22,7 +22,7 @@ spec:
           {{- end }}
           restartPolicy: {{ .Values.restartPolicy }}
           containers:
-          - name: cloudflare-ddns
+          - name: {{ include "app.fullname" . }}
             {{- with .Values.securityContext }}
             securityContext:
               {{- toYaml . | nindent 14 }}
@@ -30,8 +30,7 @@ spec:
             image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
             imagePullPolicy: {{ .Values.image.pullPolicy }}
             command:
-            - /bin/sh
-            - /scripts/cloudflare-ddns.sh
+            {{- toYaml .Values.image.command | nindent 12 }}
             envFrom:
             - secretRef:
                 name: {{ .Values.existingSecret }}
@@ -39,6 +38,8 @@ spec:
             - name: script
               mountPath: /scripts
               readOnly: true
+            - name: pip-packages
+              mountPath: /tmp/pip
             {{- with .Values.resources }}
             resources:
               {{- toYaml . | nindent 14 }}
@@ -46,5 +47,7 @@ spec:
           volumes:
           - name: script
             configMap:
-              name: {{ include "app.fullname" . }}-script
+              name: {{ include "app.fullname" . }}
               defaultMode: 0555
+          - name: pip-packages
+            emptyDir: {}

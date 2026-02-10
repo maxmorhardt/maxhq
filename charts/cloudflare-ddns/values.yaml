@@ -1,13 +1,19 @@
 fullnameOverride: cloudflare-ddns
 
-schedule: '*/5 * * * *'
+schedule: '*/15 * * * *'
 
 existingSecret: cloudflare-ddns-env
 
 image:
-  repository: badouralix/curl-jq
-  pullPolicy: Always
-  tag: alpine
+  repository: python
+  pullPolicy: IfNotPresent
+  tag: 3.14-alpine
+  command:
+    - sh
+    - -c
+    - |
+      pip install --no-cache-dir --target=/tmp/pip -r /scripts/requirements.txt && \
+      PYTHONPATH=/tmp/pip python3 /scripts/cloudflare-ddns.py
 
 resources:
   limits:
