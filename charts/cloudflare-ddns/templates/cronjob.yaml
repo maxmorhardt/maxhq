@@ -38,8 +38,8 @@ spec:
             - name: script
               mountPath: /scripts
               readOnly: true
-            - name: pip-packages
-              mountPath: /tmp/pip
+            - name: tmp
+              mountPath: /tmp
             {{- with .Values.resources }}
             resources:
               {{- toYaml . | nindent 14 }}
@@ -49,5 +49,5 @@ spec:
             configMap:
               name: {{ include "app.fullname" . }}
               defaultMode: 0555
-          - name: pip-packages
+          - name: tmp
             emptyDir: {}
