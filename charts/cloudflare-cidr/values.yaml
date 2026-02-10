@@ -5,9 +5,15 @@ schedule: '0 0 * * *'
 existingSecret: cloudflare-cidr-env
 
 image:
-  repository: alpine/k8s
+  repository: python
   pullPolicy: IfNotPresent
-  tag: 1.32.11
+  tag: 3.14-alpine
+  command:
+    - sh
+    - -c
+    - |
+      pip install --no-cache-dir --target=/tmp/pip -r /scripts/requirements.txt && \
+      PYTHONPATH=/tmp/pip python3 /scripts/cloudflare-cidr.py
 
 resources:
   limits:

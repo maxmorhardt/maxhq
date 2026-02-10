@@ -3,8 +3,9 @@
 This chart has no external Helm dependencies.
 
 ## Runtime Dependencies
-- curl
-- jq
+- Kubernetes cluster with kubectl access
+- Python 3.x
+- Python packages (see requirements.txt)
 
 ## Example Secret
 
@@ -19,5 +20,3 @@ type: Opaque
 stringData:
 	DISCORD_WEBHOOK: "discord-webhook"
 ```
-
-Set `existingSecret: my-cloudflare-cidr-secret` in your values when installing the chart.
