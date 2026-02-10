@@ -18,10 +18,10 @@ image:
 resources:
   limits:
     cpu: 50m
-    memory: 64Mi
+    memory: 128Mi
   requests:
-    cpu: 25m
-    memory: 32Mi
+    cpu: 50m
+    memory: 64Mi
 
 restartPolicy: OnFailure
 concurrencyPolicy: Forbid
