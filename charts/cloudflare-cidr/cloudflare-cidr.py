@@ -11,9 +11,9 @@ from kubernetes.client.rest import ApiException
 
 handler = logging.StreamHandler()
 formatter = jsonlogger.JsonFormatter(
-    '%(timestamp)s %(level)s %(name)s %(message)s',
-    rename_fields={'levelname': 'level', 'asctime': 'timestamp'},
-    datefmt='%Y-%m-%dT%H:%M:%S%z'
+	'%(asctime)s %(levelname)s %(name)s %(message)s',
+	rename_fields={'levelname': 'level', 'asctime': 'timestamp'},
+	datefmt='%Y-%m-%dT%H:%M:%S%z'
 )
 handler.setFormatter(formatter)
 
