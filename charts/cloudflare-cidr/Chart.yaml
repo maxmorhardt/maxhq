@@ -2,5 +2,4 @@ apiVersion: v2
 name: cloudflare-cidr
 description: A Helm chart for Cloudflare CIDR updater CronJob
 type: application
-
 version: 1.0.0
