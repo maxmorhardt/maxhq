@@ -29,7 +29,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "📊 Overview - Key Metrics",
+      "title": "Overview",
       "type": "row"
     },
     {
@@ -371,7 +371,7 @@
       },
       "id": 101,
       "panels": [],
-      "title": "🚀 Gin API Metrics",
+      "title": "Gin API Metrics",
       "type": "row"
     },
     {
@@ -825,7 +825,7 @@
       },
       "id": 105,
       "panels": [],
-      "title": "🔌 WebSocket Metrics",
+      "title": "WebSocket Metrics",
       "type": "row"
     },
     {
@@ -1061,7 +1061,7 @@
       },
       "id": 102,
       "panels": [],
-      "title": "🐹 Go Runtime Metrics",
+      "title": "Go Runtime Metrics",
       "type": "row"
     },
     {
@@ -1366,7 +1366,7 @@
       },
       "id": 103,
       "panels": [],
-      "title": "☸️ Kubernetes Metrics",
+      "title": "Kubernetes Metrics",
       "type": "row"
     },
     {
@@ -1757,7 +1757,7 @@
       },
       "id": 104,
       "panels": [],
-      "title": "📋 Loki - Error Logs",
+      "title": "Loki - Error Logs",
       "type": "row"
     },
     {
@@ -1980,6 +1980,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Squares API / Full",
-  "uid": "squares-api-complete",
+  "uid": "squares-api-full",
   "version": 0
 }
