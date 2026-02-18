@@ -20,7 +20,7 @@ sudo tailscale up
 ## Main Node
 ```bash
 sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 sh -s - \
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - \
   --tls-san "10.0.0.186" \
   --disable traefik \
   --kube-apiserver-arg service-node-port-range=25565-32767
@@ -48,7 +48,7 @@ cat /etc/rancher/k3s/k3s.yaml
 ## Worker Node
 ```bash
 sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v1.35 \
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable \
   K3S_URL=https://10.0.0.186:6443 \
   K3S_TOKEN=<token> \
   sh -s -
@@ -71,7 +71,7 @@ disable:
   - traefik
 tls-san:
   - "10.0.0.186"      # Control plane LAN IP
-  - "100.111.199.70"  # Tailscale control plane IP
+  - "100.xxx.xxx.xx"  # Tailscale control plane IP
   - "max-main"        # Tailscale control plane hostname
 kube-apiserver-arg:
   - "service-node-port-range=25565-32767"
