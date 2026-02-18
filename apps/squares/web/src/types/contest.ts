@@ -51,33 +51,9 @@ export interface WSUpdate {
   connectionId?: string;
   updatedBy: string;
   timestamp: string;
-  square?: SquareWSUpdate;
-  contest?: ContestWSUpdate;
-  quarterResult?: QuarterResultWSUpdate;
-}
-
-export interface SquareWSUpdate {
-  squareId: string;
-  value: string;
-}
-
-export interface ContestWSUpdate {
-  homeTeam?: string;
-  awayTeam?: string;
-  xLabels?: number[];
-  yLabels?: number[];
-  status?: ContestStatus;
-}
-
-export interface QuarterResultWSUpdate {
-  quarter: number;
-  homeTeamScore: number;
-  awayTeamScore: number;
-  winnerRow: number;
-  winnerCol: number;
-  winner: string;
-  winnerName: string;
-  status: ContestStatus;
+  square?: Square;
+  contest?: Contest;
+  quarterResult?: QuarterResult;
 }
 
 export interface PaginationParams {

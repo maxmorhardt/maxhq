@@ -1,5 +1,5 @@
 import { Alert, Box, Chip, Typography } from '@mui/material';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
@@ -12,175 +12,88 @@ import ShareContest from '../../../components/contest/ShareContest';
 import WinnersBoard from '../../../components/contest/WinnersBoard';
 import {
   selectContestError,
-  selectContestLoading,
   selectCurrentContest,
 } from '../../../features/contests/contestSelectors';
-import {
-  clearError,
-  updateContestFromWebSocket,
-  updateQuarterResultFromWebSocket,
-  updateSquareFromWebSocket,
-} from '../../../features/contests/contestSlice';
+import { clearError } from '../../../features/contests/contestSlice';
 import { fetchContestByOwnerAndName } from '../../../features/contests/contestThunks';
-import {
-  setConnectionDetails,
-  setDisconnectionDetails,
-  setLatestMessage,
-} from '../../../features/ws/wsSlice';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import { contestSocketEventHandler, getSocketUrl } from '../../../service/wsService';
 
-// contest page with grid, websocket connection, and sidebar details
 export default function ContestPage() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  // track last processed message to prevent duplicates
-  const lastProcessedMessageRef = useRef<string | null>(null);
-  const dispatchCalled = useRef(false);
   const { owner, name } = useParams<{ owner: string; name: string }>();
+  const hasFetchedContest = useRef(false);
 
-  const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
   const currentContest = useAppSelector(selectCurrentContest);
 
-  // check if current user is contest owner
+  const [retryCount, setRetryCount] = useState(0);
+  const [isConnecting, setIsConnecting] = useState(true);
+  const lastProcessedMessageRef = useRef<string | null>(null);
+
   const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
+  const reconnectInterval = Math.min(1000 * Math.pow(2, retryCount), 15000);
+  const socketUrl = getSocketUrl(owner, name, auth);
 
-  // build websocket url with contest id and auth token
-  const socketUrl = useMemo(
-    () => (currentContest?.id ? getSocketUrl(currentContest.id, auth) : undefined),
-    [currentContest?.id, auth]
-  );
+  // connect to websocket
+  const { lastMessage, readyState } = useWebSocket(socketUrl, {
+    shouldReconnect: () => socketUrl !== null,
+    reconnectAttempts: Infinity,
+    reconnectInterval,
+    protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
+    onOpen: () => {
+      setIsConnecting(false);
+      setRetryCount(0);
+    },
+    onError: () => {
+      setRetryCount(retryCount + 1);
+    },
+  });
 
-  // only connect if authenticated and contest is active
-  const shouldConnect = useMemo(
-    () =>
-      Boolean(
-        owner &&
-        name &&
-        auth.isAuthenticated &&
-        auth.user?.id_token &&
-        currentContest &&
-        currentContest.status !== 'FINISHED' &&
-        currentContest.status !== 'DELETED'
-      ),
-    [owner, name, auth.isAuthenticated, auth.user?.id_token, currentContest]
-  );
+  const isConnected = useMemo(() => {
+    return readyState === ReadyState.OPEN;
+  }, [readyState]);
 
-  // websocket options with auth token and reconnection settings
-  const webSocketOptions = useMemo(
-    () => ({
-      protocols: auth.user?.id_token ? [auth.user.id_token] : undefined,
-      reconnectAttempts: Infinity,
-      reconnectInterval: (attempt: number) => Math.min(1000 * 2 ** (attempt - 1), 30000),
-      shouldReconnect: () => shouldConnect,
-    }),
-    [auth.user?.id_token, shouldConnect]
-  );
-
-  // connect to websocket for real-time updates
-  const { lastMessage, readyState } = useWebSocket(
-    shouldConnect ? (socketUrl ?? null) : null,
-    webSocketOptions
-  );
-
-  // track connection state
-  const isConnected = readyState === ReadyState.OPEN;
-  const isConnecting = readyState === ReadyState.CONNECTING;
-
-  // handle incoming websocket messages and dispatch to redux
+  // fetch contest data once websocket is connected
   useEffect(() => {
-    if (!lastMessage?.data) {
+    if (!owner || !name || !isConnected || hasFetchedContest.current) {
       return;
     }
 
-    // ignore duplicate messages
-    if (lastProcessedMessageRef.current === lastMessage.data) {
-      return;
-    }
+    (async () => {
+      try {
+        await dispatch(fetchContestByOwnerAndName({ owner, name })).unwrap();
+        hasFetchedContest.current = true;
+      } catch (err) {
+        console.error('Failed to fetch contest:', err);
+      }
+    })();
+  }, [owner, name, dispatch, isConnected]);
 
-    lastProcessedMessageRef.current = lastMessage.data;
-
-    // route websocket messages to appropriate handlers
+  // handle incoming websocket messages
+  useEffect(() => {
     contestSocketEventHandler({
       lastMessage,
-      // update square value from websocket message
-      onSquareUpdate: (message) => {
-        if (
-          !message.square?.squareId ||
-          message.contestId !== currentContest?.id ||
-          message.square?.value === undefined
-        ) {
-          return;
-        }
-
-        dispatch(
-          updateSquareFromWebSocket({
-            id: message.square.squareId,
-            value: message.square.value,
-          })
-        );
-        dispatch(setLatestMessage(message));
-      },
-      // update contest details from websocket message
-      onContestUpdate: (message) => {
-        if (!message.contest) {
-          return;
-        }
-
-        dispatch(
-          updateContestFromWebSocket({
-            xLabels: message.contest.xLabels,
-            yLabels: message.contest.yLabels,
-            homeTeam: message.contest.homeTeam,
-            awayTeam: message.contest.awayTeam,
-            status: message.contest.status,
-          })
-        );
-        dispatch(setLatestMessage(message));
-      },
-      // update quarter result from websocket message
-      onQuarterResultUpdate: (message) => {
-        if (message.contestId !== currentContest?.id || !message.quarterResult) {
-          return;
-        }
-
-        dispatch(
-          updateQuarterResultFromWebSocket({
-            quarter: message.quarterResult.quarter,
-            homeTeamScore: message.quarterResult.homeTeamScore,
-            awayTeamScore: message.quarterResult.awayTeamScore,
-            winnerRow: message.quarterResult.winnerRow,
-            winnerCol: message.quarterResult.winnerCol,
-            winner: message.quarterResult.winner,
-            winnerName: message.quarterResult.winnerName,
-            status: message.quarterResult.status,
-          })
-        );
-      },
-      // handle contest deletion and navigate away
-      onContestDeleted: (message) => {
-        if (message.contestId !== currentContest?.id) {
-          return;
-        }
-
-        showToast('Contest has been deleted', 'warning');
-        if (!auth.isAuthenticated) {
-          navigate('/');
-        } else {
-          navigate('/contests');
-        }
-      },
-      // track connection status changes
-      onConnect: (message) => {
-        dispatch(setConnectionDetails(message));
-      },
-      onDisconnect: (message) => {
-        dispatch(setDisconnectionDetails(message));
+      dispatch,
+      currentContestId: currentContest?.id || '',
+      lastProcessedMessageRef,
+      callbacks: {
+        onContestDeleted: () => {
+          showToast('Contest has been deleted', 'warning');
+          if (!auth.isAuthenticated) {
+            navigate('/');
+          } else {
+            navigate('/contests');
+          }
+        },
+        onError: (error) => {
+          showToast(error, 'error');
+        },
       },
     });
   }, [
@@ -194,16 +107,6 @@ export default function ContestPage() {
     auth.isAuthenticated,
   ]);
 
-  // fetch contest on mount and websocket disconnect
-  useEffect(() => {
-    if (!owner || !name || dispatchCalled.current) {
-      return;
-    }
-
-    dispatch(fetchContestByOwnerAndName({ owner, name }));
-    dispatchCalled.current = true;
-  }, [owner, name, dispatch, readyState, dispatchCalled]);
-
   // show error toast and clear from store
   useEffect(() => {
     if (error) {
@@ -212,13 +115,13 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
-  // show skeleton while loading
-  if (!dispatchCalled || loading) {
+  // show skeleton while connecting or loading contest data
+  if (isConnecting || !isConnected || !currentContest) {
     return <ContestPageSkeleton />;
   }
 
-  // show error if contest not found
-  if (dispatchCalled && !loading && !currentContest) {
+  // show error if contest not found after fetch
+  if (!currentContest && hasFetchedContest.current) {
     return <GenericErrorDisplay />;
   }
 
@@ -226,8 +129,8 @@ export default function ContestPage() {
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
       {/* connection status indicator chip */}
       <Chip
-        label={isConnected ? 'Live' : isConnected ? 'Connecting' : 'Offline'}
-        color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
+        label={isConnected ? 'Live' : 'Connecting'}
+        color={isConnected ? 'success' : 'warning'}
         size="small"
         variant={isConnected ? 'filled' : 'outlined'}
         sx={{
