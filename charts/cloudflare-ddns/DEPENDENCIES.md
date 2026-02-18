@@ -15,11 +15,12 @@ You must create a Kubernetes Secret with your Cloudflare credentials. Example:
 apiVersion: v1
 kind: Secret
 metadata:
-	name: my-cloudflare-ddns-secret
+  name: cloudflare-ddns-env
+	namespace: jobs
 type: Opaque
 stringData:
-	ZONE_ID: "zone-id"
-	RECORD_NAME: "domain.com"
-	API_TOKEN: "cloudflare-api-token"
-	DISCORD_WEBHOOK: "discord-webhook"
+  ZONE_ID: "zone-id"
+  RECORD_NAME: "domain.com"
+  API_TOKEN: "cloudflare-api-token"
+  DISCORD_WEBHOOK: "discord-webhook"
 ```

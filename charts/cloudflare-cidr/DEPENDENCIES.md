@@ -15,8 +15,9 @@ You must create a Kubernetes Secret with your Cloudflare credentials. Example:
 apiVersion: v1
 kind: Secret
 metadata:
-	name: my-cloudflare-cidr-secret
+  name: cloudflare-cidr-env
+  namespace: jobs
 type: Opaque
 stringData:
-	DISCORD_WEBHOOK: "discord-webhook"
+  DISCORD_WEBHOOK: "discord-webhook"
 ```
