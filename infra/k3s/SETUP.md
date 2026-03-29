@@ -8,10 +8,6 @@ ufw disable
 nano /boot/firmware/cmdline.txt
 add the following to the end: cgroup_enable=memory cgroup_memory=1
 
-# CSI for longhorn
-apt install -y open-iscsi
-systemctl enable --now iscsid
-
 # Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
