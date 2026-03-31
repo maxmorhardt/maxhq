@@ -13,6 +13,7 @@ import ContactPage from './pages/contact/ContactPage';
 import ContestPage from './pages/contests/contest/ContestPage';
 import ContestsPage from './pages/contests/ContestsPage';
 import CreateContestPage from './pages/contests/create/CreateContestPage';
+import ErrorBoundary, { ErrorFallback } from './pages/error/ErrorBoundary';
 import NotFoundPage from './pages/error/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <ErrorFallback />,
     children: [
       { index: true, element: <LandingPage /> },
       { path: 'auth/callback', element: <CallbackPage /> },
@@ -60,7 +62,9 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider theme={theme}>
         <AuthProvider {...oidcConfig}>
           <CssBaseline />
-          <RouterProvider router={router} />
+          <ErrorBoundary>
+            <RouterProvider router={router} />
+          </ErrorBoundary>
         </AuthProvider>
       </ThemeProvider>
     </Provider>

@@ -1,186 +1,220 @@
-import { Alert, Box, Chip, Typography } from '@mui/material';
-import { useEffect, useMemo, useRef } from 'react';
+import { Alert, Box, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import ActivityFeed from '../../../components/contest/ActivityFeed';
+import ConnectionChip from '../../../components/contest/ConnectionChip';
 import ContestComponent from '../../../components/contest/Contest';
 import ContestDetails from '../../../components/contest/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
 import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
-import HowToPlay from '../../../components/contest/HowToPlay';
-import ShareContest from '../../../components/contest/ShareContest';
+import NotFoundPage from '../../error/NotFoundPage';
+import LiveChat from '../../../components/contest/LiveChat';
 import WinnersBoard from '../../../components/contest/WinnersBoard';
+import ContestSignIn from '../../../components/contest/ContestSignIn';
 import {
   selectContestError,
-  selectContestLoading,
   selectCurrentContest,
 } from '../../../features/contests/contestSelectors';
-import {
-  clearError,
-  updateContestFromWebSocket,
-  updateQuarterResultFromWebSocket,
-  updateSquareFromWebSocket,
-} from '../../../features/contests/contestSlice';
+import { clearError, setCurrentContest } from '../../../features/contests/contestSlice';
 import { fetchContestByOwnerAndName } from '../../../features/contests/contestThunks';
-import {
-  setConnectionDetails,
-  setDisconnectionDetails,
-  setLatestMessage,
-} from '../../../features/ws/wsSlice';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import { contestSocketEventHandler, getSocketUrl } from '../../../service/wsService';
+import type { ActivityEvent, ActivityEventType, ChatMessage } from '../../../types/contest';
+import type { ConnectionStatus } from '../../../types/ws';
 
-// contest page with grid, websocket connection, and sidebar details
 export default function ContestPage() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  // track last processed message to prevent duplicates
-  const lastProcessedMessageRef = useRef<string | null>(null);
-  const dispatchCalled = useRef(false);
   const { owner, name } = useParams<{ owner: string; name: string }>();
+  const hasFetchedContest = useRef(false);
 
-  const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
   const currentContest = useAppSelector(selectCurrentContest);
 
-  // check if current user is contest owner
-  const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
+  const [retryCount, setRetryCount] = useState(0);
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [connectionFailed, setConnectionFailed] = useState(false);
+  const [wsCloseCode, setWsCloseCode] = useState<number | null>(null);
+  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const lastProcessedMessageRef = useRef<string | null>(null);
 
-  // build websocket url with contest id and auth token
-  const socketUrl = useMemo(
-    () => (currentContest?.id ? getSocketUrl(currentContest.id, auth) : undefined),
-    [currentContest?.id, auth]
-  );
+  const isAuthenticated = !auth.isLoading && auth.isAuthenticated;
 
-  // only connect if authenticated and contest is active
-  const shouldConnect = useMemo(
-    () =>
-      Boolean(
-        owner &&
-        name &&
-        auth.isAuthenticated &&
-        auth.user?.id_token &&
-        currentContest &&
-        currentContest.status !== 'FINISHED' &&
-        currentContest.status !== 'DELETED'
-      ),
-    [owner, name, auth.isAuthenticated, auth.user?.id_token, currentContest]
-  );
+  // WS close codes that indicate a fatal error (no reconnect, no fetch)
+  const FATAL_CLOSE_CODES = [4404, 4500, 4503];
+  const hasFatalWsError = wsCloseCode !== null && FATAL_CLOSE_CODES.includes(wsCloseCode);
 
-  // websocket options with auth token and reconnection settings
-  const webSocketOptions = useMemo(
-    () => ({
-      protocols: auth.user?.id_token ? [auth.user.id_token] : undefined,
-      reconnectAttempts: Infinity,
-      reconnectInterval: (attempt: number) => Math.min(1000 * 2 ** (attempt - 1), 30000),
-      shouldReconnect: () => shouldConnect,
-    }),
-    [auth.user?.id_token, shouldConnect]
-  );
-
-  // connect to websocket for real-time updates
-  const { lastMessage, readyState } = useWebSocket(
-    shouldConnect ? (socketUrl ?? null) : null,
-    webSocketOptions
-  );
-
-  // track connection state
-  const isConnected = readyState === ReadyState.OPEN;
-  const isConnecting = readyState === ReadyState.CONNECTING;
-
-  // handle incoming websocket messages and dispatch to redux
+  // reset state when switching contests
   useEffect(() => {
-    if (!lastMessage?.data) {
+    hasFetchedContest.current = false;
+    lastProcessedMessageRef.current = null;
+    setActivityEvents([]);
+    setChatMessages([]);
+    setRetryCount(0);
+    setIsConnecting(true);
+    setConnectionFailed(false);
+    setWsCloseCode(null);
+    dispatch(setCurrentContest(null));
+
+    // clear contest from redux on unmount / navigate away
+    return () => {
+      dispatch(setCurrentContest(null));
+    };
+  }, [owner, name, dispatch]);
+
+  const MAX_RETRY_ATTEMPTS = 5;
+  const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
+  const reconnectInterval = Math.min(1000 * Math.pow(2, retryCount), 30000);
+  const socketUrl = isAuthenticated ? getSocketUrl(owner, name, auth) : null;
+
+  // connect to websocket
+  const { lastMessage, readyState, sendJsonMessage } = useWebSocket(socketUrl, {
+    shouldReconnect: (event: CloseEvent) =>
+      !FATAL_CLOSE_CODES.includes(event.code) &&
+      socketUrl !== null &&
+      retryCount < MAX_RETRY_ATTEMPTS,
+    reconnectAttempts: MAX_RETRY_ATTEMPTS,
+    reconnectInterval,
+    protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
+    onOpen: () => {
+      setIsConnecting(false);
+      setConnectionFailed(false);
+      setRetryCount(0);
+    },
+    onError: () => {
+      setRetryCount((prev) => {
+        const next = prev + 1;
+        if (next >= MAX_RETRY_ATTEMPTS) {
+          setConnectionFailed(true);
+        }
+        return next;
+      });
+    },
+    onClose: (event: CloseEvent) => {
+      if (FATAL_CLOSE_CODES.includes(event.code)) {
+        setWsCloseCode(event.code);
+        setIsConnecting(false);
+      }
+    },
+  });
+
+  const isConnected = useMemo(() => {
+    return readyState === ReadyState.OPEN;
+  }, [readyState]);
+
+  // fetch contest data once websocket is connected, then seed activity feed
+  useEffect(() => {
+    if (!owner || !name || !isConnected || hasFetchedContest.current || hasFatalWsError) {
       return;
     }
 
-    // ignore duplicate messages
-    if (lastProcessedMessageRef.current === lastMessage.data) {
-      return;
-    }
+    (async () => {
+      try {
+        const contest = await dispatch(fetchContestByOwnerAndName({ owner, name })).unwrap();
+        hasFetchedContest.current = true;
 
-    lastProcessedMessageRef.current = lastMessage.data;
+        // seed activity feed from fetched contest data
+        const seeded: ActivityEvent[] = [];
 
-    // route websocket messages to appropriate handlers
+        contest.squares
+          ?.filter((s) => s.value && s.value.trim() !== '')
+          .forEach((s) => {
+            seeded.push({
+              id: `seed-square-${s.id}`,
+              type: 'square_claimed',
+              message: `${s.ownerName || 'Someone'} claimed square (${s.row}, ${s.col})`,
+              timestamp: s.updatedAt || s.createdAt,
+            });
+          });
+
+        contest.quarterResults?.forEach((qr) => {
+          seeded.push({
+            id: `seed-qr-${qr.id}`,
+            type: 'quarter_winner',
+            message: `Q${qr.quarter} winner: ${qr.winnerName} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
+            timestamp: qr.createdAt,
+          });
+        });
+
+        seeded.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setActivityEvents(seeded);
+      } catch (err) {
+        console.error('Failed to fetch contest:', err);
+      }
+    })();
+  }, [owner, name, dispatch, isConnected]);
+
+  // add a new activity event from WS
+  const addActivityEvent = useCallback((type: ActivityEventType, message: string) => {
+    const event: ActivityEvent = {
+      id: `ws-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      type,
+      message,
+      timestamp: new Date().toISOString(),
+    };
+    setActivityEvents((prev) => [...prev, event]);
+  }, []);
+
+  // send a chat message via websocket
+  const sendChatMessage = useCallback(
+    (message: string) => {
+      if (!isConnected) return;
+      sendJsonMessage({ message });
+    },
+    [isConnected, sendJsonMessage]
+  );
+
+  // handle incoming websocket messages
+  useEffect(() => {
     contestSocketEventHandler({
       lastMessage,
-      // update square value from websocket message
-      onSquareUpdate: (message) => {
-        if (
-          !message.square?.squareId ||
-          message.contestId !== currentContest?.id ||
-          message.square?.value === undefined
-        ) {
-          return;
-        }
-
-        dispatch(
-          updateSquareFromWebSocket({
-            id: message.square.squareId,
-            value: message.square.value,
-          })
-        );
-        dispatch(setLatestMessage(message));
-      },
-      // update contest details from websocket message
-      onContestUpdate: (message) => {
-        if (!message.contest) {
-          return;
-        }
-
-        dispatch(
-          updateContestFromWebSocket({
-            xLabels: message.contest.xLabels,
-            yLabels: message.contest.yLabels,
-            homeTeam: message.contest.homeTeam,
-            awayTeam: message.contest.awayTeam,
-            status: message.contest.status,
-          })
-        );
-        dispatch(setLatestMessage(message));
-      },
-      // update quarter result from websocket message
-      onQuarterResultUpdate: (message) => {
-        if (message.contestId !== currentContest?.id || !message.quarterResult) {
-          return;
-        }
-
-        dispatch(
-          updateQuarterResultFromWebSocket({
-            quarter: message.quarterResult.quarter,
-            homeTeamScore: message.quarterResult.homeTeamScore,
-            awayTeamScore: message.quarterResult.awayTeamScore,
-            winnerRow: message.quarterResult.winnerRow,
-            winnerCol: message.quarterResult.winnerCol,
-            winner: message.quarterResult.winner,
-            winnerName: message.quarterResult.winnerName,
-            status: message.quarterResult.status,
-          })
-        );
-      },
-      // handle contest deletion and navigate away
-      onContestDeleted: (message) => {
-        if (message.contestId !== currentContest?.id) {
-          return;
-        }
-
-        showToast('Contest has been deleted', 'warning');
-        if (!auth.isAuthenticated) {
-          navigate('/');
-        } else {
-          navigate('/contests');
-        }
-      },
-      // track connection status changes
-      onConnect: (message) => {
-        dispatch(setConnectionDetails(message));
-      },
-      onDisconnect: (message) => {
-        dispatch(setDisconnectionDetails(message));
+      dispatch,
+      currentContestId: currentContest?.id || '',
+      lastProcessedMessageRef,
+      callbacks: {
+        onContestDeleted: () => {
+          showToast('Contest has been deleted', 'warning');
+          if (!auth.isAuthenticated) {
+            navigate('/');
+          } else {
+            navigate('/contests');
+          }
+        },
+        onError: (error) => {
+          showToast(error, 'error');
+        },
+        onSquareUpdate: (_value, row, col, ownerName) => {
+          addActivityEvent('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
+        },
+        onQuarterResultUpdate: (quarter, winnerName, homeScore, awayScore) => {
+          addActivityEvent(
+            'quarter_winner',
+            `Q${quarter} winner: ${winnerName} (${homeScore}-${awayScore})`
+          );
+        },
+        onContestUpdate: (status) => {
+          if (status) {
+            addActivityEvent('contest_status', `Contest status changed to ${status}`);
+          }
+        },
+        onChatMessage: (sender, message, timestamp) => {
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: `chat-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              sender,
+              message,
+              timestamp,
+            },
+          ]);
+        },
       },
     });
   }, [
@@ -192,17 +226,8 @@ export default function ContestPage() {
     showToast,
     navigate,
     auth.isAuthenticated,
+    addActivityEvent,
   ]);
-
-  // fetch contest on mount and websocket disconnect
-  useEffect(() => {
-    if (!owner || !name || dispatchCalled.current) {
-      return;
-    }
-
-    dispatch(fetchContestByOwnerAndName({ owner, name }));
-    dispatchCalled.current = true;
-  }, [owner, name, dispatch, readyState, dispatchCalled]);
 
   // show error toast and clear from store
   useEffect(() => {
@@ -212,39 +237,83 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
-  // show skeleton while loading
-  if (!dispatchCalled || loading) {
-    return <ContestPageSkeleton />;
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const contestName = currentContest?.name || '';
+
+    if (!navigator.share) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+      } catch (err) {
+        console.error('Error copying to clipboard:', err);
+      }
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: contestName,
+        text: `Join my squares contest: ${contestName || 'Contest'}`,
+        url: shareUrl,
+      });
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
+  // prompt unauthenticated users to sign in (skip loading state during silent sign-out)
+  if ((!auth.isLoading && !auth.isAuthenticated) || auth.activeNavigator === 'signoutSilent') {
+    return <ContestSignIn />;
   }
 
-  // show error if contest not found
-  if (dispatchCalled && !loading && !currentContest) {
+  // show error if connection failed after max retries
+  if (connectionFailed) {
     return <GenericErrorDisplay />;
+  }
+
+  // determine connection status for chip
+  const connectionStatus: ConnectionStatus = connectionFailed
+    ? 'failed'
+    : isConnected
+      ? 'connected'
+      : retryCount > 0
+        ? 'reconnecting'
+        : 'connecting';
+
+  // handle fatal WS close codes
+  if (hasFatalWsError) {
+    if (wsCloseCode === 4404) {
+      return <NotFoundPage />;
+    }
+    return <GenericErrorDisplay />;
+  }
+
+  // show error if contest not found after fetch
+  if (!currentContest && hasFetchedContest.current) {
+    return <NotFoundPage />;
+  }
+
+  // show skeleton while connecting or loading contest data
+  if (isConnecting || !isConnected || !currentContest) {
+    return <ContestPageSkeleton connectionStatus={connectionStatus} retryCount={retryCount} />;
   }
 
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
       {/* connection status indicator chip */}
-      <Chip
-        label={isConnected ? 'Live' : isConnected ? 'Connecting' : 'Offline'}
-        color={isConnected ? 'success' : isConnecting ? 'warning' : 'default'}
-        size="small"
-        variant={isConnected ? 'filled' : 'outlined'}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          right: 14,
-        }}
-      />
+      <ConnectionChip status={connectionStatus} retryCount={retryCount} />
 
       {/* contest name heading */}
-      <Box sx={{ position: 'relative', mt: 2, mb: 1 }}>
+      <Box sx={{ position: 'relative', mt: 2, mb: 1, px: 5 }}>
         <Typography
           sx={{
-            fontSize: { xs: '0.9rem', sm: '1.5rem', md: '1.7rem' },
+            fontSize: { xs: '0.75rem', sm: '1.5rem', md: '1.7rem' },
             fontWeight: 800,
             textShadow: '0 2px 4px rgba(0,0,0,0.3)',
             textAlign: 'center',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}
         >
           {currentContest?.name ?? ''}
@@ -284,7 +353,7 @@ export default function ContestPage() {
           p: 1,
         }}
       >
-        {/* left sidebar with contest details (desktop only) */}
+        {/* left sidebar with winners board, activity feed, and action icons (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -293,8 +362,8 @@ export default function ContestPage() {
             flex: '0 0 280px',
           }}
         >
-          <ContestDetails isOwner={isOwner} />
-          <ShareContest contestName={currentContest?.name || ''} />
+          <WinnersBoard quarterResults={currentContest?.quarterResults} />
+          <ActivityFeed events={activityEvents} />
         </Box>
 
         {/* center section with contest grid */}
@@ -308,7 +377,7 @@ export default function ContestPage() {
           <ContestComponent />
         </Box>
 
-        {/* right sidebar with winners board and how to play (desktop only) */}
+        {/* right sidebar with contest details and live chat (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -317,12 +386,17 @@ export default function ContestPage() {
             flex: '0 0 280px',
           }}
         >
-          <WinnersBoard quarterResults={currentContest?.quarterResults} />
-          <HowToPlay />
+          <ContestDetails isOwner={isOwner} onShare={handleShare} />
+          <LiveChat
+            messages={chatMessages}
+            onSend={sendChatMessage}
+            currentUser={auth.user?.profile?.preferred_username as string}
+            disabled={!auth.isAuthenticated || !isConnected}
+          />
         </Box>
       </Box>
 
-      {/* mobile layout with sidebars underneath grid */}
+      {/* mobile layout with all sections underneath grid */}
       <Box
         sx={{
           display: { xs: 'flex', lg: 'none' },
@@ -336,10 +410,15 @@ export default function ContestPage() {
           mt: 2,
         }}
       >
-        <ShareContest contestName={currentContest?.name || ''} />
-        <ContestDetails isOwner={isOwner} />
+        <ContestDetails isOwner={isOwner} onShare={handleShare} />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
-        <HowToPlay />
+        <LiveChat
+          messages={chatMessages}
+          onSend={sendChatMessage}
+          currentUser={auth.user?.profile?.preferred_username as string}
+          disabled={!auth.isAuthenticated || !isConnected}
+        />
+        <ActivityFeed events={activityEvents} />
       </Box>
     </Box>
   );

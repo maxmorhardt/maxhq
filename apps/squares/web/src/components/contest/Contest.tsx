@@ -1,4 +1,4 @@
-import { Box, Paper } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
@@ -15,7 +15,12 @@ export default function Contest() {
   const { showToast } = useToast();
   const [openEditSquare, setOpenEditSquare] = useState(false);
 
-  if (!currentContest) {
+  if (
+    !currentContest ||
+    !currentContest.xLabels ||
+    !currentContest.yLabels ||
+    !currentContest.squares
+  ) {
     return;
   }
 
@@ -84,8 +89,9 @@ export default function Contest() {
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 3,
-            p: { xs: 2.25, sm: 3, md: 4 },
+            p: { xs: 0.75, sm: 1, md: 1.5 },
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            width: 'fit-content',
           }}
         >
           {/* grid layout */}
@@ -97,31 +103,73 @@ export default function Contest() {
               gap: 0.5,
             }}
           >
-            {/* render each row */}
-            {contestMatrix.map((rowData, rowIndex) => (
-              <Box
-                key={`${rowIndex}`}
+            {/* x-axis team label (away team) */}
+            <Typography
+              sx={{
+                color: 'rgba(255,255,255,0.7)',
+                fontWeight: 600,
+                fontSize: { xs: '0.65rem', sm: '0.8rem', md: '0.95rem' },
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                mb: { xs: 1.25, sm: 2.5 },
+              }}
+            >
+              {currentContest.awayTeam || 'Away Team'}
+            </Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', pb: { xs: 1.5, sm: 3.5 } }}>
+              {/* y-axis team label (home team) */}
+              <Typography
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
+                  color: 'rgba(255,255,255,0.7)',
+                  fontWeight: 600,
+                  fontSize: { xs: '0.65rem', sm: '0.8rem', md: '0.95rem' },
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  writingMode: 'vertical-rl',
+                  transform: 'rotate(180deg)',
+                  mr: { xs: 2, sm: 3.5 },
                 }}
               >
-                {/* render each square in row */}
-                {rowData.map((squareData, colIndex) => (
-                  <Square
-                    key={`${rowIndex}-${colIndex}`}
-                    rowIndex={rowIndex}
-                    colIndex={colIndex}
-                    squareData={squareData}
-                    handleSquareClick={handleSquareClick}
-                    xLabel={currentContest.xLabels[colIndex]}
-                    yLabel={currentContest.yLabels[rowIndex]}
-                    isWinner={isWinningSquare(rowIndex, colIndex)}
-                  />
+                {currentContest.homeTeam || 'Home Team'}
+              </Typography>
+
+              {/* grid rows */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.5,
+                  pr: { xs: 3.5, sm: 5 },
+                }}
+              >
+                {/* render each row */}
+                {contestMatrix.map((rowData, rowIndex) => (
+                  <Box
+                    key={`${rowIndex}`}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                    }}
+                  >
+                    {/* render each square in row */}
+                    {rowData.map((squareData, colIndex) => (
+                      <Square
+                        key={`${rowIndex}-${colIndex}`}
+                        rowIndex={rowIndex}
+                        colIndex={colIndex}
+                        squareData={squareData}
+                        handleSquareClick={handleSquareClick}
+                        xLabel={currentContest.xLabels[colIndex]}
+                        yLabel={currentContest.yLabels[rowIndex]}
+                        isWinner={isWinningSquare(rowIndex, colIndex)}
+                      />
+                    ))}
+                  </Box>
                 ))}
               </Box>
-            ))}
+            </Box>
           </Box>
         </Paper>
       </Box>

@@ -2,6 +2,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import { Send } from '@mui/icons-material';
 import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/material';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { stripDangerousChars } from '../../utils/sanitize';
 
 interface ContactFormProps {
   onSubmit: (formData: {
@@ -28,13 +29,18 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
   // update form data with new input value
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: stripDangerousChars(value) }));
   };
 
   // submit form data
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await onSubmit({ ...formData, turnstileToken });
+    try {
+      await onSubmit({ ...formData, turnstileToken });
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch {
+      // form data preserved on error
+    }
   };
 
   return (

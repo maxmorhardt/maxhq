@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { stripDangerousChars } from '../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { updateContest } from '../../features/contests/contestThunks';
@@ -195,7 +196,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
               fullWidth
               label="Home Team"
               value={homeTeam}
-              onChange={(e) => setHomeTeam(e.target.value)}
+              onChange={(e) => setHomeTeam(stripDangerousChars(e.target.value))}
               placeholder="Enter home team name"
               disabled={isDisabled}
               slotProps={{ htmlInput: { maxLength: 20 } }}
@@ -204,7 +205,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
               fullWidth
               label="Away Team"
               value={awayTeam}
-              onChange={(e) => setAwayTeam(e.target.value)}
+              onChange={(e) => setAwayTeam(stripDangerousChars(e.target.value))}
               placeholder="Enter away team name"
               disabled={isDisabled}
               slotProps={{ htmlInput: { maxLength: 20 } }}

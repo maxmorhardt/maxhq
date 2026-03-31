@@ -131,7 +131,6 @@ const contestSlice = createSlice({
         winnerCol: number;
         winner: string;
         winnerName: string;
-        status: ContestStatus;
       }>
     ) {
       if (!state.currentContest) {
@@ -166,7 +165,17 @@ const contestSlice = createSlice({
         });
       }
 
-      state.currentContest.status = quarterResult.status;
+      const quarterStatusMap: Record<number, ContestStatus> = {
+        1: 'Q2',
+        2: 'Q3',
+        3: 'Q4',
+        4: 'FINISHED',
+      };
+
+      const nextStatus = quarterStatusMap[quarterResult.quarter];
+      if (nextStatus) {
+        state.currentContest.status = nextStatus;
+      }
     },
   },
   // async thunk handlers for API operations

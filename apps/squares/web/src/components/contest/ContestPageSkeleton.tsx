@@ -1,6 +1,23 @@
 import { Box, Paper, Skeleton } from '@mui/material';
+import type { ConnectionStatus } from '../../types/ws';
+import ConnectionChip from './ConnectionChip';
 
-export default function ContestPageSkeleton() {
+interface ContestPageSkeletonProps {
+  connectionStatus?: ConnectionStatus;
+  retryCount?: number;
+}
+
+export default function ContestPageSkeleton({
+  connectionStatus = 'connecting',
+  retryCount = 0,
+}: ContestPageSkeletonProps) {
+  const cardSx = {
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 2.5,
+    p: 1.5,
+  };
+
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
       {/* title skeleton */}
@@ -15,17 +32,8 @@ export default function ContestPageSkeleton() {
         />
       </Box>
 
-      {/* status chip skeleton */}
-      <Skeleton
-        variant="rounded"
-        sx={{
-          width: { xs: 50, sm: 60 },
-          height: { xs: 20, sm: 24 },
-          position: 'absolute',
-          top: { xs: 4, sm: 0 },
-          right: { xs: 8, sm: 14 },
-        }}
-      />
+      {/* connection status chip */}
+      <ConnectionChip status={connectionStatus} retryCount={retryCount} />
 
       {/* three-column layout: left sidebar, center grid, right sidebar */}
       <Box
@@ -41,7 +49,7 @@ export default function ContestPageSkeleton() {
           p: 1,
         }}
       >
-        {/* left sidebar: contest details skeleton */}
+        {/* left sidebar: winners board + activity feed (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -50,38 +58,25 @@ export default function ContestPageSkeleton() {
             flex: '0 0 280px',
           }}
         >
-          <Paper
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-              p: 2,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            }}
-          >
-            <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1 }} />
+          {/* winners board skeleton */}
+          <Paper sx={cardSx}>
+            <Skeleton variant="text" width={130} height={28} sx={{ mb: 1 }} />
+            <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} variant="rectangular" height={44} sx={{ borderRadius: 1 }} />
+              ))}
             </Box>
           </Paper>
 
-          {/* team directions skeleton */}
-          <Paper
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-              p: 2,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            }}
-          >
-            <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Skeleton variant="rectangular" height={32} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rectangular" height={32} sx={{ borderRadius: 1 }} />
+          {/* activity feed skeleton */}
+          <Paper sx={cardSx}>
+            <Skeleton variant="text" width={110} height={28} sx={{ mb: 1 }} />
+            <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+              ))}
             </Box>
           </Paper>
         </Box>
@@ -96,12 +91,8 @@ export default function ContestPageSkeleton() {
         >
           <Paper
             sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
+              ...cardSx,
               p: { xs: 2.25, sm: 3, md: 4 },
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             }}
           >
             <Box
@@ -129,7 +120,7 @@ export default function ContestPageSkeleton() {
           </Paper>
         </Box>
 
-        {/* right sidebar: winners board and how to play skeletons */}
+        {/* right sidebar: contest details + live chat (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -138,43 +129,22 @@ export default function ContestPageSkeleton() {
             flex: '0 0 280px',
           }}
         >
-          {/* winners board skeleton */}
-          <Paper
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-              p: 2,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            }}
-          >
-            <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
-              {[...Array(4)].map((_, index) => (
-                <Skeleton
-                  key={index}
-                  variant="rectangular"
-                  height={52}
-                  sx={{ borderRadius: 1.2 }}
-                />
-              ))}
+          {/* contest details skeleton */}
+          <Paper sx={cardSx}>
+            <Skeleton variant="text" width={120} height={28} sx={{ mb: 1 }} />
+            <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+              <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+              <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
             </Box>
           </Paper>
 
-          {/* how to play skeleton */}
-          <Paper
-            sx={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
-              p: 2,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            }}
-          >
-            <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
+          {/* live chat skeleton */}
+          <Paper sx={cardSx}>
+            <Skeleton variant="text" width={90} height={28} sx={{ mb: 1 }} />
+            <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+            <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 1, mb: 1.5 }} />
+            <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 2 }} />
           </Paper>
         </Box>
       </Box>
@@ -194,73 +164,43 @@ export default function ContestPageSkeleton() {
         }}
       >
         {/* contest details skeleton */}
-        <Paper
-          sx={{
-            background: 'rgba(255,255,255,0.05)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 3,
-            p: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}
-        >
-          <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
-            <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1 }} />
+        <Paper sx={cardSx}>
+          <Skeleton variant="text" width={120} height={28} sx={{ mb: 1 }} />
+          <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+            <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+            <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
           </Box>
         </Paper>
 
         {/* winners board skeleton */}
-        <Paper
-          sx={{
-            background: 'rgba(255,255,255,0.05)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 3,
-            p: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}
-        >
-          <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
-            {[...Array(4)].map((_, index) => (
-              <Skeleton key={index} variant="rectangular" height={52} sx={{ borderRadius: 1.2 }} />
+        <Paper sx={cardSx}>
+          <Skeleton variant="text" width={130} height={28} sx={{ mb: 1 }} />
+          <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} variant="rectangular" height={44} sx={{ borderRadius: 1 }} />
             ))}
           </Box>
         </Paper>
 
-        {/* how to play skeleton */}
-        <Paper
-          sx={{
-            background: 'rgba(255,255,255,0.05)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 3,
-            p: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}
-        >
-          <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-          <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
+        {/* activity feed skeleton */}
+        <Paper sx={cardSx}>
+          <Skeleton variant="text" width={110} height={28} sx={{ mb: 1 }} />
+          <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+            ))}
+          </Box>
         </Paper>
 
-        {/* team directions skeleton */}
-        <Paper
-          sx={{
-            background: 'rgba(255,255,255,0.05)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 3,
-            p: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}
-        >
-          <Skeleton variant="text" width={150} height={32} sx={{ mb: 1.5 }} />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Skeleton variant="rectangular" height={32} sx={{ borderRadius: 1 }} />
-            <Skeleton variant="rectangular" height={32} sx={{ borderRadius: 1 }} />
-          </Box>
+        {/* live chat skeleton */}
+        <Paper sx={cardSx}>
+          <Skeleton variant="text" width={90} height={28} sx={{ mb: 1 }} />
+          <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+          <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 1, mb: 1.5 }} />
+          <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 2 }} />
         </Paper>
       </Box>
     </Box>

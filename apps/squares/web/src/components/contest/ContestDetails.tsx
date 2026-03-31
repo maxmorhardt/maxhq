@@ -1,7 +1,8 @@
-import { BugReport, Info, SportsScore } from '@mui/icons-material';
-import { Box, Button, Divider, TextField, Typography } from '@mui/material';
+import { BugReport, Info, School, Share, SportsScore } from '@mui/icons-material';
+import { Box, Button, Divider, IconButton, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { Link } from 'react-router-dom';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { startContestThunk, updateQuarterResult } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
@@ -11,11 +12,12 @@ import ContestSidebarCard from './ContestSidebarCard';
 
 interface ContestDetailsProps {
   isOwner?: boolean;
+  onShare?: () => void;
 }
 
 const MAX_SCORE_LENGTH = 4;
 
-export default function ContestDetails({ isOwner = false }: ContestDetailsProps) {
+export default function ContestDetails({ isOwner = false, onShare }: ContestDetailsProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const currentContest = useAppSelector(selectCurrentContest);
@@ -26,7 +28,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
   const [isLoading, setIsLoading] = useState(false);
   const [isStartingQ1, setIsStartingQ1] = useState(false);
 
-  if (!currentContest) {
+  if (!currentContest || !currentContest.squares) {
     return;
   }
 
@@ -159,17 +161,20 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
 
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
         {/* status display visible to everyone */}
         <Box>
           <Typography
             variant="caption"
-            sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 1 }}
+            sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5, fontSize: '0.7rem' }}
           >
             Contest Status
           </Typography>
 
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+          <Typography
+            variant="body2"
+            sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500, fontSize: '0.8rem' }}
+          >
             {getStatusDisplay()}
           </Typography>
         </Box>
@@ -247,83 +252,80 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
               <>
                 <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
                 {/* section header */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <SportsScore sx={{ color: '#43e97b', fontSize: '1.2rem' }} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+                  <SportsScore sx={{ color: '#43e97b', fontSize: '1rem' }} />
 
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>
                     Update Score
                   </Typography>
                 </Box>
 
-                {/* home team score input */}
-                <TextField
-                  label={
-                    currentContest.homeTeam ? `${currentContest.homeTeam} Score` : 'Home Team Score'
-                  }
-                  type="number"
-                  value={homeScore}
-                  onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.length <= MAX_SCORE_LENGTH) {
-                      setHomeScore(value);
-                    }
-                  }}
-                  size="small"
-                  fullWidth
-                  sx={{
-                    '& input[type=number]': {
-                      MozAppearance: 'textfield',
-                    },
-                    '& input[type=number]::-webkit-outer-spin-button': {
-                      WebkitAppearance: 'none',
-                      margin: 0,
-                    },
-                    '& input[type=number]::-webkit-inner-spin-button': {
-                      WebkitAppearance: 'none',
-                      margin: 0,
-                    },
-                  }}
-                />
+                {/* score inputs side by side */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    label={currentContest.homeTeam || 'Home'}
+                    type="number"
+                    value={homeScore}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= MAX_SCORE_LENGTH) {
+                        setHomeScore(value);
+                      }
+                    }}
+                    size="small"
+                    sx={{
+                      flex: 1,
+                      '& input[type=number]': {
+                        MozAppearance: 'textfield',
+                      },
+                      '& input[type=number]::-webkit-outer-spin-button': {
+                        WebkitAppearance: 'none',
+                        margin: 0,
+                      },
+                      '& input[type=number]::-webkit-inner-spin-button': {
+                        WebkitAppearance: 'none',
+                        margin: 0,
+                      },
+                    }}
+                  />
 
-                {/* away team score input */}
-                <TextField
-                  label={
-                    currentContest.awayTeam ? `${currentContest.awayTeam} Score` : 'Away Team Score'
-                  }
-                  type="number"
-                  value={awayScore}
-                  onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.length <= MAX_SCORE_LENGTH) {
-                      setAwayScore(value);
-                    }
-                  }}
-                  size="small"
-                  fullWidth
-                  sx={{
-                    '& input[type=number]': {
-                      MozAppearance: 'textfield',
-                    },
-                    '& input[type=number]::-webkit-outer-spin-button': {
-                      WebkitAppearance: 'none',
-                      margin: 0,
-                    },
-                    '& input[type=number]::-webkit-inner-spin-button': {
-                      WebkitAppearance: 'none',
-                      margin: 0,
-                    },
-                  }}
-                />
+                  <TextField
+                    label={currentContest.awayTeam || 'Away'}
+                    type="number"
+                    value={awayScore}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= MAX_SCORE_LENGTH) {
+                        setAwayScore(value);
+                      }
+                    }}
+                    size="small"
+                    sx={{
+                      flex: 1,
+                      '& input[type=number]': {
+                        MozAppearance: 'textfield',
+                      },
+                      '& input[type=number]::-webkit-outer-spin-button': {
+                        WebkitAppearance: 'none',
+                        margin: 0,
+                      },
+                      '& input[type=number]::-webkit-inner-spin-button': {
+                        WebkitAppearance: 'none',
+                        margin: 0,
+                      },
+                    }}
+                  />
+                </Box>
 
                 {/* submit button */}
                 <Button
@@ -331,6 +333,7 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
                   onClick={handleScoreSubmit}
                   disabled={!homeScore || !awayScore || isLoading}
                   fullWidth
+                  size="small"
                 >
                   Update Score
                 </Button>
@@ -338,6 +341,33 @@ export default function ContestDetails({ isOwner = false }: ContestDetailsProps)
             )}
           </>
         )}
+      </Box>
+
+      {/* share and learn more icons */}
+      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 1 }}>
+        <IconButton
+          onClick={onShare}
+          size="small"
+          sx={{
+            color: 'rgba(255,255,255,0.6)',
+            '&:hover': { color: 'white' },
+          }}
+          title="Share contest"
+        >
+          <Share fontSize="small" />
+        </IconButton>
+        <IconButton
+          component={Link}
+          to="/learn-more"
+          size="small"
+          sx={{
+            color: 'rgba(255,255,255,0.6)',
+            '&:hover': { color: 'white' },
+          }}
+          title="How to play"
+        >
+          <School fontSize="small" />
+        </IconButton>
       </Box>
     </ContestSidebarCard>
   );

@@ -43,41 +43,18 @@ export interface WSUpdate {
     | 'square_update'
     | 'contest_update'
     | 'quarter_result_update'
+    | 'chat_message'
     | 'connected'
     | 'disconnected'
-    | 'contest_deleted'
-    | 'disconnect';
+    | 'contest_deleted';
   contestId: string;
   connectionId?: string;
   updatedBy: string;
   timestamp: string;
-  square?: SquareWSUpdate;
-  contest?: ContestWSUpdate;
-  quarterResult?: QuarterResultWSUpdate;
-}
-
-export interface SquareWSUpdate {
-  squareId: string;
-  value: string;
-}
-
-export interface ContestWSUpdate {
-  homeTeam?: string;
-  awayTeam?: string;
-  xLabels?: number[];
-  yLabels?: number[];
-  status?: ContestStatus;
-}
-
-export interface QuarterResultWSUpdate {
-  quarter: number;
-  homeTeamScore: number;
-  awayTeamScore: number;
-  winnerRow: number;
-  winnerCol: number;
-  winner: string;
-  winnerName: string;
-  status: ContestStatus;
+  message?: string;
+  square?: Square;
+  contest?: Contest;
+  quarterResult?: QuarterResult;
 }
 
 export interface PaginationParams {
@@ -119,6 +96,27 @@ export interface QuarterResultRequest {
 export interface UpdateSquareRequest {
   value: string;
   owner: string;
+}
+
+export type ActivityEventType =
+  | 'square_claimed'
+  | 'score_update'
+  | 'quarter_winner'
+  | 'contest_started'
+  | 'contest_status';
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  message: string;
+  timestamp: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  message: string;
+  timestamp: string;
 }
 
 export interface UpdateContestRequest {
