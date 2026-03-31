@@ -40,12 +40,16 @@ export default function ContestPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [isConnecting, setIsConnecting] = useState(true);
   const [connectionFailed, setConnectionFailed] = useState(false);
-  const [contestNotFound, setContestNotFound] = useState(false);
+  const [wsCloseCode, setWsCloseCode] = useState<number | null>(null);
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const lastProcessedMessageRef = useRef<string | null>(null);
 
   const isAuthenticated = !auth.isLoading && auth.isAuthenticated;
+
+  // WS close codes that indicate a fatal error (no reconnect, no fetch)
+  const FATAL_CLOSE_CODES = [4404, 4500, 4503];
+  const hasFatalWsError = wsCloseCode !== null && FATAL_CLOSE_CODES.includes(wsCloseCode);
 
   // reset state when switching contests
   useEffect(() => {
@@ -56,7 +60,7 @@ export default function ContestPage() {
     setRetryCount(0);
     setIsConnecting(true);
     setConnectionFailed(false);
-    setContestNotFound(false);
+    setWsCloseCode(null);
     dispatch(setCurrentContest(null));
 
     // clear contest from redux on unmount / navigate away
@@ -73,7 +77,9 @@ export default function ContestPage() {
   // connect to websocket
   const { lastMessage, readyState, sendJsonMessage } = useWebSocket(socketUrl, {
     shouldReconnect: (event: CloseEvent) =>
-      event.code !== 4404 && socketUrl !== null && retryCount < MAX_RETRY_ATTEMPTS,
+      !FATAL_CLOSE_CODES.includes(event.code) &&
+      socketUrl !== null &&
+      retryCount < MAX_RETRY_ATTEMPTS,
     reconnectAttempts: MAX_RETRY_ATTEMPTS,
     reconnectInterval,
     protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
@@ -92,8 +98,8 @@ export default function ContestPage() {
       });
     },
     onClose: (event: CloseEvent) => {
-      if (event.code === 4404) {
-        setContestNotFound(true);
+      if (FATAL_CLOSE_CODES.includes(event.code)) {
+        setWsCloseCode(event.code);
         setIsConnecting(false);
       }
     },
@@ -105,7 +111,7 @@ export default function ContestPage() {
 
   // fetch contest data once websocket is connected, then seed activity feed
   useEffect(() => {
-    if (!owner || !name || !isConnected || hasFetchedContest.current || contestNotFound) {
+    if (!owner || !name || !isConnected || hasFetchedContest.current || hasFatalWsError) {
       return;
     }
 
@@ -274,8 +280,16 @@ export default function ContestPage() {
         ? 'reconnecting'
         : 'connecting';
 
-  // show error if contest not found via WS or after fetch
-  if (contestNotFound || (!currentContest && hasFetchedContest.current)) {
+  // handle fatal WS close codes
+  if (hasFatalWsError) {
+    if (wsCloseCode === 4404) {
+      return <NotFoundPage />;
+    }
+    return <GenericErrorDisplay />;
+  }
+
+  // show error if contest not found after fetch
+  if (!currentContest && hasFetchedContest.current) {
     return <NotFoundPage />;
   }
 
