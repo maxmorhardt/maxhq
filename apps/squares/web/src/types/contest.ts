@@ -46,8 +46,7 @@ export interface WSUpdate {
     | 'chat_message'
     | 'connected'
     | 'disconnected'
-    | 'contest_deleted'
-    | 'disconnect';
+    | 'contest_deleted';
   contestId: string;
   connectionId?: string;
   updatedBy: string;

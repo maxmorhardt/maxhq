@@ -11,6 +11,7 @@ import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton
 import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
 import LiveChat from '../../../components/contest/LiveChat';
 import WinnersBoard from '../../../components/contest/WinnersBoard';
+import ContestSignIn from '../../../components/contest/ContestSignIn';
 import {
   selectContestError,
   selectCurrentContest,
@@ -42,6 +43,8 @@ export default function ContestPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const lastProcessedMessageRef = useRef<string | null>(null);
 
+  const isAuthenticated = !auth.isLoading && auth.isAuthenticated;
+
   // reset state when switching contests
   useEffect(() => {
     hasFetchedContest.current = false;
@@ -62,7 +65,7 @@ export default function ContestPage() {
   const MAX_RETRY_ATTEMPTS = 5;
   const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
   const reconnectInterval = Math.min(1000 * Math.pow(2, retryCount), 30000);
-  const socketUrl = getSocketUrl(owner, name, auth);
+  const socketUrl = isAuthenticated ? getSocketUrl(owner, name, auth) : null;
 
   // connect to websocket
   const { lastMessage, readyState, sendJsonMessage } = useWebSocket(socketUrl, {
@@ -241,6 +244,11 @@ export default function ContestPage() {
       console.error('Error sharing:', err);
     }
   };
+
+  // prompt unauthenticated users to sign in (skip loading state during silent sign-out)
+  if ((!auth.isLoading && !auth.isAuthenticated) || auth.activeNavigator === 'signoutSilent') {
+    return <ContestSignIn />;
+  }
 
   // show error if connection failed after max retries
   if (connectionFailed) {

@@ -135,7 +135,7 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
       dispatch(setConnectionDetails(message));
       break;
 
-    case 'disconnect':
+    case 'disconnected':
       dispatch(setDisconnectionDetails(message));
       break;
 

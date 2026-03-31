@@ -2,6 +2,7 @@ import { Chat, Send } from '@mui/icons-material';
 import { Box, IconButton, InputBase, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '../../types/contest';
+import { stripDangerousChars } from '../../utils/sanitize';
 import ContestSidebarCard from './ContestSidebarCard';
 
 interface LiveChatProps {
@@ -139,8 +140,9 @@ export default function LiveChat({
           placeholder={disabled ? 'Sign in to chat' : 'Type a message...'}
           value={message}
           onChange={(e) => {
-            if (e.target.value.length <= 255) {
-              setMessage(e.target.value);
+            const sanitized = stripDangerousChars(e.target.value);
+            if (sanitized.length <= 255) {
+              setMessage(sanitized);
             }
           }}
           onKeyDown={handleKeyDown}

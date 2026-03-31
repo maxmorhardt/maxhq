@@ -11,6 +11,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import FormCard from '../../../components/common/FormCard';
@@ -56,7 +57,7 @@ export default function CreateContestPage() {
   // update form data on input change
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: stripDangerousChars(value) }));
   };
 
   // validate and submit contest creation form

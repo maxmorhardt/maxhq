@@ -22,6 +22,6 @@ export interface HandleWSEventParams {
   lastMessage: MessageEvent | null;
   dispatch: Dispatch;
   currentContestId: string;
-  lastProcessedMessageRef: React.MutableRefObject<string | null>;
+  lastProcessedMessageRef: React.RefObject<string | null>;
   callbacks?: WSUICallbacks;
 }
