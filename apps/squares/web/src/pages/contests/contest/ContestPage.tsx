@@ -1,24 +1,27 @@
-import { Alert, Box, Chip, Typography } from '@mui/material';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Box, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import ActivityFeed from '../../../components/contest/ActivityFeed';
+import ConnectionChip from '../../../components/contest/ConnectionChip';
 import ContestComponent from '../../../components/contest/Contest';
 import ContestDetails from '../../../components/contest/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
 import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
-import HowToPlay from '../../../components/contest/HowToPlay';
-import ShareContest from '../../../components/contest/ShareContest';
+import LiveChat from '../../../components/contest/LiveChat';
 import WinnersBoard from '../../../components/contest/WinnersBoard';
 import {
   selectContestError,
   selectCurrentContest,
 } from '../../../features/contests/contestSelectors';
-import { clearError } from '../../../features/contests/contestSlice';
+import { clearError, setCurrentContest } from '../../../features/contests/contestSlice';
 import { fetchContestByOwnerAndName } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import { contestSocketEventHandler, getSocketUrl } from '../../../service/wsService';
+import type { ActivityEvent, ActivityEventType, ChatMessage } from '../../../types/contest';
+import type { ConnectionStatus } from '../../../types/ws';
 
 export default function ContestPage() {
   const auth = useAuth();
@@ -34,24 +37,52 @@ export default function ContestPage() {
 
   const [retryCount, setRetryCount] = useState(0);
   const [isConnecting, setIsConnecting] = useState(true);
+  const [connectionFailed, setConnectionFailed] = useState(false);
+  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const lastProcessedMessageRef = useRef<string | null>(null);
 
+  // reset state when switching contests
+  useEffect(() => {
+    hasFetchedContest.current = false;
+    lastProcessedMessageRef.current = null;
+    setActivityEvents([]);
+    setChatMessages([]);
+    setRetryCount(0);
+    setIsConnecting(true);
+    setConnectionFailed(false);
+    dispatch(setCurrentContest(null));
+
+    // clear contest from redux on unmount / navigate away
+    return () => {
+      dispatch(setCurrentContest(null));
+    };
+  }, [owner, name, dispatch]);
+
+  const MAX_RETRY_ATTEMPTS = 5;
   const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
-  const reconnectInterval = Math.min(1000 * Math.pow(2, retryCount), 15000);
+  const reconnectInterval = Math.min(1000 * Math.pow(2, retryCount), 30000);
   const socketUrl = getSocketUrl(owner, name, auth);
 
   // connect to websocket
-  const { lastMessage, readyState } = useWebSocket(socketUrl, {
-    shouldReconnect: () => socketUrl !== null,
-    reconnectAttempts: Infinity,
+  const { lastMessage, readyState, sendJsonMessage } = useWebSocket(socketUrl, {
+    shouldReconnect: () => socketUrl !== null && retryCount < MAX_RETRY_ATTEMPTS,
+    reconnectAttempts: MAX_RETRY_ATTEMPTS,
     reconnectInterval,
     protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
     onOpen: () => {
       setIsConnecting(false);
+      setConnectionFailed(false);
       setRetryCount(0);
     },
     onError: () => {
-      setRetryCount(retryCount + 1);
+      setRetryCount((prev) => {
+        const next = prev + 1;
+        if (next >= MAX_RETRY_ATTEMPTS) {
+          setConnectionFailed(true);
+        }
+        return next;
+      });
     },
   });
 
@@ -59,7 +90,7 @@ export default function ContestPage() {
     return readyState === ReadyState.OPEN;
   }, [readyState]);
 
-  // fetch contest data once websocket is connected
+  // fetch contest data once websocket is connected, then seed activity feed
   useEffect(() => {
     if (!owner || !name || !isConnected || hasFetchedContest.current) {
       return;
@@ -67,13 +98,59 @@ export default function ContestPage() {
 
     (async () => {
       try {
-        await dispatch(fetchContestByOwnerAndName({ owner, name })).unwrap();
+        const contest = await dispatch(fetchContestByOwnerAndName({ owner, name })).unwrap();
         hasFetchedContest.current = true;
+
+        // seed activity feed from fetched contest data
+        const seeded: ActivityEvent[] = [];
+
+        contest.squares
+          ?.filter((s) => s.value && s.value.trim() !== '')
+          .forEach((s) => {
+            seeded.push({
+              id: `seed-square-${s.id}`,
+              type: 'square_claimed',
+              message: `${s.ownerName || 'Someone'} claimed square (${s.row}, ${s.col})`,
+              timestamp: s.updatedAt || s.createdAt,
+            });
+          });
+
+        contest.quarterResults?.forEach((qr) => {
+          seeded.push({
+            id: `seed-qr-${qr.id}`,
+            type: 'quarter_winner',
+            message: `Q${qr.quarter} winner: ${qr.winnerName} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
+            timestamp: qr.createdAt,
+          });
+        });
+
+        seeded.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setActivityEvents(seeded);
       } catch (err) {
         console.error('Failed to fetch contest:', err);
       }
     })();
   }, [owner, name, dispatch, isConnected]);
+
+  // add a new activity event from WS
+  const addActivityEvent = useCallback((type: ActivityEventType, message: string) => {
+    const event: ActivityEvent = {
+      id: `ws-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      type,
+      message,
+      timestamp: new Date().toISOString(),
+    };
+    setActivityEvents((prev) => [...prev, event]);
+  }, []);
+
+  // send a chat message via websocket
+  const sendChatMessage = useCallback(
+    (message: string) => {
+      if (!isConnected) return;
+      sendJsonMessage({ message });
+    },
+    [isConnected, sendJsonMessage]
+  );
 
   // handle incoming websocket messages
   useEffect(() => {
@@ -94,6 +171,31 @@ export default function ContestPage() {
         onError: (error) => {
           showToast(error, 'error');
         },
+        onSquareUpdate: (_value, row, col, ownerName) => {
+          addActivityEvent('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
+        },
+        onQuarterResultUpdate: (quarter, winnerName, homeScore, awayScore) => {
+          addActivityEvent(
+            'quarter_winner',
+            `Q${quarter} winner: ${winnerName} (${homeScore}-${awayScore})`
+          );
+        },
+        onContestUpdate: (status) => {
+          if (status) {
+            addActivityEvent('contest_status', `Contest status changed to ${status}`);
+          }
+        },
+        onChatMessage: (sender, message, timestamp) => {
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: `chat-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              sender,
+              message,
+              timestamp,
+            },
+          ]);
+        },
       },
     });
   }, [
@@ -105,6 +207,7 @@ export default function ContestPage() {
     showToast,
     navigate,
     auth.isAuthenticated,
+    addActivityEvent,
   ]);
 
   // show error toast and clear from store
@@ -115,9 +218,47 @@ export default function ContestPage() {
     }
   }, [dispatch, error, showToast]);
 
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const contestName = currentContest?.name || '';
+
+    if (!navigator.share) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+      } catch (err) {
+        console.error('Error copying to clipboard:', err);
+      }
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: contestName,
+        text: `Join my squares contest: ${contestName || 'Contest'}`,
+        url: shareUrl,
+      });
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
+  // show error if connection failed after max retries
+  if (connectionFailed) {
+    return <GenericErrorDisplay />;
+  }
+
+  // determine connection status for chip
+  const connectionStatus: ConnectionStatus = connectionFailed
+    ? 'failed'
+    : isConnected
+      ? 'connected'
+      : retryCount > 0
+        ? 'reconnecting'
+        : 'connecting';
+
   // show skeleton while connecting or loading contest data
   if (isConnecting || !isConnected || !currentContest) {
-    return <ContestPageSkeleton />;
+    return <ContestPageSkeleton connectionStatus={connectionStatus} retryCount={retryCount} />;
   }
 
   // show error if contest not found after fetch
@@ -128,26 +269,19 @@ export default function ContestPage() {
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
       {/* connection status indicator chip */}
-      <Chip
-        label={isConnected ? 'Live' : 'Connecting'}
-        color={isConnected ? 'success' : 'warning'}
-        size="small"
-        variant={isConnected ? 'filled' : 'outlined'}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          right: 14,
-        }}
-      />
+      <ConnectionChip status={connectionStatus} retryCount={retryCount} />
 
       {/* contest name heading */}
-      <Box sx={{ position: 'relative', mt: 2, mb: 1 }}>
+      <Box sx={{ position: 'relative', mt: 2, mb: 1, px: 5 }}>
         <Typography
           sx={{
-            fontSize: { xs: '0.9rem', sm: '1.5rem', md: '1.7rem' },
+            fontSize: { xs: '0.75rem', sm: '1.5rem', md: '1.7rem' },
             fontWeight: 800,
             textShadow: '0 2px 4px rgba(0,0,0,0.3)',
             textAlign: 'center',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}
         >
           {currentContest?.name ?? ''}
@@ -187,7 +321,7 @@ export default function ContestPage() {
           p: 1,
         }}
       >
-        {/* left sidebar with contest details (desktop only) */}
+        {/* left sidebar with winners board, activity feed, and action icons (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -196,8 +330,8 @@ export default function ContestPage() {
             flex: '0 0 280px',
           }}
         >
-          <ContestDetails isOwner={isOwner} />
-          <ShareContest contestName={currentContest?.name || ''} />
+          <WinnersBoard quarterResults={currentContest?.quarterResults} />
+          <ActivityFeed events={activityEvents} />
         </Box>
 
         {/* center section with contest grid */}
@@ -211,7 +345,7 @@ export default function ContestPage() {
           <ContestComponent />
         </Box>
 
-        {/* right sidebar with winners board and how to play (desktop only) */}
+        {/* right sidebar with contest details and live chat (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -220,12 +354,17 @@ export default function ContestPage() {
             flex: '0 0 280px',
           }}
         >
-          <WinnersBoard quarterResults={currentContest?.quarterResults} />
-          <HowToPlay />
+          <ContestDetails isOwner={isOwner} onShare={handleShare} />
+          <LiveChat
+            messages={chatMessages}
+            onSend={sendChatMessage}
+            currentUser={auth.user?.profile?.preferred_username as string}
+            disabled={!auth.isAuthenticated || !isConnected}
+          />
         </Box>
       </Box>
 
-      {/* mobile layout with sidebars underneath grid */}
+      {/* mobile layout with all sections underneath grid */}
       <Box
         sx={{
           display: { xs: 'flex', lg: 'none' },
@@ -239,10 +378,15 @@ export default function ContestPage() {
           mt: 2,
         }}
       >
-        <ShareContest contestName={currentContest?.name || ''} />
-        <ContestDetails isOwner={isOwner} />
+        <ContestDetails isOwner={isOwner} onShare={handleShare} />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
-        <HowToPlay />
+        <LiveChat
+          messages={chatMessages}
+          onSend={sendChatMessage}
+          currentUser={auth.user?.profile?.preferred_username as string}
+          disabled={!auth.isAuthenticated || !isConnected}
+        />
+        <ActivityFeed events={activityEvents} />
       </Box>
     </Box>
   );

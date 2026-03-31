@@ -21,19 +21,21 @@ export default function ContestSidebarCard({
       sx={{
         background: theme.palette.grey[900],
         border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 3,
-        p: 2,
+        borderRadius: 2.5,
+        p: 1.5,
       }}
     >
       {/* card header with icon and title */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-        <Box sx={{ color: iconColor, display: 'flex', alignItems: 'center' }}>{icon}</Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
+        <Box sx={{ color: iconColor, display: 'flex', alignItems: 'center', fontSize: '1.1rem' }}>
+          {icon}
+        </Box>
         <Typography
           variant="h6"
           sx={{
             fontWeight: 'bold',
             color: 'white',
-            fontSize: '1.05rem',
+            fontSize: '0.9rem',
           }}
         >
           {title}
@@ -41,7 +43,7 @@ export default function ContestSidebarCard({
       </Box>
 
       {/* divider */}
-      <Divider sx={{ mb: 1.5, borderColor: 'rgba(255,255,255,0.1)' }} />
+      <Divider sx={{ mb: 1, borderColor: 'rgba(255,255,255,0.1)' }} />
 
       {/* card content */}
       {children}

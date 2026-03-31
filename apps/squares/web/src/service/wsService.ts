@@ -68,11 +68,17 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
       if (isValidSquareUpdate(message)) {
         dispatch(
           updateSquareFromWebSocket({
-            id: message.square!.squareId,
+            id: message.square!.id,
             value: message.square!.value,
           })
         );
         dispatch(setLatestMessage(message));
+        callbacks?.onSquareUpdate?.(
+          message.square!.value,
+          message.square!.row,
+          message.square!.col,
+          message.square!.ownerName
+        );
       }
       break;
 
@@ -88,6 +94,7 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
           })
         );
         dispatch(setLatestMessage(message));
+        callbacks?.onContestUpdate?.(message.contest!.status);
       }
       break;
 
@@ -102,15 +109,26 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
             winnerCol: message.quarterResult!.winnerCol,
             winner: message.quarterResult!.winner,
             winnerName: message.quarterResult!.winnerName,
-            status: message.quarterResult!.status,
           })
         );
         dispatch(setLatestMessage(message));
+        callbacks?.onQuarterResultUpdate?.(
+          message.quarterResult!.quarter,
+          message.quarterResult!.winnerName,
+          message.quarterResult!.homeTeamScore,
+          message.quarterResult!.awayTeamScore
+        );
       }
       break;
 
     case 'contest_deleted':
       callbacks?.onContestDeleted?.();
+      break;
+
+    case 'chat_message':
+      if (message.message && message.updatedBy) {
+        callbacks?.onChatMessage?.(message.updatedBy, message.message, message.timestamp);
+      }
       break;
 
     case 'connected':
@@ -143,9 +161,7 @@ function isValidWSUpdate(data: unknown): data is WSUpdate {
 
 function isValidSquareUpdate(message: WSUpdate): boolean {
   return (
-    message.type === 'square_update' &&
-    !!message.square?.squareId &&
-    message.square.value !== undefined
+    message.type === 'square_update' && !!message.square?.id && message.square.value !== undefined
   );
 }
 

@@ -50,6 +50,7 @@ export default function ContactPage() {
     } catch (error) {
       console.log(error);
       showToast('Failed to submit contact form. Please try again.', 'error');
+      throw error;
     } finally {
       setIsSubmitting(false);
     }

@@ -34,7 +34,12 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
   // submit form data
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await onSubmit({ ...formData, turnstileToken });
+    try {
+      await onSubmit({ ...formData, turnstileToken });
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch {
+      // form data preserved on error
+    }
   };
 
   return (

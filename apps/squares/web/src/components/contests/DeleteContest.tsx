@@ -93,6 +93,8 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
                 color: '#ff6b6b',
                 fontWeight: 500,
                 fontSize: { xs: '0.875rem', md: '1rem' },
+                overflowWrap: 'anywhere',
+                wordBreak: 'break-word',
               }}
             >
               Contest to delete: <strong>{currentContest.name}</strong>
