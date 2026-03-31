@@ -9,6 +9,7 @@ import ContestComponent from '../../../components/contest/Contest';
 import ContestDetails from '../../../components/contest/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
 import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
+import NotFoundPage from '../../error/NotFoundPage';
 import LiveChat from '../../../components/contest/LiveChat';
 import WinnersBoard from '../../../components/contest/WinnersBoard';
 import ContestSignIn from '../../../components/contest/ContestSignIn';
@@ -39,6 +40,7 @@ export default function ContestPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [isConnecting, setIsConnecting] = useState(true);
   const [connectionFailed, setConnectionFailed] = useState(false);
+  const [contestNotFound, setContestNotFound] = useState(false);
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const lastProcessedMessageRef = useRef<string | null>(null);
@@ -54,6 +56,7 @@ export default function ContestPage() {
     setRetryCount(0);
     setIsConnecting(true);
     setConnectionFailed(false);
+    setContestNotFound(false);
     dispatch(setCurrentContest(null));
 
     // clear contest from redux on unmount / navigate away
@@ -69,7 +72,8 @@ export default function ContestPage() {
 
   // connect to websocket
   const { lastMessage, readyState, sendJsonMessage } = useWebSocket(socketUrl, {
-    shouldReconnect: () => socketUrl !== null && retryCount < MAX_RETRY_ATTEMPTS,
+    shouldReconnect: (event: CloseEvent) =>
+      event.code !== 4404 && socketUrl !== null && retryCount < MAX_RETRY_ATTEMPTS,
     reconnectAttempts: MAX_RETRY_ATTEMPTS,
     reconnectInterval,
     protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
@@ -87,6 +91,12 @@ export default function ContestPage() {
         return next;
       });
     },
+    onClose: (event: CloseEvent) => {
+      if (event.code === 4404) {
+        setContestNotFound(true);
+        setIsConnecting(false);
+      }
+    },
   });
 
   const isConnected = useMemo(() => {
@@ -95,7 +105,7 @@ export default function ContestPage() {
 
   // fetch contest data once websocket is connected, then seed activity feed
   useEffect(() => {
-    if (!owner || !name || !isConnected || hasFetchedContest.current) {
+    if (!owner || !name || !isConnected || hasFetchedContest.current || contestNotFound) {
       return;
     }
 
@@ -264,14 +274,14 @@ export default function ContestPage() {
         ? 'reconnecting'
         : 'connecting';
 
+  // show error if contest not found via WS or after fetch
+  if (contestNotFound || (!currentContest && hasFetchedContest.current)) {
+    return <NotFoundPage />;
+  }
+
   // show skeleton while connecting or loading contest data
   if (isConnecting || !isConnected || !currentContest) {
     return <ContestPageSkeleton connectionStatus={connectionStatus} retryCount={retryCount} />;
-  }
-
-  // show error if contest not found after fetch
-  if (!currentContest && hasFetchedContest.current) {
-    return <GenericErrorDisplay />;
   }
 
   return (
