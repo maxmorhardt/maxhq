@@ -149,7 +149,7 @@ export default function ContestPage() {
         console.error('Failed to fetch contest:', err);
       }
     })();
-  }, [owner, name, dispatch, isConnected]);
+  }, [owner, name, dispatch, isConnected, hasFatalWsError]);
 
   // add a new activity event from WS
   const addActivityEvent = useCallback((type: ActivityEventType, message: string) => {
