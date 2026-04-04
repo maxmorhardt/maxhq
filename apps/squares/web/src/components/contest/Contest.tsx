@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { setCurrentSquare } from '../../features/contests/contestSlice';
+import { updateSquare } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
 import EditSquare from '../square/EditSquare';
@@ -57,16 +58,27 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
     );
   };
 
+  // helper to extract initials from user name
+  const getInitials = (name: string): string => {
+    const trimmed = name.trim();
+    if (!trimmed) return '';
+    const parts = trimmed.split(/\s+/);
+    let initials = '';
+    for (let i = 0; i < parts.length && initials.length < 3; i++) {
+      initials += parts[i].charAt(0).toUpperCase();
+    }
+    return initials;
+  };
+
   const handleSquareClick = async (row: number, col: number) => {
     // redirect to login if not authenticated
     if (!auth.isAuthenticated) {
       sessionStorage.setItem('auth_redirect_path', window.location.href);
       auth.signinRedirect();
-
       return;
     }
 
-    // find and open square for editing
+    // find square
     const square = currentContest.squares.find(
       (square) => square.row === row && square.col === col
     );
@@ -76,8 +88,33 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
       return;
     }
 
-    dispatch(setCurrentSquare(square));
-    setOpenEditSquare(true);
+    const isEmpty = !square.value || square.value.trim() === '';
+    const isActive = currentContest.status === 'ACTIVE';
+
+    if (isEmpty && isActive) {
+      // fill empty square directly with user initials
+      const username = auth.user?.profile?.preferred_username;
+      const name = auth.user?.profile?.name || '';
+      const initials = getInitials(name);
+
+      if (!username || !initials) {
+        showToast('Unable to determine your initials', 'error');
+        return;
+      }
+
+      dispatch(
+        updateSquare({
+          contestId: currentContest.id,
+          squareId: square.id,
+          value: initials,
+          owner: username,
+        })
+      );
+    } else {
+      // open edit dialog for filled squares
+      dispatch(setCurrentSquare(square));
+      setOpenEditSquare(true);
+    }
   };
 
   return (

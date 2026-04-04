@@ -19,7 +19,7 @@ import {
   selectCurrentContest,
 } from '../../../features/contests/contestSelectors';
 import { clearError, setCurrentContest } from '../../../features/contests/contestSlice';
-import { fetchContestByOwnerAndName } from '../../../features/contests/contestThunks';
+import { fetchContestByOwnerAndName, updateSquare } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import { contestSocketEventHandler, getSocketUrl } from '../../../service/wsService';
@@ -288,6 +288,48 @@ export default function ContestPage() {
     }
   };
 
+  const handleRandomSquare = () => {
+    if (!auth.isAuthenticated) {
+      sessionStorage.setItem('auth_redirect_path', window.location.href);
+      auth.signinRedirect();
+      return;
+    }
+
+    if (!currentContest || currentContest.status !== 'ACTIVE') {
+      return;
+    }
+
+    const emptySquares = currentContest.squares.filter((s) => !s.value || s.value.trim() === '');
+
+    if (emptySquares.length === 0) {
+      showToast('No empty squares available', 'info');
+      return;
+    }
+
+    const randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
+    const username = auth.user?.profile?.preferred_username;
+    const name = auth.user?.profile?.name || '';
+    const parts = name.trim().split(/\s+/);
+    let initials = '';
+    for (let i = 0; i < parts.length && initials.length < 3; i++) {
+      initials += parts[i].charAt(0).toUpperCase();
+    }
+
+    if (!username || !initials) {
+      showToast('Unable to determine your initials', 'error');
+      return;
+    }
+
+    dispatch(
+      updateSquare({
+        contestId: currentContest.id,
+        squareId: randomSquare.id,
+        value: initials,
+        owner: username,
+      })
+    );
+  };
+
   // prompt unauthenticated users to sign in (skip loading state during silent sign-out)
   if ((!auth.isLoading && !auth.isAuthenticated) || auth.activeNavigator === 'signoutSilent') {
     return <ContestSignIn />;
@@ -413,7 +455,11 @@ export default function ContestPage() {
             flex: '0 0 280px',
           }}
         >
-          <ContestDetails isOwner={isOwner} onShare={handleShare} />
+          <ContestDetails
+            isOwner={isOwner}
+            onShare={handleShare}
+            onRandomSquare={handleRandomSquare}
+          />
           <LiveChat
             messages={chatMessages}
             onSend={sendChatMessage}
@@ -437,7 +483,11 @@ export default function ContestPage() {
           mt: 2,
         }}
       >
-        <ContestDetails isOwner={isOwner} onShare={handleShare} />
+        <ContestDetails
+          isOwner={isOwner}
+          onShare={handleShare}
+          onRandomSquare={handleRandomSquare}
+        />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
         <LiveChat
           messages={chatMessages}

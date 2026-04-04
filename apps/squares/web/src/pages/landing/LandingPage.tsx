@@ -111,7 +111,7 @@ export default function LandingPage() {
       <Box
         sx={{
           background: gradients.lightBlue,
-          py: { xs: 10, md: 16 },
+          py: { xs: 18, md: 28 },
           mb: 14,
         }}
       >

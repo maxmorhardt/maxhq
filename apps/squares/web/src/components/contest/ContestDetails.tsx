@@ -1,4 +1,4 @@
-import { BugReport, Info, School, Share, SportsScore } from '@mui/icons-material';
+import { Casino, Info, School, Share, SportsScore } from '@mui/icons-material';
 import { Box, Button, Divider, IconButton, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
@@ -7,24 +7,27 @@ import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { startContestThunk, updateQuarterResult } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
-import { updateSquareValueById } from '../../service/contestService';
 import ContestSidebarCard from './ContestSidebarCard';
 
 interface ContestDetailsProps {
   isOwner?: boolean;
   onShare?: () => void;
+  onRandomSquare?: () => void;
 }
 
 const MAX_SCORE_LENGTH = 4;
 
-export default function ContestDetails({ isOwner = false, onShare }: ContestDetailsProps) {
+export default function ContestDetails({
+  isOwner = false,
+  onShare,
+  onRandomSquare,
+}: ContestDetailsProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const currentContest = useAppSelector(selectCurrentContest);
   const { showToast } = useToast();
   const [homeScore, setHomeScore] = useState('');
   const [awayScore, setAwayScore] = useState('');
-  const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isStartingQ1, setIsStartingQ1] = useState(false);
 
@@ -125,39 +128,7 @@ export default function ContestDetails({ isOwner = false, onShare }: ContestDeta
     }
   };
 
-  const handleAutoFill = async () => {
-    if (!currentContest || isAutoFilling) {
-      return;
-    }
-
-    setIsAutoFilling(true);
-    showToast('Auto-filling squares...', 'info');
-
-    // get all empty squares
-    const emptySquares = currentContest.squares.filter((s) => !s.value || s.value.trim() === '');
-    try {
-      const owner = auth.user?.profile?.preferred_username || 'debug-user';
-      const userName = auth.user?.profile?.name || auth.user?.profile?.preferred_username || 'User';
-
-      // extract initials from user name
-      const nameParts = userName.split(' ');
-      const initials = nameParts.map((part) => part.charAt(0).toUpperCase()).join('');
-
-      // fill each empty square with user initials
-      for (const square of emptySquares) {
-        await updateSquareValueById(currentContest.id, square.id, { value: initials, owner });
-      }
-
-      showToast(`Auto-filled ${emptySquares.length} squares!`, 'success');
-    } catch (error) {
-      console.error('Auto-fill error:', error);
-    } finally {
-      setIsAutoFilling(false);
-    }
-  };
-
-  const groups = (auth.user?.profile?.groups as string[]) || [];
-  const isAdmin = groups.includes('squares-admin');
+  const hasEmptySquares = filledSquares < totalSquares;
 
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
@@ -227,21 +198,16 @@ export default function ContestDetails({ isOwner = false, onShare }: ContestDeta
                   Waiting for all squares to be filled before you can start the game.
                 </Typography>
 
-                {/* admin debug button */}
-                {isAdmin && (
+                {/* randomly select a square button */}
+                {hasEmptySquares && (
                   <Button
                     variant="outlined"
-                    startIcon={<BugReport />}
-                    onClick={handleAutoFill}
-                    disabled={isAutoFilling}
+                    startIcon={<Casino />}
+                    onClick={onRandomSquare}
                     size="small"
-                    sx={{
-                      borderColor: 'rgba(255, 193, 7, 0.5)',
-                      color: '#ffc107',
-                    }}
                     fullWidth
                   >
-                    {isAutoFilling ? 'Filling...' : 'Debug: Auto-fill All'}
+                    Randomly Select Square
                   </Button>
                 )}
               </>
