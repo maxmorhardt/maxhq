@@ -68,12 +68,7 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
   switch (message.type) {
     case 'square_update':
       if (isValidSquareUpdate(message)) {
-        dispatch(
-          updateSquareFromWebSocket({
-            id: message.square!.id,
-            value: message.square!.value,
-          })
-        );
+        dispatch(updateSquareFromWebSocket(message.square!));
         dispatch(setLatestMessage(message));
         callbacks?.onSquareUpdate?.(
           message.square!.value,
@@ -118,7 +113,10 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
           message.quarterResult!.quarter,
           message.quarterResult!.winnerName,
           message.quarterResult!.homeTeamScore,
-          message.quarterResult!.awayTeamScore
+          message.quarterResult!.awayTeamScore,
+          message.quarterResult!.winnerRow,
+          message.quarterResult!.winnerCol,
+          message.quarterResult!.winner
         );
       }
       break;

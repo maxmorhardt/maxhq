@@ -31,7 +31,7 @@ export default function ConnectionChip({ status, retryCount = 0 }: ConnectionChi
       variant={variant}
       sx={{
         position: 'absolute',
-        top: { xs: 4, sm: 0 },
+        top: { xs: -6, sm: -10 },
         right: { xs: 8, sm: 14 },
       }}
     />

@@ -115,9 +115,8 @@ export default function ContestSignIn() {
           sx={{
             display: 'flex',
             justifyContent: 'center',
-            gap: { xs: 2, sm: 4 },
+            gap: { xs: 1, sm: 4 },
             mb: 5,
-            flexWrap: 'wrap',
           }}
         >
           {features.map((feature, i) => (
@@ -127,17 +126,34 @@ export default function ContestSignIn() {
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1,
-                px: 2.5,
-                py: 1.5,
+                justifyContent: 'center',
+                gap: 0.5,
+                flex: { xs: '1 1 0', sm: '0 1 auto' },
+                px: { xs: 1, sm: 2.5 },
+                py: 1,
                 borderRadius: 2,
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 animation: `${pulse} 3s ease-in-out ${i * 0.5}s infinite`,
               }}
             >
-              <Box sx={{ color: theme.palette.primary.main, display: 'flex' }}>{feature.icon}</Box>
-              <Typography sx={{ color: 'white', fontWeight: 500, fontSize: '0.9rem' }}>
+              <Box
+                sx={{
+                  color: theme.palette.primary.main,
+                  display: 'flex',
+                  '& svg': { fontSize: { xs: 16, sm: 24 } },
+                }}
+              >
+                {feature.icon}
+              </Box>
+              <Typography
+                sx={{
+                  color: 'white',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.55rem', sm: '0.9rem' },
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {feature.text}
               </Typography>
             </Paper>

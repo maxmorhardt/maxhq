@@ -1,4 +1,14 @@
-import { Box, Button, useTheme } from '@mui/material';
+import { Box, Button, keyframes, useTheme } from '@mui/material';
+
+const winnerPulse = keyframes`
+  0% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
+  10% { box-shadow: 0 0 16px rgba(67, 233, 123, 0.8), 0 0 30px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
+  20% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
+  40% { box-shadow: 0 0 16px rgba(67, 233, 123, 0.8), 0 0 30px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
+  55% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
+  70% { box-shadow: 0 0 16px rgba(67, 233, 123, 0.8), 0 0 30px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
+  85%, 100% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
+`;
 
 interface SquareProps {
   rowIndex: number;
@@ -8,6 +18,8 @@ interface SquareProps {
   xLabel?: number;
   yLabel?: number;
   isWinner?: boolean;
+  isMine?: boolean;
+  isNewWinner?: boolean;
 }
 
 export default function Square({
@@ -18,6 +30,8 @@ export default function Square({
   xLabel,
   yLabel,
   isWinner = false,
+  isMine = false,
+  isNewWinner = false,
 }: SquareProps) {
   const theme = useTheme();
 
@@ -66,15 +80,19 @@ export default function Square({
           color: 'white',
           background: isWinner
             ? 'rgba(67, 233, 123, 0.2)'
-            : squareData
-              ? 'rgba(255,255,255,0.1)'
-              : 'rgba(255,255,255,0.03)',
+            : isMine
+              ? 'rgba(102, 126, 234, 0.18)'
+              : squareData
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(255,255,255,0.03)',
           backdropFilter: 'blur(10px)',
           border: isWinner
             ? '2px solid rgba(67, 233, 123, 0.6)'
-            : squareData
-              ? '1px solid rgba(255,255,255,0.2)'
-              : '1px solid rgba(255,255,255,0.08)',
+            : isMine
+              ? '1px solid rgba(102, 126, 234, 0.4)'
+              : squareData
+                ? '1px solid rgba(255,255,255,0.2)'
+                : '1px solid rgba(255,255,255,0.08)',
           borderRadius: 1.5,
           padding: 0,
           margin: { xs: 0, sm: 0.3, md: 0.4 },
@@ -84,19 +102,26 @@ export default function Square({
           fontWeight: squareData ? 600 : 400,
           transition: 'all 0.2s ease-in-out',
           cursor: 'pointer',
+          animation: isNewWinner ? `${winnerPulse} 1.8s ease-in-out` : undefined,
           '&:hover': {
             background: isWinner
               ? 'rgba(67, 233, 123, 0.3)'
-              : squareData
-                ? 'rgba(255,255,255,0.15)'
-                : 'rgba(255,255,255,0.08)',
+              : isMine
+                ? 'rgba(102, 126, 234, 0.25)'
+                : squareData
+                  ? 'rgba(255,255,255,0.15)'
+                  : 'rgba(255,255,255,0.08)',
             transform: 'translateY(-1px)',
             boxShadow: isWinner
               ? '0 0 4px rgba(67, 233, 123, 0.5)'
-              : `0 0 4px ${theme.palette.primary.main}`,
+              : isMine
+                ? '0 0 4px rgba(102, 126, 234, 0.5)'
+                : `0 0 4px ${theme.palette.primary.main}`,
             border: isWinner
               ? '2px solid rgba(67, 233, 123, 0.8)'
-              : '1px solid rgba(255,255,255,0.3)',
+              : isMine
+                ? '1px solid rgba(102, 126, 234, 0.6)'
+                : '1px solid rgba(255,255,255,0.3)',
           },
           '&:active': {
             transform: 'translateY(0px)',

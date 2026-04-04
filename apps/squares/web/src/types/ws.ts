@@ -11,7 +11,10 @@ export interface WSUICallbacks {
     quarter: number,
     winnerName: string,
     homeScore: number,
-    awayScore: number
+    awayScore: number,
+    winnerRow: number,
+    winnerCol: number,
+    winner: string
   ) => void;
   onContestUpdate?: (status?: string) => void;
   onChatMessage?: (sender: string, message: string, timestamp: string) => void;

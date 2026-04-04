@@ -8,7 +8,11 @@ import { useToast } from '../../hooks/useToast';
 import EditSquare from '../square/EditSquare';
 import Square from '../square/Square';
 
-export default function Contest() {
+interface ContestProps {
+  newWinnerSquare?: { row: number; col: number } | null;
+}
+
+export default function Contest({ newWinnerSquare }: ContestProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const currentContest = useAppSelector(selectCurrentContest);
@@ -28,11 +32,15 @@ export default function Contest() {
   const numRows = currentContest.yLabels.length;
   const numCols = currentContest.xLabels.length;
   const contestMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
+  const ownerMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
 
-  // populate matrix with square values
+  const currentUsername = auth?.user?.profile?.preferred_username as string | undefined;
+
+  // populate matrix with square values and owners
   currentContest.squares.forEach((square) => {
     if (square.row < numRows && square.col < numCols) {
       contestMatrix[square.row][square.col] = square.value;
+      ownerMatrix[square.row][square.col] = square.owner;
     }
   });
 
@@ -164,6 +172,12 @@ export default function Contest() {
                         xLabel={currentContest.xLabels[colIndex]}
                         yLabel={currentContest.yLabels[rowIndex]}
                         isWinner={isWinningSquare(rowIndex, colIndex)}
+                        isMine={
+                          !!currentUsername && ownerMatrix[rowIndex][colIndex] === currentUsername
+                        }
+                        isNewWinner={
+                          newWinnerSquare?.row === rowIndex && newWinnerSquare?.col === colIndex
+                        }
                       />
                     ))}
                   </Box>

@@ -107,17 +107,19 @@ const contestSlice = createSlice({
         state.currentContest.status = status;
       }
     },
-    // update square value from websocket message
-    updateSquareFromWebSocket(state, action: PayloadAction<{ id: string; value: string }>) {
+    // update square from websocket message (full square object)
+    updateSquareFromWebSocket(state, action: PayloadAction<Square>) {
       if (!state.currentContest) {
         return;
       }
 
-      const { id, value } = action.payload;
+      const updatedSquare = action.payload;
 
-      const squareIndex = state.currentContest.squares.findIndex((square) => square.id === id);
+      const squareIndex = state.currentContest.squares.findIndex(
+        (square) => square.id === updatedSquare.id
+      );
       if (squareIndex !== -1) {
-        state.currentContest.squares[squareIndex].value = value;
+        state.currentContest.squares[squareIndex] = updatedSquare;
       }
     },
     // add or update quarter result from websocket, update contest status

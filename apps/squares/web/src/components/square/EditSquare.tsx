@@ -152,7 +152,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       {/* dialog title with close button */}
       <DialogTitle sx={{ fontSize: 20, fontWeight: 'bold', pr: 6 }}>
-        Edit Square
+        {isReadOnly ? 'View Square' : 'Edit Square'}
         <IconButton
           onClick={handleClose}
           sx={{
@@ -196,7 +196,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
               color: 'rgba(255,255,255,0.8)',
             }}
           >
-            Owner: {currentSquare.ownerName}
+            Owner: {currentSquare.ownerName || currentSquare.owner}
           </Typography>
         )}
 
@@ -216,24 +216,24 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
         )}
       </DialogContent>
       {/* clear and save buttons (only shown in active state) */}
-      <DialogActions>
-        {isActive && currentSquare?.value && !isReadOnly && (
-          <Button onClick={handleClear} disabled={loading} color="warning">
-            Clear Square
-          </Button>
-        )}
+      {isActive && !isReadOnly && (
+        <DialogActions>
+          {currentSquare?.value && (
+            <Button onClick={handleClear} disabled={loading} color="warning">
+              Clear Square
+            </Button>
+          )}
 
-        {isActive && (
           <Button
             variant="contained"
             onClick={handleSave}
-            disabled={loading || isReadOnly}
+            disabled={loading}
             sx={{ position: 'relative', minHeight: 37, minWidth: 100 }}
           >
             Save
           </Button>
-        )}
-      </DialogActions>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }

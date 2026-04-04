@@ -150,7 +150,7 @@ export default function LiveChat({
           sx={{
             flex: 1,
             color: 'white',
-            fontSize: '0.85rem',
+            fontSize: '16px',
             '& input::placeholder': {
               color: 'rgba(255,255,255,0.35)',
               opacity: 1,

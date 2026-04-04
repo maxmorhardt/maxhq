@@ -1,4 +1,5 @@
-import { Alert, Box, Typography } from '@mui/material';
+import { EmojiEvents } from '@mui/icons-material';
+import { Alert, Box, Button, Dialog, DialogContent, keyframes, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -43,6 +44,14 @@ export default function ContestPage() {
   const [wsCloseCode, setWsCloseCode] = useState<number | null>(null);
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [newWinnerSquare, setNewWinnerSquare] = useState<{ row: number; col: number } | null>(null);
+  const [winnerDialog, setWinnerDialog] = useState<{
+    quarter: number;
+    homeScore: number;
+    awayScore: number;
+    row: number;
+    col: number;
+  } | null>(null);
   const lastProcessedMessageRef = useRef<string | null>(null);
 
   const isAuthenticated = !auth.isLoading && auth.isAuthenticated;
@@ -193,11 +202,28 @@ export default function ContestPage() {
         onSquareUpdate: (_value, row, col, ownerName) => {
           addActivityEvent('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
         },
-        onQuarterResultUpdate: (quarter, winnerName, homeScore, awayScore) => {
+        onQuarterResultUpdate: (
+          quarter,
+          winnerName,
+          homeScore,
+          awayScore,
+          winnerRow,
+          winnerCol,
+          winner
+        ) => {
           addActivityEvent(
             'quarter_winner',
             `Q${quarter} winner: ${winnerName} (${homeScore}-${awayScore})`
           );
+
+          // pulse the winning square briefly
+          setNewWinnerSquare({ row: winnerRow, col: winnerCol });
+          setTimeout(() => setNewWinnerSquare(null), 2000);
+
+          // show winner dialog if it's me
+          if (winner === auth.user?.profile?.preferred_username) {
+            setWinnerDialog({ quarter, homeScore, awayScore, row: winnerRow, col: winnerCol });
+          }
         },
         onContestUpdate: (status) => {
           if (status) {
@@ -226,6 +252,7 @@ export default function ContestPage() {
     showToast,
     navigate,
     auth.isAuthenticated,
+    auth.user?.profile?.preferred_username,
     addActivityEvent,
   ]);
 
@@ -374,7 +401,7 @@ export default function ContestPage() {
             flex: { xs: '1 1 auto', lg: '0 0 auto' },
           }}
         >
-          <ContestComponent />
+          <ContestComponent newWinnerSquare={newWinnerSquare} />
         </Box>
 
         {/* right sidebar with contest details and live chat (desktop only) */}
@@ -420,6 +447,95 @@ export default function ContestPage() {
         />
         <ActivityFeed events={activityEvents} />
       </Box>
+
+      {/* winner celebration dialog */}
+      <Dialog
+        open={!!winnerDialog}
+        onClose={() => setWinnerDialog(null)}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              background:
+                'linear-gradient(135deg, rgba(20,20,30,0.97) 0%, rgba(15,40,25,0.97) 100%)',
+              border: '1px solid rgba(67, 233, 123, 0.3)',
+              borderRadius: 3,
+              overflow: 'visible',
+            },
+          },
+        }}
+      >
+        <DialogContent sx={{ textAlign: 'center', pt: 5, pb: 4, px: 3 }}>
+          <Box
+            sx={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              background:
+                'linear-gradient(135deg, rgba(67,233,123,0.25) 0%, rgba(67,233,123,0.1) 100%)',
+              border: '2px solid rgba(67,233,123,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2.5,
+              animation: `${keyframes`
+                0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(67,233,123,0.2); }
+                50% { transform: scale(1.08); box-shadow: 0 0 32px rgba(67,233,123,0.4); }
+              `} 2s ease-in-out infinite`,
+            }}
+          >
+            <EmojiEvents sx={{ fontSize: 36, color: '#ffd700' }} />
+          </Box>
+          <Typography
+            sx={{
+              fontSize: '1.6rem',
+              fontWeight: 800,
+              mb: 1,
+              background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            You Won!
+          </Typography>
+          <Typography sx={{ fontSize: '1rem', color: 'rgba(255,255,255,0.85)', mb: 0.5 }}>
+            Your square ({winnerDialog?.col}, {winnerDialog?.row}) took Quarter{' '}
+            {winnerDialog?.quarter}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: '1.8rem',
+              fontWeight: 700,
+              color: 'white',
+              mt: 1.5,
+              mb: 2,
+              letterSpacing: 2,
+            }}
+          >
+            {winnerDialog?.homeScore} &ndash; {winnerDialog?.awayScore}
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => setWinnerDialog(null)}
+            sx={{
+              background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+              color: '#0a0a0a',
+              fontWeight: 700,
+              px: 4,
+              py: 1,
+              borderRadius: 2,
+              fontSize: '0.95rem',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #38f9d7 0%, #43e97b 100%)',
+              },
+            }}
+          >
+            Let's Go!
+          </Button>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
