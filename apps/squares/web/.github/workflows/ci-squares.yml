@@ -4,10 +4,9 @@ on:
   push:
     tags:
       - '*'
-
-permissions:
-  contents: read
-  security-events: write
+  pull_request:
+    branches:
+      - main
 
 jobs:
   node-ci:
@@ -25,4 +24,5 @@ jobs:
       app_version: ${{ github.ref_name }}
       artifact_name: dist
       artifact_path: dist
+      push: ${{ github.event_name == 'push' }}
     secrets: inherit
