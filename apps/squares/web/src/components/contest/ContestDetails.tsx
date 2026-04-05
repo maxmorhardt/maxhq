@@ -1,7 +1,6 @@
 import { Casino, Info, School, Share, SportsScore } from '@mui/icons-material';
 import { Box, Button, Divider, IconButton, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
-import { useAuth } from 'react-oidc-context';
 import { Link } from 'react-router-dom';
 import { selectCurrentContest } from '../../features/contests/contestSelectors';
 import { startContestThunk, updateQuarterResult } from '../../features/contests/contestThunks';
@@ -22,7 +21,6 @@ export default function ContestDetails({
   onShare,
   onRandomSquare,
 }: ContestDetailsProps) {
-  const auth = useAuth();
   const dispatch = useAppDispatch();
   const currentContest = useAppSelector(selectCurrentContest);
   const { showToast } = useToast();
