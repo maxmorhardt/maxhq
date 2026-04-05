@@ -2,12 +2,10 @@ import { Box, Button, keyframes, useTheme } from '@mui/material';
 
 const winnerPulse = keyframes`
   0% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
-  10% { box-shadow: 0 0 16px rgba(67, 233, 123, 0.8), 0 0 30px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
-  20% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
-  40% { box-shadow: 0 0 16px rgba(67, 233, 123, 0.8), 0 0 30px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
-  55% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
-  70% { box-shadow: 0 0 16px rgba(67, 233, 123, 0.8), 0 0 30px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
-  85%, 100% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
+  15% { box-shadow: 0 0 18px rgba(67, 233, 123, 0.8), 0 0 35px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
+  40% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
+  55% { box-shadow: 0 0 18px rgba(67, 233, 123, 0.8), 0 0 35px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
+  75%, 100% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
 `;
 
 interface SquareProps {
@@ -102,7 +100,7 @@ export default function Square({
           fontWeight: squareData ? 600 : 400,
           transition: 'all 0.2s ease-in-out',
           cursor: 'pointer',
-          animation: isNewWinner ? `${winnerPulse} 1.8s ease-in-out` : undefined,
+          animation: isNewWinner ? `${winnerPulse} 2.2s ease-in-out` : undefined,
           '&:hover': {
             background: isWinner
               ? 'rgba(67, 233, 123, 0.3)'

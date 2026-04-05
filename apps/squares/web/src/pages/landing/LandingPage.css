@@ -1,40 +1,100 @@
 /* Scroll-triggered animations */
-.scroll-fade-up {
+
+/* 1 — How It Works: flip in from top with rotation */
+.scroll-flip-down {
   opacity: 0;
-  transform: translateY(40px);
+  transform: perspective(800px) rotateX(-15deg) translateY(-30px);
+  transform-origin: top center;
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scroll-flip-down.visible {
+  opacity: 1;
+  transform: perspective(800px) rotateX(0) translateY(0);
+}
+
+.scroll-flip-down.delay-1 {
+  transition-delay: 0.1s;
+}
+
+.scroll-flip-down.delay-2 {
+  transition-delay: 0.2s;
+}
+
+.scroll-flip-down.delay-3 {
+  transition-delay: 0.3s;
+}
+
+/* 2 — See It In Action: zoom + rotate entrance */
+.scroll-zoom-rotate {
+  opacity: 0;
+  transform: scale(0.85) rotate(-3deg);
   transition:
     opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.scroll-fade-up.visible {
+.scroll-zoom-rotate.visible {
   opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+/* 3 — Features: slide up + blur clear */
+.scroll-rise-blur {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(50px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scroll-rise-blur.visible {
+  opacity: 1;
+  filter: blur(0);
   transform: translateY(0);
 }
 
-.scroll-fade-up.delay-1 {
-  transition-delay: 0.1s;
+/* 4 — Stats: staggered count-up pop */
+.scroll-pop-in {
+  opacity: 0;
+  transform: scale(0.6) translateY(30px);
+  transition:
+    opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.scroll-fade-up.delay-2 {
-  transition-delay: 0.2s;
+.scroll-pop-in.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
-.scroll-fade-up.delay-3 {
+.scroll-pop-in.delay-1 {
+  transition-delay: 0.15s;
+}
+
+.scroll-pop-in.delay-2 {
   transition-delay: 0.3s;
 }
 
-.scroll-scale-in {
+/* 5 — CTA: cinematic fade with scale */
+.scroll-cinema {
   opacity: 0;
-  transform: scale(0.92);
+  transform: scale(1.05);
+  filter: brightness(1.3);
   transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.scroll-scale-in.visible {
+.scroll-cinema.visible {
   opacity: 1;
   transform: scale(1);
+  filter: brightness(1);
 }
 
 /* Animated mesh gradient background for CTA */

@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import LandingCreateContestButton from '../../components/landing/LandingCreateContestButton';
 import LandingCTABadge from '../../components/landing/LandingCTABadge';
 import LandingFeatureCard from '../../components/landing/LandingFeatureCard';
+import LandingStatsSection from '../../components/landing/LandingStatsSection';
 import LandingHowItWorksCard from '../../components/landing/LandingHowItWorksCard';
 import LandingStepCard from '../../components/landing/LandingStepCard';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
@@ -106,7 +107,7 @@ export default function LandingPage() {
   const cta = useScrollAnimation();
 
   return (
-    <>
+    <Box sx={{ overflowX: 'clip' }}>
       {/* hero section with title, description, and action buttons */}
       <Box
         sx={{
@@ -170,7 +171,7 @@ export default function LandingPage() {
       <Container maxWidth="lg" sx={{ mb: 14 }}>
         <Box
           ref={howItWorks.ref}
-          className={`scroll-fade-up ${howItWorks.isVisible ? 'visible' : ''}`}
+          className={`scroll-flip-down ${howItWorks.isVisible ? 'visible' : ''}`}
           sx={{ textAlign: 'center' }}
         >
           <Typography
@@ -220,7 +221,7 @@ export default function LandingPage() {
       <Container maxWidth="lg" sx={{ mb: 14 }}>
         <Box
           ref={seeItInAction.ref}
-          className={`scroll-fade-up ${seeItInAction.isVisible ? 'visible' : ''}`}
+          className={`scroll-zoom-rotate ${seeItInAction.isVisible ? 'visible' : ''}`}
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography
@@ -416,7 +417,7 @@ export default function LandingPage() {
       <Container maxWidth="lg" sx={{ pb: 14 }}>
         <Box
           ref={features.ref}
-          className={`scroll-scale-in ${features.isVisible ? 'visible' : ''}`}
+          className={`scroll-rise-blur ${features.isVisible ? 'visible' : ''}`}
           sx={{
             textAlign: 'center',
             py: 8,
@@ -479,10 +480,13 @@ export default function LandingPage() {
         </Box>
       </Container>
 
+      {/* stats section showing platform activity */}
+      <LandingStatsSection />
+
       {/* call to action section with animated background */}
       <Box
         ref={cta.ref}
-        className={`scroll-fade-up ${cta.isVisible ? 'visible' : ''}`}
+        className={`scroll-cinema ${cta.isVisible ? 'visible' : ''}`}
         sx={{
           position: 'relative',
           py: { xs: 12, md: 16 },
@@ -558,6 +562,6 @@ export default function LandingPage() {
           </Box>
         </Container>
       </Box>
-    </>
+    </Box>
   );
 }
