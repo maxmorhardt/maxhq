@@ -6,7 +6,7 @@ import type { InternalAxiosRequestConfig } from 'axios';
 
 describe('api', () => {
   it('should be an axios instance with default config', () => {
-    expect(api.defaults.headers['Content-Type']).toBe('application/json');
+    expect(api.defaults.headers.common['Content-Type']).toBe('application/json');
     expect(api.defaults.withCredentials).toBe(true);
     expect(api.defaults.timeout).toBe(10000);
   });

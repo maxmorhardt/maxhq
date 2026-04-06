@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { keyframes, useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { useEffect } from 'react';
@@ -37,6 +38,7 @@ export default function CallbackPage() {
   const theme = useTheme();
   const { showToast } = useToast();
   const [searchParams] = useSearchParams();
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -102,7 +104,9 @@ export default function CallbackPage() {
               height: CELL_SIZE,
               borderRadius: '4px',
               backgroundColor: theme.palette.primary.main,
-              animation: `${gridReveal} 0.5s ease-out ${i * 0.06}s both, ${pulseGlow} 2s ease-in-out ${i * 0.12}s infinite`,
+              animation: prefersReducedMotion
+                ? 'none'
+                : `${gridReveal} 0.5s ease-out ${i * 0.06}s both, ${pulseGlow} 2s ease-in-out ${i * 0.12}s infinite`,
             }}
           />
         ))}
@@ -118,7 +122,7 @@ export default function CallbackPage() {
           backgroundClip: 'text',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          animation: `${shimmer} 2s linear infinite`,
+          animation: prefersReducedMotion ? 'none' : `${shimmer} 2s linear infinite`,
           fontSize: { xs: '1.25rem', sm: '1.5rem' },
         }}
       >
@@ -129,7 +133,7 @@ export default function CallbackPage() {
         variant="body2"
         sx={{
           color: 'text.disabled',
-          animation: `${fadeInUp} 0.6s ease-out 0.8s both`,
+          animation: prefersReducedMotion ? 'none' : `${fadeInUp} 0.6s ease-out 0.8s both`,
           fontSize: { xs: '0.75rem', sm: '0.875rem' },
         }}
       >
