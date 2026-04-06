@@ -1,16 +1,6 @@
-import {
-  EmojiEvents,
-  GridView,
-  Groups,
-  Help,
-  Home,
-  Login,
-  Mail,
-  PersonAdd,
-} from '@mui/icons-material';
+import { EmojiEvents, GridView, Groups, Login, PersonAdd } from '@mui/icons-material';
 import { Box, Button, Container, keyframes, Paper, Typography, useTheme } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
-import { Link as RouterLink } from 'react-router-dom';
 import { createOidcStateForRegistration } from '../../utils/oidcHelpers';
 
 const float = keyframes`
@@ -57,7 +47,14 @@ export default function ContestSignIn() {
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 5, md: 8 }, px: { xs: 2, sm: 3 } }}>
-      <Box sx={{ textAlign: 'center' }}>
+      <Box
+        sx={{
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: { xs: 2, md: 0 },
+        }}
+      >
         {/* animated grid icon */}
         <Box
           sx={{
@@ -168,7 +165,7 @@ export default function ContestSignIn() {
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
+            flexDirection: 'row',
             gap: 2,
             justifyContent: 'center',
             alignItems: 'center',
@@ -185,8 +182,8 @@ export default function ContestSignIn() {
               px: 4,
               py: 1.5,
               fontWeight: 600,
-              width: { xs: '100%', sm: 'auto' },
-              maxWidth: { xs: 280, sm: 'none' },
+              width: { xs: '50%', sm: 'auto' },
+              maxWidth: { xs: 200, sm: 'none' },
             }}
           >
             Sign In
@@ -200,55 +197,12 @@ export default function ContestSignIn() {
               px: 4,
               py: 1.5,
               fontWeight: 600,
-              width: { xs: '100%', sm: 'auto' },
-              maxWidth: { xs: 280, sm: 'none' },
+              width: { xs: '50%', sm: 'auto' },
+              maxWidth: { xs: 200, sm: 'none' },
             }}
           >
             Register
           </Button>
-        </Box>
-
-        {/* links */}
-        <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Typography
-            component={RouterLink}
-            to="/"
-            sx={{
-              color: 'rgba(255,255,255,0.6)',
-              textDecoration: 'none',
-              fontSize: '0.875rem',
-              '&:hover': { color: 'white' },
-            }}
-          >
-            <Home sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
-            Home
-          </Typography>
-          <Typography
-            component={RouterLink}
-            to="/learn-more"
-            sx={{
-              color: 'rgba(255,255,255,0.6)',
-              textDecoration: 'none',
-              fontSize: '0.875rem',
-              '&:hover': { color: 'white' },
-            }}
-          >
-            <Help sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
-            How It Works
-          </Typography>
-          <Typography
-            component={RouterLink}
-            to="/contact"
-            sx={{
-              color: 'rgba(255,255,255,0.6)',
-              textDecoration: 'none',
-              fontSize: '0.875rem',
-              '&:hover': { color: 'white' },
-            }}
-          >
-            <Mail sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
-            Contact
-          </Typography>
         </Box>
       </Box>
     </Container>

@@ -84,8 +84,7 @@ export default function CallbackPage() {
         justifyContent: 'center',
         gap: { xs: 2, sm: 3 },
         p: { xs: 2, sm: 4 },
-        mt: { xs: '2rem', sm: '4rem', md: '5rem' },
-        mb: { xs: '2rem', sm: '4rem', md: '5rem' },
+        my: '4rem',
       }}
     >
       {/* Animated squares grid */}
