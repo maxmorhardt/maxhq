@@ -1,7 +1,4 @@
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
 import { keyframes, useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { useEffect } from 'react';
@@ -9,14 +6,30 @@ import { useAuth } from 'react-oidc-context';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../../hooks/useToast';
 
-const spin = keyframes`
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+const gridReveal = keyframes`
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 `;
+
+const shimmer = keyframes`
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+`;
+
+const pulseGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 8px rgba(144, 202, 249, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(144, 202, 249, 0.6); }
+`;
+
+const fadeInUp = keyframes`
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+`;
+
+const GRID_SIZE = 4;
+const CELL_SIZE = 18;
+const GAP = 4;
 
 export default function CallbackPage() {
   const auth = useAuth();
@@ -64,96 +77,64 @@ export default function CallbackPage() {
     <Box
       sx={{
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        mt: { xs: '2rem', sm: '4rem', md: '8rem' },
-        mb: { xs: '2rem', sm: '4rem', md: '8rem' },
+        gap: { xs: 2, sm: 3 },
+        p: { xs: 2, sm: 4 },
+        mt: { xs: '2rem', sm: '4rem', md: '5rem' },
+        mb: { xs: '2rem', sm: '4rem', md: '5rem' },
       }}
     >
-      <Card
+      {/* Animated squares grid */}
+      <Box
         sx={{
-          maxWidth: 500,
-          width: '90%',
-          backgroundColor: theme.palette.grey[900],
-          borderRadius: 4,
+          display: 'grid',
+          gridTemplateColumns: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
+          gap: `${GAP}px`,
         }}
       >
-        <CardContent
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: { xs: 2, sm: 3 },
-            py: { xs: 3, sm: 6 },
-            px: { xs: 2, sm: 4 },
-          }}
-        >
+        {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => (
           <Box
+            key={i}
             sx={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: CELL_SIZE,
+              height: CELL_SIZE,
+              borderRadius: '4px',
+              backgroundColor: theme.palette.primary.main,
+              animation: `${gridReveal} 0.5s ease-out ${i * 0.06}s both, ${pulseGlow} 2s ease-in-out ${i * 0.12}s infinite`,
             }}
-          >
-            <CircularProgress
-              size={80}
-              thickness={2}
-              sx={{
-                color: 'primary.main',
-                animation: `${spin} 1.5s linear infinite`,
-              }}
-            />
-            <CircularProgress
-              size={60}
-              thickness={3}
-              variant="determinate"
-              value={75}
-              sx={{
-                position: 'absolute',
-                color: 'secondary.main',
-                animation: `${spin} 2s linear infinite reverse`,
-              }}
-            />
-          </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{
-                fontWeight: 600,
-                mb: { xs: 0.5, sm: 1 },
-                fontSize: { xs: '1.5rem', sm: '2.125rem' },
-                background: '#FFF',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Almost there!
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                mb: 0.5,
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-              }}
-            >
-              Completing your authentication
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.disabled"
-              sx={{
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              }}
-            >
-              This will only take a moment
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
+          />
+        ))}
+      </Box>
+
+      {/* Shimmer text */}
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 700,
+          background: `linear-gradient(90deg, ${theme.palette.text.secondary} 0%, ${theme.palette.primary.light} 50%, ${theme.palette.text.secondary} 100%)`,
+          backgroundSize: '200% auto',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          animation: `${shimmer} 2s linear infinite`,
+          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+        }}
+      >
+        Signing you in
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{
+          color: 'text.disabled',
+          animation: `${fadeInUp} 0.6s ease-out 0.8s both`,
+          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+        }}
+      >
+        This will only take a moment
+      </Typography>
     </Box>
   );
 }

@@ -16,7 +16,7 @@ export default defineConfig({
         statements: 0,
       },
       reporter: ['text', 'html', 'lcov'],
-      exclude: ['node_modules/', 'src/setupTests.ts'],
+      exclude: ['node_modules/', 'src/setupTests.ts', 'src/types/'],
     },
   },
 });

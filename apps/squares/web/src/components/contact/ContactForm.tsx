@@ -72,6 +72,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
             value={formData.name}
             onChange={handleInputChange}
             required
+            slotProps={{ htmlInput: { maxLength: 100 } }}
           />
 
           <TextField
@@ -82,6 +83,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
             value={formData.email}
             onChange={handleInputChange}
             required
+            slotProps={{ htmlInput: { maxLength: 255 } }}
           />
         </Box>
 
@@ -93,6 +95,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
           value={formData.subject}
           onChange={handleInputChange}
           required
+          slotProps={{ htmlInput: { maxLength: 200 } }}
         />
 
         {/* message field */}
@@ -105,6 +108,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
           value={formData.message}
           onChange={handleInputChange}
           required
+          slotProps={{ htmlInput: { maxLength: 2000 } }}
         />
 
         {/* turnstile verification */}

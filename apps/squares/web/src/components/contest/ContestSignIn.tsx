@@ -56,14 +56,14 @@ export default function ContestSignIn() {
   ];
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 4, md: 8 } }}>
+    <Container maxWidth="md" sx={{ py: { xs: 5, md: 8 }, px: { xs: 2, sm: 3 } }}>
       <Box sx={{ textAlign: 'center' }}>
         {/* animated grid icon */}
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'center',
-            mb: 3,
+            mb: { xs: 1.5, md: 3 },
             animation: `${float} 3s ease-in-out infinite`,
           }}
         >
@@ -88,7 +88,7 @@ export default function ContestSignIn() {
           variant="h3"
           sx={{
             fontWeight: 800,
-            mb: 2,
+            mb: { xs: 1, md: 2 },
             fontSize: { xs: '1.75rem', md: '2.75rem' },
             color: 'white',
           }}
@@ -102,8 +102,9 @@ export default function ContestSignIn() {
             fontWeight: 300,
             maxWidth: 500,
             mx: 'auto',
-            mb: 5,
+            mb: { xs: 2, md: 5 },
             lineHeight: 1.6,
+            fontSize: { xs: '0.95rem', sm: '1.25rem' },
           }}
         >
           Someone shared a squares contest with you. Sign in or create an account to join the
@@ -114,9 +115,12 @@ export default function ContestSignIn() {
         <Box
           sx={{
             display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
             justifyContent: 'center',
-            gap: { xs: 1, sm: 4 },
-            mb: 5,
+            gap: { xs: 0.75, sm: 4 },
+            mt: { xs: 1, md: 0 },
+            mb: { xs: 2, md: 5 },
           }}
         >
           {features.map((feature, i) => (
@@ -127,10 +131,10 @@ export default function ContestSignIn() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 0.5,
-                flex: { xs: '1 1 0', sm: '0 1 auto' },
+                gap: { xs: 0.5, sm: 1 },
+                width: 'auto',
                 px: { xs: 1, sm: 2.5 },
-                py: 1,
+                py: { xs: 0.75, sm: 1 },
                 borderRadius: 2,
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -140,8 +144,8 @@ export default function ContestSignIn() {
               <Box
                 sx={{
                   color: theme.palette.primary.main,
-                  display: 'flex',
-                  '& svg': { fontSize: { xs: 16, sm: 24 } },
+                  display: { xs: 'none', sm: 'flex' },
+                  '& svg': { fontSize: { xs: 20, sm: 24 } },
                 }}
               >
                 {feature.icon}
@@ -150,7 +154,7 @@ export default function ContestSignIn() {
                 sx={{
                   color: 'white',
                   fontWeight: 500,
-                  fontSize: { xs: '0.55rem', sm: '0.9rem' },
+                  fontSize: { xs: '0.7rem', sm: '0.9rem' },
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -161,13 +165,29 @@ export default function ContestSignIn() {
         </Box>
 
         {/* action buttons */}
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', mb: 4 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 2,
+            justifyContent: 'center',
+            alignItems: 'center',
+            mb: 4,
+            width: '100%',
+          }}
+        >
           <Button
             variant="contained"
             size="large"
             startIcon={<Login />}
             onClick={handleLogin}
-            sx={{ px: 4, py: 1.5, fontWeight: 600 }}
+            sx={{
+              px: 4,
+              py: 1.5,
+              fontWeight: 600,
+              width: { xs: '100%', sm: 'auto' },
+              maxWidth: { xs: 280, sm: 'none' },
+            }}
           >
             Sign In
           </Button>
@@ -176,7 +196,13 @@ export default function ContestSignIn() {
             size="large"
             startIcon={<PersonAdd />}
             onClick={handleRegister}
-            sx={{ px: 4, py: 1.5, fontWeight: 600 }}
+            sx={{
+              px: 4,
+              py: 1.5,
+              fontWeight: 600,
+              width: { xs: '100%', sm: 'auto' },
+              maxWidth: { xs: 280, sm: 'none' },
+            }}
           >
             Register
           </Button>
