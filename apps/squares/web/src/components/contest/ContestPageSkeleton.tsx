@@ -25,9 +25,9 @@ export default function ContestPageSkeleton({
         <Skeleton
           variant="text"
           sx={{
-            fontSize: { xs: '1.2rem', sm: '1.5rem' },
-            width: { xs: 160, sm: 240 },
-            height: { xs: 28, sm: 36 },
+            fontSize: { xs: '1rem', sm: '1.5rem' },
+            width: { xs: 120, sm: 240 },
+            height: { xs: 24, sm: 36 },
           }}
         />
       </Box>
