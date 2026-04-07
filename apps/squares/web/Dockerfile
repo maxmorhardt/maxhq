@@ -3,7 +3,7 @@ FROM nginx:alpine
 LABEL io.maxstash.image.source="https://github.com/maxmorhardt/squares"
 LABEL io.maxstash.image.description="Squares Frontend - Game's web application"
 LABEL io.maxstash.image.vendor="Max Morhardt"
-LABEL io.maxstash.image.licenses="MIT"
+LABEL io.maxstash.image.licenses="PolyForm-Noncommercial-1.0.0"
 
 RUN apk upgrade --no-cache
 
