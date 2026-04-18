@@ -2,7 +2,7 @@ import { GridView, PlayArrow, SportsScore, Sync } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
-import type { ActivityEvent, ActivityEventType } from '../../types/contest';
+import type { ActivityEvent, ActivityEventType } from '../../../types/contest';
 import ContestSidebarCard from './ContestSidebarCard';
 
 interface ActivityFeedProps {

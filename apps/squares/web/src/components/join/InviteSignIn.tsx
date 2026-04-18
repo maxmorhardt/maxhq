@@ -13,7 +13,7 @@ const pulse = keyframes`
   50% { opacity: 1; }
 `;
 
-export default function ContestSignIn() {
+export default function InviteSignIn() {
   const theme = useTheme();
   const auth = useAuth();
 

@@ -1,5 +1,9 @@
 export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'DELETED';
 
+export type ContestVisibility = 'public' | 'private';
+
+export type ParticipantRole = 'owner' | 'participant' | 'viewer';
+
 export interface Contest {
   id: string;
   name: string;
@@ -8,6 +12,7 @@ export interface Contest {
   homeTeam?: string;
   awayTeam?: string;
   status: ContestStatus;
+  visibility: ContestVisibility;
   squares: Square[];
   quarterResults?: QuarterResult[];
   owner: string;
@@ -22,6 +27,7 @@ export interface CreateContestRequest {
   owner: string;
   homeTeam?: string;
   awayTeam?: string;
+  visibility?: ContestVisibility;
 }
 
 export interface Square {
@@ -122,6 +128,7 @@ export interface ChatMessage {
 export interface UpdateContestRequest {
   homeTeam?: string;
   awayTeam?: string;
+  visibility?: ContestVisibility;
 }
 
 export interface ContactRequest {
@@ -133,4 +140,54 @@ export interface ContactRequest {
 
 export interface ContactResponse {
   message: string;
+}
+
+export interface Participant {
+  id: string;
+  contestId: string;
+  userId: string;
+  inviteId: string;
+  role: ParticipantRole;
+  maxSquares: number;
+  joinedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateParticipantRequest {
+  role?: ParticipantRole;
+  maxSquares?: number;
+}
+
+export interface Invite {
+  id: string;
+  contestId: string;
+  token: string;
+  maxSquares: number;
+  role: ParticipantRole;
+  maxUses?: number;
+  uses: number;
+  expiresAt?: string;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+}
+
+export interface CreateInviteRequest {
+  maxSquares: number;
+  role: ParticipantRole;
+  maxUses?: number;
+  expiresIn?: number;
+}
+
+export interface InviteResponse {
+  inviteUrl: string;
+  token: string;
+}
+
+export interface InvitePreviewResponse {
+  contestName: string;
+  maxSquares: number;
+  owner: string;
+  role: string;
 }

@@ -73,4 +73,26 @@ describe('handleError', () => {
     expect(result.message).toBe('Invalid URL');
     expect(result.requestId).toBe('');
   });
+
+  it('should fallback to code 0 when response has no status', () => {
+    const err = new AxiosError('Request failed', 'ERR_BAD_REQUEST', undefined, {}, {
+      data: null,
+      status: undefined,
+      statusText: '',
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    } as unknown as AxiosResponse);
+
+    const result = handleError(err);
+    expect(result.code).toBe(0);
+    expect(result.requestId).toBe('');
+  });
+
+  it('should fallback message when AxiosError has no message', () => {
+    const err = new AxiosError(undefined);
+
+    const result = handleError(err);
+    expect(result.code).toBe(0);
+    expect(result.message).toBe('Request setup error');
+  });
 });

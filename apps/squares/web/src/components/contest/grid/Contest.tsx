@@ -1,13 +1,16 @@
 import { Box, Paper, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { selectCurrentContest } from '../../features/contests/contestSelectors';
-import { setCurrentSquare } from '../../features/contests/contestSlice';
-import { updateSquare } from '../../features/contests/contestThunks';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { useToast } from '../../hooks/useToast';
-import EditSquare from '../square/EditSquare';
-import Square from '../square/Square';
+import {
+  selectCurrentContest,
+  selectParticipants,
+} from '../../../features/contests/contestSelectors';
+import { setCurrentSquare } from '../../../features/contests/contestSlice';
+import { updateSquare } from '../../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
+import { useToast } from '../../../hooks/useToast';
+import EditSquare from './EditSquare';
+import Square from './Square';
 
 interface ContestProps {
   newWinnerSquare?: { row: number; col: number } | null;
@@ -17,8 +20,15 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const currentContest = useAppSelector(selectCurrentContest);
+  const participants = useAppSelector(selectParticipants);
   const { showToast } = useToast();
   const [openEditSquare, setOpenEditSquare] = useState(false);
+
+  const currentUsername = auth?.user?.profile?.preferred_username as string | undefined;
+  const currentParticipant = participants.find((p) => p.userId === currentUsername);
+  const isParticipant = !!currentParticipant;
+  const isOwner = currentUsername === currentContest?.owner;
+  const isReadOnly = !isParticipant && !isOwner;
 
   if (
     !currentContest ||
@@ -34,8 +44,6 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
   const numCols = currentContest.xLabels.length;
   const contestMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
   const ownerMatrix: string[][] = Array.from({ length: numRows }, () => Array(numCols).fill(''));
-
-  const currentUsername = auth?.user?.profile?.preferred_username as string | undefined;
 
   // populate matrix with square values and owners
   currentContest.squares.forEach((square) => {
@@ -78,6 +86,12 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
       return;
     }
 
+    // block non-participants on public contests
+    if (isReadOnly) {
+      showToast('You need an invite link to participate', 'info');
+      return;
+    }
+
     // find square
     const square = currentContest.squares.find(
       (square) => square.row === row && square.col === col
@@ -92,6 +106,19 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
     const isActive = currentContest.status === 'ACTIVE';
 
     if (isEmpty && isActive) {
+      // check square limit for non-owner participants
+      const squaresClaimed = currentContest.squares.filter(
+        (s) => s.owner === currentUsername
+      ).length;
+      if (
+        currentParticipant &&
+        currentParticipant.role !== 'owner' &&
+        squaresClaimed >= currentParticipant.maxSquares
+      ) {
+        showToast('Square limit reached', 'warning');
+        return;
+      }
+
       // fill empty square directly with user initials
       const username = auth.user?.profile?.preferred_username;
       const name = auth.user?.profile?.name || '';

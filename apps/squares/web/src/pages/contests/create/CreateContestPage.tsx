@@ -1,4 +1,4 @@
-import { ArrowBack, EmojiEvents, Groups } from '@mui/icons-material';
+import { ArrowBack, EmojiEvents, Groups, Lock, Public } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -7,6 +7,8 @@ import {
   Container,
   Paper,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -20,6 +22,7 @@ import { clearError } from '../../../features/contests/contestSlice';
 import { createContest } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import type { APIError } from '../../../types/error';
+import type { ContestVisibility } from '../../../types/contest';
 import { gradients } from '../../../types/gradients';
 
 const infoCards = [
@@ -52,6 +55,7 @@ export default function CreateContestPage() {
     homeTeam: '',
     awayTeam: '',
   });
+  const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [error, setError] = useState('');
 
   // update form data on input change
@@ -91,6 +95,7 @@ export default function CreateContestPage() {
           owner: auth.user.profile.preferred_username,
           homeTeam: formData.homeTeam.trim() || undefined,
           awayTeam: formData.awayTeam.trim() || undefined,
+          visibility,
         })
       ).unwrap();
 
@@ -217,6 +222,41 @@ export default function CreateContestPage() {
               placeholder="e.g., Bills, Packers, Steelers"
               slotProps={{ htmlInput: { maxLength: 20 } }}
             />
+
+            <Box>
+              <Typography
+                variant="body2"
+                sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, fontWeight: 500 }}
+              >
+                Visibility
+              </Typography>
+              <ToggleButtonGroup
+                value={visibility}
+                exclusive
+                onChange={(_, val) => {
+                  if (val) setVisibility(val as ContestVisibility);
+                }}
+                fullWidth
+                size="small"
+              >
+                <ToggleButton value="private">
+                  <Lock sx={{ mr: 0.5, fontSize: '1rem' }} />
+                  Private
+                </ToggleButton>
+                <ToggleButton value="public">
+                  <Public sx={{ mr: 0.5, fontSize: '1rem' }} />
+                  Public
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <Typography
+                variant="caption"
+                sx={{ color: 'rgba(255,255,255,0.4)', mt: 0.5, display: 'block' }}
+              >
+                {visibility === 'private'
+                  ? 'Only participants with an invite link can view this contest.'
+                  : 'Anyone can view this contest, but only invited participants can claim squares.'}
+              </Typography>
+            </Box>
 
             <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
               <Button

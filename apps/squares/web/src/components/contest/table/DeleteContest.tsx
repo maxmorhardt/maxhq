@@ -12,9 +12,9 @@ import {
 import {
   selectCurrentContest,
   selectDeleteContestLoading,
-} from '../../features/contests/contestSelectors';
-import { deleteContest } from '../../features/contests/contestThunks';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+} from '../../../features/contests/contestSelectors';
+import { deleteContest } from '../../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 
 interface DeleteContestProps {
   open: boolean;

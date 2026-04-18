@@ -39,6 +39,7 @@ describe('contestService', () => {
           status: 'ACTIVE',
           squares: [],
           quarterResults: [],
+          visibility: 'public',
         },
       ],
       page: 1,
@@ -75,6 +76,7 @@ describe('contestService', () => {
       status: 'ACTIVE',
       squares: [],
       quarterResults: [],
+      visibility: 'public',
     };
 
     vi.mocked(api.get).mockResolvedValue({ data: mockContest });

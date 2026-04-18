@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import type { QuarterResult } from '../../types/contest';
+import type { QuarterResult } from '../../../types/contest';
 import ContestSidebarCard from './ContestSidebarCard';
 
 const MAX_NAME_LENGTH = 20;

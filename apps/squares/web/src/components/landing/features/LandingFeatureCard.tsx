@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
-import { gradients } from '../../types/gradients';
+import { gradients } from '../../../types/gradients';
 
 interface LandingFeatureCardProps {
   icon?: ReactNode;

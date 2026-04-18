@@ -15,13 +15,13 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { stripDangerousChars } from '../../utils/sanitize';
+import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
-import { selectCurrentContest } from '../../features/contests/contestSelectors';
-import { updateContest } from '../../features/contests/contestThunks';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { useToast } from '../../hooks/useToast';
-import { getStatusOption } from '../../utils/contestStatus';
+import { selectCurrentContest } from '../../../features/contests/contestSelectors';
+import { updateContest } from '../../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
+import { useToast } from '../../../hooks/useToast';
+import { getStatusOption } from '../../../utils/contestStatus';
 
 interface EditContestProps {
   open: boolean;
