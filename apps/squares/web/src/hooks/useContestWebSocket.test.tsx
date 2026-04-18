@@ -138,7 +138,10 @@ vi.mock('../features/contests/contestThunks', async () => {
       }
     ),
     fetchParticipants: Object.assign(
-      vi.fn(() => ({ type: 'contests/fetchParticipants/fulfilled' })),
+      vi.fn(() => ({
+        unwrap: () => Promise.resolve([]),
+        type: 'contests/fetchParticipants/fulfilled',
+      })),
       {
         pending: { type: 'contests/fetchParticipants/pending' },
         fulfilled: { type: 'contests/fetchParticipants/fulfilled' },
