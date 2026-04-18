@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getSocketUrl, contestSocketEventHandler } from './wsService';
 import {
+  addParticipantFromWebSocket,
+  removeParticipantFromWebSocket,
   updateContestFromWebSocket,
   updateQuarterResultFromWebSocket,
   updateSquareFromWebSocket,
@@ -12,6 +14,8 @@ vi.mock('../features/contests/contestSlice', () => ({
   updateSquareFromWebSocket: vi.fn((p) => ({ type: 'updateSquare', payload: p })),
   updateContestFromWebSocket: vi.fn((p) => ({ type: 'updateContest', payload: p })),
   updateQuarterResultFromWebSocket: vi.fn((p) => ({ type: 'updateQR', payload: p })),
+  addParticipantFromWebSocket: vi.fn((p) => ({ type: 'addParticipant', payload: p })),
+  removeParticipantFromWebSocket: vi.fn((p) => ({ type: 'removeParticipant', payload: p })),
 }));
 
 vi.mock('../features/ws/wsSlice', () => ({
@@ -76,6 +80,8 @@ describe('contestSocketEventHandler', () => {
       onContestDeleted: vi.fn(),
       onChatMessage: vi.fn(),
       onError: vi.fn(),
+      onParticipantAdded: vi.fn(),
+      onParticipantRemoved: vi.fn(),
     };
     vi.clearAllMocks();
   });
@@ -212,6 +218,82 @@ describe('contestSocketEventHandler', () => {
 
     contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
     expect(callbacks.onContestDeleted).toHaveBeenCalled();
+  });
+
+  it('should handle participant_added messages', () => {
+    const participant = {
+      id: 'p1',
+      contestId: 'contest-1',
+      userId: 'alice',
+      inviteId: 'inv1',
+      role: 'participant',
+      maxSquares: 10,
+      joinedAt: '2025-01-01',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    };
+    const data = JSON.stringify({
+      type: 'participant_added',
+      contestId: 'contest-1',
+      updatedBy: 'alice',
+      timestamp: '2025-01-01',
+      participant,
+    });
+
+    contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
+    expect(addParticipantFromWebSocket).toHaveBeenCalledWith(participant);
+    expect(callbacks.onParticipantAdded).toHaveBeenCalledWith(participant);
+  });
+
+  it('should not dispatch participant_added when participant is missing', () => {
+    const data = JSON.stringify({
+      type: 'participant_added',
+      contestId: 'contest-1',
+      updatedBy: 'alice',
+      timestamp: '2025-01-01',
+    });
+
+    contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
+    expect(addParticipantFromWebSocket).not.toHaveBeenCalled();
+    expect(callbacks.onParticipantAdded).not.toHaveBeenCalled();
+  });
+
+  it('should handle participant_removed messages', () => {
+    const participant = {
+      id: 'p2',
+      contestId: 'contest-1',
+      userId: 'bob',
+      inviteId: 'inv2',
+      role: 'participant',
+      maxSquares: 5,
+      joinedAt: '2025-01-01',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    };
+    const data = JSON.stringify({
+      type: 'participant_removed',
+      contestId: 'contest-1',
+      updatedBy: 'owner1',
+      timestamp: '2025-01-01',
+      participant,
+    });
+
+    contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
+    expect(removeParticipantFromWebSocket).toHaveBeenCalledWith('bob');
+    expect(callbacks.onParticipantRemoved).toHaveBeenCalledWith(participant);
+  });
+
+  it('should not dispatch participant_removed when participant is missing', () => {
+    const data = JSON.stringify({
+      type: 'participant_removed',
+      contestId: 'contest-1',
+      updatedBy: 'owner1',
+      timestamp: '2025-01-01',
+    });
+
+    contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
+    expect(removeParticipantFromWebSocket).not.toHaveBeenCalled();
+    expect(callbacks.onParticipantRemoved).not.toHaveBeenCalled();
   });
 
   it('should handle chat_message messages', () => {
