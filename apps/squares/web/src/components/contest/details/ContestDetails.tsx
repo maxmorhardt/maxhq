@@ -1,6 +1,10 @@
-import { Info } from '@mui/icons-material';
-import { Box, Typography } from '@mui/material';
-import { selectCurrentContest } from '../../../features/contests/contestSelectors';
+import { Casino, Info } from '@mui/icons-material';
+import { Box, Button, Divider, Typography } from '@mui/material';
+import { useAuth } from 'react-oidc-context';
+import {
+  selectCurrentContest,
+  selectParticipants,
+} from '../../../features/contests/contestSelectors';
 import { useAppSelector } from '../../../hooks/reduxHooks';
 import ContestSidebarCard from '../sidebar/ContestSidebarCard';
 import ActiveContestControls from './ActiveContestControls';
@@ -11,14 +15,27 @@ import StartGameButton from './StartGameButton';
 interface ContestDetailsProps {
   isOwner?: boolean;
   onRandomSquare?: () => void;
+  randomSquareLoading?: boolean;
 }
 
-export default function ContestDetails({ isOwner = false, onRandomSquare }: ContestDetailsProps) {
+export default function ContestDetails({
+  isOwner = false,
+  onRandomSquare,
+  randomSquareLoading = false,
+}: ContestDetailsProps) {
+  const auth = useAuth();
   const currentContest = useAppSelector(selectCurrentContest);
+  const participants = useAppSelector(selectParticipants);
 
   if (!currentContest || !currentContest.squares) {
     return;
   }
+
+  const currentUsername = auth.user?.profile?.preferred_username;
+  const currentParticipant = participants.find((p) => p.userId === currentUsername);
+  const isParticipant = !!currentParticipant;
+  const squaresClaimed = currentContest.squares.filter((s) => s.owner === currentUsername).length;
+  const isPublicContest = currentContest.visibility === 'public';
 
   const contestStatus = currentContest.status;
   const totalSquares = currentContest.squares.length;
@@ -36,8 +53,14 @@ export default function ContestDetails({ isOwner = false, onRandomSquare }: Cont
     if (isCanceled) return 'Deleted';
     if (isFinished) return 'Finished';
     if (isInGame) return `In Progress • ${contestStatus}`;
-    return `Active • ${filledSquares}/${totalSquares} Squares Filled`;
+    return 'Active';
   };
+
+  const showRandomButton =
+    isActive &&
+    !allSquaresFilled &&
+    auth.isAuthenticated &&
+    (isOwner || (isParticipant && squaresClaimed < (currentParticipant?.maxSquares ?? 0)));
 
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
@@ -56,7 +79,47 @@ export default function ContestDetails({ isOwner = false, onRandomSquare }: Cont
           >
             {getStatusDisplay()}
           </Typography>
+          {isActive && (
+            <Typography
+              variant="body2"
+              sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', mt: 0.5 }}
+            >
+              {filledSquares}/{totalSquares} squares filled
+              {auth.isAuthenticated &&
+                currentParticipant &&
+                currentParticipant.role !== 'owner' && (
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    sx={{
+                      color:
+                        squaresClaimed >= currentParticipant.maxSquares
+                          ? '#43e97b'
+                          : 'rgba(255,255,255,0.5)',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    {' · '}
+                    {squaresClaimed}/{currentParticipant.maxSquares}
+                  </Typography>
+                )}
+            </Typography>
+          )}
         </Box>
+
+        {/* random square button — available to any participant during fill phase */}
+        {showRandomButton && (
+          <Button
+            variant="outlined"
+            startIcon={<Casino />}
+            onClick={onRandomSquare}
+            disabled={randomSquareLoading}
+            size="small"
+            fullWidth
+          >
+            {randomSquareLoading ? 'Selecting...' : 'Randomly Select Square'}
+          </Button>
+        )}
 
         {/* owner controls section */}
         {isOwner && (
@@ -72,11 +135,7 @@ export default function ContestDetails({ isOwner = false, onRandomSquare }: Cont
             {isActive && allSquaresFilled && <StartGameButton />}
 
             {isActive && !allSquaresFilled && (
-              <ActiveContestControls
-                allSquaresFilled={allSquaresFilled}
-                hasEmptySquares={filledSquares < totalSquares}
-                onRandomSquare={onRandomSquare}
-              />
+              <ActiveContestControls allSquaresFilled={allSquaresFilled} />
             )}
 
             {isInGame && <ScoreUpdateControls />}
@@ -85,6 +144,24 @@ export default function ContestDetails({ isOwner = false, onRandomSquare }: Cont
       </Box>
 
       <ContestActionIcons isOwner={isOwner} />
+
+      {/* non-participant notice for public contests */}
+      {auth.isAuthenticated && isPublicContest && !isParticipant && !isOwner && (
+        <>
+          <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mt: 1.5 }} />
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '0.75rem',
+              textAlign: 'center',
+              mt: 1.5,
+            }}
+          >
+            You're viewing this contest. Get an invite link to participate.
+          </Typography>
+        </>
+      )}
     </ContestSidebarCard>
   );
 }

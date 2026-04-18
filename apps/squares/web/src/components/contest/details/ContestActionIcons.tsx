@@ -63,6 +63,7 @@ export default function ContestActionIcons({ isOwner }: ContestActionIconsProps)
       <ParticipantsManager
         open={participantsDialogOpen}
         onClose={() => setParticipantsDialogOpen(false)}
+        isOwner={isOwner}
       />
     </>
   );

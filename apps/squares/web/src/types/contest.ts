@@ -52,7 +52,9 @@ export interface WSUpdate {
     | 'chat_message'
     | 'connected'
     | 'disconnected'
-    | 'contest_deleted';
+    | 'contest_deleted'
+    | 'participant_removed'
+    | 'participant_added';
   contestId: string;
   connectionId?: string;
   updatedBy: string;
@@ -61,6 +63,7 @@ export interface WSUpdate {
   square?: Square;
   contest?: Contest;
   quarterResult?: QuarterResult;
+  participant?: Participant;
 }
 
 export interface PaginationParams {
@@ -109,7 +112,9 @@ export type ActivityEventType =
   | 'score_update'
   | 'quarter_winner'
   | 'contest_started'
-  | 'contest_status';
+  | 'contest_status'
+  | 'participant_added'
+  | 'participant_removed';
 
 export interface ActivityEvent {
   id: string;

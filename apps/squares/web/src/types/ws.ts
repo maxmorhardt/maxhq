@@ -1,4 +1,5 @@
 import type { Dispatch } from '@reduxjs/toolkit';
+import type { Participant } from './contest';
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'failed';
 
@@ -18,6 +19,8 @@ export interface WSUICallbacks {
   ) => void;
   onContestUpdate?: (status?: string) => void;
   onChatMessage?: (sender: string, message: string, timestamp: string) => void;
+  onParticipantAdded?: (participant: Participant) => void;
+  onParticipantRemoved?: (participant: Participant) => void;
 }
 
 // Internal handler params with dispatch and validation context

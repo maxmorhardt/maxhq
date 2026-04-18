@@ -1,4 +1,5 @@
 import { Close, Edit } from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
   Button,
@@ -35,9 +36,14 @@ import type { Participant, ParticipantRole } from '../../../types/contest';
 interface ParticipantsManagerProps {
   open: boolean;
   onClose: () => void;
+  isOwner?: boolean;
 }
 
-export default function ParticipantsManager({ open, onClose }: ParticipantsManagerProps) {
+export default function ParticipantsManager({
+  open,
+  onClose,
+  isOwner = false,
+}: ParticipantsManagerProps) {
   const dispatch = useAppDispatch();
   const currentContest = useAppSelector(selectCurrentContest);
   const participants = useAppSelector(selectParticipants);
@@ -62,36 +68,34 @@ export default function ParticipantsManager({ open, onClose }: ParticipantsManag
   };
 
   const handleEditSave = async () => {
-    if (!currentContest || !editParticipant) return;
-    try {
-      await dispatch(
-        updateContestParticipant({
-          contestId: currentContest.id,
-          userId: editParticipant.userId,
-          request: { role: editRole, maxSquares: editMaxSquares },
-        })
-      ).unwrap();
-      showToast('Participant updated', 'success');
-      setEditParticipant(null);
-    } catch {
-      showToast('Failed to update participant', 'error');
+    if (!currentContest || !editParticipant) {
+      return;
     }
+
+    await dispatch(
+      updateContestParticipant({
+        contestId: currentContest.id,
+        userId: editParticipant.userId,
+        request: { role: editRole, maxSquares: editMaxSquares },
+      })
+    ).unwrap();
+    showToast('Participant updated', 'success');
+    setEditParticipant(null);
   };
 
   const handleRemove = async () => {
-    if (!currentContest || !removeConfirm) return;
-    try {
-      await dispatch(
-        removeContestParticipant({
-          contestId: currentContest.id,
-          userId: removeConfirm.userId,
-        })
-      ).unwrap();
-      showToast('Participant removed', 'success');
-      setRemoveConfirm(null);
-    } catch {
-      showToast('Failed to remove participant', 'error');
+    if (!currentContest || !removeConfirm) {
+      return;
     }
+
+    await dispatch(
+      removeContestParticipant({
+        contestId: currentContest.id,
+        userId: removeConfirm.userId,
+      })
+    ).unwrap();
+    showToast('Participant removed', 'success');
+    setRemoveConfirm(null);
   };
 
   const getRoleColor = (role: ParticipantRole) => {
@@ -108,7 +112,20 @@ export default function ParticipantsManager({ open, onClose }: ParticipantsManag
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Participants</DialogTitle>
+        <DialogTitle sx={{ pr: 6 }}>
+          Participants
+          <IconButton
+            onClick={onClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
@@ -161,31 +178,33 @@ export default function ParticipantsManager({ open, onClose }: ParticipantsManag
                     </Typography>
                   </Box>
 
-                  {participant.role !== 'owner' && (
-                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditOpen(participant)}
-                          sx={{ color: 'rgba(255,255,255,0.6)' }}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Remove">
-                        <IconButton
-                          size="small"
-                          onClick={() => setRemoveConfirm(participant)}
-                          sx={{
-                            color: 'rgba(255,255,255,0.6)',
-                            '&:hover': { color: '#ff4444' },
-                          }}
-                        >
-                          <Close fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  )}
+                  {isOwner &&
+                    participant.role !== 'owner' &&
+                    currentContest?.status === 'ACTIVE' && (
+                      <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                        <Tooltip title="Edit">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditOpen(participant)}
+                            sx={{ color: 'rgba(255,255,255,0.6)' }}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Remove">
+                          <IconButton
+                            size="small"
+                            onClick={() => setRemoveConfirm(participant)}
+                            sx={{
+                              color: 'rgba(255,255,255,0.6)',
+                              '&:hover': { color: '#ff4444' },
+                            }}
+                          >
+                            <Close fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    )}
                 </Box>
               ))}
 
@@ -209,7 +228,20 @@ export default function ParticipantsManager({ open, onClose }: ParticipantsManag
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Edit Participant</DialogTitle>
+        <DialogTitle sx={{ pr: 6 }}>
+          Edit Participant
+          <IconButton
+            onClick={() => setEditParticipant(null)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           <Typography variant="body2" sx={{ mb: 2, color: 'rgba(255,255,255,0.7)' }}>
             {editParticipant?.userId}
@@ -249,7 +281,20 @@ export default function ParticipantsManager({ open, onClose }: ParticipantsManag
 
       {/* remove participant confirm dialog */}
       <Dialog open={!!removeConfirm} onClose={() => setRemoveConfirm(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Remove Participant</DialogTitle>
+        <DialogTitle sx={{ pr: 6 }}>
+          Remove Participant
+          <IconButton
+            onClick={() => setRemoveConfirm(null)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
             Are you sure you want to remove <strong>{removeConfirm?.userId}</strong>? Their claimed

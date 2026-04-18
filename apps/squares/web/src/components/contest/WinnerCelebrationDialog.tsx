@@ -1,5 +1,13 @@
-import { EmojiEvents } from '@mui/icons-material';
-import { Box, Button, Dialog, DialogContent, keyframes, Typography } from '@mui/material';
+import { Close, EmojiEvents } from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogContent,
+  IconButton,
+  keyframes,
+  Typography,
+} from '@mui/material';
 
 interface WinnerDialogData {
   quarter: number;
@@ -32,6 +40,19 @@ export default function WinnerCelebrationDialog({ data, onClose }: WinnerCelebra
         },
       }}
     >
+      <IconButton
+        onClick={onClose}
+        sx={{
+          position: 'absolute',
+          right: 8,
+          top: 8,
+          color: 'rgba(255,255,255,0.5)',
+          '&:hover': { color: 'white' },
+          zIndex: 1,
+        }}
+      >
+        <Close />
+      </IconButton>
       <DialogContent sx={{ textAlign: 'center', pt: 5, pb: 4, px: 3 }}>
         <Box
           sx={{

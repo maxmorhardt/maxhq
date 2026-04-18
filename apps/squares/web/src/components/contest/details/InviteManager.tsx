@@ -78,20 +78,19 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
       // refetch invites list since create only returns token/url
       dispatch(fetchInvites(currentContest.id));
     } catch {
-      showToast('Failed to create invite', 'error');
+      console.log('Error creating invite');
     } finally {
       setCreating(false);
     }
   };
 
   const handleDeleteInvite = async (inviteId: string) => {
-    if (!currentContest) return;
-    try {
-      await dispatch(deleteContestInvite({ contestId: currentContest.id, inviteId })).unwrap();
-      showToast('Invite deleted', 'success');
-    } catch {
-      showToast('Failed to delete invite', 'error');
+    if (!currentContest) {
+      return;
     }
+
+    await dispatch(deleteContestInvite({ contestId: currentContest.id, inviteId })).unwrap();
+    showToast('Invite deleted', 'success');
   };
 
   const handleShareLink = async (token: string) => {

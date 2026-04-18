@@ -198,6 +198,17 @@ const contestSlice = createSlice({
         state.currentContest.status = nextStatus;
       }
     },
+    // add participant from websocket
+    addParticipantFromWebSocket(state, action: PayloadAction<Participant>) {
+      const exists = state.participants.some((p) => p.id === action.payload.id);
+      if (!exists) {
+        state.participants.push(action.payload);
+      }
+    },
+    // remove participant from websocket
+    removeParticipantFromWebSocket(state, action: PayloadAction<string>) {
+      state.participants = state.participants.filter((p) => p.userId !== action.payload);
+    },
   },
   // async thunk handlers for API operations
   extraReducers: (builder) => {
@@ -498,5 +509,7 @@ export const {
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
   updateQuarterResultFromWebSocket,
+  addParticipantFromWebSocket,
+  removeParticipantFromWebSocket,
 } = contestSlice.actions;
 export const contestReducer = contestSlice.reducer;

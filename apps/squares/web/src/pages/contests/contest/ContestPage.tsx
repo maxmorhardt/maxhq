@@ -1,4 +1,4 @@
-import { Alert, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useCallback, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -15,10 +15,7 @@ import UnauthorizedPage from '../../error/UnauthorizedPage';
 import RedirectingToLogin from '../../../components/common/RedirectingToLogin';
 import LiveChat from '../../../components/contest/sidebar/LiveChat';
 import WinnersBoard from '../../../components/contest/sidebar/WinnersBoard';
-import {
-  selectCurrentContest,
-  selectParticipants,
-} from '../../../features/contests/contestSelectors';
+import { selectCurrentContest } from '../../../features/contests/contestSelectors';
 import { updateSquare } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
@@ -34,6 +31,7 @@ export default function ContestPage() {
 
   const currentContest = useAppSelector(selectCurrentContest);
 
+  const [randomSquareLoading, setRandomSquareLoading] = useState(false);
   const [newWinnerSquare, setNewWinnerSquare] = useState<{ row: number; col: number } | null>(null);
   const [winnerDialog, setWinnerDialog] = useState<{
     quarter: number;
@@ -44,13 +42,6 @@ export default function ContestPage() {
   } | null>(null);
 
   const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
-  const participants = useAppSelector(selectParticipants);
-  const currentUsername = auth.user?.profile?.preferred_username;
-  const currentParticipant = participants.find((p) => p.userId === currentUsername);
-  const isParticipant = !!currentParticipant;
-  const squaresClaimed =
-    currentContest?.squares?.filter((s) => s.owner === currentUsername).length ?? 0;
-  const isPublicContest = currentContest?.visibility === 'public';
 
   const onContestDeleted = useCallback(() => {
     showToast('Contest has been deleted', 'warning');
@@ -73,6 +64,19 @@ export default function ContestPage() {
     []
   );
 
+  const onParticipantRemoved = useCallback(
+    (isCurrentUser: boolean, isPrivate: boolean) => {
+      if (!isCurrentUser) return;
+      if (isPrivate) {
+        showToast('You have been removed from this contest', 'warning');
+        navigate('/contests');
+      } else {
+        showToast('You have been removed as a participant', 'info');
+      }
+    },
+    [showToast, navigate]
+  );
+
   const {
     activityEvents,
     chatMessages,
@@ -90,11 +94,12 @@ export default function ContestPage() {
     owner,
     name,
     onContestDeleted,
+    onParticipantRemoved,
     onWinnerSquare,
     onWinnerDialog,
   });
 
-  const handleRandomSquare = () => {
+  const handleRandomSquare = async () => {
     if (!auth.isAuthenticated) {
       sessionStorage.setItem('auth_redirect_path', window.location.href);
       auth.signinRedirect();
@@ -126,14 +131,19 @@ export default function ContestPage() {
       return;
     }
 
-    dispatch(
-      updateSquare({
-        contestId: currentContest.id,
-        squareId: randomSquare.id,
-        value: initials,
-        owner: username,
-      })
-    );
+    setRandomSquareLoading(true);
+    try {
+      await dispatch(
+        updateSquare({
+          contestId: currentContest.id,
+          squareId: randomSquare.id,
+          value: initials,
+          owner: username,
+        })
+      ).unwrap();
+    } finally {
+      setRandomSquareLoading(false);
+    }
   };
 
   // show redirecting component while signin redirect is in progress
@@ -205,47 +215,6 @@ export default function ContestPage() {
         </Typography>
       </Box>
 
-      {/* sign in prompt for unauthenticated users */}
-      {!auth.isAuthenticated && (
-        <Box
-          sx={{
-            display: { xs: 'flex', lg: 'none' },
-            justifyContent: 'center',
-          }}
-        >
-          <Alert
-            severity="info"
-            sx={{
-              minWidth: { xs: '22rem', sm: '35rem', md: '40rem' },
-            }}
-          >
-            Sign in to claim squares and play
-          </Alert>
-        </Box>
-      )}
-
-      {/* square limit counter for participants */}
-      {auth.isAuthenticated && currentParticipant && currentParticipant.role !== 'owner' && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-          <Alert
-            severity={squaresClaimed >= currentParticipant.maxSquares ? 'warning' : 'info'}
-            sx={{ minWidth: { xs: '22rem', sm: '35rem', md: '40rem' } }}
-          >
-            {squaresClaimed}/{currentParticipant.maxSquares} squares claimed
-            {squaresClaimed >= currentParticipant.maxSquares && ' — limit reached'}
-          </Alert>
-        </Box>
-      )}
-
-      {/* non-participant banner for public contests */}
-      {auth.isAuthenticated && isPublicContest && !isParticipant && !isOwner && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-          <Alert severity="info" sx={{ minWidth: { xs: '22rem', sm: '35rem', md: '40rem' } }}>
-            You're viewing this contest. Get an invite link to participate.
-          </Alert>
-        </Box>
-      )}
-
       {/* responsive layout with contest grid and sidebars */}
       <Box
         sx={{
@@ -293,7 +262,11 @@ export default function ContestPage() {
             flex: '0 0 280px',
           }}
         >
-          <ContestDetails isOwner={isOwner} onRandomSquare={handleRandomSquare} />
+          <ContestDetails
+            isOwner={isOwner}
+            onRandomSquare={handleRandomSquare}
+            randomSquareLoading={randomSquareLoading}
+          />
           <LiveChat
             messages={chatMessages}
             onSend={sendChatMessage}
@@ -317,7 +290,11 @@ export default function ContestPage() {
           mt: 2,
         }}
       >
-        <ContestDetails isOwner={isOwner} onRandomSquare={handleRandomSquare} />
+        <ContestDetails
+          isOwner={isOwner}
+          onRandomSquare={handleRandomSquare}
+          randomSquareLoading={randomSquareLoading}
+        />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
         <LiveChat
           messages={chatMessages}

@@ -167,6 +167,7 @@ const defaultParams = {
   owner: 'testuser',
   name: 'test',
   onContestDeleted: vi.fn(),
+  onParticipantRemoved: vi.fn(),
   onWinnerSquare: vi.fn(),
   onWinnerDialog: vi.fn(),
 };

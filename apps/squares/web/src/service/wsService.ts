@@ -1,5 +1,7 @@
 import type { useAuth } from 'react-oidc-context';
 import {
+  addParticipantFromWebSocket,
+  removeParticipantFromWebSocket,
   updateContestFromWebSocket,
   updateQuarterResultFromWebSocket,
   updateSquareFromWebSocket,
@@ -123,6 +125,22 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
 
     case 'contest_deleted':
       callbacks?.onContestDeleted?.();
+      break;
+
+    case 'participant_added':
+      if (message.participant) {
+        dispatch(addParticipantFromWebSocket(message.participant));
+        dispatch(setLatestMessage(message));
+        callbacks?.onParticipantAdded?.(message.participant);
+      }
+      break;
+
+    case 'participant_removed':
+      if (message.participant) {
+        dispatch(removeParticipantFromWebSocket(message.participant.userId));
+        dispatch(setLatestMessage(message));
+        callbacks?.onParticipantRemoved?.(message.participant);
+      }
       break;
 
     case 'chat_message':

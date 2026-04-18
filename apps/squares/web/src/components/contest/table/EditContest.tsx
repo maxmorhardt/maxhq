@@ -121,7 +121,20 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   if (!isOwner) {
     return (
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Contest Details</DialogTitle>
+        <DialogTitle sx={{ pr: 6 }}>
+          Contest Details
+          <IconButton
+            onClick={onClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <Typography color="text.secondary">
             Only the contest owner can edit contest settings.

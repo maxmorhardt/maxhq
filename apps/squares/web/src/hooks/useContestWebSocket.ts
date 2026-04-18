@@ -17,6 +17,7 @@ interface UseContestWebSocketParams {
   owner: string | undefined;
   name: string | undefined;
   onContestDeleted: () => void;
+  onParticipantRemoved: (isCurrentUser: boolean, isPrivate: boolean) => void;
   onWinnerSquare: (row: number, col: number) => void;
   onWinnerDialog: (data: {
     quarter: number;
@@ -31,6 +32,7 @@ export function useContestWebSocket({
   owner,
   name,
   onContestDeleted,
+  onParticipantRemoved,
   onWinnerSquare,
   onWinnerDialog,
 }: UseContestWebSocketParams) {
@@ -118,9 +120,20 @@ export function useContestWebSocket({
         const contest = await dispatch(fetchContestByOwnerAndName({ owner, name })).unwrap();
         hasFetchedContest.current = true;
 
-        dispatch(fetchParticipants(contest.id));
+        const participants = await dispatch(fetchParticipants(contest.id)).unwrap();
 
         const seeded: ActivityEvent[] = [];
+
+        participants
+          .filter((p) => p.role !== 'owner')
+          .forEach((p) => {
+            seeded.push({
+              id: `seed-participant-${p.id}`,
+              type: 'participant_added',
+              message: `${p.userId} joined the contest`,
+              timestamp: p.joinedAt || p.createdAt,
+            });
+          });
 
         contest.squares
           ?.filter((s) => s.value && s.value.trim() !== '')
@@ -223,6 +236,17 @@ export function useContestWebSocket({
             },
           ]);
         },
+        onParticipantAdded: (participant) => {
+          addActivityEvent('participant_added', `${participant.userId} joined the contest`);
+        },
+        onParticipantRemoved: (participant) => {
+          addActivityEvent('participant_removed', `${participant.userId} was removed`);
+          const currentUsername = auth.user?.profile?.preferred_username;
+          if (participant.userId === currentUsername) {
+            const isPrivate = currentContest?.visibility === 'private';
+            onParticipantRemoved(true, isPrivate);
+          }
+        },
       } satisfies WSUICallbacks,
     });
   }, [
@@ -235,18 +259,20 @@ export function useContestWebSocket({
     auth.user?.profile?.preferred_username,
     addActivityEvent,
     onContestDeleted,
+    onParticipantRemoved,
     onWinnerSquare,
     onWinnerDialog,
+    currentContest?.visibility,
   ]);
 
-  // show error toast and clear from store
+  // show error toast and clear from store (skip if fetch error is handled by page)
   const error = useAppSelector((state) => state.contest.error);
   useEffect(() => {
-    if (error) {
+    if (error && !fetchErrorCode) {
       showToast(error, 'error');
       dispatch(clearError());
     }
-  }, [dispatch, error, showToast]);
+  }, [dispatch, error, fetchErrorCode, showToast]);
 
   // determine connection status for chip
   const connectionStatus: ConnectionStatus = connectionFailed
