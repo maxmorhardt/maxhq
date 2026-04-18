@@ -30,20 +30,20 @@ image:
     - secretRef:
         name: squares-api-env
   startupProbe:
-    path: /health
+    path: /health/live
     initialDelaySeconds: 5
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 30
   readinessProbe:
-    path: /health
+    path: /health/ready
     initialDelaySeconds: 30
     periodSeconds: 30
     timeoutSeconds: 30
     failureThreshold: 5
     successThreshold: 1
   livenessProbe:
-    path: /health
+    path: /health/live
     initialDelaySeconds: 30
     periodSeconds: 30
     timeoutSeconds: 30
