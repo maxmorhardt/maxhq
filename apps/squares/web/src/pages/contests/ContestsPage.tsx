@@ -166,7 +166,7 @@ export default function ContestsPage() {
         contests={joinedOnly}
         totalCount={joinedOnly.length}
         page={0}
-        rowsPerPage={joinedOnly.length || 5}
+        rowsPerPage={5}
         onPageChange={() => {}}
         onRowsPerPageChange={() => {}}
         title="Joined Contests"
