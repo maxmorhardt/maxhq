@@ -53,6 +53,7 @@ export default function JoinPage() {
         }
         setError(apiError.message || 'Failed to join contest');
         showToast(apiError.message || 'Failed to join contest', 'error');
+        hasJoined.current = false;
       }
     })();
   }, [auth.isAuthenticated, token, preview, dispatch, navigate, showToast]);
