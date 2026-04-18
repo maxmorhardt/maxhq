@@ -7,6 +7,8 @@ import {
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
   updateQuarterResultFromWebSocket,
+  addParticipantFromWebSocket,
+  removeParticipantFromWebSocket,
 } from './contestSlice';
 import {
   fetchContestsByOwner,
@@ -680,6 +682,64 @@ describe('contestSlice extraReducers', () => {
         payload: { message: 'remove fail' },
       });
       expect(state.error).toBe('remove fail');
+    });
+  });
+
+  describe('addParticipantFromWebSocket', () => {
+    const mockParticipant: Participant = {
+      id: 'p1',
+      contestId: 'c1',
+      userId: 'u1',
+      inviteId: 'i1',
+      role: 'participant',
+      maxSquares: 10,
+      joinedAt: '',
+      createdAt: '',
+      updatedAt: '',
+    };
+
+    it('adds a new participant', () => {
+      const state = contestReducer(initialState, addParticipantFromWebSocket(mockParticipant));
+      expect(state.participants).toHaveLength(1);
+      expect(state.participants[0].id).toBe('p1');
+    });
+
+    it('de-dupes if participant already exists', () => {
+      const state = contestReducer(
+        { ...initialState, participants: [mockParticipant] },
+        addParticipantFromWebSocket(mockParticipant)
+      );
+      expect(state.participants).toHaveLength(1);
+    });
+  });
+
+  describe('removeParticipantFromWebSocket', () => {
+    const mockParticipant: Participant = {
+      id: 'p1',
+      contestId: 'c1',
+      userId: 'u1',
+      inviteId: 'i1',
+      role: 'participant',
+      maxSquares: 10,
+      joinedAt: '',
+      createdAt: '',
+      updatedAt: '',
+    };
+
+    it('removes participant by userId', () => {
+      const state = contestReducer(
+        { ...initialState, participants: [mockParticipant] },
+        removeParticipantFromWebSocket('u1')
+      );
+      expect(state.participants).toHaveLength(0);
+    });
+
+    it('no-ops when userId does not match', () => {
+      const state = contestReducer(
+        { ...initialState, participants: [mockParticipant] },
+        removeParticipantFromWebSocket('u999')
+      );
+      expect(state.participants).toHaveLength(1);
     });
   });
 

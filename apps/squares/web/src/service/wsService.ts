@@ -60,6 +60,16 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
     return;
   }
 
+  // handle connection-level messages before contest validation
+  if (message.type === 'connected') {
+    dispatch(setConnectionDetails(message));
+    return;
+  }
+  if (message.type === 'disconnected') {
+    dispatch(setDisconnectionDetails(message));
+    return;
+  }
+
   // validate message belongs to current contest
   if (message.contestId !== currentContestId) {
     console.warn('Received message for different contest:', message.contestId);
@@ -147,14 +157,6 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
       if (message.message && message.updatedBy) {
         callbacks?.onChatMessage?.(message.updatedBy, message.message, message.timestamp);
       }
-      break;
-
-    case 'connected':
-      dispatch(setConnectionDetails(message));
-      break;
-
-    case 'disconnected':
-      dispatch(setDisconnectionDetails(message));
       break;
 
     default:

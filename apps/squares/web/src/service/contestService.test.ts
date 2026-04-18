@@ -12,6 +12,15 @@ import {
   recordQuarterResult,
   deleteContestById,
   submitContactForm,
+  getMyContests,
+  createInvite,
+  getInvites,
+  deleteInvite,
+  joinContest,
+  previewInvite,
+  getParticipants,
+  updateParticipant,
+  removeParticipant,
 } from './contestService';
 import type { Contest, PaginatedContestsResponse } from '../types/contest';
 
@@ -197,5 +206,279 @@ describe('contestService', () => {
 
     expect(result).toEqual(mockResponse);
     expect(api.post).toHaveBeenCalledWith('/contact', request);
+  });
+
+  it('should fetch my contests', async () => {
+    const mockContests = [{ id: 'c1', name: 'My Contest' }];
+    vi.mocked(api.get).mockResolvedValue({ data: mockContests });
+
+    const result = await getMyContests();
+
+    expect(result).toEqual(mockContests);
+    expect(api.get).toHaveBeenCalledWith('/contests/me');
+  });
+
+  it('should throw APIError when getMyContests fails', async () => {
+    const apiError = {
+      code: 401,
+      message: 'Unauthorized',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-002',
+    };
+    vi.mocked(api.get).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(getMyContests()).rejects.toEqual(apiError);
+  });
+
+  it('should create an invite', async () => {
+    const mockResponse = { inviteUrl: 'http://test/join/tok', token: 'tok' };
+    vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
+
+    const result = await createInvite('c1', { maxSquares: 10, role: 'participant' });
+
+    expect(result).toEqual(mockResponse);
+    expect(api.post).toHaveBeenCalledWith('/contests/c1/invites', {
+      maxSquares: 10,
+      role: 'participant',
+    });
+  });
+
+  it('should throw APIError when createInvite fails', async () => {
+    const apiError = {
+      code: 400,
+      message: 'Bad request',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-003',
+    };
+    vi.mocked(api.post).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 400,
+        statusText: 'Bad Request',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(createInvite('c1', { maxSquares: 10, role: 'participant' })).rejects.toEqual(
+      apiError
+    );
+  });
+
+  it('should fetch invites for a contest', async () => {
+    const mockInvites = [{ id: 'i1', token: 'tok', maxSquares: 10 }];
+    vi.mocked(api.get).mockResolvedValue({ data: mockInvites });
+
+    const result = await getInvites('c1');
+
+    expect(result).toEqual(mockInvites);
+    expect(api.get).toHaveBeenCalledWith('/contests/c1/invites');
+  });
+
+  it('should throw APIError when getInvites fails', async () => {
+    const apiError = {
+      code: 500,
+      message: 'Server error',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-004',
+    };
+    vi.mocked(api.get).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 500,
+        statusText: 'Internal Server Error',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(getInvites('c1')).rejects.toEqual(apiError);
+  });
+
+  it('should delete an invite', async () => {
+    vi.mocked(api.delete).mockResolvedValue({});
+
+    await expect(deleteInvite('c1', 'i1')).resolves.toBeUndefined();
+    expect(api.delete).toHaveBeenCalledWith('/contests/c1/invites/i1');
+  });
+
+  it('should throw APIError when deleteInvite fails', async () => {
+    const apiError = {
+      code: 404,
+      message: 'Invite not found',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-005',
+    };
+    vi.mocked(api.delete).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 404,
+        statusText: 'Not Found',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(deleteInvite('c1', 'i1')).rejects.toEqual(apiError);
+  });
+
+  it('should join a contest via invite token', async () => {
+    const mockParticipant = { id: 'p1', userId: 'u1', role: 'participant' };
+    vi.mocked(api.post).mockResolvedValue({ data: mockParticipant });
+
+    const result = await joinContest('tok123');
+
+    expect(result).toEqual(mockParticipant);
+    expect(api.post).toHaveBeenCalledWith('/invites/tok123/redeem');
+  });
+
+  it('should throw APIError when joinContest fails', async () => {
+    const apiError = {
+      code: 409,
+      message: 'Already joined',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-006',
+    };
+    vi.mocked(api.post).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 409,
+        statusText: 'Conflict',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(joinContest('tok123')).rejects.toEqual(apiError);
+  });
+
+  it('should preview an invite', async () => {
+    const mockPreview = { contestName: 'Test', ownerName: 'user1', maxSquares: 10 };
+    vi.mocked(api.get).mockResolvedValue({ data: mockPreview });
+
+    const result = await previewInvite('tok123');
+
+    expect(result).toEqual(mockPreview);
+    expect(api.get).toHaveBeenCalledWith('/invites/tok123');
+  });
+
+  it('should throw APIError when previewInvite fails', async () => {
+    const apiError = {
+      code: 404,
+      message: 'Invite not found',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-007',
+    };
+    vi.mocked(api.get).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 404,
+        statusText: 'Not Found',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(previewInvite('tok123')).rejects.toEqual(apiError);
+  });
+
+  it('should fetch participants for a contest', async () => {
+    const mockParticipants = [{ id: 'p1', userId: 'u1', role: 'participant' }];
+    vi.mocked(api.get).mockResolvedValue({ data: mockParticipants });
+
+    const result = await getParticipants('c1');
+
+    expect(result).toEqual(mockParticipants);
+    expect(api.get).toHaveBeenCalledWith('/contests/c1/participants');
+  });
+
+  it('should throw APIError when getParticipants fails', async () => {
+    const apiError = {
+      code: 403,
+      message: 'Forbidden',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-008',
+    };
+    vi.mocked(api.get).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 403,
+        statusText: 'Forbidden',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(getParticipants('c1')).rejects.toEqual(apiError);
+  });
+
+  it('should update a participant', async () => {
+    const mockParticipant = { id: 'p1', userId: 'u1', role: 'viewer', maxSquares: 5 };
+    vi.mocked(api.patch).mockResolvedValue({ data: mockParticipant });
+
+    const result = await updateParticipant('c1', 'u1', { role: 'viewer', maxSquares: 5 });
+
+    expect(result).toEqual(mockParticipant);
+    expect(api.patch).toHaveBeenCalledWith('/contests/c1/participants/u1', {
+      role: 'viewer',
+      maxSquares: 5,
+    });
+  });
+
+  it('should throw APIError when updateParticipant fails', async () => {
+    const apiError = {
+      code: 400,
+      message: 'Invalid role',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-009',
+    };
+    vi.mocked(api.patch).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 400,
+        statusText: 'Bad Request',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(updateParticipant('c1', 'u1', { role: 'viewer', maxSquares: 5 })).rejects.toEqual(
+      apiError
+    );
+  });
+
+  it('should remove a participant', async () => {
+    vi.mocked(api.delete).mockResolvedValue({});
+
+    await expect(removeParticipant('c1', 'u1')).resolves.toBeUndefined();
+    expect(api.delete).toHaveBeenCalledWith('/contests/c1/participants/u1');
+  });
+
+  it('should throw APIError when removeParticipant fails', async () => {
+    const apiError = {
+      code: 404,
+      message: 'Participant not found',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-010',
+    };
+    vi.mocked(api.delete).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: apiError,
+        status: 404,
+        statusText: 'Not Found',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(removeParticipant('c1', 'u1')).rejects.toEqual(apiError);
   });
 });

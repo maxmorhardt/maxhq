@@ -19,13 +19,13 @@ export default function ScoreUpdateControls() {
   const handleScoreSubmit = async () => {
     if (!currentContest) return;
 
-    setIsLoading(true);
-
     const home = parseInt(homeScore);
     const away = parseInt(awayScore);
 
     if (isNaN(home) || isNaN(away)) return;
     if (home < 0 || away < 0) return;
+
+    setIsLoading(true);
 
     try {
       await dispatch(

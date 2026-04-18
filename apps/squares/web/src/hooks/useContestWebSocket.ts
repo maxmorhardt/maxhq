@@ -11,7 +11,7 @@ import type { ActivityEvent, ActivityEventType, ChatMessage } from '../types/con
 import type { ConnectionStatus, WSUICallbacks } from '../types/ws';
 
 const MAX_RETRY_ATTEMPTS = 5;
-const FATAL_CLOSE_CODES = [4404, 4500, 4503];
+const FATAL_CLOSE_CODES = [4403, 4404, 4500, 4503];
 
 interface UseContestWebSocketParams {
   owner: string | undefined;
@@ -41,6 +41,7 @@ export function useContestWebSocket({
   const { showToast } = useToast();
 
   const currentContest = useAppSelector(selectCurrentContest);
+  const wsConnectionId = useAppSelector((state) => state.ws.connectionId);
   const hasFetchedContest = useRef(false);
   const lastProcessedMessageRef = useRef<string | null>(null);
 
@@ -109,9 +110,9 @@ export function useContestWebSocket({
 
   const isConnected = useMemo(() => readyState === ReadyState.OPEN, [readyState]);
 
-  // fetch contest data once websocket is connected, then seed activity feed
+  // fetch contest data once server confirms connection via 'connected' message
   useEffect(() => {
-    if (!owner || !name || !isConnected || hasFetchedContest.current || hasFatalWsError) {
+    if (!owner || !name || !wsConnectionId || hasFetchedContest.current || hasFatalWsError) {
       return;
     }
 
@@ -163,7 +164,7 @@ export function useContestWebSocket({
         console.error('Failed to fetch contest:', err);
       }
     })();
-  }, [owner, name, dispatch, isConnected, hasFatalWsError]);
+  }, [owner, name, dispatch, wsConnectionId, hasFatalWsError]);
 
   // add a new activity event from WS
   const addActivityEvent = useCallback((type: ActivityEventType, message: string) => {

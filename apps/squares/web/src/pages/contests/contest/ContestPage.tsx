@@ -177,6 +177,9 @@ export default function ContestPage() {
 
   // handle fatal WS close codes
   if (hasFatalWsError) {
+    if (wsCloseCode === 4403) {
+      return <ForbiddenPage />;
+    }
     if (wsCloseCode === 4404) {
       return <NotFoundPage />;
     }

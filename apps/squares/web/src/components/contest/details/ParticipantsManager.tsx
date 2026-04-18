@@ -1,5 +1,4 @@
-import { Close, Edit } from '@mui/icons-material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Close, Edit, ErrorOutline } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -54,6 +53,8 @@ export default function ParticipantsManager({
   const [editRole, setEditRole] = useState<ParticipantRole>('participant');
   const [editMaxSquares, setEditMaxSquares] = useState<number>(10);
   const [removeConfirm, setRemoveConfirm] = useState<Participant | null>(null);
+  const [editError, setEditError] = useState(false);
+  const [removeError, setRemoveError] = useState(false);
 
   useEffect(() => {
     if (open && currentContest?.id) {
@@ -71,31 +72,39 @@ export default function ParticipantsManager({
     if (!currentContest || !editParticipant) {
       return;
     }
-
-    await dispatch(
-      updateContestParticipant({
-        contestId: currentContest.id,
-        userId: editParticipant.userId,
-        request: { role: editRole, maxSquares: editMaxSquares },
-      })
-    ).unwrap();
-    showToast('Participant updated', 'success');
-    setEditParticipant(null);
+    setEditError(false);
+    try {
+      await dispatch(
+        updateContestParticipant({
+          contestId: currentContest.id,
+          userId: editParticipant.userId,
+          request: { role: editRole, maxSquares: editMaxSquares },
+        })
+      ).unwrap();
+      showToast('Participant updated', 'success');
+      setEditParticipant(null);
+    } catch {
+      setEditError(true);
+    }
   };
 
   const handleRemove = async () => {
     if (!currentContest || !removeConfirm) {
       return;
     }
-
-    await dispatch(
-      removeContestParticipant({
-        contestId: currentContest.id,
-        userId: removeConfirm.userId,
-      })
-    ).unwrap();
-    showToast('Participant removed', 'success');
-    setRemoveConfirm(null);
+    setRemoveError(false);
+    try {
+      await dispatch(
+        removeContestParticipant({
+          contestId: currentContest.id,
+          userId: removeConfirm.userId,
+        })
+      ).unwrap();
+      showToast('Participant removed', 'success');
+      setRemoveConfirm(null);
+    } catch {
+      setRemoveError(true);
+    }
   };
 
   const getRoleColor = (role: ParticipantRole) => {
@@ -123,7 +132,7 @@ export default function ParticipantsManager({
               color: (theme) => theme.palette.grey[500],
             }}
           >
-            <CloseIcon />
+            <Close />
           </IconButton>
         </DialogTitle>
         <DialogContent>
@@ -239,7 +248,7 @@ export default function ParticipantsManager({
               color: (theme) => theme.palette.grey[500],
             }}
           >
-            <CloseIcon />
+            <Close />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
@@ -273,8 +282,13 @@ export default function ParticipantsManager({
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditParticipant(null)}>Cancel</Button>
-          <Button variant="contained" onClick={handleEditSave}>
-            Save
+          <Button
+            variant="contained"
+            color={editError ? 'error' : 'primary'}
+            onClick={handleEditSave}
+            startIcon={editError ? <ErrorOutline /> : undefined}
+          >
+            {editError ? 'Failed — Retry' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -292,7 +306,7 @@ export default function ParticipantsManager({
               color: (theme) => theme.palette.grey[500],
             }}
           >
-            <CloseIcon />
+            <Close />
           </IconButton>
         </DialogTitle>
         <DialogContent>
@@ -303,8 +317,13 @@ export default function ParticipantsManager({
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setRemoveConfirm(null)}>Cancel</Button>
-          <Button variant="contained" color="error" onClick={handleRemove}>
-            Remove
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleRemove}
+            startIcon={removeError ? <ErrorOutline /> : undefined}
+          >
+            {removeError ? 'Failed — Retry' : 'Remove'}
           </Button>
         </DialogActions>
       </Dialog>

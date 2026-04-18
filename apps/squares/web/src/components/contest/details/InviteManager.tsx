@@ -1,4 +1,4 @@
-import { Close, Delete, Link as LinkIcon, Share } from '@mui/icons-material';
+import { Close, Delete, ErrorOutline, Link as LinkIcon, Share } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -49,6 +49,9 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
   const [maxUses, setMaxUses] = useState<string>('');
   const [expiresIn, setExpiresIn] = useState<string>('');
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState(false);
+  const [failedInviteId, setFailedInviteId] = useState<string | null>(null);
+  const [clipboardFallbackUrl, setClipboardFallbackUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && currentContest?.id) {
@@ -59,6 +62,8 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
   const handleCreateInvite = async () => {
     if (!currentContest) return;
     setCreating(true);
+    setCreateError(false);
+    setClipboardFallbackUrl(null);
     try {
       const result = await dispatch(
         createContestInvite({
@@ -73,12 +78,16 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
       ).unwrap();
 
       const inviteUrl = result.inviteUrl || `${window.location.origin}/join/${result.token}`;
-      await navigator.clipboard.writeText(inviteUrl);
-      showToast('Invite link copied to clipboard', 'success');
+      try {
+        await navigator.clipboard.writeText(inviteUrl);
+        showToast('Invite link copied to clipboard', 'success');
+      } catch {
+        setClipboardFallbackUrl(inviteUrl);
+      }
       // refetch invites list since create only returns token/url
       dispatch(fetchInvites(currentContest.id));
     } catch {
-      console.log('Error creating invite');
+      setCreateError(true);
     } finally {
       setCreating(false);
     }
@@ -88,9 +97,13 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
     if (!currentContest) {
       return;
     }
-
-    await dispatch(deleteContestInvite({ contestId: currentContest.id, inviteId })).unwrap();
-    showToast('Invite deleted', 'success');
+    setFailedInviteId(null);
+    try {
+      await dispatch(deleteContestInvite({ contestId: currentContest.id, inviteId })).unwrap();
+      showToast('Invite deleted', 'success');
+    } catch {
+      setFailedInviteId(inviteId);
+    }
   };
 
   const handleShareLink = async (token: string) => {
@@ -184,14 +197,35 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
 
             <Button
               variant="contained"
-              startIcon={creating ? <CircularProgress size={16} /> : <LinkIcon />}
+              color={createError ? 'error' : 'primary'}
+              startIcon={
+                creating ? (
+                  <CircularProgress size={16} />
+                ) : createError ? (
+                  <ErrorOutline />
+                ) : (
+                  <LinkIcon />
+                )
+              }
               onClick={handleCreateInvite}
               disabled={creating}
               fullWidth
               sx={{ mt: 1.5 }}
             >
-              Generate Invite Link
+              {createError ? 'Failed — Retry' : 'Generate Invite Link'}
             </Button>
+
+            {clipboardFallbackUrl && (
+              <TextField
+                label="Invite link (copy manually)"
+                value={clipboardFallbackUrl}
+                size="small"
+                fullWidth
+                slotProps={{ input: { readOnly: true } }}
+                onFocus={(e) => e.target.select()}
+                sx={{ mt: 1 }}
+              />
+            )}
           </Box>
 
           {/* active invites list */}
@@ -215,7 +249,10 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
                     p: 1,
                     borderRadius: 1,
                     backgroundColor: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    border:
+                      failedInviteId === invite.id
+                        ? '1px solid #ff4444'
+                        : '1px solid rgba(255,255,255,0.08)',
                   }}
                 >
                   <Box sx={{ minWidth: 0 }}>
@@ -243,16 +280,24 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
                         <Share fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Delete invite">
+                    <Tooltip
+                      title={
+                        failedInviteId === invite.id ? 'Delete failed — retry' : 'Delete invite'
+                      }
+                    >
                       <IconButton
                         size="small"
                         onClick={() => handleDeleteInvite(invite.id)}
                         sx={{
-                          color: 'rgba(255,255,255,0.6)',
+                          color: failedInviteId === invite.id ? '#ff4444' : 'rgba(255,255,255,0.6)',
                           '&:hover': { color: '#ff4444' },
                         }}
                       >
-                        <Delete fontSize="small" />
+                        {failedInviteId === invite.id ? (
+                          <ErrorOutline fontSize="small" />
+                        ) : (
+                          <Delete fontSize="small" />
+                        )}
                       </IconButton>
                     </Tooltip>
                   </Box>
