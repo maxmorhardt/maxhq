@@ -1,5 +1,7 @@
 import type { useAuth } from 'react-oidc-context';
 import {
+  addParticipantFromWebSocket,
+  removeParticipantFromWebSocket,
   updateContestFromWebSocket,
   updateQuarterResultFromWebSocket,
   updateSquareFromWebSocket,
@@ -55,6 +57,16 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
   } catch (error) {
     console.error('Error parsing WebSocket message:', lastMessage.data, error);
     callbacks?.onError?.('Failed to parse server message');
+    return;
+  }
+
+  // handle connection-level messages before contest validation
+  if (message.type === 'connected') {
+    dispatch(setConnectionDetails(message));
+    return;
+  }
+  if (message.type === 'disconnected') {
+    dispatch(setDisconnectionDetails(message));
     return;
   }
 
@@ -125,18 +137,26 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
       callbacks?.onContestDeleted?.();
       break;
 
+    case 'participant_added':
+      if (message.participant) {
+        dispatch(addParticipantFromWebSocket(message.participant));
+        dispatch(setLatestMessage(message));
+        callbacks?.onParticipantAdded?.(message.participant);
+      }
+      break;
+
+    case 'participant_removed':
+      if (message.participant) {
+        dispatch(removeParticipantFromWebSocket(message.participant.userId));
+        dispatch(setLatestMessage(message));
+        callbacks?.onParticipantRemoved?.(message.participant);
+      }
+      break;
+
     case 'chat_message':
       if (message.message && message.updatedBy) {
         callbacks?.onChatMessage?.(message.updatedBy, message.message, message.timestamp);
       }
-      break;
-
-    case 'connected':
-      dispatch(setConnectionDetails(message));
-      break;
-
-    case 'disconnected':
-      dispatch(setDisconnectionDetails(message));
       break;
 
     default:

@@ -1,8 +1,15 @@
-import { GridView, PlayArrow, SportsScore, Sync } from '@mui/icons-material';
+import {
+  GridView,
+  PersonAdd,
+  PersonRemove,
+  PlayArrow,
+  SportsScore,
+  Sync,
+} from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
-import type { ActivityEvent, ActivityEventType } from '../../types/contest';
+import type { ActivityEvent, ActivityEventType } from '../../../types/contest';
 import ContestSidebarCard from './ContestSidebarCard';
 
 interface ActivityFeedProps {
@@ -15,6 +22,8 @@ const eventIcons: Record<ActivityEventType, ReactNode> = {
   quarter_winner: <span style={{ fontSize: '0.75rem' }}>🏆</span>,
   contest_started: <PlayArrow sx={{ fontSize: '0.85rem', color: '#f5af19' }} />,
   contest_status: <Sync sx={{ fontSize: '0.85rem', color: '#a78bfa' }} />,
+  participant_added: <PersonAdd sx={{ fontSize: '0.85rem', color: '#43e97b' }} />,
+  participant_removed: <PersonRemove sx={{ fontSize: '0.85rem', color: '#f87171' }} />,
 };
 
 function formatTime(timestamp: string): string {

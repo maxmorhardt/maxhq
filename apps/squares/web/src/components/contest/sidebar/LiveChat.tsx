@@ -1,8 +1,8 @@
 import { Chat, Send } from '@mui/icons-material';
 import { Box, IconButton, InputBase, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
-import type { ChatMessage } from '../../types/contest';
-import { stripDangerousChars } from '../../utils/sanitize';
+import type { ChatMessage } from '../../../types/contest';
+import { stripDangerousChars } from '../../../utils/sanitize';
 import ContestSidebarCard from './ContestSidebarCard';
 
 interface LiveChatProps {

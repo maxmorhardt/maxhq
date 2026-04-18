@@ -1,15 +1,17 @@
 import { Alert, Box } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import ContestsTable from '../../components/contests/ContestsTable';
-import ContestsTableSkeleton from '../../components/contests/ContestsTableSkeleton';
+import ContestsTable from '../../components/contest/table/ContestsTable';
+import ContestsTableSkeleton from '../../components/contest/table/ContestsTableSkeleton';
+import RedirectingToLogin from '../../components/common/RedirectingToLogin';
 import {
   selectContestError,
   selectContestLoading,
   selectContests,
+  selectMyContests,
 } from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
-import { fetchContestsByOwner } from '../../features/contests/contestThunks';
+import { fetchContestsByOwner, fetchMyContests } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import type { PaginatedContestsResponse } from '../../types/contest';
@@ -31,9 +33,12 @@ export default function ContestsPage() {
     hasPrevious: false,
   });
 
+  // joined contests state (no pagination — API returns full array)
+
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
   const ownedContests = useAppSelector(selectContests);
+  const joinedContests = useAppSelector(selectMyContests);
 
   // fetch owned contests when authenticated and pagination changes
   useEffect(() => {
@@ -67,6 +72,15 @@ export default function ContestsPage() {
     }
   }, [auth.isAuthenticated, auth.user, dispatch, isInterceptorReady, ownedPage, ownedRowsPerPage]);
 
+  // fetch joined contests
+  useEffect(() => {
+    if (!auth.isAuthenticated || !isInterceptorReady) {
+      return;
+    }
+
+    dispatch(fetchMyContests());
+  }, [auth.isAuthenticated, dispatch, isInterceptorReady]);
+
   // handle owned contests pagination
   const handleOwnedPageChange = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
     setOwnedPage(newPage);
@@ -76,6 +90,11 @@ export default function ContestsPage() {
     setOwnedRowsPerPage(parseInt(event.target.value, 10));
     setOwnedPage(0);
   };
+
+  // show redirecting component while signin redirect is in progress
+  if (auth.isLoading && auth.activeNavigator === 'signinRedirect') {
+    return <RedirectingToLogin />;
+  }
 
   // show skeleton while auth is loading
   if (auth.isLoading && auth.activeNavigator !== 'signoutSilent') {
@@ -116,6 +135,10 @@ export default function ContestsPage() {
     );
   }
 
+  // filter out owned contests from joined list to avoid duplicates
+  const ownedIds = new Set(ownedContests.map((c) => c.id));
+  const joinedOnly = joinedContests.filter((c) => !ownedIds.has(c.id));
+
   return (
     <Box>
       {/* error alert for failed data fetches */}
@@ -136,6 +159,18 @@ export default function ContestsPage() {
         onPageChange={handleOwnedPageChange}
         onRowsPerPageChange={handleOwnedRowsPerPageChange}
         title="My Contests"
+      />
+
+      {/* joined contests table */}
+      <ContestsTable
+        contests={joinedOnly}
+        totalCount={joinedOnly.length}
+        page={0}
+        rowsPerPage={5}
+        onPageChange={() => {}}
+        onRowsPerPageChange={() => {}}
+        title="Joined Contests"
+        hideCreateButton
       />
     </Box>
   );

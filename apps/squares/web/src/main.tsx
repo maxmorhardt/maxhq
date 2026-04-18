@@ -15,6 +15,7 @@ import ContestsPage from './pages/contests/ContestsPage';
 import CreateContestPage from './pages/contests/create/CreateContestPage';
 import ErrorBoundary, { ErrorFallback } from './pages/error/ErrorBoundary';
 import NotFoundPage from './pages/error/NotFoundPage';
+import JoinPage from './pages/join/JoinPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
 import PrivacyPolicyPage from './pages/privacy/PrivacyPolicyPage';
@@ -47,6 +48,7 @@ const router = createBrowserRouter([
       { path: 'contests', element: <ContestsPage /> },
       { path: 'contests/create', element: <CreateContestPage /> },
       { path: 'contests/owner/:owner/name/:name', element: <ContestPage /> },
+      { path: 'join/:token', element: <JoinPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },
       { path: 'privacy-policy', element: <PrivacyPolicyPage /> },

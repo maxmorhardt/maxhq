@@ -1,4 +1,4 @@
-import { Warning } from '@mui/icons-material';
+import { Close, Warning } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -7,14 +7,15 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Typography,
 } from '@mui/material';
 import {
   selectCurrentContest,
   selectDeleteContestLoading,
-} from '../../features/contests/contestSelectors';
-import { deleteContest } from '../../features/contests/contestThunks';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+} from '../../../features/contests/contestSelectors';
+import { deleteContest } from '../../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 
 interface DeleteContestProps {
   open: boolean;
@@ -43,7 +44,18 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       {/* dialog title with warning icon */}
-      <DialogTitle>
+      <DialogTitle sx={{ pr: 6 }}>
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <Close />
+        </IconButton>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Warning
             sx={{

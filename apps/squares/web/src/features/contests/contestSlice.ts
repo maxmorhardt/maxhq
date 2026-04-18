@@ -3,18 +3,27 @@ import { createSlice } from '@reduxjs/toolkit';
 import type {
   Contest,
   ContestStatus,
+  Invite,
   PaginatedContestsResponse,
+  Participant,
   QuarterResult,
   Square,
 } from '../../types/contest';
 import {
   clearSquare,
   createContest,
+  createContestInvite,
   deleteContest,
+  deleteContestInvite,
   fetchContestByOwnerAndName,
   fetchContestsByOwner,
+  fetchInvites,
+  fetchMyContests,
+  fetchParticipants,
+  removeContestParticipant,
   startContestThunk,
   updateContest,
+  updateContestParticipant,
   updateQuarterResult,
   updateSquare,
 } from './contestThunks';
@@ -22,11 +31,16 @@ import {
 // redux state for contest management
 interface ContestState {
   contests: Contest[]; // list of user's contests
+  myContests: Contest[]; // contests where user is a participant
   currentContest?: Contest | null; // currently viewed contest
   currentSquare?: Square | null; // currently selected square
+  participants: Participant[]; // participants for current contest
+  invites: Invite[]; // invites for current contest
   contestLoading: boolean; // loading state for contest operations
   deleteContestLoading: boolean; // loading state for delete operation
   squareLoading: boolean; // loading state for square operations
+  participantsLoading: boolean; // loading state for participants
+  invitesLoading: boolean; // loading state for invites
   error: string | null; // error message
   pagination: {
     // pagination info for contests list
@@ -41,9 +55,14 @@ interface ContestState {
 
 const initialState: ContestState = {
   contests: [],
+  myContests: [],
+  participants: [],
+  invites: [],
   contestLoading: false,
   deleteContestLoading: false,
   squareLoading: false,
+  participantsLoading: false,
+  invitesLoading: false,
   error: null,
   pagination: {
     page: 1,
@@ -179,6 +198,17 @@ const contestSlice = createSlice({
         state.currentContest.status = nextStatus;
       }
     },
+    // add participant from websocket
+    addParticipantFromWebSocket(state, action: PayloadAction<Participant>) {
+      const exists = state.participants.some((p) => p.id === action.payload.id);
+      if (!exists) {
+        state.participants.push(action.payload);
+      }
+    },
+    // remove participant from websocket
+    removeParticipantFromWebSocket(state, action: PayloadAction<string>) {
+      state.participants = state.participants.filter((p) => p.userId !== action.payload);
+    },
   },
   // async thunk handlers for API operations
   extraReducers: (builder) => {
@@ -191,7 +221,7 @@ const contestSlice = createSlice({
         fetchContestsByOwner.fulfilled,
         (state, action: PayloadAction<PaginatedContestsResponse>) => {
           state.contestLoading = false;
-          state.contests = action.payload.contests;
+          state.contests = action.payload.contests ?? [];
           state.pagination = {
             page: action.payload.page,
             limit: action.payload.limit,
@@ -387,6 +417,88 @@ const contestSlice = createSlice({
       .addCase(updateQuarterResult.rejected, (state, action) => {
         state.error = action.payload?.message ?? 'Error recording quarter result';
       });
+
+    // fetch my contests (where user is a participant)
+    builder
+      .addCase(fetchMyContests.pending, (state) => {
+        state.contestLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyContests.fulfilled, (state, action: PayloadAction<Contest[]>) => {
+        state.contestLoading = false;
+        state.myContests = action.payload ?? [];
+      })
+      .addCase(fetchMyContests.rejected, (state, action) => {
+        state.contestLoading = false;
+        state.error = action.payload?.message ?? 'Error fetching contests';
+      });
+
+    // fetch participants
+    builder
+      .addCase(fetchParticipants.pending, (state) => {
+        state.participantsLoading = true;
+      })
+      .addCase(fetchParticipants.fulfilled, (state, action: PayloadAction<Participant[]>) => {
+        state.participantsLoading = false;
+        state.participants = action.payload;
+      })
+      .addCase(fetchParticipants.rejected, (state, action) => {
+        state.participantsLoading = false;
+        state.error = action.payload?.message ?? 'Error fetching participants';
+      });
+
+    // update participant
+    builder
+      .addCase(updateContestParticipant.fulfilled, (state, action: PayloadAction<Participant>) => {
+        const index = state.participants.findIndex((p) => p.id === action.payload.id);
+        if (index !== -1) {
+          state.participants[index] = action.payload;
+        }
+      })
+      .addCase(updateContestParticipant.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error updating participant';
+      });
+
+    // remove participant
+    builder
+      .addCase(removeContestParticipant.fulfilled, (state, action: PayloadAction<string>) => {
+        state.participants = state.participants.filter((p) => p.userId !== action.payload);
+      })
+      .addCase(removeContestParticipant.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error removing participant';
+      });
+
+    // fetch invites
+    builder
+      .addCase(fetchInvites.pending, (state) => {
+        state.invitesLoading = true;
+      })
+      .addCase(fetchInvites.fulfilled, (state, action: PayloadAction<Invite[]>) => {
+        state.invitesLoading = false;
+        state.invites = action.payload;
+      })
+      .addCase(fetchInvites.rejected, (state, action) => {
+        state.invitesLoading = false;
+        state.error = action.payload?.message ?? 'Error fetching invites';
+      });
+
+    // create invite
+    builder
+      .addCase(createContestInvite.fulfilled, () => {
+        // response only has inviteUrl and token; refetch invites list for full data
+      })
+      .addCase(createContestInvite.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error creating invite';
+      });
+
+    // delete invite
+    builder
+      .addCase(deleteContestInvite.fulfilled, (state, action: PayloadAction<string>) => {
+        state.invites = state.invites.filter((i) => i.id !== action.payload);
+      })
+      .addCase(deleteContestInvite.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error deleting invite';
+      });
   },
 });
 
@@ -397,5 +509,7 @@ export const {
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
   updateQuarterResultFromWebSocket,
+  addParticipantFromWebSocket,
+  removeParticipantFromWebSocket,
 } = contestSlice.actions;
 export const contestReducer = contestSlice.reducer;

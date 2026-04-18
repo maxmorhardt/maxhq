@@ -15,10 +15,10 @@ import {
   selectCurrentContest,
   selectCurrentSquare,
   selectSquareLoading,
-} from '../../features/contests/contestSelectors';
+} from '../../../features/contests/contestSelectors';
 
-import { clearSquare, updateSquare } from '../../features/contests/contestThunks';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+import { clearSquare, updateSquare } from '../../../features/contests/contestThunks';
+import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 
 interface EditSquareProps {
   open: boolean;

@@ -20,10 +20,10 @@ import {
 import { useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
-import { setCurrentContest } from '../../features/contests/contestSlice';
-import { useAppDispatch } from '../../hooks/reduxHooks';
-import type { Contest } from '../../types/contest';
-import { getStatusLabel, getStatusOption } from '../../utils/contestStatus';
+import { setCurrentContest } from '../../../features/contests/contestSlice';
+import { useAppDispatch } from '../../../hooks/reduxHooks';
+import type { Contest } from '../../../types/contest';
+import { getStatusLabel, getStatusOption } from '../../../utils/contestStatus';
 import DeleteContest from './DeleteContest';
 import EditContest from './EditContest';
 

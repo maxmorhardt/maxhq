@@ -52,6 +52,16 @@ describe('setupAxiosInterceptors', () => {
     useSpy.mockRestore();
   });
 
+  it('should reject errors in the request interceptor', async () => {
+    const useSpy = vi.spyOn(api.interceptors.request, 'use');
+    setupAxiosInterceptors({ access_token: 'token' } as User);
+
+    const onRejected = useSpy.mock.calls[0][1] as (error: unknown) => Promise<never>;
+    await expect(onRejected(new Error('interceptor error'))).rejects.toThrow('interceptor error');
+
+    useSpy.mockRestore();
+  });
+
   it('should set Authorization header on requests', async () => {
     setupAxiosInterceptors({ access_token: 'my-token' } as User);
 
