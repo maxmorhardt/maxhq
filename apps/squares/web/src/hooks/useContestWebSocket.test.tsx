@@ -6,6 +6,7 @@ import { contestReducer } from '../features/contests/contestSlice';
 import { statsReducer } from '../features/stats/statsSlice';
 import { toastReducer } from '../features/toast/toastSlice';
 import { wsReducer } from '../features/ws/wsSlice';
+import { setConnectionDetails } from '../features/ws/wsSlice';
 import { useContestWebSocket } from './useContestWebSocket';
 import type { ReactNode } from 'react';
 import type { HandleWSEventParams } from '../types/ws';
@@ -158,6 +159,18 @@ function createTestStore() {
     reducer: { contest: contestReducer, stats: statsReducer, toast: toastReducer, ws: wsReducer },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
   });
+}
+
+function simulateServerConnected(store: ReturnType<typeof createTestStore>) {
+  store.dispatch(
+    setConnectionDetails({
+      type: 'connected',
+      contestId: 'c1',
+      updatedBy: 'server',
+      timestamp: new Date().toISOString(),
+      connectionId: 'conn-1',
+    })
+  );
 }
 
 function createWrapper(store: ReturnType<typeof createTestStore>) {
@@ -352,6 +365,8 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
+      act(() => simulateServerConnected(store));
+
       await waitFor(() => {
         expect(fetchContestByOwnerAndName).toHaveBeenCalled();
       });
@@ -411,6 +426,8 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
+      act(() => simulateServerConnected(store));
+
       await waitFor(() => {
         expect(result.current.fetchErrorCode).toBe(403);
       });
@@ -424,6 +441,8 @@ describe('useContestWebSocket', () => {
       const { result } = renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
+
+      act(() => simulateServerConnected(store));
 
       await waitFor(() => {
         expect(result.current.fetchErrorCode).toBe(500);
@@ -451,6 +470,7 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
+      act(() => simulateServerConnected(store));
       await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
 
       act(() => {
@@ -471,6 +491,7 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
+      act(() => simulateServerConnected(store));
       await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
 
       act(() => {
@@ -505,6 +526,7 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
+      act(() => simulateServerConnected(store));
       await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
 
       act(() => {
@@ -535,6 +557,7 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
+      act(() => simulateServerConnected(store));
       await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
 
       act(() => {
@@ -628,6 +651,7 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
+      act(() => simulateServerConnected(store));
       await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
 
       params = { ...defaultParams, owner: 'otheruser' };

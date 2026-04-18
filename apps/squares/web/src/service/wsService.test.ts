@@ -129,10 +129,11 @@ describe('contestSocketEventHandler', () => {
   it('should ignore messages for a different contest', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const data = JSON.stringify({
-      type: 'connected',
+      type: 'square_update',
       contestId: 'other-contest',
       updatedBy: 'user1',
       timestamp: '2025-01-01',
+      square: { id: 'sq1', value: 'X', row: 0, col: 0, ownerName: 'X' },
     });
     contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
     expect(dispatch).not.toHaveBeenCalled();
