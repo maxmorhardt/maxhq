@@ -101,6 +101,7 @@ export default function ContestsPage() {
     return (
       <Box>
         <ContestsTableSkeleton title="My Contests" rowCount={2} />
+        <ContestsTableSkeleton title="Joined Contests" rowCount={2} hideCreateButton />
       </Box>
     );
   }
@@ -131,6 +132,7 @@ export default function ContestsPage() {
     return (
       <Box>
         <ContestsTableSkeleton title="My Contests" rowCount={2} />
+        <ContestsTableSkeleton title="Joined Contests" rowCount={2} hideCreateButton />
       </Box>
     );
   }
