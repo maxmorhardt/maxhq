@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" fill="none" role="img" aria-label="maxstash">
+  <defs>
+    <linearGradient id="ms-grad-d" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a855f7" />
+      <stop offset="1" stop-color="#3b82f6" />
+    </linearGradient>
+  </defs>
+  <rect x="22" y="22" width="32" height="32" rx="8" fill="url(#ms-grad-d)" fill-opacity="0.3" />
+  <rect x="16" y="16" width="32" height="32" rx="8" fill="url(#ms-grad-d)" fill-opacity="0.6" />
+  <rect x="10" y="10" width="32" height="32" rx="8" fill="url(#ms-grad-d)" />
+  <text
+    x="74"
+    y="43"
+    font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+    font-weight="600"
+    font-size="30"
+    letter-spacing="-0.5"
+    fill="#f3f4f6"
+  >maxstash</text>
+</svg>
