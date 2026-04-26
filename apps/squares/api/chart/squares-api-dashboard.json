@@ -80,7 +80,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "(sum(rate(http_requests_total{status!~\"5..\",path!~\"/ws/.*|/health\"}[5m])) / sum(rate(http_requests_total{path!~\"/ws/.*|/health\"}[5m]))) * 100",
+          "expr": "(sum(rate(http_requests_total{status!~\"5..\",path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m])) / sum(rate(http_requests_total{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))) * 100",
           "refId": "A"
         }
       ],
@@ -135,7 +135,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "(sum(rate(http_requests_total{status=~\"5..\",path!~\"/ws/.*|/health\"}[5m])) / sum(rate(http_requests_total{path!~\"/ws/.*|/health\"}[5m]))) * 100",
+          "expr": "(sum(rate(http_requests_total{status=~\"5..\",path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m])) / sum(rate(http_requests_total{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))) * 100",
           "refId": "A"
         }
       ],
@@ -190,7 +190,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health\"}[5m])) by (le)) * 1000",
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m])) by (le)) * 1000",
           "refId": "A"
         }
       ],
@@ -239,7 +239,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{path!~\"/ws/.*|/health\"}[5m])) * 60",
+          "expr": "sum(rate(http_requests_total{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m])) * 60",
           "refId": "A"
         }
       ],
@@ -435,7 +435,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rate(http_requests_total{path!~\"/ws/.*|/health\"}[5m])",
+          "expr": "rate(http_requests_total{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m])",
           "legendFormat": "{{method}} {{path}} - {{status}}",
           "refId": "A"
         }
@@ -504,17 +504,17 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"2..\",path!~\"/ws/.*|/health\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{status=~\"2..\",path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))",
           "legendFormat": "2xx Success",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(http_requests_total{status=~\"4..\",path!~\"/ws/.*|/health\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{status=~\"4..\",path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))",
           "legendFormat": "4xx Client Error",
           "refId": "B"
         },
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\",path!~\"/ws/.*|/health\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{status=~\"5..\",path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))",
           "legendFormat": "5xx Server Error",
           "refId": "C"
         }
@@ -591,17 +591,17 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health\"}[5m]))",
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))",
           "legendFormat": "p50 - {{method}} {{path}}",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health\"}[5m]))",
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))",
           "legendFormat": "p95 - {{method}} {{path}}",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health\"}[5m]))",
+          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m]))",
           "legendFormat": "p99 - {{method}} {{path}}",
           "refId": "C"
         }
@@ -670,7 +670,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{path!~\"/ws/.*|/health\"}[5m])) by (method)",
+          "expr": "sum(rate(http_requests_total{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m])) by (method)",
           "legendFormat": "{{method}}",
           "refId": "A"
         }
@@ -789,7 +789,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "topk(10, sum(rate(http_requests_total{path!~\"/ws/.*|/health\"}[5m])) by (path, method))",
+          "expr": "topk(10, sum(rate(http_requests_total{path!~\"/ws/.*|/health/.*|/swagger/.*\"}[5m])) by (path, method))",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -827,6 +827,55 @@
       "panels": [],
       "title": "WebSocket Metrics",
       "type": "row"
+    },
+    {
+      "datasource": "${prometheus_datasource}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 0,
+        "y": 39
+      },
+      "id": 60,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "sum(websocket_connections_active)",
+          "refId": "A"
+        }
+      ],
+      "title": "Active WebSocket Connections",
+      "type": "stat"
     },
     {
       "datasource": "${prometheus_datasource}",
@@ -871,11 +920,11 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 0,
+        "w": 10,
+        "x": 4,
         "y": 39
       },
-      "id": 60,
+      "id": 62,
       "options": {
         "legend": {
           "calcs": ["mean", "max"],
@@ -889,12 +938,12 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rate(http_requests_total{path=~\"/ws/.*\"}[5m])",
-          "legendFormat": "{{method}} {{path}} - {{status}}",
+          "expr": "sum(rate(websocket_connections_total[5m])) by (result)",
+          "legendFormat": "{{result}}",
           "refId": "A"
         }
       ],
-      "title": "WebSocket Connection Rate",
+      "title": "WebSocket Connection Rate by Result",
       "type": "timeseries"
     },
     {
@@ -940,11 +989,11 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 10,
+        "x": 14,
         "y": 39
       },
-      "id": 62,
+      "id": 64,
       "options": {
         "legend": {
           "calcs": ["mean", "max"],
@@ -958,22 +1007,22 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{path=~\"/ws/.*\"}[5m]))",
+          "expr": "histogram_quantile(0.50, sum(rate(websocket_connection_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{path=~\"/ws/.*\"}[5m]))",
+          "expr": "histogram_quantile(0.95, sum(rate(websocket_connection_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{path=~\"/ws/.*\"}[5m]))",
+          "expr": "histogram_quantile(0.99, sum(rate(websocket_connection_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p99",
           "refId": "C"
         }
       ],
-      "title": "WebSocket Upgrade Latency",
+      "title": "WebSocket Connection Duration",
       "type": "timeseries"
     },
     {
@@ -1014,16 +1063,16 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "ops"
         }
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 47
       },
-      "id": 64,
+      "id": 66,
       "options": {
         "legend": {
           "calcs": ["mean", "last"],
@@ -1037,17 +1086,86 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{path=~\"/ws/.*\",status=~\"101\"}[5m]))",
-          "legendFormat": "101 Switching Protocols (Success)",
+          "expr": "sum(rate(websocket_disconnects_total[5m])) by (reason)",
+          "legendFormat": "{{reason}}",
+          "refId": "A"
+        }
+      ],
+      "title": "WebSocket Disconnects by Reason",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${prometheus_datasource}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "mps"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 47
+      },
+      "id": 68,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "sum(rate(websocket_messages_sent_total[5m])) by (type)",
+          "legendFormat": "sent {{type}}",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(http_requests_total{path=~\"/ws/.*\",status!~\"101\"}[5m]))",
-          "legendFormat": "Failed Upgrades",
+          "expr": "sum(rate(websocket_messages_received_total[5m]))",
+          "legendFormat": "received",
           "refId": "B"
         }
       ],
-      "title": "WebSocket Status Codes",
+      "title": "WebSocket Message Throughput",
       "type": "timeseries"
     },
     {
@@ -1781,7 +1899,7 @@
       },
       "targets": [
         {
-          "expr": "{namespace=\"squares\", pod=~\"squares-api.*\"} |~ \"(?i)(error|panic|fatal)\"",
+          "expr": "{namespace=\"squares\", pod=~\"squares-api.*\"} | json | level=~\"ERROR|FATAL|PANIC\"",
           "refId": "A"
         }
       ],
@@ -1852,7 +1970,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({namespace=\"squares\", pod=~\"squares-api.*\"} |~ \"(?i)(error|panic|fatal)\" [1m]))",
+          "expr": "sum(count_over_time({namespace=\"squares\", pod=~\"squares-api.*\"} | json | level=~\"ERROR|FATAL|PANIC\" [1m]))",
           "legendFormat": "Error Count",
           "refId": "A"
         }
@@ -1926,6 +2044,303 @@
         }
       ],
       "title": "5xx Errors by Pod",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 113 },
+      "id": 200,
+      "panels": [],
+      "title": "Database (Postgres / GORM)",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 114 },
+      "id": 202,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "gorm_dbstats_open_connections", "legendFormat": "open", "refId": "A" },
+        { "expr": "gorm_dbstats_in_use", "legendFormat": "in_use", "refId": "B" },
+        { "expr": "gorm_dbstats_idle", "legendFormat": "idle", "refId": "C" },
+        { "expr": "gorm_dbstats_max_open_connections", "legendFormat": "max_open", "refId": "D" }
+      ],
+      "title": "DB Connection Pool",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 114 },
+      "id": 204,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(gorm_dbstats_wait_count[5m])", "legendFormat": "wait/s", "refId": "A" },
+        { "expr": "rate(gorm_dbstats_max_idle_closed[5m])", "legendFormat": "closed_max_idle/s", "refId": "B" },
+        { "expr": "rate(gorm_dbstats_max_lifetime_closed[5m])", "legendFormat": "closed_max_lifetime/s", "refId": "C" }
+      ],
+      "title": "DB Pool Pressure",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "unit": "s", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.1 }, { "color": "red", "value": 1 }] } } },
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 122 },
+      "id": 206,
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "orientation": "auto" },
+      "targets": [
+        { "expr": "rate(gorm_dbstats_wait_duration[5m])", "legendFormat": "wait_duration", "refId": "A" }
+      ],
+      "title": "Avg DB Wait Duration",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } } },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 122 },
+      "id": 208,
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" } },
+      "targets": [
+        { "expr": "sum(pg_up)", "legendFormat": "postgres_up", "refId": "A" }
+      ],
+      "title": "Postgres Up (requires postgres_exporter)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 126 },
+      "id": 220,
+      "panels": [],
+      "title": "NATS",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "mappings": [{ "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 127 },
+      "id": 222,
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "background" },
+      "targets": [{ "expr": "nats_connected", "refId": "A" }],
+      "title": "NATS Connected",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 10, "x": 4, "y": 127 },
+      "id": 224,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(nats_messages_published_total[5m])) by (subject)", "legendFormat": "{{subject}}", "refId": "A" }
+      ],
+      "title": "NATS Messages Published",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 127 },
+      "id": 226,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(nats_reconnects_total[5m])", "legendFormat": "reconnects/s", "refId": "A" },
+        { "expr": "rate(nats_disconnects_total[5m])", "legendFormat": "disconnects/s", "refId": "B" }
+      ],
+      "title": "NATS Reconnect / Disconnect Rate",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 135 },
+      "id": 240,
+      "panels": [],
+      "title": "Business Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 136 },
+      "id": 242,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(contests_created_total[5m])", "legendFormat": "created/s", "refId": "A" },
+        { "expr": "rate(contests_started_total[5m])", "legendFormat": "started/s", "refId": "B" },
+        { "expr": "rate(contests_deleted_total[5m])", "legendFormat": "deleted/s", "refId": "C" }
+      ],
+      "title": "Contest Lifecycle Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 136 },
+      "id": 244,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(squares_claimed_total[5m])", "legendFormat": "claimed/s", "refId": "A" },
+        { "expr": "rate(squares_cleared_total[5m])", "legendFormat": "cleared/s", "refId": "B" }
+      ],
+      "title": "Squares Claimed / Cleared",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 144 },
+      "id": 246,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(invites_created_total[5m])", "legendFormat": "created/s", "refId": "A" },
+        { "expr": "rate(invites_redeemed_total[5m])", "legendFormat": "redeemed/s", "refId": "B" }
+      ],
+      "title": "Invites Created / Redeemed",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 144 },
+      "id": 248,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(participants_joined_total[5m])) by (role)", "legendFormat": "joined {{role}}/s", "refId": "A" },
+        { "expr": "rate(participants_removed_total[5m])", "legendFormat": "removed/s", "refId": "B" }
+      ],
+      "title": "Participants Joined / Removed",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 152 },
+      "id": 250,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(chat_messages_total[5m])", "legendFormat": "chat/s", "refId": "A" }
+      ],
+      "title": "Chat Message Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 152 },
+      "id": 252,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(quarter_results_recorded_total[5m])) by (quarter)", "legendFormat": "Q{{quarter}}/s", "refId": "A" }
+      ],
+      "title": "Quarter Results Recorded",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 160 },
+      "id": 260,
+      "panels": [],
+      "title": "Auth & Security",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 161 },
+      "id": 262,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(auth_failures_total[5m])) by (reason)", "legendFormat": "{{reason}}", "refId": "A" }
+      ],
+      "title": "Auth Failures by Reason",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 161 },
+      "id": 264,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(http_request_size_rejected_total[5m])", "legendFormat": "rejected/s", "refId": "A" }
+      ],
+      "title": "Oversized Requests Rejected",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 169 },
+      "id": 280,
+      "panels": [],
+      "title": "Container & Process Health",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 170 },
+      "id": 282,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"squares\", pod=~\"squares-api.*\"}) by (pod)", "legendFormat": "{{pod}}", "refId": "A" }
+      ],
+      "title": "Pod Restart Count",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "percentunit" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 170 },
+      "id": 284,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total{namespace=\"squares\", pod=~\"squares-api.*\"}[5m])) by (pod) / sum(rate(container_cpu_cfs_periods_total{namespace=\"squares\", pod=~\"squares-api.*\"}[5m])) by (pod)", "legendFormat": "{{pod}}", "refId": "A" }
+      ],
+      "title": "CPU Throttling Ratio",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "Bps" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 178 },
+      "id": 286,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"squares\", pod=~\"squares-api.*\"}[5m])) by (pod)", "legendFormat": "rx {{pod}}", "refId": "A" },
+        { "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"squares\", pod=~\"squares-api.*\"}[5m])) by (pod)", "legendFormat": "tx {{pod}}", "refId": "B" }
+      ],
+      "title": "Pod Network I/O",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 178 },
+      "id": 288,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "process_resident_memory_bytes{job=~\".*squares-api.*\"}", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "Process RSS Memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" } },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 186 },
+      "id": 290,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "go_gc_duration_seconds{quantile=\"0.5\"}", "legendFormat": "p50 {{instance}}", "refId": "A" },
+        { "expr": "go_gc_duration_seconds{quantile=\"0.95\"}", "legendFormat": "p95 {{instance}}", "refId": "B" },
+        { "expr": "go_gc_duration_seconds{quantile=\"0.99\"}", "legendFormat": "p99 {{instance}}", "refId": "C" }
+      ],
+      "title": "Go GC Pause Duration",
       "type": "timeseries"
     }
   ],

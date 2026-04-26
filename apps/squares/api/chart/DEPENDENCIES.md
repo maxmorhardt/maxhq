@@ -28,5 +28,6 @@ kubectl create secret generic squares-api-env \
   --from-literal=SMTP_PASSWORD='your-password' \
   --from-literal=SUPPORT_EMAIL='support@example.com' \
 	--from-literal=OIDC_CLIENT_ID='example-oidc-client-id' \
-	--from-literal=TURNSTILE_SECRET_KEY='example-turnstile-secret-key'
+	--from-literal=TURNSTILE_SECRET_KEY='example-turnstile-secret-key' \
+	--from-literal=ALLOWED_ORIGINS='https://app.example.com,https://admin.example.com'
 ```
