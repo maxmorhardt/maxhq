@@ -1,0 +1,208 @@
+fullnameOverride: maxstash
+
+image:
+  repository: maxmorhardt/maxstash
+  tag: latest
+  pullPolicy: Always
+  revisionHistoryLimit: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+  volumes:
+    - name: tmp
+      mountPath: /tmp
+      volumeType: emptyDir
+    - name: cache
+      mountPath: /var/cache/nginx
+      volumeType: emptyDir
+    - name: run
+      mountPath: /var/run
+      volumeType: emptyDir
+  startupProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 2
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+  name: http
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: '1m'
+    nginx.ingress.kubernetes.io/client-body-buffer-size: '1m'
+    nginx.ingress.kubernetes.io/limit-rps: '50'
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: '5'
+  hosts:
+    - host: maxstash.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: maxstash.io-tls
+      hosts:
+        - maxstash.io
+
+resources:
+  limits:
+    cpu: 50m
+    memory: 64Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+affinity:
+  podAntiAffinity:
+    enabled: true
+    weight: 100
+    topologyKey: kubernetes.io/hostname
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPU: 80
+  targetRAM: 80
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+metrics:
+  image:
+    name: nginx-exporter
+    repository: nginx/nginx-prometheus-exporter
+    tag: latest
+    pullPolicy: Always
+    args:
+      - '--nginx.scrape-uri=http://127.0.0.1:9000/metrics'
+  resources:
+    limits:
+      cpu: 50m
+      memory: 64Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  service:
+    type: ClusterIP
+    port: 9113
+    targetPort: 9113
+    name: metrics
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+    honorLabels: true
+  prometheusRule:
+    enabled: true
+    labels: {}
+    rules:
+      # High Request Latency for nginx
+      - alert: HighNginxRequestLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(nginx_http_request_duration_seconds_bucket{service="{{ include "app.fullname" . }}"}[5m])) by (le)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: frontend
+        annotations:
+          summary: 'High nginx request latency detected'
+          description: 'P99 latency is {{ $value }}s for {{ $labels.service }}'
+
+      # High Error Rate
+      - alert: HighNginxErrorRate
+        expr: |
+          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: frontend
+        annotations:
+          summary: 'High HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
+
+      - alert: CriticalNginxErrorRate
+        expr: |
+          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+          component: frontend
+        annotations:
+          summary: 'Critical HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
+
+      # High 4xx Rate
+      - alert: HighNginx4xxRate
+        expr: |
+          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+          component: frontend
+        annotations:
+          summary: 'High client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
+
+      - alert: CriticalNginx4xxRate
+        expr: |
+          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.50
+        for: 5m
+        labels:
+          severity: critical
+          component: frontend
+        annotations:
+          summary: 'Critical client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
+
+      # Nginx Specific Alerts
+      - alert: NginxDown
+        expr: |
+          up{job="{{ include "app.fullname" . }}"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: frontend
+        annotations:
+          summary: 'Nginx is down'
+          description: 'Nginx metrics endpoint is not reachable for {{ $labels.job }}'
+
+      - alert: HighNginxConnectionsActive
+        expr: |
+          nginx_connections_active{job="{{ include "app.fullname" . }}"} > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: frontend
+        annotations:
+          summary: 'High number of active connections'
+          description: 'Nginx has {{ $value }} active connections'
