@@ -53,6 +53,10 @@
     "vitest": "^4.1.2"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,css,html,yml,yaml}": "prettier --write --ignore-unknown"
   }
 }
