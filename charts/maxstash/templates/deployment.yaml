@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  revisionHistoryLimit: {{ .Values.image.revisionHistoryLimit }}
+  strategy:
+    type: {{ .Values.image.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.image.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.image.strategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "app.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .runAsNonRoot }}
+        runAsUser: {{ .runAsUser }}
+        fsGroup: {{ .fsGroup }}
+        seccompProfile:
+          type: RuntimeDefault
+      {{- if .Values.affinity.podAntiAffinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.affinity.podAntiAffinity.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "app.selectorLabels" . | nindent 20 }}
+                topologyKey: {{ .Values.affinity.podAntiAffinity.topologyKey }}
+      {{- end }}
+      containers:
+        - name: {{ include "app.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: {{ .Values.image.securityContext.allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ .Values.image.securityContext.readOnlyRootFilesystem }}
+            runAsNonRoot: {{ .Values.image.securityContext.runAsNonRoot }}
+            runAsUser: {{ .Values.image.securityContext.runAsUser }}
+            capabilities:
+              drop:
+                - ALL
+          {{- with .Values.image.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: {{ .Values.service.name }}
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          {{- if .Values.image.volumes }}
+          volumeMounts:
+            {{- range .Values.image.volumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              port: {{ .Values.service.targetPort }}
+              path: {{ .Values.image.startupProbe.path }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.image.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.image.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.image.startupProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.image.startupProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              port: {{ .Values.service.targetPort }}
+              path: {{ .Values.image.readinessProbe.path }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.image.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.image.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.image.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.image.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.image.readinessProbe.successThreshold }}
+          livenessProbe:
+            httpGet:
+              port: {{ .Values.service.targetPort }}
+              path: {{ .Values.image.livenessProbe.path }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.image.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.image.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.image.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.image.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.image.livenessProbe.successThreshold }}
+        - name: {{ .Values.metrics.image.name }}
+          image: "{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+          imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
+          {{- with .Values.metrics.image.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: {{ .Values.metrics.service.name }}
+              containerPort: {{ .Values.metrics.service.targetPort }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.metrics.resources | nindent 12 }}
+      {{- if .Values.image.volumes }}
+      volumes:
+        {{- range .Values.image.volumes }}
+        - name: {{ .name }}
+          {{- if eq .volumeType "emptyDir" }}
+          emptyDir: {}
+          {{- end }}
+        {{- end }}
+      {{- end }}
