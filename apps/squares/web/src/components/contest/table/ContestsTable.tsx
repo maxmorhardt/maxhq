@@ -130,41 +130,41 @@ export default function ContestsTable({
             <Box
               sx={{
                 display: 'flex',
-                flexDirection: 'column',
+                flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                py: { xs: 6, md: 10 },
+                gap: 2,
+                py: 8,
                 px: 3,
               }}
             >
               <EmojiEvents
                 sx={{
-                  fontSize: { xs: 48, md: 64 },
+                  fontSize: 60,
                   color: 'rgba(255,255,255,0.15)',
-                  mb: 2,
                 }}
               />
-              <Typography
-                variant="h6"
-                sx={{
-                  color: 'rgba(255,255,255,0.5)',
-                  fontWeight: 600,
-                  mb: 1,
-                  fontSize: { xs: '1rem', md: '1.25rem' },
-                }}
-              >
-                No contests yet
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: 'rgba(255,255,255,0.3)',
-                  textAlign: 'center',
-                  maxWidth: 320,
-                }}
-              >
-                Create your first contest to get started
-              </Typography>
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: 'rgba(255,255,255,0.5)',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  No contests yet
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.3)',
+                  }}
+                >
+                  Create your first contest to get started
+                </Typography>
+              </Box>
             </Box>
           ) : isMobile ? (
             /* mobile card layout */
