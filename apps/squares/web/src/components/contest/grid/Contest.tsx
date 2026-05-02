@@ -110,11 +110,7 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
       const squaresClaimed = currentContest.squares.filter(
         (s) => s.owner === currentUsername
       ).length;
-      if (
-        currentParticipant &&
-        currentParticipant.role !== 'owner' &&
-        squaresClaimed >= currentParticipant.maxSquares
-      ) {
+      if (currentParticipant && squaresClaimed >= currentParticipant.maxSquares) {
         showToast('Square limit reached', 'warning');
         return;
       }

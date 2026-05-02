@@ -18,3 +18,5 @@ export const selectContestError = (state: RootState): string | null => state.con
 export const selectContestPagination = (state: RootState) => state.contest.pagination;
 export const selectDeleteContestLoading = (state: RootState): boolean =>
   state.contest.deleteContestLoading;
+export const selectSquareErrorCode = (state: RootState): number | null =>
+  state.contest.squareErrorCode;

@@ -3,7 +3,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from './contestSlice';
 import {
   fetchContestsByOwner,
-  fetchContestByOwnerAndName,
   createContest,
   updateSquare,
   clearSquare,
@@ -25,7 +24,6 @@ import type { Contest, Square } from '../../types/contest';
 
 vi.mock('../../service/contestService', () => ({
   getContestsByOwner: vi.fn(),
-  getContestByOwnerAndName: vi.fn(),
   createNewContest: vi.fn(),
   updateSquareValueById: vi.fn(),
   clearSquareById: vi.fn(),
@@ -46,7 +44,6 @@ vi.mock('../../service/contestService', () => ({
 
 import {
   getContestsByOwner,
-  getContestByOwnerAndName,
   createNewContest,
   updateSquareValueById,
   clearSquareById,
@@ -151,27 +148,6 @@ describe('contestThunks', () => {
         fetchContestsByOwner({ owner: 'u1', pagination: { page: 1, limit: 5, search: 'foo' } })
       );
       expect(getContestsByOwner).toHaveBeenCalledWith('u1', { page: 1, limit: 5, search: 'foo' });
-    });
-  });
-
-  describe('fetchContestByOwnerAndName', () => {
-    it('fulfilled: sets current contest', async () => {
-      vi.mocked(getContestByOwnerAndName).mockResolvedValue(mockContest);
-      const store = createTestStore();
-      await store.dispatch(fetchContestByOwnerAndName({ owner: 'u1', name: 'Test' }));
-      expect(store.getState().contest.currentContest).toEqual(mockContest);
-    });
-
-    it('rejected: sets error', async () => {
-      vi.mocked(getContestByOwnerAndName).mockRejectedValue({
-        code: 404,
-        message: 'not found',
-        timestamp: '',
-        requestId: '',
-      });
-      const store = createTestStore();
-      await store.dispatch(fetchContestByOwnerAndName({ owner: 'u1', name: 'nope' }));
-      expect(store.getState().contest.error).toBe('not found');
     });
   });
 

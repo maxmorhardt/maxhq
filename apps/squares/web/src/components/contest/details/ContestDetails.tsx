@@ -60,7 +60,8 @@ export default function ContestDetails({
     isActive &&
     !allSquaresFilled &&
     auth.isAuthenticated &&
-    (isOwner || (isParticipant && squaresClaimed < (currentParticipant?.maxSquares ?? 0)));
+    isParticipant &&
+    squaresClaimed < (currentParticipant?.maxSquares ?? 0);
 
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
@@ -85,24 +86,22 @@ export default function ContestDetails({
               sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', mt: 0.5 }}
             >
               {filledSquares}/{totalSquares} squares filled
-              {auth.isAuthenticated &&
-                currentParticipant &&
-                currentParticipant.role !== 'owner' && (
-                  <Typography
-                    component="span"
-                    variant="body2"
-                    sx={{
-                      color:
-                        squaresClaimed >= currentParticipant.maxSquares
-                          ? '#43e97b'
-                          : 'rgba(255,255,255,0.5)',
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    {' · '}
-                    {squaresClaimed}/{currentParticipant.maxSquares}
-                  </Typography>
-                )}
+              {auth.isAuthenticated && currentParticipant && (
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{
+                    color:
+                      squaresClaimed >= currentParticipant.maxSquares
+                        ? '#43e97b'
+                        : 'rgba(255,255,255,0.5)',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  {' · '}
+                  {squaresClaimed}/{currentParticipant.maxSquares}
+                </Typography>
+              )}
             </Typography>
           )}
         </Box>

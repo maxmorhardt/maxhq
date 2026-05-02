@@ -1,9 +1,10 @@
-import { Box, CircularProgress, Container, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
+import LoadingScreen from '../../components/common/LoadingScreen';
 import InviteSignIn from '../../components/join/InviteSignIn';
-import RedirectingToLogin from '../../components/common/RedirectingToLogin';
+import JoinError from '../../components/join/JoinError';
+import JoinNoSquares from '../../components/join/JoinNoSquares';
 import { joinContestByToken, previewInviteToken } from '../../features/contests/contestThunks';
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
@@ -18,6 +19,7 @@ export default function JoinPage() {
   const { showToast } = useToast();
   const hasJoined = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<number | null>(null);
   const [preview, setPreview] = useState<InvitePreviewResponse | null>(null);
 
   // fetch invite preview on mount (no auth required)
@@ -28,6 +30,7 @@ export default function JoinPage() {
       .then(setPreview)
       .catch((err: APIError) => {
         setError(err.message || 'This invite link is invalid or expired');
+        setErrorCode(err.code ?? null);
       });
   }, [token, dispatch]);
 
@@ -52,47 +55,39 @@ export default function JoinPage() {
           return;
         }
         setError(apiError.message || 'Failed to join contest');
+        setErrorCode(apiError.code ?? null);
         showToast(apiError.message || 'Failed to join contest', 'error');
         hasJoined.current = false;
       }
     })();
   }, [auth.isAuthenticated, token, preview, dispatch, navigate, showToast]);
 
-  // show sign-in page for unauthenticated users
-  if (!auth.isAuthenticated && !auth.isLoading) {
+  // auth still initialising — neutral loading state (avoids flashing "sign in" briefly)
+  if (auth.isLoading && auth.activeNavigator !== 'signoutSilent') {
+    return <LoadingScreen title="Redirecting to sign in..." subtitle="Please wait..." />;
+  }
+
+  // unauthenticated — show sign-in prompt
+  if (!auth.isAuthenticated) {
     return <InviteSignIn />;
   }
 
-  if (error) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h5" sx={{ color: 'white', fontWeight: 700, mb: 2 }}>
-          Unable to Join
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-          {error}
-        </Typography>
-      </Container>
-    );
+  if (errorCode === 422) {
+    return <JoinNoSquares preview={preview} />;
   }
 
-  const isJoining = auth.isAuthenticated && preview && !error;
+  if (error) {
+    return <JoinError message={error} />;
+  }
 
-  if (!isJoining) {
-    return <RedirectingToLogin subtitle="You need to sign in to join this contest" />;
+  if (!preview) {
+    return <LoadingScreen title="Loading invite..." subtitle="Fetching contest details" />;
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-        <CircularProgress size={40} />
-        <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
-          Joining contest...
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-          Please wait while we add you to the contest
-        </Typography>
-      </Box>
-    </Container>
+    <LoadingScreen
+      title="Joining contest..."
+      subtitle={`Preparing your spot in ${preview.contestName}`}
+    />
   );
 }

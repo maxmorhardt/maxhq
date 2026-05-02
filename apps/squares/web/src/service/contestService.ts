@@ -37,16 +37,6 @@ export async function getContestsByOwner(
   }
 }
 
-// fetch single contest by id with all details
-export async function getContestByOwnerAndName(owner: string, name: string): Promise<Contest> {
-  try {
-    const res = await api.get<Contest>(`/contests/owner/${owner}/name/${name}`);
-    return res.data;
-  } catch (err: unknown) {
-    throw handleError(err);
-  }
-}
-
 // create new contest
 export async function createNewContest(request: CreateContestRequest) {
   try {

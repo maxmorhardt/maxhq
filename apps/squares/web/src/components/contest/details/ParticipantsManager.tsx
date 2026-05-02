@@ -74,11 +74,14 @@ export default function ParticipantsManager({
     }
     setEditError(false);
     try {
+      const isEditingOwner = editParticipant.role === 'owner';
       await dispatch(
         updateContestParticipant({
           contestId: currentContest.id,
           userId: editParticipant.userId,
-          request: { role: editRole, maxSquares: editMaxSquares },
+          request: isEditingOwner
+            ? { maxSquares: editMaxSquares }
+            : { role: editRole, maxSquares: editMaxSquares },
         })
       ).unwrap();
       showToast('Participant updated', 'success');
@@ -187,19 +190,18 @@ export default function ParticipantsManager({
                     </Typography>
                   </Box>
 
-                  {isOwner &&
-                    participant.role !== 'owner' &&
-                    currentContest?.status === 'ACTIVE' && (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditOpen(participant)}
-                            sx={{ color: 'rgba(255,255,255,0.6)' }}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                  {isOwner && currentContest?.status === 'ACTIVE' && (
+                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditOpen(participant)}
+                          sx={{ color: 'rgba(255,255,255,0.6)' }}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      {participant.role !== 'owner' && (
                         <Tooltip title="Remove">
                           <IconButton
                             size="small"
@@ -212,8 +214,9 @@ export default function ParticipantsManager({
                             <Close fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                      </Box>
-                    )}
+                      )}
+                    </Box>
+                  )}
                 </Box>
               ))}
 
@@ -256,17 +259,19 @@ export default function ParticipantsManager({
             {editParticipant?.userId}
           </Typography>
 
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-            <InputLabel>Role</InputLabel>
-            <Select
-              value={editRole}
-              label="Role"
-              onChange={(e) => setEditRole(e.target.value as ParticipantRole)}
-            >
-              <MenuItem value="participant">Participant</MenuItem>
-              <MenuItem value="viewer">Viewer</MenuItem>
-            </Select>
-          </FormControl>
+          {editParticipant?.role !== 'owner' && (
+            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+              <InputLabel>Role</InputLabel>
+              <Select
+                value={editRole}
+                label="Role"
+                onChange={(e) => setEditRole(e.target.value as ParticipantRole)}
+              >
+                <MenuItem value="participant">Participant</MenuItem>
+                <MenuItem value="viewer">Viewer</MenuItem>
+              </Select>
+            </FormControl>
+          )}
 
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 0.5 }}>
             Max Squares: {editMaxSquares}

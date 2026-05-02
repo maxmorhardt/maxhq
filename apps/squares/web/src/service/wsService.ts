@@ -2,6 +2,8 @@ import type { useAuth } from 'react-oidc-context';
 import {
   addParticipantFromWebSocket,
   removeParticipantFromWebSocket,
+  setCurrentContest,
+  setParticipants,
   updateContestFromWebSocket,
   updateQuarterResultFromWebSocket,
   updateSquareFromWebSocket,
@@ -63,6 +65,15 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
   // handle connection-level messages before contest validation
   if (message.type === 'connected') {
     dispatch(setConnectionDetails(message));
+    if (message.contest) {
+      dispatch(setCurrentContest(message.contest));
+    }
+    if (message.participants) {
+      dispatch(setParticipants(message.participants));
+    }
+    if (message.contest && message.participants) {
+      callbacks?.onConnected?.(message.contest, message.participants);
+    }
     return;
   }
   if (message.type === 'disconnected') {

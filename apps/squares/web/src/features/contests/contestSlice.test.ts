@@ -12,7 +12,6 @@ import {
 } from './contestSlice';
 import {
   fetchContestsByOwner,
-  fetchContestByOwnerAndName,
   createContest,
   updateSquare,
   clearSquare,
@@ -310,35 +309,6 @@ describe('contestSlice extraReducers', () => {
         payload: undefined,
       });
       expect(state.error).toBe('Error fetching contests');
-    });
-  });
-
-  describe('fetchContestByOwnerAndName', () => {
-    it('pending: sets loading, clears current contest and error', () => {
-      const state = contestReducer(
-        { ...initialState, currentContest: mockContest, error: 'old' },
-        { type: fetchContestByOwnerAndName.pending.type }
-      );
-      expect(state.contestLoading).toBe(true);
-      expect(state.currentContest).toBeNull();
-      expect(state.error).toBeNull();
-    });
-
-    it('fulfilled: sets current contest', () => {
-      const state = contestReducer(initialState, {
-        type: fetchContestByOwnerAndName.fulfilled.type,
-        payload: mockContest,
-      });
-      expect(state.contestLoading).toBe(false);
-      expect(state.currentContest).toEqual(mockContest);
-    });
-
-    it('rejected: sets error', () => {
-      const state = contestReducer(initialState, {
-        type: fetchContestByOwnerAndName.rejected.type,
-        payload: { message: 'not found' },
-      });
-      expect(state.error).toBe('not found');
     });
   });
 

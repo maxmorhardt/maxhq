@@ -5,9 +5,14 @@ import { useAppDispatch, useAppSelector } from './reduxHooks';
 import { useToast } from './useToast';
 import { selectCurrentContest } from '../features/contests/contestSelectors';
 import { clearError, setCurrentContest } from '../features/contests/contestSlice';
-import { fetchContestByOwnerAndName, fetchParticipants } from '../features/contests/contestThunks';
 import { contestSocketEventHandler, getSocketUrl } from '../service/wsService';
-import type { ActivityEvent, ActivityEventType, ChatMessage } from '../types/contest';
+import type {
+  ActivityEvent,
+  ActivityEventType,
+  ChatMessage,
+  Contest,
+  Participant,
+} from '../types/contest';
 import type { ConnectionStatus, WSUICallbacks } from '../types/ws';
 
 const MAX_RETRY_ATTEMPTS = 5;
@@ -41,8 +46,6 @@ export function useContestWebSocket({
   const { showToast } = useToast();
 
   const currentContest = useAppSelector(selectCurrentContest);
-  const wsConnectionId = useAppSelector((state) => state.ws.connectionId);
-  const hasFetchedContest = useRef(false);
   const lastProcessedMessageRef = useRef<string | null>(null);
 
   const [retryCount, setRetryCount] = useState(0);
@@ -51,17 +54,15 @@ export function useContestWebSocket({
   const [wsCloseCode, setWsCloseCode] = useState<number | null>(null);
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [fetchErrorCode, setFetchErrorCode] = useState<number | null>(null);
 
   const isAuthenticated = !auth.isLoading && auth.isAuthenticated;
   const hasFatalWsError = wsCloseCode !== null && FATAL_CLOSE_CODES.includes(wsCloseCode);
 
   const reconnectInterval = Math.min(1000 * Math.pow(2, retryCount), 30000);
-  const socketUrl = isAuthenticated && !fetchErrorCode ? getSocketUrl(owner, name, auth) : null;
+  const socketUrl = isAuthenticated ? getSocketUrl(owner, name, auth) : null;
 
   // reset state when switching contests
   useEffect(() => {
-    hasFetchedContest.current = false;
     lastProcessedMessageRef.current = null;
     setActivityEvents([]);
     setChatMessages([]);
@@ -69,7 +70,6 @@ export function useContestWebSocket({
     setIsConnecting(true);
     setConnectionFailed(false);
     setWsCloseCode(null);
-    setFetchErrorCode(null);
     dispatch(setCurrentContest(null));
 
     return () => {
@@ -78,93 +78,90 @@ export function useContestWebSocket({
   }, [owner, name, dispatch]);
 
   // connect to websocket
-  const { lastMessage, readyState, sendJsonMessage } = useWebSocket(socketUrl, {
-    shouldReconnect: (event: CloseEvent) =>
-      !FATAL_CLOSE_CODES.includes(event.code) &&
-      socketUrl !== null &&
-      retryCount < MAX_RETRY_ATTEMPTS,
-    reconnectAttempts: MAX_RETRY_ATTEMPTS,
-    reconnectInterval,
-    protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
-    onOpen: () => {
-      setIsConnecting(false);
-      setConnectionFailed(false);
-      setRetryCount(0);
-    },
-    onError: () => {
-      setRetryCount((prev) => {
-        const next = prev + 1;
-        if (next >= MAX_RETRY_ATTEMPTS) {
-          setConnectionFailed(true);
-        }
-        return next;
-      });
-    },
-    onClose: (event: CloseEvent) => {
-      if (FATAL_CLOSE_CODES.includes(event.code)) {
-        setWsCloseCode(event.code);
+  const { lastMessage, readyState, sendJsonMessage, getWebSocket } = useWebSocket(
+    socketUrl,
+    {
+      shouldReconnect: (event: CloseEvent) =>
+        !FATAL_CLOSE_CODES.includes(event.code) &&
+        socketUrl !== null &&
+        retryCount < MAX_RETRY_ATTEMPTS,
+      reconnectAttempts: MAX_RETRY_ATTEMPTS,
+      reconnectInterval,
+      protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
+      onOpen: () => {
         setIsConnecting(false);
-      }
+        setConnectionFailed(false);
+        setRetryCount(0);
+      },
+      onError: () => {
+        setRetryCount((prev) => {
+          const next = prev + 1;
+          if (next >= MAX_RETRY_ATTEMPTS) {
+            setConnectionFailed(true);
+          }
+          return next;
+        });
+      },
+      onClose: (event: CloseEvent) => {
+        if (FATAL_CLOSE_CODES.includes(event.code)) {
+          setWsCloseCode(event.code);
+          setIsConnecting(false);
+        }
+      },
     },
-  });
+    socketUrl !== null // connect only when URL is available
+  );
 
   const isConnected = useMemo(() => readyState === ReadyState.OPEN, [readyState]);
 
-  // fetch contest data once server confirms connection via 'connected' message
-  useEffect(() => {
-    if (!owner || !name || !wsConnectionId || hasFetchedContest.current || hasFatalWsError) {
-      return;
-    }
+  // force a reconnect — used when a 409 indicates the local state is stale
+  const forceReconnect = useCallback(() => {
+    dispatch(setCurrentContest(null));
+    lastProcessedMessageRef.current = null;
+    setActivityEvents([]);
+    setIsConnecting(true);
+    // closing the socket triggers react-use-websocket's reconnect cycle
+    getWebSocket()?.close();
+  }, [dispatch, getWebSocket]);
 
-    (async () => {
-      try {
-        const contest = await dispatch(fetchContestByOwnerAndName({ owner, name })).unwrap();
-        hasFetchedContest.current = true;
+  // seed activity feed from the connected message payload
+  const seedActivityFromConnected = useCallback((contest: Contest, participants: Participant[]) => {
+    const seeded: ActivityEvent[] = [];
 
-        const participants = await dispatch(fetchParticipants(contest.id)).unwrap();
-
-        const seeded: ActivityEvent[] = [];
-
-        participants
-          .filter((p) => p.role !== 'owner')
-          .forEach((p) => {
-            seeded.push({
-              id: `seed-participant-${p.id}`,
-              type: 'participant_added',
-              message: `${p.userId} joined the contest`,
-              timestamp: p.joinedAt || p.createdAt,
-            });
-          });
-
-        contest.squares
-          ?.filter((s) => s.value && s.value.trim() !== '')
-          .forEach((s) => {
-            seeded.push({
-              id: `seed-square-${s.id}`,
-              type: 'square_claimed',
-              message: `${s.ownerName || 'Someone'} claimed square (${s.row}, ${s.col})`,
-              timestamp: s.updatedAt || s.createdAt,
-            });
-          });
-
-        contest.quarterResults?.forEach((qr) => {
-          seeded.push({
-            id: `seed-qr-${qr.id}`,
-            type: 'quarter_winner',
-            message: `Q${qr.quarter} winner: ${qr.winnerName} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
-            timestamp: qr.createdAt,
-          });
+    participants
+      .filter((p) => p.role !== 'owner')
+      .forEach((p) => {
+        seeded.push({
+          id: `seed-participant-${p.id}`,
+          type: 'participant_added',
+          message: `${p.userId} joined the contest`,
+          timestamp: p.joinedAt || p.createdAt,
         });
+      });
 
-        seeded.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-        setActivityEvents(seeded);
-      } catch (err) {
-        const apiError = err as { code?: number; message?: string };
-        setFetchErrorCode(apiError.code ?? 500);
-        console.error('Failed to fetch contest:', err);
-      }
-    })();
-  }, [owner, name, dispatch, wsConnectionId, hasFatalWsError]);
+    contest.squares
+      ?.filter((s) => s.value && s.value.trim() !== '')
+      .forEach((s) => {
+        seeded.push({
+          id: `seed-square-${s.id}`,
+          type: 'square_claimed',
+          message: `${s.ownerName || 'Someone'} claimed square (${s.row}, ${s.col})`,
+          timestamp: s.updatedAt || s.createdAt,
+        });
+      });
+
+    contest.quarterResults?.forEach((qr) => {
+      seeded.push({
+        id: `seed-qr-${qr.id}`,
+        type: 'quarter_winner',
+        message: `Q${qr.quarter} winner: ${qr.winnerName} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
+        timestamp: qr.createdAt,
+      });
+    });
+
+    seeded.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    setActivityEvents(seeded);
+  }, []);
 
   // add a new activity event from WS
   const addActivityEvent = useCallback((type: ActivityEventType, message: string) => {
@@ -194,6 +191,7 @@ export function useContestWebSocket({
       currentContestId: currentContest?.id || '',
       lastProcessedMessageRef,
       callbacks: {
+        onConnected: seedActivityFromConnected,
         onContestDeleted,
         onError: (error) => {
           showToast(error, 'error');
@@ -259,6 +257,7 @@ export function useContestWebSocket({
     showToast,
     auth.user?.profile?.preferred_username,
     addActivityEvent,
+    seedActivityFromConnected,
     onContestDeleted,
     onParticipantRemoved,
     onWinnerSquare,
@@ -266,14 +265,14 @@ export function useContestWebSocket({
     currentContest?.visibility,
   ]);
 
-  // show error toast and clear from store (skip if fetch error is handled by page)
+  // show error toast and clear from store
   const error = useAppSelector((state) => state.contest.error);
   useEffect(() => {
-    if (error && !fetchErrorCode) {
+    if (error) {
       showToast(error, 'error');
       dispatch(clearError());
     }
-  }, [dispatch, error, fetchErrorCode, showToast]);
+  }, [dispatch, error, showToast]);
 
   // determine connection status for chip
   const connectionStatus: ConnectionStatus = connectionFailed
@@ -295,7 +294,6 @@ export function useContestWebSocket({
     retryCount,
     wsCloseCode,
     hasFatalWsError,
-    fetchErrorCode,
-    hasFetchedContest: hasFetchedContest.current,
+    forceReconnect,
   };
 }

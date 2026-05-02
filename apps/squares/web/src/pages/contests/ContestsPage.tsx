@@ -15,7 +15,7 @@ import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import ContestsTable from '../../components/contest/table/ContestsTable';
 import ContestsTableSkeleton from '../../components/contest/table/ContestsTableSkeleton';
-import RedirectingToLogin from '../../components/common/RedirectingToLogin';
+import LoadingScreen from '../../components/common/LoadingScreen';
 import {
   selectContestError,
   selectContestLoading,
@@ -144,7 +144,9 @@ export default function ContestsPage() {
 
   // show redirecting component while signin redirect is in progress
   if (auth.isLoading && auth.activeNavigator === 'signinRedirect') {
-    return <RedirectingToLogin />;
+    return (
+      <LoadingScreen title="Redirecting to sign in..." subtitle="You will be redirected shortly" />
+    );
   }
 
   const isSearching = hasLoadedOnce && (searchInput.trim() !== debouncedSearch || loading);
@@ -190,7 +192,7 @@ export default function ContestsPage() {
           </Box>
           {skeletonMode ? (
             <Skeleton variant="rectangular" width={148} height={40} sx={{ borderRadius: 1 }} />
-          ) : (
+          ) : auth.isAuthenticated ? (
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -199,7 +201,7 @@ export default function ContestsPage() {
             >
               Create Contest
             </Button>
-          )}
+          ) : null}
         </Box>
 
         {skeletonMode ? (
@@ -214,6 +216,7 @@ export default function ContestsPage() {
             placeholder="Search contests..."
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
+            disabled={!auth.isAuthenticated}
             slotProps={{
               input: {
                 startAdornment: (
@@ -242,7 +245,7 @@ export default function ContestsPage() {
               },
               '& .MuiInputBase-input': {
                 color: 'rgba(255,255,255,0.85)',
-                fontSize: '0.875rem',
+                fontSize: '1rem',
                 '&::placeholder': { color: 'rgba(255,255,255,0.3)' },
               },
             }}
@@ -257,7 +260,8 @@ export default function ContestsPage() {
   // spinner in the search bar instead of unmounting the table.
   if (
     !hasLoadedOnce &&
-    ((auth.isLoading && auth.activeNavigator !== 'signoutSilent') || !isInterceptorReady || loading)
+    ((auth.isLoading && auth.activeNavigator !== 'signoutSilent') ||
+      (auth.isAuthenticated && (!isInterceptorReady || loading)))
   ) {
     return (
       <Box>
@@ -291,6 +295,18 @@ export default function ContestsPage() {
             title="My Contests"
             hideCreateButton
           />
+          <Box sx={{ mt: 3 }}>
+            <ContestsTable
+              contests={[]}
+              totalCount={0}
+              page={0}
+              rowsPerPage={5}
+              onPageChange={() => {}}
+              onRowsPerPageChange={() => {}}
+              title="Joined Contests"
+              hideCreateButton
+            />
+          </Box>
         </Container>
       </Box>
     );

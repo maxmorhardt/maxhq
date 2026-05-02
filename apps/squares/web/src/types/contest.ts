@@ -28,6 +28,7 @@ export interface CreateContestRequest {
   homeTeam?: string;
   awayTeam?: string;
   visibility?: ContestVisibility;
+  maxSquares: number;
 }
 
 export interface Square {
@@ -64,6 +65,7 @@ export interface WSUpdate {
   contest?: Contest;
   quarterResult?: QuarterResult;
   participant?: Participant;
+  participants?: Participant[];
 }
 
 export interface PaginationParams {

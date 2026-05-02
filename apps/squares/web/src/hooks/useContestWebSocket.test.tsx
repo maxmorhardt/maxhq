@@ -6,10 +6,10 @@ import { contestReducer } from '../features/contests/contestSlice';
 import { statsReducer } from '../features/stats/statsSlice';
 import { toastReducer } from '../features/toast/toastSlice';
 import { wsReducer } from '../features/ws/wsSlice';
-import { setConnectionDetails } from '../features/ws/wsSlice';
 import { useContestWebSocket } from './useContestWebSocket';
 import type { ReactNode } from 'react';
 import type { HandleWSEventParams } from '../types/ws';
+import type { Contest, Participant } from '../types/contest';
 
 // Mock react-oidc-context
 const mockAuth = {
@@ -29,6 +29,7 @@ vi.mock('react-oidc-context', () => ({
 
 // Mock react-use-websocket
 const mockSendJsonMessage = vi.fn();
+const mockGetWebSocket = vi.fn(() => null);
 let mockLastMessage: MessageEvent | null = null;
 let mockReadyState = 1; // ReadyState.OPEN
 let wsOptions: Record<string, unknown> = {};
@@ -41,6 +42,7 @@ vi.mock('react-use-websocket', () => ({
       lastMessage: mockLastMessage,
       readyState: mockReadyState,
       sendJsonMessage: mockSendJsonMessage,
+      getWebSocket: mockGetWebSocket,
     };
   },
   ReadyState: { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 },
@@ -57,12 +59,11 @@ vi.mock('../service/wsService', () => ({
 
 import { contestSocketEventHandler } from '../service/wsService';
 
-// Mock contestThunks — return contest with squares and quarterResults for seeding
-const mockContestData = {
+const mockContestData: Contest = {
   id: 'c1',
   name: 'test',
   owner: 'testuser',
-  status: 'ACTIVE' as const,
+  status: 'ACTIVE',
   xLabels: [],
   yLabels: [],
   squares: [
@@ -110,67 +111,33 @@ const mockContestData = {
       updatedBy: '',
     },
   ],
-  visibility: 'public' as const,
+  visibility: 'public',
   createdAt: '',
   updatedAt: '',
   createdBy: '',
   updatedBy: '',
 };
 
-let fetchShouldReject = false;
-let fetchRejectError: { code?: number; message: string } = { code: 404, message: 'not found' };
-
-vi.mock('../features/contests/contestThunks', async () => {
-  const actual = await vi.importActual('../features/contests/contestThunks');
-  return {
-    ...actual,
-    fetchContestByOwnerAndName: Object.assign(
-      vi.fn(() => ({
-        unwrap: () => {
-          if (fetchShouldReject) return Promise.reject(fetchRejectError);
-          return Promise.resolve(mockContestData);
-        },
-        type: 'contests/fetchContestByOwnerAndName/fulfilled',
-      })),
-      {
-        pending: { type: 'contests/fetchContestByOwnerAndName/pending' },
-        fulfilled: { type: 'contests/fetchContestByOwnerAndName/fulfilled' },
-        rejected: { type: 'contests/fetchContestByOwnerAndName/rejected' },
-      }
-    ),
-    fetchParticipants: Object.assign(
-      vi.fn(() => ({
-        unwrap: () => Promise.resolve([]),
-        type: 'contests/fetchParticipants/fulfilled',
-      })),
-      {
-        pending: { type: 'contests/fetchParticipants/pending' },
-        fulfilled: { type: 'contests/fetchParticipants/fulfilled' },
-        rejected: { type: 'contests/fetchParticipants/rejected' },
-      }
-    ),
-  };
-});
-
-import { fetchContestByOwnerAndName, fetchParticipants } from '../features/contests/contestThunks';
+const mockParticipants: Participant[] = [
+  {
+    id: 'p1',
+    contestId: 'c1',
+    userId: 'newuser',
+    role: 'participant',
+    maxSquares: 5,
+    joinedAt: '2024-01-01T00:30:00Z',
+    createdAt: '2024-01-01T00:30:00Z',
+    updatedAt: '',
+    createdBy: '',
+    updatedBy: '',
+  },
+];
 
 function createTestStore() {
   return configureStore({
     reducer: { contest: contestReducer, stats: statsReducer, toast: toastReducer, ws: wsReducer },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
   });
-}
-
-function simulateServerConnected(store: ReturnType<typeof createTestStore>) {
-  store.dispatch(
-    setConnectionDetails({
-      type: 'connected',
-      contestId: 'c1',
-      updatedBy: 'server',
-      timestamp: new Date().toISOString(),
-      connectionId: 'conn-1',
-    })
-  );
 }
 
 function createWrapper(store: ReturnType<typeof createTestStore>) {
@@ -197,8 +164,6 @@ beforeEach(() => {
   mockAuth.isLoading = false;
   mockAuth.isAuthenticated = true;
   mockAuth.user = { access_token: 'test-token', profile: { preferred_username: 'testuser' } };
-  fetchShouldReject = false;
-  fetchRejectError = { code: 404, message: 'not found' };
 });
 
 describe('useContestWebSocket', () => {
@@ -213,7 +178,6 @@ describe('useContestWebSocket', () => {
     expect(result.current.retryCount).toBe(0);
     expect(result.current.wsCloseCode).toBeNull();
     expect(result.current.hasFatalWsError).toBe(false);
-    expect(result.current.fetchErrorCode).toBeNull();
     expect(result.current.activityEvents).toEqual([]);
     expect(result.current.chatMessages).toEqual([]);
   });
@@ -314,6 +278,19 @@ describe('useContestWebSocket', () => {
     expect(result.current.retryCount).toBe(0);
   });
 
+  it('forceReconnect should close the socket and reset state', () => {
+    const mockClose = vi.fn();
+    mockGetWebSocket.mockReturnValue({ close: mockClose });
+    const store = createTestStore();
+    const { result } = renderHook(() => useContestWebSocket(defaultParams), {
+      wrapper: createWrapper(store),
+    });
+    act(() => result.current.forceReconnect());
+    expect(mockClose).toHaveBeenCalled();
+    expect(result.current.activityEvents).toEqual([]);
+    expect(result.current.isConnecting).toBe(true);
+  });
+
   describe('connectionStatus', () => {
     it('should be failed when connectionFailed', () => {
       const store = createTestStore();
@@ -357,96 +334,63 @@ describe('useContestWebSocket', () => {
     });
   });
 
-  describe('fetch contest effect', () => {
-    it('should fetch contest and seed activity events on connect', async () => {
+  describe('onConnected seeding', () => {
+    it('should seed activity events from connected message payload', async () => {
       mockReadyState = 1;
       const store = createTestStore();
       const { result } = renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
 
-      act(() => simulateServerConnected(store));
-
-      await waitFor(() => {
-        expect(fetchContestByOwnerAndName).toHaveBeenCalled();
+      act(() => {
+        capturedEventParams?.callbacks?.onConnected?.(mockContestData, mockParticipants);
       });
 
       await waitFor(() => {
-        expect(fetchParticipants).toHaveBeenCalledWith('c1');
+        // 1 claimed square + 1 quarter result + 1 participant (non-owner)
+        expect(result.current.activityEvents).toHaveLength(3);
       });
 
-      // should have seeded activity from claimed squares (1 claimed) + quarterResults (1)
-      await waitFor(() => {
-        expect(result.current.activityEvents).toHaveLength(2);
-      });
-
-      // square event first (earlier timestamp), then quarter result
-      expect(result.current.activityEvents[0].type).toBe('square_claimed');
-      expect(result.current.activityEvents[0].message).toContain('Alice');
-      expect(result.current.activityEvents[1].type).toBe('quarter_winner');
+      const types = result.current.activityEvents.map((e) => e.type);
+      expect(types).toContain('participant_added');
+      expect(types).toContain('square_claimed');
+      expect(types).toContain('quarter_winner');
     });
 
-    it('should not fetch if owner is undefined', async () => {
-      mockReadyState = 1;
-      const store = createTestStore();
-      renderHook(() => useContestWebSocket({ ...defaultParams, owner: undefined }), {
-        wrapper: createWrapper(store),
-      });
-
-      await new Promise((r) => setTimeout(r, 50));
-      expect(fetchContestByOwnerAndName).not.toHaveBeenCalled();
-    });
-
-    it('should not fetch if name is undefined', async () => {
-      mockReadyState = 1;
-      const store = createTestStore();
-      renderHook(() => useContestWebSocket({ ...defaultParams, name: undefined }), {
-        wrapper: createWrapper(store),
-      });
-      await new Promise((r) => setTimeout(r, 50));
-      expect(fetchContestByOwnerAndName).not.toHaveBeenCalled();
-    });
-
-    it('should not fetch if not connected', async () => {
-      mockReadyState = 3;
-      const store = createTestStore();
-      renderHook(() => useContestWebSocket(defaultParams), {
-        wrapper: createWrapper(store),
-      });
-      await new Promise((r) => setTimeout(r, 50));
-      expect(fetchContestByOwnerAndName).not.toHaveBeenCalled();
-    });
-
-    it('should set fetchErrorCode on fetch failure', async () => {
-      fetchShouldReject = true;
-      fetchRejectError = { code: 403, message: 'forbidden' };
+    it('should seed activity sorted by timestamp', async () => {
       mockReadyState = 1;
       const store = createTestStore();
       const { result } = renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
 
-      act(() => simulateServerConnected(store));
+      act(() => {
+        capturedEventParams?.callbacks?.onConnected?.(mockContestData, mockParticipants);
+      });
 
       await waitFor(() => {
-        expect(result.current.fetchErrorCode).toBe(403);
+        expect(result.current.activityEvents.length).toBeGreaterThan(0);
       });
+
+      const timestamps = result.current.activityEvents.map((e) => new Date(e.timestamp).getTime());
+      for (let i = 1; i < timestamps.length; i++) {
+        expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i - 1]);
+      }
     });
 
-    it('should default fetchErrorCode to 500 when code missing', async () => {
-      fetchShouldReject = true;
-      fetchRejectError = { message: 'unknown' };
+    it('should handle empty contest data gracefully', () => {
       mockReadyState = 1;
       const store = createTestStore();
       const { result } = renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
 
-      act(() => simulateServerConnected(store));
-
-      await waitFor(() => {
-        expect(result.current.fetchErrorCode).toBe(500);
+      const emptyContest: Contest = { ...mockContestData, squares: [], quarterResults: [] };
+      act(() => {
+        capturedEventParams?.callbacks?.onConnected?.(emptyContest, []);
       });
+
+      expect(result.current.activityEvents).toEqual([]);
     });
   });
 
@@ -470,9 +414,6 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
-      act(() => simulateServerConnected(store));
-      await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
-
       act(() => {
         capturedEventParams?.callbacks?.onSquareUpdate?.('val', 1, 2, 'Bob');
       });
@@ -491,9 +432,6 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
-      act(() => simulateServerConnected(store));
-      await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
-
       act(() => {
         capturedEventParams?.callbacks?.onContestUpdate?.('Q1');
       });
@@ -508,7 +446,7 @@ describe('useContestWebSocket', () => {
     it('onContestUpdate callback should not add event without status', () => {
       mockReadyState = 1;
       const store = createTestStore();
-      renderHook(() => useContestWebSocket(defaultParams), {
+      const { result } = renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
 
@@ -516,7 +454,7 @@ describe('useContestWebSocket', () => {
         capturedEventParams?.callbacks?.onContestUpdate?.(undefined);
       });
 
-      // No contest_status event should exist (empty string or undefined status is skipped)
+      expect(result.current.activityEvents).toHaveLength(0);
     });
 
     it('onQuarterResultUpdate callback should add event and call onWinnerSquare', async () => {
@@ -525,9 +463,6 @@ describe('useContestWebSocket', () => {
       const { result } = renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
-
-      act(() => simulateServerConnected(store));
-      await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
 
       act(() => {
         capturedEventParams?.callbacks?.onQuarterResultUpdate?.(
@@ -556,9 +491,6 @@ describe('useContestWebSocket', () => {
       renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
-
-      act(() => simulateServerConnected(store));
-      await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
 
       act(() => {
         capturedEventParams?.callbacks?.onQuarterResultUpdate?.(
@@ -643,7 +575,7 @@ describe('useContestWebSocket', () => {
   });
 
   describe('reset on owner/name change', () => {
-    it('should reset state when owner changes', async () => {
+    it('should reset activity events when owner changes', async () => {
       mockReadyState = 1;
       const store = createTestStore();
       let params = { ...defaultParams };
@@ -651,15 +583,17 @@ describe('useContestWebSocket', () => {
         wrapper: createWrapper(store),
       });
 
-      act(() => simulateServerConnected(store));
-      await waitFor(() => expect(fetchContestByOwnerAndName).toHaveBeenCalled());
+      act(() => {
+        capturedEventParams?.callbacks?.onConnected?.(mockContestData, mockParticipants);
+      });
+
+      await waitFor(() => expect(result.current.activityEvents.length).toBeGreaterThan(0));
 
       params = { ...defaultParams, owner: 'otheruser' };
       rerender();
 
       expect(result.current.activityEvents).toEqual([]);
       expect(result.current.chatMessages).toEqual([]);
-      expect(result.current.fetchErrorCode).toBeNull();
     });
   });
 
