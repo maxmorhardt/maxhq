@@ -29,7 +29,7 @@ vi.mock('react-oidc-context', () => ({
 
 // Mock react-use-websocket
 const mockSendJsonMessage = vi.fn();
-const mockGetWebSocket = vi.fn<[], WebSocket | null>(() => null);
+const mockGetWebSocket = vi.fn<() => WebSocket | null>(() => null);
 let mockLastMessage: MessageEvent | null = null;
 let mockReadyState = 1; // ReadyState.OPEN
 let wsOptions: Record<string, unknown> = {};
@@ -279,7 +279,7 @@ describe('useContestWebSocket', () => {
 
   it('forceReconnect should close the socket and reset state', () => {
     const mockClose = vi.fn();
-    mockGetWebSocket.mockReturnValue({ close: mockClose });
+    mockGetWebSocket.mockReturnValue({ close: mockClose } as unknown as WebSocket);
     const store = createTestStore();
     const { result } = renderHook(() => useContestWebSocket(defaultParams), {
       wrapper: createWrapper(store),
