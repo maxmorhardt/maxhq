@@ -29,7 +29,7 @@ vi.mock('react-oidc-context', () => ({
 
 // Mock react-use-websocket
 const mockSendJsonMessage = vi.fn();
-const mockGetWebSocket = vi.fn(() => null);
+const mockGetWebSocket = vi.fn<[], WebSocket | null>(() => null);
 let mockLastMessage: MessageEvent | null = null;
 let mockReadyState = 1; // ReadyState.OPEN
 let wsOptions: Record<string, unknown> = {};
@@ -123,13 +123,12 @@ const mockParticipants: Participant[] = [
     id: 'p1',
     contestId: 'c1',
     userId: 'newuser',
+    inviteId: '',
     role: 'participant',
     maxSquares: 5,
     joinedAt: '2024-01-01T00:30:00Z',
     createdAt: '2024-01-01T00:30:00Z',
     updatedAt: '',
-    createdBy: '',
-    updatedBy: '',
   },
 ];
 
