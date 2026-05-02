@@ -28,7 +28,7 @@ export interface CreateContestRequest {
   homeTeam?: string;
   awayTeam?: string;
   visibility?: ContestVisibility;
-  maxSquares: number;
+  maxSquares?: number;
 }
 
 export interface Square {

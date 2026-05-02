@@ -266,10 +266,12 @@ const contestSlice = createSlice({
     builder
       .addCase(updateSquare.pending, (state) => {
         state.squareLoading = true;
+        state.squareErrorCode = null;
         state.error = null;
       })
       .addCase(updateSquare.fulfilled, (state, action: PayloadAction<Square>) => {
         state.squareLoading = false;
+        state.squareErrorCode = null;
         const updatedSquare = action.payload;
 
         if (!state.currentContest) {
@@ -296,10 +298,12 @@ const contestSlice = createSlice({
     builder
       .addCase(clearSquare.pending, (state) => {
         state.squareLoading = true;
+        state.squareErrorCode = null;
         state.error = null;
       })
       .addCase(clearSquare.fulfilled, (state, action: PayloadAction<Square>) => {
         state.squareLoading = false;
+        state.squareErrorCode = null;
         const clearedSquare = action.payload;
 
         if (!state.currentContest) {

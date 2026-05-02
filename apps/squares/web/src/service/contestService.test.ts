@@ -21,7 +21,7 @@ import {
   updateParticipant,
   removeParticipant,
 } from './contestService';
-import type { PaginatedContestsResponse } from '../types/contest';
+import type { PaginatedContestsResponse, Participant } from '../types/contest';
 
 // Mock the axios api module
 vi.mock('../axios/api');
@@ -393,7 +393,7 @@ describe('contestService', () => {
   });
 
   it('should fetch participants for a contest', async () => {
-    const mockParticipants = [{ id: 'p1', userId: 'u1', role: 'participant' }];
+    const mockParticipants = [{ id: 'p1', userId: 'u1', role: 'participant' }] as Participant[];
     vi.mocked(api.get).mockResolvedValue({ data: mockParticipants });
 
     const result = await getParticipants('c1');

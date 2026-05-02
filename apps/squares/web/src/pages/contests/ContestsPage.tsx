@@ -293,7 +293,6 @@ export default function ContestsPage() {
             onPageChange={() => {}}
             onRowsPerPageChange={() => {}}
             title="My Contests"
-            hideCreateButton
           />
           <Box sx={{ mt: 3 }}>
             <ContestsTable
@@ -304,7 +303,6 @@ export default function ContestsPage() {
               onPageChange={() => {}}
               onRowsPerPageChange={() => {}}
               title="Joined Contests"
-              hideCreateButton
             />
           </Box>
         </Container>
@@ -343,7 +341,6 @@ export default function ContestsPage() {
             onPageChange={handleOwnedPageChange}
             onRowsPerPageChange={handleOwnedRowsPerPageChange}
             title="My Contests"
-            hideCreateButton
           />
         </Box>
 
@@ -363,7 +360,6 @@ export default function ContestsPage() {
               onPageChange={() => {}}
               onRowsPerPageChange={() => {}}
               title="Joined Contests"
-              hideCreateButton
               hidePagination
             />
           </Box>

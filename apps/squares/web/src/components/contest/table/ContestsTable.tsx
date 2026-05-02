@@ -1,7 +1,6 @@
-import { Add, Delete, Edit, EmojiEvents } from '@mui/icons-material';
+import { Delete, Edit, EmojiEvents } from '@mui/icons-material';
 import {
   Box,
-  Button,
   Chip,
   IconButton,
   Paper,
@@ -35,7 +34,6 @@ interface ContestsTableProps {
   onPageChange: (event: MouseEvent<HTMLButtonElement> | null, newPage: number) => void;
   onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
   title?: string;
-  hideCreateButton?: boolean;
   hidePagination?: boolean;
 }
 
@@ -47,7 +45,6 @@ export default function ContestsTable({
   onPageChange,
   onRowsPerPageChange,
   title = 'My Contests',
-  hideCreateButton = false,
   hidePagination = false,
 }: ContestsTableProps) {
   const theme = useTheme();
@@ -108,15 +105,6 @@ export default function ContestsTable({
           >
             {title}
           </Typography>
-          {!hideCreateButton && (
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate('/contests/create')}
-            >
-              Create Contest
-            </Button>
-          )}
         </Box>
 
         {/* table container */}

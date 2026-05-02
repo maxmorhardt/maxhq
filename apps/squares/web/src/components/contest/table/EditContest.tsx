@@ -123,14 +123,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   const titleText = isOwner ? 'Edit Contest' : 'Contest Details';
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      disableRestoreFocus
-      slotProps={{ backdrop: { onClick: handleClose } }}
-    >
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth disableRestoreFocus>
       <DialogTitle component="div" sx={{ pb: 1.5, pr: 7 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Edit fontSize="small" sx={{ color: 'text.secondary' }} />

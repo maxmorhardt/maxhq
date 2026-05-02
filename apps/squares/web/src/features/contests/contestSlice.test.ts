@@ -49,6 +49,7 @@ const initialState = {
   participantsLoading: false,
   invitesLoading: false,
   error: null as string | null,
+  squareErrorCode: null as number | null,
   pagination: { page: 1, limit: 5, total: 0, totalPages: 0, hasNext: false, hasPrevious: false },
 };
 

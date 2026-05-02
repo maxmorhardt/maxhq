@@ -155,7 +155,7 @@ describe('contestThunks', () => {
     it('fulfilled: adds contest', async () => {
       vi.mocked(createNewContest).mockResolvedValue(mockContest);
       const store = createTestStore();
-      await store.dispatch(createContest({ name: 'Test', owner: 'u1' }));
+      await store.dispatch(createContest({ name: 'Test', owner: 'u1', maxSquares: 10 }));
       expect(store.getState().contest.contests).toHaveLength(1);
     });
 
@@ -167,7 +167,7 @@ describe('contestThunks', () => {
         requestId: '',
       });
       const store = createTestStore();
-      await store.dispatch(createContest({ name: 'Test', owner: 'u1' }));
+      await store.dispatch(createContest({ name: 'Test', owner: 'u1', maxSquares: 10 }));
       expect(store.getState().contest.error).toBe('bad');
     });
   });
