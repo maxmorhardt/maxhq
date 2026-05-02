@@ -3,9 +3,16 @@ import { Box, Container, Typography } from '@mui/material';
 import LearnFAQs from '../../components/learn/LearnFAQs';
 import LearnFeatureCard from '../../components/learn/LearnFeatureCard';
 import LearnHowItWorksCard from '../../components/learn/LearnHowItWorksCard';
+import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import '../landing/LandingPage.css';
 
 // learn more page with how it works, features, and faqs
 export default function LearnMorePage() {
+  const header = useScrollAnimation();
+  const howItWorks = useScrollAnimation();
+  const features = useScrollAnimation();
+  const faqsAnim = useScrollAnimation();
+
   const howItWorksSteps = [
     {
       stepNumber: 1,
@@ -30,7 +37,7 @@ export default function LearnMorePage() {
     },
   ];
 
-  const features = [
+  const featuresList = [
     {
       icon: <Sports sx={{ color: '#667eea' }} />,
       title: 'Squares Made Easy',
@@ -105,9 +112,14 @@ export default function LearnMorePage() {
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
       {/* page header with title and description */}
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
+      <Box
+        ref={header.ref}
+        className={`scroll-section ${header.isVisible ? 'visible' : ''}`}
+        sx={{ textAlign: 'center', mb: 8 }}
+      >
         <Typography
           variant="h2"
+          className="reveal"
           sx={{
             fontWeight: 700,
             mb: 4,
@@ -119,6 +131,7 @@ export default function LearnMorePage() {
         </Typography>
         <Typography
           variant="h6"
+          className="reveal delay-1"
           sx={{
             color: 'white',
             maxWidth: 800,
@@ -133,9 +146,14 @@ export default function LearnMorePage() {
       </Box>
 
       {/* how it works section with 3-step process */}
-      <Box sx={{ mb: 10 }}>
+      <Box
+        ref={howItWorks.ref}
+        className={`scroll-section ${howItWorks.isVisible ? 'visible' : ''}`}
+        sx={{ mb: 10 }}
+      >
         <Typography
           variant="h3"
+          className="reveal"
           sx={{
             color: 'white',
             fontWeight: 700,
@@ -149,22 +167,28 @@ export default function LearnMorePage() {
         <Box
           sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 4 }}
         >
-          {howItWorksSteps.map((step) => (
-            <LearnHowItWorksCard
-              key={step.stepNumber}
-              stepNumber={step.stepNumber}
-              title={step.title}
-              description={step.description}
-              color={step.color}
-            />
+          {howItWorksSteps.map((step, index) => (
+            <Box key={step.stepNumber} className={`reveal delay-${index + 1}`}>
+              <LearnHowItWorksCard
+                stepNumber={step.stepNumber}
+                title={step.title}
+                description={step.description}
+                color={step.color}
+              />
+            </Box>
           ))}
         </Box>
       </Box>
 
       {/* platform features grid */}
-      <Box sx={{ mb: 10 }}>
+      <Box
+        ref={features.ref}
+        className={`scroll-section ${features.isVisible ? 'visible' : ''}`}
+        sx={{ mb: 10 }}
+      >
         <Typography
           variant="h3"
+          className="reveal"
           sx={{
             color: 'white',
             fontWeight: 700,
@@ -176,21 +200,23 @@ export default function LearnMorePage() {
         </Typography>
 
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-          {features.map((feature) => (
-            <LearnFeatureCard
-              key={feature.title}
-              icon={feature.icon}
-              title={feature.title}
-              description={feature.description}
-            />
+          {featuresList.map((feature, index) => (
+            <Box key={feature.title} className={`reveal delay-${index + 1}`}>
+              <LearnFeatureCard
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+              />
+            </Box>
           ))}
         </Box>
       </Box>
 
       {/* frequently asked questions section */}
-      <Box>
+      <Box ref={faqsAnim.ref} className={`scroll-section ${faqsAnim.isVisible ? 'visible' : ''}`}>
         <Typography
           variant="h3"
+          className="reveal"
           sx={{
             color: 'white',
             fontWeight: 700,
@@ -203,7 +229,9 @@ export default function LearnMorePage() {
 
         <Box sx={{ maxWidth: 800, mx: 'auto' }}>
           {faqs.map((faq, index) => (
-            <LearnFAQs key={index} question={faq.question} answer={faq.answer} />
+            <Box key={index} className={`reveal delay-${Math.min(index + 1, 7)}`}>
+              <LearnFAQs question={faq.question} answer={faq.answer} />
+            </Box>
           ))}
         </Box>
       </Box>

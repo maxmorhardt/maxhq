@@ -1,4 +1,4 @@
-import { ArrowBack, EmojiEvents, Groups, Lock, Public } from '@mui/icons-material';
+import { ArrowBack, Lock, Public } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -12,11 +12,10 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
-import FormCard from '../../../components/common/FormCard';
 import { selectContestLoading } from '../../../features/contests/contestSelectors';
 import { clearError } from '../../../features/contests/contestSlice';
 import { createContest } from '../../../features/contests/contestThunks';
@@ -24,21 +23,6 @@ import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import type { APIError } from '../../../types/error';
 import type { ContestVisibility } from '../../../types/contest';
 import { gradients } from '../../../types/gradients';
-
-const infoCards = [
-  {
-    icon: <EmojiEvents sx={{ mr: 2, color: '#ffd700' }} />,
-    title: "What's Next?",
-    details:
-      "After creating your contest, you'll be able to customize the grid, set entry fees, and invite participants to join.",
-  },
-  {
-    icon: <Groups sx={{ mr: 2, color: '#f093fb' }} />,
-    title: 'Share & Invite',
-    details:
-      'Once created, you can share your contest link with friends and colleagues to get them involved.',
-  },
-];
 
 // create contest page with form and info cards
 export default function CreateContestPage() {
@@ -108,73 +92,61 @@ export default function CreateContestPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
       {/* page header with title and description */}
-      <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 4 } }}>
+      <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 3 } }}>
         <Typography
           sx={{
             fontWeight: 700,
-            mb: 2,
+            mb: 1,
             background: gradients.textGradient,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
-            fontSize: { xs: '1.5rem', sm: '2rem' },
+            fontSize: { xs: '1.5rem', sm: '1.85rem' },
           }}
         >
           Create New Contest
         </Typography>
         <Typography
           sx={{
-            color: 'white',
-            opacity: 0.8,
-            maxWidth: 800,
+            color: 'rgba(255,255,255,0.55)',
+            maxWidth: 560,
             mx: 'auto',
-            fontSize: { xs: '0.9rem', sm: '1.1rem' },
+            fontSize: { xs: '0.85rem', sm: '0.95rem' },
           }}
         >
-          Set up your squares contest in minutes. Add teams, customize settings, and invite
-          participants.
+          Set up your squares contest in minutes.
         </Typography>
       </Box>
 
       {/* back to contests button */}
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 1.5 }}>
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate('/contests')}
+          size="small"
           sx={{
-            color: 'rgba(255,255,255,0.8)',
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: '0.85rem',
           }}
         >
           Back to Contests
         </Button>
       </Box>
 
-      {/* form and info cards grid */}
-      <Box
+      {/* contest creation form with validation */}
+      <Paper
         sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
-          gap: 4,
+          background: theme.palette.grey[900],
+          border: `1px solid ${theme.palette.grey[800]}`,
+          borderRadius: 3,
         }}
       >
-        {/* contest creation form with validation */}
-        <Paper
-          sx={{
-            p: 4,
-            background: theme.palette.grey[900],
-            border: `1px solid ${theme.palette.grey[800]}`,
-            borderRadius: 3,
-          }}
-        >
-          <Typography sx={{ mb: 2, fontWeight: 600, fontSize: { xs: '1.1rem', sm: '2.1rem' } }}>
-            Contest Details
-          </Typography>
-
+        <Box sx={{ p: { xs: 2, sm: 4 } }}>
           {!auth.isAuthenticated && (
             <Alert severity="warning" sx={{ mb: 3 }}>
-              You must be logged in to create a contest. Please sign in to continue.
+              You must be logged in to create a contest.
             </Alert>
           )}
 
@@ -184,52 +156,68 @@ export default function CreateContestPage() {
             </Alert>
           )}
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-          >
-            <TextField
-              name="name"
-              label="Contest Name"
-              value={formData.name}
-              onChange={handleInputChange}
-              fullWidth
-              required
-              disabled={loading}
-              placeholder="e.g., Super Bowl 2025, Office Pool, Championship Game"
-              slotProps={{ htmlInput: { maxLength: 20 } }}
-            />
+          <Box component="form" onSubmit={handleSubmit}>
+            {/* Section: Basics */}
+            <FormSection title="Basics" description="A short, recognizable name.">
+              <TextField
+                name="name"
+                label="Contest Name"
+                value={formData.name}
+                onChange={handleInputChange}
+                fullWidth
+                required
+                size="small"
+                disabled={loading}
+                slotProps={{ htmlInput: { maxLength: 20 } }}
+              />
+            </FormSection>
 
-            <TextField
-              name="homeTeam"
-              label="Home Team (Optional)"
-              value={formData.homeTeam}
-              onChange={handleInputChange}
-              fullWidth
-              disabled={loading}
-              placeholder="e.g., Chiefs, Cowboys, Patriots"
-              slotProps={{ htmlInput: { maxLength: 20 } }}
-            />
+            <SectionDivider />
 
-            <TextField
-              name="awayTeam"
-              label="Away Team (Optional)"
-              value={formData.awayTeam}
-              onChange={handleInputChange}
-              fullWidth
-              disabled={loading}
-              placeholder="e.g., Bills, Packers, Steelers"
-              slotProps={{ htmlInput: { maxLength: 20 } }}
-            />
-
-            <Box>
-              <Typography
-                variant="body2"
-                sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, fontWeight: 500 }}
+            {/* Section: Teams */}
+            <FormSection title="Teams" description="Optional matchup shown on the grid.">
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                  gap: 1.5,
+                }}
               >
-                Visibility
-              </Typography>
+                <TextField
+                  name="homeTeam"
+                  label="Home Team"
+                  value={formData.homeTeam}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                  disabled={loading}
+                  slotProps={{ htmlInput: { maxLength: 20 } }}
+                />
+
+                <TextField
+                  name="awayTeam"
+                  label="Away Team"
+                  value={formData.awayTeam}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                  disabled={loading}
+                  slotProps={{ htmlInput: { maxLength: 20 } }}
+                />
+              </Box>
+            </FormSection>
+
+            <SectionDivider />
+
+            {/* Section: Visibility */}
+            <FormSection
+              title="Visibility"
+              description={
+                visibility === 'private'
+                  ? 'Invite-only. Hidden from non-participants.'
+                  : 'Anyone can view. Only invited participants can claim squares.'
+              }
+            >
               <ToggleButtonGroup
                 value={visibility}
                 exclusive
@@ -240,36 +228,34 @@ export default function CreateContestPage() {
                 size="small"
               >
                 <ToggleButton value="private">
-                  <Lock sx={{ mr: 0.5, fontSize: '1rem' }} />
+                  <Lock sx={{ mr: 0.75, fontSize: '1rem' }} />
                   Private
                 </ToggleButton>
                 <ToggleButton value="public">
-                  <Public sx={{ mr: 0.5, fontSize: '1rem' }} />
+                  <Public sx={{ mr: 0.75, fontSize: '1rem' }} />
                   Public
                 </ToggleButton>
               </ToggleButtonGroup>
-              <Typography
-                variant="caption"
-                sx={{ color: 'rgba(255,255,255,0.4)', mt: 0.5, display: 'block' }}
-              >
-                {visibility === 'private'
-                  ? 'Only participants with an invite link can view this contest.'
-                  : 'Anyone can view this contest, but only invited participants can claim squares.'}
-              </Typography>
-            </Box>
+            </FormSection>
 
-            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+            {/* Footer actions */}
+            <Box
+              sx={{
+                mt: 4,
+                pt: 2.5,
+                borderTop: `1px solid ${theme.palette.grey[800]}`,
+                display: 'flex',
+                gap: 1.5,
+                justifyContent: 'flex-end',
+                flexWrap: 'wrap',
+              }}
+            >
               <Button
                 type="button"
-                variant="outlined"
+                variant="text"
                 onClick={() => navigate('/contests')}
                 disabled={loading}
-                sx={{
-                  flex: 1,
-                  py: 1.5,
-                  borderColor: gradients.background,
-                  color: 'rgba(255,255,255,0.8)',
-                }}
+                sx={{ color: 'rgba(255,255,255,0.7)' }}
               >
                 Cancel
               </Button>
@@ -277,31 +263,71 @@ export default function CreateContestPage() {
                 type="submit"
                 variant="contained"
                 disabled={loading || !auth.isAuthenticated}
-                sx={{
-                  flex: 2,
-                  py: 1.5,
-                }}
+                sx={{ minWidth: 160 }}
               >
                 {loading ? <CircularProgress size={18} color="inherit" /> : 'Create Contest'}
               </Button>
             </Box>
           </Box>
-        </Paper>
+        </Box>
+      </Paper>
+    </Container>
+  );
+}
 
-        {/* info cards explaining next steps */}
-        <Box
+interface FormSectionProps {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}
+
+function FormSection({ title, description, children }: FormSectionProps) {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: '200px 1fr' },
+        columnGap: { sm: 4 },
+        rowGap: 1,
+        py: { xs: 2, sm: 2.5 },
+      }}
+    >
+      <Box>
+        <Typography
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: { xs: 2, sm: 2, md: 2, lg: 4 },
-            alignSelf: 'center',
+            color: 'white',
+            fontWeight: 600,
+            fontSize: '0.95rem',
+            mb: 0.5,
           }}
         >
-          {infoCards.map((card) => (
-            <FormCard key={card.title} icon={card.icon} title={card.title} details={card.details} />
-          ))}
-        </Box>
+          {title}
+        </Typography>
+        {description && (
+          <Typography
+            sx={{
+              color: 'rgba(255,255,255,0.45)',
+              fontSize: '0.78rem',
+              lineHeight: 1.5,
+            }}
+          >
+            {description}
+          </Typography>
+        )}
       </Box>
-    </Container>
+      <Box>{children}</Box>
+    </Box>
+  );
+}
+
+function SectionDivider() {
+  return (
+    <Box
+      sx={{
+        height: '1px',
+        background:
+          'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
+      }}
+    />
   );
 }
