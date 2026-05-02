@@ -64,6 +64,16 @@ export default function ContestsPage() {
     }, 1000);
   };
 
+  // clear pending debounce on unmount to avoid setState on unmounted component
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+    };
+  }, []);
+
   // joined contests state
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
@@ -338,6 +348,7 @@ export default function ContestsPage() {
               onRowsPerPageChange={() => {}}
               title="Joined Contests"
               hideCreateButton
+              hidePagination
             />
           </Box>
         </Box>

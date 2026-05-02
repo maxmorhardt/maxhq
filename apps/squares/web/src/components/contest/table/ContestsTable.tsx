@@ -36,6 +36,7 @@ interface ContestsTableProps {
   onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
   title?: string;
   hideCreateButton?: boolean;
+  hidePagination?: boolean;
 }
 
 export default function ContestsTable({
@@ -47,6 +48,7 @@ export default function ContestsTable({
   onRowsPerPageChange,
   title = 'My Contests',
   hideCreateButton = false,
+  hidePagination = false,
 }: ContestsTableProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -406,8 +408,8 @@ export default function ContestsTable({
             </TableContainer>
           )}
 
-          {/* Pagination - only show when there are contests */}
-          {contests.length > 0 && (
+          {/* Pagination - only show when there are contests and not hidden */}
+          {contests.length > 0 && !hidePagination && (
             <TablePagination
               component="div"
               count={totalCount}
