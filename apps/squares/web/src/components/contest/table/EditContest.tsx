@@ -1,20 +1,21 @@
-import { Edit } from '@mui/icons-material';
+import { Edit, LockOutlined, PersonOutlined, VisibilityOutlined } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   IconButton,
+  Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../../features/contests/contestSelectors';
@@ -28,72 +29,78 @@ interface EditContestProps {
   onClose: () => void;
 }
 
+function DetailRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box sx={{ color: 'text.disabled', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        {icon}
+      </Box>
+      <Typography variant="body2" sx={{ color: 'text.disabled', minWidth: 72, flexShrink: 0 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function EditContest({ open, onClose }: EditContestProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
   const contest = useAppSelector(selectCurrentContest);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // form state for editable fields
-  const [contestName, setContestName] = useState('');
   const [homeTeam, setHomeTeam] = useState('');
   const [awayTeam, setAwayTeam] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // check if current user owns the contest
   const isOwner = auth.user?.profile?.preferred_username === contest?.owner;
   const currentStatus = getStatusOption(contest?.status || 'ACTIVE');
 
-  // calculate status flags
   const contestStatus = contest?.status;
   const isCanceled = contestStatus === 'DELETED';
   const isFinished = contestStatus === 'FINISHED';
   const isInGame = contestStatus && ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
   const isDisabled = isCanceled || isFinished;
 
-  const getStatusDisplay = () => {
-    if (isCanceled) {
-      return 'Deleted';
-    }
+  const createdDate = contest?.createdAt
+    ? new Date(contest.createdAt).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : '—';
 
-    if (isFinished) {
-      return 'Finished';
-    }
-
-    if (isInGame) {
-      return `In Progress • ${contestStatus}`;
-    }
-
-    return `Active`;
-  };
-
-  // initialize form with contest data when modal opens
   useEffect(() => {
     if (contest && open) {
-      setContestName(contest.name);
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
     }
   }, [contest, open]);
 
-  // validate and dispatch update action
   const handleSave = async () => {
     if (!isOwner || !contest?.id) return;
-
-    // Validate contest name
-    if (!contestName.trim()) {
-      showToast('Contest name is required', 'error');
-      return;
-    }
-
     setLoading(true);
     try {
-      const updates = {
-        homeTeam: homeTeam.trim() || undefined,
-        awayTeam: awayTeam.trim() || undefined,
-      };
-
-      await dispatch(updateContest({ id: contest.id, updates })).unwrap();
+      await dispatch(
+        updateContest({
+          id: contest.id,
+          updates: {
+            homeTeam: homeTeam.trim() || undefined,
+            awayTeam: awayTeam.trim() || undefined,
+          },
+        })
+      ).unwrap();
       showToast('Contest updated successfully', 'success');
       onClose();
     } catch (error) {
@@ -103,9 +110,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     }
   };
 
-  // reset form to original values on close
   const handleClose = () => {
-    // Reset form to current values
     if (contest) {
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
@@ -113,132 +118,142 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     onClose();
   };
 
-  if (!contest) {
-    return null;
-  }
+  if (!contest) return null;
 
-  // show read-only message if user is not the owner
-  if (!isOwner) {
-    return (
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ pr: 6 }}>
-          Contest Details
-          <IconButton
-            onClick={onClose}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Typography color="text.secondary">
-            Only the contest owner can edit contest settings.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Close</Button>
-        </DialogActions>
-      </Dialog>
-    );
-  }
+  const titleText = isOwner ? 'Edit Contest' : 'Contest Details';
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      {/* dialog title with edit icon and close button */}
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 2, pr: 6 }}>
-        <Edit />
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          Edit Contest
-        </Typography>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth disableRestoreFocus>
+      <DialogTitle component="div" sx={{ pb: 1.5, pr: 7 }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Edit fontSize="small" sx={{ color: 'text.secondary' }} />
+          <Typography component="span" sx={{ fontWeight: 700, fontSize: '1.1rem', flexGrow: 1 }}>
+            {titleText}
+          </Typography>
+          <Chip
+            label={currentStatus.label}
+            size="small"
+            sx={{
+              background: currentStatus.color,
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '0.7rem',
+              height: 22,
+            }}
+          />
+        </Stack>
         <IconButton
+          ref={closeButtonRef}
           onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
+          size="small"
+          aria-label="Close dialog"
+          sx={{ position: 'absolute', right: 10, top: 10, color: 'text.secondary' }}
         >
-          <CloseIcon />
+          <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* current status display card */}
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  mb: 1,
-                }}
-              >
-                <Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 600 }}>
-                  Contest Status
-                </Typography>
-                <Chip
-                  label={currentStatus?.label}
-                  size="small"
-                  sx={{
-                    background: currentStatus.color,
-                    color: 'white',
-                    fontSize: '0.8rem',
-                  }}
-                />
-              </Box>
-              <Typography variant="body1" sx={{ color: 'white', opacity: 0.9 }}>
-                {getStatusDisplay()}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          {/* contest name input */}
-          <TextField fullWidth label="Contest Name" value={contestName} disabled />
-
-          {/* team name inputs */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              fullWidth
-              label="Home Team"
-              value={homeTeam}
-              onChange={(e) => setHomeTeam(stripDangerousChars(e.target.value))}
-              placeholder="Enter home team name"
-              disabled={isDisabled}
-              slotProps={{ htmlInput: { maxLength: 20 } }}
-            />
-            <TextField
-              fullWidth
-              label="Away Team"
-              value={awayTeam}
-              onChange={(e) => setAwayTeam(stripDangerousChars(e.target.value))}
-              placeholder="Enter away team name"
-              disabled={isDisabled}
-              slotProps={{ htmlInput: { maxLength: 20 } }}
-            />
+      <DialogContent sx={{ pt: 0 }}>
+        <Stack spacing={2.5}>
+          {/* Contest meta info */}
+          <Box
+            sx={{
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              px: 2,
+              py: 1.5,
+            }}
+          >
+            <Stack spacing={1}>
+              <DetailRow icon={<Edit sx={{ fontSize: 16 }} />} label="Name" value={contest.name} />
+              <DetailRow
+                icon={<PersonOutlined sx={{ fontSize: 16 }} />}
+                label="Owner"
+                value={contest.owner}
+              />
+              <DetailRow
+                icon={<VisibilityOutlined sx={{ fontSize: 16 }} />}
+                label="Visibility"
+                value={contest.visibility === 'public' ? 'Public' : 'Private'}
+              />
+              <DetailRow
+                icon={<LockOutlined sx={{ fontSize: 16 }} />}
+                label="Created"
+                value={createdDate}
+              />
+            </Stack>
           </Box>
-        </Box>
+
+          {isOwner && (
+            <>
+              <Divider />
+
+              {(isCanceled || isFinished) && (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  This contest is {isCanceled ? 'deleted' : 'finished'} and cannot be edited.
+                </Typography>
+              )}
+
+              {isInGame && (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Game is in progress — team names can still be updated.
+                </Typography>
+              )}
+
+              <Stack direction="row" spacing={2}>
+                <Tooltip
+                  title={isDisabled ? 'Cannot edit a finished or deleted contest' : ''}
+                  placement="top"
+                >
+                  <span style={{ flex: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Home Team"
+                      value={homeTeam}
+                      onChange={(e) => setHomeTeam(stripDangerousChars(e.target.value))}
+                      placeholder="Enter home team"
+                      disabled={isDisabled}
+                      slotProps={{ htmlInput: { maxLength: 20 } }}
+                    />
+                  </span>
+                </Tooltip>
+                <Tooltip
+                  title={isDisabled ? 'Cannot edit a finished or deleted contest' : ''}
+                  placement="top"
+                >
+                  <span style={{ flex: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Away Team"
+                      value={awayTeam}
+                      onChange={(e) => setAwayTeam(stripDangerousChars(e.target.value))}
+                      placeholder="Enter away team"
+                      disabled={isDisabled}
+                      slotProps={{ htmlInput: { maxLength: 20 } }}
+                    />
+                  </span>
+                </Tooltip>
+              </Stack>
+            </>
+          )}
+        </Stack>
       </DialogContent>
 
-      {/* save button */}
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={loading || isDisabled}
-          sx={{
-            minWidth: 100,
-          }}
-        >
-          {loading ? 'Saving...' : 'Save Changes'}
+      <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
+        <Button onClick={handleClose} color="inherit">
+          {isOwner ? 'Cancel' : 'Close'}
         </Button>
+        {isOwner && (
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={loading || isDisabled}
+            sx={{ minWidth: 120 }}
+          >
+            {loading ? 'Saving…' : 'Save Changes'}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

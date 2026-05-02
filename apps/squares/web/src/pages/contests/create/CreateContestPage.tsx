@@ -6,6 +6,7 @@ import {
   CircularProgress,
   Container,
   Paper,
+  Slider,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -40,6 +41,7 @@ export default function CreateContestPage() {
     awayTeam: '',
   });
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
+  const [maxSquares, setMaxSquares] = useState<number>(10);
   const [error, setError] = useState('');
 
   // update form data on input change
@@ -80,6 +82,7 @@ export default function CreateContestPage() {
           homeTeam: formData.homeTeam.trim() || undefined,
           awayTeam: formData.awayTeam.trim() || undefined,
           visibility,
+          maxSquares,
         })
       ).unwrap();
 
@@ -92,9 +95,9 @@ export default function CreateContestPage() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1.5, sm: 3 } }}>
       {/* page header with title and description */}
-      <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 3 } }}>
+      <Box sx={{ textAlign: 'center', mb: { xs: 1.5, sm: 2 } }}>
         <Typography
           sx={{
             fontWeight: 700,
@@ -121,7 +124,7 @@ export default function CreateContestPage() {
       </Box>
 
       {/* back to contests button */}
-      <Box sx={{ mb: 1.5 }}>
+      <Box sx={{ mb: 1 }}>
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate('/contests')}
@@ -143,7 +146,7 @@ export default function CreateContestPage() {
           borderRadius: 3,
         }}
       >
-        <Box sx={{ p: { xs: 2, sm: 4 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3 } }}>
           {!auth.isAuthenticated && (
             <Alert severity="warning" sx={{ mb: 3 }}>
               You must be logged in to create a contest.
@@ -238,11 +241,46 @@ export default function CreateContestPage() {
               </ToggleButtonGroup>
             </FormSection>
 
+            <SectionDivider />
+
+            {/* Section: Owner Squares */}
+            <FormSection
+              title="Your Squares"
+              description={`Maximum squares you can claim. Counts toward the 100-square total.`}
+            >
+              <Box sx={{ px: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    mb: 0.5,
+                  }}
+                >
+                  <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
+                    Max squares
+                  </Typography>
+                  <Typography sx={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}>
+                    {maxSquares}
+                  </Typography>
+                </Box>
+                <Slider
+                  value={maxSquares}
+                  onChange={(_, val) => setMaxSquares(val as number)}
+                  min={1}
+                  max={100}
+                  step={1}
+                  valueLabelDisplay="auto"
+                  disabled={loading}
+                />
+              </Box>
+            </FormSection>
+
             {/* Footer actions */}
             <Box
               sx={{
-                mt: 4,
-                pt: 2.5,
+                mt: 3,
+                pt: 2,
                 borderTop: `1px solid ${theme.palette.grey[800]}`,
                 display: 'flex',
                 gap: 1.5,
@@ -286,10 +324,10 @@ function FormSection({ title, description, children }: FormSectionProps) {
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: '200px 1fr' },
-        columnGap: { sm: 4 },
-        rowGap: 1,
-        py: { xs: 2, sm: 2.5 },
+        gridTemplateColumns: { xs: '1fr', sm: '140px 1fr' },
+        columnGap: { sm: 3 },
+        rowGap: 0.75,
+        py: 1.5,
       }}
     >
       <Box>

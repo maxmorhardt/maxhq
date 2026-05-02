@@ -74,6 +74,7 @@ describe('contestSocketEventHandler', () => {
     dispatch = vi.fn() as unknown as HandleWSEventParams['dispatch'];
     lastProcessedMessageRef = { current: null };
     callbacks = {
+      onConnected: vi.fn(),
       onSquareUpdate: vi.fn(),
       onContestUpdate: vi.fn(),
       onQuarterResultUpdate: vi.fn(),

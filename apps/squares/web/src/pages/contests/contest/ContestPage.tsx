@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import ActivityFeed from '../../../components/contest/sidebar/ActivityFeed';
@@ -12,10 +12,14 @@ import WinnerCelebrationDialog from '../../../components/contest/WinnerCelebrati
 import NotFoundPage from '../../error/NotFoundPage';
 import ForbiddenPage from '../../error/ForbiddenPage';
 import UnauthorizedPage from '../../error/UnauthorizedPage';
-import RedirectingToLogin from '../../../components/common/RedirectingToLogin';
+import LoadingScreen from '../../../components/common/LoadingScreen';
 import LiveChat from '../../../components/contest/sidebar/LiveChat';
 import WinnersBoard from '../../../components/contest/sidebar/WinnersBoard';
-import { selectCurrentContest } from '../../../features/contests/contestSelectors';
+import {
+  selectCurrentContest,
+  selectSquareErrorCode,
+} from '../../../features/contests/contestSelectors';
+import { clearSquareErrorCode } from '../../../features/contests/contestSlice';
 import { updateSquare } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
@@ -30,6 +34,7 @@ export default function ContestPage() {
   const { owner, name } = useParams<{ owner: string; name: string }>();
 
   const currentContest = useAppSelector(selectCurrentContest);
+  const squareErrorCode = useAppSelector(selectSquareErrorCode);
 
   const [randomSquareLoading, setRandomSquareLoading] = useState(false);
   const [newWinnerSquare, setNewWinnerSquare] = useState<{ row: number; col: number } | null>(null);
@@ -88,8 +93,7 @@ export default function ContestPage() {
     retryCount,
     wsCloseCode,
     hasFatalWsError,
-    fetchErrorCode,
-    hasFetchedContest,
+    forceReconnect,
   } = useContestWebSocket({
     owner,
     name,
@@ -98,6 +102,14 @@ export default function ContestPage() {
     onWinnerSquare,
     onWinnerDialog,
   });
+
+  // on 409 conflict, our local state is stale — reconnect to get fresh data
+  useEffect(() => {
+    if (squareErrorCode === 409) {
+      dispatch(clearSquareErrorCode());
+      forceReconnect();
+    }
+  }, [squareErrorCode, dispatch, forceReconnect]);
 
   const handleRandomSquare = async () => {
     if (!auth.isAuthenticated) {
@@ -148,26 +160,14 @@ export default function ContestPage() {
 
   // show redirecting component while signin redirect is in progress
   if (auth.isLoading && auth.activeNavigator === 'signinRedirect') {
-    return <RedirectingToLogin />;
+    return (
+      <LoadingScreen title="Redirecting to sign in..." subtitle="You will be redirected shortly" />
+    );
   }
 
   // prompt unauthenticated users to sign in (skip loading state during silent sign-out)
   if ((!auth.isLoading && !auth.isAuthenticated) || auth.activeNavigator === 'signoutSilent') {
     return <UnauthorizedPage />;
-  }
-
-  // handle HTTP errors from contest fetch
-  if (fetchErrorCode === 401) {
-    return <UnauthorizedPage />;
-  }
-  if (fetchErrorCode === 403) {
-    return <ForbiddenPage />;
-  }
-  if (fetchErrorCode === 404) {
-    return <NotFoundPage />;
-  }
-  if (fetchErrorCode && fetchErrorCode >= 400) {
-    return <GenericErrorDisplay />;
   }
 
   // show error if connection failed after max retries
@@ -184,11 +184,6 @@ export default function ContestPage() {
       return <NotFoundPage />;
     }
     return <GenericErrorDisplay />;
-  }
-
-  // show error if contest not found after fetch
-  if (!currentContest && hasFetchedContest) {
-    return <NotFoundPage />;
   }
 
   // show skeleton while connecting or loading contest data

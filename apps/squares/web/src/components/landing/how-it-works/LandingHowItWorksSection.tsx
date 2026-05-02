@@ -80,7 +80,7 @@ export default function LandingHowItWorksSection({ animRef, isVisible }: Props) 
           }}
         >
           {howItWorksSteps.map((step, index) => (
-            <Box key={index} className={`reveal delay-${index + 2}`}>
+            <Box key={index} className={`reveal delay-${index + 2}`} sx={{ height: '100%' }}>
               <LandingHowItWorksCard
                 icon={step.icon}
                 title={step.title}

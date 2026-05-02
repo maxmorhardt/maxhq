@@ -3,7 +3,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from './contestSlice';
 import {
   fetchContestsByOwner,
-  fetchContestByOwnerAndName,
   createContest,
   updateSquare,
   clearSquare,
@@ -25,7 +24,6 @@ import type { Contest, Square } from '../../types/contest';
 
 vi.mock('../../service/contestService', () => ({
   getContestsByOwner: vi.fn(),
-  getContestByOwnerAndName: vi.fn(),
   createNewContest: vi.fn(),
   updateSquareValueById: vi.fn(),
   clearSquareById: vi.fn(),
@@ -46,7 +44,6 @@ vi.mock('../../service/contestService', () => ({
 
 import {
   getContestsByOwner,
-  getContestByOwnerAndName,
   createNewContest,
   updateSquareValueById,
   clearSquareById,
@@ -154,32 +151,11 @@ describe('contestThunks', () => {
     });
   });
 
-  describe('fetchContestByOwnerAndName', () => {
-    it('fulfilled: sets current contest', async () => {
-      vi.mocked(getContestByOwnerAndName).mockResolvedValue(mockContest);
-      const store = createTestStore();
-      await store.dispatch(fetchContestByOwnerAndName({ owner: 'u1', name: 'Test' }));
-      expect(store.getState().contest.currentContest).toEqual(mockContest);
-    });
-
-    it('rejected: sets error', async () => {
-      vi.mocked(getContestByOwnerAndName).mockRejectedValue({
-        code: 404,
-        message: 'not found',
-        timestamp: '',
-        requestId: '',
-      });
-      const store = createTestStore();
-      await store.dispatch(fetchContestByOwnerAndName({ owner: 'u1', name: 'nope' }));
-      expect(store.getState().contest.error).toBe('not found');
-    });
-  });
-
   describe('createContest', () => {
     it('fulfilled: adds contest', async () => {
       vi.mocked(createNewContest).mockResolvedValue(mockContest);
       const store = createTestStore();
-      await store.dispatch(createContest({ name: 'Test', owner: 'u1' }));
+      await store.dispatch(createContest({ name: 'Test', owner: 'u1', maxSquares: 10 }));
       expect(store.getState().contest.contests).toHaveLength(1);
     });
 
@@ -191,7 +167,7 @@ describe('contestThunks', () => {
         requestId: '',
       });
       const store = createTestStore();
-      await store.dispatch(createContest({ name: 'Test', owner: 'u1' }));
+      await store.dispatch(createContest({ name: 'Test', owner: 'u1', maxSquares: 10 }));
       expect(store.getState().contest.error).toBe('bad');
     });
   });

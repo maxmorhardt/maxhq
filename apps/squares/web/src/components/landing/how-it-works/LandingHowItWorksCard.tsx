@@ -28,6 +28,8 @@ export default function LandingHowItWorksCard({
         transition: 'all 0.3s ease',
         background: theme.palette.grey[900],
         border: `1px solid ${theme.palette.grey[800]}`,
+        height: '100%',
+        boxSizing: 'border-box',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: '0 12px 32px rgba(255,255,255,0.1)',

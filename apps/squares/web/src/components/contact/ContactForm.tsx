@@ -1,6 +1,6 @@
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Send } from '@mui/icons-material';
-import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Button, Paper, Skeleton, TextField, Typography, useTheme } from '@mui/material';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { stripDangerousChars } from '../../utils/sanitize';
 
@@ -24,6 +24,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
     message: '',
   });
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const siteKey = import.meta.env.PROD ? '0x4AAAAAACKD7d5JYPJqlXPI' : '1x00000000000000000000AA';
 
   // update form data with new input value
@@ -112,7 +113,21 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
         />
 
         {/* turnstile verification */}
-        <Turnstile siteKey={siteKey} onSuccess={setTurnstileToken} />
+        <Box sx={{ position: 'relative', width: 300, height: 65 }}>
+          <Turnstile
+            siteKey={siteKey}
+            onBeforeInteractive={() => setTurnstileReady(true)}
+            onSuccess={(token) => {
+              setTurnstileToken(token);
+              setTurnstileReady(true);
+            }}
+          />
+          {!turnstileReady && (
+            <Box sx={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+              <Skeleton variant="rectangular" width={300} height={65} sx={{ borderRadius: 1 }} />
+            </Box>
+          )}
+        </Box>
 
         {/* submit button */}
         <Button

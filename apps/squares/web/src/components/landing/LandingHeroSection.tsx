@@ -89,10 +89,9 @@ export default function LandingHeroSection() {
       />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <Box sx={{ textAlign: 'center', position: 'relative' }}>
+        <Box className="hero-mount" sx={{ textAlign: 'center', position: 'relative' }}>
           <Typography
             variant="h1"
-            className="hero-mount"
             sx={{
               fontWeight: 800,
               fontSize: { xs: '3.75rem', md: '5.5rem', lg: '6.25rem' },
@@ -106,7 +105,6 @@ export default function LandingHeroSection() {
 
           <Typography
             variant="h4"
-            className="hero-mount delay-1"
             sx={{
               mb: 5,
               fontWeight: 300,
@@ -121,10 +119,7 @@ export default function LandingHeroSection() {
             win big during the big game!
           </Typography>
 
-          <Box
-            className="hero-mount delay-2"
-            sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'nowrap' }}
-          >
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'nowrap' }}>
             <LandingCreateContestButton />
             <Button
               variant="outlined"

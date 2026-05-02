@@ -110,131 +110,155 @@ export default function LearnMorePage() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
-      {/* page header with title and description */}
-      <Box
-        ref={header.ref}
-        className={`scroll-section ${header.isVisible ? 'visible' : ''}`}
-        sx={{ textAlign: 'center', mb: 8 }}
-      >
-        <Typography
-          variant="h2"
-          className="reveal"
-          sx={{
-            fontWeight: 700,
-            mb: 4,
-            background: 'white',
-            backgroundClip: 'text',
-          }}
-        >
-          Learn More
-        </Typography>
-        <Typography
-          variant="h6"
-          className="reveal delay-1"
-          sx={{
-            color: 'white',
-            maxWidth: 800,
-            mx: 'auto',
-            fontWeight: 400,
-            lineHeight: 1.6,
-          }}
-        >
-          Discover everything you need to know about creating and managing squares games. From basic
-          concepts to advanced features, we've got you covered.
-        </Typography>
-      </Box>
-
-      {/* how it works section with 3-step process */}
-      <Box
-        ref={howItWorks.ref}
-        className={`scroll-section ${howItWorks.isVisible ? 'visible' : ''}`}
-        sx={{ mb: 10 }}
-      >
-        <Typography
-          variant="h3"
-          className="reveal"
-          sx={{
-            color: 'white',
-            fontWeight: 700,
-            textAlign: 'center',
-            mb: 6,
-          }}
-        >
-          How Squares Work
-        </Typography>
-
+    <>
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Box
-          sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 4 }}
+          ref={header.ref}
+          className={`scroll-section ${header.isVisible ? 'visible' : ''}`}
+          sx={{ textAlign: 'center' }}
         >
-          {howItWorksSteps.map((step, index) => (
-            <Box key={step.stepNumber} className={`reveal delay-${index + 1}`}>
-              <LearnHowItWorksCard
-                stepNumber={step.stepNumber}
-                title={step.title}
-                description={step.description}
-                color={step.color}
-              />
-            </Box>
-          ))}
+          <Typography
+            variant="h2"
+            className="reveal"
+            sx={{ fontWeight: 700, mb: 3, color: 'white' }}
+          >
+            Learn More
+          </Typography>
+          <Typography
+            variant="h6"
+            className="reveal delay-1"
+            sx={{
+              color: 'rgba(255,255,255,0.7)',
+              maxWidth: 800,
+              mx: 'auto',
+              fontWeight: 400,
+              lineHeight: 1.7,
+            }}
+          >
+            Discover everything you need to know about creating and managing squares games. From
+            basic concepts to advanced features, we&apos;ve got you covered.
+          </Typography>
         </Box>
-      </Box>
+      </Container>
 
-      {/* platform features grid */}
+      {/* ── How It Works ────────────────────────────────────────────── */}
       <Box
-        ref={features.ref}
-        className={`scroll-section ${features.isVisible ? 'visible' : ''}`}
-        sx={{ mb: 10 }}
+        sx={{
+          background: 'rgba(255,255,255,0.03)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          py: { xs: 6, md: 10 },
+        }}
       >
-        <Typography
-          variant="h3"
-          className="reveal"
-          sx={{
-            color: 'white',
-            fontWeight: 700,
-            textAlign: 'center',
-            mb: 6,
-          }}
-        >
-          Platform Features
-        </Typography>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-          {featuresList.map((feature, index) => (
-            <Box key={feature.title} className={`reveal delay-${index + 1}`}>
-              <LearnFeatureCard
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-              />
+        <Container maxWidth="lg">
+          <Box
+            ref={howItWorks.ref}
+            className={`scroll-section ${howItWorks.isVisible ? 'visible' : ''}`}
+          >
+            <Typography
+              variant="h3"
+              className="reveal"
+              sx={{ color: 'white', fontWeight: 700, textAlign: 'center', mb: 6 }}
+            >
+              How Squares Work
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
+                gap: 4,
+              }}
+            >
+              {howItWorksSteps.map((step, index) => (
+                <Box key={step.stepNumber} className={`reveal delay-${index + 1}`}>
+                  <LearnHowItWorksCard
+                    stepNumber={step.stepNumber}
+                    title={step.title}
+                    description={step.description}
+                    color={step.color}
+                  />
+                </Box>
+              ))}
             </Box>
-          ))}
-        </Box>
+          </Box>
+        </Container>
       </Box>
 
-      {/* frequently asked questions section */}
-      <Box ref={faqsAnim.ref} className={`scroll-section ${faqsAnim.isVisible ? 'visible' : ''}`}>
-        <Typography
-          variant="h3"
-          className="reveal"
-          sx={{
-            color: 'white',
-            fontWeight: 700,
-            textAlign: 'center',
-            mb: 6,
-          }}
-        >
-          Frequently Asked Questions
-        </Typography>
-
-        <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-          {faqs.map((faq, index) => (
-            <Box key={index} className={`reveal delay-${Math.min(index + 1, 7)}`}>
-              <LearnFAQs question={faq.question} answer={faq.answer} />
+      {/* ── Platform Features ──────────────────────────────────────── */}
+      <Box
+        sx={{
+          py: { xs: 6, md: 10 },
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            ref={features.ref}
+            className={`scroll-section ${features.isVisible ? 'visible' : ''}`}
+          >
+            <Typography
+              variant="h3"
+              className="reveal"
+              sx={{ color: 'white', fontWeight: 700, textAlign: 'center', mb: 6 }}
+            >
+              Platform Features
+            </Typography>
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}
+            >
+              {featuresList.map((feature, index) => (
+                <Box
+                  key={feature.title}
+                  className={`reveal delay-${index + 1}`}
+                  sx={{ height: '100%' }}
+                >
+                  <LearnFeatureCard
+                    icon={feature.icon}
+                    title={feature.title}
+                    description={feature.description}
+                  />
+                </Box>
+              ))}
             </Box>
-          ))}
-        </Box>
+          </Box>
+        </Container>
       </Box>
-    </Container>
+
+      {/* ── FAQs ───────────────────────────────────────────────────── */}
+      <Box
+        sx={{
+          background: 'rgba(255,255,255,0.03)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          py: { xs: 6, md: 10 },
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            ref={faqsAnim.ref}
+            className={`scroll-section ${faqsAnim.isVisible ? 'visible' : ''}`}
+          >
+            <Typography
+              variant="h3"
+              className="reveal"
+              sx={{ color: 'white', fontWeight: 700, textAlign: 'center', mb: 6 }}
+            >
+              Frequently Asked Questions
+            </Typography>
+            <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+              {faqs.map((faq, index) => (
+                <Box
+                  key={index}
+                  sx={{ mb: 2 }}
+                  className={`reveal delay-${Math.min(index + 1, 7)}`}
+                >
+                  <LearnFAQs question={faq.question} answer={faq.answer} />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+    </>
   );
 }

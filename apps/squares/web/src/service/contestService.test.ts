@@ -3,7 +3,6 @@ import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios';
 import api from '../axios/api';
 import {
   getContestsByOwner,
-  getContestByOwnerAndName,
   createNewContest,
   updateSquareValueById,
   clearSquareById,
@@ -22,7 +21,7 @@ import {
   updateParticipant,
   removeParticipant,
 } from './contestService';
-import type { Contest, PaginatedContestsResponse } from '../types/contest';
+import type { PaginatedContestsResponse, Participant } from '../types/contest';
 
 // Mock the axios api module
 vi.mock('../axios/api');
@@ -89,33 +88,6 @@ describe('contestService', () => {
     expect(api.get).toHaveBeenCalledWith('/contests/owner/user123', {
       params: { page: 1, limit: 10, search: 'foo' },
     });
-  });
-
-  it('should fetch a single contest by owner and name', async () => {
-    const mockContest: Contest = {
-      id: '123',
-      name: 'Super Bowl Contest',
-      owner: 'user456',
-      createdAt: '2025-01-15T00:00:00Z',
-      updatedAt: '2025-01-15T00:00:00Z',
-      createdBy: 'user456',
-      updatedBy: 'user456',
-      xLabels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      yLabels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      status: 'ACTIVE',
-      squares: [],
-      quarterResults: [],
-      visibility: 'public',
-    };
-
-    vi.mocked(api.get).mockResolvedValue({ data: mockContest });
-
-    const result = await getContestByOwnerAndName('user456', 'Super Bowl Contest');
-
-    expect(result).toEqual(mockContest);
-    expect(result.id).toBe('123');
-    expect(result.name).toBe('Super Bowl Contest');
-    expect(api.get).toHaveBeenCalledWith('/contests/owner/user456/name/Super Bowl Contest');
   });
 
   it('should throw APIError when getContestsByOwner fails', async () => {
@@ -421,7 +393,7 @@ describe('contestService', () => {
   });
 
   it('should fetch participants for a contest', async () => {
-    const mockParticipants = [{ id: 'p1', userId: 'u1', role: 'participant' }];
+    const mockParticipants = [{ id: 'p1', userId: 'u1', role: 'participant' }] as Participant[];
     vi.mocked(api.get).mockResolvedValue({ data: mockParticipants });
 
     const result = await getParticipants('c1');

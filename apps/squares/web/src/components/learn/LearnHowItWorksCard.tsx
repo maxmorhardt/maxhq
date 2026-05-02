@@ -22,6 +22,12 @@ export default function LearnHowItWorksCard({
         background: theme.palette.grey[900],
         border: `1px solid ${theme.palette.grey[800]}`,
         borderRadius: 3,
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+        '&:hover': {
+          transform: 'translateY(-6px)',
+          borderColor: color ?? theme.palette.grey[700],
+          boxShadow: `0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px ${color ?? theme.palette.grey[700]}22`,
+        },
       }}
     >
       <CardContent sx={{ p: 4, textAlign: 'center' }}>

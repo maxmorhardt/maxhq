@@ -1,9 +1,10 @@
 import { Box, GlobalStyles } from '@mui/material';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Outlet } from 'react-router-dom';
 import './App.css';
 import ScrollToTop from './components/common/ScrollToTop';
+import SessionRefreshBanner, { type RefreshState } from './components/common/SessionRefreshBanner';
 import Footer from './components/footer/Footer';
 import Header from './components/header/Header';
 import { ToastProvider } from './components/toast/ToastProvider';
@@ -19,6 +20,7 @@ export default function App() {
 
   const hasAttemptedSilentSignin = useRef(false);
   const lastActiveNavigator = useRef<string | undefined>(undefined);
+  const [refreshState, setRefreshState] = useState<RefreshState>('idle');
 
   // get active navigator before it clears
   useEffect(() => {
@@ -54,16 +56,16 @@ export default function App() {
     }
 
     hasAttemptedSilentSignin.current = true;
-    showToast('Signing you back in...', 'info');
+    setRefreshState('refreshing');
     auth
       .signinSilent()
       .then((user) => {
         if (user) {
-          showToast('Welcome back', 'success');
+          setRefreshState('success');
         }
       })
       .catch(() => {
-        showToast('Session expired. Please sign in again', 'warning');
+        setRefreshState('error');
       });
   }, [auth, showToast]);
 
@@ -71,6 +73,7 @@ export default function App() {
     <>
       <ScrollToTop />
       <ToastProvider />
+      <SessionRefreshBanner state={refreshState} />
       <GlobalStyles
         styles={{
           body: {

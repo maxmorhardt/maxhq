@@ -15,7 +15,6 @@ import {
   createContestInvite,
   deleteContest,
   deleteContestInvite,
-  fetchContestByOwnerAndName,
   fetchContestsByOwner,
   fetchInvites,
   fetchMyContests,
@@ -39,6 +38,7 @@ interface ContestState {
   contestLoading: boolean; // loading state for contest operations
   deleteContestLoading: boolean; // loading state for delete operation
   squareLoading: boolean; // loading state for square operations
+  squareErrorCode: number | null; // HTTP status code from last square error
   participantsLoading: boolean; // loading state for participants
   invitesLoading: boolean; // loading state for invites
   error: string | null; // error message
@@ -61,6 +61,7 @@ const initialState: ContestState = {
   contestLoading: false,
   deleteContestLoading: false,
   squareLoading: false,
+  squareErrorCode: null,
   participantsLoading: false,
   invitesLoading: false,
   error: null,
@@ -82,9 +83,17 @@ const contestSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+    // clear square error code (after handling e.g. 409)
+    clearSquareErrorCode(state) {
+      state.squareErrorCode = null;
+    },
     // set the currently viewed contest
     setCurrentContest(state, action: PayloadAction<Contest | null>) {
       state.currentContest = action.payload;
+    },
+    // directly set participants (used on WS connected message)
+    setParticipants(state, action: PayloadAction<Participant[]>) {
+      state.participants = action.payload;
     },
     // set the currently selected square for editing
     setCurrentSquare(state, action: PayloadAction<Square>) {
@@ -238,22 +247,6 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 
-    // fetch single contest by owner and name
-    builder
-      .addCase(fetchContestByOwnerAndName.pending, (state) => {
-        state.contestLoading = true;
-        state.error = null;
-        state.currentContest = null;
-      })
-      .addCase(fetchContestByOwnerAndName.fulfilled, (state, action: PayloadAction<Contest>) => {
-        state.contestLoading = false;
-        state.currentContest = action.payload;
-      })
-      .addCase(fetchContestByOwnerAndName.rejected, (state, action) => {
-        state.contestLoading = false;
-        state.error = action.payload?.message ?? 'Error fetching contest';
-      });
-
     // create new contest
     builder
       .addCase(createContest.pending, (state) => {
@@ -273,10 +266,12 @@ const contestSlice = createSlice({
     builder
       .addCase(updateSquare.pending, (state) => {
         state.squareLoading = true;
+        state.squareErrorCode = null;
         state.error = null;
       })
       .addCase(updateSquare.fulfilled, (state, action: PayloadAction<Square>) => {
         state.squareLoading = false;
+        state.squareErrorCode = null;
         const updatedSquare = action.payload;
 
         if (!state.currentContest) {
@@ -295,6 +290,7 @@ const contestSlice = createSlice({
       })
       .addCase(updateSquare.rejected, (state, action) => {
         state.squareLoading = false;
+        state.squareErrorCode = action.payload?.code ?? null;
         state.error = action.payload?.message ?? 'Error updating square';
       });
 
@@ -302,10 +298,12 @@ const contestSlice = createSlice({
     builder
       .addCase(clearSquare.pending, (state) => {
         state.squareLoading = true;
+        state.squareErrorCode = null;
         state.error = null;
       })
       .addCase(clearSquare.fulfilled, (state, action: PayloadAction<Square>) => {
         state.squareLoading = false;
+        state.squareErrorCode = null;
         const clearedSquare = action.payload;
 
         if (!state.currentContest) {
@@ -504,8 +502,10 @@ const contestSlice = createSlice({
 
 export const {
   clearError,
+  clearSquareErrorCode,
   setCurrentContest,
   setCurrentSquare,
+  setParticipants,
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
   updateQuarterResultFromWebSocket,

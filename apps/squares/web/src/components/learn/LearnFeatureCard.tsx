@@ -17,6 +17,7 @@ export default function LearnFeatureCard({ icon, title, description }: LearnFeat
         background: theme.palette.grey[900],
         border: `1px solid ${theme.palette.grey[800]}`,
         borderRadius: 3,
+        height: '100%',
         transition: 'all 0.3s ease',
         '&:hover': {
           transform: 'translateY(-4px)',

@@ -5,7 +5,6 @@ import {
   createNewContest,
   deleteContestById,
   deleteInvite,
-  getContestByOwnerAndName,
   getContestsByOwner,
   getInvites,
   getMyContests,
@@ -45,20 +44,6 @@ export const fetchContestsByOwner = createAsyncThunk<
 >('contests/fetchByUser', async ({ owner, pagination }, { rejectWithValue }) => {
   try {
     const response = await getContestsByOwner(owner, pagination);
-    return response;
-  } catch (err: unknown) {
-    return rejectWithValue(err as APIError);
-  }
-});
-
-// fetch single contest by id with all squares and details
-export const fetchContestByOwnerAndName = createAsyncThunk<
-  Contest,
-  { owner: string; name: string },
-  { rejectValue: APIError }
->('contests/fetchContestByOwnerAndName', async ({ owner, name }, { rejectWithValue }) => {
-  try {
-    const response = await getContestByOwnerAndName(owner, name);
     return response;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
