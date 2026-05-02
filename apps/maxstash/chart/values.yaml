@@ -59,7 +59,8 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: '1m'
     nginx.ingress.kubernetes.io/client-body-buffer-size: '1m'
-    nginx.ingress.kubernetes.io/limit-rps: '50'
+    nginx.ingress.kubernetes.io/limit-connections: '200'
+    nginx.ingress.kubernetes.io/limit-rps: '100'
     nginx.ingress.kubernetes.io/limit-burst-multiplier: '5'
   hosts:
     - host: maxstash.io
