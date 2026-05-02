@@ -1,64 +1,99 @@
 /* Scroll-triggered animations */
 
-/* 1 — How It Works: flip in from top with rotation */
-.scroll-flip-down {
+/* Modern reveal: subtle fade + small upward shift, applied per-element via .reveal */
+.scroll-section .reveal {
   opacity: 0;
-  transform: perspective(800px) rotateX(-15deg) translateY(-30px);
-  transform-origin: top center;
-  transition:
-    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.scroll-flip-down.visible {
-  opacity: 1;
-  transform: perspective(800px) rotateX(0) translateY(0);
-}
-
-.scroll-flip-down.delay-1 {
-  transition-delay: 0.1s;
-}
-
-.scroll-flip-down.delay-2 {
-  transition-delay: 0.2s;
-}
-
-.scroll-flip-down.delay-3 {
-  transition-delay: 0.3s;
-}
-
-/* 2 — See It In Action: zoom + rotate entrance */
-.scroll-zoom-rotate {
-  opacity: 0;
-  transform: scale(0.85) rotate(-3deg);
+  transform: translateY(20px);
   transition:
     opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
 
-.scroll-zoom-rotate.visible {
+.scroll-section.visible .reveal {
   opacity: 1;
-  transform: scale(1) rotate(0);
-}
-
-/* 3 — Features: slide up + blur clear */
-.scroll-rise-blur {
-  opacity: 0;
-  filter: blur(10px);
-  transform: translateY(50px);
-  transition:
-    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.scroll-rise-blur.visible {
-  opacity: 1;
-  filter: blur(0);
   transform: translateY(0);
 }
 
-/* 4 — Stats: staggered count-up pop */
+.scroll-section.visible .reveal.delay-1 {
+  transition-delay: 0.15s;
+}
+.scroll-section.visible .reveal.delay-2 {
+  transition-delay: 0.3s;
+}
+.scroll-section.visible .reveal.delay-3 {
+  transition-delay: 0.45s;
+}
+.scroll-section.visible .reveal.delay-4 {
+  transition-delay: 0.6s;
+}
+.scroll-section.visible .reveal.delay-5 {
+  transition-delay: 0.75s;
+}
+.scroll-section.visible .reveal.delay-6 {
+  transition-delay: 0.9s;
+}
+.scroll-section.visible .reveal.delay-7 {
+  transition-delay: 1.05s;
+}
+
+/* Hero entrance: runs once on mount, no scroll trigger needed */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-mount {
+  opacity: 0;
+  animation: hero-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-mount.delay-1 {
+  animation-delay: 0.12s;
+}
+.hero-mount.delay-2 {
+  animation-delay: 0.22s;
+}
+.hero-mount.delay-3 {
+  animation-delay: 0.34s;
+}
+
+/* Floating accent squares in the hero */
+@keyframes hero-float-a {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-12deg);
+  }
+  50% {
+    transform: translateY(-18px) rotate(-8deg);
+  }
+}
+@keyframes hero-float-b {
+  0%,
+  100% {
+    transform: translateY(0) rotate(18deg);
+  }
+  50% {
+    transform: translateY(-22px) rotate(22deg);
+  }
+}
+@keyframes hero-float-c {
+  0%,
+  100% {
+    transform: translateY(0) rotate(8deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(12deg);
+  }
+}
+
+/* Stats: staggered count-up pop (kept) */
 .scroll-pop-in {
   opacity: 0;
   transform: scale(0.6) translateY(30px);
@@ -80,7 +115,7 @@
   transition-delay: 0.3s;
 }
 
-/* 5 — CTA: cinematic fade with scale */
+/* CTA: cinematic fade with scale (kept) */
 .scroll-cinema {
   opacity: 0;
   transform: scale(1.05);

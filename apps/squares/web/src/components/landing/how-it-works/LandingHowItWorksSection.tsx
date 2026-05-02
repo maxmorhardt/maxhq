@@ -44,11 +44,12 @@ export default function LandingHowItWorksSection({ animRef, isVisible }: Props) 
     <Container maxWidth="lg" sx={{ mb: 14 }}>
       <Box
         ref={animRef}
-        className={`scroll-flip-down ${isVisible ? 'visible' : ''}`}
+        className={`scroll-section ${isVisible ? 'visible' : ''}`}
         sx={{ textAlign: 'center' }}
       >
         <Typography
           variant="h3"
+          className="reveal"
           sx={{
             fontWeight: 700,
             mb: 2,
@@ -59,6 +60,7 @@ export default function LandingHowItWorksSection({ animRef, isVisible }: Props) 
         </Typography>
         <Typography
           variant="h6"
+          className="reveal delay-1"
           sx={{
             color: 'text.secondary',
             mb: 6,
@@ -78,13 +80,14 @@ export default function LandingHowItWorksSection({ animRef, isVisible }: Props) 
           }}
         >
           {howItWorksSteps.map((step, index) => (
-            <LandingHowItWorksCard
-              key={index}
-              icon={step.icon}
-              title={step.title}
-              description={step.description}
-              backgroundColor={step.backgroundColor}
-            />
+            <Box key={index} className={`reveal delay-${index + 2}`}>
+              <LandingHowItWorksCard
+                icon={step.icon}
+                title={step.title}
+                description={step.description}
+                backgroundColor={step.backgroundColor}
+              />
+            </Box>
           ))}
         </Box>
       </Box>

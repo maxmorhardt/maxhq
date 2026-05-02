@@ -48,7 +48,6 @@ export default function ContactPage() {
       const response = await submitContactForm(formData);
       showToast(response.message, 'success');
     } catch (error) {
-      console.log(error);
       showToast('Failed to submit contact form. Please try again.', 'error');
       throw error;
     } finally {

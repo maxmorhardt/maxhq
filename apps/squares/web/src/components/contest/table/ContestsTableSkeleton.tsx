@@ -1,7 +1,5 @@
-import { Add } from '@mui/icons-material';
 import {
   Box,
-  Button,
   Paper,
   Skeleton,
   Table,
@@ -13,55 +11,32 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 
 interface ContestsTableSkeletonProps {
   title?: string;
-  hideCreateButton?: boolean;
   rowCount?: number;
 }
 
 export default function ContestsTableSkeleton({
   title = 'My Contests',
-  hideCreateButton = false,
   rowCount = 2,
 }: ContestsTableSkeletonProps) {
   const theme = useTheme();
-  const navigate = useNavigate();
 
   return (
-    // main container
-    <Box sx={{ p: 3 }}>
-      {/* header with title and create button */}
-      <Box
+    <Box sx={{ p: { xs: 0, sm: 1 } }}>
+      {/* section title */}
+      <Typography
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3,
-          flexWrap: 'wrap',
+          color: 'white',
+          fontWeight: 800,
+          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+          mb: 2,
         }}
       >
-        <Typography
-          sx={{
-            color: 'white',
-            fontWeight: 800,
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-            fontSize: { xs: '1.5rem', sm: '2rem' },
-          }}
-        >
-          {title}
-        </Typography>
-        {!hideCreateButton && (
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => navigate('/contests/create')}
-          >
-            Create Contest
-          </Button>
-        )}
-      </Box>
+        {title}
+      </Typography>
+
       {/* skeleton table container */}
       <Paper
         sx={{
@@ -71,51 +46,46 @@ export default function ContestsTableSkeleton({
         }}
       >
         <TableContainer>
-          <Table>
-            {/* skeleton table header */}
+          <Table sx={{ tableLayout: 'fixed' }}>
+            {/* header row: Name 35% | Matchup 30% | Status 20% | Actions 15% */}
             <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Skeleton variant="text" />
+              <TableRow sx={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <TableCell sx={{ width: '35%' }}>
+                  <Skeleton variant="text" width={60} />
                 </TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                  <Skeleton variant="text" />
+                <TableCell sx={{ width: '30%' }}>
+                  <Skeleton variant="text" width={70} />
                 </TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                  <Skeleton variant="text" />
+                <TableCell sx={{ width: '20%' }}>
+                  <Skeleton variant="text" width={50} />
                 </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
+                <TableCell sx={{ width: '15%' }}>
+                  <Skeleton variant="text" width={55} sx={{ ml: 'auto' }} />
                 </TableCell>
               </TableRow>
             </TableHead>
-            {/* skeleton table rows */}
             <TableBody>
               {[...Array(rowCount)].map((_, index) => (
-                <TableRow key={index}>
+                <TableRow key={index} sx={{ '&:last-child td': { borderBottom: 0 } }}>
                   <TableCell>
-                    <Skeleton variant="text" />
-                  </TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                    <Skeleton variant="text" />
-                  </TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                    <Skeleton variant="text" />
+                    <Skeleton variant="text" width="60%" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton variant="text" />
+                    <Skeleton variant="text" width="70%" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton variant="rectangular" width={80} height={24} />
+                    <Skeleton
+                      variant="rectangular"
+                      width={68}
+                      height={24}
+                      sx={{ borderRadius: 3 }}
+                    />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton variant="circular" width={32} height={32} />
+                  <TableCell sx={{ textAlign: 'right' }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                      <Skeleton variant="circular" width={28} height={28} />
+                      <Skeleton variant="circular" width={28} height={28} />
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

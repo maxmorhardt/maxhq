@@ -36,6 +36,7 @@ interface ContestsTableProps {
   onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
   title?: string;
   hideCreateButton?: boolean;
+  hidePagination?: boolean;
 }
 
 export default function ContestsTable({
@@ -47,6 +48,7 @@ export default function ContestsTable({
   onRowsPerPageChange,
   title = 'My Contests',
   hideCreateButton = false,
+  hidePagination = false,
 }: ContestsTableProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -85,23 +87,23 @@ export default function ContestsTable({
   return (
     <>
       {/* main container */}
-      <Box sx={{ p: 3 }}>
-        {/* header with title and create button */}
+      <Box sx={{ p: { xs: 0, sm: 1 } }}>
+        {/* section header: title + optional create button */}
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: 3,
+            mb: 2,
             flexWrap: 'wrap',
+            gap: 1,
           }}
         >
           <Typography
             sx={{
               color: 'white',
               fontWeight: 800,
-              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-              fontSize: { xs: '1.5rem', sm: '2rem' },
+              fontSize: { xs: '1.25rem', sm: '1.5rem' },
             }}
           >
             {title}
@@ -283,15 +285,15 @@ export default function ContestsTable({
           ) : (
             /* desktop table layout */
             <TableContainer>
-              <Table>
+              <Table sx={{ tableLayout: 'fixed' }}>
                 <TableHead>
-                  <TableRow>
-                    <TableCell sx={headerSx}>Name</TableCell>
-                    <TableCell sx={headerSx}>Home Team</TableCell>
-                    <TableCell sx={headerSx}>Away Team</TableCell>
-                    <TableCell sx={headerSx}>Created By</TableCell>
-                    <TableCell sx={headerSx}>Status</TableCell>
-                    <TableCell sx={{ ...headerSx, textAlign: 'right' }}>Actions</TableCell>
+                  <TableRow sx={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <TableCell sx={{ ...headerSx, width: '35%' }}>Name</TableCell>
+                    <TableCell sx={{ ...headerSx, width: '30%' }}>Matchup</TableCell>
+                    <TableCell sx={{ ...headerSx, width: '20%' }}>Status</TableCell>
+                    <TableCell sx={{ ...headerSx, width: '15%', textAlign: 'right' }}>
+                      Actions
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -302,42 +304,38 @@ export default function ContestsTable({
                       sx={{
                         cursor: 'pointer',
                         backgroundColor: index % 2 === 0 ? '' : 'rgba(255,255,255,0.02)',
-                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
-                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.07)' },
+                        transition: 'background-color 0.15s ease',
+                        '&:last-child td': { borderBottom: 0 },
                       }}
                     >
                       <TableCell
                         sx={{
-                          color: 'rgba(255,255,255,0.8)',
-                          fontWeight: 500,
+                          color: 'rgba(255,255,255,0.9)',
+                          fontWeight: 600,
                           fontSize: '0.875rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {contest.name}
                       </TableCell>
                       <TableCell
                         sx={{
-                          color: 'rgba(255,255,255,0.8)',
-                          fontSize: '0.875rem',
+                          color: 'rgba(255,255,255,0.55)',
+                          fontSize: '0.8rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {contest.homeTeam || ''}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: 'rgba(255,255,255,0.8)',
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        {contest.awayTeam || ''}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: 'rgba(255,255,255,0.8)',
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        {contest.createdBy}
+                        {contest.homeTeam && contest.awayTeam
+                          ? `${contest.homeTeam} vs ${contest.awayTeam}`
+                          : contest.homeTeam ||
+                            contest.awayTeam || (
+                              <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
+                            )}
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -347,8 +345,9 @@ export default function ContestsTable({
                             bgcolor: getStatusOption(contest.status).color,
                             color: 'white',
                             fontWeight: 500,
-                            fontSize: '0.75rem',
-                            '& .MuiChip-label': { fontSize: '0.75rem' },
+                            fontSize: '0.72rem',
+                            height: 24,
+                            '& .MuiChip-label': { fontSize: '0.72rem', px: 1.25 },
                           }}
                         />
                       </TableCell>
@@ -356,7 +355,7 @@ export default function ContestsTable({
                         <Box
                           sx={{
                             display: 'flex',
-                            gap: 1,
+                            gap: 0.5,
                             justifyContent: 'flex-end',
                           }}
                         >
@@ -369,7 +368,7 @@ export default function ContestsTable({
                                   handleEdit(contest);
                                 }}
                                 sx={{
-                                  color: 'rgba(255,255,255,0.7)',
+                                  color: 'rgba(255,255,255,0.6)',
                                   '&:hover': {
                                     color: 'white',
                                     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -389,7 +388,7 @@ export default function ContestsTable({
                                   handleDelete(contest);
                                 }}
                                 sx={{
-                                  color: 'rgba(255,255,255,0.7)',
+                                  color: 'rgba(255,255,255,0.6)',
                                   '&:hover': {
                                     color: '#ff4444',
                                     backgroundColor: 'rgba(255,68,68,0.1)',
@@ -409,8 +408,8 @@ export default function ContestsTable({
             </TableContainer>
           )}
 
-          {/* Pagination - only show when there are contests */}
-          {contests.length > 0 && (
+          {/* Pagination - only show when there are contests and not hidden */}
+          {contests.length > 0 && !hidePagination && (
             <TablePagination
               component="div"
               count={totalCount}

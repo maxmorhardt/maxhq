@@ -28,6 +28,7 @@ export async function getContestsByOwner(
       params: {
         page: pagination.page,
         limit: pagination.limit,
+        ...(pagination.search ? { search: pagination.search } : {}),
       },
     });
     return res.data;
@@ -142,9 +143,11 @@ export async function submitContactForm(request: {
 }
 
 // fetch contests where the current user is a participant
-export async function getMyContests(): Promise<Contest[]> {
+export async function getMyContests(search?: string): Promise<Contest[]> {
   try {
-    const res = await api.get<Contest[]>('/contests/me');
+    const res = await api.get<Contest[]>('/contests/me', {
+      params: search ? { search } : undefined,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

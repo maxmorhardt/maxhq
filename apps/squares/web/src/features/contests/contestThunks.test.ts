@@ -135,6 +135,23 @@ describe('contestThunks', () => {
       );
       expect(store.getState().contest.error).toBe('fail');
     });
+
+    it('passes search through pagination to service', async () => {
+      vi.mocked(getContestsByOwner).mockResolvedValue({
+        contests: [],
+        page: 1,
+        limit: 5,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false,
+      });
+      const store = createTestStore();
+      await store.dispatch(
+        fetchContestsByOwner({ owner: 'u1', pagination: { page: 1, limit: 5, search: 'foo' } })
+      );
+      expect(getContestsByOwner).toHaveBeenCalledWith('u1', { page: 1, limit: 5, search: 'foo' });
+    });
   });
 
   describe('fetchContestByOwnerAndName', () => {
@@ -336,6 +353,20 @@ describe('contestThunks', () => {
       const store = createTestStore();
       await store.dispatch(fetchMyContests());
       expect(store.getState().contest.myContests).toHaveLength(1);
+    });
+
+    it('passes search arg through to service', async () => {
+      vi.mocked(getMyContests).mockResolvedValue([]);
+      const store = createTestStore();
+      await store.dispatch(fetchMyContests('hello'));
+      expect(getMyContests).toHaveBeenCalledWith('hello');
+    });
+
+    it('passes undefined when no search arg', async () => {
+      vi.mocked(getMyContests).mockResolvedValue([]);
+      const store = createTestStore();
+      await store.dispatch(fetchMyContests());
+      expect(getMyContests).toHaveBeenCalledWith(undefined);
     });
 
     it('rejected: sets error', async () => {

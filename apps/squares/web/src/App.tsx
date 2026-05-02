@@ -54,7 +54,17 @@ export default function App() {
     }
 
     hasAttemptedSilentSignin.current = true;
-    auth.signinSilent();
+    showToast('Signing you back in...', 'info');
+    auth
+      .signinSilent()
+      .then((user) => {
+        if (user) {
+          showToast('Welcome back', 'success');
+        }
+      })
+      .catch(() => {
+        showToast('Session expired. Please sign in again', 'warning');
+      });
   }, [auth, showToast]);
 
   return (

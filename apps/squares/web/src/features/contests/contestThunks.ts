@@ -161,17 +161,18 @@ export const updateQuarterResult = createAsyncThunk<
 });
 
 // fetch contests where current user is a participant
-export const fetchMyContests = createAsyncThunk<Contest[], void, { rejectValue: APIError }>(
-  'contests/fetchMyContests',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await getMyContests();
-      return response;
-    } catch (err: unknown) {
-      return rejectWithValue(err as APIError);
-    }
+export const fetchMyContests = createAsyncThunk<
+  Contest[],
+  string | void,
+  { rejectValue: APIError }
+>('contests/fetchMyContests', async (search, { rejectWithValue }) => {
+  try {
+    const response = await getMyContests(typeof search === 'string' ? search : undefined);
+    return response;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
   }
-);
+});
 
 // create invite link for a contest
 export const createContestInvite = createAsyncThunk<

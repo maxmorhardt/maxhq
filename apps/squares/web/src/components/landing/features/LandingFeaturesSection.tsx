@@ -60,7 +60,7 @@ export default function LandingFeaturesSection({ animRef, isVisible }: Props) {
     <Container maxWidth="lg" sx={{ pb: 14 }}>
       <Box
         ref={animRef}
-        className={`scroll-rise-blur ${isVisible ? 'visible' : ''}`}
+        className={`scroll-section ${isVisible ? 'visible' : ''}`}
         sx={{
           textAlign: 'center',
           py: 8,
@@ -75,6 +75,7 @@ export default function LandingFeaturesSection({ animRef, isVisible }: Props) {
           variant="h3"
           component="h2"
           gutterBottom
+          className="reveal"
           sx={{
             textAlign: 'center',
             mb: 2,
@@ -91,6 +92,7 @@ export default function LandingFeaturesSection({ animRef, isVisible }: Props) {
 
         <Typography
           variant="h6"
+          className="reveal delay-1"
           sx={{
             textAlign: 'center',
             color: 'rgba(255,255,255,0.8)',
@@ -111,13 +113,14 @@ export default function LandingFeaturesSection({ animRef, isVisible }: Props) {
           }}
         >
           {featureDetails.map((feature, index) => (
-            <LandingFeatureCard
-              key={index}
-              icon={feature.icon}
-              gradient={feature.gradient}
-              title={feature.title}
-              description={feature.description}
-            />
+            <Box key={index} className={`reveal delay-${index + 2}`}>
+              <LandingFeatureCard
+                icon={feature.icon}
+                gradient={feature.gradient}
+                title={feature.title}
+                description={feature.description}
+              />
+            </Box>
           ))}
         </Box>
       </Box>

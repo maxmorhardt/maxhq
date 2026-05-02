@@ -71,6 +71,26 @@ describe('contestService', () => {
     });
   });
 
+  it('should fetch contests by owner with a search query', async () => {
+    const mockResponse = {
+      contests: [],
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+      hasNext: false,
+      hasPrevious: false,
+    };
+
+    vi.mocked(api.get).mockResolvedValue({ data: mockResponse });
+
+    await getContestsByOwner('user123', { page: 1, limit: 10, search: 'foo' });
+
+    expect(api.get).toHaveBeenCalledWith('/contests/owner/user123', {
+      params: { page: 1, limit: 10, search: 'foo' },
+    });
+  });
+
   it('should fetch a single contest by owner and name', async () => {
     const mockContest: Contest = {
       id: '123',
@@ -215,7 +235,17 @@ describe('contestService', () => {
     const result = await getMyContests();
 
     expect(result).toEqual(mockContests);
-    expect(api.get).toHaveBeenCalledWith('/contests/me');
+    expect(api.get).toHaveBeenCalledWith('/contests/me', { params: undefined });
+  });
+
+  it('should fetch my contests with search query', async () => {
+    const mockContests = [{ id: 'c1', name: 'Foo Contest' }];
+    vi.mocked(api.get).mockResolvedValue({ data: mockContests });
+
+    const result = await getMyContests('foo');
+
+    expect(result).toEqual(mockContests);
+    expect(api.get).toHaveBeenCalledWith('/contests/me', { params: { search: 'foo' } });
   });
 
   it('should throw APIError when getMyContests fails', async () => {
