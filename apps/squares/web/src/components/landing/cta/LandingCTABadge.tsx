@@ -1,3 +1,4 @@
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Box, Typography } from '@mui/material';
 
 interface LandingCTABadgeProps {
@@ -6,7 +7,6 @@ interface LandingCTABadgeProps {
 
 export default function LandingCTABadge({ text }: LandingCTABadgeProps) {
   return (
-    // feature badge with checkmark icon and hover effect
     <Box
       sx={{
         display: 'flex',
@@ -27,6 +27,13 @@ export default function LandingCTABadge({ text }: LandingCTABadgeProps) {
         },
       }}
     >
+      <CheckCircleIcon
+        sx={{
+          color: '#4caf50',
+          fontSize: { xs: '1rem', sm: '1.2rem' },
+          flexShrink: 0,
+        }}
+      />
       <Typography
         variant="body1"
         sx={{
@@ -38,7 +45,7 @@ export default function LandingCTABadge({ text }: LandingCTABadgeProps) {
           textOverflow: 'ellipsis',
         }}
       >
-        ✅ {text}
+        {text}
       </Typography>
     </Box>
   );

@@ -259,10 +259,11 @@ export default function ContestsPage() {
   // show full-page skeleton only on the very first load. After the initial
   // fetch completes, in-flight refetches (search, pagination) show an inline
   // spinner in the search bar instead of unmounting the table.
+  // Condition covers: auth still loading, OR authenticated but data not yet arrived
+  // (including the brief gap between isInterceptorReady=true and loading=true).
   if (
     !hasLoadedOnce &&
-    ((auth.isLoading && auth.activeNavigator !== 'signoutSilent') ||
-      (auth.isAuthenticated && (!isInterceptorReady || loading)))
+    ((auth.isLoading && auth.activeNavigator !== 'signoutSilent') || auth.isAuthenticated)
   ) {
     return (
       <Box>

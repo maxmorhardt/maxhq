@@ -4,17 +4,27 @@ interface UseScrollAnimationOptions {
   threshold?: number;
   rootMargin?: string;
   triggerOnce?: boolean;
+  animateOnMount?: boolean;
 }
 
 export function useScrollAnimation({
   threshold = 0.18,
   rootMargin = '0px 0px -30px 0px',
   triggerOnce = true,
+  animateOnMount = false,
 }: UseScrollAnimationOptions = {}) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (animateOnMount) {
+      const id = setTimeout(() => setIsVisible(true), 50);
+      return () => clearTimeout(id);
+    }
+  }, [animateOnMount]);
+
+  useEffect(() => {
+    if (animateOnMount) return;
     const element = ref.current;
     if (!element) return;
 
@@ -34,7 +44,7 @@ export function useScrollAnimation({
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [threshold, rootMargin, triggerOnce]);
+  }, [threshold, rootMargin, triggerOnce, animateOnMount]);
 
   return { ref, isVisible };
 }
