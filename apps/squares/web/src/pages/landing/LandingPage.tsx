@@ -1,4 +1,5 @@
 import { Box } from '@mui/material';
+import { Helmet } from 'react-helmet-async';
 import LandingCTASection from '../../components/landing/cta/LandingCTASection';
 import LandingFeaturesSection from '../../components/landing/features/LandingFeaturesSection';
 import LandingHeroSection from '../../components/landing/LandingHeroSection';
@@ -16,6 +17,14 @@ export default function LandingPage() {
 
   return (
     <Box sx={{ overflowX: 'clip' }}>
+      <Helmet>
+        <title>Squares – NFL Football Squares Pools</title>
+        <meta
+          name="description"
+          content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
+        />
+        <link rel="canonical" href="https://squares.maxstash.io/" />
+      </Helmet>
       <LandingHeroSection />
       <LandingHowItWorksSection animRef={howItWorks.ref} isVisible={howItWorks.isVisible} />
       <LandingSeeItInActionSection

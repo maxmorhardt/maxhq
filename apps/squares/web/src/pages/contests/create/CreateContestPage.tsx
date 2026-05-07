@@ -24,6 +24,7 @@ import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import type { APIError } from '../../../types/error';
 import type { ContestVisibility } from '../../../types/contest';
 import { gradients } from '../../../types/gradients';
+import { Helmet } from 'react-helmet-async';
 
 // create contest page with form and info cards
 export default function CreateContestPage() {
@@ -96,6 +97,10 @@ export default function CreateContestPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1.5, sm: 3 } }}>
+      <Helmet>
+        <title>Create Contest – Squares</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* page header with title and description */}
       <Box sx={{ textAlign: 'center', mb: { xs: 1.5, sm: 2 } }}>
         <Typography

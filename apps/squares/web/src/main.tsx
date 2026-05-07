@@ -3,6 +3,7 @@ import { WebStorageStateStore } from 'oidc-client-ts';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AuthProvider, type AuthProviderProps } from 'react-oidc-context';
+import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
@@ -60,15 +61,17 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <AuthProvider {...oidcConfig}>
-          <CssBaseline />
-          <ErrorBoundary>
-            <RouterProvider router={router} />
-          </ErrorBoundary>
-        </AuthProvider>
-      </ThemeProvider>
-    </Provider>
+    <HelmetProvider>
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <AuthProvider {...oidcConfig}>
+            <CssBaseline />
+            <ErrorBoundary>
+              <RouterProvider router={router} />
+            </ErrorBoundary>
+          </AuthProvider>
+        </ThemeProvider>
+      </Provider>
+    </HelmetProvider>
   </StrictMode>
 );

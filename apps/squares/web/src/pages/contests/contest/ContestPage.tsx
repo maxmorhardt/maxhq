@@ -24,6 +24,7 @@ import { updateSquare } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
 import { useToast } from '../../../hooks/useToast';
+import { Helmet } from 'react-helmet-async';
 
 export default function ContestPage() {
   const auth = useAuth();
@@ -193,6 +194,10 @@ export default function ContestPage() {
 
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
+      <Helmet>
+        <title>{`${currentContest.name} – Squares`}</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* connection status indicator chip */}
       <ConnectionChip status={connectionStatus} retryCount={retryCount} />
 
