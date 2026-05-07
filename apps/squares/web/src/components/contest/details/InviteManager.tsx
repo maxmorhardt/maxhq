@@ -51,7 +51,6 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState(false);
   const [failedInviteId, setFailedInviteId] = useState<string | null>(null);
-  const [clipboardFallbackUrl, setClipboardFallbackUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && currentContest?.id) {
@@ -63,9 +62,8 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
     if (!currentContest) return;
     setCreating(true);
     setCreateError(false);
-    setClipboardFallbackUrl(null);
     try {
-      const result = await dispatch(
+      await dispatch(
         createContestInvite({
           contestId: currentContest.id,
           request: {
@@ -77,13 +75,6 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
         })
       ).unwrap();
 
-      const inviteUrl = result.inviteUrl || `${window.location.origin}/join/${result.token}`;
-      try {
-        await navigator.clipboard.writeText(inviteUrl);
-        showToast('Invite link copied to clipboard', 'success');
-      } catch {
-        setClipboardFallbackUrl(inviteUrl);
-      }
       // refetch invites list since create only returns token/url
       dispatch(fetchInvites(currentContest.id));
     } catch {
@@ -108,7 +99,6 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
 
   const handleShareLink = async (token: string) => {
     const url = `${window.location.origin}/join/${token}`;
-    const contestName = currentContest?.name || '';
 
     if (!navigator.share) {
       try {
@@ -121,11 +111,7 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
     }
 
     try {
-      await navigator.share({
-        title: contestName,
-        text: `Join my squares contest: ${contestName || 'Contest'}`,
-        url,
-      });
+      await navigator.share({ url });
     } catch (err) {
       console.error('Error sharing:', err);
     }
@@ -214,18 +200,6 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
             >
               {createError ? 'Failed — Retry' : 'Generate Invite Link'}
             </Button>
-
-            {clipboardFallbackUrl && (
-              <TextField
-                label="Invite link (copy manually)"
-                value={clipboardFallbackUrl}
-                size="small"
-                fullWidth
-                slotProps={{ input: { readOnly: true } }}
-                onFocus={(e) => e.target.select()}
-                sx={{ mt: 1 }}
-              />
-            )}
           </Box>
 
           {/* active invites list */}

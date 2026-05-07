@@ -10,7 +10,7 @@ import '../landing/LandingPage.css';
 // learn more page with how it works, features, and faqs
 export default function LearnMorePage() {
   const header = useScrollAnimation();
-  const howItWorks = useScrollAnimation();
+  const howItWorks = useScrollAnimation({ animateOnMount: true });
   const features = useScrollAnimation();
   const faqsAnim = useScrollAnimation();
 
@@ -130,7 +130,12 @@ export default function LearnMorePage() {
           <Typography
             variant="h2"
             className="reveal"
-            sx={{ fontWeight: 700, mb: 3, color: 'white' }}
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+              color: 'white',
+              fontSize: { xs: '2.8rem', sm: '3.5rem', md: '4rem' },
+            }}
           >
             Learn More
           </Typography>
