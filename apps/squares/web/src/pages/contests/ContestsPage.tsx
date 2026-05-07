@@ -28,6 +28,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { gradients } from '../../types/gradients';
 import type { PaginatedContestsResponse } from '../../types/contest';
+import { Helmet } from 'react-helmet-async';
 
 export default function ContestsPage() {
   const auth = useAuth();
@@ -317,6 +318,11 @@ export default function ContestsPage() {
 
   return (
     <Box>
+      <Helmet>
+        <title>Contests – Squares</title>
+        <meta name="description" content="Browse and manage your NFL football squares contests." />
+        <link rel="canonical" href="https://squares.maxstash.io/contests" />
+      </Helmet>
       {heroSection()}
 
       <Container maxWidth="lg" sx={{ py: 3, px: { xs: 2, sm: 3 } }}>

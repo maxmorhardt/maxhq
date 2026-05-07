@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import LegalPageTemplate, { type LegalSection } from '../../components/common/LegalPageTemplate';
 
 // privacy policy page using legal page template
@@ -79,6 +80,20 @@ export default function PrivacyPolicyPage() {
   ];
 
   return (
-    <LegalPageTemplate title="Privacy Policy" lastUpdated="December 18, 2025" sections={sections} />
+    <>
+      <Helmet>
+        <title>Privacy Policy – Squares</title>
+        <meta
+          name="description"
+          content="Read the Squares privacy policy to understand how we collect, use, and protect your information."
+        />
+        <link rel="canonical" href="https://squares.maxstash.io/privacy-policy" />
+      </Helmet>
+      <LegalPageTemplate
+        title="Privacy Policy"
+        lastUpdated="December 18, 2025"
+        sections={sections}
+      />
+    </>
   );
 }

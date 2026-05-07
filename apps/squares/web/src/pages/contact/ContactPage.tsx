@@ -1,5 +1,6 @@
 import { Email, LocationOn, Phone } from '@mui/icons-material';
 import { Box, Container, Typography } from '@mui/material';
+import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
 import FormCard from '../../components/common/FormCard';
 import ContactForm from '../../components/contact/ContactForm';
@@ -57,6 +58,14 @@ export default function ContactPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 3, mb: { xs: 4, sm: 4, md: 2 } }}>
+      <Helmet>
+        <title>Contact Us – Squares</title>
+        <meta
+          name="description"
+          content="Get in touch with the Squares team. We’re here to help with your football squares questions."
+        />
+        <link rel="canonical" href="https://squares.maxstash.io/contact" />
+      </Helmet>
       {/* page header with title and description */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography

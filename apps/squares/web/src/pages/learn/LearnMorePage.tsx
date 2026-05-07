@@ -1,5 +1,6 @@
 import { DeviceHub, People, Security, Sports, Timeline, Tune } from '@mui/icons-material';
 import { Box, Container, Typography } from '@mui/material';
+import { Helmet } from 'react-helmet-async';
 import LearnFAQs from '../../components/learn/LearnFAQs';
 import LearnFeatureCard from '../../components/learn/LearnFeatureCard';
 import LearnHowItWorksCard from '../../components/learn/LearnHowItWorksCard';
@@ -111,6 +112,14 @@ export default function LearnMorePage() {
 
   return (
     <>
+      <Helmet>
+        <title>How to Play Football Squares – Squares</title>
+        <meta
+          name="description"
+          content="Learn how NFL football squares pools work. Create a grid, claim squares, and win based on live game scores."
+        />
+        <link rel="canonical" href="https://squares.maxstash.io/learn-more" />
+      </Helmet>
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Box

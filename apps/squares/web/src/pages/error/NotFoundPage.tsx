@@ -1,5 +1,6 @@
 import { Home, Search } from '@mui/icons-material';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,6 +22,10 @@ export default function NotFoundPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Helmet>
+        <title>Page Not Found – Squares</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* main error message and navigation */}
       <Box sx={{ textAlign: 'center', mb: 8 }}>
         {/* 404 number display */}

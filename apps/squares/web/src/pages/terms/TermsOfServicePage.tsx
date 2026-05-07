@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import LegalPageTemplate, { type LegalSection } from '../../components/common/LegalPageTemplate';
 
 // terms of service page using legal page template
@@ -91,10 +92,17 @@ export default function TermsOfServicePage() {
   ];
 
   return (
-    <LegalPageTemplate
-      title="Terms of Service"
-      lastUpdated="December 18, 2025"
-      sections={sections}
-    />
+    <>
+      <Helmet>
+        <title>Terms of Service – Squares</title>
+        <meta name="description" content="Read the Squares terms of service and usage policies." />
+        <link rel="canonical" href="https://squares.maxstash.io/terms-of-service" />
+      </Helmet>
+      <LegalPageTemplate
+        title="Terms of Service"
+        lastUpdated="December 18, 2025"
+        sections={sections}
+      />
+    </>
   );
 }
