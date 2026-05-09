@@ -35,7 +35,11 @@ export default function SessionRefreshBanner({ state }: Props) {
 
   return (
     <Snackbar open={open} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-      <Alert severity={severity} variant="filled" sx={{ minWidth: 260 }}>
+      <Alert
+        severity={severity}
+        variant="filled"
+        sx={{ minWidth: 260, '& .MuiAlert-icon': { color: 'white' } }}
+      >
         <Typography variant="body2" sx={{ fontWeight: 500, color: 'white' }}>
           {message}
         </Typography>

@@ -4,7 +4,12 @@ import { useScrollAnimation } from './useScrollAnimation';
 import { createElement } from 'react';
 
 // Test component that attaches the ref to a real DOM element
-function TestComponent(props: { threshold?: number; rootMargin?: string; triggerOnce?: boolean }) {
+function TestComponent(props: {
+  threshold?: number;
+  rootMargin?: string;
+  triggerOnce?: boolean;
+  animateOnMount?: boolean;
+}) {
   const { ref, isVisible } = useScrollAnimation(props);
   return createElement('div', { ref, 'data-testid': 'target', 'data-visible': String(isVisible) });
 }
@@ -115,5 +120,24 @@ describe('useScrollAnimation', () => {
       threshold: 0.5,
       rootMargin: '10px',
     });
+  });
+
+  it('does not create IntersectionObserver when animateOnMount is true', () => {
+    render(createElement(TestComponent, { animateOnMount: true }));
+    expect(observeMock).not.toHaveBeenCalled();
+  });
+
+  it('sets isVisible=true after timeout when animateOnMount is true', async () => {
+    vi.useFakeTimers();
+
+    const { getByTestId } = render(createElement(TestComponent, { animateOnMount: true }));
+    expect(getByTestId('target').dataset.visible).toBe('false');
+
+    await act(async () => {
+      vi.advanceTimersByTime(100);
+    });
+
+    expect(getByTestId('target').dataset.visible).toBe('true');
+    vi.useRealTimers();
   });
 });
