@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -22,8 +22,50 @@ vi.mock('react-helmet-async', () => ({
 
 vi.mock('../../hooks/useAxiosAuth', () => ({ useAxiosAuth: vi.fn(() => true) }));
 
+vi.mock('../../service/contestService', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../service/contestService')>();
+  return {
+    ...actual,
+    getContestsByOwner: vi.fn().mockResolvedValue({
+      contests: [],
+      page: 1,
+      limit: 5,
+      total: 0,
+      totalPages: 0,
+      hasNext: false,
+      hasPrevious: false,
+    }),
+    getMyContests: vi.fn().mockResolvedValue([]),
+  };
+});
+
 vi.mock('../../components/contest/table/ContestsTable', () => ({
-  default: ({ title }: { title: string }) => <div data-testid={`table-${title}`}>{title}</div>,
+  default: ({
+    title,
+    onPageChange,
+    onRowsPerPageChange,
+  }: {
+    title: string;
+    onPageChange?: (e: unknown, page: number) => void;
+    onRowsPerPageChange?: (e: unknown) => void;
+  }) => (
+    <div data-testid={`table-${title}`}>
+      {title}
+      {onPageChange && (
+        <button data-testid={`page-${title}`} onClick={() => onPageChange(null, 1)}>
+          Next Page
+        </button>
+      )}
+      {onRowsPerPageChange && (
+        <button
+          data-testid={`rows-${title}`}
+          onClick={() => onRowsPerPageChange({ target: { value: '10' } })}
+        >
+          Change Rows
+        </button>
+      )}
+    </div>
+  ),
 }));
 vi.mock('../../components/contest/table/ContestsTableSkeleton', () => ({
   default: ({ title }: { title: string }) => (
@@ -35,6 +77,7 @@ vi.mock('../../components/common/LoadingScreen', () => ({
 }));
 
 import { useAuth } from 'react-oidc-context';
+import { getContestsByOwner } from '../../service/contestService';
 
 const theme = createTheme({ palette: { mode: 'dark' } });
 
@@ -147,5 +190,112 @@ describe('ContestsPage', () => {
     fireEvent.change(searchInput, { target: { value: 'b' } });
     fireEvent.change(searchInput, { target: { value: 'bo' } });
     expect((searchInput as HTMLInputElement).value).toBe('bo');
+  });
+
+  it('shows tables when authenticated and data has loaded', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('table-My Contests')).toBeInTheDocument());
+    expect(screen.getByTestId('table-Joined Contests')).toBeInTheDocument();
+  });
+
+  it('shows Create Contest button when authenticated', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /create contest/i })).toBeInTheDocument()
+    );
+  });
+
+  it('navigates to /contests/create when Create Contest is clicked', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    await waitFor(() => screen.getByRole('button', { name: /create contest/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create contest/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/create');
+  });
+
+  it('shows error alert when fetch fails', async () => {
+    vi.mocked(getContestsByOwner).mockRejectedValueOnce({
+      code: 500,
+      message: 'fetch failed',
+      timestamp: '',
+      requestId: '',
+    });
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+  });
+
+  it('clears error alert when close button is clicked', async () => {
+    vi.mocked(getContestsByOwner).mockRejectedValueOnce({
+      code: 500,
+      message: 'fetch failed',
+      timestamp: '',
+      requestId: '',
+    });
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    await waitFor(() => screen.getByRole('alert'));
+    fireEvent.click(screen.getByRole('button', { name: /close/i }));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
+
+  it('calls onPageChange when Next Page is clicked', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    await waitFor(() => screen.getByTestId('page-My Contests'));
+    fireEvent.click(screen.getByTestId('page-My Contests'));
+    await waitFor(() => expect(screen.getByTestId('table-My Contests')).toBeInTheDocument());
+  });
+
+  it('calls onRowsPerPageChange when Change Rows is clicked', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    await waitFor(() => screen.getByTestId('rows-My Contests'));
+    fireEvent.click(screen.getByTestId('rows-My Contests'));
+    await waitFor(() => expect(screen.getByTestId('table-My Contests')).toBeInTheDocument());
   });
 });

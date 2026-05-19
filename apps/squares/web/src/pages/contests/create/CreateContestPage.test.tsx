@@ -154,4 +154,35 @@ describe('CreateContestPage', () => {
 
     await waitFor(() => expect(screen.getByText('Name already taken')).toBeInTheDocument());
   });
+
+  it('toggles visibility to Public when Public button is clicked', async () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /public/i }));
+    await waitFor(() => expect(screen.getByText(/anyone can view/i)).toBeInTheDocument());
+  });
+
+  it('changes max squares when slider value changes', () => {
+    const { container } = renderPage();
+    const slider = container.querySelector('input[type="range"]');
+    expect(slider).toBeInTheDocument();
+    fireEvent.change(slider!, { target: { value: '25' } });
+    expect(screen.getByText('Create New Contest')).toBeInTheDocument();
+  });
+
+  it('shows error when submitting with a name but user is null', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: null,
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    fireEvent.change(screen.getByLabelText(/contest name/i), {
+      target: { name: 'name', value: 'Test Contest' },
+    });
+    fireEvent.submit(document.querySelector('form')!);
+    await waitFor(() =>
+      expect(screen.getByText('You must be logged in to create a contest')).toBeInTheDocument()
+    );
+  });
 });

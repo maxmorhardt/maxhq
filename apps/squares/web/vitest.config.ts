@@ -25,7 +25,6 @@ export default defineConfig({
         'src/main.tsx',
         'src/**/*.test.{ts,tsx}',
         'coverage/',
-        'test/',
         'public/',
         '*.config.*',
       ],

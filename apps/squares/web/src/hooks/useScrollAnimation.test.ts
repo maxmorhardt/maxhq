@@ -46,6 +46,7 @@ describe('useScrollAnimation', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it('should start with isVisible=false', () => {

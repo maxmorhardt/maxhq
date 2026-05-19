@@ -1,8 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import SessionRefreshBanner from './SessionRefreshBanner';
 
 describe('SessionRefreshBanner', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('renders nothing when state is idle', () => {
     const { container } = render(<SessionRefreshBanner state="idle" />);
     expect(container.firstChild).toBeNull();
@@ -37,8 +41,8 @@ describe('SessionRefreshBanner', () => {
     const { rerender } = render(<SessionRefreshBanner state="refreshing" />);
     rerender(<SessionRefreshBanner state="success" />);
 
-    act(() => {
-      vi.advanceTimersByTime(2500);
+    await act(async () => {
+      vi.runAllTimers();
     });
 
     vi.useRealTimers();
