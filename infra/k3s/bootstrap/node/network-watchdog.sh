@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # --- Config ---
-# Hosts to ping to check if the internet is reachable
 LOG_TAG="network-watchdog"
 PING_TARGETS=("1.1.1.1" "8.8.8.8")
+REBOOT_COOLDOWN_MIN=15
+LAST_REBOOT_FILE="/var/lib/network-watchdog/last-reboot"
 
-# --- Helpers ---
-# Write a log line to the system journal and stdout
+# ─── Helpers ─────────────────────────────────────────────────────────────────
 log() { logger -t "$LOG_TAG" "$1"; echo "$(date '+%Y-%m-%d %H:%M:%S') $1"; }
 
-# Returns 0 (success) if at least one ping target responds
+# Returns 0 if at least one ping target responds
 network_ok() {
     for target in "${PING_TARGETS[@]}"; do
         if ping -c 2 -W 4 "$target" &>/dev/null; then
@@ -20,14 +20,37 @@ network_ok() {
     return 1
 }
 
-# --- Step 1: Quick check — maybe network is fine ---
-# Run by cron every few minutes; exit immediately if everything is working
+# Write a timestamp and reboot — checked on next run to enforce cooldown
+do_reboot() {
+    mkdir -p "$(dirname "$LAST_REBOOT_FILE")"
+    date +%s > "$LAST_REBOOT_FILE"
+    log "$1"
+    reboot
+}
+
+# ─── Reboot cooldown ─────────────────────────────────────────────────────────
+# If we rebooted recently, let the node settle before trying recovery again.
+if [ -f "$LAST_REBOOT_FILE" ]; then
+    last_reboot=$(cat "$LAST_REBOOT_FILE")
+    elapsed=$(( ($(date +%s) - last_reboot) / 60 ))
+    if [ "$elapsed" -lt "$REBOOT_COOLDOWN_MIN" ]; then
+        remaining=$(( REBOOT_COOLDOWN_MIN - elapsed ))
+        log "Post-reboot cooldown: ${remaining}m remaining — skipping recovery"
+        exit 0
+    fi
+    
+    rm -f "$LAST_REBOOT_FILE"
+fi
+
+# ─── Step 1: Quick check ─────────────────────────────────────────────────────
+# Exit immediately if network is fine — runs every 5 min via systemd timer.
 if network_ok; then
     exit 0
 fi
 
-# --- Step 2: Wait 60s to see if it's just a momentary blip ---
-log "Network unreachable, waiting 60s before acting to rule out a brief blip..."
+# ─── Step 2: Blip wait ───────────────────────────────────────────────────────
+# Wait 60s before acting in case it's a momentary ISP hiccup.
+log "Network unreachable, waiting 60s before acting..."
 sleep 60
 
 if network_ok; then
@@ -35,11 +58,11 @@ if network_ok; then
     exit 0
 fi
 
-# --- Step 3: No default route? Restart the networking daemon ---
-# If the routing table is empty (e.g. after a weird kernel/driver event),
-# restarting systemd-networkd re-applies the network config and restores routes.
+# ─── Step 3: No default route ────────────────────────────────────────────────
+# If the routing table is empty, restarting systemd-networkd re-applies network
+# config and restores the default route.
 
-# Returns the name of the network interface used for the default route (e.g. "eth0")
+# Returns the interface used for the default route (e.g. "eth0")
 get_default_iface() {
     ip route show default 2>/dev/null | awk '{print $5}' | head -1
 }
@@ -56,13 +79,12 @@ if [ -z "$IFACE" ]; then
         exit 0
     fi
 
-    log "Still unreachable after networkd restart. Rebooting..."
-    reboot
+    do_reboot "Still unreachable after networkd restart. Rebooting..."
     exit 0
 fi
 
-# --- Step 4: Bounce the network interface (down → up) ---
-# Sometimes the NIC gets into a bad state; turning it off and on again fixes it.
+# ─── Step 4: Interface bounce ────────────────────────────────────────────────
+# Bring the NIC down and back up to reset driver state.
 log "Still unreachable. Cycling interface $IFACE..."
 ip link set "$IFACE" down
 sleep 5
@@ -75,8 +97,8 @@ if network_ok; then
     exit 0
 fi
 
-# --- Step 5: Renew the DHCP lease ---
-# The router may have dropped our IP assignment; ask for a new one.
+# ─── Step 5: DHCP renewal ────────────────────────────────────────────────────
+# Ask the router for a fresh IP + gateway assignment.
 log "Interface cycle did not help. Renewing DHCP lease on $IFACE..."
 if systemctl is-active --quiet systemd-networkd; then
     networkctl renew "$IFACE" 2>/dev/null || true
@@ -91,7 +113,6 @@ if network_ok; then
     exit 0
 fi
 
-# --- Step 6: Nothing worked — reboot the node ---
-# Last resort: a full reboot will reset everything (driver, network stack, DHCP).
-log "All soft recovery attempts failed. Rebooting..."
-reboot
+# ─── Step 6: Reboot ──────────────────────────────────────────────────────────
+# Last resort — a full reboot resets everything (driver, network stack, DHCP).
+do_reboot "All soft recovery attempts failed. Rebooting..."
