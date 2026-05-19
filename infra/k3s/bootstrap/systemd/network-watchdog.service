@@ -8,3 +8,4 @@ Type=oneshot
 ExecStart=/usr/local/bin/network-watchdog.sh
 StandardOutput=journal
 StandardError=journal
+StartLimitIntervalSec=0
