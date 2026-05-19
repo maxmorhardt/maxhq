@@ -1,0 +1,10 @@
+[Unit]
+Description=Network connectivity watchdog
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/network-watchdog.sh
+StandardOutput=journal
+StandardError=journal

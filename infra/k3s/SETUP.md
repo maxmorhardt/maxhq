@@ -1,79 +1,49 @@
-## Prerequisites
+## Bootstrap (recommended)
+
+Automates all node provisioning over SSH. See [bootstrap/README.md](bootstrap/README.md) for setup.
+
 ```bash
-# Disable firewall (you can also allow 6443 and other ports)
-sudo su
-ufw disable
+cd k3s/bootstrap
 
-# Enable cgroups
-nano /boot/firmware/cmdline.txt
-add the following to the end: cgroup_enable=memory cgroup_memory=1
+# Control plane
+python main.py --node-type control-plane --host 10.0.0.100
 
-# Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
+# Worker
+python main.py --node-type worker --host 10.0.0.101 --cp-host 10.0.0.100
+```
+
+Handles: packages, firewall, cgroups, k3s install, kubeconfig, join token, aliases, node scripts, systemd units, apt upgrade cron, Tailscale install.
+
+## Post-bootstrap: Tailscale
+
+Bootstrap installs Tailscale but does not authenticate it. SSH into each node after bootstrap and run:
+
+```bash
 sudo tailscale up
-```
-
-## Main Node
-```bash
-sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - \
-  --tls-san "10.0.0.186" \
-  --disable traefik \
-  --kube-apiserver-arg service-node-port-range=25565-32767
-
-# Setup kubectl aliases
-echo "alias k=\"k3s kubectl\"" >> /root/.bashrc
-echo "alias k=\"sudo k3s kubectl\"" >> .bashrc
-```
-
-For worker token:
-```bash
-cat /var/lib/rancher/k3s/server/token
-```
-
-For kube config:
-```bash
-# On K3s server
-cat /etc/rancher/k3s/k3s.yaml
-
-# On local machine with Tailscale
-# Copy kubeconfig and update server to use Tailscale hostname:
-# server: https://max-main:6443
-```
-
-## Worker Node
-```bash
-sudo su
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable \
-  K3S_URL=https://10.0.0.186:6443 \
-  K3S_TOKEN=<token> \
-  sh -s -
+# visit the printed URL to authenticate
 ```
 
 ## Tailscale TLS Configuration
 
-Add Tailscale IPs to K3s certificate:
-```bash
-# Get Tailscale IP
-tailscale status
+To use `kubectl` over Tailscale, add the control-plane Tailscale IP and hostname to the k3s TLS certificate.
 
-# Create config file
-sudo nano /etc/rancher/k3s/config.yaml
+Get your Tailscale IP:
+```bash
+tailscale status
 ```
 
-Add:
+Create/update `/etc/rancher/k3s/config.yaml` on the control plane:
 ```yaml
 disable:
   - traefik
 tls-san:
-  - "10.0.0.186"      # Control plane LAN IP
-  - "100.xxx.xxx.xx"  # Tailscale control plane IP
-  - "max-main"        # Tailscale control plane hostname
+  - "10.0.0.186"        # LAN IP
+  - "100.xxx.xxx.xx"    # Tailscale IP
+  - "max-main"          # Tailscale hostname
 kube-apiserver-arg:
   - "service-node-port-range=25565-32767"
 ```
 
-Restart:
 ```bash
 sudo systemctl restart k3s
 ```
@@ -83,75 +53,26 @@ Verify:
 openssl s_client -connect 10.0.0.186:6443 </dev/null 2>/dev/null | openssl x509 -noout -text | grep -A1 "Subject Alternative Name"
 ```
 
+Update your local kubeconfig to point to the Tailscale hostname:
+```yaml
+server: https://max-main:6443
+```
+
 ## Port Forwarding
-The following ports should be open
-- 443 (HTTPS)
 
-## Other
-Delete k3s main node: 
-```bash
-/usr/local/bin/k3s-uninstall.sh
-```
-
-Delete k3s worker node: 
-```bash
-/usr/local/bin/k3s-agent-uninstall.sh
-```
-
-Upgrades:
-```bash
-# SCP rehydrate.sh in nodes
-mv rehydrate.sh /usr/local/bin
-chmod +x /usr/local/bin/rehydrate.sh
-chown 0:0 /usr/local/bin/rehydrate.sh
-
-mkdir -p /var/log/rehydrate
-
-echo 'DISCORD_WEBHOOK="https://discord.com/api/webhooks/XXXX/XXXX"' | tee /etc/rehydrate.env
-chmod 600 /etc/rehydrate.env
-chown 0:0 /etc/rehydrate.env
-
-# SCP k3s-uncordon.service to worker nodes
-# For control plane do the same steps but with k3s-uncordon-cp.service
-mv k3s-uncordon.service /etc/systemd/system/
-chmod 644 /etc/systemd/system/k3s-uncordon.service
-chown 0:0 /etc/systemd/system/k3s-uncordon.service
-systemctl daemon-reload
-systemctl enable k3s-uncordon.service
-
-# SCP kubeconfig to worker nodes for draining (make sure host is the right IP/DNS first)
-mkdir -p /etc/rancher/k3s
-mv k3s.yaml /etc/rancher/k3s/k3s.yaml
-chmod 600 /etc/rancher/k3s/k3s.yaml
-chown 0:0 /etc/rancher/k3s/k3s.yaml
-
-# Crontab config (Tuesday 2am - 3:30am EST)
-crontab -e
-
-# Main Node
-0 2 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
-
-# Worker 1
-30 2 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
-
-# Worker 2
-0 3 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
-
-# Worker 3
-30 3 * * 2 /usr/local/bin/rehydrate.sh >> /var/log/rehydrate/rehydrate-$(hostname)-$(date +\%Y-\%m-\%d).log 2>&1
-```
+Open port 443 (HTTPS) on your router to the control-plane LAN IP.
 
 ## MicroSD to NVMe Migration
 
 To migrate from microSD to NVMe for better performance:
 
 ```bash
-# 1. Drain node and shutdown, then attach NVMe drive
+# 1. Drain node and shut down, then attach NVMe drive
 
-# 2. Startup and stop k3s services
+# 2. Start up and stop k3s services
 sudo /usr/local/bin/k3s-killall.sh
 
-# 3. Clone microSD to NVMe (Ensure correct drives: mmcblk0 - MicroSD, nvme0n1 NVMe)
+# 3. Clone microSD to NVMe (verify drives: mmcblk0 = MicroSD, nvme0n1 = NVMe)
 lsblk
 sudo dd if=/dev/mmcblk0 of=/dev/nvme0n1 bs=4M status=progress conv=fsync
 sync
@@ -161,5 +82,15 @@ sudo growpart /dev/nvme0n1 2
 sudo e2fsck -f /dev/nvme0n1p2
 sudo resize2fs /dev/nvme0n1p2
 
-# 5. Shutdown, detach microSD, and startup from NVMe
+# 5. Shut down, remove microSD, boot from NVMe
+```
+
+## Uninstall
+
+```bash
+# Control plane
+/usr/local/bin/k3s-uninstall.sh
+
+# Worker
+/usr/local/bin/k3s-agent-uninstall.sh
 ```
