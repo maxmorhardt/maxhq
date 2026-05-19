@@ -20,10 +20,10 @@ SSH_IDENTITY=/home/you/.ssh/id_rsa
 
 ```bash
 # Bootstrap control plane
-python main.py --node-type control-plane --host 10.0.0.186
+python main.py --node-type control-plane --host 10.0.0.100
 
 # Bootstrap a worker (cp-host is the control-plane IP)
-python main.py --node-type worker --host 10.0.0.101 --cp-host 10.0.0.186
+python main.py --node-type worker --host 10.0.0.101 --cp-host 10.0.0.100
 ```
 
 Outputs saved to `bootstrap-output/<host>/`: `kubeconfig`, `join-token`.
