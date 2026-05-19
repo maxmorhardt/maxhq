@@ -30,7 +30,7 @@ This guide provides context for coding agents working in this repository. Square
 - Type check: `npm run type-check` (uses `tsc --noEmit`).
 - Tests: **Vitest** + **@testing-library/react** + **jest-dom** + **jsdom** (`npm run test`, `npm run test:watch`, `npm run test:coverage`).
 
-Coverage thresholds are enforced at **45%** for lines / branches / functions / statements in [vitest.config.ts](vitest.config.ts). Keep them passing.
+Coverage thresholds are enforced at **80%** for lines / branches / functions / statements in [vitest.config.ts](vitest.config.ts). Keep them passing.
 
 ## Code style
 
@@ -84,7 +84,7 @@ The app follows a strict **page/component → hook → service → backend** flo
 - Service tests should mock the `axios` instance from `src/axios/api.ts`, not `axios` itself.
 - Hook tests use `renderHook` from `@testing-library/react`. For OIDC-dependent hooks, mock `useAuth` from `react-oidc-context`.
 - When mocking browser APIs (`IntersectionObserver`, `WebSocket`, `matchMedia`), restore the original on `afterEach`.
-- Run `npm run test:coverage` before committing changes that touch `src/`. The build will fail if any coverage metric drops below 45%.
+- Run `npm run test:coverage` before committing changes that touch `src/`. The build will fail if any coverage metric drops below 80%.
 
 ## Deployment
 
