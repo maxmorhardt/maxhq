@@ -1,13 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
 import ErrorBoundary, { ErrorFallback } from './ErrorBoundary';
 
 const mockReload = vi.fn();
-Object.defineProperty(window, 'location', {
-  value: { reload: mockReload, href: '' },
-  writable: true,
+
+beforeEach(() => {
+  vi.stubGlobal('location', { ...window.location, reload: mockReload });
+});
+
+afterEach(() => {
+  mockReload.mockReset();
+  vi.unstubAllGlobals();
 });
 
 const theme = createTheme({ palette: { mode: 'dark' } });

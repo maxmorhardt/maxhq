@@ -8,6 +8,8 @@ import { contestReducer } from '../../../features/contests/contestSlice';
 import ContestsTable from './ContestsTable';
 import type { Contest } from '../../../types/contest';
 
+const mockNavigate = vi.hoisted(() => vi.fn());
+
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -22,7 +24,6 @@ vi.mock('./EditContest', () => ({
 
 import { useAuth } from 'react-oidc-context';
 
-const mockNavigate = vi.fn();
 const theme = createTheme();
 
 const contest: Contest = {
