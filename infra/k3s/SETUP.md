@@ -37,7 +37,7 @@ Create/update `/etc/rancher/k3s/config.yaml` on the control plane:
 disable:
   - traefik
 tls-san:
-  - "10.0.0.186"        # LAN IP
+  - "10.0.0.100"        # LAN IP
   - "100.xxx.xxx.xx"    # Tailscale IP
   - "max-main"          # Tailscale hostname
 kube-apiserver-arg:

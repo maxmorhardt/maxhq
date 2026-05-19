@@ -1,6 +1,6 @@
 # bootstrap
 
-Provisions a k3s node over SSH.
+Provisions a k3s node over SSH. Tested on Ubuntu 24+.
 
 ## Setup
 
