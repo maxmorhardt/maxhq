@@ -120,6 +120,7 @@ class NodeBootstrap:
             f"grep -q cgroup_enable=memory {cmdline} && grep -q cgroup_memory=1 {cmdline}",
             hide="both", warn=True,
         ).ok
+        
         if already:
             log.info("cgroups already configured")
         else:
@@ -201,6 +202,7 @@ class NodeBootstrap:
             local = NODE_DIR / script
             if not local.exists():
                 raise SystemExit(f"Missing: {local}")
+            
             self._sudo_put(local, f"{SCRIPTS_DEST}/{script}")
             self.ssh(f"sudo chmod +x {SCRIPTS_DEST}/{script}")
         log.info("Node scripts deployed")
@@ -211,6 +213,7 @@ class NodeBootstrap:
             if not local.exists():
                 raise SystemExit(f"Missing: {local}")
             self._sudo_put(local, f"{SYSTEMD_DEST}/{unit}")
+
         self.ssh("sudo systemctl daemon-reload")
         self.ssh("sudo systemctl enable --now network-watchdog.timer")
         self.ssh("sudo systemctl restart network-watchdog.timer")
