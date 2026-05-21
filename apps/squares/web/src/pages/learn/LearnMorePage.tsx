@@ -119,6 +119,20 @@ export default function LearnMorePage() {
           content="Learn how NFL football squares pools work. Create a grid, claim squares, and win based on live game scores."
         />
         <link rel="canonical" href="https://squares.maxstash.io/learn-more" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: faqs.map((faq) => ({
+              '@type': 'Question',
+              name: faq.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: faq.answer,
+              },
+            })),
+          })}
+        </script>
       </Helmet>
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>

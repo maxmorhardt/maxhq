@@ -12,10 +12,13 @@
       name="description"
       content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
     />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#121212" />
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://squares.maxstash.io/" />
+    <meta property="og:site_name" content="Squares" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content="Squares – NFL Football Squares Pools" />
     <meta
       property="og:description"
@@ -30,6 +33,29 @@
       content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
     />
     <meta name="twitter:image" content="https://squares.maxstash.io/squares_logo.png" />
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Squares",
+        "url": "https://squares.maxstash.io/",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "description": "Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "Squares",
+          "url": "https://squares.maxstash.io/"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
