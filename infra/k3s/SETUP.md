@@ -85,6 +85,15 @@ sudo resize2fs /dev/nvme0n1p2
 # 5. Shut down, remove microSD, boot from NVMe
 ```
 
+## Network Watchdog Logs
+
+The watchdog runs on a systemd timer and logs to the journal.
+
+```bash
+journalctl -u network-watchdog.service -r
+systemctl status network-watchdog.timer
+```
+
 ## Uninstall
 
 ```bash

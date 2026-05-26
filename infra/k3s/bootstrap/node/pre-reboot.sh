@@ -1,6 +1,6 @@
 #!/bin/bash
-# Pre-reboot cleanup — called by kured before each node reboot.
-set -euo pipefail
+# Pre-reboot cleanup called by kured before each node reboot.
+set -uo pipefail
 
 LOG_DIR="/var/log/kured"
 LOG_FILE="$LOG_DIR/pre-reboot-$(date +%Y-%m-%d).log"
@@ -22,11 +22,11 @@ echo "Inodes:"
 df -i /
 
 log_section "Pruning unused container images"
-k3s crictl rmi --prune || true
+k3s crictl rmi --prune
 
 log_section "Updating and upgrading packages"
 apt-get update
-apt-get upgrade -y
+apt-get upgrade -y --fix-missing
 apt-get autoremove -y
 apt-get autoclean
 
@@ -36,13 +36,13 @@ journalctl --vacuum-time=7d
 journalctl --disk-usage
 
 log_section "Removing old log files (>30 days)"
-find /var/log -type f \( -name "*.log" -o -name "*.gz" \) -mtime +30 -print -delete || true
+find /var/log -type f \( -name "*.log" -o -name "*.gz" \) -mtime +30 -print -delete
 
 log_section "Cleaning temporary files"
-rm -rf /tmp/* /var/tmp/* || true
+rm -rf /tmp/* /var/tmp/*
 
 log_section "Removing firmware backups"
-rm -f /boot/firmware/*.bak || true
+rm -f /boot/firmware/*.bak
 
 log_section "Disk space after cleanup"
 df -h /
