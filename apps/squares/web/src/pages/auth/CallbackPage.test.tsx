@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, act } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -39,11 +39,17 @@ function renderPage(searchString = '') {
 
 describe('CallbackPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
     vi.mocked(useAuth).mockReturnValue({
       isLoading: true,
       isAuthenticated: false,
       error: undefined,
     } as unknown as ReturnType<typeof useAuth>);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders the loading animation while auth is loading', () => {
@@ -62,8 +68,8 @@ describe('CallbackPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
   });
 
-  it('navigates to redirect path when authenticated', () => {
-    sessionStorage.setItem('auth_redirect_path', '/contests');
+  it('navigates to redirect path when auth completes (deferred until intro finishes)', () => {
+    sessionStorage.setItem('auth_redirect_path', '/contests/owner/alice/name/pool');
     vi.mocked(useAuth).mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
@@ -71,8 +77,35 @@ describe('CallbackPage', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage('?code=abc&state=xyz');
-    expect(mockNavigate).toHaveBeenCalledWith('/contests', { replace: true });
+
+    // navigation must not fire synchronously on render
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    // advance past MIN_DISPLAY_MS; noop act() in between forces React to flush effects
+    act(() => vi.advanceTimersByTime(1600));
+    act(() => {}); // flush React renders triggered by setMinTimePassed
+    act(() => vi.advanceTimersByTime(700));
+    act(() => {}); // flush any remaining effects
+
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/owner/alice/name/pool', { replace: true });
+  });
+
+  it('falls back to /contests when no redirect path is stored', () => {
     sessionStorage.removeItem('auth_redirect_path');
+    vi.mocked(useAuth).mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      error: undefined,
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage('?code=abc&state=xyz');
+
+    act(() => vi.advanceTimersByTime(1600));
+    act(() => {});
+    act(() => vi.advanceTimersByTime(700));
+    act(() => {});
+
+    expect(mockNavigate).toHaveBeenCalledWith('/contests', { replace: true });
   });
 
   it('navigates home on auth error', () => {

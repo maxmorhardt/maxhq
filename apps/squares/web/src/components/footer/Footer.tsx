@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Footer() {
   const navigate = useNavigate();
-  // get current year for copyright
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [
@@ -14,7 +13,6 @@ export default function Footer() {
   ];
 
   return (
-    // footer container with top border
     <Box
       component="footer"
       sx={{

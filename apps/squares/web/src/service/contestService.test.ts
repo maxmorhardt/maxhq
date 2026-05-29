@@ -23,7 +23,7 @@ import {
 } from './contestService';
 import type { PaginatedContestsResponse, Participant } from '../types/contest';
 
-// Mock the axios api module
+// mock the axios api module
 vi.mock('../axios/api');
 
 describe('contestService', () => {

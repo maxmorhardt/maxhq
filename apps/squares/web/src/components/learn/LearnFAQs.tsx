@@ -10,7 +10,6 @@ export default function LearnFAQs({ question, answer }: LearnFAQsProps) {
   const theme = useTheme();
 
   return (
-    // expandable accordion for FAQ item
     <Accordion
       sx={{
         background: theme.palette.grey[900],

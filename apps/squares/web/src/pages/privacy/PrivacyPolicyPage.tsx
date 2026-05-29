@@ -1,7 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import LegalPageTemplate, { type LegalSection } from '../../components/common/LegalPageTemplate';
 
-// privacy policy page using legal page template
 export default function PrivacyPolicyPage() {
   const sections: LegalSection[] = [
     {

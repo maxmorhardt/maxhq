@@ -118,7 +118,9 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     onClose();
   };
 
-  if (!contest) return null;
+  if (!contest) {
+    return null;
+  }
 
   const titleText = isOwner ? 'Edit Contest' : 'Contest Details';
 

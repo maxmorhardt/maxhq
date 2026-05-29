@@ -67,7 +67,6 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     return;
   }
 
-  // validate and dispatch update action
   const handleSave = () => {
     if (!value.trim()) {
       setError(true);
@@ -88,7 +87,6 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     }
   };
 
-  // dispatch clear action and close modal
   const handleClear = async () => {
     if (currentSquare) {
       try {
@@ -105,11 +103,10 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     }
   };
 
-  // update value and clear error if valid
   const handleValueChange = (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.target.value;
 
-    // filter to only alphanumeric characters, convert to uppercase, limit to 3 chars
+    // alphanumeric only, uppercase, max 3 chars
     const filtered = input
       .replace(/[^a-zA-Z0-9]/g, '')
       .toUpperCase()
@@ -121,7 +118,6 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     }
   };
 
-  // reset form to original values on close
   const handleClose = () => {
     if (currentSquare?.value) {
       setValue(currentSquare.value);
@@ -134,12 +130,10 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     onClose();
   };
 
-  // check ownership and contest state
   const isOwner = currentSquare?.owner === auth?.user?.profile?.preferred_username;
   const isReadOnly = Boolean(currentSquare?.owner && !isOwner);
   const isActive = currentContest?.status === 'ACTIVE';
 
-  // get all quarters where this square is a winner
   const winningQuarters =
     currentContest?.quarterResults
       ?.filter((qr) => qr.winnerRow === currentSquare?.row && qr.winnerCol === currentSquare?.col)

@@ -1,11 +1,10 @@
 import { isAxiosError } from 'axios';
 import type { APIError } from '../types/error';
 
-// convert any error into standardized APIError format
+// normalize any thrown value (axios or otherwise) into an APIError
 export function handleError(err: unknown): APIError {
   const now = new Date().toISOString();
 
-  // handle non-axios errors
   if (!isAxiosError(err)) {
     return {
       code: 0,
@@ -18,12 +17,12 @@ export function handleError(err: unknown): APIError {
   const response = err.response;
   const request = err.request;
 
-  // return api error from response data if available
+  // prefer backend-provided error body when present
   if (response?.data) {
     return response.data;
   }
 
-  // create error from response status
+  // response without a body — synthesize from status
   if (response) {
     return {
       code: response.status ?? 0,
@@ -33,7 +32,7 @@ export function handleError(err: unknown): APIError {
     };
   }
 
-  // network error (no response received)
+  // request sent but no response — network failure
   if (request) {
     return {
       code: 0,
@@ -43,7 +42,7 @@ export function handleError(err: unknown): APIError {
     };
   }
 
-  // request setup error
+  // request was never sent (config/setup error)
   return {
     code: 0,
     message: err.message ?? 'Request setup error',

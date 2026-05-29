@@ -4,18 +4,15 @@ import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 
-// 404 error page with navigation options
 export default function NotFoundPage() {
   const theme = useTheme();
   const navigate = useNavigate();
   const auth = useAuth();
 
-  // navigate to home page
   const handleGoHome = () => {
     navigate('/');
   };
 
-  // navigate to contests page
   const handleGoToContests = () => {
     navigate('/contests');
   };

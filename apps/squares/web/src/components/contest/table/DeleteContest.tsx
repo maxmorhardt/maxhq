@@ -32,7 +32,6 @@ export default function DeleteContest({ open, onClose }: DeleteContestProps) {
     return;
   }
 
-  // dispatch delete action and close modal on success
   const handleConfirm = () => {
     dispatch(deleteContest(currentContest.id))
       .unwrap()

@@ -5,13 +5,11 @@ import { useToast } from '../../hooks/useToast';
 import { Toast } from './Toast';
 
 export function ToastProvider() {
-  // get all active toast messages from redux
   const messages: ToastMessage[] = useSelector(selectToastMessages);
   const { hideToast } = useToast();
 
   return (
     <>
-      {/* render all active toast notifications */}
       {messages.map((message) => (
         <Toast
           key={message.id}

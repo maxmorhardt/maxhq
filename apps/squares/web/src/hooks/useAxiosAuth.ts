@@ -6,7 +6,6 @@ export const useAxiosAuth = () => {
   const auth = useAuth();
   const [ready, setReady] = useState(false);
 
-  // configure axios with auth token when user is authenticated
   useEffect(() => {
     if (!auth.isAuthenticated || !auth.user?.access_token) {
       setReady(false);
@@ -17,6 +16,5 @@ export const useAxiosAuth = () => {
     setReady(true);
   }, [auth.user, auth.isAuthenticated]);
 
-  // returns true when axios is configured with auth token
   return ready;
 };

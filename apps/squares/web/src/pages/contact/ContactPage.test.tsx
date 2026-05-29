@@ -21,7 +21,7 @@ vi.mock('../../hooks/useToast', () => ({
   useToast: () => ({ showToast: mockShowToast }),
 }));
 
-// Capture the onSubmit prop so tests can invoke it directly
+// capture the onSubmit prop so tests can invoke it directly
 let capturedOnSubmit:
   | ((data: {
       name: string;

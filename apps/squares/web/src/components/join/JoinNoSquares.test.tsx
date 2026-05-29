@@ -42,7 +42,7 @@ describe('JoinNoSquares', () => {
 
   it('does not show the chip when preview is null', () => {
     renderComponent(null);
-    // The Chip only renders the contest name when preview is provided
+    // the chip only renders the contest name when preview is provided
     expect(screen.queryByText('Super Bowl Contest')).not.toBeInTheDocument();
   });
 

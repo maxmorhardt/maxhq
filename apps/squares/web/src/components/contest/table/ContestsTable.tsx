@@ -57,25 +57,21 @@ export default function ContestsTable({
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  // shared styling for table headers
   const headerSx = {
     color: 'white',
     fontWeight: 600,
     fontSize: { xs: '0.75rem', md: '0.875rem' },
   };
 
-  // navigate to contest detail page
   const handleRowClick = (owner: string, name: string) => {
     navigate(`/contests/owner/${owner}/name/${name}`);
   };
 
-  // set contest in redux and open delete modal
   const handleDelete = (contest: Contest) => {
     dispatch(setCurrentContest(contest));
     setDeleteModalOpen(true);
   };
 
-  // set contest in redux and open edit modal
   const handleEdit = (contest: Contest) => {
     dispatch(setCurrentContest(contest));
     setEditModalOpen(true);
@@ -83,7 +79,6 @@ export default function ContestsTable({
 
   return (
     <>
-      {/* main container */}
       <Box sx={{ p: { xs: 0, sm: 1 } }}>
         {/* section header: title + optional create button */}
         <Box
@@ -396,7 +391,7 @@ export default function ContestsTable({
             </TableContainer>
           )}
 
-          {/* Pagination - only show when there are contests and not hidden */}
+          {/* pagination — only when there are contests and not hidden */}
           {contests.length > 0 && !hidePagination && (
             <TablePagination
               component="div"

@@ -5,7 +5,9 @@ interface ActiveContestControlsProps {
 }
 
 export default function ActiveContestControls({ allSquaresFilled }: ActiveContestControlsProps) {
-  if (allSquaresFilled) return null;
+  if (allSquaresFilled) {
+    return null;
+  }
 
   return (
     <>

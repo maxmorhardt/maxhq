@@ -92,30 +92,110 @@ export default function ContestPageSkeleton({
           <Paper
             sx={{
               ...cardSx,
-              p: { xs: 2.25, sm: 3, md: 4 },
+              p: { xs: 0.75, sm: 1, md: 1.5 },
+              borderRadius: 3,
+              width: 'fit-content',
             }}
           >
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(11, 1fr)',
-                gridTemplateRows: 'repeat(11, 1fr)',
-                gap: { xs: 0.5, sm: 1 },
-                width: { xs: '320px', sm: '440px', md: '550px' },
-                height: { xs: '320px', sm: '440px', md: '550px' },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
               }}
             >
-              {[...Array(121)].map((_, index) => (
+              {/* away team label */}
+              <Skeleton
+                variant="rectangular"
+                sx={{
+                  width: { xs: 70, sm: 90, md: 110 },
+                  height: { xs: 10, sm: 14, md: 16 },
+                  borderRadius: 0.5,
+                  mb: { xs: 2, sm: 3.375 },
+                }}
+              />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', pb: { xs: 1.5, sm: 3.5 } }}>
+                {/* home team label (vertical) */}
                 <Skeleton
-                  key={index}
                   variant="rectangular"
                   sx={{
-                    width: '100%',
-                    height: '100%',
+                    width: { xs: 10, sm: 14, md: 16 },
+                    height: { xs: 100, sm: 130, md: 150 },
                     borderRadius: 1,
+                    mr: { xs: 2, sm: 3.5 },
                   }}
                 />
-              ))}
+
+                {/* grid rows */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.5,
+                    pr: { xs: 3.5, sm: 5 },
+                  }}
+                >
+                  {[...Array(10)].map((_, rowIndex) => (
+                    <Box key={rowIndex} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      {[...Array(10)].map((_, colIndex) => (
+                        <Box key={colIndex} sx={{ position: 'relative' }}>
+                          {rowIndex === 0 && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: { xs: -12, sm: -18, md: -20 },
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: { xs: 8, sm: 12, md: 14 },
+                                height: { xs: 8, sm: 12, md: 14 },
+                              }}
+                            >
+                              <Skeleton
+                                variant="rectangular"
+                                sx={{ width: { xs: 5, sm: 7, md: 8 }, height: 2, borderRadius: 1 }}
+                              />
+                            </Box>
+                          )}
+                          {colIndex === 0 && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                left: { xs: -10, sm: -13, md: -16 },
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: { xs: 8, sm: 12, md: 14 },
+                                height: { xs: 8, sm: 12, md: 14 },
+                              }}
+                            >
+                              <Skeleton
+                                variant="rectangular"
+                                sx={{ width: { xs: 5, sm: 7, md: 8 }, height: 2, borderRadius: 1 }}
+                              />
+                            </Box>
+                          )}
+                          <Skeleton
+                            variant="rectangular"
+                            sx={{
+                              width: { xs: 24, sm: 43, md: 47.5 },
+                              height: { xs: 24, sm: 43, md: 47.5 },
+                              m: { xs: 0, sm: 0.3, md: 0.4 },
+                              borderRadius: 1.5,
+                            }}
+                          />
+                        </Box>
+                      ))}
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
             </Box>
           </Paper>
         </Box>

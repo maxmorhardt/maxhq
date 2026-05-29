@@ -17,7 +17,6 @@ export default function LandingHowItWorksCard({
   const theme = useTheme();
 
   return (
-    // card with icon and description, hover lift effect
     <Paper
       elevation={0}
       sx={{

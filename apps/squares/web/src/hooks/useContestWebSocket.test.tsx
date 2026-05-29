@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import type { HandleWSEventParams } from '../types/ws';
 import type { Contest, Participant } from '../types/contest';
 
-// Mock react-oidc-context
+// mock react-oidc-context
 const mockAuth = {
   isLoading: false,
   isAuthenticated: true,
@@ -27,7 +27,7 @@ vi.mock('react-oidc-context', () => ({
   useAuth: () => mockAuth,
 }));
 
-// Mock react-use-websocket
+// mock react-use-websocket
 const mockSendJsonMessage = vi.fn();
 const mockGetWebSocket = vi.fn<() => WebSocket | null>(() => null);
 let mockLastMessage: MessageEvent | null = null;
@@ -48,7 +48,7 @@ vi.mock('react-use-websocket', () => ({
   ReadyState: { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 },
 }));
 
-// Mock wsService — capture params for callback invocation
+// mock wsService — capture params for callback invocation
 let capturedEventParams: HandleWSEventParams | null = null;
 vi.mock('../service/wsService', () => ({
   getSocketUrl: vi.fn(() => 'ws://localhost:8080/ws/contests/owner/testuser/name/test'),

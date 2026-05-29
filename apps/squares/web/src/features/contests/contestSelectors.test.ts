@@ -80,7 +80,7 @@ const defaultPagination = {
   hasPrevious: false,
 };
 
-// Construct a minimal state shape that satisfies the selectors' RootState expectations
+// construct a minimal state shape that satisfies the selectors' RootState expectations
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const makeState = (overrides: Record<string, unknown> = {}): any => ({
   contest: {

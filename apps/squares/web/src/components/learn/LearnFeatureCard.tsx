@@ -11,7 +11,6 @@ export default function LearnFeatureCard({ icon, title, description }: LearnFeat
   const theme = useTheme();
 
   return (
-    // feature card with hover lift animation
     <Card
       sx={{
         background: theme.palette.grey[900],

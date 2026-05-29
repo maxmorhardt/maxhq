@@ -72,9 +72,6 @@ vi.mock('../../components/contest/table/ContestsTableSkeleton', () => ({
     <div data-testid={`skeleton-${title}`}>{title} skeleton</div>
   ),
 }));
-vi.mock('../../components/common/LoadingScreen', () => ({
-  default: ({ title }: { title: string }) => <div data-testid="loading-screen">{title}</div>,
-}));
 
 import { useAuth } from 'react-oidc-context';
 import { getContestsByOwner } from '../../service/contestService';
@@ -126,20 +123,7 @@ describe('ContestsPage', () => {
     expect(screen.getByText('Sign in to view your contests')).toBeInTheDocument();
   });
 
-  it('shows skeleton tables on first load while auth is loading', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      isLoading: true,
-      activeNavigator: undefined,
-      user: null,
-    } as unknown as ReturnType<typeof useAuth>);
-
-    renderPage();
-    expect(screen.getByTestId('skeleton-My Contests')).toBeInTheDocument();
-    expect(screen.getByTestId('skeleton-Joined Contests')).toBeInTheDocument();
-  });
-
-  it('shows loading screen when signin redirect is in progress', () => {
+  it('shows a redirecting screen while a sign-in redirect is in progress', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
@@ -148,7 +132,20 @@ describe('ContestsPage', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
-    expect(screen.getByTestId('loading-screen')).toBeInTheDocument();
+    expect(screen.getByText('Redirecting to sign in...')).toBeInTheDocument();
+  });
+
+  it('shows skeleton tables on first load while authenticated but data not yet arrived', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+
+    renderPage();
+    expect(screen.getByTestId('skeleton-My Contests')).toBeInTheDocument();
+    expect(screen.getByTestId('skeleton-Joined Contests')).toBeInTheDocument();
   });
 
   it('renders the search field', () => {

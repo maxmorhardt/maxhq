@@ -90,7 +90,7 @@ describe('ScoreUpdateControls', () => {
   it('does not submit when score inputs contain non-numeric text', async () => {
     const { recordQuarterResult } = await import('../../../service/contestService');
     renderControls();
-    // Input values that parseInt will produce NaN for
+    // input values that parseInt will produce NaN for
     fireEvent.change(screen.getByLabelText(/chiefs/i), { target: { value: 'abc' } });
     fireEvent.change(screen.getByLabelText(/eagles/i), { target: { value: 'xyz' } });
     fireEvent.click(screen.getByRole('button', { name: /update score/i }));
@@ -121,12 +121,12 @@ describe('ScoreUpdateControls', () => {
   it('ignores values longer than 4 characters in score inputs', () => {
     renderControls();
     const homeInput = screen.getByLabelText(/chiefs/i);
-    // Valid short value first
+    // valid short value first
     fireEvent.change(homeInput, { target: { value: '12' } });
     expect(homeInput).toHaveValue(12);
-    // Now try too long
+    // now try too long
     fireEvent.change(homeInput, { target: { value: '12345' } });
-    // Should remain at 12 since 5 digits > MAX_SCORE_LENGTH(4)
+    // should remain at 12 since 5 digits > MAX_SCORE_LENGTH(4)
     expect(homeInput).toHaveValue(12);
   });
 });
