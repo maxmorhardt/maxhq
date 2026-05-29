@@ -160,7 +160,7 @@ describe('Contest (grid)', () => {
     };
     renderContest(undefined, [participant]);
     const buttons = screen.getAllByRole('button');
-    // Click an empty square (index 1 since index 0 has value 'JD')
+    // click an empty square (index 1 since index 0 has value 'JD')
     fireEvent.click(buttons[1]);
     await waitFor(() => expect(updateSquareValueById).toHaveBeenCalled());
   });
@@ -185,7 +185,7 @@ describe('Contest (grid)', () => {
     };
     renderContest(undefined, [participant]);
     const buttons = screen.getAllByRole('button');
-    // Click the filled square (index 0 has value 'JD')
+    // click the filled square (index 0 has value 'JD')
     fireEvent.click(buttons[0]);
     expect(screen.getByTestId('edit-square-dialog')).toBeInTheDocument();
   });

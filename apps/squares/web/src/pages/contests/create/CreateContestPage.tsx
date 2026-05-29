@@ -26,7 +26,6 @@ import type { ContestVisibility } from '../../../types/contest';
 import { gradients } from '../../../types/gradients';
 import { Helmet } from 'react-helmet-async';
 
-// create contest page with form and info cards
 export default function CreateContestPage() {
   const theme = useTheme();
   const auth = useAuth();
@@ -35,7 +34,6 @@ export default function CreateContestPage() {
 
   const loading = useAppSelector(selectContestLoading);
 
-  // form state for contest name and team names
   const [formData, setFormData] = useState({
     name: '',
     homeTeam: '',
@@ -45,23 +43,19 @@ export default function CreateContestPage() {
   const [maxSquares, setMaxSquares] = useState<number>(10);
   const [error, setError] = useState('');
 
-  // update form data on input change
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: stripDangerousChars(value) }));
   };
 
-  // validate and submit contest creation form
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // validate contest name
     if (!formData.name.trim()) {
       setError('Contest name is required');
       return;
     }
 
-    // validate user is authenticated
     if (!auth.isAuthenticated || !auth.user) {
       setError('You must be logged in to create a contest');
       return;
@@ -74,7 +68,6 @@ export default function CreateContestPage() {
 
     setError('');
 
-    // create contest and navigate to contest page on success
     try {
       const contest = await dispatch(
         createContest({
@@ -165,7 +158,7 @@ export default function CreateContestPage() {
           )}
 
           <Box component="form" onSubmit={handleSubmit}>
-            {/* Section: Basics */}
+            {/* basics */}
             <FormSection title="Basics" description="A short, recognizable name.">
               <TextField
                 name="name"
@@ -182,7 +175,7 @@ export default function CreateContestPage() {
 
             <SectionDivider />
 
-            {/* Section: Teams */}
+            {/* teams */}
             <FormSection title="Teams" description="Optional matchup shown on the grid.">
               <Box
                 sx={{
@@ -217,7 +210,7 @@ export default function CreateContestPage() {
 
             <SectionDivider />
 
-            {/* Section: Visibility */}
+            {/* visibility */}
             <FormSection
               title="Visibility"
               description={
@@ -248,7 +241,7 @@ export default function CreateContestPage() {
 
             <SectionDivider />
 
-            {/* Section: Owner Squares */}
+            {/* owner squares */}
             <FormSection
               title="Your Squares"
               description={`Maximum squares you can claim. Counts toward the 100-square total.`}
@@ -281,7 +274,7 @@ export default function CreateContestPage() {
               </Box>
             </FormSection>
 
-            {/* Footer actions */}
+            {/* footer actions */}
             <Box
               sx={{
                 mt: 3,

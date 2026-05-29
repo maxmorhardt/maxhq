@@ -68,9 +68,6 @@ vi.mock('../../../components/contest/WinnerCelebrationDialog', () => ({
 vi.mock('../../../components/contest/ConnectionChip', () => ({
   default: () => <div data-testid="connection-chip" />,
 }));
-vi.mock('../../../components/common/LoadingScreen', () => ({
-  default: ({ title }: { title: string }) => <div data-testid="loading-screen">{title}</div>,
-}));
 vi.mock('../../error/UnauthorizedPage', () => ({
   default: () => <div data-testid="unauthorized-page">Unauthorized</div>,
 }));
@@ -136,7 +133,7 @@ describe('ContestPage', () => {
     expect(screen.getByTestId('unauthorized-page')).toBeInTheDocument();
   });
 
-  it('shows loading screen during signin redirect', () => {
+  it('shows a redirecting screen while a sign-in redirect is in progress', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
@@ -145,7 +142,7 @@ describe('ContestPage', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
-    expect(screen.getByTestId('loading-screen')).toBeInTheDocument();
+    expect(screen.getByText('Redirecting to sign in...')).toBeInTheDocument();
   });
 
   it('shows skeleton while connecting', () => {

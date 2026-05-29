@@ -36,7 +36,7 @@ export default function ContestsPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  // owned contests state
+  // owned contests pagination state
   const [ownedPage, setOwnedPage] = useState(0);
   const [ownedRowsPerPage, setOwnedRowsPerPage] = useState(5);
   const [ownedPagination, setOwnedPagination] = useState({
@@ -48,12 +48,11 @@ export default function ContestsPage() {
     hasPrevious: false,
   });
 
-  // search state
+  // search input + debounced value used to actually fire the request
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // track whether the first successful fetch has completed
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const handleSearchChange = (value: string) => {
@@ -75,13 +74,12 @@ export default function ContestsPage() {
     };
   }, []);
 
-  // joined contests state
   const loading = useAppSelector(selectContestLoading);
   const error = useAppSelector(selectContestError);
   const ownedContests = useAppSelector(selectContests);
   const joinedContests = useAppSelector(selectMyContests);
 
-  // fetch owned contests when authenticated and pagination changes
+  // fetch owned contests when authenticated and pagination/search changes
   useEffect(() => {
     if (!auth.isAuthenticated || !isInterceptorReady) {
       return;
@@ -110,7 +108,7 @@ export default function ContestsPage() {
             hasPrevious: payload.hasPrevious,
           });
         }
-        // mark first load complete
+
         setHasLoadedOnce(true);
       });
     }
@@ -124,7 +122,7 @@ export default function ContestsPage() {
     debouncedSearch,
   ]);
 
-  // fetch joined contests
+  // fetch contests where the current user is a participant
   useEffect(() => {
     if (!auth.isAuthenticated || !isInterceptorReady) {
       return;
@@ -133,7 +131,6 @@ export default function ContestsPage() {
     dispatch(fetchMyContests(debouncedSearch || undefined));
   }, [auth.isAuthenticated, dispatch, isInterceptorReady, debouncedSearch]);
 
-  // handle owned contests pagination
   const handleOwnedPageChange = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
     setOwnedPage(newPage);
   };
@@ -143,7 +140,6 @@ export default function ContestsPage() {
     setOwnedPage(0);
   };
 
-  // show redirecting component while signin redirect is in progress
   if (auth.isLoading && auth.activeNavigator === 'signinRedirect') {
     return (
       <LoadingScreen title="Redirecting to sign in..." subtitle="You will be redirected shortly" />
@@ -256,11 +252,7 @@ export default function ContestsPage() {
     </Box>
   );
 
-  // show full-page skeleton only on the very first load. After the initial
-  // fetch completes, in-flight refetches (search, pagination) show an inline
-  // spinner in the search bar instead of unmounting the table.
-  // Condition covers: auth still loading, OR authenticated but data not yet arrived
-  // (including the brief gap between isInterceptorReady=true and loading=true).
+  // full-page skeleton only on first load; later refetches show an inline spinner
   if (
     !hasLoadedOnce &&
     ((auth.isLoading && auth.activeNavigator !== 'signoutSilent') || auth.isAuthenticated)

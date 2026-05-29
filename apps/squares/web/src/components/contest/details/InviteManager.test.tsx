@@ -173,10 +173,10 @@ describe('InviteManager', () => {
       },
     ]);
     await renderManager(true);
-    // Wait for invites to render, then find and click the last icon button (Delete)
+    // wait for invites to render, then find and click the last icon button (delete)
     await waitFor(() => expect(screen.getByText(/0 uses/)).toBeInTheDocument());
     const iconBtns = screen.getAllByRole('button').filter((b) => b.querySelector('svg'));
-    // Last icon button in the invite row is delete
+    // last icon button in the invite row is delete
     fireEvent.click(iconBtns[iconBtns.length - 1]);
     await waitFor(() => expect(deleteInvite).toHaveBeenCalled());
   });

@@ -65,7 +65,7 @@ describe('setupAxiosInterceptors', () => {
   it('should set Authorization header on requests', async () => {
     setupAxiosInterceptors({ access_token: 'my-token' } as User);
 
-    // Get the interceptor fulfillment handler and test it
+    // get the interceptor fulfillment handler and test it
     const useSpy = vi.spyOn(api.interceptors.request, 'use');
     setupAxiosInterceptors({ access_token: 'my-token' } as User);
 

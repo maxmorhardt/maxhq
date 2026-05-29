@@ -27,13 +27,11 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
   const [turnstileReady, setTurnstileReady] = useState(false);
   const siteKey = import.meta.env.PROD ? '0x4AAAAAACKD7d5JYPJqlXPI' : '1x00000000000000000000AA';
 
-  // update form data with new input value
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: stripDangerousChars(value) }));
   };
 
-  // submit form data
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {

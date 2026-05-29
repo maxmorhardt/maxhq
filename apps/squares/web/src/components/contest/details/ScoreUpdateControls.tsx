@@ -48,7 +48,9 @@ export default function ScoreUpdateControls() {
     }
   };
 
-  if (!currentContest) return null;
+  if (!currentContest) {
+    return null;
+  }
 
   return (
     <>

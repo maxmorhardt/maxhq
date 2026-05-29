@@ -3,7 +3,7 @@ import { render, act } from '@testing-library/react';
 import { useScrollAnimation } from './useScrollAnimation';
 import { createElement } from 'react';
 
-// Test component that attaches the ref to a real DOM element
+// test component that attaches the ref to a real DOM element
 function TestComponent(props: {
   threshold?: number;
   rootMargin?: string;

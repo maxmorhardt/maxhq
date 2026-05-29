@@ -69,7 +69,10 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
   // helper to extract initials from user name
   const getInitials = (name: string): string => {
     const trimmed = name.trim();
-    if (!trimmed) return '';
+    if (!trimmed) {
+      return '';
+    }
+
     const parts = trimmed.split(/\s+/);
     let initials = '';
     for (let i = 0; i < parts.length && initials.length < 3; i++) {
@@ -92,7 +95,6 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
       return;
     }
 
-    // find square
     const square = currentContest.squares.find(
       (square) => square.row === row && square.col === col
     );

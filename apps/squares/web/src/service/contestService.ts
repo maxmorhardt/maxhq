@@ -18,7 +18,6 @@ import type {
 } from '../types/contest';
 import { handleError } from './handleError';
 
-// fetch contests owned by specific owner
 export async function getContestsByOwner(
   owner: string,
   pagination: PaginationParams
@@ -37,7 +36,6 @@ export async function getContestsByOwner(
   }
 }
 
-// create new contest
 export async function createNewContest(request: CreateContestRequest) {
   try {
     const res = await api.put('/contests', request);
@@ -47,7 +45,6 @@ export async function createNewContest(request: CreateContestRequest) {
   }
 }
 
-// update square with new value and owner
 export async function updateSquareValueById(
   contestId: string,
   squareId: string,
@@ -61,7 +58,6 @@ export async function updateSquareValueById(
   }
 }
 
-// clear square value and remove owner
 export async function clearSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
     const res = await api.post<Square>(`/contests/${contestId}/squares/${squareId}/clear`);
@@ -71,7 +67,6 @@ export async function clearSquareById(contestId: string, squareId: string): Prom
   }
 }
 
-// update contest details
 export async function updateContestById(
   id: string,
   updates: UpdateContestRequest
@@ -84,7 +79,6 @@ export async function updateContestById(
   }
 }
 
-// start contest and lock grid
 export async function startContest(id: string): Promise<Contest> {
   try {
     const res = await api.post<Contest>(`/contests/${id}/start`);
@@ -94,7 +88,6 @@ export async function startContest(id: string): Promise<Contest> {
   }
 }
 
-// record quarter result and determine winner
 export async function recordQuarterResult(
   contestId: string,
   request: QuarterResultRequest
@@ -107,7 +100,6 @@ export async function recordQuarterResult(
   }
 }
 
-// delete contest by id
 export async function deleteContestById(id: string): Promise<void> {
   try {
     await api.delete<void>(`/contests/${id}`);
@@ -116,7 +108,6 @@ export async function deleteContestById(id: string): Promise<void> {
   }
 }
 
-// submit contact form
 export async function submitContactForm(request: {
   name: string;
   email: string;
@@ -132,7 +123,6 @@ export async function submitContactForm(request: {
   }
 }
 
-// fetch contests where the current user is a participant
 export async function getMyContests(search?: string): Promise<Contest[]> {
   try {
     const res = await api.get<Contest[]>('/contests/me', {
@@ -144,7 +134,6 @@ export async function getMyContests(search?: string): Promise<Contest[]> {
   }
 }
 
-// create invite link for a contest
 export async function createInvite(
   contestId: string,
   request: CreateInviteRequest
@@ -157,7 +146,6 @@ export async function createInvite(
   }
 }
 
-// get all invites for a contest
 export async function getInvites(contestId: string): Promise<Invite[]> {
   try {
     const res = await api.get<Invite[]>(`/contests/${contestId}/invites`);
@@ -167,7 +155,6 @@ export async function getInvites(contestId: string): Promise<Invite[]> {
   }
 }
 
-// delete an invite
 export async function deleteInvite(contestId: string, inviteId: string): Promise<void> {
   try {
     await api.delete<void>(`/contests/${contestId}/invites/${inviteId}`);
@@ -176,7 +163,6 @@ export async function deleteInvite(contestId: string, inviteId: string): Promise
   }
 }
 
-// join a contest via invite token
 export async function joinContest(token: string): Promise<Participant> {
   try {
     const res = await api.post<Participant>(`/invites/${token}/redeem`);
@@ -186,7 +172,6 @@ export async function joinContest(token: string): Promise<Participant> {
   }
 }
 
-// preview an invite link (no auth required)
 export async function previewInvite(token: string): Promise<InvitePreviewResponse> {
   try {
     const res = await api.get<InvitePreviewResponse>(`/invites/${token}`);
@@ -196,7 +181,6 @@ export async function previewInvite(token: string): Promise<InvitePreviewRespons
   }
 }
 
-// get participants for a contest
 export async function getParticipants(contestId: string): Promise<Participant[]> {
   try {
     const res = await api.get<Participant[]>(`/contests/${contestId}/participants`);
@@ -206,7 +190,6 @@ export async function getParticipants(contestId: string): Promise<Participant[]>
   }
 }
 
-// update a participant's role or max squares
 export async function updateParticipant(
   contestId: string,
   userId: string,
@@ -223,7 +206,6 @@ export async function updateParticipant(
   }
 }
 
-// remove a participant from a contest
 export async function removeParticipant(contestId: string, userId: string): Promise<void> {
   try {
     await api.delete<void>(`/contests/${contestId}/participants/${userId}`);

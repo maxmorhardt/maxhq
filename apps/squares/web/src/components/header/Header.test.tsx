@@ -77,7 +77,7 @@ describe('Header', () => {
 
   it('navigates home when the brand name is clicked', () => {
     renderHeader();
-    // There are multiple "Squares" text elements; click the first desktop one
+    // there are multiple "Squares" text elements; click the first desktop one
     fireEvent.click(screen.getAllByText('Squares')[0]);
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });

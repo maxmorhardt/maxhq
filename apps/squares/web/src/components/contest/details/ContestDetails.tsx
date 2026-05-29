@@ -50,9 +50,18 @@ export default function ContestDetails({
   const allSquaresFilled = filledSquares >= totalSquares;
 
   const getStatusDisplay = () => {
-    if (isCanceled) return 'Deleted';
-    if (isFinished) return 'Finished';
-    if (isInGame) return `In Progress • ${contestStatus}`;
+    if (isCanceled) {
+      return 'Deleted';
+    }
+
+    if (isFinished) {
+      return 'Finished';
+    }
+
+    if (isInGame) {
+      return `In Progress • ${contestStatus}`;
+    }
+
     return 'Active';
   };
 

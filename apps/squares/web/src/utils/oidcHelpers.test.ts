@@ -1,6 +1,45 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { AuthContextProps } from 'react-oidc-context';
-import { createOidcStateForRegistration } from './oidcHelpers';
+import { createOidcStateForRegistration, isSilentRefreshNeeded } from './oidcHelpers';
+
+describe('isSilentRefreshNeeded', () => {
+  const key = 'oidc.user:https://auth.example.com:test-client';
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('returns false when there is no stored session', () => {
+    expect(isSilentRefreshNeeded()).toBe(false);
+  });
+
+  it('returns false when the stored session has no refresh token', () => {
+    localStorage.setItem(key, JSON.stringify({ expires_at: 0 }));
+    expect(isSilentRefreshNeeded()).toBe(false);
+  });
+
+  it('returns false when the access token is still valid', () => {
+    const future = Math.floor(Date.now() / 1000) + 3600;
+    localStorage.setItem(key, JSON.stringify({ refresh_token: 'r', expires_at: future }));
+    expect(isSilentRefreshNeeded()).toBe(false);
+  });
+
+  it('returns true when the access token is expired and a refresh token exists', () => {
+    const past = Math.floor(Date.now() / 1000) - 3600;
+    localStorage.setItem(key, JSON.stringify({ refresh_token: 'r', expires_at: past }));
+    expect(isSilentRefreshNeeded()).toBe(true);
+  });
+
+  it('returns true when expires_at is missing but a refresh token exists', () => {
+    localStorage.setItem(key, JSON.stringify({ refresh_token: 'r' }));
+    expect(isSilentRefreshNeeded()).toBe(true);
+  });
+
+  it('returns false when the stored value is not valid JSON', () => {
+    localStorage.setItem(key, 'not-json');
+    expect(isSilentRefreshNeeded()).toBe(false);
+  });
+});
 
 describe('createOidcStateForRegistration', () => {
   beforeEach(() => {

@@ -12,6 +12,32 @@ interface OidcState {
   extraTokenParams: Record<string, unknown>;
 }
 
+// true only when a stored session has a refresh token but an expired/missing access token
+export const isSilentRefreshNeeded = (): boolean => {
+  try {
+    const key = Object.keys(localStorage).find((k) => k.startsWith('oidc.user:'));
+    if (!key) {
+      return false;
+    }
+
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      return false;
+    }
+
+    const stored = JSON.parse(raw) as { expires_at?: number; refresh_token?: string };
+    if (!stored.refresh_token) {
+      return false;
+    }
+
+    // expires_at is in unix seconds; missing or in the past means a refresh is needed
+    const nowSeconds = Date.now() / 1000;
+    return stored.expires_at === undefined || stored.expires_at <= nowSeconds;
+  } catch {
+    return false;
+  }
+};
+
 // generate cryptographically random hex string
 const generateRandomString = (length: number): string => {
   const array = new Uint8Array(length);

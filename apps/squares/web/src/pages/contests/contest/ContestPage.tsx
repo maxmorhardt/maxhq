@@ -7,12 +7,12 @@ import ConnectionChip from '../../../components/contest/ConnectionChip';
 import ContestComponent from '../../../components/contest/grid/Contest';
 import ContestDetails from '../../../components/contest/details/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
+import LoadingScreen from '../../../components/common/LoadingScreen';
 import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
 import WinnerCelebrationDialog from '../../../components/contest/WinnerCelebrationDialog';
 import NotFoundPage from '../../error/NotFoundPage';
 import ForbiddenPage from '../../error/ForbiddenPage';
 import UnauthorizedPage from '../../error/UnauthorizedPage';
-import LoadingScreen from '../../../components/common/LoadingScreen';
 import LiveChat from '../../../components/contest/sidebar/LiveChat';
 import WinnersBoard from '../../../components/contest/sidebar/WinnersBoard';
 import {

@@ -14,7 +14,7 @@ vi.mock('./hooks/useAxiosAuth', () => ({ useAxiosAuth: vi.fn() }));
 vi.mock('./hooks/useToast', () => ({ useToast: () => ({ showToast: mockShowToast }) }));
 vi.mock('./components/common/ScrollToTop', () => ({ default: () => null }));
 vi.mock('./components/toast/ToastProvider', () => ({ ToastProvider: () => null }));
-vi.mock('./components/common/SessionRefreshBanner', () => ({ default: () => null }));
+vi.mock('./components/common/AuthLoadingAnimation', () => ({ default: () => null }));
 vi.mock('./components/header/Header', () => ({ default: () => <div data-testid="header" /> }));
 vi.mock('./components/footer/Footer', () => ({ default: () => <div data-testid="footer" /> }));
 vi.mock('react-router-dom', async () => {
@@ -42,6 +42,7 @@ function renderApp(store = createStore()) {
 
 describe('App', () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -83,7 +84,7 @@ describe('App', () => {
   });
 
   it('shows auth error toast when signinRedirect previously failed', async () => {
-    // First render with activeNavigator set to signinRedirect
+    // first render with activeNavigator set to signinRedirect
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -95,7 +96,7 @@ describe('App', () => {
     const store = createStore();
     const { rerender } = renderApp(store);
 
-    // Now simulate auth error after redirect completes
+    // now simulate auth error after redirect completes
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -130,7 +131,7 @@ describe('App', () => {
 
     renderApp();
     await waitFor(() => expect(mockSigninSilentReject).toHaveBeenCalled());
-    // Should not throw — component still renders
+    // should not throw — component still renders
     expect(screen.getByTestId('header')).toBeInTheDocument();
   });
 });

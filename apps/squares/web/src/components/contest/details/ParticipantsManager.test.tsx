@@ -91,7 +91,7 @@ async function renderManager(open = true, isOwner = false) {
 describe('ParticipantsManager', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    // Re-establish default mock after clearAllMocks
+    // re-establish default mock after clearAllMocks
     const { getParticipants } = await import('../../../service/contestService');
     vi.mocked(getParticipants).mockResolvedValue([
       {
@@ -149,7 +149,7 @@ describe('ParticipantsManager', () => {
     await renderManager(true, true);
     await waitFor(() => expect(screen.getAllByText('bob').length).toBeGreaterThan(0));
     const buttons = screen.getAllByRole('button');
-    // Just verify more than 1 button exists (close + edit buttons) and we can interact
+    // just verify more than 1 button exists (close + edit buttons) and we can interact
     expect(buttons.length).toBeGreaterThan(1);
   });
 
@@ -250,14 +250,14 @@ describe('ParticipantsManager', () => {
     await renderManager(true, true);
     await waitFor(() => screen.getByText('bob'));
     const buttons = screen.getAllByRole('button');
-    // The edit button is the second button (after close)
+    // the edit button is the second button (after close)
     const editBtn = buttons.find(
       (b) => b.querySelector('[data-testid="EditIcon"]') ?? b.getAttribute('aria-label') === 'Edit'
     );
     if (editBtn) {
       fireEvent.click(editBtn);
     } else {
-      // Find by tooltip title or just click the second icon button
+      // find by tooltip title or just click the second icon button
       const iconButtons = screen.getAllByRole('button');
       fireEvent.click(iconButtons[iconButtons.length - 2]);
     }
@@ -270,7 +270,7 @@ describe('ParticipantsManager', () => {
     await renderManager(true, true);
     await waitFor(() => screen.getByText('bob'));
     const buttons = screen.getAllByRole('button');
-    // Click the edit icon button (second to last before Close)
+    // click the edit icon button (second to last before close)
     fireEvent.click(buttons[buttons.length - 2]);
     await waitFor(() => screen.getByText('Edit Participant'));
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
@@ -283,7 +283,7 @@ describe('ParticipantsManager', () => {
     await renderManager(true, true);
     await waitFor(() => screen.getByText('bob'));
     const buttons = screen.getAllByRole('button');
-    // Last button in participant row is remove
+    // last button in participant row is remove
     fireEvent.click(buttons[buttons.length - 1]);
     await waitFor(() => expect(screen.getByText('Remove Participant')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /^remove$/i }));

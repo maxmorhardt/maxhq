@@ -16,7 +16,6 @@ export default function LearnHowItWorksCard({
   const theme = useTheme();
 
   return (
-    // step card with numbered badge
     <Card
       sx={{
         background: theme.palette.grey[900],

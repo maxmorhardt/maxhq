@@ -7,7 +7,6 @@ import LearnHowItWorksCard from '../../components/learn/LearnHowItWorksCard';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 import '../landing/LandingPage.css';
 
-// learn more page with how it works, features, and faqs
 export default function LearnMorePage() {
   const header = useScrollAnimation();
   const howItWorks = useScrollAnimation({ animateOnMount: true });

@@ -27,12 +27,10 @@ const contactMethods = [
   },
 ];
 
-// contact page with form and contact method cards
 export default function ContactPage() {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // submit contact form and show success/error toast
   const handleFormSubmit = async (formData: {
     name: string;
     email: string;

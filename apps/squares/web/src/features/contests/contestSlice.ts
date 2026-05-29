@@ -27,23 +27,21 @@ import {
   updateSquare,
 } from './contestThunks';
 
-// redux state for contest management
 interface ContestState {
-  contests: Contest[]; // list of user's contests
-  myContests: Contest[]; // contests where user is a participant
-  currentContest?: Contest | null; // currently viewed contest
-  currentSquare?: Square | null; // currently selected square
-  participants: Participant[]; // participants for current contest
-  invites: Invite[]; // invites for current contest
-  contestLoading: boolean; // loading state for contest operations
-  deleteContestLoading: boolean; // loading state for delete operation
-  squareLoading: boolean; // loading state for square operations
-  squareErrorCode: number | null; // HTTP status code from last square error
-  participantsLoading: boolean; // loading state for participants
-  invitesLoading: boolean; // loading state for invites
-  error: string | null; // error message
+  contests: Contest[];
+  myContests: Contest[];
+  currentContest?: Contest | null;
+  currentSquare?: Square | null;
+  participants: Participant[];
+  invites: Invite[];
+  contestLoading: boolean;
+  deleteContestLoading: boolean;
+  squareLoading: boolean;
+  squareErrorCode: number | null;
+  participantsLoading: boolean;
+  invitesLoading: boolean;
+  error: string | null;
   pagination: {
-    // pagination info for contests list
     page: number;
     limit: number;
     total: number;
@@ -79,27 +77,26 @@ const contestSlice = createSlice({
   name: 'contests',
   initialState,
   reducers: {
-    // clear error state
     clearError(state) {
       state.error = null;
     },
-    // clear square error code (after handling e.g. 409)
+
     clearSquareErrorCode(state) {
       state.squareErrorCode = null;
     },
-    // set the currently viewed contest
+
     setCurrentContest(state, action: PayloadAction<Contest | null>) {
       state.currentContest = action.payload;
     },
-    // directly set participants (used on WS connected message)
+
     setParticipants(state, action: PayloadAction<Participant[]>) {
       state.participants = action.payload;
     },
-    // set the currently selected square for editing
+
     setCurrentSquare(state, action: PayloadAction<Square>) {
       state.currentSquare = action.payload;
     },
-    // update contest fields from websocket message
+
     updateContestFromWebSocket(
       state,
       action: PayloadAction<{
@@ -135,7 +132,7 @@ const contestSlice = createSlice({
         state.currentContest.status = status;
       }
     },
-    // update square from websocket message (full square object)
+
     updateSquareFromWebSocket(state, action: PayloadAction<Square>) {
       if (!state.currentContest) {
         return;
@@ -150,7 +147,7 @@ const contestSlice = createSlice({
         state.currentContest.squares[squareIndex] = updatedSquare;
       }
     },
-    // add or update quarter result from websocket, update contest status
+    // websocket quarter result: append if new and advance contest status
     updateQuarterResultFromWebSocket(
       state,
       action: PayloadAction<{
@@ -207,20 +204,20 @@ const contestSlice = createSlice({
         state.currentContest.status = nextStatus;
       }
     },
-    // add participant from websocket
+
     addParticipantFromWebSocket(state, action: PayloadAction<Participant>) {
       const exists = state.participants.some((p) => p.id === action.payload.id);
       if (!exists) {
         state.participants.push(action.payload);
       }
     },
-    // remove participant from websocket
+
     removeParticipantFromWebSocket(state, action: PayloadAction<string>) {
       state.participants = state.participants.filter((p) => p.userId !== action.payload);
     },
   },
-  // async thunk handlers for API operations
   extraReducers: (builder) => {
+    // fetch contests by owner
     builder
       .addCase(fetchContestsByOwner.pending, (state) => {
         state.contestLoading = true;
