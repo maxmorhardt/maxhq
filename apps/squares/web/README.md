@@ -34,8 +34,10 @@ This application requires the following services to be running:
 
 ## Development
 
-1. Install dependencies: `npm install`
-2. Start the development server: `npm run dev`
+This project uses [pnpm](https://pnpm.io) (enforced — `npm`/`yarn` installs are blocked). Enable it with `corepack enable`.
+
+1. Install dependencies: `pnpm install`
+2. Start the development server: `pnpm dev`
 3. Open browser to `http://localhost:3000`
 
 ## Production Build
@@ -43,5 +45,5 @@ This application requires the following services to be running:
 Build the application for production deployment:
 
 ```bash
-npm run build
+pnpm build
 ```

@@ -2,7 +2,7 @@ node_modules
 build
 dist
 coverage
-package-lock.json
+pnpm-lock.yaml
 *.min.js
 public/
 helm

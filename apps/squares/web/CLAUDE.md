@@ -23,12 +23,12 @@ This guide provides context for coding agents working in this repository. Square
 
 ## Tooling
 
-- Package manager: **npm**.
-- Build/dev: **Vite** (`npm run dev`, `npm run build`, `npm run preview`). The build runs `tsc -b` before `vite build`.
-- Lint: **ESLint** flat config with `typescript-eslint` and React hooks plugins (`npm run lint`).
-- Format: **Prettier** (`npm run format`); enforced on commit via **Husky + lint-staged**.
-- Type check: `npm run type-check` (uses `tsc --noEmit`).
-- Tests: **Vitest** + **@testing-library/react** + **jest-dom** + **jsdom** (`npm run test`, `npm run test:watch`, `npm run test:coverage`).
+- Package manager: **pnpm** (pinned via the `packageManager` field; `npm`/`yarn` are blocked by an `only-allow pnpm` preinstall hook). Enable with `corepack enable`. `pnpm-workspace.yaml` sets `minimumReleaseAge: 1440` to refuse dependency versions published less than 24h ago.
+- Build/dev: **Vite** (`pnpm dev`, `pnpm build`, `pnpm preview`). The build runs `tsc -b` before `vite build`.
+- Lint: **ESLint** flat config with `typescript-eslint` and React hooks plugins (`pnpm lint`).
+- Format: **Prettier** (`pnpm format`); enforced on commit via **Husky + lint-staged**.
+- Type check: `pnpm type-check` (uses `tsc --noEmit`).
+- Tests: **Vitest** + **@testing-library/react** + **jest-dom** + **jsdom** (`pnpm test`, `pnpm test:watch`, `pnpm test:coverage`).
 
 Coverage thresholds are enforced at **80%** for lines / branches / functions / statements in [vitest.config.ts](vitest.config.ts). Keep them passing.
 
@@ -84,7 +84,7 @@ The app follows a strict **page/component → hook → service → backend** flo
 - Service tests should mock the `axios` instance from `src/axios/api.ts`, not `axios` itself.
 - Hook tests use `renderHook` from `@testing-library/react`. For OIDC-dependent hooks, mock `useAuth` from `react-oidc-context`.
 - When mocking browser APIs (`IntersectionObserver`, `WebSocket`, `matchMedia`), restore the original on `afterEach`.
-- Run `npm run test:coverage` before committing changes that touch `src/`. The build will fail if any coverage metric drops below 80%.
+- Run `pnpm test:coverage` before committing changes that touch `src/`. The build will fail if any coverage metric drops below 80%.
 
 ## Deployment
 
@@ -101,4 +101,4 @@ Use conventional commits. Common types and scopes for this repo:
 
 Example: `feat(pages): add search input to ContestsPage`.
 
-Always run `npm run lint`, `npm run type-check`, and `npm run test` before committing.
+Always run `pnpm lint`, `pnpm type-check`, and `pnpm test` before committing.
