@@ -47,5 +47,3 @@ Build the application for production deployment:
 ```bash
 pnpm build
 ```
-
-test
