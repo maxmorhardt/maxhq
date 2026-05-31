@@ -1,18 +1,22 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ScrollToTop from './ScrollToTop';
 
 describe('ScrollToTop', () => {
+  const scrollTo = vi.fn();
   const originalScrollTo = window.scrollTo;
+
+  beforeEach(() => {
+    window.scrollTo = scrollTo;
+  });
 
   afterEach(() => {
     window.scrollTo = originalScrollTo;
+    scrollTo.mockClear();
   });
 
   it('calls window.scrollTo(0, 0) on mount', () => {
-    const scrollTo = vi.fn();
-    window.scrollTo = scrollTo;
     render(
       <MemoryRouter initialEntries={['/']}>
         <ScrollToTop />

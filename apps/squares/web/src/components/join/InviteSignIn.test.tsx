@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
@@ -29,6 +29,7 @@ describe('InviteSignIn', () => {
 
   beforeEach(() => {
     mockSigninRedirect.mockClear();
+    vi.stubGlobal('location', { ...window.location, href: '' });
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -36,6 +37,10 @@ describe('InviteSignIn', () => {
       settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
       signinRedirect: mockSigninRedirect,
     } as unknown as ReturnType<typeof useAuth>);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("renders the You're Invited heading", () => {
