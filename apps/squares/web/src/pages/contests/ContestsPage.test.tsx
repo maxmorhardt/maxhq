@@ -74,7 +74,7 @@ vi.mock('../../components/contest/table/ContestsTableSkeleton', () => ({
 }));
 
 import { useAuth } from 'react-oidc-context';
-import { getContestsByOwner } from '../../service/contestService';
+import { getContestsByOwner, getMyContests } from '../../service/contestService';
 
 const theme = createTheme({ palette: { mode: 'dark' } });
 
@@ -135,13 +135,15 @@ describe('ContestsPage', () => {
     expect(screen.getByText('Redirecting to sign in...')).toBeInTheDocument();
   });
 
-  it('shows skeleton tables on first load while authenticated but data not yet arrived', async () => {
+  it('shows skeleton tables on first load while authenticated but data not yet arrived', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
       user: { profile: { preferred_username: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
+    vi.mocked(getContestsByOwner).mockReturnValueOnce(new Promise(() => {}));
+    vi.mocked(getMyContests).mockReturnValueOnce(new Promise(() => {}));
 
     renderPage();
     expect(screen.getByTestId('skeleton-My Contests')).toBeInTheDocument();
