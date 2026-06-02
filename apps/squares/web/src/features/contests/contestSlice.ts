@@ -28,8 +28,8 @@ import {
 } from './contestThunks';
 
 interface ContestState {
-  contests: Contest[];
-  myContests: Contest[];
+  contests: Contest[] | null;
+  myContests: Contest[] | null;
   currentContest?: Contest | null;
   currentSquare?: Square | null;
   participants: Participant[];
@@ -52,8 +52,8 @@ interface ContestState {
 }
 
 const initialState: ContestState = {
-  contests: [],
-  myContests: [],
+  contests: null,
+  myContests: null,
   participants: [],
   invites: [],
   contestLoading: false,
@@ -252,7 +252,7 @@ const contestSlice = createSlice({
       })
       .addCase(createContest.fulfilled, (state, action: PayloadAction<Contest>) => {
         state.contestLoading = false;
-        state.contests.push(action.payload);
+        state.contests = [...(state.contests ?? []), action.payload];
       })
       .addCase(createContest.rejected, (state, action) => {
         state.contestLoading = false;
@@ -346,9 +346,11 @@ const contestSlice = createSlice({
           state.currentContest = action.payload;
         }
 
-        const index = state.contests.findIndex((c) => c.id === action.payload.id);
-        if (index !== -1) {
-          state.contests[index] = action.payload;
+        if (state.contests) {
+          const index = state.contests.findIndex((c) => c.id === action.payload.id);
+          if (index !== -1) {
+            state.contests[index] = action.payload;
+          }
         }
       })
       .addCase(updateContest.rejected, (state, action) => {
@@ -363,9 +365,11 @@ const contestSlice = createSlice({
       })
       .addCase(deleteContest.fulfilled, (state) => {
         state.deleteContestLoading = false;
-        state.contests = state.contests.filter(
-          (contest) => contest.id !== state.currentContest?.id
-        );
+        if (state.contests) {
+          state.contests = state.contests.filter(
+            (contest) => contest.id !== state.currentContest?.id
+          );
+        }
         state.currentContest = null;
       })
       .addCase(deleteContest.rejected, (state, action) => {
@@ -425,6 +429,7 @@ const contestSlice = createSlice({
       })
       .addCase(fetchMyContests.rejected, (state, action) => {
         state.contestLoading = false;
+        state.myContests = state.myContests ?? [];
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 

@@ -78,13 +78,16 @@ import { getContestsByOwner, getMyContests } from '../../service/contestService'
 
 const theme = createTheme({ palette: { mode: 'dark' } });
 
-function createTestStore() {
-  return configureStore({ reducer: { contest: contestReducer, toast: toastReducer } });
+function createTestStore(preloadedState?: Parameters<typeof configureStore>[0]['preloadedState']) {
+  return configureStore({
+    reducer: { contest: contestReducer, toast: toastReducer },
+    preloadedState,
+  });
 }
 
-function renderPage() {
+function renderPage(preloadedState?: Parameters<typeof createTestStore>[0]) {
   return render(
-    <Provider store={createTestStore()}>
+    <Provider store={createTestStore(preloadedState)}>
       <ThemeProvider theme={theme}>
         <MemoryRouter>
           <ContestsPage />
@@ -148,6 +151,26 @@ describe('ContestsPage', () => {
     renderPage();
     expect(screen.getByTestId('skeleton-My Contests')).toBeInTheDocument();
     expect(screen.getByTestId('skeleton-Joined Contests')).toBeInTheDocument();
+  });
+
+  it('renders cached contests without a skeleton when the store was already fetched', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      activeNavigator: undefined,
+      user: { profile: { preferred_username: 'user1' } },
+    } as unknown as ReturnType<typeof useAuth>);
+    // background revalidation never resolves; cached data should still render immediately
+    vi.mocked(getContestsByOwner).mockReturnValueOnce(new Promise(() => {}));
+    vi.mocked(getMyContests).mockReturnValueOnce(new Promise(() => {}));
+
+    const contestState = contestReducer(undefined, { type: '@@INIT' });
+    renderPage({ contest: { ...contestState, contests: [], myContests: [] } } as Parameters<
+      typeof renderPage
+    >[0]);
+
+    expect(screen.getByTestId('table-My Contests')).toBeInTheDocument();
+    expect(screen.queryByTestId('skeleton-My Contests')).not.toBeInTheDocument();
   });
 
   it('renders the search field', () => {

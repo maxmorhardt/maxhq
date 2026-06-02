@@ -1,8 +1,12 @@
 import type { RootState } from '../../app/store';
 import type { Contest, Invite, Participant, Square } from '../../types/contest';
 
-export const selectContests = (state: RootState): Contest[] => state.contest.contests;
-export const selectMyContests = (state: RootState): Contest[] => state.contest.myContests;
+const EMPTY_CONTESTS: Contest[] = [];
+
+export const selectContests = (state: RootState): Contest[] =>
+  state.contest.contests ?? EMPTY_CONTESTS;
+export const selectMyContests = (state: RootState): Contest[] =>
+  state.contest.myContests ?? EMPTY_CONTESTS;
 export const selectCurrentContest = (state: RootState): Contest | null | undefined =>
   state.contest.currentContest;
 export const selectCurrentSquare = (state: RootState): Square | null | undefined =>
@@ -10,6 +14,8 @@ export const selectCurrentSquare = (state: RootState): Square | null | undefined
 export const selectParticipants = (state: RootState): Participant[] => state.contest.participants;
 export const selectInvites = (state: RootState): Invite[] => state.contest.invites;
 export const selectContestLoading = (state: RootState): boolean => state.contest.contestLoading;
+export const selectContestsFetched = (state: RootState): boolean =>
+  state.contest.contests !== null && state.contest.myContests !== null;
 export const selectSquareLoading = (state: RootState): boolean => state.contest.squareLoading;
 export const selectParticipantsLoading = (state: RootState): boolean =>
   state.contest.participantsLoading;
