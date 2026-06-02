@@ -252,9 +252,7 @@ const contestSlice = createSlice({
       })
       .addCase(createContest.fulfilled, (state, action: PayloadAction<Contest>) => {
         state.contestLoading = false;
-        if (state.contests) {
-          state.contests.push(action.payload);
-        }
+        state.contests = [...(state.contests ?? []), action.payload];
       })
       .addCase(createContest.rejected, (state, action) => {
         state.contestLoading = false;
@@ -431,6 +429,7 @@ const contestSlice = createSlice({
       })
       .addCase(fetchMyContests.rejected, (state, action) => {
         state.contestLoading = false;
+        state.myContests = [];
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 

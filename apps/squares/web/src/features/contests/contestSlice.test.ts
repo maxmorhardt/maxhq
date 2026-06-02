@@ -551,12 +551,13 @@ describe('contestSlice extraReducers', () => {
       expect(state.myContests).not.toBeNull();
     });
 
-    it('rejected: sets error', () => {
+    it('rejected: sets error and settles myContests', () => {
       const state = contestReducer(initialState, {
         type: fetchMyContests.rejected.type,
         payload: { message: 'fetch fail' },
       });
       expect(state.error).toBe('fetch fail');
+      expect(state.myContests).toEqual([]);
     });
   });
 
