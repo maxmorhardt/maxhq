@@ -134,7 +134,8 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: frontend
+          component: squares
+          layer: frontend
         annotations:
           summary: 'High nginx request latency detected'
           description: 'P99 latency is {{ $value }}s for {{ $labels.service }}'
@@ -146,7 +147,8 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: frontend
+          component: squares
+          layer: frontend
         annotations:
           summary: 'High HTTP error rate'
           description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
@@ -157,7 +159,8 @@ metrics:
         for: 2m
         labels:
           severity: critical
-          component: frontend
+          component: squares
+          layer: frontend
         annotations:
           summary: 'Critical HTTP error rate'
           description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
@@ -169,7 +172,8 @@ metrics:
         for: 10m
         labels:
           severity: warning
-          component: frontend
+          component: squares
+          layer: frontend
         annotations:
           summary: 'High client error rate'
           description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
@@ -180,7 +184,8 @@ metrics:
         for: 5m
         labels:
           severity: critical
-          component: frontend
+          component: squares
+          layer: frontend
         annotations:
           summary: 'Critical client error rate'
           description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
@@ -192,7 +197,8 @@ metrics:
         for: 5m
         labels:
           severity: critical
-          component: frontend
+          component: squares
+          layer: frontend
         annotations:
           summary: 'Nginx is down'
           description: 'Nginx metrics endpoint is not reachable for {{ $labels.job }}'
@@ -203,7 +209,8 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: frontend
+          component: squares
+          layer: frontend
         annotations:
           summary: 'High number of active connections'
           description: 'Nginx has {{ $value }} active connections'
