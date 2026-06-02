@@ -20,6 +20,7 @@ import {
   selectContestError,
   selectContestLoading,
   selectContests,
+  selectContestsFetched,
   selectMyContests,
 } from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
@@ -53,7 +54,9 @@ export default function ContestsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  // seed from the store so navigating back renders cached contests without a skeleton
+  const hasFetched = useAppSelector(selectContestsFetched);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(hasFetched);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -146,7 +149,9 @@ export default function ContestsPage() {
     );
   }
 
-  const isSearching = hasLoadedOnce && (searchInput.trim() !== debouncedSearch || loading);
+  const isSearching =
+    hasLoadedOnce &&
+    (searchInput.trim() !== debouncedSearch || (loading && debouncedSearch !== ''));
 
   // hero section shared between all states
   const heroSection = (skeletonMode = false) => (

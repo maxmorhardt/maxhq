@@ -87,7 +87,8 @@ const mockSquare: Square = {
 describe('contestSlice reducers', () => {
   it('should return initial state', () => {
     const state = contestReducer(undefined, { type: 'unknown' });
-    expect(state.contests).toEqual([]);
+    expect(state.contests).toBeNull();
+    expect(state.myContests).toBeNull();
     expect(state.error).toBeNull();
     expect(state.contestLoading).toBe(false);
   });
@@ -290,6 +291,7 @@ describe('contestSlice extraReducers', () => {
         payload,
       });
       expect(state.contestLoading).toBe(false);
+      expect(state.contests).not.toBeNull();
       expect(state.contests).toHaveLength(1);
       expect(state.pagination.total).toBe(1);
     });
@@ -546,6 +548,7 @@ describe('contestSlice extraReducers', () => {
       });
       expect(state.myContests).toHaveLength(1);
       expect(state.contestLoading).toBe(false);
+      expect(state.myContests).not.toBeNull();
     });
 
     it('rejected: sets error', () => {

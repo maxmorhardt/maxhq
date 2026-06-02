@@ -129,7 +129,15 @@ export default function App() {
         <Header />
 
         <Box sx={{ flex: 1 }}>
-          {splashActive ? <AuthLoadingAnimation exiting={splashExiting} /> : <Outlet />}
+          {splashActive ? (
+            <AuthLoadingAnimation
+              title="Welcome back"
+              subtitle="Restoring your session"
+              exiting={splashExiting}
+            />
+          ) : (
+            <Outlet />
+          )}
         </Box>
 
         <Footer />
