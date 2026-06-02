@@ -125,7 +125,8 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: api
+          component: squares-api
+          layer: api
         annotations:
           summary: 'High request latency detected'
           description: 'P99 latency is {{ $value }}s for {{ $labels.method }} {{ $labels.path }} on {{ $labels.job }}'
@@ -136,7 +137,8 @@ metrics:
         for: 5m
         labels:
           severity: critical
-          component: api
+          component: squares-api
+          layer: api
         annotations:
           summary: 'Critical request latency detected'
           description: 'P99 latency is {{ $value }}s for {{ $labels.method }} {{ $labels.path }} on {{ $labels.job }}'
@@ -148,7 +150,8 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: api
+          component: squares-api
+          layer: api
         annotations:
           summary: 'High HTTP error rate'
           description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
@@ -159,7 +162,8 @@ metrics:
         for: 2m
         labels:
           severity: critical
-          component: api
+          component: squares-api
+          layer: api
         annotations:
           summary: 'Critical HTTP error rate'
           description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
@@ -171,7 +175,8 @@ metrics:
         for: 10m
         labels:
           severity: warning
-          component: api
+          component: squares-api
+          layer: api
         annotations:
           summary: 'Significant drop in request rate'
           description: 'Request rate has dropped to {{ $value | humanizePercentage }} of normal for {{ $labels.job }}'
@@ -183,7 +188,8 @@ metrics:
         for: 10m
         labels:
           severity: warning
-          component: api
+          component: squares-api
+          layer: api
         annotations:
           summary: 'High client error rate'
           description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
@@ -194,7 +200,8 @@ metrics:
         for: 5m
         labels:
           severity: critical
-          component: api
+          component: squares-api
+          layer: api
         annotations:
           summary: 'Critical client error rate'
           description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
