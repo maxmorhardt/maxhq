@@ -450,7 +450,7 @@ describe('contestSlice extraReducers', () => {
         { ...initialState, contests: [mockContest] },
         { type: updateContest.fulfilled.type, payload: updated }
       );
-      expect(state.contests[0].homeTeam).toBe('Updated Home');
+      expect(state.contests?.[0]?.homeTeam).toBe('Updated Home');
     });
   });
 

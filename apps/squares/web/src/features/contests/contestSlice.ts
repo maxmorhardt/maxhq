@@ -429,7 +429,7 @@ const contestSlice = createSlice({
       })
       .addCase(fetchMyContests.rejected, (state, action) => {
         state.contestLoading = false;
-        state.myContests = [];
+        state.myContests = state.myContests ?? [];
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 

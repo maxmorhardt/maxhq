@@ -1,8 +1,12 @@
 import type { RootState } from '../../app/store';
 import type { Contest, Invite, Participant, Square } from '../../types/contest';
 
-export const selectContests = (state: RootState): Contest[] => state.contest.contests ?? [];
-export const selectMyContests = (state: RootState): Contest[] => state.contest.myContests ?? [];
+const EMPTY_CONTESTS: Contest[] = [];
+
+export const selectContests = (state: RootState): Contest[] =>
+  state.contest.contests ?? EMPTY_CONTESTS;
+export const selectMyContests = (state: RootState): Contest[] =>
+  state.contest.myContests ?? EMPTY_CONTESTS;
 export const selectCurrentContest = (state: RootState): Contest | null | undefined =>
   state.contest.currentContest;
 export const selectCurrentSquare = (state: RootState): Square | null | undefined =>
