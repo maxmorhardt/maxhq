@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" role="img" aria-label="">
+  <!-- v3: glowing light ribbons sweeping across an aurora base. No geometry. -->
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"    stop-color="#15161c" />
+      <stop offset="0.55" stop-color="#191a21" />
+      <stop offset="1"    stop-color="#111218" />
+    </linearGradient>
+
+    <radialGradient id="g1" cx="0.13" cy="0.12" r="0.72">
+      <stop offset="0"    stop-color="#6d28d9" stop-opacity="0.32" />
+      <stop offset="0.55" stop-color="#6d28d9" stop-opacity="0.05" />
+      <stop offset="1"    stop-color="#6d28d9" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="g2" cx="0.9" cy="0.92" r="0.72">
+      <stop offset="0"    stop-color="#2563eb" stop-opacity="0.26" />
+      <stop offset="0.55" stop-color="#2563eb" stop-opacity="0.04" />
+      <stop offset="1"    stop-color="#2563eb" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="g3" cx="0.82" cy="0.05" r="0.46">
+      <stop offset="0"    stop-color="#a855f7" stop-opacity="0.15" />
+      <stop offset="0.6"  stop-color="#a855f7" stop-opacity="0.03" />
+      <stop offset="1"    stop-color="#a855f7" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="ribbonA" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"    stop-color="#a855f7" stop-opacity="0" />
+      <stop offset="0.35" stop-color="#a855f7" stop-opacity="0.55" />
+      <stop offset="0.7"  stop-color="#3b82f6" stop-opacity="0.5" />
+      <stop offset="1"    stop-color="#3b82f6" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="ribbonB" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"    stop-color="#3b82f6" stop-opacity="0" />
+      <stop offset="0.4"  stop-color="#6d28d9" stop-opacity="0.5" />
+      <stop offset="1"    stop-color="#a855f7" stop-opacity="0" />
+    </linearGradient>
+
+    <filter id="glow" x="-15%" y="-40%" width="130%" height="180%">
+      <feGaussianBlur stdDeviation="7" result="b" />
+      <feMerge>
+        <feMergeNode in="b" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.85">
+      <stop offset="0.55" stop-color="#000" stop-opacity="0" />
+      <stop offset="1"    stop-color="#000" stop-opacity="0.5" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#base)" />
+  <rect width="1920" height="1080" fill="url(#g1)" />
+  <rect width="1920" height="1080" fill="url(#g2)" />
+  <rect width="1920" height="1080" fill="url(#g3)" />
+
+  <!-- light ribbons, routed through the upper and lower thirds -->
+  <g fill="none" filter="url(#glow)" stroke-linecap="round">
+    <path d="M -140 250 C 460 60, 1240 470, 2060 210" stroke="url(#ribbonA)" stroke-width="2.5" />
+    <path d="M -140 900 C 520 1050, 1280 600, 2060 870" stroke="url(#ribbonB)" stroke-width="2" />
+    <path d="M -140 470 C 360 360, 760 250, 1180 360" stroke="url(#ribbonA)" stroke-width="1.5" stroke-opacity="0.55" />
+    <path d="M 820 760 C 1200 880, 1640 700, 2060 760" stroke="url(#ribbonB)" stroke-width="1.5" stroke-opacity="0.6" />
+  </g>
+
+  <rect width="1920" height="1080" fill="url(#vignette)" />
+</svg>
