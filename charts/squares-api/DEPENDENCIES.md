@@ -2,7 +2,7 @@
 
 ## Required
 
-- **PostgreSQL Database** - Version 18+
+- **PostgreSQL Database** - Version 17+
 - **NATS** - For pub/sub messaging and real-time WebSocket broadcasting
 - **SMTP Server** - For sending emails
 - **Environment Secret** - Name: `squares-api-env`
