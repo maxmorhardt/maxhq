@@ -1,76 +1,109 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" role="img" aria-label="">
   <defs>
-    <!-- Base tuned to sit right next to the login card's surface (~#1c1d23) -->
-    <linearGradient id="bg-base" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0"   stop-color="#1a1b21" />
-      <stop offset="0.5" stop-color="#1d1e25" />
-      <stop offset="1"   stop-color="#16171d" />
+    <!-- Dark base, tuned to sit just behind the login card surface (~#1c1d23) -->
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"   stop-color="#16171d" />
+      <stop offset="0.5" stop-color="#1a1b22" />
+      <stop offset="1"   stop-color="#121319" />
     </linearGradient>
 
-    <!-- Edge vignette to keep focus centered without darkening behind the card -->
-    <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.9">
-      <stop offset="0.6" stop-color="#000" stop-opacity="0" />
-      <stop offset="1"   stop-color="#000" stop-opacity="0.45" />
-    </radialGradient>
-
-    <!-- Violet glow tucked into the far corner -->
-    <radialGradient id="glow-violet" cx="0.08" cy="0.12" r="0.55">
-      <stop offset="0"    stop-color="#6d28d9" stop-opacity="0.16" />
-      <stop offset="0.55" stop-color="#6d28d9" stop-opacity="0.04" />
+    <!-- Aurora glows pushed into the corners so the centre stays calm behind the card -->
+    <radialGradient id="g-purple" cx="0.12" cy="0.10" r="0.62">
+      <stop offset="0"    stop-color="#6d28d9" stop-opacity="0.30" />
+      <stop offset="0.5"  stop-color="#6d28d9" stop-opacity="0.06" />
       <stop offset="1"    stop-color="#6d28d9" stop-opacity="0" />
     </radialGradient>
-
-    <!-- Blue glow opposite corner -->
-    <radialGradient id="glow-blue" cx="0.95" cy="0.92" r="0.55">
-      <stop offset="0"    stop-color="#2563eb" stop-opacity="0.14" />
-      <stop offset="0.55" stop-color="#2563eb" stop-opacity="0.03" />
+    <radialGradient id="g-violet" cx="0.86" cy="0.04" r="0.5">
+      <stop offset="0"    stop-color="#a855f7" stop-opacity="0.18" />
+      <stop offset="0.55" stop-color="#a855f7" stop-opacity="0.04" />
+      <stop offset="1"    stop-color="#a855f7" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="g-blue" cx="0.93" cy="0.95" r="0.62">
+      <stop offset="0"    stop-color="#2563eb" stop-opacity="0.26" />
+      <stop offset="0.5"  stop-color="#2563eb" stop-opacity="0.05" />
       <stop offset="1"    stop-color="#2563eb" stop-opacity="0" />
     </radialGradient>
-
-    <!-- Faint grid for depth -->
-    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
-      <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#ffffff" stroke-opacity="0.022" stroke-width="1" />
-    </pattern>
-
-    <!-- Mask so the grid only shows in the middle band, fading at edges -->
-    <radialGradient id="grid-mask" cx="0.5" cy="0.5" r="0.7">
-      <stop offset="0" stop-color="#fff" stop-opacity="1" />
-      <stop offset="1" stop-color="#fff" stop-opacity="0" />
+    <radialGradient id="g-indigo" cx="0.08" cy="0.96" r="0.55">
+      <stop offset="0"    stop-color="#5b21b6" stop-opacity="0.22" />
+      <stop offset="0.55" stop-color="#5b21b6" stop-opacity="0.04" />
+      <stop offset="1"    stop-color="#5b21b6" stop-opacity="0" />
     </radialGradient>
-    <mask id="grid-fade">
-      <rect width="1920" height="1080" fill="url(#grid-mask)" />
+
+    <!-- Fine dot grid, faded out toward the centre -->
+    <pattern id="dots" width="46" height="46" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#ffffff" fill-opacity="0.05" />
+    </pattern>
+    <radialGradient id="dot-mask-grad" cx="0.5" cy="0.5" r="0.78">
+      <stop offset="0"    stop-color="#fff" stop-opacity="0" />
+      <stop offset="0.5"  stop-color="#fff" stop-opacity="0.3" />
+      <stop offset="1"    stop-color="#fff" stop-opacity="0.95" />
+    </radialGradient>
+    <mask id="dot-mask">
+      <rect width="1920" height="1080" fill="url(#dot-mask-grad)" />
     </mask>
 
-    <!-- Diagonal accent line gradients -->
-    <linearGradient id="line-violet" x1="0" y1="0" x2="1" y2="0">
+    <!-- Brand gradient for the stacked-square motif (echoes the maxstash logo) -->
+    <linearGradient id="sq-stroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.55" />
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0.30" />
+    </linearGradient>
+
+    <!-- Sweeping accent line gradient -->
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0"   stop-color="#a855f7" stop-opacity="0" />
-      <stop offset="0.5" stop-color="#a855f7" stop-opacity="0.22" />
+      <stop offset="0.5" stop-color="#a855f7" stop-opacity="0.26" />
       <stop offset="1"   stop-color="#3b82f6" stop-opacity="0" />
     </linearGradient>
-    <linearGradient id="line-blue" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0"   stop-color="#3b82f6" stop-opacity="0" />
-      <stop offset="0.5" stop-color="#3b82f6" stop-opacity="0.18" />
+
+    <!-- Soft particle glow -->
+    <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"   stop-color="#c4b5fd" stop-opacity="0.9" />
+      <stop offset="0.5" stop-color="#a855f7" stop-opacity="0.35" />
       <stop offset="1"   stop-color="#a855f7" stop-opacity="0" />
-    </linearGradient>
+    </radialGradient>
+
+    <!-- Edge vignette to settle the corners and frame the card -->
+    <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.85">
+      <stop offset="0.55" stop-color="#000" stop-opacity="0" />
+      <stop offset="1"    stop-color="#000" stop-opacity="0.5" />
+    </radialGradient>
   </defs>
 
-  <!-- Base -->
-  <rect width="1920" height="1080" fill="url(#bg-base)" />
+  <!-- Base + aurora -->
+  <rect width="1920" height="1080" fill="url(#base)" />
+  <rect width="1920" height="1080" fill="url(#g-purple)" />
+  <rect width="1920" height="1080" fill="url(#g-violet)" />
+  <rect width="1920" height="1080" fill="url(#g-blue)" />
+  <rect width="1920" height="1080" fill="url(#g-indigo)" />
 
-  <!-- Faded grid -->
-  <rect width="1920" height="1080" fill="url(#grid)" mask="url(#grid-fade)" />
+  <!-- Edge-faded dot grid -->
+  <rect width="1920" height="1080" fill="url(#dots)" mask="url(#dot-mask)" />
 
-  <!-- Color glows pushed to corners -->
-  <rect width="1920" height="1080" fill="url(#glow-violet)" />
-  <rect width="1920" height="1080" fill="url(#glow-blue)" />
-
-  <!-- Diagonal accent lines, kept away from the card area -->
-  <g stroke-width="1" fill="none">
-    <line x1="-200" y1="180"  x2="2120" y2="640" stroke="url(#line-violet)" />
-    <line x1="-200" y1="930"  x2="2120" y2="470" stroke="url(#line-blue)" />
-    <line x1="-200" y1="1020" x2="2120" y2="780" stroke="url(#line-violet)" stroke-opacity="0.5" />
+  <!-- Stacked-square motif, top-left -->
+  <g fill="none" stroke="url(#sq-stroke)" stroke-width="2">
+    <rect x="150"  y="120" width="250" height="250" rx="52" transform="rotate(-12 275 245)" />
+    <rect x="216"  y="186" width="250" height="250" rx="52" transform="rotate(-12 341 311)" stroke-opacity="0.55" />
+  </g>
+  <!-- Stacked-square motif, bottom-right -->
+  <g fill="none" stroke="url(#sq-stroke)" stroke-width="2" opacity="0.85">
+    <rect x="1520" y="700" width="290" height="290" rx="60" transform="rotate(14 1665 845)" />
+    <rect x="1454" y="634" width="290" height="290" rx="60" transform="rotate(14 1599 779)" stroke-opacity="0.5" />
   </g>
 
-  <!-- Edge vignette on top so corners settle -->
+  <!-- Sweeping accent lines -->
+  <g stroke-width="1.5" fill="none">
+    <line x1="-120" y1="250" x2="2040" y2="710" stroke="url(#line)" />
+    <line x1="-120" y1="880" x2="2040" y2="430" stroke="url(#line)" stroke-opacity="0.6" />
+  </g>
+
+  <!-- Glowing particles -->
+  <g>
+    <circle cx="430"  cy="780" r="28" fill="url(#spark)" />
+    <circle cx="1500" cy="300" r="22" fill="url(#spark)" />
+    <circle cx="980"  cy="120" r="16" fill="url(#spark)" opacity="0.7" />
+    <circle cx="1360" cy="940" r="18" fill="url(#spark)" opacity="0.7" />
+  </g>
+
+  <!-- Vignette on top so corners settle -->
   <rect width="1920" height="1080" fill="url(#vignette)" />
 </svg>
