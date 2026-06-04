@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import ReactUseWebSocket, { ReadyState } from 'react-use-websocket';
-
-// Vite 8 / Rolldown mis-bundles this package's getter-based CJS `default` export:
-// the default import resolves to the module.exports object instead of the hook.
-// Unwrap the extra `.default` layer when present (browser), else use it directly (tests).
-
 import { useAppDispatch, useAppSelector } from './reduxHooks';
 import { useToast } from './useToast';
 import { selectCurrentContest } from '../features/contests/contestSelectors';
@@ -20,6 +15,7 @@ import type {
 } from '../types/contest';
 import type { ConnectionStatus, WSUICallbacks } from '../types/ws';
 
+// fix until use websocket migrates off CJS
 const useWebSocket =
   (ReactUseWebSocket as unknown as { default?: typeof ReactUseWebSocket }).default ??
   ReactUseWebSocket;
