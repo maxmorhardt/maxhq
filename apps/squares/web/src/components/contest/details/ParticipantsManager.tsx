@@ -1,4 +1,4 @@
-import { Close, Edit, ErrorOutline } from '@mui/icons-material';
+import { Close, Edit, ErrorOutlineOutlined } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -291,7 +291,7 @@ export default function ParticipantsManager({
             variant="contained"
             color={editError ? 'error' : 'primary'}
             onClick={handleEditSave}
-            startIcon={editError ? <ErrorOutline /> : undefined}
+            startIcon={editError ? <ErrorOutlineOutlined /> : undefined}
           >
             {editError ? 'Failed — Retry' : 'Save'}
           </Button>
@@ -326,7 +326,7 @@ export default function ParticipantsManager({
             variant="contained"
             color="error"
             onClick={handleRemove}
-            startIcon={removeError ? <ErrorOutline /> : undefined}
+            startIcon={removeError ? <ErrorOutlineOutlined /> : undefined}
           >
             {removeError ? 'Failed — Retry' : 'Remove'}
           </Button>

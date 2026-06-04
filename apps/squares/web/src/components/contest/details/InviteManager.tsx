@@ -1,4 +1,4 @@
-import { Close, Delete, ErrorOutline, Link as LinkIcon, Share } from '@mui/icons-material';
+import { Close, Delete, ErrorOutlineOutlined, Link as LinkIcon, Share } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -188,7 +188,7 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
                 creating ? (
                   <CircularProgress size={16} />
                 ) : createError ? (
-                  <ErrorOutline />
+                  <ErrorOutlineOutlined />
                 ) : (
                   <LinkIcon />
                 )
@@ -268,7 +268,7 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
                         }}
                       >
                         {failedInviteId === invite.id ? (
-                          <ErrorOutline fontSize="small" />
+                          <ErrorOutlineOutlined fontSize="small" />
                         ) : (
                           <Delete fontSize="small" />
                         )}
