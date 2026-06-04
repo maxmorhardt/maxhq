@@ -27,8 +27,7 @@ export default function Footer() {
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={{ xs: 2, sm: 3 }}
-          justifyContent="space-between"
-          alignItems="center"
+          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
         >
           {/* logo and copyright section */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>

@@ -1,4 +1,4 @@
-import { ErrorOutline } from '@mui/icons-material';
+import { ErrorOutlineOutlined } from '@mui/icons-material';
 import { Box, Button, Container, Paper, Typography, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,7 +35,7 @@ export default function JoinError({ message }: JoinErrorProps) {
             mb: 3,
           }}
         >
-          <ErrorOutline sx={{ fontSize: 28, color: '#ff6b6b' }} />
+          <ErrorOutlineOutlined sx={{ fontSize: 28, color: '#ff6b6b' }} />
         </Box>
 
         <Typography sx={{ fontWeight: 700, fontSize: '1.3rem', color: 'white', mb: 1.5 }}>

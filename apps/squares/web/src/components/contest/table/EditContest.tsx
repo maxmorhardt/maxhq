@@ -127,7 +127,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth disableRestoreFocus>
       <DialogTitle component="div" sx={{ pb: 1.5, pr: 7 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Edit fontSize="small" sx={{ color: 'text.secondary' }} />
           <Typography component="span" sx={{ fontWeight: 700, fontSize: '1.1rem', flexGrow: 1 }}>
             {titleText}

@@ -1,4 +1,4 @@
-import { ErrorOutline, Home, Refresh } from '@mui/icons-material';
+import { ErrorOutlineOutlined, Home, Refresh } from '@mui/icons-material';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
@@ -40,7 +40,7 @@ export function ErrorFallback() {
     <Container maxWidth="lg" sx={{ py: 8 }}>
       <Box sx={{ textAlign: 'center', mb: 8 }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <ErrorOutline sx={{ fontSize: 64, color: '#ff6b6b' }} />
+          <ErrorOutlineOutlined sx={{ fontSize: 64, color: '#ff6b6b' }} />
         </Box>
         <Typography
           variant="h1"

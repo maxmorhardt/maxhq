@@ -1,6 +1,6 @@
 # Squares UI Contribution Guide
 
-This guide provides context for coding agents working in this repository. Squares UI is the frontend for a real-time football squares pool: a React 19 + TypeScript SPA built with Vite, styled with MUI (Material UI v7), state managed with Redux Toolkit, authenticated via OIDC, and kept in sync over WebSockets. It ships as a Docker image and is served by NGINX, deployed via the sibling `charts/squares` Helm chart. The backend it talks to is the sibling `squares-api` workspace.
+This guide provides context for coding agents working in this repository. Squares UI is the frontend for a real-time football squares pool: a React 19 + TypeScript SPA built with Vite, styled with MUI (Material UI v9), state managed with Redux Toolkit, authenticated via OIDC, and kept in sync over WebSockets. It ships as a Docker image and is served by NGINX, deployed via the sibling `charts/squares` Helm chart. The backend it talks to is the sibling `squares-api` workspace.
 
 ## Directory overview
 
@@ -36,7 +36,7 @@ Coverage thresholds are enforced at **80%** for lines / branches / functions / s
 
 - React components are function components in `.tsx` files, exported as `default` from page files and as named exports from shared components.
 - Props: declare with a local `interface Props { ... }` and `({ ... }: Props)` destructuring. Don't export `Props` unless reused.
-- Use **MUI v7** (`@mui/material`, `@mui/icons-material`) for UI primitives and styling. Prefer the `sx` prop and theme tokens over ad-hoc CSS; gradients live in [src/types/gradients.ts](src/types/gradients.ts).
+- Use **MUI v9** (`@mui/material`, `@mui/icons-material`) for UI primitives and styling. Prefer the `sx` prop and theme tokens over ad-hoc CSS; gradients live in [src/types/gradients.ts](src/types/gradients.ts).
 - Hooks live in `src/hooks/` and are named `useXxx`. Always use the typed `useAppDispatch` / `useAppSelector` from [src/hooks/reduxHooks.ts](src/hooks/reduxHooks.ts) — never the raw `react-redux` hooks.
 - Avoid comments unless the code is genuinely non-obvious.
 - Never type with `any`; use `unknown` if the type is truly unknown.

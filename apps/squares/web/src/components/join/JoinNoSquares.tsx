@@ -1,4 +1,4 @@
-import { ErrorOutline, GridOff, HowToReg } from '@mui/icons-material';
+import { ErrorOutlineOutlined, GridOff, HowToReg } from '@mui/icons-material';
 import { Box, Button, Chip, Container, Paper, Typography, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import type { InvitePreviewResponse } from '../../types/contest';
@@ -99,7 +99,9 @@ export default function JoinNoSquares({ preview }: JoinNoSquaresProps) {
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-              <ErrorOutline sx={{ fontSize: 18, color: '#4facfe', mt: 0.1, flexShrink: 0 }} />
+              <ErrorOutlineOutlined
+                sx={{ fontSize: 18, color: '#4facfe', mt: 0.1, flexShrink: 0 }}
+              />
               <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem' }}>
                 Ask{preview?.owner ? ` ${preview.owner}` : ' the contest owner'} to reduce another
                 participant&apos;s square limit to free up space.

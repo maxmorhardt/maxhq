@@ -1,4 +1,4 @@
-import { ErrorOutline, Home, Refresh, Search } from '@mui/icons-material';
+import { ErrorOutlineOutlined, Home, Refresh, Search } from '@mui/icons-material';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,7 +11,7 @@ export default function GenericErrorDisplay() {
       <Box sx={{ mb: 6 }}>
         {/* icon */}
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <ErrorOutline sx={{ fontSize: 48, color: '#ff6b6b' }} />
+          <ErrorOutlineOutlined sx={{ fontSize: 48, color: '#ff6b6b' }} />
         </Box>
 
         {/* title */}

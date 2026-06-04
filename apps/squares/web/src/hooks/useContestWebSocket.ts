@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import ReactUseWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAppDispatch, useAppSelector } from './reduxHooks';
 import { useToast } from './useToast';
 import { selectCurrentContest } from '../features/contests/contestSelectors';
@@ -14,6 +14,11 @@ import type {
   Participant,
 } from '../types/contest';
 import type { ConnectionStatus, WSUICallbacks } from '../types/ws';
+
+// fix until use websocket migrates off CJS
+const useWebSocket =
+  (ReactUseWebSocket as unknown as { default?: typeof ReactUseWebSocket }).default ??
+  ReactUseWebSocket;
 
 const MAX_RETRY_ATTEMPTS = 5;
 const FATAL_CLOSE_CODES = [4403, 4404, 4500, 4503];
