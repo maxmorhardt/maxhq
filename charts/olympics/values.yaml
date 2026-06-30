@@ -1,0 +1,89 @@
+fullnameOverride: olympics
+
+replicaCount: 1
+
+image:
+  repository: maxmorhardt/olympics
+  tag: latest
+  pullPolicy: Always
+  revisionHistoryLimit: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+  volumes:
+    - name: tmp
+      mountPath: /tmp
+      volumeType: emptyDir
+    - name: cache
+      mountPath: /var/cache/nginx
+      volumeType: emptyDir
+    - name: run
+      mountPath: /var/run
+      volumeType: emptyDir
+  startupProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 2
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+  name: http
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: '1m'
+    nginx.ingress.kubernetes.io/client-body-buffer-size: '1m'
+    nginx.ingress.kubernetes.io/limit-connections: '300'
+    nginx.ingress.kubernetes.io/limit-rps: '150'
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: '5'
+  hosts:
+    - host: olympics.maxstash.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: maxstash.io-tls
+      hosts:
+        - olympics.maxstash.io
+
+resources:
+  limits:
+    cpu: 50m
+    memory: 64Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+affinity:
+  podAntiAffinity:
+    enabled: false
+    weight: 100
+    topologyKey: kubernetes.io/hostname

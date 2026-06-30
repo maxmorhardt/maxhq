@@ -1,0 +1,92 @@
+fullnameOverride: olympics-api
+
+replicaCount: 1
+
+image:
+  repository: maxmorhardt/olympics-api
+  tag: latest
+  pullPolicy: Always
+  revisionHistoryLimit: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+  volumes:
+    - name: tmp
+      mountPath: /tmp
+      volumeType: emptyDir
+    - name: home
+      mountPath: /home/olympics
+      volumeType: emptyDir
+    - name: log
+      mountPath: /var/log
+      volumeType: emptyDir
+  envFrom:
+    - secretRef:
+        name: olympics-api-env
+  startupProbe:
+    path: /health/live
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+  readinessProbe:
+    path: /health/ready
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 5
+    successThreshold: 1
+  livenessProbe:
+    path: /health/live
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 5
+    successThreshold: 1
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  name: http
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: '1m'
+    nginx.ingress.kubernetes.io/client-body-buffer-size: '1m'
+    nginx.ingress.kubernetes.io/limit-connections: '500'
+    nginx.ingress.kubernetes.io/limit-rps: '100'
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: '5'
+  hosts:
+    - host: olympics-api.maxstash.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: maxstash.io-tls
+      hosts:
+        - olympics-api.maxstash.io
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+affinity:
+  podAntiAffinity:
+    enabled: false
+    weight: 100
+    topologyKey: kubernetes.io/hostname
