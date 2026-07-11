@@ -2,12 +2,18 @@ import os
 import sys
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import List
 
 import requests
 from pythonjsonlogger import jsonlogger
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
+
+CTP_GROUP = "gateway.envoyproxy.io"
+CTP_VERSION = "v1alpha1"
+CTP_NAMESPACE = "envoy-gateway-system"
+CTP_PLURAL = "clienttrafficpolicies"
+CTP_NAME = "maxstash"
 
 handler = logging.StreamHandler()
 formatter = jsonlogger.JsonFormatter(
@@ -39,7 +45,7 @@ def discord_notify(msg: str, webhook: str, success: bool = True) -> None:
 	except requests.RequestException as e:
 		logger.error(f"failed to send discord notification: {e}")
 
-def fetch_cloudflare_ranges() -> str:
+def fetch_cloudflare_ranges() -> List[str]:
 	logger.info("fetching cloudflare ipv4 ranges")
 	try:
 		ipv4_response = requests.get("https://www.cloudflare.com/ips-v4", timeout=10)
@@ -59,40 +65,58 @@ def fetch_cloudflare_ranges() -> str:
 		raise
 
 	all_ranges = ipv4_ranges + ipv6_ranges
-	cloudflare_ranges = ','.join(all_ranges)
-	logger.info(f"all cloudflare ip ranges: {cloudflare_ranges}")
+	logger.info(f"all cloudflare ip ranges: {','.join(all_ranges)}")
 
-	return cloudflare_ranges
+	return all_ranges
 
-def get_current_proxy_real_ip_cidr() -> Optional[str]:
-	logger.info("getting ingress nginx configmap")
+def get_current_trusted_cidrs() -> List[str]:
+	logger.info("getting client traffic policy")
 	try:
-		v1 = client.CoreV1Api()
-		configmap = v1.read_namespaced_config_map(
-			name="ingress-nginx-controller",
-			namespace="ingress-nginx"
+		api = client.CustomObjectsApi()
+		ctp = api.get_namespaced_custom_object(
+			group=CTP_GROUP,
+			version=CTP_VERSION,
+			namespace=CTP_NAMESPACE,
+			plural=CTP_PLURAL,
+			name=CTP_NAME
 		)
 
-		proxy_real_ip_cidr = configmap.data.get("proxy-real-ip-cidr", "")
-		logger.info(f"proxy-real-ip-cidr: {proxy_real_ip_cidr}")
-		
-		return proxy_real_ip_cidr
+		trusted_cidrs = (
+			ctp.get("spec", {})
+			.get("clientIPDetection", {})
+			.get("xForwardedFor", {})
+			.get("trustedCIDRs", [])
+		)
+		logger.info(f"trustedCIDRs: {','.join(trusted_cidrs)}")
+
+		return trusted_cidrs
 	except ApiException as e:
-		logger.error(f"failed to fetch configmap: {e}")
+		logger.error(f"failed to fetch client traffic policy: {e}")
 		raise
 
-def update_proxy_real_ip_cidr(cloudflare_ranges: str) -> None:
-	logger.error("proxy-real-ip-cidr does not match current cloudflare ip ranges")
+def update_trusted_cidrs(cloudflare_ranges: List[str]) -> None:
+	logger.error("trustedCIDRs do not match current cloudflare ip ranges")
 	try:
-		v1 = client.CoreV1Api()
-		v1.patch_namespaced_config_map(
-			name="ingress-nginx-controller",
-			namespace="ingress-nginx",
-			body={"data": {"proxy-real-ip-cidr": cloudflare_ranges}}
+		api = client.CustomObjectsApi()
+		api.patch_namespaced_custom_object(
+			group=CTP_GROUP,
+			version=CTP_VERSION,
+			namespace=CTP_NAMESPACE,
+			plural=CTP_PLURAL,
+			name=CTP_NAME,
+			body={
+				"spec": {
+					"clientIPDetection": {
+						"xForwardedFor": {
+							"trustedCIDRs": cloudflare_ranges
+						}
+					}
+				}
+			}
 		)
-		logger.info("successfully patched configmap")
+		logger.info("successfully patched client traffic policy")
 	except ApiException as e:
-		logger.error(f"failed to patch configmap: {e}")
+		logger.error(f"failed to patch client traffic policy: {e}")
 		raise
 
 def main() -> int:
@@ -101,7 +125,7 @@ def main() -> int:
 	if not discord_webhook:
 		logger.error("DISCORD_WEBHOOK environment variable is not set")
 		return 2
-	
+
 	try:
 		config.load_incluster_config()
 		logger.info("loaded in-cluster k8s configuration")
@@ -111,14 +135,14 @@ def main() -> int:
 
 	try:
 		cloudflare_ranges = fetch_cloudflare_ranges()
-		current_proxy_real_ip_cidr = get_current_proxy_real_ip_cidr()
+		current_trusted_cidrs = get_current_trusted_cidrs()
 
-		if cloudflare_ranges == current_proxy_real_ip_cidr:
-			logger.info("proxy-real-ip-cidr matches current cloudflare ip ranges")
+		if sorted(cloudflare_ranges) == sorted(current_trusted_cidrs):
+			logger.info("trustedCIDRs match current cloudflare ip ranges")
 			return 0
 
-		update_proxy_real_ip_cidr(cloudflare_ranges)
-		msg = "✓ Cloudflare CIDR job succcessfully updated NGINX IP Ranges"
+		update_trusted_cidrs(cloudflare_ranges)
+		msg = "✓ Cloudflare CIDR job successfully updated Envoy Gateway trusted IP ranges"
 		discord_notify(msg, discord_webhook, success=True)
 		return 0
 
