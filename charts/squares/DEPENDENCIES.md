@@ -2,8 +2,8 @@
 
 ## Required
 
-- **NGINX Ingress Controller** - Must be installed in cluster
-- **TLS Secret** - For HTTPS (name: `maxstash.io-tls`)
+- **Envoy Gateway** - `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef)
+- **TLS** - Terminated at the gateway (`maxstash.io-tls` in `envoy-gateway-system`)
 
 ```bash
 kubectl create secret tls maxstash.io-tls \
@@ -11,7 +11,7 @@ kubectl create secret tls maxstash.io-tls \
   --key=path/to/tls.key
 ```
 
-- **DNS Record** - Point `squares.maxstash.io` to ingress external IP
+- **DNS Record** - Point `squares.maxstash.io` to the gateway external IP
 
 ## Optional
 

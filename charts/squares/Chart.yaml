@@ -2,4 +2,4 @@ apiVersion: v2
 name: squares-chart
 description: Chart for squares
 type: application
-version: 1.4.0
+version: 2.0.0
