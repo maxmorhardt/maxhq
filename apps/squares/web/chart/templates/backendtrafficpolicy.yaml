@@ -14,11 +14,17 @@ spec:
     type: Local
     local:
       rules:
-        # per client ip, enforced per proxy replica
         - clientSelectors:
             - sourceCIDR:
                 type: Distinct
                 value: 0.0.0.0/0
+          limit:
+            requests: {{ .Values.route.rateLimit.requests }}
+            unit: {{ .Values.route.rateLimit.unit }}
+        - clientSelectors:
+            - sourceCIDR:
+                type: Distinct
+                value: ::/0
           limit:
             requests: {{ .Values.route.rateLimit.requests }}
             unit: {{ .Values.route.rateLimit.unit }}
