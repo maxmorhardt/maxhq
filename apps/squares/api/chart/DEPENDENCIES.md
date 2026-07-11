@@ -33,6 +33,6 @@ kubectl create secret generic squares-api-env \
   --from-literal=SERVER_PORT='8080' \
   --from-literal=METRICS_ENABLED='false' \
   --from-literal=CONTACT_RATE_LIMIT='10' \
-  --from-literal=OIDC_ISSUER='https://login.maxstash.io/application/o/squares/' \
+  --from-literal=OIDC_ISSUER='https://login.maxstash.io' \
   --from-literal=TURNSTILE_BASE_URL='https://challenges.cloudflare.com'
 ```

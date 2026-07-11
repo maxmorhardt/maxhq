@@ -1,0 +1,5 @@
+apiVersion: v2
+name: maxstash-gateway-chart
+description: Gateway API resources for the maxstash.io gateway (GatewayClass, Gateway, EnvoyProxy, policies)
+type: application
+version: 1.0.0

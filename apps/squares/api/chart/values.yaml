@@ -56,24 +56,26 @@ service:
   targetPort: 8080
   name: http
 
-ingress:
+route:
   enabled: true
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: '1m'
-    nginx.ingress.kubernetes.io/client-body-buffer-size: '1m'
-    nginx.ingress.kubernetes.io/limit-connections: '500'
-    nginx.ingress.kubernetes.io/limit-rps: '100'
-    nginx.ingress.kubernetes.io/limit-burst-multiplier: '5'
-  hosts:
-    - host: squares-api.maxstash.io
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: maxstash.io-tls
-      hosts:
-        - squares-api.maxstash.io
+  gateway:
+    name: maxstash
+    namespace: envoy-gateway-system
+  hostnames:
+    - api.maxstash.io
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /squares
+      urlRewrite:
+        path:
+          type: ReplacePrefixMatch
+          replacePrefixMatch: /
+  rateLimit:
+    enabled: true
+    requests: 100
+    unit: Second
 
 resources:
   limits:
