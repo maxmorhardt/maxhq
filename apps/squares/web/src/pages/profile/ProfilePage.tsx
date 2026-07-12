@@ -119,8 +119,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  // null while the active-contest preflight is loading
   const [activeContests, setActiveContests] = useState<UserActiveContest[] | null>(null);
+  const [activeContestsError, setActiveContestsError] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const userEmail = profile?.email ?? auth.user?.profile?.email ?? '';
@@ -157,15 +157,19 @@ export default function ProfilePage() {
 
   const refreshActiveContests = async () => {
     try {
-      setActiveContests(await getMyActiveContests());
+      const contests = await getMyActiveContests();
+      setActiveContests(contests);
+      setActiveContestsError(false);
     } catch {
       showToast('Failed to check your contests', 'error');
-      setActiveContests([]);
+      setActiveContests(null);
+      setActiveContestsError(true);
     }
   };
 
   const openDeleteDialog = () => {
     setActiveContests(null);
+    setActiveContestsError(false);
     setDeleteOpen(true);
     refreshActiveContests();
   };
@@ -173,6 +177,7 @@ export default function ProfilePage() {
   const closeDeleteDialog = () => {
     setDeleteOpen(false);
     setActiveContests(null);
+    setActiveContestsError(false);
   };
 
   const handleDeleteContest = async (id: string) => {
@@ -370,7 +375,23 @@ export default function ProfilePage() {
         maxWidth="sm"
         fullWidth
       >
-        {activeContests === null ? (
+        {activeContestsError ? (
+          <>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                We couldn't verify whether you have active contests, so account deletion is blocked
+                for safety. Please try again.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeDeleteDialog}>Close</Button>
+              <Button onClick={refreshActiveContests} variant="contained">
+                Retry
+              </Button>
+            </DialogActions>
+          </>
+        ) : activeContests === null ? (
           <>
             <DialogTitle>Delete your account?</DialogTitle>
             <DialogContent>
@@ -378,6 +399,9 @@ export default function ProfilePage() {
                 <CircularProgress size={24} />
               </Box>
             </DialogContent>
+            <DialogActions>
+              <Button onClick={closeDeleteDialog}>Cancel</Button>
+            </DialogActions>
           </>
         ) : activeContests.length > 0 ? (
           <>

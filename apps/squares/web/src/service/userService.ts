@@ -24,7 +24,7 @@ export async function getMyStats(): Promise<UserStats> {
 export async function getMyActiveContests(): Promise<UserActiveContest[]> {
   try {
     const res = await api.get<UserActiveContest[]>('/users/me/active-contests');
-    return res.data;
+    return res.data ?? [];
   } catch (err: unknown) {
     throw handleError(err);
   }

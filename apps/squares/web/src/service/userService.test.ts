@@ -53,6 +53,14 @@ describe('userService', () => {
     expect(api.get).toHaveBeenCalledWith('/users/me/active-contests');
   });
 
+  it('should normalize a null active-contests response to an empty array', async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: null });
+
+    const result = await getMyActiveContests();
+
+    expect(result).toEqual([]);
+  });
+
   it('should delete the account successfully', async () => {
     vi.mocked(api.delete).mockResolvedValue({});
 

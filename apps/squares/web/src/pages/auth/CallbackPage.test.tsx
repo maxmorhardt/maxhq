@@ -69,7 +69,7 @@ describe('CallbackPage', () => {
   });
 
   it('navigates to redirect path when auth completes (deferred until intro finishes)', () => {
-    sessionStorage.setItem('auth_redirect_path', '/contests/owner/alice/name/pool');
+    sessionStorage.setItem('auth_redirect_path', '/contests/c-1');
     vi.mocked(useAuth).mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
@@ -87,7 +87,7 @@ describe('CallbackPage', () => {
     act(() => vi.advanceTimersByTime(700));
     act(() => {}); // flush any remaining effects
 
-    expect(mockNavigate).toHaveBeenCalledWith('/contests/owner/alice/name/pool', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1', { replace: true });
   });
 
   it('falls back to /contests when no redirect path is stored', () => {

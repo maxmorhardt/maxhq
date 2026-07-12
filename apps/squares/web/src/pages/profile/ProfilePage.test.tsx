@@ -107,6 +107,39 @@ describe('ProfilePage', () => {
     expect(getMyActiveContests).toHaveBeenCalled();
   });
 
+  it('blocks deletion and offers a retry when the active-contests preflight fails', async () => {
+    vi.mocked(getMyActiveContests).mockRejectedValueOnce(new Error('down'));
+    renderPage();
+
+    await openDeleteDialog();
+    await waitFor(() =>
+      expect(mockShowToast).toHaveBeenCalledWith('Failed to check your contests', 'error')
+    );
+    expect(await screen.findByText(/couldn't verify/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete forever/i })).not.toBeInTheDocument();
+
+    vi.mocked(getMyActiveContests).mockResolvedValueOnce([]);
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    expect(await screen.findByRole('button', { name: /delete forever/i })).toBeInTheDocument();
+  });
+
+  it('allows closing the dialog while the preflight is still loading', async () => {
+    let resolvePreflight: (value: UserActiveContest[]) => void = () => {};
+    vi.mocked(getMyActiveContests).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolvePreflight = resolve;
+      })
+    );
+    renderPage();
+
+    await openDeleteDialog();
+    expect(await screen.findByRole('button', { name: /cancel/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByText(/delete your account\?/i)).not.toBeInTheDocument();
+
+    resolvePreflight([]);
+  });
+
   it('deletes the account, clears the session, and navigates home', async () => {
     vi.mocked(deleteMyAccount).mockResolvedValue(undefined);
     renderPage();
