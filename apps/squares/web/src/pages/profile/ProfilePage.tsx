@@ -280,8 +280,8 @@ export default function ProfilePage() {
             Danger Zone
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Deleting your account removes your contests, frees your claimed squares, and erases your
-            personal data. This cannot be undone.
+            Deleting your account removes your active contests, frees your claimed squares, and
+            anonymizes your contest history. This cannot be undone.
           </Typography>
         </Box>
         <Button
@@ -301,8 +301,8 @@ export default function ProfilePage() {
         <DialogTitle>Delete your account?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Your contests will be deleted, your squares released, and your data permanently removed.
-            This action cannot be undone.
+            Your active contests will be deleted, your squares released, and your contest history
+            anonymized. This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -11,7 +11,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
-import { Link as RouterLink } from 'react-router-dom';
 import { signInWithProvider, type OidcProvider } from '../../utils/oidcHelpers';
 
 interface SignInDialogProps {
@@ -62,11 +61,23 @@ export default function SignInDialog({ open, onClose, redirectPath }: SignInDial
           sx={{ display: 'block', color: 'text.secondary', maxWidth: 280 }}
         >
           By signing in, you agree to our{' '}
-          <Link component={RouterLink} to="/terms-of-service" color="inherit" underline="always">
+          <Link
+            href="https://maxstash.io/terms-of-service"
+            target="_blank"
+            rel="noreferrer"
+            color="inherit"
+            underline="always"
+          >
             terms of service
           </Link>{' '}
           and{' '}
-          <Link component={RouterLink} to="/privacy-policy" color="inherit" underline="always">
+          <Link
+            href="https://maxstash.io/privacy-policy"
+            target="_blank"
+            rel="noreferrer"
+            color="inherit"
+            underline="always"
+          >
             privacy policy
           </Link>
           .

@@ -5,11 +5,12 @@ export default function Footer() {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
 
+  // legal pages are centralized on maxstash.io for all services
   const footerLinks = [
     { label: 'Learn More', path: '/learn-more' },
     { label: 'Contact', path: '/contact' },
-    { label: 'Privacy', path: '/privacy-policy' },
-    { label: 'Terms', path: '/terms-of-service' },
+    { label: 'Privacy', href: 'https://maxstash.io/privacy-policy' },
+    { label: 'Terms', href: 'https://maxstash.io/terms-of-service' },
   ];
 
   return (
@@ -49,8 +50,10 @@ export default function Footer() {
           <Stack direction="row" spacing={{ xs: 2, sm: 3 }}>
             {footerLinks.map((link) => (
               <Link
-                key={link.path}
-                onClick={() => navigate(link.path)}
+                key={link.label}
+                {...(link.href
+                  ? { href: link.href, target: '_blank', rel: 'noreferrer' }
+                  : { onClick: () => link.path && navigate(link.path) })}
                 sx={{
                   color: 'rgba(255,255,255,0.7)',
                   cursor: 'pointer',

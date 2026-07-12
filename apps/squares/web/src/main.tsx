@@ -19,9 +19,7 @@ import NotFoundPage from './pages/error/NotFoundPage';
 import JoinPage from './pages/join/JoinPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
-import PrivacyPolicyPage from './pages/privacy/PrivacyPolicyPage';
 import ProfilePage from './pages/profile/ProfilePage';
-import TermsOfServicePage from './pages/terms/TermsOfServicePage';
 
 const oidcConfig: AuthProviderProps = {
   authority: 'https://login.maxstash.io',
@@ -54,8 +52,6 @@ const router = createBrowserRouter([
       { path: 'join/:token', element: <JoinPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },
-      { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
-      { path: 'terms-of-service', element: <TermsOfServicePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
