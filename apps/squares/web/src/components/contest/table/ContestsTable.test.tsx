@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ComponentProps } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
@@ -64,7 +65,7 @@ const defaultProps = {
   title: 'My Contests',
 };
 
-function renderTable(props = defaultProps) {
+function renderTable(props: ComponentProps<typeof ContestsTable> = defaultProps) {
   return render(
     <ThemeProvider theme={theme}>
       <Provider store={makeStore()}>
