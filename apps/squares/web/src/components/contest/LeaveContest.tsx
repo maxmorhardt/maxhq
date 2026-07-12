@@ -40,6 +40,10 @@ export default function LeaveContest({
   }
 
   const handleConfirm = async () => {
+    if (!userEmail) {
+      setError('Unable to identify your account. Please sign in again.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

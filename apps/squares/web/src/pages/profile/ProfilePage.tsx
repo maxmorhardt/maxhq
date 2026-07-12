@@ -188,6 +188,11 @@ export default function ProfilePage() {
   };
 
   const handleLeaveContest = async (id: string) => {
+    if (!userEmail) {
+      showToast('Unable to determine your email. Please refresh and try again.', 'error');
+      return;
+    }
+
     setBusyId(id);
     try {
       await dispatch(removeContestParticipant({ contestId: id, userId: userEmail })).unwrap();
