@@ -43,6 +43,7 @@ export default function HeaderMenu({
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         open={Boolean(anchorElNav)}
         onClose={handleCloseNavMenu}
+        disableScrollLock
         sx={{ display: { xs: 'block', md: 'none' } }}
       >
         {/* navigation menu items */}

@@ -16,7 +16,17 @@ vi.mock('../../../service/contestService', async () => {
   return {
     ...actual,
     getInvites: vi.fn().mockResolvedValue([]),
-    createInvite: vi.fn().mockResolvedValue({ token: 'abc', url: 'http://example.com/join/abc' }),
+    createInvite: vi.fn().mockResolvedValue({
+      id: 'inv-new',
+      contestId: 'c-1',
+      token: 'abc',
+      maxSquares: 10,
+      role: 'participant',
+      uses: 0,
+      createdAt: '',
+      createdBy: 'alice',
+      updatedAt: '',
+    }),
     deleteInvite: vi.fn().mockResolvedValue(undefined),
   };
 });
@@ -85,6 +95,18 @@ describe('InviteManager', () => {
     await renderManager(true);
     fireEvent.click(screen.getByRole('button', { name: /generate invite link/i }));
     await waitFor(() => expect(createInvite).toHaveBeenCalled());
+  });
+
+  it('adds the newly created invite to the list without refetching', async () => {
+    const { createInvite, getInvites } = await import('../../../service/contestService');
+    await renderManager(true);
+    await waitFor(() => expect(getInvites).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole('button', { name: /generate invite link/i }));
+    await waitFor(() => expect(createInvite).toHaveBeenCalled());
+
+    await waitFor(() => expect(screen.getByText(/active invite links/i)).toBeInTheDocument());
+    expect(getInvites).toHaveBeenCalledTimes(1);
   });
 
   it('shows active invite list when store has invites', async () => {

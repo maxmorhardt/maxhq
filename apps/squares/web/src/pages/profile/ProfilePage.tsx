@@ -3,103 +3,34 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import GridViewIcon from '@mui/icons-material/GridView';
 import GroupsIcon from '@mui/icons-material/Groups';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  keyframes,
-  Paper,
-  Skeleton,
-  Typography,
-  useTheme,
-} from '@mui/material';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Box, Button, Container, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from '../../components/common/LoadingScreen';
+import { popIn } from '../../components/profile/animations';
+import DeleteAccountDialog from '../../components/profile/DeleteAccountDialog';
+import StatCard from '../../components/profile/StatCard';
+import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
+import { useAppDispatch } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
-import { deleteMyAccount, getMyProfile, getMyStats } from '../../service/userService';
-import type { UserProfile, UserStats } from '../../types/user';
+import {
+  deleteMyAccount,
+  getMyActiveContests,
+  getMyProfile,
+  getMyStats,
+} from '../../service/userService';
+import type { UserActiveContest, UserProfile, UserStats } from '../../types/user';
 import UnauthorizedPage from '../error/UnauthorizedPage';
-
-const popIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-interface StatCardProps {
-  icon: ReactNode;
-  value: number | undefined;
-  label: string;
-  caption?: string;
-  loading: boolean;
-  highlight?: boolean;
-  delay: number;
-}
-
-function StatCard({ icon, value, label, caption, loading, highlight, delay }: StatCardProps) {
-  const theme = useTheme();
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        textAlign: 'center',
-        px: 2,
-        py: 2.5,
-        borderRadius: 3,
-        background: highlight
-          ? `linear-gradient(135deg, ${theme.palette.primary.dark}33 0%, ${theme.palette.primary.main}22 100%)`
-          : 'rgba(255,255,255,0.04)',
-        border: highlight
-          ? `1px solid ${theme.palette.primary.main}66`
-          : '1px solid rgba(255,255,255,0.08)',
-        animation: `${popIn} 0.5s ease-out ${delay}s both`,
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          mb: 1,
-          color: 'primary.main',
-          fontSize: 32,
-        }}
-      >
-        {icon}
-      </Box>
-      {loading ? (
-        <Skeleton variant="text" width={60} sx={{ mx: 'auto', fontSize: '2rem' }} />
-      ) : (
-        <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.5 }}>
-          {value?.toLocaleString() ?? '—'}
-        </Typography>
-      )}
-      <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-        {label}
-      </Typography>
-      {caption && !loading && (
-        <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-          {caption}
-        </Typography>
-      )}
-    </Paper>
-  );
-}
 
 export default function ProfilePage() {
   const auth = useAuth();
   const axiosReady = useAxiosAuth();
   const theme = useTheme();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { showToast } = useToast();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -107,6 +38,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [activeContests, setActiveContests] = useState<UserActiveContest[] | null>(null);
+  const [activeContestsError, setActiveContestsError] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const userEmail = profile?.email ?? auth.user?.profile?.email ?? '';
 
   const loadProfile = useCallback(async () => {
     try {
@@ -138,7 +74,61 @@ export default function ProfilePage() {
     return <UnauthorizedPage />;
   }
 
-  const handleDelete = async () => {
+  const refreshActiveContests = async () => {
+    try {
+      const contests = await getMyActiveContests();
+      setActiveContests(contests);
+      setActiveContestsError(false);
+    } catch {
+      showToast('Failed to check your contests', 'error');
+      setActiveContests(null);
+      setActiveContestsError(true);
+    }
+  };
+
+  const openDeleteDialog = () => {
+    setActiveContests(null);
+    setActiveContestsError(false);
+    setDeleteOpen(true);
+    refreshActiveContests();
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteOpen(false);
+    setActiveContests(null);
+    setActiveContestsError(false);
+  };
+
+  const handleDeleteContest = async (id: string) => {
+    setBusyId(id);
+    try {
+      await dispatch(deleteContest(id)).unwrap();
+      await refreshActiveContests();
+    } catch {
+      showToast('Failed to delete the contest', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleLeaveContest = async (id: string) => {
+    if (!userEmail) {
+      showToast('Unable to determine your email. Please refresh and try again.', 'error');
+      return;
+    }
+
+    setBusyId(id);
+    try {
+      await dispatch(removeContestParticipant({ contestId: id, userId: userEmail })).unwrap();
+      await refreshActiveContests();
+    } catch {
+      showToast('Failed to leave the contest', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
       await deleteMyAccount();
@@ -148,7 +138,7 @@ export default function ProfilePage() {
     } catch {
       showToast('Failed to delete your account', 'error');
       setDeleting(false);
-      setDeleteOpen(false);
+      refreshActiveContests();
     }
   };
 
@@ -280,15 +270,15 @@ export default function ProfilePage() {
             Danger Zone
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Deleting your account removes your active contests, frees your claimed squares, and
-            anonymizes your contest history. This cannot be undone.
+            Deleting your account anonymizes your contest history and removes your personal data.
+            You must delete or leave any active contests first. This cannot be undone.
           </Typography>
         </Box>
         <Button
           variant="outlined"
           color="error"
           startIcon={<DeleteForeverIcon />}
-          onClick={() => setDeleteOpen(true)}
+          onClick={openDeleteDialog}
           disabled={loading}
           sx={{ flexShrink: 0 }}
         >
@@ -296,32 +286,18 @@ export default function ProfilePage() {
         </Button>
       </Paper>
 
-      {/* delete confirmation */}
-      <Dialog open={deleteOpen} onClose={() => !deleting && setDeleteOpen(false)}>
-        <DialogTitle>Delete your account?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Your active contests will be deleted, your squares released, and your contest history
-            anonymized. This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)} disabled={deleting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDelete}
-            color="error"
-            variant="contained"
-            disabled={deleting}
-            startIcon={
-              deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />
-            }
-          >
-            Delete Forever
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DeleteAccountDialog
+        open={deleteOpen}
+        deleting={deleting}
+        busyId={busyId}
+        activeContests={activeContests}
+        activeContestsError={activeContestsError}
+        onClose={closeDeleteDialog}
+        onRetry={refreshActiveContests}
+        onDeleteContest={handleDeleteContest}
+        onLeaveContest={handleLeaveContest}
+        onConfirmDelete={handleDeleteAccount}
+      />
     </Container>
   );
 }

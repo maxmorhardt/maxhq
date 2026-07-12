@@ -360,7 +360,17 @@ describe('contestThunks', () => {
 
   describe('createContestInvite', () => {
     it('fulfilled: returns invite response', async () => {
-      vi.mocked(createInvite).mockResolvedValue({ inviteUrl: 'url', token: 'tok' });
+      vi.mocked(createInvite).mockResolvedValue({
+        id: 'i1',
+        contestId: 'c1',
+        token: 'tok',
+        maxSquares: 10,
+        role: 'participant',
+        uses: 0,
+        createdAt: '',
+        createdBy: '',
+        updatedAt: '',
+      });
       const store = createTestStore();
       const result = await store.dispatch(
         createContestInvite({ contestId: 'c1', request: { maxSquares: 10, role: 'participant' } })
@@ -475,6 +485,7 @@ describe('contestThunks', () => {
         maxSquares: 10,
         owner: 'u1',
         role: 'participant',
+        contestId: '',
       });
       const store = createTestStore();
       const result = await store.dispatch(previewInviteToken('tok'));
@@ -572,7 +583,7 @@ describe('contestThunks', () => {
       expect(result.type).toContain('fulfilled');
     });
 
-    it('rejected: sets error', async () => {
+    it('rejected: does not set the global contest error', async () => {
       vi.mocked(removeParticipant).mockRejectedValue({
         code: 500,
         message: 'remove fail',
@@ -580,8 +591,11 @@ describe('contestThunks', () => {
         requestId: '',
       });
       const store = createTestStore();
-      await store.dispatch(removeContestParticipant({ contestId: 'c1', userId: 'u1' }));
-      expect(store.getState().contest.error).toBe('remove fail');
+      const result = await store.dispatch(
+        removeContestParticipant({ contestId: 'c1', userId: 'u1' })
+      );
+      expect(result.type).toContain('rejected');
+      expect(store.getState().contest.error).toBeNull();
     });
   });
 });

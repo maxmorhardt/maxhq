@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ComponentProps } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
@@ -64,7 +65,7 @@ const defaultProps = {
   title: 'My Contests',
 };
 
-function renderTable(props = defaultProps) {
+function renderTable(props: ComponentProps<typeof ContestsTable> = defaultProps) {
   return render(
     <ThemeProvider theme={theme}>
       <Provider store={makeStore()}>
@@ -117,7 +118,7 @@ describe('ContestsTable', () => {
   it('navigates to contest detail when row is clicked', () => {
     renderTable();
     fireEvent.click(screen.getByText('Super Bowl LX'));
-    expect(mockNavigate).toHaveBeenCalledWith('/contests/owner/alice/name/Super Bowl LX');
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1');
   });
 
   it('does not show edit/delete buttons when user is not the owner', () => {
@@ -128,6 +129,24 @@ describe('ContestsTable', () => {
     renderTable();
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the leave icon for a non-owned active contest when authenticated', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      user: { profile: { email: 'bob' } },
+    } as unknown as ReturnType<typeof useAuth>);
+    renderTable({ ...defaultProps, onLeave: vi.fn() });
+    expect(screen.getAllByRole('button', { name: /leave contest/i }).length).toBeGreaterThan(0);
+  });
+
+  it('does not show the leave icon when the user email is unavailable', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: false,
+      user: undefined,
+    } as unknown as ReturnType<typeof useAuth>);
+    renderTable({ ...defaultProps, onLeave: vi.fn() });
+    expect(screen.queryByRole('button', { name: /leave contest/i })).not.toBeInTheDocument();
   });
 
   it('shows pagination when hidePagination is false (default)', () => {

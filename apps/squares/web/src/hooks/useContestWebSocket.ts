@@ -20,12 +20,11 @@ const useWebSocket =
   (ReactUseWebSocket as unknown as { default?: typeof ReactUseWebSocket }).default ??
   ReactUseWebSocket;
 
-const MAX_RETRY_ATTEMPTS = 5;
+const RECONNECT_INTERVAL_MS = 1000;
 const FATAL_CLOSE_CODES = [4403, 4404, 4500, 4503];
 
 interface UseContestWebSocketParams {
-  owner: string | undefined;
-  name: string | undefined;
+  id: string | undefined;
   onContestDeleted: () => void;
   onParticipantRemoved: (isCurrentUser: boolean, isPrivate: boolean) => void;
   onWinnerSquare: (row: number, col: number) => void;
@@ -39,8 +38,7 @@ interface UseContestWebSocketParams {
 }
 
 export function useContestWebSocket({
-  owner,
-  name,
+  id,
   onContestDeleted,
   onParticipantRemoved,
   onWinnerSquare,
@@ -63,8 +61,7 @@ export function useContestWebSocket({
   const isAuthenticated = !auth.isLoading && auth.isAuthenticated;
   const hasFatalWsError = wsCloseCode !== null && FATAL_CLOSE_CODES.includes(wsCloseCode);
 
-  const reconnectInterval = Math.min(1000 * Math.pow(2, retryCount), 30000);
-  const socketUrl = isAuthenticated ? getSocketUrl(owner, name, auth) : null;
+  const socketUrl = isAuthenticated ? getSocketUrl(id, auth) : null;
 
   // reset state when switching contests
   useEffect(() => {
@@ -80,18 +77,18 @@ export function useContestWebSocket({
     return () => {
       dispatch(setCurrentContest(null));
     };
-  }, [owner, name, dispatch]);
+  }, [id, dispatch]);
 
-  // connect to websocket
+  // one reconnect attempt per outage. the library resets its counter on every
+  // successful open, so an initial connect gets 2 tries (connect + 1 retry) and a
+  // dropped connection gets 1 retry, then onReconnectStop surfaces the error page
   const { lastMessage, readyState, sendJsonMessage, getWebSocket } = useWebSocket(
     socketUrl,
     {
       shouldReconnect: (event: CloseEvent) =>
-        !FATAL_CLOSE_CODES.includes(event.code) &&
-        socketUrl !== null &&
-        retryCount < MAX_RETRY_ATTEMPTS,
-      reconnectAttempts: MAX_RETRY_ATTEMPTS,
-      reconnectInterval,
+        !FATAL_CLOSE_CODES.includes(event.code) && socketUrl !== null,
+      reconnectAttempts: 1,
+      reconnectInterval: RECONNECT_INTERVAL_MS,
       protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
       onOpen: () => {
         setIsConnecting(false);
@@ -99,19 +96,17 @@ export function useContestWebSocket({
         setRetryCount(0);
       },
       onError: () => {
-        setRetryCount((prev) => {
-          const next = prev + 1;
-          if (next >= MAX_RETRY_ATTEMPTS) {
-            setConnectionFailed(true);
-          }
-          return next;
-        });
+        setRetryCount((prev) => prev + 1);
       },
       onClose: (event: CloseEvent) => {
         if (FATAL_CLOSE_CODES.includes(event.code)) {
           setWsCloseCode(event.code);
           setIsConnecting(false);
         }
+      },
+      onReconnectStop: () => {
+        setConnectionFailed(true);
+        setIsConnecting(false);
       },
     },
     socketUrl !== null // connect only when URL is available
@@ -254,8 +249,7 @@ export function useContestWebSocket({
       } satisfies WSUICallbacks,
     });
   }, [
-    owner,
-    name,
+    id,
     lastMessage,
     dispatch,
     currentContest?.id,

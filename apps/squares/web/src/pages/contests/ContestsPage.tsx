@@ -369,6 +369,7 @@ export default function ContestsPage() {
               onRowsPerPageChange={() => {}}
               title="Joined Contests"
               hidePagination
+              onLeave={() => dispatch(fetchMyContests(debouncedSearch || undefined))}
             />
           </Box>
         </Box>

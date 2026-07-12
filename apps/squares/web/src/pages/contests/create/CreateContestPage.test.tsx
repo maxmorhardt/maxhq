@@ -128,6 +128,7 @@ describe('CreateContestPage', () => {
 
   it('navigates to contest page on successful creation', async () => {
     vi.mocked(createNewContest).mockResolvedValue({
+      id: 'c-1',
       owner: 'user1',
       name: 'Super Bowl 2025',
     } as Awaited<ReturnType<typeof createNewContest>>);
@@ -138,9 +139,7 @@ describe('CreateContestPage', () => {
     });
     fireEvent.submit(document.querySelector('form')!);
 
-    await waitFor(() =>
-      expect(mockNavigate).toHaveBeenCalledWith('/contests/owner/user1/name/Super Bowl 2025')
-    );
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1'));
   });
 
   it('shows error message when createContest thunk rejects', async () => {

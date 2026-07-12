@@ -60,6 +60,7 @@ export default function HeaderAuth({
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             open={Boolean(anchorElSignIn)}
             onClose={() => setAnchorElSignIn(null)}
+            disableScrollLock
             slotProps={{ paper: { sx: { mt: 1, minWidth: 250, borderRadius: 2 } } }}
           >
             <Typography variant="subtitle2" sx={{ px: 2, pt: 1, pb: 0.5, fontWeight: 700 }}>
@@ -127,6 +128,7 @@ export default function HeaderAuth({
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             open={Boolean(anchorElUser)}
             onClose={handleCloseUserMenu}
+            disableScrollLock
             slotProps={{ paper: { sx: { mt: 1, minWidth: 250, borderRadius: 2 } } }}
           >
             <Typography

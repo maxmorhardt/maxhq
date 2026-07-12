@@ -48,7 +48,7 @@ const router = createBrowserRouter([
       { path: 'contests', element: <ContestsPage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'contests/create', element: <CreateContestPage /> },
-      { path: 'contests/owner/:owner/name/:name', element: <ContestPage /> },
+      { path: 'contests/:id', element: <ContestPage /> },
       { path: 'join/:token', element: <JoinPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },

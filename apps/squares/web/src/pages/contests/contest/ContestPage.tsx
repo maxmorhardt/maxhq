@@ -33,7 +33,7 @@ export default function ContestPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const { owner, name } = useParams<{ owner: string; name: string }>();
+  const { id } = useParams<{ id: string }>();
 
   const currentContest = useAppSelector(selectCurrentContest);
   const squareErrorCode = useAppSelector(selectSquareErrorCode);
@@ -98,8 +98,7 @@ export default function ContestPage() {
     hasFatalWsError,
     forceReconnect,
   } = useContestWebSocket({
-    owner,
-    name,
+    id,
     onContestDeleted,
     onParticipantRemoved,
     onWinnerSquare,

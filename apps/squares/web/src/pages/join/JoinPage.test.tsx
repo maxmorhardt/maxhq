@@ -157,7 +157,8 @@ describe('JoinPage', () => {
   it('shows "Joining contest..." screen after preview resolves (authenticated)', async () => {
     vi.mocked(previewInviteToken).mockReturnValueOnce({
       type: 'contests/previewInviteToken/fulfilled',
-      unwrap: () => Promise.resolve({ owner: 'alice', contestName: 'Super Bowl 2025' }),
+      unwrap: () =>
+        Promise.resolve({ contestId: 'c-1', owner: 'alice', contestName: 'Super Bowl 2025' }),
     } as unknown as ReturnType<typeof previewInviteToken>);
 
     // joinContestByToken never resolves — stays on the "Joining" screen
@@ -179,12 +180,13 @@ describe('JoinPage', () => {
   it('navigates to contest page on successful join', async () => {
     vi.mocked(previewInviteToken).mockReturnValueOnce({
       type: 'contests/previewInviteToken/fulfilled',
-      unwrap: () => Promise.resolve({ owner: 'alice', contestName: 'Super Bowl 2025' }),
+      unwrap: () =>
+        Promise.resolve({ contestId: 'c-1', owner: 'alice', contestName: 'Super Bowl 2025' }),
     } as unknown as ReturnType<typeof previewInviteToken>);
 
     vi.mocked(joinContestByToken).mockReturnValueOnce({
       type: 'contests/joinContestByToken/fulfilled',
-      unwrap: () => Promise.resolve({}),
+      unwrap: () => Promise.resolve({ contestId: 'c-1' }),
     } as unknown as ReturnType<typeof joinContestByToken>);
 
     vi.mocked(useAuth).mockReturnValue({
@@ -195,7 +197,7 @@ describe('JoinPage', () => {
 
     renderWithToken();
     await waitFor(() =>
-      expect(mockNavigate).toHaveBeenCalledWith('/contests/owner/alice/name/Super Bowl 2025', {
+      expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1', {
         replace: true,
       })
     );
@@ -204,7 +206,8 @@ describe('JoinPage', () => {
   it('silently redirects on 409 conflict', async () => {
     vi.mocked(previewInviteToken).mockReturnValueOnce({
       type: 'contests/previewInviteToken/fulfilled',
-      unwrap: () => Promise.resolve({ owner: 'bob', contestName: 'Playoff Pool' }),
+      unwrap: () =>
+        Promise.resolve({ contestId: 'c-2', owner: 'bob', contestName: 'Playoff Pool' }),
     } as unknown as ReturnType<typeof previewInviteToken>);
 
     vi.mocked(joinContestByToken).mockReturnValueOnce({
@@ -220,7 +223,7 @@ describe('JoinPage', () => {
 
     renderWithToken();
     await waitFor(() =>
-      expect(mockNavigate).toHaveBeenCalledWith('/contests/owner/bob/name/Playoff Pool', {
+      expect(mockNavigate).toHaveBeenCalledWith('/contests/c-2', {
         replace: true,
       })
     );
@@ -229,7 +232,8 @@ describe('JoinPage', () => {
   it('shows error message when join fails with non-409 error', async () => {
     vi.mocked(previewInviteToken).mockReturnValueOnce({
       type: 'contests/previewInviteToken/fulfilled',
-      unwrap: () => Promise.resolve({ owner: 'carol', contestName: 'Weekly Game' }),
+      unwrap: () =>
+        Promise.resolve({ contestId: 'c-3', owner: 'carol', contestName: 'Weekly Game' }),
     } as unknown as ReturnType<typeof previewInviteToken>);
 
     vi.mocked(joinContestByToken).mockReturnValueOnce({

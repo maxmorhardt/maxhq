@@ -74,9 +74,6 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
           },
         })
       ).unwrap();
-
-      // refetch invites list since create only returns token/url
-      dispatch(fetchInvites(currentContest.id));
     } catch {
       setCreateError(true);
     } finally {

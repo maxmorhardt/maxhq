@@ -241,7 +241,17 @@ describe('contestService', () => {
   });
 
   it('should create an invite', async () => {
-    const mockResponse = { inviteUrl: 'http://test/join/tok', token: 'tok' };
+    const mockResponse = {
+      id: 'i1',
+      contestId: 'c1',
+      token: 'tok',
+      maxSquares: 10,
+      role: 'participant',
+      uses: 0,
+      createdAt: '2025-01-01T00:00:00Z',
+      createdBy: 'owner1',
+      updatedAt: '2025-01-01T00:00:00Z',
+    };
     vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
 
     const result = await createInvite('c1', { maxSquares: 10, role: 'participant' });

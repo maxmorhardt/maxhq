@@ -26,7 +26,7 @@ describe('signInWithProvider', () => {
   it('preserves query params and hash from the current location for deep links', () => {
     vi.stubGlobal('location', {
       ...window.location,
-      pathname: '/contests/owner/alice/name/pool',
+      pathname: '/contests/c-1',
       search: '?tab=scores',
       hash: '#square-12',
     });
@@ -35,9 +35,7 @@ describe('signInWithProvider', () => {
 
     signInWithProvider(auth, 'google');
 
-    expect(sessionStorage.getItem('auth_redirect_path')).toBe(
-      '/contests/owner/alice/name/pool?tab=scores#square-12'
-    );
+    expect(sessionStorage.getItem('auth_redirect_path')).toBe('/contests/c-1?tab=scores#square-12');
   });
 
   it('redirects with the github connector', () => {

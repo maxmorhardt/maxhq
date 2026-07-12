@@ -1,5 +1,5 @@
 import api from '../axios/api';
-import type { UserProfile, UserStats } from '../types/user';
+import type { UserActiveContest, UserProfile, UserStats } from '../types/user';
 import { handleError } from './handleError';
 
 export async function getMyProfile(): Promise<UserProfile> {
@@ -15,6 +15,16 @@ export async function getMyStats(): Promise<UserStats> {
   try {
     const res = await api.get<UserStats>('/users/me/stats');
     return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+// contests the user owns or participates in that block account deletion
+export async function getMyActiveContests(): Promise<UserActiveContest[]> {
+  try {
+    const res = await api.get<UserActiveContest[]>('/users/me/active-contests');
+    return res.data ?? [];
   } catch (err: unknown) {
     throw handleError(err);
   }

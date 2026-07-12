@@ -80,7 +80,7 @@ export default function CreateContestPage() {
         })
       ).unwrap();
 
-      navigate(`/contests/owner/${contest.owner}/name/${contest.name}`);
+      navigate(`/contests/${contest.id}`);
     } catch (err: unknown) {
       const apiError = err as APIError;
       setError(apiError.message);

@@ -1,4 +1,4 @@
-import { Delete, Edit, EmojiEvents } from '@mui/icons-material';
+import { Delete, Edit, EmojiEvents, Logout } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -23,6 +23,7 @@ import { setCurrentContest } from '../../../features/contests/contestSlice';
 import { useAppDispatch } from '../../../hooks/reduxHooks';
 import type { Contest } from '../../../types/contest';
 import { getStatusLabel, getStatusOption } from '../../../utils/contestStatus';
+import LeaveContest from '../LeaveContest';
 import DeleteContest from './DeleteContest';
 import EditContest from './EditContest';
 
@@ -35,6 +36,7 @@ interface ContestsTableProps {
   onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
   title?: string;
   hidePagination?: boolean;
+  onLeave?: () => void;
 }
 
 export default function ContestsTable({
@@ -46,6 +48,7 @@ export default function ContestsTable({
   onRowsPerPageChange,
   title = 'My Contests',
   hidePagination = false,
+  onLeave,
 }: ContestsTableProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -56,6 +59,11 @@ export default function ContestsTable({
   // modal state for delete and edit dialogs
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [leaveTarget, setLeaveTarget] = useState<Contest | null>(null);
+
+  const userEmail = auth.user?.profile?.email;
+  const canLeave = (contest: Contest) =>
+    !!onLeave && !!userEmail && contest.owner !== userEmail && contest.status === 'ACTIVE';
 
   const headerSx = {
     color: 'white',
@@ -63,8 +71,8 @@ export default function ContestsTable({
     fontSize: { xs: '0.75rem', md: '0.875rem' },
   };
 
-  const handleRowClick = (owner: string, name: string) => {
-    navigate(`/contests/owner/${owner}/name/${name}`);
+  const handleRowClick = (id: string) => {
+    navigate(`/contests/${id}`);
   };
 
   const handleDelete = (contest: Contest) => {
@@ -157,7 +165,7 @@ export default function ContestsTable({
               {contests.map((contest, index) => (
                 <Box
                   key={contest.id}
-                  onClick={() => handleRowClick(contest.owner, contest.name)}
+                  onClick={() => handleRowClick(contest.id)}
                   sx={{
                     cursor: 'pointer',
                     p: 2,
@@ -230,6 +238,25 @@ export default function ContestsTable({
                           </IconButton>
                         </>
                       )}
+                      {canLeave(contest) && (
+                        <IconButton aria-label="Leave contest"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLeaveTarget(contest);
+                          }}
+                          sx={{
+                            color: 'rgba(255,255,255,0.7)',
+                            padding: '4px',
+                            '&:hover': {
+                              color: '#ff4444',
+                              backgroundColor: 'rgba(255,68,68,0.1)',
+                            },
+                          }}
+                        >
+                          <Logout sx={{ fontSize: '1rem' }} />
+                        </IconButton>
+                      )}
                     </Box>
                   </Box>
                   <Box
@@ -283,7 +310,7 @@ export default function ContestsTable({
                   {contests.map((contest, index) => (
                     <TableRow
                       key={contest.id}
-                      onClick={() => handleRowClick(contest.owner, contest.name)}
+                      onClick={() => handleRowClick(contest.id)}
                       sx={{
                         cursor: 'pointer',
                         backgroundColor: index % 2 === 0 ? '' : 'rgba(255,255,255,0.02)',
@@ -382,6 +409,26 @@ export default function ContestsTable({
                               </IconButton>
                             </Tooltip>
                           )}
+                          {canLeave(contest) && (
+                            <Tooltip title="Leave Contest">
+                              <IconButton aria-label="Leave contest"
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setLeaveTarget(contest);
+                                }}
+                                sx={{
+                                  color: 'rgba(255,255,255,0.6)',
+                                  '&:hover': {
+                                    color: '#ff4444',
+                                    backgroundColor: 'rgba(255,68,68,0.1)',
+                                  },
+                                }}
+                              >
+                                <Logout fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -411,9 +458,16 @@ export default function ContestsTable({
         </Paper>
       </Box>
 
-      {/* delete and edit modals */}
+      {/* delete, edit, and leave modals */}
       <DeleteContest open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} />
       <EditContest open={editModalOpen} onClose={() => setEditModalOpen(false)} />
+      <LeaveContest
+        open={!!leaveTarget}
+        onClose={() => setLeaveTarget(null)}
+        contest={leaveTarget}
+        userEmail={userEmail ?? ''}
+        onLeft={onLeave}
+      />
     </>
   );
 }

@@ -651,12 +651,12 @@ describe('contestSlice extraReducers', () => {
       expect(state.participants).toHaveLength(0);
     });
 
-    it('rejected: sets error', () => {
+    it('rejected: leaves the global error untouched (surfaced in the dialog instead)', () => {
       const state = contestReducer(initialState, {
         type: removeContestParticipant.rejected.type,
         payload: { message: 'remove fail' },
       });
-      expect(state.error).toBe('remove fail');
+      expect(state.error).toBeNull();
     });
   });
 
@@ -757,6 +757,38 @@ describe('contestSlice extraReducers', () => {
   });
 
   describe('createContestInvite', () => {
+    it('fulfilled: prepends the new invite without refetching', () => {
+      const newInvite: Invite = {
+        id: 'i2',
+        contestId: 'c1',
+        token: 'newtok',
+        maxSquares: 5,
+        role: 'participant',
+        uses: 0,
+        createdAt: '',
+        createdBy: '',
+        updatedAt: '',
+      };
+      const existingInvite: Invite = {
+        id: 'i1',
+        contestId: 'c1',
+        token: 'tok',
+        maxSquares: 10,
+        role: 'participant',
+        uses: 0,
+        createdAt: '',
+        createdBy: '',
+        updatedAt: '',
+      };
+
+      const state = contestReducer(
+        { ...initialState, invites: [existingInvite] },
+        { type: createContestInvite.fulfilled.type, payload: newInvite }
+      );
+
+      expect(state.invites).toEqual([newInvite, existingInvite]);
+    });
+
     it('rejected: sets error', () => {
       const state = contestReducer(initialState, {
         type: createContestInvite.rejected.type,

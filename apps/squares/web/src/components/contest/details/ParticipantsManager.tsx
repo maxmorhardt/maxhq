@@ -1,4 +1,4 @@
-import { Close, Edit, ErrorOutlineOutlined } from '@mui/icons-material';
+import { Close, Edit, ErrorOutlineOutlined, Logout } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -18,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 import {
   selectCurrentContest,
   selectParticipants,
@@ -31,6 +32,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import type { Participant, ParticipantRole } from '../../../types/contest';
+import LeaveContest from '../LeaveContest';
 
 interface ParticipantsManagerProps {
   open: boolean;
@@ -44,15 +46,19 @@ export default function ParticipantsManager({
   isOwner = false,
 }: ParticipantsManagerProps) {
   const dispatch = useAppDispatch();
+  const auth = useAuth();
   const currentContest = useAppSelector(selectCurrentContest);
   const participants = useAppSelector(selectParticipants);
   const loading = useAppSelector(selectParticipantsLoading);
   const { showToast } = useToast();
 
+  const userEmail = auth.user?.profile?.email;
+
   const [editParticipant, setEditParticipant] = useState<Participant | null>(null);
   const [editRole, setEditRole] = useState<ParticipantRole>('participant');
   const [editMaxSquares, setEditMaxSquares] = useState<number>(10);
   const [removeConfirm, setRemoveConfirm] = useState<Participant | null>(null);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const [editError, setEditError] = useState(false);
   const [removeError, setRemoveError] = useState(false);
 
@@ -217,6 +223,25 @@ export default function ParticipantsManager({
                       )}
                     </Box>
                   )}
+
+                  {/* a non-owner can remove themselves */}
+                  {participant.userId === userEmail &&
+                    participant.role !== 'owner' &&
+                    currentContest?.status === 'ACTIVE' && (
+                      <Tooltip title="Leave contest">
+                        <IconButton aria-label="Leave contest"
+                          size="small"
+                          onClick={() => setLeaveOpen(true)}
+                          sx={{
+                            flexShrink: 0,
+                            color: 'rgba(255,255,255,0.6)',
+                            '&:hover': { color: '#ff4444' },
+                          }}
+                        >
+                          <Logout fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                 </Box>
               ))}
 
@@ -332,6 +357,15 @@ export default function ParticipantsManager({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* self-leave confirmation; closes the whole manager once left */}
+      <LeaveContest
+        open={leaveOpen}
+        onClose={() => setLeaveOpen(false)}
+        contest={currentContest ?? null}
+        userEmail={userEmail ?? ''}
+        onLeft={onClose}
+      />
     </>
   );
 }
