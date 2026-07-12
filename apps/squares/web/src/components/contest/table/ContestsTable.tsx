@@ -239,7 +239,7 @@ export default function ContestsTable({
                         </>
                       )}
                       {canLeave(contest) && (
-                        <IconButton
+                        <IconButton aria-label="Leave contest"
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -411,7 +411,7 @@ export default function ContestsTable({
                           )}
                           {canLeave(contest) && (
                             <Tooltip title="Leave Contest">
-                              <IconButton
+                              <IconButton aria-label="Leave contest"
                                 size="small"
                                 onClick={(e) => {
                                   e.stopPropagation();

@@ -229,7 +229,7 @@ export default function ParticipantsManager({
                     participant.role !== 'owner' &&
                     currentContest?.status === 'ACTIVE' && (
                       <Tooltip title="Leave contest">
-                        <IconButton
+                        <IconButton aria-label="Leave contest"
                           size="small"
                           onClick={() => setLeaveOpen(true)}
                           sx={{

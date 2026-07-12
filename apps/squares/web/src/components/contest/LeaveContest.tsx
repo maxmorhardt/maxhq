@@ -67,7 +67,7 @@ export default function LeaveContest({
   return (
     <Dialog open={open} onClose={loading ? undefined : handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
-        <IconButton
+        <IconButton aria-label="Close dialog"
           onClick={handleClose}
           disabled={loading}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
