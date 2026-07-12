@@ -25,7 +25,7 @@ export function getSocketUrl(
     return null;
   }
 
-  const baseURL = import.meta.env.PROD ? 'wss://squares-api.maxstash.io' : 'ws://localhost:8080';
+  const baseURL = import.meta.env.PROD ? 'wss://api.maxstash.io/squares' : 'ws://localhost:8080';
   return `${baseURL}/ws/contests/owner/${encodeURIComponent(owner)}/name/${encodeURIComponent(
     name
   )}`;

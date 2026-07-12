@@ -63,7 +63,7 @@ export default function JoinPage() {
   }, [auth.isAuthenticated, token, preview, dispatch, navigate, showToast]);
 
   // auth still initialising — neutral loading state (avoids flashing "sign in" briefly)
-  if (auth.isLoading && auth.activeNavigator !== 'signoutSilent') {
+  if (auth.isLoading) {
     return <LoadingScreen title="Redirecting to sign in..." subtitle="Please wait..." />;
   }
 

@@ -1,16 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
 import InviteSignIn from './InviteSignIn';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
-vi.mock('../../utils/oidcHelpers', () => ({
-  createOidcStateForRegistration: vi.fn().mockResolvedValue({ state: 's', codeChallenge: 'c' }),
-}));
 
 import { useAuth } from 'react-oidc-context';
-import { createOidcStateForRegistration } from '../../utils/oidcHelpers';
 
 const theme = createTheme();
 
@@ -29,18 +25,14 @@ describe('InviteSignIn', () => {
 
   beforeEach(() => {
     mockSigninRedirect.mockClear();
-    vi.stubGlobal('location', { ...window.location, href: '' });
+    sessionStorage.clear();
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
       activeNavigator: undefined,
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
+      settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
       signinRedirect: mockSigninRedirect,
     } as unknown as ReturnType<typeof useAuth>);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it("renders the You're Invited heading", () => {
@@ -55,25 +47,25 @@ describe('InviteSignIn', () => {
     expect(screen.getByText('Compete with friends')).toBeInTheDocument();
   });
 
-  it('renders Sign In and Register buttons', () => {
+  it('renders Google and GitHub sign-in buttons', () => {
     renderComponent();
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in with github/i })).toBeInTheDocument();
   });
 
-  it('calls signinRedirect when Sign In button is clicked', () => {
+  it('redirects with the google connector when Google sign-in is clicked', () => {
     renderComponent();
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-    expect(mockSigninRedirect).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /sign in with google/i }));
+    expect(mockSigninRedirect).toHaveBeenCalledWith({
+      extraQueryParams: { connector_id: 'google' },
+    });
   });
 
-  it('calls createOidcStateForRegistration when Register button is clicked', async () => {
+  it('redirects with the github connector when GitHub sign-in is clicked', () => {
     renderComponent();
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
-    await waitFor(() =>
-      expect(createOidcStateForRegistration).toHaveBeenCalledWith(
-        expect.objectContaining({ client_id: 'c' })
-      )
-    );
+    fireEvent.click(screen.getByRole('button', { name: /sign in with github/i }));
+    expect(mockSigninRedirect).toHaveBeenCalledWith({
+      extraQueryParams: { connector_id: 'github' },
+    });
   });
 });

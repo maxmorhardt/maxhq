@@ -83,7 +83,7 @@ describe('EditSquare', () => {
       user: {
         profile: {
           name: 'Alice Smith',
-          preferred_username: 'alice',
+          email: 'alice',
         },
       },
     } as unknown as ReturnType<typeof useAuth>);

@@ -1,7 +1,7 @@
-import { EmojiEvents, GridView, Groups, Login, PersonAdd } from '@mui/icons-material';
+import { EmojiEvents, GitHub, Google, GridView, Groups } from '@mui/icons-material';
 import { Box, Button, Container, keyframes, Paper, Typography, useTheme } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
-import { createOidcStateForRegistration } from '../../utils/oidcHelpers';
+import { signInWithProvider } from '../../utils/oidcHelpers';
 
 const float = keyframes`
   0%, 100% { transform: translateY(0px); }
@@ -16,28 +16,6 @@ const pulse = keyframes`
 export default function InviteSignIn() {
   const theme = useTheme();
   const auth = useAuth();
-
-  const handleLogin = () => {
-    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
-    auth.signinRedirect();
-  };
-
-  const handleRegister = async () => {
-    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
-    const { state, codeChallenge } = await createOidcStateForRegistration(auth.settings);
-    const authParams = new URLSearchParams({
-      client_id: auth.settings.client_id,
-      redirect_uri: auth.settings.redirect_uri,
-      response_type: 'code',
-      scope: auth.settings.scope || 'openid profile email offline_access',
-      state: state,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256',
-    });
-    const nextUrl = `/application/o/authorize/?${authParams.toString()}`;
-    const enrollmentUrl = `https://login.maxstash.io/if/flow/enrollment/?next=${encodeURIComponent(nextUrl)}`;
-    window.location.href = enrollmentUrl;
-  };
 
   const features = [
     { icon: <GridView />, text: 'Claim your squares' },
@@ -176,8 +154,8 @@ export default function InviteSignIn() {
           <Button
             variant="contained"
             size="large"
-            startIcon={<Login />}
-            onClick={handleLogin}
+            startIcon={<Google />}
+            onClick={() => signInWithProvider(auth, 'google')}
             sx={{
               px: 4,
               py: 1.5,
@@ -186,13 +164,13 @@ export default function InviteSignIn() {
               maxWidth: { xs: 200, sm: 'none' },
             }}
           >
-            Sign In
+            Sign in with Google
           </Button>
           <Button
             variant="outlined"
             size="large"
-            startIcon={<PersonAdd />}
-            onClick={handleRegister}
+            startIcon={<GitHub />}
+            onClick={() => signInWithProvider(auth, 'github')}
             sx={{
               px: 4,
               py: 1.5,
@@ -201,7 +179,7 @@ export default function InviteSignIn() {
               maxWidth: { xs: 200, sm: 'none' },
             }}
           >
-            Register
+            Sign in with GitHub
           </Button>
         </Box>
       </Box>

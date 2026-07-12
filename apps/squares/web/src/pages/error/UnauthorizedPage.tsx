@@ -1,17 +1,14 @@
 import { Home, Login } from '@mui/icons-material';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
-import { useAuth } from 'react-oidc-context';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SignInDialog from '../../components/auth/SignInDialog';
 
 export default function UnauthorizedPage() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const auth = useAuth();
 
-  const handleSignIn = () => {
-    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
-    auth.signinRedirect();
-  };
+  const [signInOpen, setSignInOpen] = useState(false);
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
@@ -63,7 +60,12 @@ export default function UnauthorizedPage() {
             flexWrap: 'wrap',
           }}
         >
-          <Button variant="contained" size="large" startIcon={<Login />} onClick={handleSignIn}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<Login />}
+            onClick={() => setSignInOpen(true)}
+          >
             Sign In
           </Button>
           <Button
@@ -76,6 +78,7 @@ export default function UnauthorizedPage() {
           </Button>
         </Box>
       </Box>
+      <SignInDialog open={signInOpen} onClose={() => setSignInOpen(false)} />
     </Container>
   );
 }

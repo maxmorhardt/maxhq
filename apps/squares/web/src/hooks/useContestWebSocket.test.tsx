@@ -17,7 +17,7 @@ const mockAuth = {
   isAuthenticated: true,
   user: {
     access_token: 'test-token',
-    profile: { preferred_username: 'testuser' },
+    profile: { email: 'testuser' },
   },
   signinRedirect: vi.fn(),
   signoutRedirect: vi.fn(),
@@ -162,7 +162,7 @@ beforeEach(() => {
   capturedEventParams = null;
   mockAuth.isLoading = false;
   mockAuth.isAuthenticated = true;
-  mockAuth.user = { access_token: 'test-token', profile: { preferred_username: 'testuser' } };
+  mockAuth.user = { access_token: 'test-token', profile: { email: 'testuser' } };
 });
 
 describe('useContestWebSocket', () => {

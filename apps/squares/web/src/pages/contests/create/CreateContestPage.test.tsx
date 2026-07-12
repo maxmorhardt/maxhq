@@ -52,7 +52,7 @@ describe('CreateContestPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'user1', name: 'User One' } },
+      user: { profile: { email: 'user1', name: 'User One' } },
     } as unknown as ReturnType<typeof useAuth>);
   });
 
@@ -111,11 +111,11 @@ describe('CreateContestPage', () => {
     expect(await screen.findByText('Contest name is required')).toBeInTheDocument();
   });
 
-  it('shows error when user has no preferred_username', async () => {
+  it('shows error when user has no email', async () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: undefined } },
+      user: { profile: { email: undefined } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();

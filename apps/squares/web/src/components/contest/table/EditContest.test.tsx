@@ -65,7 +65,7 @@ describe('EditContest', () => {
     vi.clearAllMocks();
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
-      user: { profile: { preferred_username: 'alice' } },
+      user: { profile: { email: 'alice' } },
     } as unknown as ReturnType<typeof useAuth>);
   });
 
@@ -82,7 +82,7 @@ describe('EditContest', () => {
   it('renders "Contest Details" title for non-owners', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
-      user: { profile: { preferred_username: 'bob' } },
+      user: { profile: { email: 'bob' } },
     } as unknown as ReturnType<typeof useAuth>);
     renderDialog();
     expect(screen.getByText('Contest Details')).toBeInTheDocument();

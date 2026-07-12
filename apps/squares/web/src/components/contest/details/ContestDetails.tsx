@@ -31,7 +31,7 @@ export default function ContestDetails({
     return;
   }
 
-  const currentUsername = auth.user?.profile?.preferred_username;
+  const currentUsername = auth.user?.profile?.email;
   const currentParticipant = participants.find((p) => p.userId === currentUsername);
   const isParticipant = !!currentParticipant;
   const squaresClaimed = currentContest.squares.filter((s) => s.owner === currentUsername).length;

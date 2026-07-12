@@ -1,19 +1,24 @@
-import { CircularProgress } from '@mui/material';
-import Avatar from '@mui/material/Avatar';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import GoogleIcon from '@mui/icons-material/Google';
+import LoginIcon from '@mui/icons-material/Login';
+import PersonIcon from '@mui/icons-material/Person';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import type { JSX, MouseEvent } from 'react';
+import { useState, type JSX, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { Link as RouterLink } from 'react-router-dom';
+import { signInWithProvider, type OidcProvider } from '../../utils/oidcHelpers';
 
 interface HeaderAuthProps {
   handleOpenUserMenu: (event: MouseEvent<HTMLElement>) => void;
   handleCloseUserMenu: () => void;
-  handleRegister: () => void;
   handleSettingClick: (setting: string) => void;
   isAuthButtonDisabled: boolean;
   anchorElUser: null | HTMLElement;
@@ -23,7 +28,6 @@ interface HeaderAuthProps {
 export default function HeaderAuth({
   handleOpenUserMenu,
   handleCloseUserMenu,
-  handleRegister,
   handleSettingClick,
   isAuthButtonDisabled,
   anchorElUser,
@@ -31,13 +35,11 @@ export default function HeaderAuth({
 }: HeaderAuthProps) {
   const auth = useAuth();
 
-  const handleLogin = () => {
-    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
-    auth.signinRedirect();
-  };
+  const [anchorElSignIn, setAnchorElSignIn] = useState<HTMLElement | null>(null);
 
-  const handleRegisterClick = () => {
-    handleRegister();
+  const handleSignIn = (provider: OidcProvider) => {
+    setAnchorElSignIn(null);
+    signInWithProvider(auth, provider);
   };
 
   return (
@@ -46,49 +48,95 @@ export default function HeaderAuth({
         <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
           <Button
             color="inherit"
-            sx={{ mr: 2 }}
-            onClick={handleLogin}
-            variant="outlined"
-            startIcon={
-              auth.activeNavigator === 'signinSilent' && (
-                <CircularProgress size={16} color="inherit" />
-              )
-            }
+            onClick={(e) => setAnchorElSignIn(e.currentTarget)}
+            startIcon={<LoginIcon />}
             disabled={isAuthButtonDisabled}
           >
-            Login
+            Sign In
           </Button>
-          <Button
-            color="primary"
-            onClick={handleRegisterClick}
-            variant="contained"
-            disabled={isAuthButtonDisabled}
+          <Menu
+            id="menu-signin"
+            anchorEl={anchorElSignIn}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            open={Boolean(anchorElSignIn)}
+            onClose={() => setAnchorElSignIn(null)}
+            slotProps={{ paper: { sx: { mt: 1, minWidth: 250, borderRadius: 2 } } }}
           >
-            Register
-          </Button>
+            <Typography variant="subtitle2" sx={{ px: 2, pt: 1, pb: 0.5, fontWeight: 700 }}>
+              Sign in
+            </Typography>
+            <MenuItem onClick={() => handleSignIn('google')} sx={{ py: 1.25 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <GoogleIcon fontSize="small" />
+                <Typography>Google</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem onClick={() => handleSignIn('github')} sx={{ py: 1.25 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <GitHubIcon fontSize="small" />
+                <Typography>GitHub</Typography>
+              </Box>
+            </MenuItem>
+            <Divider />
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                px: 2,
+                pt: 0.5,
+                pb: 1,
+                color: 'text.secondary',
+                maxWidth: 250,
+              }}
+            >
+              By signing in, you agree to our{' '}
+              <Link
+                component={RouterLink}
+                to="/terms-of-service"
+                color="inherit"
+                underline="always"
+              >
+                terms of service
+              </Link>{' '}
+              and{' '}
+              <Link component={RouterLink} to="/privacy-policy" color="inherit" underline="always">
+                privacy policy
+              </Link>
+              .
+            </Typography>
+          </Menu>
         </Box>
       ) : (
         <>
-          <Tooltip title="Open settings">
-            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              <Avatar
-                alt={auth.user?.profile?.name?.toUpperCase()}
-                src={auth.user?.profile?.name?.toUpperCase()}
-              />
+          <Tooltip title="Account">
+            <IconButton color="inherit" onClick={handleOpenUserMenu} aria-label="account">
+              <PersonIcon />
             </IconButton>
           </Tooltip>
           <Menu
-            sx={{ mt: '45px' }}
             id="menu-appbar"
             anchorEl={anchorElUser}
-            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             open={Boolean(anchorElUser)}
             onClose={handleCloseUserMenu}
+            slotProps={{ paper: { sx: { mt: 1, minWidth: 250, borderRadius: 2 } } }}
           >
+            <Typography
+              variant="subtitle2"
+              noWrap
+              sx={{ px: 2, pt: 1, pb: 0.5, fontWeight: 700, maxWidth: 280 }}
+            >
+              {auth.user?.profile?.email}
+            </Typography>
             {settings.map((setting) => (
-              <MenuItem key={setting.name} onClick={() => handleSettingClick(setting.name)}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <MenuItem
+                key={setting.name}
+                onClick={() => handleSettingClick(setting.name)}
+                sx={{ py: 1.25 }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                   {setting.icon}
                   <Typography>{setting.name}</Typography>
                 </Box>

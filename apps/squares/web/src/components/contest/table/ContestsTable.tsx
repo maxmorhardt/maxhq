@@ -192,7 +192,7 @@ export default function ContestsTable({
                       {contest.name}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                      {auth.user?.profile?.preferred_username === contest.owner && (
+                      {auth.user?.profile?.email === contest.owner && (
                         <>
                           <IconButton
                             size="small"
@@ -342,7 +342,7 @@ export default function ContestsTable({
                             justifyContent: 'flex-end',
                           }}
                         >
-                          {auth.user?.profile?.preferred_username === contest.owner && (
+                          {auth.user?.profile?.email === contest.owner && (
                             <Tooltip title="Edit Contest">
                               <IconButton
                                 size="small"
@@ -362,7 +362,7 @@ export default function ContestsTable({
                               </IconButton>
                             </Tooltip>
                           )}
-                          {auth.user?.profile?.preferred_username === contest.owner && (
+                          {auth.user?.profile?.email === contest.owner && (
                             <Tooltip title="Delete Contest">
                               <IconButton
                                 size="small"

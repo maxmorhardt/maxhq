@@ -114,7 +114,7 @@ describe('ContestDetails', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'alice' } },
+      user: { profile: { email: 'alice' } },
     } as unknown as ReturnType<typeof useAuth>);
     const participant = {
       id: 'p-1',
@@ -135,7 +135,7 @@ describe('ContestDetails', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'bob' } },
+      user: { profile: { email: 'bob' } },
     } as unknown as ReturnType<typeof useAuth>);
     const participant = {
       id: 'p-1',
@@ -156,7 +156,7 @@ describe('ContestDetails', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'alice' } },
+      user: { profile: { email: 'alice' } },
     } as unknown as ReturnType<typeof useAuth>);
     const ownerParticipant = {
       id: 'p-1',
@@ -180,7 +180,7 @@ describe('ContestDetails', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'carol' } },
+      user: { profile: { email: 'carol' } },
     } as unknown as ReturnType<typeof useAuth>);
     renderDetails({ currentContest: { ...baseContest, visibility: 'public', owner: 'alice' } });
     expect(screen.getByText(/you're viewing this contest/i)).toBeInTheDocument();

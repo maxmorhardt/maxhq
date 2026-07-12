@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import Header from './Header';
 
 const mockNavigate = vi.fn();
-const mockSignoutSilent = vi.fn();
+const mockRemoveUser = vi.fn();
 const mockSigninRedirect = vi.fn();
 
 vi.mock('react-router-dom', async () => {
@@ -14,9 +14,6 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
-vi.mock('../../utils/oidcHelpers', () => ({
-  createOidcStateForRegistration: vi.fn().mockResolvedValue({ state: 's', codeChallenge: 'c' }),
-}));
 
 import { useAuth } from 'react-oidc-context';
 
@@ -39,10 +36,10 @@ describe('Header', () => {
       isAuthenticated: false,
       isLoading: false,
       activeNavigator: undefined,
-      signoutSilent: mockSignoutSilent,
+      removeUser: mockRemoveUser,
       signinRedirect: mockSigninRedirect,
       user: null,
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
+      settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
     } as unknown as ReturnType<typeof useAuth>);
   });
 
@@ -52,10 +49,16 @@ describe('Header', () => {
     expect(brands.length).toBeGreaterThan(0);
   });
 
-  it('renders Login and Register buttons when unauthenticated', () => {
+  it('renders the Sign In button when unauthenticated', () => {
     renderHeader();
-    expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+  });
+
+  it('shows provider options when Sign In is clicked', () => {
+    renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    expect(screen.getByRole('menuitem', { name: /google/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /github/i })).toBeInTheDocument();
   });
 
   it('does not show Contests desktop link when unauthenticated', () => {
@@ -68,7 +71,7 @@ describe('Header', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
+      settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderHeader();
@@ -99,7 +102,7 @@ describe('Header', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
+      settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderHeader();
@@ -107,34 +110,19 @@ describe('Header', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/contests');
   });
 
-  it('disables Login button when auth is loading (activeNavigator is not signoutSilent)', () => {
+  it('disables the sign-in button while auth is loading', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
       activeNavigator: undefined,
-      signoutSilent: mockSignoutSilent,
+      removeUser: mockRemoveUser,
       signinRedirect: mockSigninRedirect,
       user: null,
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
+      settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderHeader();
-    expect(screen.getByRole('button', { name: /login/i })).toBeDisabled();
-  });
-
-  it('does not disable Login button when activeNavigator is signoutSilent', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      isLoading: true,
-      activeNavigator: 'signoutSilent',
-      signoutSilent: mockSignoutSilent,
-      signinRedirect: mockSigninRedirect,
-      user: null,
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
-    } as unknown as ReturnType<typeof useAuth>);
-
-    renderHeader();
-    expect(screen.getByRole('button', { name: /login/i })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
   });
 
   it('opens the user menu when the avatar button is clicked', () => {
@@ -142,49 +130,30 @@ describe('Header', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      signoutSilent: mockSignoutSilent,
+      removeUser: mockRemoveUser,
       signinRedirect: mockSigninRedirect,
       user: { profile: { name: 'Alice' } },
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
+      settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
     } as unknown as ReturnType<typeof useAuth>);
     renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: /open settings/i }));
-    expect(screen.getByRole('menuitem', { name: /account/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /account/i }));
     expect(screen.getByRole('menuitem', { name: /logout/i })).toBeInTheDocument();
   });
 
-  it('calls auth.signoutSilent when Logout is clicked', async () => {
+  it('calls auth.removeUser when Logout is clicked', async () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      signoutSilent: mockSignoutSilent,
+      removeUser: mockRemoveUser,
       signinRedirect: mockSigninRedirect,
       user: { profile: { name: 'Alice' } },
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
+      settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
     } as unknown as ReturnType<typeof useAuth>);
     renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: /open settings/i }));
+    fireEvent.click(screen.getByRole('button', { name: /account/i }));
     fireEvent.click(screen.getByRole('menuitem', { name: /logout/i }));
-    await waitFor(() => expect(mockSignoutSilent).toHaveBeenCalled());
-  });
-
-  it('opens Account settings in a new tab when Account is clicked', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      activeNavigator: undefined,
-      signoutSilent: mockSignoutSilent,
-      signinRedirect: mockSigninRedirect,
-      user: { profile: { name: 'Alice' } },
-      settings: { client_id: 'c', redirect_uri: 'r', scope: 'openid' },
-    } as unknown as ReturnType<typeof useAuth>);
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: /open settings/i }));
-    fireEvent.click(screen.getByRole('menuitem', { name: /^account$/i }));
-    expect(openSpy).toHaveBeenCalledWith('https://login.maxstash.io/if/user/#/settings', '_blank');
-    openSpy.mockRestore();
+    await waitFor(() => expect(mockRemoveUser).toHaveBeenCalled());
   });
 
   it('opens the hamburger menu and navigates via a menu item', () => {
