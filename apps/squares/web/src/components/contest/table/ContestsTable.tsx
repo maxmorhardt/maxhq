@@ -63,7 +63,7 @@ export default function ContestsTable({
 
   const userEmail = auth.user?.profile?.email;
   const canLeave = (contest: Contest) =>
-    !!onLeave && contest.owner !== userEmail && contest.status === 'ACTIVE';
+    !!onLeave && !!userEmail && contest.owner !== userEmail && contest.status === 'ACTIVE';
 
   const headerSx = {
     color: 'white',

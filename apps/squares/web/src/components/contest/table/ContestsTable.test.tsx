@@ -130,6 +130,24 @@ describe('ContestsTable', () => {
     expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
   });
 
+  it('shows the leave icon for a non-owned active contest when authenticated', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      user: { profile: { email: 'bob' } },
+    } as unknown as ReturnType<typeof useAuth>);
+    renderTable({ ...defaultProps, onLeave: vi.fn() });
+    expect(screen.getAllByRole('button', { name: /leave contest/i }).length).toBeGreaterThan(0);
+  });
+
+  it('does not show the leave icon when the user email is unavailable', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: false,
+      user: undefined,
+    } as unknown as ReturnType<typeof useAuth>);
+    renderTable({ ...defaultProps, onLeave: vi.fn() });
+    expect(screen.queryByRole('button', { name: /leave contest/i })).not.toBeInTheDocument();
+  });
+
   it('shows pagination when hidePagination is false (default)', () => {
     renderTable();
     expect(screen.getByRole('combobox')).toBeInTheDocument();
