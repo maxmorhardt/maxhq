@@ -113,10 +113,6 @@ export function useContestWebSocket({
           setIsConnecting(false);
         }
       },
-      onReconnectStop: () => {
-        setConnectionFailed(true);
-        setIsConnecting(false);
-      },
     },
     socketUrl !== null // connect only when URL is available
   );
