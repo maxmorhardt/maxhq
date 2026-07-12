@@ -24,7 +24,13 @@ interface LeaveContestProps {
   onLeft?: () => void;
 }
 
-export default function LeaveContest({ open, onClose, contest, userEmail, onLeft }: LeaveContestProps) {
+export default function LeaveContest({
+  open,
+  onClose,
+  contest,
+  userEmail,
+  onLeft,
+}: LeaveContestProps) {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

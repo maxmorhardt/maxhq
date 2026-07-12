@@ -150,7 +150,9 @@ describe('ProfilePage', () => {
 
   it('leaves a joined blocking contest', async () => {
     vi.mocked(getMyActiveContests)
-      .mockResolvedValueOnce([{ id: 'c2', name: 'office', owner: 'other@b.com', role: 'participant' }])
+      .mockResolvedValueOnce([
+        { id: 'c2', name: 'office', owner: 'other@b.com', role: 'participant' },
+      ])
       .mockResolvedValueOnce([]);
     renderPage();
 

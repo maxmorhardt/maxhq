@@ -7,7 +7,11 @@ export function useToast() {
   const dispatch = useDispatch<AppDispatch>();
 
   const showToast = useCallback(
-    (message: string, severity: 'error' | 'warning' | 'info' | 'success' = 'info', duration?: number) => {
+    (
+      message: string,
+      severity: 'error' | 'warning' | 'info' | 'success' = 'info',
+      duration?: number
+    ) => {
       dispatch(addToast({ message, severity, duration }));
     },
     [dispatch]

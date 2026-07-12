@@ -485,7 +485,7 @@ describe('contestThunks', () => {
         maxSquares: 10,
         owner: 'u1',
         role: 'participant',
-        contestId: ''
+        contestId: '',
       });
       const store = createTestStore();
       const result = await store.dispatch(previewInviteToken('tok'));

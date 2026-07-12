@@ -32,7 +32,12 @@ import { deleteContest, removeContestParticipant } from '../../features/contests
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
-import { deleteMyAccount, getMyActiveContests, getMyProfile, getMyStats } from '../../service/userService';
+import {
+  deleteMyAccount,
+  getMyActiveContests,
+  getMyProfile,
+  getMyStats,
+} from '../../service/userService';
 import type { UserActiveContest, UserProfile, UserStats } from '../../types/user';
 import UnauthorizedPage from '../error/UnauthorizedPage';
 
@@ -409,7 +414,9 @@ export default function ProfilePage() {
                     <ListItemText
                       primary={contest.name}
                       secondary={
-                        contest.role === 'owner' ? 'You own this contest' : 'You joined this contest'
+                        contest.role === 'owner'
+                          ? 'You own this contest'
+                          : 'You joined this contest'
                       }
                     />
                   </ListItem>
