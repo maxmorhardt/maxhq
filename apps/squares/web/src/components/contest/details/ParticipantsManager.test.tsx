@@ -9,6 +9,9 @@ import ParticipantsManager from './ParticipantsManager';
 vi.mock('../../../hooks/useToast', () => ({
   useToast: () => ({ showToast: vi.fn() }),
 }));
+vi.mock('react-oidc-context', () => ({
+  useAuth: () => ({ user: { profile: { email: 'owner' } } }),
+}));
 vi.mock('../../../service/contestService', async () => {
   const actual = await vi.importActual<typeof import('../../../service/contestService')>(
     '../../../service/contestService'

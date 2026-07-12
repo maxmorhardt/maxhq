@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import api from '../axios/api';
-import { deleteMyAccount, getMyProfile, getMyStats } from './userService';
-import type { UserProfile, UserStats } from '../types/user';
+import { deleteMyAccount, getMyActiveContests, getMyProfile, getMyStats } from './userService';
+import type { UserActiveContest, UserProfile, UserStats } from '../types/user';
 
 vi.mock('../axios/api');
 
@@ -39,6 +39,18 @@ describe('userService', () => {
 
     expect(result).toEqual(mockStats);
     expect(api.get).toHaveBeenCalledWith('/users/me/stats');
+  });
+
+  it('should fetch active contests successfully', async () => {
+    const contests: UserActiveContest[] = [
+      { id: 'c1', name: 'pool', owner: 'a@b.com', role: 'owner' },
+    ];
+    vi.mocked(api.get).mockResolvedValue({ data: contests });
+
+    const result = await getMyActiveContests();
+
+    expect(result).toEqual(contests);
+    expect(api.get).toHaveBeenCalledWith('/users/me/active-contests');
   });
 
   it('should delete the account successfully', async () => {

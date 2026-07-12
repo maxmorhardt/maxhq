@@ -16,19 +16,13 @@ import {
 import type { WSUpdate } from '../types/contest';
 import type { HandleWSEventParams } from '../types/ws';
 
-export function getSocketUrl(
-  owner: string | undefined,
-  name: string | undefined,
-  auth: ReturnType<typeof useAuth>
-) {
-  if (!owner || !name || !auth.user?.access_token) {
+export function getSocketUrl(id: string | undefined, auth: ReturnType<typeof useAuth>) {
+  if (!id || !auth.user?.access_token) {
     return null;
   }
 
   const baseURL = import.meta.env.PROD ? 'wss://api.maxstash.io/squares' : 'ws://localhost:8080';
-  return `${baseURL}/ws/contests/owner/${encodeURIComponent(owner)}/name/${encodeURIComponent(
-    name
-  )}`;
+  return `${baseURL}/ws/contests/${encodeURIComponent(id)}`;
 }
 
 export function contestSocketEventHandler(eventParams: HandleWSEventParams) {

@@ -24,7 +24,6 @@ import type {
   CreateInviteRequest,
   Invite,
   InvitePreviewResponse,
-  InviteResponse,
   PaginatedContestsResponse,
   PaginationParams,
   Participant,
@@ -151,7 +150,7 @@ export const fetchMyContests = createAsyncThunk<
 });
 
 export const createContestInvite = createAsyncThunk<
-  InviteResponse,
+  Invite,
   { contestId: string; request: CreateInviteRequest },
   { rejectValue: APIError }
 >('contests/createInvite', async ({ contestId, request }, { rejectWithValue }) => {

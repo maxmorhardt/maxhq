@@ -3,6 +3,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import GridViewIcon from '@mui/icons-material/GridView';
 import GroupsIcon from '@mui/icons-material/Groups';
+import LogoutIcon from '@mui/icons-material/Logout';
 import {
   Box,
   Button,
@@ -14,6 +15,9 @@ import {
   DialogContentText,
   DialogTitle,
   keyframes,
+  List,
+  ListItem,
+  ListItemText,
   Paper,
   Skeleton,
   Typography,
@@ -24,10 +28,12 @@ import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from '../../components/common/LoadingScreen';
+import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
+import { useAppDispatch } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
-import { deleteMyAccount, getMyProfile, getMyStats } from '../../service/userService';
-import type { UserProfile, UserStats } from '../../types/user';
+import { deleteMyAccount, getMyActiveContests, getMyProfile, getMyStats } from '../../service/userService';
+import type { UserActiveContest, UserProfile, UserStats } from '../../types/user';
 import UnauthorizedPage from '../error/UnauthorizedPage';
 
 const popIn = keyframes`
@@ -100,6 +106,7 @@ export default function ProfilePage() {
   const axiosReady = useAxiosAuth();
   const theme = useTheme();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { showToast } = useToast();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -107,6 +114,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // null while the active-contest preflight is loading
+  const [activeContests, setActiveContests] = useState<UserActiveContest[] | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const userEmail = profile?.email ?? auth.user?.profile?.email ?? '';
 
   const loadProfile = useCallback(async () => {
     try {
@@ -138,7 +150,51 @@ export default function ProfilePage() {
     return <UnauthorizedPage />;
   }
 
-  const handleDelete = async () => {
+  const refreshActiveContests = async () => {
+    try {
+      setActiveContests(await getMyActiveContests());
+    } catch {
+      showToast('Failed to check your contests', 'error');
+      setActiveContests([]);
+    }
+  };
+
+  const openDeleteDialog = () => {
+    setActiveContests(null);
+    setDeleteOpen(true);
+    refreshActiveContests();
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteOpen(false);
+    setActiveContests(null);
+  };
+
+  const handleDeleteContest = async (id: string) => {
+    setBusyId(id);
+    try {
+      await dispatch(deleteContest(id)).unwrap();
+      await refreshActiveContests();
+    } catch {
+      showToast('Failed to delete the contest', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleLeaveContest = async (id: string) => {
+    setBusyId(id);
+    try {
+      await dispatch(removeContestParticipant({ contestId: id, userId: userEmail })).unwrap();
+      await refreshActiveContests();
+    } catch {
+      showToast('Failed to leave the contest', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
       await deleteMyAccount();
@@ -148,7 +204,8 @@ export default function ProfilePage() {
     } catch {
       showToast('Failed to delete your account', 'error');
       setDeleting(false);
-      setDeleteOpen(false);
+      // something changed since the preflight; re-check so the list reflects reality
+      refreshActiveContests();
     }
   };
 
@@ -280,15 +337,15 @@ export default function ProfilePage() {
             Danger Zone
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Deleting your account removes your active contests, frees your claimed squares, and
-            anonymizes your contest history. This cannot be undone.
+            Deleting your account anonymizes your contest history and removes your personal data.
+            You must delete or leave any active contests first. This cannot be undone.
           </Typography>
         </Box>
         <Button
           variant="outlined"
           color="error"
           startIcon={<DeleteForeverIcon />}
-          onClick={() => setDeleteOpen(true)}
+          onClick={openDeleteDialog}
           disabled={loading}
           sx={{ flexShrink: 0 }}
         >
@@ -296,31 +353,102 @@ export default function ProfilePage() {
         </Button>
       </Paper>
 
-      {/* delete confirmation */}
-      <Dialog open={deleteOpen} onClose={() => !deleting && setDeleteOpen(false)}>
-        <DialogTitle>Delete your account?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Your active contests will be deleted, your squares released, and your contest history
-            anonymized. This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)} disabled={deleting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDelete}
-            color="error"
-            variant="contained"
-            disabled={deleting}
-            startIcon={
-              deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />
-            }
-          >
-            Delete Forever
-          </Button>
-        </DialogActions>
+      {/* deletion preflight: clear active contests first, then the delete button appears */}
+      <Dialog
+        open={deleteOpen}
+        onClose={() => !deleting && !busyId && closeDeleteDialog()}
+        maxWidth="sm"
+        fullWidth
+      >
+        {activeContests === null ? (
+          <>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogContent>
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={24} />
+              </Box>
+            </DialogContent>
+          </>
+        ) : activeContests.length > 0 ? (
+          <>
+            <DialogTitle>Finish your contests first</DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ mb: 1.5 }}>
+                You're still active in these contests. Delete the ones you own and leave the ones
+                you've joined, then you can delete your account.
+              </DialogContentText>
+              <List dense disablePadding>
+                {activeContests.map((contest) => (
+                  <ListItem
+                    key={contest.id}
+                    disableGutters
+                    secondaryAction={
+                      <Button
+                        size="small"
+                        color="error"
+                        disabled={busyId !== null}
+                        startIcon={
+                          busyId === contest.id ? (
+                            <CircularProgress size={14} color="inherit" />
+                          ) : contest.role === 'owner' ? (
+                            <DeleteForeverIcon />
+                          ) : (
+                            <LogoutIcon />
+                          )
+                        }
+                        onClick={() =>
+                          contest.role === 'owner'
+                            ? handleDeleteContest(contest.id)
+                            : handleLeaveContest(contest.id)
+                        }
+                      >
+                        {contest.role === 'owner' ? 'Delete' : 'Leave'}
+                      </Button>
+                    }
+                  >
+                    <ListItemText
+                      primary={contest.name}
+                      secondary={
+                        contest.role === 'owner' ? 'You own this contest' : 'You joined this contest'
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeDeleteDialog} disabled={busyId !== null}>
+                Close
+              </Button>
+            </DialogActions>
+          </>
+        ) : (
+          <>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Your squares history will be anonymized and your personal data removed. This action
+                cannot be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeDeleteDialog} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteAccount}
+                color="error"
+                variant="contained"
+                disabled={deleting}
+                startIcon={
+                  deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />
+                }
+              >
+                Delete Forever
+              </Button>
+            </DialogActions>
+          </>
+        )}
       </Dialog>
     </Container>
   );

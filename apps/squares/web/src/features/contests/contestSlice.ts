@@ -464,9 +464,8 @@ const contestSlice = createSlice({
       .addCase(removeContestParticipant.fulfilled, (state, action: PayloadAction<string>) => {
         state.participants = state.participants.filter((p) => p.userId !== action.payload);
       })
-      .addCase(removeContestParticipant.rejected, (state, action) => {
-        state.error = action.payload?.message ?? 'Error removing participant';
-      });
+      // removal errors are surfaced in the initiating dialog, not the global contest alert
+      .addCase(removeContestParticipant.rejected, () => {});
 
     // fetch invites
     builder
@@ -484,8 +483,8 @@ const contestSlice = createSlice({
 
     // create invite
     builder
-      .addCase(createContestInvite.fulfilled, () => {
-        // response only has inviteUrl and token; refetch invites list for full data
+      .addCase(createContestInvite.fulfilled, (state, action: PayloadAction<Invite>) => {
+        state.invites = [action.payload, ...state.invites];
       })
       .addCase(createContestInvite.rejected, (state, action) => {
         state.error = action.payload?.message ?? 'Error creating invite';

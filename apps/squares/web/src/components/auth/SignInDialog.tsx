@@ -31,6 +31,7 @@ export default function SignInDialog({ open, onClose, redirectPath }: SignInDial
     <Dialog
       open={open}
       onClose={onClose}
+      disableScrollLock
       slotProps={{ paper: { sx: { borderRadius: 2, minWidth: 300 } } }}
     >
       <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Sign in</DialogTitle>

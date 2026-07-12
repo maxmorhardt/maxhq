@@ -30,26 +30,21 @@ describe('getSocketUrl', () => {
       typeof import('react-oidc-context').useAuth
     >;
 
-  it('should return null if owner is undefined', () => {
-    expect(getSocketUrl(undefined, 'name', makeAuth('tok'))).toBeNull();
-  });
-
-  it('should return null if name is undefined', () => {
-    expect(getSocketUrl('owner', undefined, makeAuth('tok'))).toBeNull();
+  it('should return null if id is undefined', () => {
+    expect(getSocketUrl(undefined, makeAuth('tok'))).toBeNull();
   });
 
   it('should return null if no access token', () => {
-    expect(getSocketUrl('owner', 'name', makeAuth())).toBeNull();
+    expect(getSocketUrl('c1', makeAuth())).toBeNull();
   });
 
   it('should return ws url in non-prod environment', () => {
-    const url = getSocketUrl('owner', 'my contest', makeAuth('tok'));
-    expect(url).toContain('/ws/contests/owner/owner/name/my%20contest');
+    const url = getSocketUrl('c1', makeAuth('tok'));
+    expect(url).toContain('/ws/contests/c1');
   });
 
-  it('should encode owner and name in the URL', () => {
-    const url = getSocketUrl('user@1', 'a&b', makeAuth('tok'));
-    expect(url).toContain(encodeURIComponent('user@1'));
+  it('should encode the id in the URL', () => {
+    const url = getSocketUrl('a&b', makeAuth('tok'));
     expect(url).toContain(encodeURIComponent('a&b'));
   });
 });

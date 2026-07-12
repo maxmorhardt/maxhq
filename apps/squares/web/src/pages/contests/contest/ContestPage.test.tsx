@@ -98,9 +98,9 @@ function renderPage(store = createTestStore()) {
   return render(
     <Provider store={store}>
       <ThemeProvider theme={theme}>
-        <MemoryRouter initialEntries={['/contests/owner/user1/name/my-contest']}>
+        <MemoryRouter initialEntries={['/contests/c1']}>
           <Routes>
-            <Route path="/contests/owner/:owner/name/:name" element={<ContestPage />} />
+            <Route path="/contests/:id" element={<ContestPage />} />
           </Routes>
         </MemoryRouter>
       </ThemeProvider>

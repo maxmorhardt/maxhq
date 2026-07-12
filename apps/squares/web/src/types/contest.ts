@@ -188,12 +188,8 @@ export interface CreateInviteRequest {
   expiresIn?: number;
 }
 
-export interface InviteResponse {
-  inviteUrl: string;
-  token: string;
-}
-
 export interface InvitePreviewResponse {
+  contestId: string;
   contestName: string;
   maxSquares: number;
   owner: string;

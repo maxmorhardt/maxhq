@@ -51,7 +51,7 @@ vi.mock('react-use-websocket', () => ({
 // mock wsService — capture params for callback invocation
 let capturedEventParams: HandleWSEventParams | null = null;
 vi.mock('../service/wsService', () => ({
-  getSocketUrl: vi.fn(() => 'ws://localhost:8080/ws/contests/owner/testuser/name/test'),
+  getSocketUrl: vi.fn(() => 'ws://localhost:8080/ws/contests/c1'),
   contestSocketEventHandler: vi.fn((params: HandleWSEventParams) => {
     capturedEventParams = params;
   }),
@@ -146,8 +146,7 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
 }
 
 const defaultParams = {
-  owner: 'testuser',
-  name: 'test',
+  id: 'c1',
   onContestDeleted: vi.fn(),
   onParticipantRemoved: vi.fn(),
   onWinnerSquare: vi.fn(),
@@ -254,15 +253,14 @@ describe('useContestWebSocket', () => {
     expect(result.current.connectionFailed).toBe(false);
   });
 
-  it('should set connectionFailed after max retries', () => {
+  it('should set connectionFailed when the reconnect attempts are exhausted', () => {
     const store = createTestStore();
     const { result } = renderHook(() => useContestWebSocket(defaultParams), {
       wrapper: createWrapper(store),
     });
-    act(() => {
-      for (let i = 0; i < 5; i++) (wsOptions.onError as () => void)?.();
-    });
+    act(() => (wsOptions.onReconnectStop as () => void)?.());
     expect(result.current.connectionFailed).toBe(true);
+    expect(result.current.isConnecting).toBe(false);
   });
 
   it('should reset state on open', () => {
@@ -296,9 +294,7 @@ describe('useContestWebSocket', () => {
       const { result } = renderHook(() => useContestWebSocket(defaultParams), {
         wrapper: createWrapper(store),
       });
-      act(() => {
-        for (let i = 0; i < 5; i++) (wsOptions.onError as () => void)?.();
-      });
+      act(() => (wsOptions.onReconnectStop as () => void)?.());
       expect(result.current.connectionStatus).toBe('failed');
     });
 
@@ -573,8 +569,8 @@ describe('useContestWebSocket', () => {
     });
   });
 
-  describe('reset on owner/name change', () => {
-    it('should reset activity events when owner changes', async () => {
+  describe('reset on contest id change', () => {
+    it('should reset activity events when id changes', async () => {
       mockReadyState = 1;
       const store = createTestStore();
       let params = { ...defaultParams };
@@ -588,7 +584,7 @@ describe('useContestWebSocket', () => {
 
       await waitFor(() => expect(result.current.activityEvents.length).toBeGreaterThan(0));
 
-      params = { ...defaultParams, owner: 'otheruser' };
+      params = { ...defaultParams, id: 'c2' };
       rerender();
 
       expect(result.current.activityEvents).toEqual([]);

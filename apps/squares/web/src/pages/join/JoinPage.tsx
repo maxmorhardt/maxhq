@@ -42,14 +42,14 @@ export default function JoinPage() {
 
     (async () => {
       try {
-        await dispatch(joinContestByToken(token)).unwrap();
+        const participant = await dispatch(joinContestByToken(token)).unwrap();
         showToast('Successfully joined contest!', 'success');
-        navigate(`/contests/owner/${preview.owner}/name/${preview.contestName}`, { replace: true });
+        navigate(`/contests/${participant.contestId}`, { replace: true });
       } catch (err: unknown) {
         const apiError = err as APIError;
         // 409 = already a participant — silently redirect
         if (apiError.code === 409) {
-          navigate(`/contests/owner/${preview.owner}/name/${preview.contestName}`, {
+          navigate(`/contests/${preview.contestId}`, {
             replace: true,
           });
           return;

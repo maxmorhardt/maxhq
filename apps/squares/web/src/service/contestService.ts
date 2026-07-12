@@ -5,7 +5,6 @@ import type {
   CreateInviteRequest,
   Invite,
   InvitePreviewResponse,
-  InviteResponse,
   PaginatedContestsResponse,
   PaginationParams,
   Participant,
@@ -137,9 +136,9 @@ export async function getMyContests(search?: string): Promise<Contest[]> {
 export async function createInvite(
   contestId: string,
   request: CreateInviteRequest
-): Promise<InviteResponse> {
+): Promise<Invite> {
   try {
-    const res = await api.post<InviteResponse>(`/contests/${contestId}/invites`, request);
+    const res = await api.post<Invite>(`/contests/${contestId}/invites`, request);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

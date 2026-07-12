@@ -117,7 +117,7 @@ describe('ContestsTable', () => {
   it('navigates to contest detail when row is clicked', () => {
     renderTable();
     fireEvent.click(screen.getByText('Super Bowl LX'));
-    expect(mockNavigate).toHaveBeenCalledWith('/contests/owner/alice/name/Super Bowl LX');
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1');
   });
 
   it('does not show edit/delete buttons when user is not the owner', () => {
