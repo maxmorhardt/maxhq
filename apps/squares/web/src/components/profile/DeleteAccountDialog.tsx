@@ -41,7 +41,7 @@ export default function DeleteAccountDialog({
   onConfirmDelete,
 }: DeleteAccountDialogProps) {
   return (
-    <Dialog open={open} onClose={() => !deleting && !busyId && onClose()} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={() => !deleting && busyId === null && onClose()} maxWidth="sm" fullWidth>
       {activeContestsError ? (
         <>
           <DialogTitle>Delete your account?</DialogTitle>
@@ -52,8 +52,13 @@ export default function DeleteAccountDialog({
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Close</Button>
-            <Button onClick={onRetry} variant="contained">
+            <Button
+              onClick={() => !deleting && busyId === null && onClose()}
+              disabled={deleting || busyId !== null}
+            >
+              Close
+            </Button>
+            <Button onClick={onRetry} variant="contained" disabled={deleting || busyId !== null}>
               Retry
             </Button>
           </DialogActions>
