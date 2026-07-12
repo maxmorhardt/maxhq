@@ -28,7 +28,6 @@ export interface DeleteAccountDialogProps {
   onConfirmDelete: () => void;
 }
 
-// deletion preflight: clear active contests first, then the delete button appears
 export default function DeleteAccountDialog({
   open,
   deleting,
