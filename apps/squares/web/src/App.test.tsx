@@ -14,7 +14,6 @@ vi.mock('./hooks/useAxiosAuth', () => ({ useAxiosAuth: vi.fn() }));
 vi.mock('./hooks/useToast', () => ({ useToast: () => ({ showToast: mockShowToast }) }));
 vi.mock('./components/common/ScrollToTop', () => ({ default: () => null }));
 vi.mock('./components/toast/ToastProvider', () => ({ ToastProvider: () => null }));
-vi.mock('./components/common/AuthLoadingAnimation', () => ({ default: () => null }));
 vi.mock('./components/header/Header', () => ({ default: () => <div data-testid="header" /> }));
 vi.mock('./components/footer/Footer', () => ({ default: () => <div data-testid="footer" /> }));
 vi.mock('react-router-dom', async () => {

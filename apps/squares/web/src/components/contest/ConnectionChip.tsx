@@ -7,6 +7,11 @@ interface ConnectionChipProps {
 }
 
 export default function ConnectionChip({ status, retryCount = 0 }: ConnectionChipProps) {
+  // debug affordance for local development only
+  if (!import.meta.env.DEV) {
+    return null;
+  }
+
   const label = (() => {
     switch (status) {
       case 'connected':

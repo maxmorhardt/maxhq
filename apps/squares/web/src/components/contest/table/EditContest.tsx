@@ -64,7 +64,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   const [awayTeam, setAwayTeam] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const isOwner = auth.user?.profile?.preferred_username === contest?.owner;
+  const isOwner = auth.user?.profile?.email === contest?.owner;
   const currentStatus = getStatusOption(contest?.status || 'ACTIVE');
 
   const contestStatus = contest?.status;

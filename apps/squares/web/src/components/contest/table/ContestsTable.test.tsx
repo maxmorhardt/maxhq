@@ -81,7 +81,7 @@ describe('ContestsTable', () => {
     vi.clearAllMocks();
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
-      user: { profile: { preferred_username: 'alice' } },
+      user: { profile: { email: 'alice' } },
     } as unknown as ReturnType<typeof useAuth>);
   });
 
@@ -123,7 +123,7 @@ describe('ContestsTable', () => {
   it('does not show edit/delete buttons when user is not the owner', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
-      user: { profile: { preferred_username: 'bob' } },
+      user: { profile: { email: 'bob' } },
     } as unknown as ReturnType<typeof useAuth>);
     renderTable();
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();

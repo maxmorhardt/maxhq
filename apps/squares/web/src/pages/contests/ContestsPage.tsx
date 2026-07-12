@@ -88,33 +88,37 @@ export default function ContestsPage() {
       return;
     }
 
-    const owner = auth.user?.profile?.preferred_username;
-    if (owner) {
-      dispatch(
-        fetchContestsByOwner({
-          owner,
-          pagination: {
-            page: ownedPage + 1,
-            limit: ownedRowsPerPage,
-            search: debouncedSearch || undefined,
-          },
-        })
-      ).then((result) => {
-        if (result.meta.requestStatus === 'fulfilled') {
-          const payload = result.payload as PaginatedContestsResponse;
-          setOwnedPagination({
-            page: payload.page,
-            limit: payload.limit,
-            total: payload.total,
-            totalPages: payload.totalPages,
-            hasNext: payload.hasNext,
-            hasPrevious: payload.hasPrevious,
-          });
-        }
-
-        setHasLoadedOnce(true);
-      });
+    const owner = auth.user?.profile?.email;
+    if (!owner) {
+      // never leave the skeleton up when the fetch cannot be dispatched
+      setHasLoadedOnce(true);
+      return;
     }
+
+    dispatch(
+      fetchContestsByOwner({
+        owner,
+        pagination: {
+          page: ownedPage + 1,
+          limit: ownedRowsPerPage,
+          search: debouncedSearch || undefined,
+        },
+      })
+    ).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        const payload = result.payload as PaginatedContestsResponse;
+        setOwnedPagination({
+          page: payload.page,
+          limit: payload.limit,
+          total: payload.total,
+          totalPages: payload.totalPages,
+          hasNext: payload.hasNext,
+          hasPrevious: payload.hasPrevious,
+        });
+      }
+
+      setHasLoadedOnce(true);
+    });
   }, [
     auth.isAuthenticated,
     auth.user,

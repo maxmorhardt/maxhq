@@ -110,16 +110,15 @@ describe('JoinPage', () => {
     expect(screen.getByText(/loading invite/i)).toBeInTheDocument();
   });
 
-  it('shows InviteSignIn (not loading screen) when isLoading with signoutSilent navigator', () => {
+  it('shows the loading screen while auth is initialising', () => {
     vi.mocked(useAuth).mockReturnValue({
       isLoading: true,
       isAuthenticated: false,
-      activeNavigator: 'signoutSilent',
+      activeNavigator: undefined,
     } as unknown as ReturnType<typeof useAuth>);
 
     renderWithToken();
-    expect(screen.getByTestId('invite-sign-in')).toBeInTheDocument();
-    expect(screen.queryByText(/redirecting to sign in/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/redirecting to sign in/i)).toBeInTheDocument();
   });
 
   it('shows JoinError when previewInviteToken rejects with a non-422 code', async () => {

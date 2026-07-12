@@ -115,7 +115,7 @@ describe('ContestPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1', name: 'User One' } },
+      user: { profile: { email: 'user1', name: 'User One' } },
       signinRedirect: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
     vi.mocked(useContestWebSocket).mockReturnValue(mockWebSocket);

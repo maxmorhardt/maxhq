@@ -13,6 +13,7 @@ import WinnerCelebrationDialog from '../../../components/contest/WinnerCelebrati
 import NotFoundPage from '../../error/NotFoundPage';
 import ForbiddenPage from '../../error/ForbiddenPage';
 import UnauthorizedPage from '../../error/UnauthorizedPage';
+import SignInDialog from '../../../components/auth/SignInDialog';
 import LiveChat from '../../../components/contest/sidebar/LiveChat';
 import WinnersBoard from '../../../components/contest/sidebar/WinnersBoard';
 import {
@@ -38,6 +39,7 @@ export default function ContestPage() {
   const squareErrorCode = useAppSelector(selectSquareErrorCode);
 
   const [randomSquareLoading, setRandomSquareLoading] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
   const [newWinnerSquare, setNewWinnerSquare] = useState<{ row: number; col: number } | null>(null);
   const [winnerDialog, setWinnerDialog] = useState<{
     quarter: number;
@@ -47,7 +49,7 @@ export default function ContestPage() {
     col: number;
   } | null>(null);
 
-  const isOwner = auth.user?.profile?.preferred_username === currentContest?.owner;
+  const isOwner = auth.user?.profile?.email === currentContest?.owner;
 
   const onContestDeleted = useCallback(() => {
     showToast('Contest has been deleted', 'warning');
@@ -114,8 +116,7 @@ export default function ContestPage() {
 
   const handleRandomSquare = async () => {
     if (!auth.isAuthenticated) {
-      sessionStorage.setItem('auth_redirect_path', window.location.href);
-      auth.signinRedirect();
+      setSignInOpen(true);
       return;
     }
 
@@ -131,7 +132,7 @@ export default function ContestPage() {
     }
 
     const randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
-    const username = auth.user?.profile?.preferred_username;
+    const username = auth.user?.profile?.email;
     const name = auth.user?.profile?.name || '';
     const parts = name.trim().split(/\s+/);
     let initials = '';
@@ -166,8 +167,8 @@ export default function ContestPage() {
     );
   }
 
-  // prompt unauthenticated users to sign in (skip loading state during silent sign-out)
-  if ((!auth.isLoading && !auth.isAuthenticated) || auth.activeNavigator === 'signoutSilent') {
+  // prompt unauthenticated users to sign in
+  if (!auth.isLoading && !auth.isAuthenticated) {
     return <UnauthorizedPage />;
   }
 
@@ -273,7 +274,7 @@ export default function ContestPage() {
           <LiveChat
             messages={chatMessages}
             onSend={sendChatMessage}
-            currentUser={auth.user?.profile?.preferred_username as string}
+            currentUser={auth.user?.profile?.email as string}
             disabled={!auth.isAuthenticated || !isConnected}
           />
         </Box>
@@ -302,7 +303,7 @@ export default function ContestPage() {
         <LiveChat
           messages={chatMessages}
           onSend={sendChatMessage}
-          currentUser={auth.user?.profile?.preferred_username as string}
+          currentUser={auth.user?.profile?.email as string}
           disabled={!auth.isAuthenticated || !isConnected}
         />
         <ActivityFeed events={activityEvents} />
@@ -310,6 +311,8 @@ export default function ContestPage() {
 
       {/* winner celebration dialog */}
       <WinnerCelebrationDialog data={winnerDialog} onClose={() => setWinnerDialog(null)} />
+
+      <SignInDialog open={signInOpen} onClose={() => setSignInOpen(false)} />
     </Box>
   );
 }

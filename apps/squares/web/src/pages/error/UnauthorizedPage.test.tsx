@@ -51,10 +51,20 @@ describe('UnauthorizedPage', () => {
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it('calls signinRedirect when Sign In is clicked', () => {
+  it('opens the sign-in dialog when Sign In is clicked', () => {
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-    expect(mockSigninRedirect).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in with github/i })).toBeInTheDocument();
+  });
+
+  it('redirects with the chosen connector from the dialog', () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /sign in with google/i }));
+    expect(mockSigninRedirect).toHaveBeenCalledWith({
+      extraQueryParams: { connector_id: 'google' },
+    });
   });
 
   it('renders the Go Home button', () => {

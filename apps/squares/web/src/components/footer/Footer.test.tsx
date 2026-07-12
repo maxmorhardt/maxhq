@@ -42,8 +42,17 @@ describe('Footer', () => {
     renderFooter();
     fireEvent.click(screen.getByText('Learn More'));
     expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
+  });
 
-    fireEvent.click(screen.getByText('Privacy'));
-    expect(mockNavigate).toHaveBeenCalledWith('/privacy-policy');
+  it('links the legal pages to maxstash.io', () => {
+    renderFooter();
+    expect(screen.getByText('Privacy').closest('a')).toHaveAttribute(
+      'href',
+      'https://maxstash.io/privacy-policy'
+    );
+    expect(screen.getByText('Terms').closest('a')).toHaveAttribute(
+      'href',
+      'https://maxstash.io/terms-of-service'
+    );
   });
 });

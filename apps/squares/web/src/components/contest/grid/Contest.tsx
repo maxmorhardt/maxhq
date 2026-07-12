@@ -24,7 +24,7 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
   const { showToast } = useToast();
   const [openEditSquare, setOpenEditSquare] = useState(false);
 
-  const currentUsername = auth?.user?.profile?.preferred_username as string | undefined;
+  const currentUsername = auth?.user?.profile?.email as string | undefined;
   const currentParticipant = participants.find((p) => p.userId === currentUsername);
   const isParticipant = !!currentParticipant;
   const isOwner = currentUsername === currentContest?.owner;
@@ -118,7 +118,7 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
       }
 
       // fill empty square directly with user initials
-      const username = auth.user?.profile?.preferred_username;
+      const username = auth.user?.profile?.email;
       const name = auth.user?.profile?.name || '';
       const initials = getInitials(name);
 

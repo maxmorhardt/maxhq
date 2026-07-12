@@ -73,14 +73,14 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
       return;
     }
 
-    if (currentSquare && auth?.user?.profile?.preferred_username) {
+    if (currentSquare && auth?.user?.profile?.email) {
       setError(false);
       dispatch(
         updateSquare({
           contestId: currentSquare.contestId,
           squareId: currentSquare.id,
           value: value,
-          owner: auth.user.profile.preferred_username,
+          owner: auth.user.profile.email,
         })
       );
       onClose();
@@ -130,7 +130,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
     onClose();
   };
 
-  const isOwner = currentSquare?.owner === auth?.user?.profile?.preferred_username;
+  const isOwner = currentSquare?.owner === auth?.user?.profile?.email;
   const isReadOnly = Boolean(currentSquare?.owner && !isOwner);
   const isActive = currentContest?.status === 'ACTIVE';
 

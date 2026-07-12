@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
+import { MemoryRouter } from 'react-router-dom';
 import HeaderAuth from './HeaderAuth';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
@@ -9,10 +10,7 @@ import { useAuth } from 'react-oidc-context';
 
 const theme = createTheme();
 
-const mockSettings = [
-  { name: 'Account', icon: <span>AccountIcon</span> },
-  { name: 'Logout', icon: <span>LogoutIcon</span> },
-];
+const mockSettings = [{ name: 'Logout', icon: <span>LogoutIcon</span> }];
 
 function renderAuth(overrides?: {
   handleOpenUserMenu?: () => void;
@@ -21,69 +19,64 @@ function renderAuth(overrides?: {
 }) {
   return render(
     <ThemeProvider theme={theme}>
-      <HeaderAuth
-        handleOpenUserMenu={overrides?.handleOpenUserMenu ?? vi.fn()}
-        handleCloseUserMenu={vi.fn()}
-        handleRegister={vi.fn()}
-        handleSettingClick={overrides?.handleSettingClick ?? vi.fn()}
-        isAuthButtonDisabled={false}
-        anchorElUser={overrides?.anchorElUser ?? null}
-        settings={mockSettings}
-      />
+      <MemoryRouter>
+        <HeaderAuth
+          handleOpenUserMenu={overrides?.handleOpenUserMenu ?? vi.fn()}
+          handleCloseUserMenu={vi.fn()}
+          handleSettingClick={overrides?.handleSettingClick ?? vi.fn()}
+          isAuthButtonDisabled={false}
+          anchorElUser={overrides?.anchorElUser ?? null}
+          settings={mockSettings}
+        />
+      </MemoryRouter>
     </ThemeProvider>
   );
 }
 
+function mockAuth(signinRedirect = vi.fn()) {
+  vi.mocked(useAuth).mockReturnValue({
+    isAuthenticated: false,
+    isLoading: false,
+    activeNavigator: undefined,
+    user: null,
+    signinRedirect,
+  } as unknown as ReturnType<typeof useAuth>);
+  return signinRedirect;
+}
+
 describe('HeaderAuth', () => {
   beforeEach(() => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      isLoading: false,
-      activeNavigator: undefined,
-      user: null,
-      signinRedirect: vi.fn(),
-      signoutSilent: vi.fn(),
-    } as unknown as ReturnType<typeof useAuth>);
+    mockAuth();
   });
 
-  it('shows Login and Register buttons when not authenticated', () => {
+  it('shows a Sign In button when not authenticated', () => {
     renderAuth();
-    expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it('calls signinRedirect when Login is clicked', () => {
-    const mockSignin = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      isLoading: false,
-      activeNavigator: undefined,
-      user: null,
-      signinRedirect: mockSignin,
-    } as unknown as ReturnType<typeof useAuth>);
+  it('opens the provider dropdown when Sign In is clicked', () => {
+    renderAuth();
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    expect(screen.getByRole('menuitem', { name: /google/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /github/i })).toBeInTheDocument();
+  });
+
+  it('redirects with the google connector when Google is selected', () => {
+    const mockSignin = mockAuth();
 
     renderAuth();
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
-    expect(mockSignin).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /google/i }));
+    expect(mockSignin).toHaveBeenCalledWith({ extraQueryParams: { connector_id: 'google' } });
   });
 
-  it('calls handleRegister when Register is clicked', () => {
-    const handleRegister = vi.fn();
-    render(
-      <ThemeProvider theme={theme}>
-        <HeaderAuth
-          handleOpenUserMenu={vi.fn()}
-          handleCloseUserMenu={vi.fn()}
-          handleRegister={handleRegister}
-          handleSettingClick={vi.fn()}
-          isAuthButtonDisabled={false}
-          anchorElUser={null}
-          settings={mockSettings}
-        />
-      </ThemeProvider>
-    );
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
-    expect(handleRegister).toHaveBeenCalled();
+  it('redirects with the github connector when GitHub is selected', () => {
+    const mockSignin = mockAuth();
+
+    renderAuth();
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /github/i }));
+    expect(mockSignin).toHaveBeenCalledWith({ extraQueryParams: { connector_id: 'github' } });
   });
 
   it('shows user avatar when authenticated', () => {
@@ -93,11 +86,10 @@ describe('HeaderAuth', () => {
       activeNavigator: undefined,
       user: { profile: { name: 'Alice' } },
       signinRedirect: vi.fn(),
-      signoutSilent: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
 
     renderAuth();
-    expect(screen.getByRole('button', { name: /open settings/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /login/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /account/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
   });
 });

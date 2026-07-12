@@ -49,13 +49,26 @@ describe('LandingCreateContestButton', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/contests/create');
   });
 
-  it('calls signinRedirect when not authenticated', () => {
+  it('opens the sign-in dialog when not authenticated', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       signinRedirect: mockSigninRedirect,
     } as unknown as ReturnType<typeof useAuth>);
     renderButton();
     fireEvent.click(screen.getByRole('button', { name: /create a contest/i }));
-    expect(mockSigninRedirect).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
+  });
+
+  it('redirects with the chosen connector from the dialog', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: false,
+      signinRedirect: mockSigninRedirect,
+    } as unknown as ReturnType<typeof useAuth>);
+    renderButton();
+    fireEvent.click(screen.getByRole('button', { name: /create a contest/i }));
+    fireEvent.click(screen.getByRole('button', { name: /sign in with github/i }));
+    expect(mockSigninRedirect).toHaveBeenCalledWith({
+      extraQueryParams: { connector_id: 'github' },
+    });
   });
 });

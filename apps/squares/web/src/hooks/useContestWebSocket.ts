@@ -220,7 +220,7 @@ export function useContestWebSocket({
 
           onWinnerSquare(winnerRow, winnerCol);
 
-          if (winner === auth.user?.profile?.preferred_username) {
+          if (winner === auth.user?.profile?.email) {
             onWinnerDialog({ quarter, homeScore, awayScore, row: winnerRow, col: winnerCol });
           }
         },
@@ -245,7 +245,7 @@ export function useContestWebSocket({
         },
         onParticipantRemoved: (participant) => {
           addActivityEvent('participant_removed', `${participant.userId} was removed`);
-          const currentUsername = auth.user?.profile?.preferred_username;
+          const currentUsername = auth.user?.profile?.email;
           if (participant.userId === currentUsername) {
             const isPrivate = currentContest?.visibility === 'private';
             onParticipantRemoved(true, isPrivate);
@@ -260,7 +260,7 @@ export function useContestWebSocket({
     dispatch,
     currentContest?.id,
     showToast,
-    auth.user?.profile?.preferred_username,
+    auth.user?.profile?.email,
     addActivityEvent,
     seedActivityFromConnected,
     onContestDeleted,

@@ -2,7 +2,7 @@ import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import GridViewIcon from '@mui/icons-material/GridView';
 import InfoIcon from '@mui/icons-material/Info';
 import LogoutIcon from '@mui/icons-material/Logout';
-import SettingsIcon from '@mui/icons-material/Settings';
+import PersonIcon from '@mui/icons-material/Person';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -12,7 +12,6 @@ import Typography from '@mui/material/Typography';
 import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
-import { createOidcStateForRegistration } from '../../utils/oidcHelpers';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 
@@ -23,7 +22,7 @@ const pages = [
 ];
 
 const settings = [
-  { name: 'Account', icon: <SettingsIcon fontSize="small" /> },
+  { name: 'Profile', icon: <PersonIcon fontSize="small" /> },
   { name: 'Logout', icon: <LogoutIcon fontSize="small" /> },
 ];
 
@@ -42,38 +41,15 @@ export default function Header() {
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
-  const isAuthButtonDisabled = auth.isLoading && auth.activeNavigator !== 'signoutSilent';
-
-  // redirect to registration page
-  const handleRegister = async () => {
-    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
-
-    // manually create OIDC state for enrollment flow
-    const { state, codeChallenge } = await createOidcStateForRegistration(auth.settings);
-
-    // build authorization URL with PKCE parameters
-    const authParams = new URLSearchParams({
-      client_id: auth.settings.client_id,
-      redirect_uri: auth.settings.redirect_uri,
-      response_type: 'code',
-      scope: auth.settings.scope || 'openid profile email offline_access',
-      state: state,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256',
-    });
-
-    const nextUrl = `/application/o/authorize/?${authParams.toString()}`;
-    const enrollmentUrl = `https://login.maxstash.io/if/flow/enrollment/?next=${encodeURIComponent(nextUrl)}`;
-
-    window.location.href = enrollmentUrl;
-  };
+  const isAuthButtonDisabled = auth.isLoading;
 
   // handle account settings menu clicks
   const handleSettingClick = (setting: string) => {
-    if (setting === 'Account') {
-      window.open('https://login.maxstash.io/if/user/#/settings', '_blank');
+    if (setting === 'Profile') {
+      navigate('/profile');
     } else if (setting === 'Logout') {
-      auth.signoutSilent();
+      // dex has no end-session endpoint, so logout just clears the local session
+      void auth.removeUser();
     }
 
     handleCloseUserMenu();
@@ -115,7 +91,6 @@ export default function Header() {
             <HeaderMenu
               handleOpenNavMenu={handleOpenNavMenu}
               handleCloseNavMenu={handleCloseNavMenu}
-              handleRegister={handleRegister}
               isAuthButtonDisabled={isAuthButtonDisabled}
               anchorElNav={anchorElNav}
               pages={pages}
@@ -183,7 +158,6 @@ export default function Header() {
             <HeaderAuth
               handleOpenUserMenu={handleOpenUserMenu}
               handleCloseUserMenu={handleCloseUserMenu}
-              handleRegister={handleRegister}
               handleSettingClick={handleSettingClick}
               isAuthButtonDisabled={isAuthButtonDisabled}
               anchorElUser={anchorElUser}

@@ -143,7 +143,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
     vi.mocked(getContestsByOwner).mockReturnValueOnce(new Promise(() => {}));
     vi.mocked(getMyContests).mockReturnValueOnce(new Promise(() => {}));
@@ -158,7 +158,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
     // background revalidation never resolves; cached data should still render immediately
     vi.mocked(getContestsByOwner).mockReturnValueOnce(new Promise(() => {}));
@@ -219,7 +219,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
@@ -232,7 +232,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
@@ -246,7 +246,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
@@ -266,7 +266,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
@@ -284,7 +284,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
@@ -298,7 +298,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
@@ -312,7 +312,7 @@ describe('ContestsPage', () => {
       isAuthenticated: true,
       isLoading: false,
       activeNavigator: undefined,
-      user: { profile: { preferred_username: 'user1' } },
+      user: { profile: { email: 'user1' } },
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();

@@ -129,7 +129,7 @@ describe('Contest (grid)', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'charlie', name: 'Charlie Brown' } },
+      user: { profile: { email: 'charlie', name: 'Charlie Brown' } },
       signinRedirect: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
     renderContest();
@@ -144,7 +144,7 @@ describe('Contest (grid)', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'bob', name: 'Bob Smith' } },
+      user: { profile: { email: 'bob', name: 'Bob Smith' } },
       signinRedirect: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
     const participant = {
@@ -169,7 +169,7 @@ describe('Contest (grid)', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'bob', name: 'Bob Smith' } },
+      user: { profile: { email: 'bob', name: 'Bob Smith' } },
       signinRedirect: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
     const participant = {
@@ -194,7 +194,7 @@ describe('Contest (grid)', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { preferred_username: 'alice', name: 'Alice A' } },
+      user: { profile: { email: 'alice', name: 'Alice A' } },
       signinRedirect: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
     // alice is owner but also in participants with maxSquares=1

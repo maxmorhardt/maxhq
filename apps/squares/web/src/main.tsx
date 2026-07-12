@@ -19,12 +19,11 @@ import NotFoundPage from './pages/error/NotFoundPage';
 import JoinPage from './pages/join/JoinPage';
 import LandingPage from './pages/landing/LandingPage';
 import LearnMorePage from './pages/learn/LearnMorePage';
-import PrivacyPolicyPage from './pages/privacy/PrivacyPolicyPage';
-import TermsOfServicePage from './pages/terms/TermsOfServicePage';
+import ProfilePage from './pages/profile/ProfilePage';
 
 const oidcConfig: AuthProviderProps = {
-  authority: 'https://login.maxstash.io/application/o/squares/',
-  client_id: 'xGOjxYcjca4aIJRTc5NyyjUnFzLXMwt8Vfepu23H',
+  authority: 'https://login.maxstash.io',
+  client_id: 'squares',
   redirect_uri: import.meta.env.PROD
     ? 'https://squares.maxstash.io/auth/callback'
     : 'http://localhost:3000/auth/callback',
@@ -47,13 +46,12 @@ const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: 'auth/callback', element: <CallbackPage /> },
       { path: 'contests', element: <ContestsPage /> },
+      { path: 'profile', element: <ProfilePage /> },
       { path: 'contests/create', element: <CreateContestPage /> },
       { path: 'contests/owner/:owner/name/:name', element: <ContestPage /> },
       { path: 'join/:token', element: <JoinPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'learn-more', element: <LearnMorePage /> },
-      { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
-      { path: 'terms-of-service', element: <TermsOfServicePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

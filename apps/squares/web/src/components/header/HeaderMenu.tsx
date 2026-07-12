@@ -1,7 +1,7 @@
-import HowToRegIcon from '@mui/icons-material/HowToReg';
-import LoginIcon from '@mui/icons-material/Login';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import GoogleIcon from '@mui/icons-material/Google';
 import MenuIcon from '@mui/icons-material/Menu';
-import { CircularProgress, Divider } from '@mui/material';
+import { Divider } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -10,11 +10,11 @@ import Typography from '@mui/material/Typography';
 import type { JSX, MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
+import { signInWithProvider } from '../../utils/oidcHelpers';
 
 interface HeaderMenuProps {
   handleOpenNavMenu: (event: MouseEvent<HTMLElement>) => void;
   handleCloseNavMenu: () => void;
-  handleRegister: () => void;
   isAuthButtonDisabled: boolean;
   anchorElNav: null | HTMLElement;
   pages: { name: string; icon: JSX.Element; navigate: string }[];
@@ -23,7 +23,6 @@ interface HeaderMenuProps {
 export default function HeaderMenu({
   handleOpenNavMenu,
   handleCloseNavMenu,
-  handleRegister,
   isAuthButtonDisabled,
   anchorElNav,
   pages,
@@ -69,38 +68,33 @@ export default function HeaderMenu({
           );
         })}
 
-        {/* mobile login and register menu items */}
+        {/* mobile sign-in menu items */}
         {!auth.isAuthenticated && <Divider />}
         {!auth.isAuthenticated && (
           <MenuItem
             onClick={() => {
-              sessionStorage.setItem('auth_redirect_path', window.location.pathname);
-              auth.signinRedirect();
+              signInWithProvider(auth, 'google');
               handleCloseNavMenu();
             }}
             disabled={isAuthButtonDisabled}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {auth.activeNavigator === 'signinSilent' ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                <LoginIcon fontSize="small" />
-              )}
-              <Typography>Login</Typography>
+              <GoogleIcon fontSize="small" />
+              <Typography>Sign in with Google</Typography>
             </Box>
           </MenuItem>
         )}
         {!auth.isAuthenticated && (
           <MenuItem
             onClick={() => {
-              handleRegister();
+              signInWithProvider(auth, 'github');
               handleCloseNavMenu();
             }}
             disabled={isAuthButtonDisabled}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <HowToRegIcon fontSize="small" />
-              <Typography>Register</Typography>
+              <GitHubIcon fontSize="small" />
+              <Typography>Sign in with GitHub</Typography>
             </Box>
           </MenuItem>
         )}
