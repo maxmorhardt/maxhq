@@ -8,6 +8,7 @@ export const signInWithProvider = (
   provider: OidcProvider,
   redirectPath?: string
 ): void => {
-  sessionStorage.setItem('auth_redirect_path', redirectPath ?? window.location.pathname);
+  const { pathname, search, hash } = window.location;
+  sessionStorage.setItem('auth_redirect_path', redirectPath ?? `${pathname}${search}${hash}`);
   void auth.signinRedirect({ extraQueryParams: { connector_id: provider } });
 };

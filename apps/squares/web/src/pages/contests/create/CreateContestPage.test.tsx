@@ -123,7 +123,7 @@ describe('CreateContestPage', () => {
       target: { name: 'name', value: 'Test Contest' },
     });
     fireEvent.submit(document.querySelector('form')!);
-    expect(await screen.findByText('User is missing a username')).toBeInTheDocument();
+    expect(await screen.findByText('User is missing an email')).toBeInTheDocument();
   });
 
   it('navigates to contest page on successful creation', async () => {

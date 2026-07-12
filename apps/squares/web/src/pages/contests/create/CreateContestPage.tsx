@@ -62,7 +62,7 @@ export default function CreateContestPage() {
     }
 
     if (!auth.user?.profile?.email) {
-      setError('User is missing a username');
+      setError('User is missing an email');
       return;
     }
 
