@@ -135,7 +135,9 @@ describe('ProfilePage', () => {
     await openDeleteDialog();
     expect(await screen.findByRole('button', { name: /cancel/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
-    expect(screen.queryByText(/delete your account\?/i)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText(/delete your account\?/i)).not.toBeInTheDocument()
+    );
 
     resolvePreflight([]);
   });
