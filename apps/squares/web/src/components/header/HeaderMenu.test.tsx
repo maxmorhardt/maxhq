@@ -30,7 +30,6 @@ function renderMenu(overrides?: { anchorElNav?: HTMLElement | null }) {
         <HeaderMenu
           handleOpenNavMenu={vi.fn()}
           handleCloseNavMenu={vi.fn()}
-          isAuthButtonDisabled={false}
           anchorElNav={overrides?.anchorElNav ?? null}
           pages={mockPages}
         />
@@ -55,13 +54,13 @@ describe('HeaderMenu', () => {
     expect(screen.getByRole('button', { name: /menu/i })).toBeInTheDocument();
   });
 
-  it('shows Google and GitHub sign-in items when menu is open and user is unauthenticated', () => {
+  it('does not render sign-in items (sign-in lives in the header)', () => {
     const anchorEl = document.createElement('button');
     document.body.appendChild(anchorEl);
     renderMenu({ anchorElNav: anchorEl });
 
-    expect(screen.getByText('Sign in with Google')).toBeInTheDocument();
-    expect(screen.getByText('Sign in with GitHub')).toBeInTheDocument();
+    expect(screen.queryByText('Sign in with Google')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign in with GitHub')).not.toBeInTheDocument();
     document.body.removeChild(anchorEl);
   });
 
@@ -105,46 +104,6 @@ describe('HeaderMenu', () => {
 
     fireEvent.click(screen.getByText('Learn More'));
     expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
-    document.body.removeChild(anchorEl);
-  });
-
-  it('redirects with the google connector when Google sign-in is clicked', () => {
-    const mockSigninRedirect = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      isLoading: false,
-      activeNavigator: undefined,
-      signinRedirect: mockSigninRedirect,
-    } as unknown as ReturnType<typeof useAuth>);
-
-    const anchorEl = document.createElement('button');
-    document.body.appendChild(anchorEl);
-    renderMenu({ anchorElNav: anchorEl });
-
-    fireEvent.click(screen.getByText('Sign in with Google'));
-    expect(mockSigninRedirect).toHaveBeenCalledWith({
-      extraQueryParams: { connector_id: 'google' },
-    });
-    document.body.removeChild(anchorEl);
-  });
-
-  it('redirects with the github connector when GitHub sign-in is clicked', () => {
-    const mockSigninRedirect = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      isLoading: false,
-      activeNavigator: undefined,
-      signinRedirect: mockSigninRedirect,
-    } as unknown as ReturnType<typeof useAuth>);
-
-    const anchorEl = document.createElement('button');
-    document.body.appendChild(anchorEl);
-    renderMenu({ anchorElNav: anchorEl });
-
-    fireEvent.click(screen.getByText('Sign in with GitHub'));
-    expect(mockSigninRedirect).toHaveBeenCalledWith({
-      extraQueryParams: { connector_id: 'github' },
-    });
     document.body.removeChild(anchorEl);
   });
 });

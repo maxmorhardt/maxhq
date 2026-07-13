@@ -87,41 +87,34 @@ export default function Header() {
               Squares
             </Typography>
 
-            {/* mobile navigation menu */}
-            <HeaderMenu
-              handleOpenNavMenu={handleOpenNavMenu}
-              handleCloseNavMenu={handleCloseNavMenu}
-              isAuthButtonDisabled={isAuthButtonDisabled}
-              anchorElNav={anchorElNav}
-              pages={pages}
-            />
-
-            {/* mobile logo and brand */}
+            {/* mobile logo and brand (left) */}
             <Box
-              sx={{ display: { xs: 'flex', md: 'none' }, mr: 2, cursor: 'pointer' }}
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                alignItems: 'center',
+                gap: 1,
+                cursor: 'pointer',
+              }}
               onClick={() => navigate('/')}
             >
               <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
+              <Typography
+                variant="h6"
+                noWrap
+                sx={{
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  letterSpacing: '.1em',
+                  color: 'inherit',
+                  textDecoration: 'none',
+                }}
+              >
+                Squares
+              </Typography>
             </Box>
 
-            <Typography
-              variant="h5"
-              noWrap
-              onClick={() => navigate('/')}
-              sx={{
-                mr: 2,
-                display: { xs: 'flex', md: 'none' },
-                flexGrow: 1,
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                letterSpacing: '.1em',
-                color: 'inherit',
-                textDecoration: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              Squares
-            </Typography>
+            {/* spacer pushes the mobile menu and auth to the right */}
+            <Box sx={{ flexGrow: 1, display: { xs: 'block', md: 'none' } }} />
 
             {/* desktop navigation links */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
@@ -153,6 +146,14 @@ export default function Header() {
                 );
               })}
             </Box>
+
+            {/* mobile navigation menu (hamburger, grouped with auth on the right) */}
+            <HeaderMenu
+              handleOpenNavMenu={handleOpenNavMenu}
+              handleCloseNavMenu={handleCloseNavMenu}
+              anchorElNav={anchorElNav}
+              pages={pages}
+            />
 
             {/* authentication controls (login/register or user menu) */}
             <HeaderAuth

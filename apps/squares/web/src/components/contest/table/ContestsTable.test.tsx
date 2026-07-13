@@ -174,7 +174,29 @@ describe('ContestsTable', () => {
       ...defaultProps,
       contests: [{ ...contest, homeTeam: undefined, awayTeam: undefined }],
     });
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('–')).toBeInTheDocument();
+  });
+
+  it('shows a view button (not edit/delete) for a finished contest the user owns', () => {
+    renderTable({ ...defaultProps, contests: [{ ...contest, status: 'FINISHED' }] });
+    expect(screen.getByRole('button', { name: /view contest/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /edit contest/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete contest/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a view button for a contest the user does not own', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      user: { profile: { email: 'bob' } },
+    } as unknown as ReturnType<typeof useAuth>);
+    renderTable();
+    expect(screen.getByRole('button', { name: /view contest/i })).toBeInTheDocument();
+  });
+
+  it('opens the dialog when the view icon is clicked', () => {
+    renderTable({ ...defaultProps, contests: [{ ...contest, status: 'FINISHED' }] });
+    fireEvent.click(screen.getByRole('button', { name: /view contest/i }));
+    expect(screen.getByTestId('edit-dialog')).toBeInTheDocument();
   });
 
   it('shows custom title when title prop is provided', () => {

@@ -92,12 +92,13 @@ describe('ProfilePage', () => {
     expect(screen.getByText(/12% win rate/i)).toBeInTheDocument();
   });
 
-  it('shows a toast when loading fails', async () => {
-    vi.mocked(getMyProfile).mockRejectedValue(new Error('down'));
+  it('shows a top-of-page error and disables account deletion when loading fails', async () => {
+    vi.mocked(getMyProfile).mockRejectedValueOnce(new Error('down'));
     renderPage();
-    await waitFor(() =>
-      expect(mockShowToast).toHaveBeenCalledWith('Failed to load your profile', 'error')
-    );
+    expect(await screen.findByText(/couldn't load your profile/i)).toBeInTheDocument();
+    expect(mockShowToast).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /delete account/i })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /retry/i })).not.toBeInTheDocument();
   });
 
   it('shows the delete button after the preflight finds no active contests', async () => {
@@ -112,9 +113,6 @@ describe('ProfilePage', () => {
     renderPage();
 
     await openDeleteDialog();
-    await waitFor(() =>
-      expect(mockShowToast).toHaveBeenCalledWith('Failed to check your contests', 'error')
-    );
     expect(await screen.findByText(/couldn't verify/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete forever/i })).not.toBeInTheDocument();
 
@@ -199,16 +197,15 @@ describe('ProfilePage', () => {
     );
   });
 
-  it('shows a toast when account deletion fails', async () => {
+  it('shows an inline dialog error when account deletion fails', async () => {
     vi.mocked(deleteMyAccount).mockRejectedValue(new Error('down'));
     renderPage();
 
     await openDeleteDialog();
     fireEvent.click(await screen.findByRole('button', { name: /delete forever/i }));
 
-    await waitFor(() =>
-      expect(mockShowToast).toHaveBeenCalledWith('Failed to delete your account', 'error')
-    );
+    expect(await screen.findByText(/failed to delete your account/i)).toBeInTheDocument();
+    expect(mockShowToast).not.toHaveBeenCalledWith('Failed to delete your account', 'error');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 

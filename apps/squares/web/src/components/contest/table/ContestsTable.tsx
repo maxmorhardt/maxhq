@@ -1,4 +1,4 @@
-import { Delete, Edit, EmojiEvents, Logout } from '@mui/icons-material';
+import { Delete, Edit, EmojiEvents, Logout, Visibility } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -65,6 +65,12 @@ export default function ContestsTable({
   const canLeave = (contest: Contest) =>
     !!onLeave && !!userEmail && contest.owner !== userEmail && contest.status === 'ACTIVE';
 
+  // edit/delete on non-terminal contests; everyone else gets a read-only view
+  const isTerminal = (contest: Contest) =>
+    contest.status === 'FINISHED' || contest.status === 'DELETED';
+  const canModify = (contest: Contest) =>
+    !!userEmail && contest.owner === userEmail && !isTerminal(contest);
+
   const headerSx = {
     color: 'white',
     fontWeight: 600,
@@ -80,7 +86,7 @@ export default function ContestsTable({
     setDeleteModalOpen(true);
   };
 
-  const handleEdit = (contest: Contest) => {
+  const openContestDialog = (contest: Contest) => {
     dispatch(setCurrentContest(contest));
     setEditModalOpen(true);
   };
@@ -200,13 +206,14 @@ export default function ContestsTable({
                       {contest.name}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                      {auth.user?.profile?.email === contest.owner && (
+                      {canModify(contest) ? (
                         <>
                           <IconButton
+                            aria-label="Edit contest"
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEdit(contest);
+                              openContestDialog(contest);
                             }}
                             sx={{
                               color: 'rgba(255,255,255,0.7)',
@@ -220,6 +227,7 @@ export default function ContestsTable({
                             <Edit sx={{ fontSize: '1rem' }} />
                           </IconButton>
                           <IconButton
+                            aria-label="Delete contest"
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -237,9 +245,29 @@ export default function ContestsTable({
                             <Delete sx={{ fontSize: '1rem' }} />
                           </IconButton>
                         </>
+                      ) : (
+                        <IconButton
+                          aria-label="View contest"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openContestDialog(contest);
+                          }}
+                          sx={{
+                            color: 'rgba(255,255,255,0.7)',
+                            padding: '4px',
+                            '&:hover': {
+                              color: 'white',
+                              backgroundColor: 'rgba(255,255,255,0.1)',
+                            },
+                          }}
+                        >
+                          <Visibility sx={{ fontSize: '1rem' }} />
+                        </IconButton>
                       )}
                       {canLeave(contest) && (
-                        <IconButton aria-label="Leave contest"
+                        <IconButton
+                          aria-label="Leave contest"
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -344,7 +372,7 @@ export default function ContestsTable({
                           ? `${contest.homeTeam} vs ${contest.awayTeam}`
                           : contest.homeTeam ||
                             contest.awayTeam || (
-                              <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
+                              <span style={{ color: 'rgba(255,255,255,0.2)' }}>–</span>
                             )}
                       </TableCell>
                       <TableCell>
@@ -369,13 +397,55 @@ export default function ContestsTable({
                             justifyContent: 'flex-end',
                           }}
                         >
-                          {auth.user?.profile?.email === contest.owner && (
-                            <Tooltip title="Edit Contest">
+                          {canModify(contest) ? (
+                            <>
+                              <Tooltip title="Edit Contest">
+                                <IconButton
+                                  aria-label="Edit contest"
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openContestDialog(contest);
+                                  }}
+                                  sx={{
+                                    color: 'rgba(255,255,255,0.6)',
+                                    '&:hover': {
+                                      color: 'white',
+                                      backgroundColor: 'rgba(255,255,255,0.1)',
+                                    },
+                                  }}
+                                >
+                                  <Edit fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete Contest">
+                                <IconButton
+                                  aria-label="Delete contest"
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(contest);
+                                  }}
+                                  sx={{
+                                    color: 'rgba(255,255,255,0.6)',
+                                    '&:hover': {
+                                      color: '#ff4444',
+                                      backgroundColor: 'rgba(255,68,68,0.1)',
+                                    },
+                                  }}
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          ) : (
+                            <Tooltip title="View Contest">
                               <IconButton
+                                aria-label="View contest"
                                 size="small"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleEdit(contest);
+                                  openContestDialog(contest);
                                 }}
                                 sx={{
                                   color: 'rgba(255,255,255,0.6)',
@@ -385,33 +455,14 @@ export default function ContestsTable({
                                   },
                                 }}
                               >
-                                <Edit fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          {auth.user?.profile?.email === contest.owner && (
-                            <Tooltip title="Delete Contest">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(contest);
-                                }}
-                                sx={{
-                                  color: 'rgba(255,255,255,0.6)',
-                                  '&:hover': {
-                                    color: '#ff4444',
-                                    backgroundColor: 'rgba(255,68,68,0.1)',
-                                  },
-                                }}
-                              >
-                                <Delete fontSize="small" />
+                                <Visibility fontSize="small" />
                               </IconButton>
                             </Tooltip>
                           )}
                           {canLeave(contest) && (
                             <Tooltip title="Leave Contest">
-                              <IconButton aria-label="Leave contest"
+                              <IconButton
+                                aria-label="Leave contest"
                                 size="small"
                                 onClick={(e) => {
                                   e.stopPropagation();

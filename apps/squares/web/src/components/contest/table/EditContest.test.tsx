@@ -4,6 +4,7 @@ import { createTheme, ThemeProvider } from '@mui/material';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../../../features/contests/contestSlice';
+import type { Contest } from '../../../types/contest';
 import EditContest from './EditContest';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
@@ -21,13 +22,13 @@ import { useAuth } from 'react-oidc-context';
 
 const theme = createTheme();
 
-const contest = {
+const contest: Contest = {
   id: 'c-1',
   name: 'Super Bowl LX',
   xLabels: [],
   yLabels: [],
-  status: 'ACTIVE' as const,
-  visibility: 'public' as const,
+  status: 'ACTIVE',
+  visibility: 'public',
   squares: [],
   owner: 'alice',
   homeTeam: 'Chiefs',
@@ -38,7 +39,7 @@ const contest = {
   updatedBy: 'alice',
 };
 
-function makeStore(currentContest: typeof contest | null = contest) {
+function makeStore(currentContest: Contest | null = contest) {
   return configureStore({
     reducer: { contest: contestReducer },
     preloadedState: {
@@ -50,7 +51,7 @@ function makeStore(currentContest: typeof contest | null = contest) {
   });
 }
 
-function renderDialog(open = true, currentContest: typeof contest | null = contest) {
+function renderDialog(open = true, currentContest: Contest | null = contest) {
   return render(
     <ThemeProvider theme={theme}>
       <Provider store={makeStore(currentContest)}>
@@ -79,13 +80,20 @@ describe('EditContest', () => {
     expect(screen.getByText('Edit Contest')).toBeInTheDocument();
   });
 
-  it('renders "Contest Details" title for non-owners', () => {
+  it('renders "View Contest" title for non-owners', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       user: { profile: { email: 'bob' } },
     } as unknown as ReturnType<typeof useAuth>);
     renderDialog();
-    expect(screen.getByText('Contest Details')).toBeInTheDocument();
+    expect(screen.getByText('View Contest')).toBeInTheDocument();
+  });
+
+  it('renders read-only "View Contest" with no Save for a finished contest the user owns', () => {
+    renderDialog(true, { ...contest, status: 'FINISHED' as const });
+    expect(screen.getByText('View Contest')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Home Team')).not.toBeInTheDocument();
   });
 
   it('calls updateContestById when Save is clicked as owner', async () => {

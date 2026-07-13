@@ -229,7 +229,8 @@ export default function ParticipantsManager({
                     participant.role !== 'owner' &&
                     currentContest?.status === 'ACTIVE' && (
                       <Tooltip title="Leave contest">
-                        <IconButton aria-label="Leave contest"
+                        <IconButton
+                          aria-label="Leave contest"
                           size="small"
                           onClick={() => setLeaveOpen(true)}
                           sx={{
@@ -318,7 +319,7 @@ export default function ParticipantsManager({
             onClick={handleEditSave}
             startIcon={editError ? <ErrorOutlineOutlined /> : undefined}
           >
-            {editError ? 'Failed — Retry' : 'Save'}
+            {editError ? 'Failed, Retry' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -353,7 +354,7 @@ export default function ParticipantsManager({
             onClick={handleRemove}
             startIcon={removeError ? <ErrorOutlineOutlined /> : undefined}
           >
-            {removeError ? 'Failed — Retry' : 'Remove'}
+            {removeError ? 'Failed, Retry' : 'Remove'}
           </Button>
         </DialogActions>
       </Dialog>

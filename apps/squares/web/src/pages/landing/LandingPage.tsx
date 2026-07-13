@@ -10,7 +10,7 @@ import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 import './LandingPage.css';
 
 export default function LandingPage() {
-  const howItWorks = useScrollAnimation({ animateOnMount: true });
+  const howItWorks = useScrollAnimation();
   const seeItInAction = useScrollAnimation();
   const features = useScrollAnimation();
   const cta = useScrollAnimation();

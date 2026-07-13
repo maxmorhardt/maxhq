@@ -1,6 +1,7 @@
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import LogoutIcon from '@mui/icons-material/Logout';
 import {
+  Alert,
   Button,
   CircularProgress,
   Dialog,
@@ -21,6 +22,7 @@ export interface DeleteAccountDialogProps {
   busyId: string | null;
   activeContests: UserActiveContest[] | null;
   activeContestsError: boolean;
+  actionError: string | null;
   onClose: () => void;
   onRetry: () => void;
   onDeleteContest: (id: string) => void;
@@ -34,6 +36,7 @@ export default function DeleteAccountDialog({
   busyId,
   activeContests,
   activeContestsError,
+  actionError,
   onClose,
   onRetry,
   onDeleteContest,
@@ -41,7 +44,12 @@ export default function DeleteAccountDialog({
   onConfirmDelete,
 }: DeleteAccountDialogProps) {
   return (
-    <Dialog open={open} onClose={() => !deleting && busyId === null && onClose()} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={() => !deleting && busyId === null && onClose()}
+      maxWidth="sm"
+      fullWidth
+    >
       {activeContestsError ? (
         <>
           <DialogTitle>Delete your account?</DialogTitle>
@@ -83,6 +91,11 @@ export default function DeleteAccountDialog({
               You're still active in these contests. Delete the ones you own and leave the ones
               you've joined, then you can delete your account.
             </DialogContentText>
+            {actionError && (
+              <Alert severity="error" sx={{ mb: 1.5 }}>
+                {actionError}
+              </Alert>
+            )}
             <List dense disablePadding>
               {activeContests.map((contest) => (
                 <ListItem
@@ -132,10 +145,11 @@ export default function DeleteAccountDialog({
         <>
           <DialogTitle>Delete your account?</DialogTitle>
           <DialogContent>
-            <DialogContentText>
+            <DialogContentText sx={{ mb: actionError ? 1.5 : 0 }}>
               Your squares history will be anonymized and your personal data removed. This action
               cannot be undone.
             </DialogContentText>
+            {actionError && <Alert severity="error">{actionError}</Alert>}
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose} disabled={deleting}>

@@ -1,7 +1,7 @@
-import { EmojiEvents, GitHub, Google, GridView, Groups } from '@mui/icons-material';
+import { EmojiEvents, GridView, Groups, Login } from '@mui/icons-material';
 import { Box, Button, Container, keyframes, Paper, Typography, useTheme } from '@mui/material';
-import { useAuth } from 'react-oidc-context';
-import { signInWithProvider } from '../../utils/oidcHelpers';
+import { useState } from 'react';
+import SignInDialog from '../auth/SignInDialog';
 
 const float = keyframes`
   0%, 100% { transform: translateY(0px); }
@@ -15,7 +15,7 @@ const pulse = keyframes`
 
 export default function InviteSignIn() {
   const theme = useTheme();
-  const auth = useAuth();
+  const [signInOpen, setSignInOpen] = useState(false);
 
   const features = [
     { icon: <GridView />, text: 'Claim your squares' },
@@ -139,12 +139,10 @@ export default function InviteSignIn() {
           ))}
         </Box>
 
-        {/* action buttons */}
+        {/* action button */}
         <Box
           sx={{
             display: 'flex',
-            flexDirection: 'row',
-            gap: 2,
             justifyContent: 'center',
             alignItems: 'center',
             mb: 4,
@@ -154,35 +152,24 @@ export default function InviteSignIn() {
           <Button
             variant="contained"
             size="large"
-            startIcon={<Google />}
-            onClick={() => signInWithProvider(auth, 'google')}
+            startIcon={<Login />}
+            onClick={() => setSignInOpen(true)}
             sx={{
-              px: 4,
+              px: 5,
               py: 1.5,
-              fontWeight: 600,
-              width: { xs: '50%', sm: 'auto' },
-              maxWidth: { xs: 200, sm: 'none' },
+              fontWeight: 700,
+              fontSize: '1rem',
+              borderRadius: 2,
+              minWidth: { xs: 240, sm: 260 },
+              boxShadow: `0 8px 24px ${theme.palette.primary.main}55`,
             }}
           >
-            Sign in with Google
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<GitHub />}
-            onClick={() => signInWithProvider(auth, 'github')}
-            sx={{
-              px: 4,
-              py: 1.5,
-              fontWeight: 600,
-              width: { xs: '50%', sm: 'auto' },
-              maxWidth: { xs: 200, sm: 'none' },
-            }}
-          >
-            Sign in with GitHub
+            Sign In to Join
           </Button>
         </Box>
       </Box>
+
+      <SignInDialog open={signInOpen} onClose={() => setSignInOpen(false)} />
     </Container>
   );
 }
