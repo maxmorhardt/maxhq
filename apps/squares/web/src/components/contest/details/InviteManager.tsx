@@ -144,9 +144,8 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
                 backgroundColor: 'rgba(255,255,255,0.03)',
               }}
             >
-              <ErrorOutlineOutlined fontSize="small" sx={{ color: 'rgba(255,255,255,0.5)' }} />
               <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                This contest is finished. Invite links can no longer be created or changed.
+                This contest is finished or deleted. Invite links can no longer be created or changed.
               </Typography>
             </Box>
           ) : (
