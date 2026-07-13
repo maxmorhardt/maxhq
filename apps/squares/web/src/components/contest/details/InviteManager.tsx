@@ -52,7 +52,6 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
   const [createError, setCreateError] = useState(false);
   const [failedInviteId, setFailedInviteId] = useState<string | null>(null);
 
-  // dialog becomes read-only when the contest is finished or deleted
   const isTerminal = currentContest?.status === 'FINISHED' || currentContest?.status === 'DELETED';
 
   useEffect(() => {
@@ -145,7 +144,8 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
               }}
             >
               <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                This contest is finished or deleted. Invite links can no longer be created or changed.
+                This contest is finished or deleted. Invite links can no longer be created or
+                changed.
               </Typography>
             </Box>
           ) : (

@@ -115,7 +115,7 @@ export default function ContestDetails({
           )}
         </Box>
 
-        {/* random square button — available to any participant during fill phase */}
+        {/* random square button available to any participant during fill phase */}
         {showRandomButton && (
           <Button
             variant="outlined"
