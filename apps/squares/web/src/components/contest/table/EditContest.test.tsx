@@ -4,6 +4,7 @@ import { createTheme, ThemeProvider } from '@mui/material';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../../../features/contests/contestSlice';
+import type { Contest } from '../../../types/contest';
 import EditContest from './EditContest';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
@@ -21,13 +22,13 @@ import { useAuth } from 'react-oidc-context';
 
 const theme = createTheme();
 
-const contest = {
+const contest: Contest = {
   id: 'c-1',
   name: 'Super Bowl LX',
   xLabels: [],
   yLabels: [],
-  status: 'ACTIVE' as const,
-  visibility: 'public' as const,
+  status: 'ACTIVE',
+  visibility: 'public',
   squares: [],
   owner: 'alice',
   homeTeam: 'Chiefs',
@@ -38,7 +39,7 @@ const contest = {
   updatedBy: 'alice',
 };
 
-function makeStore(currentContest: typeof contest | null = contest) {
+function makeStore(currentContest: Contest | null = contest) {
   return configureStore({
     reducer: { contest: contestReducer },
     preloadedState: {
@@ -50,7 +51,7 @@ function makeStore(currentContest: typeof contest | null = contest) {
   });
 }
 
-function renderDialog(open = true, currentContest: typeof contest | null = contest) {
+function renderDialog(open = true, currentContest: Contest | null = contest) {
   return render(
     <ThemeProvider theme={theme}>
       <Provider store={makeStore(currentContest)}>
