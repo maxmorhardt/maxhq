@@ -1,5 +1,5 @@
 apiVersion: v2
-name: squares-api
+name: squares-api-chart
 description: Chart for squares
 type: application
 version: 2.0.0
