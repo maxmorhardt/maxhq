@@ -1,5 +1,5 @@
 apiVersion: v2
-name: olympics-chart
+name: olympics
 description: Chart for olympics
 type: application
 version: 2.0.0
