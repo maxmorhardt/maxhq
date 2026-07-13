@@ -52,6 +52,9 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
   const [createError, setCreateError] = useState(false);
   const [failedInviteId, setFailedInviteId] = useState<string | null>(null);
 
+  // dialog becomes read-only when the contest is finished or deleted
+  const isTerminal = currentContest?.status === 'FINISHED' || currentContest?.status === 'DELETED';
+
   useEffect(() => {
     if (open && currentContest?.id) {
       dispatch(fetchInvites(currentContest.id));
@@ -128,76 +131,95 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-          {/* create invite form */}
-          <Box>
-            <Typography
-              variant="caption"
-              sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}
+          {/* create invite form, hidden once the contest is finished */}
+          {isTerminal ? (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                p: 1.5,
+                borderRadius: 1,
+                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+              }}
             >
-              Max Squares Per Person: {maxSquares}
-            </Typography>
-            <Slider
-              value={maxSquares}
-              onChange={(_, val) => setMaxSquares(val as number)}
-              min={1}
-              max={100}
-              valueLabelDisplay="auto"
-              size="small"
-            />
-
-            <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={role}
-                label="Role"
-                onChange={(e) => setRole(e.target.value as ParticipantRole)}
-              >
-                <MenuItem value="participant">Participant</MenuItem>
-                <MenuItem value="viewer">Viewer</MenuItem>
-              </Select>
-            </FormControl>
-
-            <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
-              <TextField
-                label="Max Uses (optional)"
-                type="number"
-                value={maxUses}
-                onChange={(e) => setMaxUses(e.target.value)}
-                size="small"
-                fullWidth
-                slotProps={{ htmlInput: { min: 1 } }}
-              />
-              <TextField
-                label="Expires In (min)"
-                type="number"
-                value={expiresIn}
-                onChange={(e) => setExpiresIn(e.target.value)}
-                size="small"
-                fullWidth
-                slotProps={{ htmlInput: { min: 1 } }}
-              />
+              <ErrorOutlineOutlined fontSize="small" sx={{ color: 'rgba(255,255,255,0.5)' }} />
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                This contest is finished. Invite links can no longer be created or changed.
+              </Typography>
             </Box>
+          ) : (
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}
+              >
+                Max Squares Per Person: {maxSquares}
+              </Typography>
+              <Slider
+                value={maxSquares}
+                onChange={(_, val) => setMaxSquares(val as number)}
+                min={1}
+                max={100}
+                valueLabelDisplay="auto"
+                size="small"
+              />
 
-            <Button
-              variant="contained"
-              color={createError ? 'error' : 'primary'}
-              startIcon={
-                creating ? (
-                  <CircularProgress size={16} />
-                ) : createError ? (
-                  <ErrorOutlineOutlined />
-                ) : (
-                  <LinkIcon />
-                )
-              }
-              onClick={handleCreateInvite}
-              disabled={creating}
-              fullWidth
-              sx={{ mt: 1.5 }}
-            >
-              {createError ? 'Failed — Retry' : 'Generate Invite Link'}
-            </Button>
-          </Box>
+              <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={role}
+                  label="Role"
+                  onChange={(e) => setRole(e.target.value as ParticipantRole)}
+                >
+                  <MenuItem value="participant">Participant</MenuItem>
+                  <MenuItem value="viewer">Viewer</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
+                <TextField
+                  label="Max Uses (optional)"
+                  type="number"
+                  value={maxUses}
+                  onChange={(e) => setMaxUses(e.target.value)}
+                  size="small"
+                  fullWidth
+                  slotProps={{ htmlInput: { min: 1 } }}
+                />
+                <TextField
+                  label="Expires In (min)"
+                  type="number"
+                  value={expiresIn}
+                  onChange={(e) => setExpiresIn(e.target.value)}
+                  size="small"
+                  fullWidth
+                  slotProps={{ htmlInput: { min: 1 } }}
+                />
+              </Box>
+
+              <Button
+                variant="contained"
+                color={createError ? 'error' : 'primary'}
+                startIcon={
+                  creating ? (
+                    <CircularProgress size={16} />
+                  ) : createError ? (
+                    <ErrorOutlineOutlined />
+                  ) : (
+                    <LinkIcon />
+                  )
+                }
+                onClick={handleCreateInvite}
+                disabled={creating}
+                fullWidth
+                sx={{ mt: 1.5 }}
+              >
+                {createError ? 'Failed, Retry' : 'Generate Invite Link'}
+              </Button>
+            </Box>
+          )}
 
           {/* active invites list */}
           {loading ? (
@@ -241,37 +263,40 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
                         ` · expires ${new Date(invite.expiresAt).toLocaleDateString()}`}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                    <Tooltip title="Share link">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleShareLink(invite.token)}
-                        sx={{ color: 'rgba(255,255,255,0.6)' }}
+                  {!isTerminal && (
+                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                      <Tooltip title="Share link">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleShareLink(invite.token)}
+                          sx={{ color: 'rgba(255,255,255,0.6)' }}
+                        >
+                          <Share fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          failedInviteId === invite.id ? 'Delete failed, retry' : 'Delete invite'
+                        }
                       >
-                        <Share fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip
-                      title={
-                        failedInviteId === invite.id ? 'Delete failed — retry' : 'Delete invite'
-                      }
-                    >
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteInvite(invite.id)}
-                        sx={{
-                          color: failedInviteId === invite.id ? '#ff4444' : 'rgba(255,255,255,0.6)',
-                          '&:hover': { color: '#ff4444' },
-                        }}
-                      >
-                        {failedInviteId === invite.id ? (
-                          <ErrorOutlineOutlined fontSize="small" />
-                        ) : (
-                          <Delete fontSize="small" />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteInvite(invite.id)}
+                          sx={{
+                            color:
+                              failedInviteId === invite.id ? '#ff4444' : 'rgba(255,255,255,0.6)',
+                            '&:hover': { color: '#ff4444' },
+                          }}
+                        >
+                          {failedInviteId === invite.id ? (
+                            <ErrorOutlineOutlined fontSize="small" />
+                          ) : (
+                            <Delete fontSize="small" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  )}
                 </Box>
               ))}
             </>

@@ -3,7 +3,16 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import GridViewIcon from '@mui/icons-material/GridView';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { Box, Button, Container, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Container,
+  Paper,
+  Skeleton,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
@@ -36,25 +45,28 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeContests, setActiveContests] = useState<UserActiveContest[] | null>(null);
   const [activeContestsError, setActiveContestsError] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const userEmail = profile?.email ?? auth.user?.profile?.email ?? '';
 
   const loadProfile = useCallback(async () => {
+    setLoadError(false);
     try {
       const [profileRes, statsRes] = await Promise.all([getMyProfile(), getMyStats()]);
       setProfile(profileRes);
       setStats(statsRes);
     } catch {
-      showToast('Failed to load your profile', 'error');
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, []);
 
   // wait for the bearer interceptor before fetching, or the first request goes out unauthenticated
   useEffect(() => {
@@ -80,7 +92,6 @@ export default function ProfilePage() {
       setActiveContests(contests);
       setActiveContestsError(false);
     } catch {
-      showToast('Failed to check your contests', 'error');
       setActiveContests(null);
       setActiveContestsError(true);
     }
@@ -89,6 +100,7 @@ export default function ProfilePage() {
   const openDeleteDialog = () => {
     setActiveContests(null);
     setActiveContestsError(false);
+    setActionError(null);
     setDeleteOpen(true);
     refreshActiveContests();
   };
@@ -97,15 +109,17 @@ export default function ProfilePage() {
     setDeleteOpen(false);
     setActiveContests(null);
     setActiveContestsError(false);
+    setActionError(null);
   };
 
   const handleDeleteContest = async (id: string) => {
+    setActionError(null);
     setBusyId(id);
     try {
       await dispatch(deleteContest(id)).unwrap();
       await refreshActiveContests();
     } catch {
-      showToast('Failed to delete the contest', 'error');
+      setActionError('Failed to delete the contest. Please try again.');
     } finally {
       setBusyId(null);
     }
@@ -113,22 +127,24 @@ export default function ProfilePage() {
 
   const handleLeaveContest = async (id: string) => {
     if (!userEmail) {
-      showToast('Unable to determine your email. Please refresh and try again.', 'error');
+      setActionError('Unable to determine your email. Please refresh and try again.');
       return;
     }
 
+    setActionError(null);
     setBusyId(id);
     try {
       await dispatch(removeContestParticipant({ contestId: id, userId: userEmail })).unwrap();
       await refreshActiveContests();
     } catch {
-      showToast('Failed to leave the contest', 'error');
+      setActionError('Failed to leave the contest. Please try again.');
     } finally {
       setBusyId(null);
     }
   };
 
   const handleDeleteAccount = async () => {
+    setActionError(null);
     setDeleting(true);
     try {
       await deleteMyAccount();
@@ -136,7 +152,7 @@ export default function ProfilePage() {
       await auth.removeUser();
       navigate('/');
     } catch {
-      showToast('Failed to delete your account', 'error');
+      setActionError('Failed to delete your account. Please try again.');
       setDeleting(false);
       refreshActiveContests();
     }
@@ -157,6 +173,13 @@ export default function ProfilePage() {
         <title>Profile – Squares</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
+
+      {/* page-level load error */}
+      {loadError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          We couldn't load your profile. Please try again.
+        </Alert>
+      )}
 
       {/* profile header */}
       <Box sx={{ textAlign: 'center', mb: 3, animation: `${popIn} 0.5s ease-out both` }}>
@@ -183,7 +206,7 @@ export default function ProfilePage() {
           <Skeleton variant="text" width={180} sx={{ mx: 'auto', fontSize: '2rem' }} />
         ) : (
           <Typography variant="h5" sx={{ fontWeight: 800 }}>
-            {profile?.displayName || '—'}
+            {profile?.displayName || '–'}
           </Typography>
         )}
 
@@ -279,7 +302,7 @@ export default function ProfilePage() {
           color="error"
           startIcon={<DeleteForeverIcon />}
           onClick={openDeleteDialog}
-          disabled={loading}
+          disabled={loading || loadError}
           sx={{ flexShrink: 0 }}
         >
           Delete Account
@@ -292,6 +315,7 @@ export default function ProfilePage() {
         busyId={busyId}
         activeContests={activeContests}
         activeContestsError={activeContestsError}
+        actionError={actionError}
         onClose={closeDeleteDialog}
         onRetry={refreshActiveContests}
         onDeleteContest={handleDeleteContest}

@@ -55,7 +55,7 @@ export default function StatCard({
         <Skeleton variant="text" width={60} sx={{ mx: 'auto', fontSize: '2rem' }} />
       ) : (
         <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.5 }}>
-          {value?.toLocaleString() ?? '—'}
+          {value?.toLocaleString() ?? '–'}
         </Typography>
       )}
       <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>

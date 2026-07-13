@@ -44,7 +44,7 @@ export default function HeaderAuth({
   return (
     <Box sx={{ flexGrow: 0 }}>
       {!auth.isAuthenticated ? (
-        <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+        <Box sx={{ display: 'flex' }}>
           <Button
             color="inherit"
             onClick={(e) => setAnchorElSignIn(e.currentTarget)}

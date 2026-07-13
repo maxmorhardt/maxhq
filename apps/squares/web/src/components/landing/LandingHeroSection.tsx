@@ -12,7 +12,12 @@ export default function LandingHeroSection() {
         position: 'relative',
         overflow: 'hidden',
         background: gradients.lightBlue,
-        py: { xs: 20, md: 30 },
+        // fill the viewport below the static AppBar (56px on xs, 64px from sm up)
+        minHeight: { xs: 'calc(100svh - 56px)', sm: 'calc(100svh - 64px)' },
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        py: { xs: 10, md: 12 },
         mb: 12,
         // squares grid motif
         '&::before': {

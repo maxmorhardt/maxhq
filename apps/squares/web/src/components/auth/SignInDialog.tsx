@@ -1,3 +1,4 @@
+import CloseIcon from '@mui/icons-material/Close';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
 import {
@@ -7,6 +8,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  IconButton,
   Link,
   Typography,
 } from '@mui/material';
@@ -34,7 +36,17 @@ export default function SignInDialog({ open, onClose, redirectPath }: SignInDial
       disableScrollLock
       slotProps={{ paper: { sx: { borderRadius: 2, minWidth: 300 } } }}
     >
-      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Sign in</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700, pb: 1, pr: 6 }}>
+        Sign in
+        <IconButton
+          onClick={onClose}
+          size="small"
+          aria-label="Close dialog"
+          sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 0.5 }}>
           <Button

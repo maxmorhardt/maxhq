@@ -48,7 +48,7 @@ function StatItem({ icon, value, label, loading, delay, visible }: StatItemProps
             mb: 1,
           }}
         >
-          {value?.toLocaleString() ?? '—'}
+          {value?.toLocaleString() ?? '–'}
         </Typography>
       )}
       <Typography

@@ -179,6 +179,47 @@ describe('InviteManager', () => {
     await waitFor(() => expect(screen.getByText(/0 uses/)).toBeInTheDocument());
   });
 
+  it('is read-only with no create form when the contest is finished', async () => {
+    const { getInvites } = await import('../../../service/contestService');
+    vi.mocked(getInvites).mockResolvedValueOnce([
+      {
+        id: 'inv-f',
+        contestId: 'c-1',
+        token: 'tokf',
+        maxSquares: 10,
+        role: 'participant' as const,
+        uses: 0,
+        createdAt: '',
+        createdBy: 'alice',
+        updatedAt: '',
+      },
+    ]);
+    const store = configureStore({
+      reducer: { contest: contestReducer },
+      preloadedState: {
+        contest: {
+          ...contestReducer(undefined, { type: '' }),
+          currentContest: { ...baseContest, status: 'FINISHED' as const },
+        },
+      },
+      middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
+    });
+    render(
+      <ThemeProvider theme={theme}>
+        <Provider store={store}>
+          <InviteManager open onClose={vi.fn()} />
+        </Provider>
+      </ThemeProvider>
+    );
+    await act(async () => {});
+    expect(screen.getByText(/can no longer be created or changed/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /generate invite link/i })).not.toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByText(/0 uses/)).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /delete invite/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /share link/i })).not.toBeInTheDocument();
+  });
+
   it('calls deleteInvite when delete icon button is clicked', async () => {
     const { getInvites, deleteInvite } = await import('../../../service/contestService');
     vi.mocked(getInvites).mockResolvedValueOnce([

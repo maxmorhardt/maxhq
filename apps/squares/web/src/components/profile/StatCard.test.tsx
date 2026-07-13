@@ -15,7 +15,7 @@ describe('StatCard', () => {
     render(
       <StatCard icon={<span />} value={undefined} label="Quarter Wins" loading={false} delay={0} />
     );
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('–')).toBeInTheDocument();
   });
 
   it('hides the value while loading', () => {

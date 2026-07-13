@@ -10,6 +10,7 @@ function baseProps() {
     busyId: null,
     activeContests: [] as UserActiveContest[] | null,
     activeContestsError: false,
+    actionError: null as string | null,
     onClose: vi.fn(),
     onRetry: vi.fn(),
     onDeleteContest: vi.fn(),
@@ -64,5 +65,24 @@ describe('DeleteAccountDialog', () => {
   it('disables the confirm action while deleting', () => {
     render(<DeleteAccountDialog {...baseProps()} deleting />);
     expect(screen.getByRole('button', { name: /delete forever/i })).toBeDisabled();
+  });
+
+  it('renders an inline action error in the confirm view', () => {
+    render(<DeleteAccountDialog {...baseProps()} actionError="Failed to delete your account." />);
+    expect(screen.getByText('Failed to delete your account.')).toBeInTheDocument();
+  });
+
+  it('renders an inline action error in the blocking-contests view', () => {
+    const active: UserActiveContest[] = [
+      { id: 'c1', name: 'pool', owner: 'a@b.com', role: 'owner' },
+    ];
+    render(
+      <DeleteAccountDialog
+        {...baseProps()}
+        activeContests={active}
+        actionError="Failed to delete the contest."
+      />
+    );
+    expect(screen.getByText('Failed to delete the contest.')).toBeInTheDocument();
   });
 });

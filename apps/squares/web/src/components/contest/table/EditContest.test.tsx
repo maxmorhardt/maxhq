@@ -79,13 +79,20 @@ describe('EditContest', () => {
     expect(screen.getByText('Edit Contest')).toBeInTheDocument();
   });
 
-  it('renders "Contest Details" title for non-owners', () => {
+  it('renders "View Contest" title for non-owners', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       user: { profile: { email: 'bob' } },
     } as unknown as ReturnType<typeof useAuth>);
     renderDialog();
-    expect(screen.getByText('Contest Details')).toBeInTheDocument();
+    expect(screen.getByText('View Contest')).toBeInTheDocument();
+  });
+
+  it('renders read-only "View Contest" with no Save for a finished contest the user owns', () => {
+    renderDialog(true, { ...contest, status: 'FINISHED' as const });
+    expect(screen.getByText('View Contest')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Home Team')).not.toBeInTheDocument();
   });
 
   it('calls updateContestById when Save is clicked as owner', async () => {

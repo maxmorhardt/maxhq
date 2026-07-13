@@ -47,22 +47,32 @@ describe('InviteSignIn', () => {
     expect(screen.getByText('Compete with friends')).toBeInTheDocument();
   });
 
-  it('renders Google and GitHub sign-in buttons', () => {
+  it('shows a single Sign In button that is not a provider button by default', () => {
     renderComponent();
+    expect(screen.getByRole('button', { name: /sign in to join/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign in with google/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign in with github/i })).not.toBeInTheDocument();
+  });
+
+  it('opens the sign-in dialog with provider options when Sign In is clicked', () => {
+    renderComponent();
+    fireEvent.click(screen.getByRole('button', { name: /sign in to join/i }));
     expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in with github/i })).toBeInTheDocument();
   });
 
-  it('redirects with the google connector when Google sign-in is clicked', () => {
+  it('redirects with the google connector when Google is selected from the dialog', () => {
     renderComponent();
+    fireEvent.click(screen.getByRole('button', { name: /sign in to join/i }));
     fireEvent.click(screen.getByRole('button', { name: /sign in with google/i }));
     expect(mockSigninRedirect).toHaveBeenCalledWith({
       extraQueryParams: { connector_id: 'google' },
     });
   });
 
-  it('redirects with the github connector when GitHub sign-in is clicked', () => {
+  it('redirects with the github connector when GitHub is selected from the dialog', () => {
     renderComponent();
+    fireEvent.click(screen.getByRole('button', { name: /sign in to join/i }));
     fireEvent.click(screen.getByRole('button', { name: /sign in with github/i }));
     expect(mockSigninRedirect).toHaveBeenCalledWith({
       extraQueryParams: { connector_id: 'github' },

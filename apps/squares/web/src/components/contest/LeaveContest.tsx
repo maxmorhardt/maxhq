@@ -67,7 +67,8 @@ export default function LeaveContest({
   return (
     <Dialog open={open} onClose={loading ? undefined : handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
-        <IconButton aria-label="Close dialog"
+        <IconButton
+          aria-label="Close dialog"
           onClick={handleClose}
           disabled={loading}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
@@ -96,7 +97,12 @@ export default function LeaveContest({
       </DialogContent>
 
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={handleClose} variant="outlined" disabled={loading} sx={{ minWidth: 100 }}>
+        <Button
+          onClick={handleClose}
+          variant="outlined"
+          disabled={loading}
+          sx={{ minWidth: 100, minHeight: 35 }}
+        >
           Cancel
         </Button>
         <Button
@@ -104,7 +110,7 @@ export default function LeaveContest({
           variant="contained"
           color="error"
           disabled={loading}
-          sx={{ minWidth: 100 }}
+          sx={{ minWidth: 100, minHeight: 35 }}
         >
           {loading ? <CircularProgress size={16} color="inherit" /> : 'Leave'}
         </Button>

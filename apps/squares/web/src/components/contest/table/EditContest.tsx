@@ -12,7 +12,6 @@ import {
   IconButton,
   Stack,
   TextField,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
@@ -46,7 +45,12 @@ function DetailRow({
       <Typography variant="body2" sx={{ color: 'text.disabled', minWidth: 72, flexShrink: 0 }}>
         {label}
       </Typography>
-      <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
+      <Typography
+        variant="body2"
+        noWrap
+        title={value}
+        sx={{ color: 'text.primary', fontWeight: 500, minWidth: 0 }}
+      >
         {value}
       </Typography>
     </Box>
@@ -71,7 +75,8 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   const isCanceled = contestStatus === 'DELETED';
   const isFinished = contestStatus === 'FINISHED';
   const isInGame = contestStatus && ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
-  const isDisabled = isCanceled || isFinished;
+  const isTerminal = isCanceled || isFinished;
+  const canEdit = isOwner && !isTerminal;
 
   const createdDate = contest?.createdAt
     ? new Date(contest.createdAt).toLocaleDateString(undefined, {
@@ -79,7 +84,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
         month: 'short',
         day: 'numeric',
       })
-    : '—';
+    : '–';
 
   useEffect(() => {
     if (contest && open) {
@@ -89,7 +94,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   }, [contest, open]);
 
   const handleSave = async () => {
-    if (!isOwner || !contest?.id) return;
+    if (!canEdit || !contest?.id) return;
     setLoading(true);
     try {
       await dispatch(
@@ -122,13 +127,17 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     return null;
   }
 
-  const titleText = isOwner ? 'Edit Contest' : 'Contest Details';
+  const titleText = canEdit ? 'Edit Contest' : 'View Contest';
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth disableRestoreFocus>
       <DialogTitle component="div" sx={{ pb: 1.5, pr: 7 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Edit fontSize="small" sx={{ color: 'text.secondary' }} />
+          {canEdit ? (
+            <Edit fontSize="small" sx={{ color: 'text.secondary' }} />
+          ) : (
+            <VisibilityOutlined fontSize="small" sx={{ color: 'text.secondary' }} />
+          )}
           <Typography component="span" sx={{ fontWeight: 700, fontSize: '1.1rem', flexGrow: 1 }}>
             {titleText}
           </Typography>
@@ -187,76 +196,51 @@ export default function EditContest({ open, onClose }: EditContestProps) {
             </Stack>
           </Box>
 
-          {isOwner && (
+          {canEdit && (
             <>
               <Divider />
 
-              {(isCanceled || isFinished) && (
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  This contest is {isCanceled ? 'deleted' : 'finished'} and cannot be edited.
-                </Typography>
-              )}
-
               {isInGame && (
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Game is in progress — team names can still be updated.
+                  Game is in progress. Team names can still be updated.
                 </Typography>
               )}
 
               <Stack direction="row" spacing={2}>
-                <Tooltip
-                  title={isDisabled ? 'Cannot edit a finished or deleted contest' : ''}
-                  placement="top"
-                >
-                  <span style={{ flex: 1 }}>
-                    <TextField
-                      fullWidth
-                      label="Home Team"
-                      value={homeTeam}
-                      onChange={(e) => setHomeTeam(stripDangerousChars(e.target.value))}
-                      placeholder="Enter home team"
-                      disabled={isDisabled}
-                      slotProps={{ htmlInput: { maxLength: 20 } }}
-                    />
-                  </span>
-                </Tooltip>
-                <Tooltip
-                  title={isDisabled ? 'Cannot edit a finished or deleted contest' : ''}
-                  placement="top"
-                >
-                  <span style={{ flex: 1 }}>
-                    <TextField
-                      fullWidth
-                      label="Away Team"
-                      value={awayTeam}
-                      onChange={(e) => setAwayTeam(stripDangerousChars(e.target.value))}
-                      placeholder="Enter away team"
-                      disabled={isDisabled}
-                      slotProps={{ htmlInput: { maxLength: 20 } }}
-                    />
-                  </span>
-                </Tooltip>
+                <TextField
+                  fullWidth
+                  label="Home Team"
+                  value={homeTeam}
+                  onChange={(e) => setHomeTeam(stripDangerousChars(e.target.value))}
+                  placeholder="Enter home team"
+                  slotProps={{ htmlInput: { maxLength: 20 } }}
+                />
+                <TextField
+                  fullWidth
+                  label="Away Team"
+                  value={awayTeam}
+                  onChange={(e) => setAwayTeam(stripDangerousChars(e.target.value))}
+                  placeholder="Enter away team"
+                  slotProps={{ htmlInput: { maxLength: 20 } }}
+                />
               </Stack>
             </>
           )}
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
-        <Button onClick={handleClose} color="inherit">
-          {isOwner ? 'Cancel' : 'Close'}
-        </Button>
-        {isOwner && (
+      {canEdit && (
+        <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
           <Button
             onClick={handleSave}
             variant="contained"
-            disabled={loading || isDisabled}
+            disabled={loading}
             sx={{ minWidth: 120 }}
           >
             {loading ? 'Saving…' : 'Save Changes'}
           </Button>
-        )}
-      </DialogActions>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }
