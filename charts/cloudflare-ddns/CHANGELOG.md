@@ -1,0 +1,16 @@
+# Changelog
+
+## 1.0.0 (2026-07-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* reset versions with proper config ([#28](https://github.com/maxmorhardt/charts/issues/28))
+* reset all chart versions ([#26](https://github.com/maxmorhardt/charts/issues/26))
+* reset all chart versions
+
+### Features
+
+* reset all chart versions ([38e6cf7](https://github.com/maxmorhardt/charts/commit/38e6cf7c3512326d40f6a9aaf6628321fb09c525))
+* reset all chart versions ([#26](https://github.com/maxmorhardt/charts/issues/26)) ([33d24f7](https://github.com/maxmorhardt/charts/commit/33d24f7d2fbc6dd804572a6c0f1e3b349bbc68f7))
+* reset versions with proper config ([#28](https://github.com/maxmorhardt/charts/issues/28)) ([ea40c75](https://github.com/maxmorhardt/charts/commit/ea40c75c68dcdb9b2b5fd2873dcc10c52b6a1e3d))
