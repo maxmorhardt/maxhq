@@ -12,6 +12,7 @@ import {
   deleteContestById,
   submitContactForm,
   getMyContests,
+  getUpcomingGames,
   createInvite,
   getInvites,
   deleteInvite,
@@ -238,6 +239,36 @@ describe('contestService', () => {
     );
 
     await expect(getMyContests()).rejects.toEqual(apiError);
+  });
+
+  it('should fetch upcoming games', async () => {
+    const mockGames = [{ id: 'g1', homeTeam: 'Bills', awayTeam: 'Jets' }];
+    vi.mocked(api.get).mockResolvedValue({ data: mockGames });
+
+    const result = await getUpcomingGames();
+
+    expect(result).toEqual(mockGames);
+    expect(api.get).toHaveBeenCalledWith('/games/upcoming');
+  });
+
+  it('should throw APIError when getUpcomingGames fails', async () => {
+    const apiError = {
+      code: 500,
+      message: 'Failed to get upcoming games',
+      timestamp: '2025-01-01T00:00:00Z',
+      requestId: 'req-games',
+    };
+    vi.mocked(api.get).mockRejectedValue(
+      new AxiosError('fail', 'ERR_BAD_RESPONSE', undefined, {}, {
+        data: apiError,
+        status: 500,
+        statusText: 'Internal Server Error',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse)
+    );
+
+    await expect(getUpcomingGames()).rejects.toEqual(apiError);
   });
 
   it('should create an invite', async () => {

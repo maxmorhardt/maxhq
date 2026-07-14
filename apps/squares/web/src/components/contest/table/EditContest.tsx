@@ -21,7 +21,7 @@ import { selectCurrentContest } from '../../../features/contests/contestSelector
 import { updateContest } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
-import { getStatusOption } from '../../../utils/contestStatus';
+import { getStatusOption, isInGameStatus, isTerminalStatus } from '../../../utils/contestStatus';
 
 interface EditContestProps {
   open: boolean;
@@ -72,10 +72,8 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   const currentStatus = getStatusOption(contest?.status || 'ACTIVE');
 
   const contestStatus = contest?.status;
-  const isCanceled = contestStatus === 'DELETED';
-  const isFinished = contestStatus === 'FINISHED';
-  const isInGame = contestStatus && ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
-  const isTerminal = isCanceled || isFinished;
+  const isInGame = isInGameStatus(contestStatus);
+  const isTerminal = isTerminalStatus(contestStatus);
   const canEdit = isOwner && !isTerminal;
 
   const createdDate = contest?.createdAt

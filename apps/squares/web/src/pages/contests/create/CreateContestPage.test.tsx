@@ -22,7 +22,30 @@ vi.mock('react-helmet-async', () => ({
 
 vi.mock('../../../service/contestService', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../service/contestService')>();
-  return { ...actual, createNewContest: vi.fn() };
+  return {
+    ...actual,
+    createNewContest: vi.fn(),
+    getUpcomingGames: vi.fn().mockResolvedValue([
+      {
+        id: 'game-1',
+        espnId: '401',
+        homeTeam: 'Chiefs',
+        awayTeam: 'Eagles',
+        homeAbbr: 'KC',
+        awayAbbr: 'PHI',
+        gameTime: '2026-01-10T18:00:00Z',
+        week: 1,
+        season: 2025,
+        seasonType: 2,
+        status: 'scheduled',
+        period: 0,
+        homeScore: 0,
+        awayScore: 0,
+        createdAt: '',
+        updatedAt: '',
+      },
+    ]),
+  };
 });
 
 import { useAuth } from 'react-oidc-context';
@@ -77,10 +100,49 @@ describe('CreateContestPage', () => {
     expect(screen.getByLabelText(/contest name/i)).toBeInTheDocument();
   });
 
-  it('renders the Home Team and Away Team fields', () => {
+  it('renders the Home Team and Away Team fields in manual mode', () => {
     renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /manual/i }));
     expect(screen.getByLabelText(/home team/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/away team/i)).toBeInTheDocument();
+  });
+
+  it('defaults to Live Game mode with a game picker', async () => {
+    renderPage();
+    expect(await screen.findByRole('combobox')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/home team/i)).not.toBeInTheDocument();
+  });
+
+  it('shows an error when submitting in game mode without a game selected', async () => {
+    renderPage();
+    fireEvent.change(screen.getByLabelText(/contest name/i), {
+      target: { name: 'name', value: 'Super Bowl' },
+    });
+    fireEvent.submit(document.querySelector('form')!);
+    expect(
+      await screen.findByText('Select a game or switch to manual scoring')
+    ).toBeInTheDocument();
+  });
+
+  it('creates a game-linked contest with the selected game', async () => {
+    vi.mocked(createNewContest).mockResolvedValue({
+      id: 'c-1',
+      owner: 'user1',
+      name: 'Super Bowl',
+    } as Awaited<ReturnType<typeof createNewContest>>);
+
+    renderPage();
+    fireEvent.change(screen.getByLabelText(/contest name/i), {
+      target: { name: 'name', value: 'Super Bowl' },
+    });
+    fireEvent.mouseDown(await screen.findByRole('combobox'));
+    fireEvent.click(await screen.findByRole('option', { name: /eagles @ chiefs/i }));
+    fireEvent.submit(document.querySelector('form')!);
+
+    await waitFor(() =>
+      expect(createNewContest).toHaveBeenCalledWith(expect.objectContaining({ gameId: 'game-1' }))
+    );
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1'));
   });
 
   it('renders Private and Public toggle buttons', () => {
@@ -134,6 +196,7 @@ describe('CreateContestPage', () => {
     } as Awaited<ReturnType<typeof createNewContest>>);
 
     renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /manual/i }));
     fireEvent.change(screen.getByLabelText(/contest name/i), {
       target: { name: 'name', value: 'Super Bowl 2025' },
     });
@@ -146,6 +209,7 @@ describe('CreateContestPage', () => {
     vi.mocked(createNewContest).mockRejectedValue({ message: 'Name already taken' });
 
     renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /manual/i }));
     fireEvent.change(screen.getByLabelText(/contest name/i), {
       target: { name: 'name', value: 'Taken Name' },
     });

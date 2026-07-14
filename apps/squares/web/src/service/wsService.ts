@@ -13,7 +13,7 @@ import {
   setDisconnectionDetails,
   setLatestMessage,
 } from '../features/ws/wsSlice';
-import type { WSUpdate } from '../types/contest';
+import type { Contest, QuarterResult, Square, WSUpdate } from '../types/contest';
 import type { HandleWSEventParams } from '../types/ws';
 
 export function getSocketUrl(id: string | undefined, auth: ReturnType<typeof useAuth>) {
@@ -85,13 +85,13 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
   switch (message.type) {
     case 'square_update':
       if (isValidSquareUpdate(message)) {
-        dispatch(updateSquareFromWebSocket(message.square!));
+        dispatch(updateSquareFromWebSocket(message.square));
         dispatch(setLatestMessage(message));
         callbacks?.onSquareUpdate?.(
-          message.square!.value,
-          message.square!.row,
-          message.square!.col,
-          message.square!.ownerName
+          message.square.value,
+          message.square.row,
+          message.square.col,
+          message.square.ownerName
         );
       }
       break;
@@ -100,15 +100,17 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
       if (isValidContestUpdate(message)) {
         dispatch(
           updateContestFromWebSocket({
-            xLabels: message.contest!.xLabels,
-            yLabels: message.contest!.yLabels,
-            homeTeam: message.contest!.homeTeam,
-            awayTeam: message.contest!.awayTeam,
-            status: message.contest!.status,
+            xLabels: message.contest.xLabels,
+            yLabels: message.contest.yLabels,
+            homeTeam: message.contest.homeTeam,
+            awayTeam: message.contest.awayTeam,
+            status: message.contest.status,
+            gameId: message.contest.gameId,
+            game: message.contest.game,
           })
         );
         dispatch(setLatestMessage(message));
-        callbacks?.onContestUpdate?.(message.contest!.status);
+        callbacks?.onContestUpdate?.(message.contest.status);
       }
       break;
 
@@ -116,24 +118,24 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
       if (isValidQuarterResultUpdate(message)) {
         dispatch(
           updateQuarterResultFromWebSocket({
-            quarter: message.quarterResult!.quarter,
-            homeTeamScore: message.quarterResult!.homeTeamScore,
-            awayTeamScore: message.quarterResult!.awayTeamScore,
-            winnerRow: message.quarterResult!.winnerRow,
-            winnerCol: message.quarterResult!.winnerCol,
-            winner: message.quarterResult!.winner,
-            winnerName: message.quarterResult!.winnerName,
+            quarter: message.quarterResult.quarter,
+            homeTeamScore: message.quarterResult.homeTeamScore,
+            awayTeamScore: message.quarterResult.awayTeamScore,
+            winnerRow: message.quarterResult.winnerRow,
+            winnerCol: message.quarterResult.winnerCol,
+            winner: message.quarterResult.winner,
+            winnerName: message.quarterResult.winnerName,
           })
         );
         dispatch(setLatestMessage(message));
         callbacks?.onQuarterResultUpdate?.(
-          message.quarterResult!.quarter,
-          message.quarterResult!.winnerName,
-          message.quarterResult!.homeTeamScore,
-          message.quarterResult!.awayTeamScore,
-          message.quarterResult!.winnerRow,
-          message.quarterResult!.winnerCol,
-          message.quarterResult!.winner
+          message.quarterResult.quarter,
+          message.quarterResult.winnerName,
+          message.quarterResult.homeTeamScore,
+          message.quarterResult.awayTeamScore,
+          message.quarterResult.winnerRow,
+          message.quarterResult.winnerCol,
+          message.quarterResult.winner
         );
       }
       break;
@@ -184,16 +186,18 @@ function isValidWSUpdate(data: unknown): data is WSUpdate {
   );
 }
 
-function isValidSquareUpdate(message: WSUpdate): boolean {
+function isValidSquareUpdate(message: WSUpdate): message is WSUpdate & { square: Square } {
   return (
     message.type === 'square_update' && !!message.square?.id && message.square.value !== undefined
   );
 }
 
-function isValidContestUpdate(message: WSUpdate): boolean {
+function isValidContestUpdate(message: WSUpdate): message is WSUpdate & { contest: Contest } {
   return message.type === 'contest_update' && !!message.contest;
 }
 
-function isValidQuarterResultUpdate(message: WSUpdate): boolean {
+function isValidQuarterResultUpdate(
+  message: WSUpdate
+): message is WSUpdate & { quarterResult: QuarterResult } {
   return message.type === 'quarter_result_update' && !!message.quarterResult;
 }

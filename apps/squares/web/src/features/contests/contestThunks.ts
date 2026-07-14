@@ -9,6 +9,7 @@ import {
   getInvites,
   getMyContests,
   getParticipants,
+  getUpcomingGames,
   joinContest,
   previewInvite,
   recordQuarterResult,
@@ -22,6 +23,7 @@ import type {
   Contest,
   CreateContestRequest,
   CreateInviteRequest,
+  Game,
   Invite,
   InvitePreviewResponse,
   PaginatedContestsResponse,
@@ -135,6 +137,17 @@ export const updateQuarterResult = createAsyncThunk<
     return rejectWithValue(err as APIError);
   }
 });
+
+export const fetchUpcomingGames = createAsyncThunk<Game[], void, { rejectValue: APIError }>(
+  'contests/fetchUpcomingGames',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getUpcomingGames();
+    } catch (err: unknown) {
+      return rejectWithValue(err as APIError);
+    }
+  }
+);
 
 export const fetchMyContests = createAsyncThunk<
   Contest[],

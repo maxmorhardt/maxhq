@@ -3,6 +3,7 @@ import type {
   Contest,
   CreateContestRequest,
   CreateInviteRequest,
+  Game,
   Invite,
   InvitePreviewResponse,
   PaginatedContestsResponse,
@@ -157,6 +158,15 @@ export async function getInvites(contestId: string): Promise<Invite[]> {
 export async function deleteInvite(contestId: string, inviteId: string): Promise<void> {
   try {
     await api.delete<void>(`/contests/${contestId}/invites/${inviteId}`);
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function getUpcomingGames(): Promise<Game[]> {
+  try {
+    const res = await api.get<Game[]>('/games/upcoming');
+    return res.data;
   } catch (err: unknown) {
     throw handleError(err);
   }

@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import type {
   Contest,
   ContestStatus,
+  Game,
   Invite,
   PaginatedContestsResponse,
   Participant,
@@ -105,13 +106,23 @@ const contestSlice = createSlice({
         homeTeam?: string;
         awayTeam?: string;
         status?: ContestStatus;
+        gameId?: string;
+        game?: Game;
       }>
     ) {
       if (!state.currentContest) {
         return;
       }
 
-      const { xLabels, yLabels, homeTeam, awayTeam, status } = action.payload;
+      const { xLabels, yLabels, homeTeam, awayTeam, status, gameId, game } = action.payload;
+      if (gameId !== undefined) {
+        state.currentContest.gameId = gameId;
+      }
+
+      if (game !== undefined) {
+        state.currentContest.game = game;
+      }
+
       if (xLabels !== undefined) {
         state.currentContest.xLabels = xLabels;
       }

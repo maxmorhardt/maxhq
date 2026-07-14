@@ -15,6 +15,8 @@ export interface Contest {
   visibility: ContestVisibility;
   squares: Square[];
   quarterResults?: QuarterResult[];
+  gameId?: string;
+  game?: Game;
   owner: string;
   createdAt: string;
   updatedAt: string;
@@ -29,6 +31,7 @@ export interface CreateContestRequest {
   awayTeam?: string;
   visibility?: ContestVisibility;
   maxSquares?: number;
+  gameId?: string;
 }
 
 export interface Square {
@@ -103,6 +106,38 @@ export interface QuarterResult {
 export interface QuarterResultRequest {
   homeTeamScore: number;
   awayTeamScore: number;
+}
+
+export type GameStatus = 'scheduled' | 'in_progress' | 'final';
+
+export interface GameScore {
+  id: string;
+  gameId: string;
+  quarter: number;
+  homeScore: number;
+  awayScore: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Game {
+  id: string;
+  espnId: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeAbbr: string;
+  awayAbbr: string;
+  gameTime: string;
+  week: number;
+  season: number;
+  seasonType: number;
+  status: GameStatus;
+  period: number;
+  homeScore: number;
+  awayScore: number;
+  scores?: GameScore[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UpdateSquareRequest {

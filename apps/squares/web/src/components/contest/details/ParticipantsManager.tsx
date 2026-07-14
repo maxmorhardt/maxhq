@@ -81,13 +81,17 @@ export default function ParticipantsManager({
     setEditError(false);
     try {
       const isEditingOwner = editParticipant.role === 'owner';
+      // owners keep their role and may set 0; viewers never hold squares
+      const request = isEditingOwner
+        ? { maxSquares: editMaxSquares }
+        : editRole === 'viewer'
+          ? { role: editRole, maxSquares: 0 }
+          : { role: editRole, maxSquares: editMaxSquares };
       await dispatch(
         updateContestParticipant({
           contestId: currentContest.id,
           userId: editParticipant.userId,
-          request: isEditingOwner
-            ? { maxSquares: editMaxSquares }
-            : { role: editRole, maxSquares: editMaxSquares },
+          request,
         })
       ).unwrap();
       showToast('Participant updated', 'success');
@@ -191,9 +195,12 @@ export default function ParticipantsManager({
                         }}
                       />
                     </Box>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                      max {participant.maxSquares} squares
-                    </Typography>
+                    {/* viewers never hold squares, so don't mention a count for them */}
+                    {participant.role !== 'viewer' && (
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                        max {participant.maxSquares} squares
+                      </Typography>
+                    )}
                   </Box>
 
                   {isOwner && currentContest?.status === 'ACTIVE' && (
@@ -291,7 +298,14 @@ export default function ParticipantsManager({
               <Select
                 value={editRole}
                 label="Role"
-                onChange={(e) => setEditRole(e.target.value as ParticipantRole)}
+                onChange={(e) => {
+                  const role = e.target.value as ParticipantRole;
+                  setEditRole(role);
+                  // participants need at least one square
+                  if (role === 'participant' && editMaxSquares < 1) {
+                    setEditMaxSquares(1);
+                  }
+                }}
               >
                 <MenuItem value="participant">Participant</MenuItem>
                 <MenuItem value="viewer">Viewer</MenuItem>
@@ -299,17 +313,22 @@ export default function ParticipantsManager({
             </FormControl>
           )}
 
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 0.5 }}>
-            Max Squares: {editMaxSquares}
-          </Typography>
-          <Slider
-            value={editMaxSquares}
-            onChange={(_, val) => setEditMaxSquares(val as number)}
-            min={1}
-            max={100}
-            valueLabelDisplay="auto"
-            size="small"
-          />
+          {/* viewers hold no squares; owners may set 0, participants at least 1 */}
+          {editRole !== 'viewer' && (
+            <>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 0.5 }}>
+                Max Squares: {editMaxSquares}
+              </Typography>
+              <Slider
+                value={editMaxSquares}
+                onChange={(_, val) => setEditMaxSquares(val as number)}
+                min={editParticipant?.role === 'owner' ? 0 : 1}
+                max={100}
+                valueLabelDisplay="auto"
+                size="small"
+              />
+            </>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditParticipant(null)}>Cancel</Button>

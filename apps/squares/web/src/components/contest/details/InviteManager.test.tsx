@@ -150,6 +150,26 @@ describe('InviteManager', () => {
     expect(screen.getByText('Participant')).toBeInTheDocument();
   });
 
+  it('hides the square slider and sends 0 squares when role is viewer', async () => {
+    const { createInvite } = await import('../../../service/contestService');
+    await renderManager(true);
+
+    expect(screen.getByText(/max squares per person/i)).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(await screen.findByRole('option', { name: 'Viewer' }));
+
+    expect(screen.queryByText(/max squares per person/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /generate invite link/i }));
+    await waitFor(() =>
+      expect(createInvite).toHaveBeenCalledWith(
+        'c-1',
+        expect.objectContaining({ role: 'viewer', maxSquares: 0 })
+      )
+    );
+  });
+
   it('shows error state on create invite failure', async () => {
     const { createInvite } = await import('../../../service/contestService');
     vi.mocked(createInvite).mockRejectedValueOnce(new Error('fail'));

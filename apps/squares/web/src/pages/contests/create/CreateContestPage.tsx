@@ -5,7 +5,11 @@ import {
   Button,
   CircularProgress,
   Container,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Slider,
   TextField,
   ToggleButton,
@@ -13,18 +17,21 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import { selectContestLoading } from '../../../features/contests/contestSelectors';
 import { clearError } from '../../../features/contests/contestSlice';
-import { createContest } from '../../../features/contests/contestThunks';
+import { createContest, fetchUpcomingGames } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import type { APIError } from '../../../types/error';
-import type { ContestVisibility } from '../../../types/contest';
+import type { ContestVisibility, Game } from '../../../types/contest';
 import { gradients } from '../../../types/gradients';
+import { formatMatchup } from '../../../utils/game';
 import { Helmet } from 'react-helmet-async';
+
+type ScoringMode = 'game' | 'manual';
 
 export default function CreateContestPage() {
   const theme = useTheme();
@@ -42,6 +49,31 @@ export default function CreateContestPage() {
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [maxSquares, setMaxSquares] = useState<number>(10);
   const [error, setError] = useState('');
+
+  // scoring mode: link to a live game (default) or enter scores manually
+  const [scoringMode, setScoringMode] = useState<ScoringMode>('game');
+  const [games, setGames] = useState<Game[]>([]);
+  const [selectedGameId, setSelectedGameId] = useState('');
+  const [gamesLoading, setGamesLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setGamesLoading(true);
+    dispatch(fetchUpcomingGames())
+      .unwrap()
+      .then((g) => {
+        if (active) setGames(g);
+      })
+      .catch(() => {
+        if (active) setGames([]);
+      })
+      .finally(() => {
+        if (active) setGamesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [dispatch]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -66,6 +98,12 @@ export default function CreateContestPage() {
       return;
     }
 
+    const isGameLinked = scoringMode === 'game';
+    if (isGameLinked && !selectedGameId) {
+      setError('Select a game or switch to manual scoring');
+      return;
+    }
+
     setError('');
 
     try {
@@ -73,10 +111,12 @@ export default function CreateContestPage() {
         createContest({
           name: formData.name.trim(),
           owner: auth.user.profile.email,
-          homeTeam: formData.homeTeam.trim() || undefined,
-          awayTeam: formData.awayTeam.trim() || undefined,
+          // a game-linked contest takes its teams from the game; manual uses the inputs
+          homeTeam: isGameLinked ? undefined : formData.homeTeam.trim() || undefined,
+          awayTeam: isGameLinked ? undefined : formData.awayTeam.trim() || undefined,
           visibility,
           maxSquares,
+          gameId: isGameLinked ? selectedGameId : undefined,
         })
       ).unwrap();
 
@@ -175,36 +215,89 @@ export default function CreateContestPage() {
 
             <SectionDivider />
 
-            {/* teams */}
-            <FormSection title="Teams" description="Optional matchup shown on the grid.">
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap: 1.5,
-                }}
-              >
-                <TextField
-                  name="homeTeam"
-                  label="Home Team"
-                  value={formData.homeTeam}
-                  onChange={handleInputChange}
+            {/* matchup: link a live game (auto scores) or enter teams manually */}
+            <FormSection
+              title="Matchup"
+              description={
+                scoringMode === 'game'
+                  ? 'Scores update automatically from the linked NFL game.'
+                  : 'Enter the matchup and record scores yourself each quarter.'
+              }
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <ToggleButtonGroup
+                  value={scoringMode}
+                  exclusive
+                  onChange={(_, val) => {
+                    if (val) {
+                      setScoringMode(val as ScoringMode);
+                      setError('');
+                    }
+                  }}
                   fullWidth
                   size="small"
-                  disabled={loading}
-                  slotProps={{ htmlInput: { maxLength: 20 } }}
-                />
+                >
+                  <ToggleButton value="game">Live Game</ToggleButton>
+                  <ToggleButton value="manual">Manual</ToggleButton>
+                </ToggleButtonGroup>
 
-                <TextField
-                  name="awayTeam"
-                  label="Away Team"
-                  value={formData.awayTeam}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  disabled={loading}
-                  slotProps={{ htmlInput: { maxLength: 20 } }}
-                />
+                {scoringMode === 'game' ? (
+                  gamesLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                      <CircularProgress size={18} />
+                    </Box>
+                  ) : games.length > 0 ? (
+                    <FormControl fullWidth size="small" required disabled={loading}>
+                      <InputLabel>Game</InputLabel>
+                      <Select
+                        value={selectedGameId}
+                        label="Game"
+                        required
+                        onChange={(e) => setSelectedGameId(e.target.value)}
+                      >
+                        {games.map((game) => (
+                          <MenuItem key={game.id} value={game.id}>
+                            {gameLabel(game)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem' }}>
+                      No upcoming games available. Switch to Manual to enter the matchup yourself.
+                    </Typography>
+                  )
+                ) : (
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                      gap: 1.5,
+                    }}
+                  >
+                    <TextField
+                      name="homeTeam"
+                      label="Home Team"
+                      value={formData.homeTeam}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      disabled={loading}
+                      slotProps={{ htmlInput: { maxLength: 20 } }}
+                    />
+
+                    <TextField
+                      name="awayTeam"
+                      label="Away Team"
+                      value={formData.awayTeam}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      disabled={loading}
+                      slotProps={{ htmlInput: { maxLength: 20 } }}
+                    />
+                  </Box>
+                )}
               </Box>
             </FormSection>
 
@@ -244,7 +337,7 @@ export default function CreateContestPage() {
             {/* owner squares */}
             <FormSection
               title="Your Squares"
-              description={`Maximum squares you can claim. Counts toward the 100-square total.`}
+              description="Maximum squares you can claim. Counts toward the 100-square total."
             >
               <Box sx={{ px: 1 }}>
                 <Box
@@ -265,7 +358,7 @@ export default function CreateContestPage() {
                 <Slider
                   value={maxSquares}
                   onChange={(_, val) => setMaxSquares(val as number)}
-                  min={1}
+                  min={0}
                   max={100}
                   step={1}
                   valueLabelDisplay="auto"
@@ -366,4 +459,15 @@ function SectionDivider() {
       }}
     />
   );
+}
+
+function gameLabel(game: Game): string {
+  const kickoff = game.gameTime
+    ? new Date(game.gameTime).toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      })
+    : '';
+  return `${formatMatchup(game)}${kickoff ? ` · ${kickoff}` : ''}`;
 }

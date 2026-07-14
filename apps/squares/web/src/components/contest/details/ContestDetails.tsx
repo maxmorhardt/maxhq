@@ -6,6 +6,8 @@ import {
   selectParticipants,
 } from '../../../features/contests/contestSelectors';
 import { useAppSelector } from '../../../hooks/reduxHooks';
+import { isInGameStatus } from '../../../utils/contestStatus';
+import { formatMatchup } from '../../../utils/game';
 import ContestSidebarCard from '../sidebar/ContestSidebarCard';
 import ActiveContestControls from './ActiveContestControls';
 import ContestActionIcons from './ContestActionIcons';
@@ -46,8 +48,9 @@ export default function ContestDetails({
   const isCanceled = contestStatus === 'DELETED';
   const isFinished = contestStatus === 'FINISHED';
   const isActive = contestStatus === 'ACTIVE';
-  const isInGame = ['Q1', 'Q2', 'Q3', 'Q4'].includes(contestStatus);
+  const isInGame = isInGameStatus(contestStatus);
   const allSquaresFilled = filledSquares >= totalSquares;
+  const isGameLinked = !!currentContest.gameId;
 
   const getStatusDisplay = () => {
     if (isCanceled) {
@@ -140,13 +143,34 @@ export default function ContestDetails({
               </Box>
             )}
 
-            {isActive && allSquaresFilled && <StartGameButton />}
+            {/* manual contests are started by the owner; linked ones start at kickoff */}
+            {isActive && allSquaresFilled && !isGameLinked && <StartGameButton />}
+
+            {isActive && allSquaresFilled && isGameLinked && (
+              <Typography
+                variant="body2"
+                sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', mt: 0.5 }}
+              >
+                The grid is full. This contest starts automatically when the linked game kicks off.
+              </Typography>
+            )}
 
             {isActive && !allSquaresFilled && (
               <ActiveContestControls allSquaresFilled={allSquaresFilled} />
             )}
 
-            {isInGame && <ScoreUpdateControls />}
+            {/* manual scoring stays available as a fallback for contests not linked to a game */}
+            {isInGame && !isGameLinked && <ScoreUpdateControls />}
+
+            {isInGame && isGameLinked && (
+              <Typography
+                variant="body2"
+                sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', mt: 0.5 }}
+              >
+                Scores update automatically from the linked game
+                {currentContest.game ? ` (${formatMatchup(currentContest.game)})` : ''}.
+              </Typography>
+            )}
           </>
         )}
       </Box>

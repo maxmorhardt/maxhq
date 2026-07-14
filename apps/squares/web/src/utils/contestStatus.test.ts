@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getStatusOption, getStatusLabel, statusOptions } from './contestStatus';
+import {
+  getStatusOption,
+  getStatusLabel,
+  isInGameStatus,
+  isTerminalStatus,
+  statusOptions,
+} from './contestStatus';
 import type { ContestStatus } from '../types/contest';
 
 describe('statusOptions', () => {
@@ -52,5 +58,43 @@ describe('getStatusLabel', () => {
 
   it('should return "Active" for unknown status', () => {
     expect(getStatusLabel('INVALID' as ContestStatus)).toBe('Active');
+  });
+});
+
+describe('isInGameStatus', () => {
+  it('should be true for quarter statuses', () => {
+    expect(isInGameStatus('Q1')).toBe(true);
+    expect(isInGameStatus('Q2')).toBe(true);
+    expect(isInGameStatus('Q3')).toBe(true);
+    expect(isInGameStatus('Q4')).toBe(true);
+  });
+
+  it('should be false for non-quarter statuses', () => {
+    expect(isInGameStatus('ACTIVE')).toBe(false);
+    expect(isInGameStatus('FINISHED')).toBe(false);
+    expect(isInGameStatus('DELETED')).toBe(false);
+  });
+
+  it('should be false for undefined or null', () => {
+    expect(isInGameStatus(undefined)).toBe(false);
+    expect(isInGameStatus(null)).toBe(false);
+  });
+});
+
+describe('isTerminalStatus', () => {
+  it('should be true for finished and deleted', () => {
+    expect(isTerminalStatus('FINISHED')).toBe(true);
+    expect(isTerminalStatus('DELETED')).toBe(true);
+  });
+
+  it('should be false for active and in-game statuses', () => {
+    expect(isTerminalStatus('ACTIVE')).toBe(false);
+    expect(isTerminalStatus('Q1')).toBe(false);
+    expect(isTerminalStatus('Q4')).toBe(false);
+  });
+
+  it('should be false for undefined or null', () => {
+    expect(isTerminalStatus(undefined)).toBe(false);
+    expect(isTerminalStatus(null)).toBe(false);
   });
 });

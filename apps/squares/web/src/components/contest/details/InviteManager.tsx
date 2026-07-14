@@ -30,6 +30,7 @@ import {
 } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
+import { isTerminalStatus } from '../../../utils/contestStatus';
 import type { ParticipantRole } from '../../../types/contest';
 
 interface InviteManagerProps {
@@ -52,7 +53,7 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
   const [createError, setCreateError] = useState(false);
   const [failedInviteId, setFailedInviteId] = useState<string | null>(null);
 
-  const isTerminal = currentContest?.status === 'FINISHED' || currentContest?.status === 'DELETED';
+  const isTerminal = isTerminalStatus(currentContest?.status);
 
   useEffect(() => {
     if (open && currentContest?.id) {
@@ -69,7 +70,7 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
         createContestInvite({
           contestId: currentContest.id,
           request: {
-            maxSquares,
+            maxSquares: role === 'viewer' ? 0 : maxSquares,
             role,
             maxUses: maxUses ? parseInt(maxUses, 10) : undefined,
             expiresIn: expiresIn ? parseInt(expiresIn, 10) : undefined,
@@ -150,20 +151,25 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
             </Box>
           ) : (
             <Box>
-              <Typography
-                variant="caption"
-                sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}
-              >
-                Max Squares Per Person: {maxSquares}
-              </Typography>
-              <Slider
-                value={maxSquares}
-                onChange={(_, val) => setMaxSquares(val as number)}
-                min={1}
-                max={100}
-                valueLabelDisplay="auto"
-                size="small"
-              />
+              {/* viewers never claim squares, so the limit slider only applies to participants */}
+              {role !== 'viewer' && (
+                <>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}
+                  >
+                    Max Squares Per Person: {maxSquares}
+                  </Typography>
+                  <Slider
+                    value={maxSquares}
+                    onChange={(_, val) => setMaxSquares(val as number)}
+                    min={1}
+                    max={100}
+                    valueLabelDisplay="auto"
+                    size="small"
+                  />
+                </>
+              )}
 
               <FormControl fullWidth size="small" sx={{ mt: 1 }}>
                 <InputLabel>Role</InputLabel>
@@ -252,7 +258,9 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
                       variant="body2"
                       sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}
                     >
-                      {invite.maxSquares} sq/person · {invite.role}
+                      {invite.role === 'viewer'
+                        ? invite.role
+                        : `${invite.maxSquares} sq/person · ${invite.role}`}
                     </Typography>
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
                       {invite.maxUses

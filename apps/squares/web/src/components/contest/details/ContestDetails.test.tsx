@@ -56,11 +56,14 @@ function makeStore(override: Partial<ReturnType<typeof contestReducer>> = {}) {
   });
 }
 
-function renderDetails(storeOverride: Record<string, unknown> = {}) {
+function renderDetails(
+  storeOverride: Record<string, unknown> = {},
+  props: { isOwner?: boolean } = {}
+) {
   return render(
     <ThemeProvider theme={theme}>
       <Provider store={makeStore(storeOverride)}>
-        <ContestDetails />
+        <ContestDetails {...props} />
       </Provider>
     </ThemeProvider>
   );
@@ -184,5 +187,55 @@ describe('ContestDetails', () => {
     } as unknown as ReturnType<typeof useAuth>);
     renderDetails({ currentContest: { ...baseContest, visibility: 'public', owner: 'alice' } });
     expect(screen.getByText(/you're viewing this contest/i)).toBeInTheDocument();
+  });
+
+  const filledContest = {
+    ...baseContest,
+    squares: baseContest.squares.map((s) => ({ ...s, value: 'X' })),
+  };
+
+  it('shows the start button for a full manual contest', () => {
+    renderDetails({ currentContest: filledContest }, { isOwner: true });
+    expect(screen.getByTestId('start-button')).toBeInTheDocument();
+  });
+
+  it('shows the auto-start notice instead of the start button for a full game-linked contest', () => {
+    renderDetails({ currentContest: { ...filledContest, gameId: 'g-1' } }, { isOwner: true });
+    expect(
+      screen.getByText(/starts automatically when the linked game kicks off/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('start-button')).not.toBeInTheDocument();
+  });
+
+  it('shows auto-scoring notice with the matchup for an in-progress game-linked contest', () => {
+    renderDetails(
+      {
+        currentContest: {
+          ...baseContest,
+          status: 'Q1',
+          gameId: 'g-1',
+          game: { awayTeam: 'Jets', homeTeam: 'Bills' },
+        },
+      },
+      { isOwner: true }
+    );
+    expect(
+      screen.getByText(/scores update automatically from the linked game/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Jets @ Bills/)).toBeInTheDocument();
+    expect(screen.queryByTestId('score-controls')).not.toBeInTheDocument();
+  });
+
+  it('shows auto-scoring notice without a matchup when the game is not loaded', () => {
+    renderDetails(
+      { currentContest: { ...baseContest, status: 'Q1', gameId: 'g-1' } },
+      {
+        isOwner: true,
+      }
+    );
+    expect(
+      screen.getByText(/scores update automatically from the linked game/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/@/)).not.toBeInTheDocument();
   });
 });

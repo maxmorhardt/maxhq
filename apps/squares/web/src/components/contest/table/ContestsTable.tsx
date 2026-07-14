@@ -22,7 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { setCurrentContest } from '../../../features/contests/contestSlice';
 import { useAppDispatch } from '../../../hooks/reduxHooks';
 import type { Contest } from '../../../types/contest';
-import { getStatusLabel, getStatusOption } from '../../../utils/contestStatus';
+import { getStatusLabel, getStatusOption, isTerminalStatus } from '../../../utils/contestStatus';
 import LeaveContest from '../LeaveContest';
 import DeleteContest from './DeleteContest';
 import EditContest from './EditContest';
@@ -66,10 +66,8 @@ export default function ContestsTable({
     !!onLeave && !!userEmail && contest.owner !== userEmail && contest.status === 'ACTIVE';
 
   // edit/delete on non-terminal contests; everyone else gets a read-only view
-  const isTerminal = (contest: Contest) =>
-    contest.status === 'FINISHED' || contest.status === 'DELETED';
   const canModify = (contest: Contest) =>
-    !!userEmail && contest.owner === userEmail && !isTerminal(contest);
+    !!userEmail && contest.owner === userEmail && !isTerminalStatus(contest.status);
 
   const headerSx = {
     color: 'white',

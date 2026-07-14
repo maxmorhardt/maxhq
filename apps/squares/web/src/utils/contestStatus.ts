@@ -64,3 +64,13 @@ export function getStatusOption(status: ContestStatus): StatusOption {
 export function getStatusLabel(status: ContestStatus): string {
   return getStatusOption(status).label;
 }
+
+const inGameStatuses: ContestStatus[] = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+export function isInGameStatus(status: ContestStatus | undefined | null): boolean {
+  return !!status && inGameStatuses.includes(status);
+}
+
+export function isTerminalStatus(status: ContestStatus | undefined | null): boolean {
+  return status === 'FINISHED' || status === 'DELETED';
+}
