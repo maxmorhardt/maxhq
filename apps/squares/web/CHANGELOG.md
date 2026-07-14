@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/maxmorhardt/squares/compare/1.0.0...1.1.0) (2026-07-14)
+
+
+### Features
+
+* viewer role fix and game link ([#32](https://github.com/maxmorhardt/squares/issues/32)) ([75851ba](https://github.com/maxmorhardt/squares/commit/75851ba2bbcc29993c55f0568490c5a56da5ce1d))
+
 ## 1.0.0 (2026-07-14)
 
 ### Features
