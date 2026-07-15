@@ -16,6 +16,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+vi.mock('../../../hooks/useAxiosAuth', () => ({ useAxiosAuth: vi.fn(() => true) }));
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -79,32 +80,36 @@ describe('CreateContestPage', () => {
     } as unknown as ReturnType<typeof useAuth>);
   });
 
-  it('renders the Create New Contest heading', () => {
+  it('renders the Create New Contest heading', async () => {
     renderPage();
-    expect(screen.getByText('Create New Contest')).toBeInTheDocument();
+    expect(await screen.findByText('Create New Contest')).toBeInTheDocument();
   });
 
-  it('renders the Back to Contests button', () => {
+  it('renders the Back to Contests button', async () => {
     renderPage();
-    expect(screen.getByRole('button', { name: /back to contests/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /back to contests/i })).toBeInTheDocument();
   });
 
-  it('navigates back when Back to Contests is clicked', () => {
+  it('navigates back when Back to Contests is clicked', async () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /back to contests/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/contests');
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/contests');
+    });
   });
 
-  it('renders the contest name field', () => {
+  it('renders the contest name field', async () => {
     renderPage();
-    expect(screen.getByLabelText(/contest name/i)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/contest name/i)).toBeInTheDocument();
   });
 
-  it('renders the Home Team and Away Team fields in manual mode', () => {
+  it('renders the Home Team and Away Team fields in manual mode', async () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /manual/i }));
-    expect(screen.getByLabelText(/home team/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/away team/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText(/home team/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/away team/i)).toBeInTheDocument();
+    });
   });
 
   it('defaults to Live Game mode with a game picker', async () => {
@@ -145,15 +150,15 @@ describe('CreateContestPage', () => {
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1'));
   });
 
-  it('renders Private and Public toggle buttons', () => {
+  it('renders Private and Public toggle buttons', async () => {
     renderPage();
-    expect(screen.getByRole('button', { name: /private/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /public/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /private/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /public/i })).toBeInTheDocument();
   });
 
-  it('renders the Create Contest submit button', () => {
+  it('renders the Create Contest submit button', async () => {
     renderPage();
-    expect(screen.getByRole('button', { name: /create contest/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /create contest/i })).toBeInTheDocument();
   });
 
   it('shows a warning when unauthenticated', () => {
@@ -224,12 +229,12 @@ describe('CreateContestPage', () => {
     await waitFor(() => expect(screen.getByText(/anyone can view/i)).toBeInTheDocument());
   });
 
-  it('changes max squares when slider value changes', () => {
+  it('changes max squares when slider value changes', async () => {
     const { container } = renderPage();
     const slider = container.querySelector('input[type="range"]');
     expect(slider).toBeInTheDocument();
     fireEvent.change(slider!, { target: { value: '25' } });
-    expect(screen.getByText('Create New Contest')).toBeInTheDocument();
+    expect(await screen.findByText('Create New Contest')).toBeInTheDocument();
   });
 
   it('shows error when submitting with a name but user is null', async () => {

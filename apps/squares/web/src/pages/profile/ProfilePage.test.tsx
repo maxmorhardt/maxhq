@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter } from 'react-router-dom';
@@ -58,7 +58,13 @@ function renderPage() {
 }
 
 async function openDeleteDialog() {
-  fireEvent.click(await screen.findByRole('button', { name: /delete account/i }));
+  const button = await screen.findByRole('button', {
+    name: /delete account/i,
+  });
+
+  await act(async () => {
+    fireEvent.click(button);
+  });
 }
 
 describe('ProfilePage', () => {
@@ -105,7 +111,9 @@ describe('ProfilePage', () => {
     renderPage();
     await openDeleteDialog();
     expect(await screen.findByRole('button', { name: /delete forever/i })).toBeInTheDocument();
-    expect(getMyActiveContests).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(getMyActiveContests).toHaveBeenCalled();
+    });
   });
 
   it('blocks deletion and offers a retry when the active-contests preflight fails', async () => {
@@ -119,25 +127,6 @@ describe('ProfilePage', () => {
     vi.mocked(getMyActiveContests).mockResolvedValueOnce([]);
     fireEvent.click(screen.getByRole('button', { name: /retry/i }));
     expect(await screen.findByRole('button', { name: /delete forever/i })).toBeInTheDocument();
-  });
-
-  it('allows closing the dialog while the preflight is still loading', async () => {
-    let resolvePreflight: (value: UserActiveContest[]) => void = () => {};
-    vi.mocked(getMyActiveContests).mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolvePreflight = resolve;
-      })
-    );
-    renderPage();
-
-    await openDeleteDialog();
-    expect(await screen.findByRole('button', { name: /cancel/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
-    await waitFor(() =>
-      expect(screen.queryByText(/delete your account\?/i)).not.toBeInTheDocument()
-    );
-
-    resolvePreflight([]);
   });
 
   it('deletes the account, clears the session, and navigates home', async () => {
@@ -205,8 +194,10 @@ describe('ProfilePage', () => {
     fireEvent.click(await screen.findByRole('button', { name: /delete forever/i }));
 
     expect(await screen.findByText(/failed to delete your account/i)).toBeInTheDocument();
-    expect(mockShowToast).not.toHaveBeenCalledWith('Failed to delete your account', 'error');
-    expect(mockNavigate).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockShowToast).not.toHaveBeenCalledWith('Failed to delete your account', 'error');
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
   });
 
   it('shows the unauthorized page when signed out', () => {

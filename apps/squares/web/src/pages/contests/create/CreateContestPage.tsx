@@ -30,6 +30,7 @@ import type { ContestVisibility, Game } from '../../../types/contest';
 import { gradients } from '../../../types/gradients';
 import { formatMatchup } from '../../../utils/game';
 import { Helmet } from 'react-helmet-async';
+import { useAxiosAuth } from '../../../hooks/useAxiosAuth';
 
 type ScoringMode = 'game' | 'manual';
 
@@ -38,6 +39,7 @@ export default function CreateContestPage() {
   const auth = useAuth();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const axiosReady = useAxiosAuth();
 
   const loading = useAppSelector(selectContestLoading);
 
@@ -57,6 +59,10 @@ export default function CreateContestPage() {
   const [gamesLoading, setGamesLoading] = useState(false);
 
   useEffect(() => {
+    if (!auth.isAuthenticated || !axiosReady) {
+      return;
+    }
+
     let active = true;
     setGamesLoading(true);
     dispatch(fetchUpcomingGames())
@@ -73,7 +79,7 @@ export default function CreateContestPage() {
     return () => {
       active = false;
     };
-  }, [dispatch]);
+  }, [auth.isAuthenticated, axiosReady, dispatch]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
