@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/maxmorhardt/squares/compare/1.1.0...1.1.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* gate create page game fetch on auth readiness ([#34](https://github.com/maxmorhardt/squares/issues/34)) ([de86541](https://github.com/maxmorhardt/squares/commit/de8654151f90c2c4792a362a0782866318d57b95))
+
 ## [1.1.0](https://github.com/maxmorhardt/squares/compare/1.0.0...1.1.0) (2026-07-14)
 
 
