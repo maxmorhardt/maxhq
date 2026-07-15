@@ -135,7 +135,7 @@ export default function CreateContestPage() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1.5, sm: 3 } }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1.5, sm: 3 }, mb: 2.5 }}>
       <Helmet>
         <title>Create Contest – Squares</title>
         <meta name="robots" content="noindex, nofollow" />
@@ -192,13 +192,13 @@ export default function CreateContestPage() {
       >
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
           {!auth.isAuthenticated && (
-            <Alert severity="warning" sx={{ mb: 3 }}>
+            <Alert severity="warning" sx={{ mb: { xs: 0, sm: 2 } }}>
               You must be logged in to create a contest.
             </Alert>
           )}
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity="error" sx={{ mb: { xs: 0, sm: 2 } }}>
               {error}
             </Alert>
           )}
@@ -260,6 +260,21 @@ export default function CreateContestPage() {
                         label="Game"
                         required
                         onChange={(e) => setSelectedGameId(e.target.value)}
+                        MenuProps={{
+                          slotProps: {
+                            paper: {
+                              sx: {
+                                maxHeight: { xs: 250, sm: 300 },
+                                '& .MuiMenuItem-root': {
+                                  fontSize: { xs: 12, sm: 13, md: 14 },
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                },
+                              },
+                            },
+                          },
+                        }}
                       >
                         {games.map((game) => (
                           <MenuItem key={game.id} value={game.id}>
@@ -421,7 +436,7 @@ function FormSection({ title, description, children }: FormSectionProps) {
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: '140px 1fr' },
+        gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: '140px minmax(0, 1fr)' },
         columnGap: { sm: 3 },
         rowGap: 0.75,
         py: 1.5,
@@ -450,7 +465,7 @@ function FormSection({ title, description, children }: FormSectionProps) {
           </Typography>
         )}
       </Box>
-      <Box>{children}</Box>
+      <Box sx={{ minWidth: 0 }}>{children}</Box>
     </Box>
   );
 }

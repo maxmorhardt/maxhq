@@ -188,6 +188,7 @@ export default function EditSquare({ open, onClose }: EditSquareProps) {
             sx={{
               mt: 2,
               color: 'rgba(255,255,255,0.8)',
+              overflowWrap: 'anywhere',
             }}
           >
             Owner: {currentSquare.ownerName || currentSquare.owner}

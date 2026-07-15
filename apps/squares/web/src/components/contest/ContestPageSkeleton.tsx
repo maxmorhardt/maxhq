@@ -1,16 +1,6 @@
 import { Box, Paper, Skeleton } from '@mui/material';
-import type { ConnectionStatus } from '../../types/ws';
-import ConnectionChip from './ConnectionChip';
 
-interface ContestPageSkeletonProps {
-  connectionStatus?: ConnectionStatus;
-  retryCount?: number;
-}
-
-export default function ContestPageSkeleton({
-  connectionStatus = 'connecting',
-  retryCount = 0,
-}: ContestPageSkeletonProps) {
+export default function ContestPageSkeleton() {
   const cardSx = {
     background: 'rgba(255,255,255,0.05)',
     border: '1px solid rgba(255,255,255,0.1)',
@@ -31,9 +21,6 @@ export default function ContestPageSkeleton({
           }}
         />
       </Box>
-
-      {/* connection status chip */}
-      <ConnectionChip status={connectionStatus} retryCount={retryCount} />
 
       {/* three-column layout: left sidebar, center grid, right sidebar */}
       <Box

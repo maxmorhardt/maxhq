@@ -1,20 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import ContestPageSkeleton from './ContestPageSkeleton';
 
 describe('ContestPageSkeleton', () => {
-  it('renders with the default "Connecting" chip', () => {
-    render(<ContestPageSkeleton />);
-    expect(screen.getByText('Connecting')).toBeInTheDocument();
+  it('renders skeleton placeholders', () => {
+    const { container } = render(<ContestPageSkeleton />);
+    expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
   });
 
-  it('renders "Live" chip when connectionStatus is connected', () => {
-    render(<ContestPageSkeleton connectionStatus="connected" />);
-    expect(screen.getByText('Live')).toBeInTheDocument();
+  it('renders a placeholder card for each section on desktop and mobile', () => {
+    const { container } = render(<ContestPageSkeleton />);
+    expect(container.querySelectorAll('.MuiPaper-root')).toHaveLength(9);
   });
 
-  it('renders "Connection Failed" chip when connection fails', () => {
-    render(<ContestPageSkeleton connectionStatus="failed" />);
-    expect(screen.getByText('Connection Failed')).toBeInTheDocument();
+  it('renders no text content', () => {
+    const { container } = render(<ContestPageSkeleton />);
+    expect(container.textContent).toBe('');
   });
 });

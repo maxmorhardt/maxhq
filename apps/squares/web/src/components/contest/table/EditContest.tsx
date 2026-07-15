@@ -198,10 +198,16 @@ export default function EditContest({ open, onClose }: EditContestProps) {
             <>
               <Divider />
 
-              {isInGame && (
+              {contest.gameId ? (
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Game is in progress. Team names can still be updated.
+                  Team names come from the linked game and can&apos;t be edited.
                 </Typography>
+              ) : (
+                isInGame && (
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    Game is in progress. Team names can still be updated.
+                  </Typography>
+                )
               )}
 
               <Stack direction="row" spacing={2}>
@@ -209,6 +215,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
                   fullWidth
                   label="Home Team"
                   value={homeTeam}
+                  disabled={!!contest.gameId}
                   onChange={(e) => setHomeTeam(stripDangerousChars(e.target.value))}
                   placeholder="Enter home team"
                   slotProps={{ htmlInput: { maxLength: 20 } }}
@@ -217,6 +224,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
                   fullWidth
                   label="Away Team"
                   value={awayTeam}
+                  disabled={!!contest.gameId}
                   onChange={(e) => setAwayTeam(stripDangerousChars(e.target.value))}
                   placeholder="Enter away team"
                   slotProps={{ htmlInput: { maxLength: 20 } }}

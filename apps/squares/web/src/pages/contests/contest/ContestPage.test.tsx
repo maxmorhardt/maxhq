@@ -40,9 +40,7 @@ vi.mock('../../../hooks/useContestWebSocket', () => ({
 }));
 
 vi.mock('../../../components/contest/ContestPageSkeleton', () => ({
-  default: ({ connectionStatus }: { connectionStatus: string }) => (
-    <div data-testid="contest-skeleton">Skeleton - {connectionStatus}</div>
-  ),
+  default: () => <div data-testid="contest-skeleton">Skeleton</div>,
 }));
 vi.mock('../../../components/contest/GenericErrorDisplay', () => ({
   default: () => <div data-testid="generic-error">Generic Error</div>,
@@ -64,9 +62,6 @@ vi.mock('../../../components/contest/sidebar/WinnersBoard', () => ({
 }));
 vi.mock('../../../components/contest/WinnerCelebrationDialog', () => ({
   default: () => null,
-}));
-vi.mock('../../../components/contest/ConnectionChip', () => ({
-  default: () => <div data-testid="connection-chip" />,
 }));
 vi.mock('../../error/UnauthorizedPage', () => ({
   default: () => <div data-testid="unauthorized-page">Unauthorized</div>,

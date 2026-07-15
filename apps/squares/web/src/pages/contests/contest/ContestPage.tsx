@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import ActivityFeed from '../../../components/contest/sidebar/ActivityFeed';
-import ConnectionChip from '../../../components/contest/ConnectionChip';
 import ContestComponent from '../../../components/contest/grid/Contest';
 import ContestDetails from '../../../components/contest/details/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
@@ -92,8 +91,6 @@ export default function ContestPage() {
     isConnected,
     isConnecting,
     connectionFailed,
-    connectionStatus,
-    retryCount,
     wsCloseCode,
     hasFatalWsError,
     forceReconnect,
@@ -189,7 +186,7 @@ export default function ContestPage() {
 
   // show skeleton while connecting or loading contest data
   if (isConnecting || !isConnected || !currentContest) {
-    return <ContestPageSkeleton connectionStatus={connectionStatus} retryCount={retryCount} />;
+    return <ContestPageSkeleton />;
   }
 
   return (
@@ -198,14 +195,12 @@ export default function ContestPage() {
         <title>{`${currentContest.name} – Squares`}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      {/* connection status indicator chip */}
-      <ConnectionChip status={connectionStatus} retryCount={retryCount} />
 
       {/* contest name heading */}
-      <Box sx={{ position: 'relative', mt: 2, mb: 1, px: 5 }}>
+      <Box sx={{ position: 'relative', mt: { xs: 1.5, sm: 2 }, mb: { xs: 0.5, sm: 1 }, px: 5 }}>
         <Typography
           sx={{
-            fontSize: { xs: '0.75rem', sm: '1.5rem', md: '1.7rem' },
+            fontSize: { xs: '1rem', sm: '1.5rem', md: '1.7rem' },
             fontWeight: 800,
             textShadow: '0 2px 4px rgba(0,0,0,0.3)',
             textAlign: 'center',

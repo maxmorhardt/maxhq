@@ -288,7 +288,10 @@ export default function ParticipantsManager({
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
-          <Typography variant="body2" sx={{ mb: 2, color: 'rgba(255,255,255,0.7)' }}>
+          <Typography
+            variant="body2"
+            sx={{ mb: 2, color: 'rgba(255,255,255,0.7)', overflowWrap: 'anywhere' }}
+          >
             {editParticipant?.userId}
           </Typography>
 
@@ -360,7 +363,10 @@ export default function ParticipantsManager({
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+          <Typography
+            variant="body2"
+            sx={{ color: 'rgba(255,255,255,0.7)', overflowWrap: 'anywhere' }}
+          >
             Are you sure you want to remove <strong>{removeConfirm?.userId}</strong>? Their claimed
             squares will be cleared.
           </Typography>
