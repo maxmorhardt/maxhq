@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/maxmorhardt/squares/compare/1.1.1...1.1.2) (2026-07-15)
+
+
+### Bug Fixes
+
+* refine contest UI and improve game fetching on auth readiness ([#36](https://github.com/maxmorhardt/squares/issues/36)) ([e70477f](https://github.com/maxmorhardt/squares/commit/e70477f23ae0eaed686e7d5335f2f11a14ee111a))
+
 ## [1.1.1](https://github.com/maxmorhardt/squares/compare/1.1.0...1.1.1) (2026-07-15)
 
 
