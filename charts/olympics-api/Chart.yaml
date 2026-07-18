@@ -3,3 +3,5 @@ name: olympics-api
 description: Chart for olympics-api
 type: application
 version: 1.0.0
+# renovate: image=maxmorhardt/olympics-api
+appVersion: 1.0.0

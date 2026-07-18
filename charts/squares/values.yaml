@@ -2,7 +2,7 @@ fullnameOverride: squares
 
 image:
   repository: maxmorhardt/squares
-  tag: latest
+  tag: ''
   pullPolicy: Always
   revisionHistoryLimit: 2
   strategy:

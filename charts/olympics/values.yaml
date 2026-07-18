@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: maxmorhardt/olympics
-  tag: latest
+  tag: ''
   pullPolicy: Always
   revisionHistoryLimit: 2
   strategy:

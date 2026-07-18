@@ -7,7 +7,7 @@ existingSecret: cloudflare-ddns-env
 image:
   repository: python
   pullPolicy: IfNotPresent
-  tag: 3.14-alpine
+  tag: ''
   command:
     - sh
     - -c

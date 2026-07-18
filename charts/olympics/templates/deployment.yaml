@@ -39,7 +39,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ include "app.fullname" . }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: {{ .Values.image.securityContext.allowPrivilegeEscalation }}

@@ -3,3 +3,5 @@ name: squares
 description: Chart for squares
 type: application
 version: 1.0.0
+# renovate: image=maxmorhardt/squares
+appVersion: 1.1.2
