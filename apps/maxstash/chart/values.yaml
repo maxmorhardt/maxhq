@@ -2,7 +2,7 @@ fullnameOverride: maxstash
 
 image:
   repository: maxmorhardt/maxstash
-  tag: latest
+  tag: ''
   pullPolicy: Always
   revisionHistoryLimit: 2
   strategy:

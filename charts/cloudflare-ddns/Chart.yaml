@@ -3,3 +3,4 @@ name: cloudflare-ddns
 description: A Helm chart for Cloudflare DDNS updater CronJob
 type: application
 version: 1.0.0
+appVersion: 3.14-alpine

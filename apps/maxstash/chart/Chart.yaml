@@ -3,3 +3,5 @@ name: maxstash
 description: Chart for maxstash
 type: application
 version: 1.0.0
+# renovate: image=maxmorhardt/maxstash
+appVersion: 1.0.1
