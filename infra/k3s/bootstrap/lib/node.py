@@ -1,4 +1,4 @@
-"""NodeBootstrap — provisions a k3s node over SSH."""
+"""NodeBootstrap - provisions a k3s node over SSH."""
 
 import base64
 import logging
@@ -105,7 +105,7 @@ class NodeBootstrap:
         
         log.info("Installing Tailscale")
         self.ssh("curl -fsSL https://tailscale.com/install.sh | sudo sh")
-        log.warning("Tailscale installed — SSH into %s and run: sudo tailscale up", self.host)
+        log.warning("Tailscale installed. SSH into %s and run: sudo tailscale up", self.host)
 
     def setup_firewall(self):
         if self._conn.run("sudo ufw status 2>/dev/null | grep -q inactive", hide="both", warn=True).ok:
@@ -206,6 +206,14 @@ class NodeBootstrap:
             self._sudo_put(local, f"{SCRIPTS_DEST}/{script}")
             self.ssh(f"sudo chmod +x {SCRIPTS_DEST}/{script}")
         log.info("Node scripts deployed")
+
+        env_file = NODE_DIR / "network-watchdog.env"
+        if env_file.exists():
+            self._sudo_put(env_file, "/etc/network-watchdog.env")
+            self.ssh("sudo chmod 600 /etc/network-watchdog.env")
+            log.info("Watchdog env deployed")
+        else:
+            log.info("No network-watchdog.env")
 
     def deploy_systemd_units(self):
         for unit in ["network-watchdog.service", "network-watchdog.timer"]:

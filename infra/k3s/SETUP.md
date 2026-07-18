@@ -85,13 +85,25 @@ sudo resize2fs /dev/nvme0n1p2
 # 5. Shut down, remove microSD, boot from NVMe
 ```
 
-## Network Watchdog Logs
+## Network Watchdog
 
-The watchdog runs on a systemd timer and logs to the journal.
+The watchdog runs on a systemd timer. On an outage it snapshots network state,
+walks recovery ladder, and sends a Discord alert with the full before/after log attached.
 
 ```bash
 journalctl -u network-watchdog.service -r
 systemctl status network-watchdog.timer
+```
+
+### Discord alerts (optional)
+
+Copy `node/network-watchdog.env.example` to `node/network-watchdog.env` (gitignored)
+and set `DISCORD_WEBHOOK_URL` to a raw Discord webhook URL. `node.py` deploys it to
+`/etc/network-watchdog.env` on the next bootstrap. To set it on a live node:
+
+```bash
+echo 'DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...' | sudo tee /etc/network-watchdog.env
+sudo chmod 600 /etc/network-watchdog.env
 ```
 
 ## Uninstall

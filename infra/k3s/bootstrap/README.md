@@ -41,7 +41,8 @@ sudo tailscale up
 
 | File | Purpose |
 |---|---|
-| `node/network-watchdog.sh` | Recovers ethernet after ISP maintenance drops |
+| `node/network-watchdog.sh` | Recovers ethernet after ISP maintenance drops; diagnostics + Discord alerts |
+| `node/network-watchdog.env.example` | Template for the watchdog's Discord webhook (`DISCORD_WEBHOOK_URL`) |
 | `node/pre-reboot.sh` | Pre-reboot cleanup (autoremove, clean, vacuum journals) |
 | `systemd/network-watchdog.service` | Watchdog oneshot service |
 | `systemd/network-watchdog.timer` | Runs watchdog every 5 minutes |

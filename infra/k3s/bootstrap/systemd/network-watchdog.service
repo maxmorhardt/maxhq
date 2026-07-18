@@ -5,7 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+EnvironmentFile=-/etc/network-watchdog.env
 ExecStart=/usr/local/bin/network-watchdog.sh
+TimeoutStartSec=600
 StandardOutput=journal
 StandardError=journal
 StartLimitIntervalSec=0
