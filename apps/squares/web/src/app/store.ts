@@ -2,17 +2,20 @@ import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../features/contests/contestSlice';
 import { statsReducer } from '../features/stats/statsSlice';
 import { toastReducer } from '../features/toast/toastSlice';
+import { userReducer } from '../features/user/userSlice';
 import { wsReducer } from '../features/ws/wsSlice';
 
 const rootReducer = {
   contest: contestReducer,
   stats: statsReducer,
   toast: toastReducer,
+  user: userReducer,
   ws: wsReducer,
 };
 
 export const store = configureStore({
   reducer: rootReducer,
+  devTools: { maxAge: 50 },
 });
 
 export type AppStore = typeof store;

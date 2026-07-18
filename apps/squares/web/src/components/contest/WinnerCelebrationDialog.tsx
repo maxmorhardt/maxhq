@@ -7,6 +7,7 @@ import {
   IconButton,
   keyframes,
   Typography,
+  useTheme,
 } from '@mui/material';
 
 interface WinnerDialogData {
@@ -23,6 +24,15 @@ interface WinnerCelebrationDialogProps {
 }
 
 export default function WinnerCelebrationDialog({ data, onClose }: WinnerCelebrationDialogProps) {
+  const theme = useTheme();
+  const primary = theme.palette.primary.main;
+  const primaryDark = theme.palette.primary.dark;
+
+  const trophyPulse = keyframes`
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px ${primary}33; }
+    50% { transform: scale(1.08); box-shadow: 0 0 32px ${primary}66; }
+  `;
+
   return (
     <Dialog
       open={!!data}
@@ -32,9 +42,7 @@ export default function WinnerCelebrationDialog({ data, onClose }: WinnerCelebra
       slotProps={{
         paper: {
           sx: {
-            background: 'linear-gradient(135deg, rgba(20,20,30,0.97) 0%, rgba(15,40,25,0.97) 100%)',
-            border: '1px solid rgba(67, 233, 123, 0.3)',
-            borderRadius: 3,
+            background: 'linear-gradient(135deg, rgba(18,18,18,0.98) 0%, rgba(15,30,50,0.98) 100%)',
             overflow: 'visible',
           },
         },
@@ -59,18 +67,14 @@ export default function WinnerCelebrationDialog({ data, onClose }: WinnerCelebra
             width: 72,
             height: 72,
             borderRadius: '50%',
-            background:
-              'linear-gradient(135deg, rgba(67,233,123,0.25) 0%, rgba(67,233,123,0.1) 100%)',
-            border: '2px solid rgba(67,233,123,0.5)',
+            background: `linear-gradient(135deg, ${primary}40 0%, ${primary}1a 100%)`,
+            border: `2px solid ${primary}80`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
             mb: 2.5,
-            animation: `${keyframes`
-              0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(67,233,123,0.2); }
-              50% { transform: scale(1.08); box-shadow: 0 0 32px rgba(67,233,123,0.4); }
-            `} 2s ease-in-out infinite`,
+            animation: `${trophyPulse} 2s ease-in-out infinite`,
           }}
         >
           <EmojiEvents sx={{ fontSize: 36, color: '#ffd700' }} />
@@ -80,7 +84,7 @@ export default function WinnerCelebrationDialog({ data, onClose }: WinnerCelebra
             fontSize: '1.6rem',
             fontWeight: 800,
             mb: 1,
-            background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+            background: `linear-gradient(135deg, ${primary}, ${primaryDark})`,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}
@@ -103,18 +107,24 @@ export default function WinnerCelebrationDialog({ data, onClose }: WinnerCelebra
           {data?.homeScore} &ndash; {data?.awayScore}
         </Typography>
         <Button
-          variant="contained"
+          variant="outlined"
           onClick={onClose}
           sx={{
-            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            color: '#0a0a0a',
+            color: primary,
             fontWeight: 700,
             px: 4,
             py: 1,
             borderRadius: 2,
             fontSize: '0.95rem',
+            textTransform: 'none',
+            letterSpacing: 0.3,
+            background: `${primary}14`,
+            border: `1px solid ${primary}59`,
+            boxShadow: 'none',
             '&:hover': {
-              background: 'linear-gradient(135deg, #38f9d7 0%, #43e97b 100%)',
+              background: `${primary}26`,
+              border: `1px solid ${primary}99`,
+              boxShadow: 'none',
             },
           }}
         >

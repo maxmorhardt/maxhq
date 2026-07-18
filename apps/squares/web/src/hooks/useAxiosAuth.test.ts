@@ -29,10 +29,10 @@ describe('useAxiosAuth', () => {
     expect(result.current).toBe(false);
   });
 
-  it('should return false when user has no access token', () => {
+  it('should return false when user has no id token', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
-      user: { access_token: '' },
+      user: { id_token: '' },
     } as ReturnType<typeof useAuth>);
 
     const { result } = renderHook(() => useAxiosAuth());
@@ -40,7 +40,7 @@ describe('useAxiosAuth', () => {
   });
 
   it('should setup interceptors and return true when authenticated', () => {
-    const mockUser = { access_token: 'valid-token' };
+    const mockUser = { id_token: 'valid-token' };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       user: mockUser,
@@ -53,7 +53,7 @@ describe('useAxiosAuth', () => {
   });
 
   it('should reconfigure when user changes', () => {
-    const mockUser1 = { access_token: 'token-1' };
+    const mockUser1 = { id_token: 'token-1' };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       user: mockUser1,
@@ -62,7 +62,7 @@ describe('useAxiosAuth', () => {
     const { rerender } = renderHook(() => useAxiosAuth());
     expect(setupAxiosInterceptors).toHaveBeenCalledWith(mockUser1);
 
-    const mockUser2 = { access_token: 'token-2' };
+    const mockUser2 = { id_token: 'token-2' };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       user: mockUser2,

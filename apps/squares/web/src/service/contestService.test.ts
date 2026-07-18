@@ -4,8 +4,9 @@ import api from '../axios/api';
 import {
   getContestsByOwner,
   createNewContest,
-  updateSquareValueById,
+  claimSquareById,
   clearSquareById,
+  clearMySquaresByContest,
   updateContestById,
   startContest,
   recordQuarterResult,
@@ -121,17 +122,14 @@ describe('contestService', () => {
     expect(api.put).toHaveBeenCalledWith('/contests', { name: 'New Contest', owner: 'user1' });
   });
 
-  it('should update a square value', async () => {
-    const mockSquare = { id: 'sq-1', value: 'Alice', row: 0, col: 0 };
+  it('should claim a square', async () => {
+    const mockSquare = { id: 'sq-1', value: 'AB', row: 0, col: 0 };
     vi.mocked(api.patch).mockResolvedValue({ data: mockSquare });
 
-    const result = await updateSquareValueById('c1', 'sq-1', { value: 'Alice', owner: 'o1' });
+    const result = await claimSquareById('c1', 'sq-1');
 
     expect(result).toEqual(mockSquare);
-    expect(api.patch).toHaveBeenCalledWith('/contests/c1/squares/sq-1', {
-      value: 'Alice',
-      owner: 'o1',
-    });
+    expect(api.patch).toHaveBeenCalledWith('/contests/c1/squares/sq-1');
   });
 
   it('should clear a square', async () => {
@@ -142,6 +140,19 @@ describe('contestService', () => {
 
     expect(result).toEqual(mockSquare);
     expect(api.post).toHaveBeenCalledWith('/contests/c1/squares/sq-1/clear');
+  });
+
+  it("should clear all of the caller's squares", async () => {
+    const mockSquares = [
+      { id: 'sq-1', value: '', row: 0, col: 0 },
+      { id: 'sq-2', value: '', row: 1, col: 1 },
+    ];
+    vi.mocked(api.post).mockResolvedValue({ data: mockSquares });
+
+    const result = await clearMySquaresByContest('c1');
+
+    expect(result).toEqual(mockSquares);
+    expect(api.post).toHaveBeenCalledWith('/contests/c1/squares/clear-mine');
   });
 
   it('should update contest details', async () => {

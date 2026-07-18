@@ -11,12 +11,11 @@ import type { ReactNode } from 'react';
 import type { HandleWSEventParams } from '../types/ws';
 import type { Contest, Participant } from '../types/contest';
 
-// mock react-oidc-context
 const mockAuth = {
   isLoading: false,
   isAuthenticated: true,
   user: {
-    access_token: 'test-token',
+    id_token: 'test-token',
     profile: { email: 'testuser' },
   },
   signinRedirect: vi.fn(),
@@ -27,7 +26,6 @@ vi.mock('react-oidc-context', () => ({
   useAuth: () => mockAuth,
 }));
 
-// mock react-use-websocket
 const mockSendJsonMessage = vi.fn();
 const mockGetWebSocket = vi.fn<() => WebSocket | null>(() => null);
 let mockLastMessage: MessageEvent | null = null;
@@ -48,7 +46,6 @@ vi.mock('react-use-websocket', () => ({
   ReadyState: { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 },
 }));
 
-// mock wsService — capture params for callback invocation
 let capturedEventParams: HandleWSEventParams | null = null;
 vi.mock('../service/wsService', () => ({
   getSocketUrl: vi.fn(() => 'ws://localhost:8080/ws/contests/c1'),
@@ -161,7 +158,7 @@ beforeEach(() => {
   capturedEventParams = null;
   mockAuth.isLoading = false;
   mockAuth.isAuthenticated = true;
-  mockAuth.user = { access_token: 'test-token', profile: { email: 'testuser' } };
+  mockAuth.user = { id_token: 'test-token', profile: { email: 'testuser' } };
 });
 
 describe('useContestWebSocket', () => {
@@ -418,6 +415,26 @@ describe('useContestWebSocket', () => {
         expect(squareEvent).toBeDefined();
         expect(squareEvent?.message).toContain('Bob claimed square (1, 2)');
       });
+    });
+
+    it('onSquareUpdate with empty value should add a cleared event, not a claim', async () => {
+      mockReadyState = 1;
+      const store = createTestStore();
+      const { result } = renderHook(() => useContestWebSocket(defaultParams), {
+        wrapper: createWrapper(store),
+      });
+
+      act(() => {
+        capturedEventParams?.callbacks?.onSquareUpdate?.('', 3, 5, '');
+      });
+
+      await waitFor(() => {
+        const clearedEvent = result.current.activityEvents.find((e) => e.type === 'square_cleared');
+        expect(clearedEvent).toBeDefined();
+        expect(clearedEvent?.message).toBe('Square (3, 5) was cleared');
+      });
+
+      expect(result.current.activityEvents.some((e) => e.message.includes('claimed'))).toBe(false);
     });
 
     it('onContestUpdate callback should add activity event for status change', async () => {

@@ -1,5 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
+  claimSquareById,
+  clearMySquaresByContest,
   clearSquareById,
   createInvite,
   createNewContest,
@@ -17,7 +19,6 @@ import {
   startContest,
   updateContestById,
   updateParticipant,
-  updateSquareValueById,
 } from '../../service/contestService';
 import type {
   Contest,
@@ -63,13 +64,13 @@ export const createContest = createAsyncThunk<
   }
 });
 
-export const updateSquare = createAsyncThunk<
+export const claimSquare = createAsyncThunk<
   Square,
-  { contestId: string; squareId: string; value: string; owner: string },
+  { contestId: string; squareId: string },
   { rejectValue: APIError }
->('contests/updateSquare', async ({ contestId, squareId, value, owner }, { rejectWithValue }) => {
+>('contests/claimSquare', async ({ contestId, squareId }, { rejectWithValue }) => {
   try {
-    const square = await updateSquareValueById(contestId, squareId, { value, owner });
+    const square = await claimSquareById(contestId, squareId);
     return square;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
@@ -84,6 +85,19 @@ export const clearSquare = createAsyncThunk<
   try {
     const square = await clearSquareById(contestId, squareId);
     return square;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
+  }
+});
+
+export const clearMySquares = createAsyncThunk<
+  Square[],
+  { contestId: string },
+  { rejectValue: APIError }
+>('contests/clearMySquares', async ({ contestId }, { rejectWithValue }) => {
+  try {
+    const squares = await clearMySquaresByContest(contestId);
+    return squares;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
   }

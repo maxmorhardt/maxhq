@@ -45,4 +45,16 @@ describe('ActivityFeed', () => {
     expect(screen.getByText('Alice claimed a square')).toBeInTheDocument();
     expect(screen.getByText('Score updated: 7-14')).toBeInTheDocument();
   });
+
+  it('renders a square_cleared event message', () => {
+    renderFeed([
+      {
+        id: '3',
+        type: 'square_cleared',
+        message: 'Square (3, 5) was cleared',
+        timestamp: '2025-01-01T12:02:00Z',
+      },
+    ]);
+    expect(screen.getByText('Square (3, 5) was cleared')).toBeInTheDocument();
+  });
 });

@@ -7,7 +7,7 @@ export const useAxiosAuth = () => {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!auth.isAuthenticated || !auth.user?.access_token) {
+    if (!auth.isAuthenticated || !auth.user?.id_token) {
       setReady(false);
       return;
     }

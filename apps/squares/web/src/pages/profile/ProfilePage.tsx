@@ -10,10 +10,11 @@ import {
   Container,
   Paper,
   Skeleton,
+  TextField,
   Typography,
   useTheme,
 } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
@@ -22,16 +23,17 @@ import { popIn } from '../../components/profile/animations';
 import DeleteAccountDialog from '../../components/profile/DeleteAccountDialog';
 import StatCard from '../../components/profile/StatCard';
 import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
-import { useAppDispatch } from '../../hooks/reduxHooks';
+import {
+  selectUserProfile,
+  selectUserProfileError,
+  selectUserProfileLoading,
+} from '../../features/user/userSelectors';
+import { loadUserProfile, updateUserInitials } from '../../features/user/userThunks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
-import {
-  deleteMyAccount,
-  getMyActiveContests,
-  getMyProfile,
-  getMyStats,
-} from '../../service/userService';
-import type { UserActiveContest, UserProfile, UserStats } from '../../types/user';
+import { deleteMyAccount, getMyActiveContests, getMyStats } from '../../service/userService';
+import type { UserActiveContest, UserStats } from '../../types/user';
 import UnauthorizedPage from '../error/UnauthorizedPage';
 
 export default function ProfilePage() {
@@ -42,10 +44,13 @@ export default function ProfilePage() {
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  // the profile is loaded app-wide (get-or-create) so it is seamless on first visit
+  const profile = useAppSelector(selectUserProfile);
+  const profileLoading = useAppSelector(selectUserProfileLoading);
+  const profileError = useAppSelector(selectUserProfileError);
+
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const [statsError, setStatsError] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeContests, setActiveContests] = useState<UserActiveContest[] | null>(null);
@@ -53,27 +58,72 @@ export default function ProfilePage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const userEmail = profile?.email ?? auth.user?.profile?.email ?? '';
+  const [editingInitials, setEditingInitials] = useState(false);
+  const [initialsValue, setInitialsValue] = useState('');
+  const [savingInitials, setSavingInitials] = useState(false);
 
-  const loadProfile = useCallback(async () => {
-    setLoadError(false);
+  const userEmail = profile?.email ?? auth.user?.profile?.email ?? '';
+  const loading = profileLoading && !profile;
+  const loadError = Boolean(profileError) && !profile;
+
+  const loadStats = useCallback(async () => {
+    setStatsError(false);
     try {
-      const [profileRes, statsRes] = await Promise.all([getMyProfile(), getMyStats()]);
-      setProfile(profileRes);
-      setStats(statsRes);
+      setStats(await getMyStats());
     } catch {
-      setLoadError(true);
-    } finally {
-      setLoading(false);
+      setStatsError(true);
     }
   }, []);
 
   // wait for the bearer interceptor before fetching, or the first request goes out unauthenticated
   useEffect(() => {
     if (auth.isAuthenticated && axiosReady) {
-      loadProfile();
+      loadStats();
+      if (!profile && !profileLoading && !profileError) {
+        dispatch(loadUserProfile());
+      }
     }
-  }, [auth.isAuthenticated, axiosReady, loadProfile]);
+  }, [
+    auth.isAuthenticated,
+    axiosReady,
+    loadStats,
+    profile,
+    profileLoading,
+    profileError,
+    dispatch,
+  ]);
+
+  const startEditingInitials = () => {
+    setInitialsValue(profile?.defaultInitials ?? '');
+    setEditingInitials(true);
+  };
+
+  const handleInitialsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    // alphanumeric only, uppercase, max 3 chars to match the backend rules
+    setInitialsValue(
+      event.target.value
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toUpperCase()
+        .slice(0, 3)
+    );
+  };
+
+  const handleSaveInitials = async () => {
+    if (!initialsValue.trim()) {
+      return;
+    }
+
+    setSavingInitials(true);
+    try {
+      await dispatch(updateUserInitials(initialsValue)).unwrap();
+      showToast('Your initials have been updated', 'success');
+      setEditingInitials(false);
+    } catch {
+      showToast('Failed to update your initials. Please try again', 'error');
+    } finally {
+      setSavingInitials(false);
+    }
+  };
 
   // show redirecting state while a sign-in redirect is in flight instead of flashing the page
   if (auth.activeNavigator === 'signinRedirect') {
@@ -167,6 +217,8 @@ export default function ProfilePage() {
     ? new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
     : '';
 
+  const statsLoading = !stats && !statsError;
+
   return (
     <Container maxWidth="md" sx={{ py: { xs: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
       <Helmet>
@@ -214,7 +266,7 @@ export default function ProfilePage() {
           {profile?.email ?? auth.user?.profile?.email}
         </Typography>
         {!loading && memberSince && (
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
             Member since {memberSince}
           </Typography>
         )}
@@ -244,21 +296,21 @@ export default function ProfilePage() {
           icon={<GridOnIcon sx={{ fontSize: 'inherit' }} />}
           value={stats?.contestsCreated}
           label="Contests Created"
-          loading={loading}
+          loading={statsLoading}
           delay={0.15}
         />
         <StatCard
           icon={<GroupsIcon sx={{ fontSize: 'inherit' }} />}
           value={stats?.contestsJoined}
           label="Contests Joined"
-          loading={loading}
+          loading={statsLoading}
           delay={0.25}
         />
         <StatCard
           icon={<GridViewIcon sx={{ fontSize: 'inherit' }} />}
           value={stats?.squaresClaimed}
           label="Squares Claimed"
-          loading={loading}
+          loading={statsLoading}
           delay={0.35}
         />
         <StatCard
@@ -266,11 +318,81 @@ export default function ProfilePage() {
           value={stats?.quarterWins}
           label="Quarter Wins"
           caption={winRate}
-          loading={loading}
+          loading={statsLoading}
           highlight
           delay={0.45}
         />
       </Box>
+
+      {/* default initials */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2.5,
+          mb: 4,
+          borderRadius: 3,
+          border: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 2,
+          animation: `${popIn} 0.5s ease-out 0.05s both`,
+        }}
+      >
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            Default Initials
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Shown on every square you claim. Changing them updates your squares in active contests.
+          </Typography>
+        </Box>
+
+        {editingInitials ? (
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexShrink: 0 }}>
+            <TextField
+              size="small"
+              label="Initials"
+              value={initialsValue}
+              onChange={handleInitialsChange}
+              disabled={savingInitials}
+              sx={{ width: 110 }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleSaveInitials}
+              disabled={savingInitials || !initialsValue.trim()}
+            >
+              Save
+            </Button>
+            <Button
+              color="inherit"
+              onClick={() => setEditingInitials(false)}
+              disabled={savingInitials}
+            >
+              Cancel
+            </Button>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexShrink: 0 }}>
+            {loading ? (
+              <Skeleton variant="text" width={48} sx={{ fontSize: '1.5rem' }} />
+            ) : (
+              <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: 1 }}>
+                {profile?.defaultInitials || '—'}
+              </Typography>
+            )}
+            <Button
+              variant="outlined"
+              onClick={startEditingInitials}
+              disabled={loading || loadError}
+            >
+              Edit
+            </Button>
+          </Box>
+        )}
+      </Paper>
 
       {/* danger zone */}
       <Paper

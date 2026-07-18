@@ -32,9 +32,9 @@ describe('setupAxiosInterceptors', () => {
     clearSpy.mockRestore();
   });
 
-  it('should not add interceptors when user has no access_token', () => {
+  it('should not add interceptors when user has no id_token', () => {
     const clearSpy = vi.spyOn(api.interceptors.request, 'clear');
-    setupAxiosInterceptors({ access_token: '' } as User);
+    setupAxiosInterceptors({ id_token: '' } as User);
     expect(clearSpy).not.toHaveBeenCalled();
     clearSpy.mockRestore();
   });
@@ -43,7 +43,7 @@ describe('setupAxiosInterceptors', () => {
     const clearSpy = vi.spyOn(api.interceptors.request, 'clear');
     const useSpy = vi.spyOn(api.interceptors.request, 'use');
 
-    setupAxiosInterceptors({ access_token: 'test-token-123' } as User);
+    setupAxiosInterceptors({ id_token: 'test-token-123' } as User);
 
     expect(clearSpy).toHaveBeenCalled();
     expect(useSpy).toHaveBeenCalled();
@@ -54,7 +54,7 @@ describe('setupAxiosInterceptors', () => {
 
   it('should reject errors in the request interceptor', async () => {
     const useSpy = vi.spyOn(api.interceptors.request, 'use');
-    setupAxiosInterceptors({ access_token: 'token' } as User);
+    setupAxiosInterceptors({ id_token: 'token' } as User);
 
     const onRejected = useSpy.mock.calls[0][1] as (error: unknown) => Promise<never>;
     await expect(onRejected(new Error('interceptor error'))).rejects.toThrow('interceptor error');
@@ -63,11 +63,11 @@ describe('setupAxiosInterceptors', () => {
   });
 
   it('should set Authorization header on requests', async () => {
-    setupAxiosInterceptors({ access_token: 'my-token' } as User);
+    setupAxiosInterceptors({ id_token: 'my-token' } as User);
 
     // get the interceptor fulfillment handler and test it
     const useSpy = vi.spyOn(api.interceptors.request, 'use');
-    setupAxiosInterceptors({ access_token: 'my-token' } as User);
+    setupAxiosInterceptors({ id_token: 'my-token' } as User);
 
     const onFulfilled = useSpy.mock.calls[0][0] as (
       config: InternalAxiosRequestConfig

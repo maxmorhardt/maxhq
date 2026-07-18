@@ -7,6 +7,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../../../features/contests/contestSlice';
 import { wsReducer } from '../../../features/ws/wsSlice';
 import { toastReducer } from '../../../features/toast/toastSlice';
+import { userReducer } from '../../../features/user/userSlice';
 import ContestPage from './ContestPage';
 
 const mockNavigate = vi.fn();
@@ -83,7 +84,7 @@ function createTestStore(currentContest?: unknown) {
   const preloadedContest = currentContest ? { ...baseState, currentContest } : undefined;
   const store = // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (configureStore as unknown as (...args: any[]) => ReturnType<typeof configureStore>)({
-      reducer: { contest: contestReducer, ws: wsReducer, toast: toastReducer },
+      reducer: { contest: contestReducer, ws: wsReducer, toast: toastReducer, user: userReducer },
       preloadedState: preloadedContest ? { contest: preloadedContest } : undefined,
     });
   return store;

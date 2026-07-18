@@ -20,7 +20,8 @@ import {
   selectSquareErrorCode,
 } from '../../../features/contests/contestSelectors';
 import { clearSquareErrorCode } from '../../../features/contests/contestSlice';
-import { updateSquare } from '../../../features/contests/contestThunks';
+import { claimSquare, clearMySquares } from '../../../features/contests/contestThunks';
+import { selectDefaultInitials } from '../../../features/user/userSelectors';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
 import { useToast } from '../../../hooks/useToast';
@@ -36,8 +37,10 @@ export default function ContestPage() {
 
   const currentContest = useAppSelector(selectCurrentContest);
   const squareErrorCode = useAppSelector(selectSquareErrorCode);
+  const defaultInitials = useAppSelector(selectDefaultInitials);
 
   const [randomSquareLoading, setRandomSquareLoading] = useState(false);
+  const [clearMySquaresLoading, setClearMySquaresLoading] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const [newWinnerSquare, setNewWinnerSquare] = useState<{ row: number; col: number } | null>(null);
   const [winnerDialog, setWinnerDialog] = useState<{
@@ -128,31 +131,37 @@ export default function ContestPage() {
     }
 
     const randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
-    const username = auth.user?.profile?.email;
-    const name = auth.user?.profile?.name || '';
-    const parts = name.trim().split(/\s+/);
-    let initials = '';
-    for (let i = 0; i < parts.length && initials.length < 3; i++) {
-      initials += parts[i].charAt(0).toUpperCase();
-    }
 
-    if (!username || !initials) {
-      showToast('Unable to determine your initials', 'error');
+    // claim uses the profile default initials, so require them to be set first
+    if (!defaultInitials) {
+      showToast('Set your initials in your profile before claiming a square', 'warning');
+      navigate('/profile');
       return;
     }
 
     setRandomSquareLoading(true);
     try {
       await dispatch(
-        updateSquare({
+        claimSquare({
           contestId: currentContest.id,
           squareId: randomSquare.id,
-          value: initials,
-          owner: username,
         })
       ).unwrap();
     } finally {
       setRandomSquareLoading(false);
+    }
+  };
+
+  const handleClearMySquares = async () => {
+    if (!currentContest || currentContest.status !== 'ACTIVE') {
+      return;
+    }
+
+    setClearMySquaresLoading(true);
+    try {
+      await dispatch(clearMySquares({ contestId: currentContest.id })).unwrap();
+    } finally {
+      setClearMySquaresLoading(false);
     }
   };
 
@@ -264,6 +273,8 @@ export default function ContestPage() {
             isOwner={isOwner}
             onRandomSquare={handleRandomSquare}
             randomSquareLoading={randomSquareLoading}
+            onClearMySquares={handleClearMySquares}
+            clearMySquaresLoading={clearMySquaresLoading}
           />
           <LiveChat
             messages={chatMessages}
@@ -292,6 +303,8 @@ export default function ContestPage() {
           isOwner={isOwner}
           onRandomSquare={handleRandomSquare}
           randomSquareLoading={randomSquareLoading}
+          onClearMySquares={handleClearMySquares}
+          clearMySquaresLoading={clearMySquaresLoading}
         />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
         <LiveChat

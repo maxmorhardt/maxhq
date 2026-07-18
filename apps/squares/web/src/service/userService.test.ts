@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import api from '../axios/api';
-import { deleteMyAccount, getMyActiveContests, getMyProfile, getMyStats } from './userService';
+import {
+  deleteMyAccount,
+  getMyActiveContests,
+  getMyProfile,
+  getMyStats,
+  updateMyProfile,
+} from './userService';
 import type { UserActiveContest, UserProfile, UserStats } from '../types/user';
 
 vi.mock('../axios/api');
@@ -14,6 +20,7 @@ describe('userService', () => {
     const mockProfile: UserProfile = {
       email: 'a@b.com',
       displayName: 'Max',
+      defaultInitials: 'MM',
       createdAt: '2026-07-11T00:00:00Z',
     };
 
@@ -23,6 +30,22 @@ describe('userService', () => {
 
     expect(result).toEqual(mockProfile);
     expect(api.get).toHaveBeenCalledWith('/users/me');
+  });
+
+  it('should update the profile initials successfully', async () => {
+    const mockProfile: UserProfile = {
+      email: 'a@b.com',
+      displayName: 'Max',
+      defaultInitials: 'MM',
+      createdAt: '2026-07-11T00:00:00Z',
+    };
+
+    vi.mocked(api.patch).mockResolvedValue({ data: mockProfile });
+
+    const result = await updateMyProfile({ defaultInitials: 'MM' });
+
+    expect(result).toEqual(mockProfile);
+    expect(api.patch).toHaveBeenCalledWith('/users/me', { defaultInitials: 'MM' });
   });
 
   it('should fetch stats successfully', async () => {

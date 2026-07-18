@@ -35,6 +35,16 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
   },
+  components: {
+    MuiDialog: {
+      styleOverrides: {
+        paper: ({ theme }) => ({
+          borderRadius: Number(theme.shape.borderRadius) * 3,
+          border: '1px solid rgba(255,255,255,0.1)',
+        }),
+      },
+    },
+  },
 });
 
 const router = createBrowserRouter([

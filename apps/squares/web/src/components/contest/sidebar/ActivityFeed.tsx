@@ -1,4 +1,5 @@
 import {
+  GridOff,
   GridView,
   PersonAdd,
   PersonRemove,
@@ -18,6 +19,7 @@ interface ActivityFeedProps {
 
 const eventIcons: Record<ActivityEventType, ReactNode> = {
   square_claimed: <GridView sx={{ fontSize: '0.85rem', color: '#4facfe' }} />,
+  square_cleared: <GridOff sx={{ fontSize: '0.85rem', color: '#f87171' }} />,
   score_update: <SportsScore sx={{ fontSize: '0.85rem', color: '#43e97b' }} />,
   quarter_winner: <span style={{ fontSize: '0.75rem' }}>🏆</span>,
   contest_started: <PlayArrow sx={{ fontSize: '0.85rem', color: '#f5af19' }} />,

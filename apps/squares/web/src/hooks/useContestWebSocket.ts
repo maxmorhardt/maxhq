@@ -79,9 +79,6 @@ export function useContestWebSocket({
     };
   }, [id, dispatch]);
 
-  // one reconnect attempt per outage. the library resets its counter on every
-  // successful open, so an initial connect gets 2 tries (connect + 1 retry) and a
-  // dropped connection gets 1 retry, then onReconnectStop surfaces the error page
   const { lastMessage, readyState, sendJsonMessage, getWebSocket } = useWebSocket(
     socketUrl,
     {
@@ -89,7 +86,7 @@ export function useContestWebSocket({
         !FATAL_CLOSE_CODES.includes(event.code) && socketUrl !== null,
       reconnectAttempts: 1,
       reconnectInterval: RECONNECT_INTERVAL_MS,
-      protocols: auth.user?.access_token ? [auth.user.access_token] : undefined,
+      protocols: auth.user?.id_token ? [auth.user.id_token] : undefined,
       onOpen: () => {
         setIsConnecting(false);
         setConnectionFailed(false);
@@ -114,7 +111,6 @@ export function useContestWebSocket({
 
   const isConnected = useMemo(() => readyState === ReadyState.OPEN, [readyState]);
 
-  // force a reconnect — used when a 409 indicates the local state is stale
   const forceReconnect = useCallback(() => {
     dispatch(setCurrentContest(null));
     lastProcessedMessageRef.current = null;
@@ -124,10 +120,8 @@ export function useContestWebSocket({
     getWebSocket()?.close();
   }, [dispatch, getWebSocket]);
 
-  // seed activity feed from the connected message payload
   const seedActivityFromConnected = useCallback((contest: Contest, participants: Participant[]) => {
     const seeded: ActivityEvent[] = [];
-
     participants
       .filter((p) => p.role !== 'owner')
       .forEach((p) => {
@@ -163,7 +157,6 @@ export function useContestWebSocket({
     setActivityEvents(seeded);
   }, []);
 
-  // add a new activity event from WS
   const addActivityEvent = useCallback((type: ActivityEventType, message: string) => {
     const event: ActivityEvent = {
       id: `ws-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -174,7 +167,6 @@ export function useContestWebSocket({
     setActivityEvents((prev) => [...prev, event]);
   }, []);
 
-  // send a chat message via websocket
   const sendChatMessage = useCallback(
     (message: string) => {
       if (!isConnected) return;
@@ -196,7 +188,13 @@ export function useContestWebSocket({
         onError: (error) => {
           showToast(error, 'error');
         },
-        onSquareUpdate: (_value, row, col, ownerName) => {
+        onSquareUpdate: (value, row, col, ownerName) => {
+          // a cleared square arrives as a square_update with an empty value and no owner
+          if (!value || value.trim() === '') {
+            addActivityEvent('square_cleared', `Square (${row}, ${col}) was cleared`);
+            return;
+          }
+
           addActivityEvent('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
         },
         onQuarterResultUpdate: (

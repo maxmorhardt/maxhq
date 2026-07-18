@@ -1,7 +1,12 @@
 export interface UserProfile {
   email: string;
   displayName: string;
+  defaultInitials: string;
   createdAt: string;
+}
+
+export interface UpdateUserProfileRequest {
+  defaultInitials: string;
 }
 
 export interface UserStats {

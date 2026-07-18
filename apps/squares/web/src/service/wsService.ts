@@ -17,7 +17,7 @@ import type { Contest, QuarterResult, Square, WSUpdate } from '../types/contest'
 import type { HandleWSEventParams } from '../types/ws';
 
 export function getSocketUrl(id: string | undefined, auth: ReturnType<typeof useAuth>) {
-  if (!id || !auth.user?.access_token) {
+  if (!id || !auth.user?.id_token) {
     return null;
   }
 

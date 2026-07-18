@@ -13,8 +13,9 @@ import {
 import {
   fetchContestsByOwner,
   createContest,
-  updateSquare,
+  claimSquare,
   clearSquare,
+  clearMySquares,
   startContestThunk,
   updateContest,
   deleteContest,
@@ -341,10 +342,10 @@ describe('contestSlice extraReducers', () => {
     });
   });
 
-  describe('updateSquare', () => {
+  describe('claimSquare', () => {
     it('pending: sets squareLoading', () => {
       const state = contestReducer(initialState, {
-        type: updateSquare.pending.type,
+        type: claimSquare.pending.type,
       });
       expect(state.squareLoading).toBe(true);
     });
@@ -354,7 +355,7 @@ describe('contestSlice extraReducers', () => {
       const updated = { ...mockSquare, value: 'new' };
       const state = contestReducer(
         { ...initialState, currentContest: contestWithSquare },
-        { type: updateSquare.fulfilled.type, payload: updated }
+        { type: claimSquare.fulfilled.type, payload: updated }
       );
       expect(state.currentContest?.squares[0].value).toBe('new');
       expect(state.squareLoading).toBe(false);
@@ -363,14 +364,14 @@ describe('contestSlice extraReducers', () => {
     it('fulfilled: pushes new square if not found', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest, squares: [] } },
-        { type: updateSquare.fulfilled.type, payload: mockSquare }
+        { type: claimSquare.fulfilled.type, payload: mockSquare }
       );
       expect(state.currentContest?.squares).toHaveLength(1);
     });
 
     it('fulfilled: does nothing if no current contest', () => {
       const state = contestReducer(initialState, {
-        type: updateSquare.fulfilled.type,
+        type: claimSquare.fulfilled.type,
         payload: mockSquare,
       });
       expect(state.currentContest).toBeUndefined();
@@ -378,7 +379,7 @@ describe('contestSlice extraReducers', () => {
 
     it('rejected: sets error', () => {
       const state = contestReducer(initialState, {
-        type: updateSquare.rejected.type,
+        type: claimSquare.rejected.type,
         payload: { message: 'square error' },
       });
       expect(state.error).toBe('square error');
@@ -404,6 +405,37 @@ describe('contestSlice extraReducers', () => {
         { type: clearSquare.fulfilled.type, payload: cleared }
       );
       expect(state.currentContest?.squares[0].value).toBe('test');
+    });
+  });
+
+  describe('clearMySquares', () => {
+    it('fulfilled: clears each returned square by id', () => {
+      const other: Square = {
+        ...mockSquare,
+        id: 's2',
+        row: 1,
+        col: 1,
+        value: 'CD',
+        owner: 'other',
+      };
+      const clearedMine = { ...mockSquare, value: '', owner: '', ownerName: '' };
+      const state = contestReducer(
+        { ...initialState, currentContest: { ...mockContest, squares: [mockSquare, other] } },
+        { type: clearMySquares.fulfilled.type, payload: [clearedMine] }
+      );
+      expect(state.currentContest?.squares[0].value).toBe('');
+      // squares owned by others are untouched
+      expect(state.currentContest?.squares[1].value).toBe('CD');
+      expect(state.squareLoading).toBe(false);
+    });
+
+    it('rejected: sets error message', () => {
+      const state = contestReducer(
+        { ...initialState, squareLoading: true },
+        { type: clearMySquares.rejected.type, payload: { message: 'boom' } }
+      );
+      expect(state.squareLoading).toBe(false);
+      expect(state.error).toBe('boom');
     });
   });
 

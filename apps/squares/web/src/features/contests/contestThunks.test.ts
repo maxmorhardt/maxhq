@@ -4,8 +4,9 @@ import { contestReducer } from './contestSlice';
 import {
   fetchContestsByOwner,
   createContest,
-  updateSquare,
+  claimSquare,
   clearSquare,
+  clearMySquares,
   startContestThunk,
   updateContest,
   deleteContest,
@@ -25,8 +26,9 @@ import type { Contest, Square } from '../../types/contest';
 vi.mock('../../service/contestService', () => ({
   getContestsByOwner: vi.fn(),
   createNewContest: vi.fn(),
-  updateSquareValueById: vi.fn(),
+  claimSquareById: vi.fn(),
   clearSquareById: vi.fn(),
+  clearMySquaresByContest: vi.fn(),
   startContest: vi.fn(),
   updateContestById: vi.fn(),
   deleteContestById: vi.fn(),
@@ -45,8 +47,9 @@ vi.mock('../../service/contestService', () => ({
 import {
   getContestsByOwner,
   createNewContest,
-  updateSquareValueById,
+  claimSquareById,
   clearSquareById,
+  clearMySquaresByContest,
   startContest,
   updateContestById,
   deleteContestById,
@@ -172,27 +175,23 @@ describe('contestThunks', () => {
     });
   });
 
-  describe('updateSquare', () => {
-    it('fulfilled: updates square', async () => {
-      vi.mocked(updateSquareValueById).mockResolvedValue(mockSquare);
+  describe('claimSquare', () => {
+    it('fulfilled: claims square', async () => {
+      vi.mocked(claimSquareById).mockResolvedValue(mockSquare);
       const store = createTestStore();
-      await store.dispatch(
-        updateSquare({ contestId: 'c1', squareId: 's1', value: 'v', owner: 'u1' })
-      );
+      await store.dispatch(claimSquare({ contestId: 'c1', squareId: 's1' }));
       expect(store.getState().contest.squareLoading).toBe(false);
     });
 
     it('rejected: sets error', async () => {
-      vi.mocked(updateSquareValueById).mockRejectedValue({
+      vi.mocked(claimSquareById).mockRejectedValue({
         code: 400,
         message: 'square fail',
         timestamp: '',
         requestId: '',
       });
       const store = createTestStore();
-      await store.dispatch(
-        updateSquare({ contestId: 'c1', squareId: 's1', value: 'v', owner: 'u1' })
-      );
+      await store.dispatch(claimSquare({ contestId: 'c1', squareId: 's1' }));
       expect(store.getState().contest.error).toBe('square fail');
     });
   });
@@ -215,6 +214,29 @@ describe('contestThunks', () => {
       const store = createTestStore();
       await store.dispatch(clearSquare({ contestId: 'c1', squareId: 's1' }));
       expect(store.getState().contest.error).toBe('clear fail');
+    });
+  });
+
+  describe('clearMySquares', () => {
+    it('fulfilled: clears the caller squares', async () => {
+      vi.mocked(clearMySquaresByContest).mockResolvedValue([
+        { ...mockSquare, value: '', owner: '' },
+      ]);
+      const store = createTestStore();
+      await store.dispatch(clearMySquares({ contestId: 'c1' }));
+      expect(store.getState().contest.squareLoading).toBe(false);
+    });
+
+    it('rejected: sets error', async () => {
+      vi.mocked(clearMySquaresByContest).mockRejectedValue({
+        code: 500,
+        message: 'clear all fail',
+        timestamp: '',
+        requestId: '',
+      });
+      const store = createTestStore();
+      await store.dispatch(clearMySquares({ contestId: 'c1' }));
+      expect(store.getState().contest.error).toBe('clear all fail');
     });
   });
 

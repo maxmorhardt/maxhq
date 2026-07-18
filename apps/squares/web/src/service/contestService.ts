@@ -14,7 +14,6 @@ import type {
   Square,
   UpdateContestRequest,
   UpdateParticipantRequest,
-  UpdateSquareRequest,
 } from '../types/contest';
 import { handleError } from './handleError';
 
@@ -45,13 +44,9 @@ export async function createNewContest(request: CreateContestRequest) {
   }
 }
 
-export async function updateSquareValueById(
-  contestId: string,
-  squareId: string,
-  request: UpdateSquareRequest
-): Promise<Square> {
+export async function claimSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
-    const res = await api.patch<Square>(`/contests/${contestId}/squares/${squareId}`, request);
+    const res = await api.patch<Square>(`/contests/${contestId}/squares/${squareId}`);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -61,6 +56,15 @@ export async function updateSquareValueById(
 export async function clearSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
     const res = await api.post<Square>(`/contests/${contestId}/squares/${squareId}/clear`);
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function clearMySquaresByContest(contestId: string): Promise<Square[]> {
+  try {
+    const res = await api.post<Square[]>(`/contests/${contestId}/squares/clear-mine`);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

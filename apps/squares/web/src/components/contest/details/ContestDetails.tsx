@@ -1,4 +1,4 @@
-import { Casino, Info } from '@mui/icons-material';
+import { Casino, GridOff, Info } from '@mui/icons-material';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
 import {
@@ -18,12 +18,16 @@ interface ContestDetailsProps {
   isOwner?: boolean;
   onRandomSquare?: () => void;
   randomSquareLoading?: boolean;
+  onClearMySquares?: () => void;
+  clearMySquaresLoading?: boolean;
 }
 
 export default function ContestDetails({
   isOwner = false,
   onRandomSquare,
   randomSquareLoading = false,
+  onClearMySquares,
+  clearMySquaresLoading = false,
 }: ContestDetailsProps) {
   const auth = useAuth();
   const currentContest = useAppSelector(selectCurrentContest);
@@ -75,6 +79,9 @@ export default function ContestDetails({
     isParticipant &&
     squaresClaimed < (currentParticipant?.maxSquares ?? 0);
 
+  const showClearMineButton =
+    isActive && auth.isAuthenticated && isParticipant && squaresClaimed > 0;
+
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
@@ -118,18 +125,36 @@ export default function ContestDetails({
           )}
         </Box>
 
-        {/* random square button available to any participant during fill phase */}
-        {showRandomButton && (
-          <Button
-            variant="outlined"
-            startIcon={<Casino />}
-            onClick={onRandomSquare}
-            disabled={randomSquareLoading}
-            size="small"
-            fullWidth
-          >
-            {randomSquareLoading ? 'Selecting...' : 'Randomly Select Square'}
-          </Button>
+        {/* square actions available to any participant during the fill phase */}
+        {(showRandomButton || showClearMineButton) && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {showRandomButton && (
+              <Button
+                variant="outlined"
+                startIcon={<Casino />}
+                onClick={onRandomSquare}
+                disabled={randomSquareLoading}
+                size="small"
+                fullWidth
+              >
+                {randomSquareLoading ? 'Selecting...' : 'Randomly Select Square'}
+              </Button>
+            )}
+
+            {showClearMineButton && (
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<GridOff />}
+                onClick={onClearMySquares}
+                disabled={clearMySquaresLoading}
+                size="small"
+                fullWidth
+              >
+                {clearMySquaresLoading ? 'Clearing...' : 'Clear My Squares'}
+              </Button>
+            )}
+          </Box>
         )}
 
         {/* owner controls section */}

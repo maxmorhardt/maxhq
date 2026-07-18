@@ -11,6 +11,22 @@ const mockShowToast = vi.fn();
 const mockRemoveUser = vi.fn().mockResolvedValue(undefined);
 const mockDispatch = vi.fn().mockReturnValue({ unwrap: () => Promise.resolve() });
 
+const mockProfile = {
+  email: 'a@b.com',
+  displayName: 'Max',
+  defaultInitials: 'MM',
+  createdAt: '2026-07-11T00:00:00Z',
+};
+const mockStats = { contestsCreated: 3, contestsJoined: 7, squaresClaimed: 42, quarterWins: 5 };
+
+// the profile lives in the redux user slice; tests drive it through this fake state
+type FakeUserState = {
+  profile: typeof mockProfile | null;
+  loading: boolean;
+  error: string | null;
+};
+let userState: FakeUserState;
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: () => mockNavigate };
@@ -19,13 +35,20 @@ vi.mock('react-router-dom', async () => {
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 vi.mock('../../hooks/useAxiosAuth', () => ({ useAxiosAuth: () => true }));
 vi.mock('../../hooks/useToast', () => ({ useToast: () => ({ showToast: mockShowToast }) }));
-vi.mock('../../hooks/reduxHooks', () => ({ useAppDispatch: () => mockDispatch }));
+vi.mock('../../hooks/reduxHooks', () => ({
+  useAppDispatch: () => mockDispatch,
+  useAppSelector: (selector: (state: { user: FakeUserState }) => unknown) =>
+    selector({ user: userState }),
+}));
 vi.mock('../../features/contests/contestThunks', () => ({
   deleteContest: vi.fn((id: string) => ({ type: 'deleteContest', id })),
   removeContestParticipant: vi.fn((arg) => ({ type: 'removeParticipant', arg })),
 }));
+vi.mock('../../features/user/userThunks', () => ({
+  loadUserProfile: vi.fn(() => ({ type: 'loadUserProfile' })),
+  updateUserInitials: vi.fn((initials: string) => ({ type: 'updateUserInitials', initials })),
+}));
 vi.mock('../../service/userService', () => ({
-  getMyProfile: vi.fn(),
   getMyStats: vi.fn(),
   getMyActiveContests: vi.fn(),
   deleteMyAccount: vi.fn(),
@@ -33,17 +56,10 @@ vi.mock('../../service/userService', () => ({
 
 import { useAuth } from 'react-oidc-context';
 import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
-import {
-  deleteMyAccount,
-  getMyActiveContests,
-  getMyProfile,
-  getMyStats,
-} from '../../service/userService';
+import { updateUserInitials } from '../../features/user/userThunks';
+import { deleteMyAccount, getMyActiveContests, getMyStats } from '../../service/userService';
 
 const theme = createTheme();
-
-const mockProfile = { email: 'a@b.com', displayName: 'Max', createdAt: '2026-07-11T00:00:00Z' };
-const mockStats = { contestsCreated: 3, contestsJoined: 7, squaresClaimed: 42, quarterWins: 5 };
 
 function renderPage() {
   return render(
@@ -71,13 +87,13 @@ describe('ProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDispatch.mockReturnValue({ unwrap: () => Promise.resolve() });
+    userState = { profile: mockProfile, loading: false, error: null };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       removeUser: mockRemoveUser,
       user: { profile: { email: 'a@b.com' } },
     } as unknown as ReturnType<typeof useAuth>);
-    vi.mocked(getMyProfile).mockResolvedValue(mockProfile);
     vi.mocked(getMyStats).mockResolvedValue(mockStats);
     vi.mocked(getMyActiveContests).mockResolvedValue([]);
   });
@@ -99,12 +115,29 @@ describe('ProfilePage', () => {
   });
 
   it('shows a top-of-page error and disables account deletion when loading fails', async () => {
-    vi.mocked(getMyProfile).mockRejectedValueOnce(new Error('down'));
+    userState = { profile: null, loading: false, error: 'down' };
     renderPage();
     expect(await screen.findByText(/couldn't load your profile/i)).toBeInTheDocument();
     expect(mockShowToast).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: /delete account/i })).toBeDisabled();
     expect(screen.queryByRole('button', { name: /retry/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the default initials and saves an edit', async () => {
+    renderPage();
+    expect(await screen.findByText('MM')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }));
+    const input = screen.getByRole('textbox', { name: /initials/i });
+    fireEvent.change(input, { target: { value: 'zz' } });
+    // input is normalized to uppercase alphanumeric
+    expect(input).toHaveValue('ZZ');
+
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    await waitFor(() => expect(updateUserInitials).toHaveBeenCalledWith('ZZ'));
+    await waitFor(() =>
+      expect(mockShowToast).toHaveBeenCalledWith('Your initials have been updated', 'success')
+    );
   });
 
   it('shows the delete button after the preflight finds no active contests', async () => {
@@ -201,6 +234,7 @@ describe('ProfilePage', () => {
   });
 
   it('shows the unauthorized page when signed out', () => {
+    userState = { profile: null, loading: false, error: null };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -209,6 +243,6 @@ describe('ProfilePage', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
-    expect(getMyProfile).not.toHaveBeenCalled();
+    expect(getMyStats).not.toHaveBeenCalled();
   });
 });

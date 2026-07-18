@@ -80,32 +80,67 @@ export default function LearnMorePage() {
     {
       question: 'What is Squares?',
       answer:
-        "Squares (also called Super Bowl squares) is a popular betting pool game. Players buy squares in a 10x10 grid, and winners are determined based on the last digit of each team's score at the end of each quarter.",
+        "Squares (also called Super Bowl squares) is a popular pool game. Players claim squares in a 10x10 grid, and winners are decided by the last digit of each team's score at the end of every quarter.",
     },
     {
       question: 'How do I create a contest?',
       answer:
-        'Simply click "Create Contest" on the home page, give your contest a name, optionally set team names, and share the link with your friends. They can then select their squares.',
+        'Click "Create Contest", give it a short name, and choose a matchup by linking a live NFL game or entering the teams yourself. Then set the contest to private or public, pick how many squares you want to claim, and invite others to fill out the rest of the grid.',
     },
     {
-      question: 'Do players need accounts?',
+      question: "What's the difference between a live game and manual scoring?",
       answer:
-        'Yes, all participants need accounts to join and select squares. Both contest creators and participants must sign up to participate.',
+        "When you link a live NFL game, the teams and scores update automatically as it plays out and quarter winners are calculated for you. With manual scoring you enter the team names and record the score yourself at the end of each quarter, which is handy for college, local, or other games that aren't in our schedule.",
+    },
+    {
+      question: 'How do I invite people to my contest?',
+      answer:
+        'Open your contest and select "Invite Links". Pick a role (participant or viewer) and, for participants, how many squares each person can claim. You can optionally limit how many times a link is used and set it to expire after a number of minutes. Generate the link, share it, and anyone who opens it can sign in and join.',
+    },
+    {
+      question: 'How do I manage participants and their roles?',
+      answer:
+        'Participants can claim squares up to their per-person limit, while viewers follow along in real time without claiming any. As the owner, open the "Participants" panel while the contest is active to change someone\'s role, adjust how many squares they can claim, or remove them. Removing a participant clears their claimed squares so others can take them.',
+    },
+    {
+      question: "What's the difference between a private and public contest?",
+      answer:
+        "A private contest is invite-only and hidden from anyone who isn't part of it. A public contest can be viewed by anyone with the link, but only people you've invited can actually claim squares.",
+    },
+    {
+      question: 'How do I change my square initials?',
+      answer:
+        'Go to your Profile and edit your Default Initials, up to three letters or numbers. They appear on every square you claim, and updating them refreshes your squares in any active contests automatically.',
+    },
+    {
+      question: 'Do I need an account, and how do I sign in?',
+      answer:
+        "Yes, everyone needs an account to join a contest and claim squares. You sign in with your Google or GitHub account, so there's no separate password to remember. Your email is your identity across the platform, so signing in with the same email always brings you back to the same account and history.",
     },
     {
       question: 'How are winners determined?',
       answer:
-        "Winners are typically determined by the last digit of each team's score. For example, if the score is Home: 14, Away: 7, the winning square would be at coordinates (4,7). You can customize the winning criteria for your contest.",
+        "Winners are decided by the last digit of each team's score at the end of each quarter. For example, if the score is Home 14, Away 7, the winning square sits where row 4 meets column 7. Live games calculate this automatically, and manual contests use the scores you enter.",
+    },
+    {
+      question: 'How do I leave a contest?',
+      answer:
+        'Open the contest\'s "Participants" panel and use the leave option next to your name, or use the leave action in the "Joined Contests" table on your Contests page. Owners can\'t leave their own contest and would delete it instead. Leaving frees up any squares you had claimed.',
+    },
+    {
+      question: 'How do I delete my account?',
+      answer:
+        "Go to your Profile and open the Danger Zone at the bottom. You'll need to delete or leave any active contests first. Deleting anonymizes your past contest history and removes your personal data, and it cannot be undone.",
+    },
+    {
+      question: 'How do I contact support?',
+      answer:
+        'Use the Contact page to send us a message, or email support@maxstash.io directly. We typically respond within a week.',
     },
     {
       question: 'Is it free to use?',
       answer:
-        'Yes! Creating and managing contests is completely free. There are no hidden fees or premium tiers - enjoy unlimited contests at no cost.',
-    },
-    {
-      question: 'Can I use this for other sports?',
-      answer:
-        'While designed for football, the platform can be adapted for any sport with scoring. The grid system works well for basketball, hockey, or any game with numerical scores.',
+        'Yes. Creating and managing contests is completely free, with no hidden fees or premium tiers, so you can run unlimited contests at no cost.',
     },
   ];
 
@@ -277,7 +312,8 @@ export default function LearnMorePage() {
                 <Box
                   key={index}
                   sx={{ mb: 2 }}
-                  className={`reveal delay-${Math.min(index + 1, 7)}`}
+                  className="reveal"
+                  style={{ transitionDelay: `${index * 0.08}s` }}
                 >
                   <LearnFAQs question={faq.question} answer={faq.answer} />
                 </Box>

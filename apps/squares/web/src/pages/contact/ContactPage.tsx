@@ -23,7 +23,7 @@ const contactMethods = [
   {
     icon: <LocationOn sx={{ color: iconColor, mr: 2 }} />,
     title: 'Response Time',
-    details: 'We typically respond within 24 hours',
+    details: 'We typically respond within a week',
   },
 ];
 

@@ -7,15 +7,29 @@ import ScrollToTop from './components/common/ScrollToTop';
 import Footer from './components/footer/Footer';
 import Header from './components/header/Header';
 import { ToastProvider } from './components/toast/ToastProvider';
+import { loadUserProfile } from './features/user/userThunks';
+import { useAppDispatch } from './hooks/reduxHooks';
 import { useAxiosAuth } from './hooks/useAxiosAuth';
 import { useToast } from './hooks/useToast';
 import { gradients } from './types/gradients';
 
 export default function App() {
-  useAxiosAuth();
+  const axiosReady = useAxiosAuth();
 
   const auth = useAuth();
+  const dispatch = useAppDispatch();
   const { showToast } = useToast();
+
+  // get profile once after auth
+  const hasLoadedProfile = useRef(false);
+  useEffect(() => {
+    if (!auth.isAuthenticated || !axiosReady || hasLoadedProfile.current) {
+      return;
+    }
+
+    hasLoadedProfile.current = true;
+    dispatch(loadUserProfile());
+  }, [auth.isAuthenticated, axiosReady, dispatch]);
 
   const hasAttemptedSilentSignin = useRef(false);
   const lastActiveNavigator = useRef<string | undefined>(undefined);
@@ -63,10 +77,12 @@ export default function App() {
       <ToastProvider />
       <GlobalStyles
         styles={{
+          // remove default page margin and padding
           body: {
             margin: 0,
             padding: 0,
           },
+          // prevent mui default of all caps in buttons
           button: {
             textTransform: 'none !important',
           },
@@ -75,6 +91,7 @@ export default function App() {
 
       <Box
         sx={{
+          // set full app container styles
           background: gradients.background,
           minHeight: '100dvh',
           display: 'flex',

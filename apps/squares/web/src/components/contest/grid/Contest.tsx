@@ -1,12 +1,14 @@
 import { Box, Paper, Typography } from '@mui/material';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import {
   selectCurrentContest,
   selectParticipants,
 } from '../../../features/contests/contestSelectors';
 import { setCurrentSquare } from '../../../features/contests/contestSlice';
-import { updateSquare } from '../../../features/contests/contestThunks';
+import { claimSquare } from '../../../features/contests/contestThunks';
+import { selectDefaultInitials } from '../../../features/user/userSelectors';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import EditSquare from './EditSquare';
@@ -19,8 +21,10 @@ interface ContestProps {
 export default function Contest({ newWinnerSquare }: ContestProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const currentContest = useAppSelector(selectCurrentContest);
   const participants = useAppSelector(selectParticipants);
+  const defaultInitials = useAppSelector(selectDefaultInitials);
   const { showToast } = useToast();
   const [openEditSquare, setOpenEditSquare] = useState(false);
 
@@ -66,32 +70,10 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
     );
   };
 
-  // helper to extract initials from user name
-  const getInitials = (name: string): string => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      return '';
-    }
-
-    const parts = trimmed.split(/\s+/);
-    let initials = '';
-    for (let i = 0; i < parts.length && initials.length < 3; i++) {
-      initials += parts[i].charAt(0).toUpperCase();
-    }
-    return initials;
-  };
-
   const handleSquareClick = async (row: number, col: number) => {
-    // redirect to login if not authenticated
-    if (!auth.isAuthenticated) {
-      sessionStorage.setItem('auth_redirect_path', window.location.href);
-      auth.signinRedirect();
-      return;
-    }
-
     // block non-participants on public contests
     if (isReadOnly) {
-      showToast('You need an invite link to participate', 'info');
+      showToast('You need to be a participant to claim squares', 'info');
       return;
     }
 
@@ -117,22 +99,17 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
         return;
       }
 
-      // fill empty square directly with user initials
-      const username = auth.user?.profile?.email;
-      const name = auth.user?.profile?.name || '';
-      const initials = getInitials(name);
-
-      if (!username || !initials) {
-        showToast('Unable to determine your initials', 'error');
+      // require default initials to be set before claiming square
+      if (!defaultInitials) {
+        showToast('Set your initials in your profile before claiming a square', 'warning');
+        navigate('/profile');
         return;
       }
 
       dispatch(
-        updateSquare({
+        claimSquare({
           contestId: currentContest.id,
           squareId: square.id,
-          value: initials,
-          owner: username,
         })
       );
     } else {

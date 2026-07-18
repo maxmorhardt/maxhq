@@ -61,7 +61,7 @@ The app follows a strict **page/component → hook → service → backend** flo
 ## Authentication
 
 - OIDC is configured in [src/main.tsx](src/main.tsx) (`oidcConfig` → `AuthProvider`) and uses `oidc-client-ts` with `WebStorageStateStore` on `localStorage`.
-- [src/hooks/useAxiosAuth.ts](src/hooks/useAxiosAuth.ts) wires the current OIDC access token into the shared `axios` instance and refreshes it on token change. It is mounted exactly once in `App.tsx`.
+- [src/hooks/useAxiosAuth.ts](src/hooks/useAxiosAuth.ts) wires the current OIDC id token into the shared `axios` instance and refreshes it on token change. It is mounted exactly once in `App.tsx`.
 - `App.tsx` runs a silent sign-in on load when a refresh token is present, and surfaces interactive sign-in failures via the toast system.
 - Components read auth state with `useAuth()` from `react-oidc-context`. Helpers in [src/utils/oidcHelpers.ts](src/utils/oidcHelpers.ts) extract claims (display name, etc.) from the OIDC user.
 

@@ -11,6 +11,7 @@ import type {
   Square,
 } from '../../types/contest';
 import {
+  clearMySquares,
   clearSquare,
   createContest,
   createContestInvite,
@@ -22,10 +23,10 @@ import {
   fetchParticipants,
   removeContestParticipant,
   startContestThunk,
+  claimSquare,
   updateContest,
   updateContestParticipant,
   updateQuarterResult,
-  updateSquare,
 } from './contestThunks';
 
 interface ContestState {
@@ -270,14 +271,14 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error creating contest';
       });
 
-    // update square value and owner
+    // claim a square using the profile default initials
     builder
-      .addCase(updateSquare.pending, (state) => {
+      .addCase(claimSquare.pending, (state) => {
         state.squareLoading = true;
         state.squareErrorCode = null;
         state.error = null;
       })
-      .addCase(updateSquare.fulfilled, (state, action: PayloadAction<Square>) => {
+      .addCase(claimSquare.fulfilled, (state, action: PayloadAction<Square>) => {
         state.squareLoading = false;
         state.squareErrorCode = null;
         const updatedSquare = action.payload;
@@ -296,10 +297,10 @@ const contestSlice = createSlice({
           state.currentContest.squares.push(updatedSquare);
         }
       })
-      .addCase(updateSquare.rejected, (state, action) => {
+      .addCase(claimSquare.rejected, (state, action) => {
         state.squareLoading = false;
         state.squareErrorCode = action.payload?.code ?? null;
-        state.error = action.payload?.message ?? 'Error updating square';
+        state.error = action.payload?.message ?? 'Error claiming square';
       });
 
     // clear square value and owner
@@ -329,6 +330,33 @@ const contestSlice = createSlice({
       .addCase(clearSquare.rejected, (state, action) => {
         state.squareLoading = false;
         state.error = action.payload?.message ?? 'Error clearing square';
+      });
+
+    // clear all of the current user's squares
+    builder
+      .addCase(clearMySquares.pending, (state) => {
+        state.squareLoading = true;
+        state.squareErrorCode = null;
+        state.error = null;
+      })
+      .addCase(clearMySquares.fulfilled, (state, action: PayloadAction<Square[]>) => {
+        state.squareLoading = false;
+        state.squareErrorCode = null;
+
+        if (!state.currentContest) {
+          return;
+        }
+
+        for (const clearedSquare of action.payload) {
+          const index = state.currentContest.squares.findIndex((s) => s.id === clearedSquare.id);
+          if (index !== -1) {
+            state.currentContest.squares[index] = clearedSquare;
+          }
+        }
+      })
+      .addCase(clearMySquares.rejected, (state, action) => {
+        state.squareLoading = false;
+        state.error = action.payload?.message ?? 'Error clearing squares';
       });
 
     // start contest

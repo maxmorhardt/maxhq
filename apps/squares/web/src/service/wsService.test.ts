@@ -26,7 +26,7 @@ vi.mock('../features/ws/wsSlice', () => ({
 
 describe('getSocketUrl', () => {
   const makeAuth = (token?: string) =>
-    ({ user: token ? { access_token: token } : null }) as ReturnType<
+    ({ user: token ? { id_token: token } : null }) as ReturnType<
       typeof import('react-oidc-context').useAuth
     >;
 
@@ -34,7 +34,7 @@ describe('getSocketUrl', () => {
     expect(getSocketUrl(undefined, makeAuth('tok'))).toBeNull();
   });
 
-  it('should return null if no access token', () => {
+  it('should return null if no id token', () => {
     expect(getSocketUrl('c1', makeAuth())).toBeNull();
   });
 

@@ -140,13 +140,9 @@ export interface Game {
   updatedAt: string;
 }
 
-export interface UpdateSquareRequest {
-  value: string;
-  owner: string;
-}
-
 export type ActivityEventType =
   | 'square_claimed'
+  | 'square_cleared'
   | 'score_update'
   | 'quarter_winner'
   | 'contest_started'

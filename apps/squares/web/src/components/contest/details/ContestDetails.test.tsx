@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -58,7 +59,7 @@ function makeStore(override: Partial<ReturnType<typeof contestReducer>> = {}) {
 
 function renderDetails(
   storeOverride: Record<string, unknown> = {},
-  props: { isOwner?: boolean } = {}
+  props: Partial<ComponentProps<typeof ContestDetails>> = {}
 ) {
   return render(
     <ThemeProvider theme={theme}>
@@ -153,6 +154,57 @@ describe('ContestDetails', () => {
     };
     renderDetails({ currentContest: baseContest, participants: [participant] });
     expect(screen.getByRole('button', { name: /randomly select square/i })).toBeInTheDocument();
+  });
+
+  const bobParticipant = {
+    id: 'p-1',
+    contestId: 'c-1',
+    userId: 'bob',
+    inviteId: '',
+    role: 'participant' as const,
+    maxSquares: 10,
+    joinedAt: '',
+    createdAt: '',
+    updatedAt: '',
+  };
+
+  function authAsBob() {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { profile: { email: 'bob' } },
+    } as unknown as ReturnType<typeof useAuth>);
+  }
+
+  // a contest where bob owns one square
+  const contestWithBobSquare = {
+    ...baseContest,
+    squares: baseContest.squares.map((s, i) =>
+      i === 0 ? { ...s, value: 'BOB', owner: 'bob', ownerName: 'Bob' } : s
+    ),
+  };
+
+  it('shows Clear My Squares button when the participant owns at least one square', () => {
+    authAsBob();
+    renderDetails({ currentContest: contestWithBobSquare, participants: [bobParticipant] });
+    expect(screen.getByRole('button', { name: /clear my squares/i })).toBeInTheDocument();
+  });
+
+  it('hides Clear My Squares button when the participant owns no squares', () => {
+    authAsBob();
+    renderDetails({ currentContest: baseContest, participants: [bobParticipant] });
+    expect(screen.queryByRole('button', { name: /clear my squares/i })).not.toBeInTheDocument();
+  });
+
+  it('calls onClearMySquares when the button is clicked', () => {
+    authAsBob();
+    const onClearMySquares = vi.fn();
+    renderDetails(
+      { currentContest: contestWithBobSquare, participants: [bobParticipant] },
+      { onClearMySquares }
+    );
+    fireEvent.click(screen.getByRole('button', { name: /clear my squares/i }));
+    expect(onClearMySquares).toHaveBeenCalledTimes(1);
   });
 
   it('shows "Deleted" status text and no actions for DELETED owner contest', () => {

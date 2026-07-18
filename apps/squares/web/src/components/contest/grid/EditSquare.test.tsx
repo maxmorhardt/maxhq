@@ -2,8 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../../../features/contests/contestSlice';
+import { userReducer } from '../../../features/user/userSlice';
+import type { UserProfile } from '../../../types/user';
 import EditSquare from './EditSquare';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
@@ -13,7 +16,7 @@ vi.mock('../../../service/contestService', async () => {
   );
   return {
     ...actual,
-    updateSquareValueById: vi.fn().mockResolvedValue({}),
+    claimSquareById: vi.fn().mockResolvedValue({}),
     clearSquareById: vi.fn().mockResolvedValue({}),
   };
 });
@@ -51,26 +54,39 @@ const currentSquare = {
   updatedBy: 'alice',
 };
 
-function makeStore(squareOverride?: unknown) {
+const baseProfile: UserProfile = {
+  email: 'alice',
+  displayName: 'Alice Smith',
+  defaultInitials: 'AS',
+  createdAt: '',
+};
+
+function makeStore(squareOverride?: unknown, profile: UserProfile | null = baseProfile) {
   return configureStore({
-    reducer: { contest: contestReducer },
+    reducer: { contest: contestReducer, user: userReducer },
     preloadedState: {
       contest: {
         ...contestReducer(undefined, { type: '' }),
         currentContest: baseContest,
         currentSquare: squareOverride !== undefined ? squareOverride : currentSquare,
       } as ReturnType<typeof contestReducer>,
+      user: {
+        ...userReducer(undefined, { type: '' }),
+        profile,
+      } as ReturnType<typeof userReducer>,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
   });
 }
 
-function renderDialog(squareOverride?: unknown) {
+function renderDialog(squareOverride?: unknown, profile: UserProfile | null = baseProfile) {
   return render(
     <ThemeProvider theme={theme}>
-      <Provider store={makeStore(squareOverride)}>
-        <EditSquare open={true} onClose={vi.fn()} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={makeStore(squareOverride, profile)}>
+          <EditSquare open={true} onClose={vi.fn()} />
+        </Provider>
+      </MemoryRouter>
     </ThemeProvider>
   );
 }
@@ -94,74 +110,40 @@ describe('EditSquare', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders the dialog when currentSquare is set', () => {
+  it('renders an unclaimed details dialog for an empty square with no claim action', () => {
     renderDialog();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('Empty Square')).toBeInTheDocument();
+    expect(screen.getByText(/this square is unclaimed/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /claim square/i })).not.toBeInTheDocument();
   });
 
-  it('pre-fills initials from user name when square has no value', () => {
-    renderDialog();
-    const input = screen.getByRole('textbox');
-    expect(input).toHaveValue('AS');
-  });
-
-  it('does not close when Save is clicked with an empty value', () => {
-    const onClose = vi.fn();
-    render(
-      <ThemeProvider theme={theme}>
-        <Provider store={makeStore()}>
-          <EditSquare open={true} onClose={onClose} />
-        </Provider>
-      </ThemeProvider>
+  it('shows the owning viewer their initials and a clear action', () => {
+    const ownedSquare = { ...currentSquare, value: 'AS', owner: 'alice', ownerName: 'Alice Smith' };
+    renderDialog(ownedSquare);
+    expect(screen.getByText('Your Square')).toBeInTheDocument();
+    expect(screen.getByText('AS')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /clear square/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /change your default initials/i })).toHaveAttribute(
+      'href',
+      '/profile'
     );
-    const input = screen.getByRole('textbox');
-    fireEvent.change(input, { target: { value: '' } });
-    fireEvent.click(screen.getByRole('button', { name: /save/i }));
-    expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('shows View Square title and disables input when square is owned by another user', () => {
+  it('shows details and no clear action when owned by another user', () => {
     const filledSquare = { ...currentSquare, value: 'JD', owner: 'bob', ownerName: 'Bob Jones' };
     renderDialog(filledSquare);
-    expect(screen.getByText('View Square')).toBeInTheDocument();
-    expect(screen.getByRole('textbox')).toBeDisabled();
-    expect(screen.getByText(/Owner: Bob Jones/)).toBeInTheDocument();
+    expect(screen.getByText('Square Details')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /clear square/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/Claimed by Bob Jones/)).toBeInTheDocument();
   });
 
   it('calls clearSquareById when Clear Square button is clicked', async () => {
     const { clearSquareById } = await import('../../../service/contestService');
-    // Square needs a value AND be owned by the current user for Clear Square to show
     const ownedSquare = { ...currentSquare, value: 'AS', owner: 'alice', ownerName: 'Alice' };
     renderDialog(ownedSquare);
     fireEvent.click(screen.getByRole('button', { name: /clear square/i }));
     await waitFor(() => expect(clearSquareById).toHaveBeenCalled());
-  });
-
-  it('calls updateSquareValueById when Save is clicked with a valid value', async () => {
-    const { updateSquareValueById } = await import('../../../service/contestService');
-    renderDialog();
-    const input = screen.getByRole('textbox');
-    fireEvent.change(input, { target: { value: 'XY' } });
-    fireEvent.click(screen.getByRole('button', { name: /save/i }));
-    await waitFor(() => expect(updateSquareValueById).toHaveBeenCalled());
-  });
-
-  it('resets value to existing square value on close when square has value', () => {
-    const filledSquare = { ...currentSquare, value: 'AB', owner: 'alice', ownerName: 'Alice' };
-    const onClose = vi.fn();
-    render(
-      <ThemeProvider theme={theme}>
-        <Provider store={makeStore(filledSquare)}>
-          <EditSquare open={true} onClose={onClose} />
-        </Provider>
-      </ThemeProvider>
-    );
-    // Change value then close via the X button
-    const input = screen.getByRole('textbox');
-    fireEvent.change(input, { target: { value: 'ZZ' } });
-    const closeBtn = screen.getAllByRole('button').find((b) => b.querySelector('svg'));
-    if (closeBtn) fireEvent.click(closeBtn);
-    expect(onClose).toHaveBeenCalled();
   });
 
   it('shows winner badge when square has quarter results', () => {
@@ -186,23 +168,29 @@ describe('EditSquare', () => {
       ],
     };
     const store = configureStore({
-      reducer: { contest: contestReducer },
+      reducer: { contest: contestReducer, user: userReducer },
       preloadedState: {
         contest: {
           ...contestReducer(undefined, { type: '' }),
           currentContest: contestWithWinner,
           currentSquare,
         } as ReturnType<typeof contestReducer>,
+        user: {
+          ...userReducer(undefined, { type: '' }),
+          profile: baseProfile,
+        } as ReturnType<typeof userReducer>,
       },
       middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
     });
     render(
       <ThemeProvider theme={theme}>
-        <Provider store={store}>
-          <EditSquare open={true} onClose={vi.fn()} />
-        </Provider>
+        <MemoryRouter>
+          <Provider store={store}>
+            <EditSquare open={true} onClose={vi.fn()} />
+          </Provider>
+        </MemoryRouter>
       </ThemeProvider>
     );
-    expect(screen.getByText(/Winner: Quarter 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Winner · Q1/)).toBeInTheDocument();
   });
 });
