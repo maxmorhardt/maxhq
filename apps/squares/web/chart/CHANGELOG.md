@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/maxmorhardt/charts/compare/squares/1.0.0...squares/1.0.1) (2026-07-18)
+
+
+### Bug Fixes
+
+* use chart appVersion for image tags by default ([#32](https://github.com/maxmorhardt/charts/issues/32)) ([e2aace4](https://github.com/maxmorhardt/charts/commit/e2aace43112105c47f8a3864304b8fc650bc7465))
+
 ## 1.0.0 (2026-07-13)
 
 
