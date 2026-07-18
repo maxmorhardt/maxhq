@@ -2,6 +2,6 @@ apiVersion: v2
 name: cloudflare-ddns
 description: A Helm chart for Cloudflare DDNS updater CronJob
 type: application
-version: 1.0.0
+version: 1.0.1
 # renovate: image=python
 appVersion: 3.14-alpine
