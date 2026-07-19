@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/maxmorhardt/squares/compare/1.2.0...1.3.0) (2026-07-19)
+
+
+### Features
+
+* centralize stats and harden square claims ([#44](https://github.com/maxmorhardt/squares/issues/44)) ([9869d70](https://github.com/maxmorhardt/squares/commit/9869d70bce41c09c6dca776d2bbe7a662e2130ef))
+
 ## [1.2.0](https://github.com/maxmorhardt/squares/compare/1.1.2...1.2.0) (2026-07-19)
 
 
