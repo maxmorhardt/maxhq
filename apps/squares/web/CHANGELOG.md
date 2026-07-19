@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/maxmorhardt/squares/compare/1.1.2...1.2.0) (2026-07-19)
+
+
+### Features
+
+* enhance user profile handling and refactor authentication flow ([#38](https://github.com/maxmorhardt/squares/issues/38)) ([0781a69](https://github.com/maxmorhardt/squares/commit/0781a694127f8d150909ca6d590c36078865436b))
+
+
+### Bug Fixes
+
+* **deps:** update pnpm to v11.8.0 [security] ([#40](https://github.com/maxmorhardt/squares/issues/40)) ([6f083e6](https://github.com/maxmorhardt/squares/commit/6f083e60168ff29834db26b544828c6cce10dbaa))
+* improve auth recovery and contest leave UX ([#43](https://github.com/maxmorhardt/squares/issues/43)) ([dc368e3](https://github.com/maxmorhardt/squares/commit/dc368e3be9176d3ede90cc41b2bc9eb56e320220))
+
 ## [1.1.2](https://github.com/maxmorhardt/squares/compare/1.1.1...1.1.2) (2026-07-15)
 
 
