@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/maxmorhardt/squares/compare/1.3.0...1.3.1) (2026-07-19)
+
+
+### Bug Fixes
+
+* error handling and improve responsive layout ([#48](https://github.com/maxmorhardt/squares/issues/48)) ([46309ce](https://github.com/maxmorhardt/squares/commit/46309cede160473fce2acf8ce57d30da9715253a))
+
 ## [1.3.0](https://github.com/maxmorhardt/squares/compare/1.2.0...1.3.0) (2026-07-19)
 
 
