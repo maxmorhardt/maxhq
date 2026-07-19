@@ -1,4 +1,10 @@
-import { Edit, LockOutlined, PersonOutlined, VisibilityOutlined } from '@mui/icons-material';
+import {
+  Edit,
+  LockOutlined,
+  PersonOutlined,
+  Public,
+  VisibilityOutlined,
+} from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
@@ -12,9 +18,12 @@ import {
   IconButton,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
+import type { ContestVisibility } from '../../../types/contest';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
 import { selectCurrentContest } from '../../../features/contests/contestSelectors';
@@ -66,6 +75,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
 
   const [homeTeam, setHomeTeam] = useState('');
   const [awayTeam, setAwayTeam] = useState('');
+  const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [loading, setLoading] = useState(false);
 
   const isOwner = auth.user?.profile?.email === contest?.owner;
@@ -88,6 +98,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     if (contest && open) {
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
+      setVisibility(contest.visibility);
     }
   }, [contest, open]);
 
@@ -101,6 +112,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
           updates: {
             homeTeam: homeTeam.trim() || undefined,
             awayTeam: awayTeam.trim() || undefined,
+            visibility,
           },
         })
       ).unwrap();
@@ -117,6 +129,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
     if (contest) {
       setHomeTeam(contest.homeTeam || '');
       setAwayTeam(contest.awayTeam || '');
+      setVisibility(contest.visibility);
     }
     onClose();
   };
@@ -181,11 +194,13 @@ export default function EditContest({ open, onClose }: EditContestProps) {
                 label="Owner"
                 value={contest.owner}
               />
-              <DetailRow
-                icon={<VisibilityOutlined sx={{ fontSize: 16 }} />}
-                label="Visibility"
-                value={contest.visibility === 'public' ? 'Public' : 'Private'}
-              />
+              {!canEdit && (
+                <DetailRow
+                  icon={<VisibilityOutlined sx={{ fontSize: 16 }} />}
+                  label="Visibility"
+                  value={contest.visibility === 'public' ? 'Public' : 'Private'}
+                />
+              )}
               <DetailRow
                 icon={<LockOutlined sx={{ fontSize: 16 }} />}
                 label="Created"
@@ -230,6 +245,48 @@ export default function EditContest({ open, onClose }: EditContestProps) {
                   slotProps={{ htmlInput: { maxLength: 20 } }}
                 />
               </Stack>
+
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'text.secondary',
+                    mb: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <VisibilityOutlined sx={{ fontSize: 16 }} />
+                  Visibility
+                </Typography>
+                <ToggleButtonGroup
+                  value={visibility}
+                  exclusive
+                  onChange={(_, val) => {
+                    if (val) setVisibility(val as ContestVisibility);
+                  }}
+                  fullWidth
+                  size="small"
+                >
+                  <ToggleButton value="private">
+                    <LockOutlined sx={{ mr: 0.75, fontSize: '1rem' }} />
+                    Private
+                  </ToggleButton>
+                  <ToggleButton value="public">
+                    <Public sx={{ mr: 0.75, fontSize: '1rem' }} />
+                    Public
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'text.disabled', mt: 0.75, display: 'block' }}
+                >
+                  {visibility === 'private'
+                    ? 'Invite-only. Non-participants viewing the public board will be disconnected.'
+                    : 'Anyone with the link can view. Only invited participants can claim squares.'}
+                </Typography>
+              </Box>
             </>
           )}
         </Stack>

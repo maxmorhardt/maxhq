@@ -2,6 +2,7 @@ import type { useAuth } from 'react-oidc-context';
 import {
   addParticipantFromWebSocket,
   removeParticipantFromWebSocket,
+  rollbackQuarterResultFromWebSocket,
   setCurrentContest,
   setParticipants,
   updateContestFromWebSocket,
@@ -105,6 +106,7 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
             homeTeam: message.contest.homeTeam,
             awayTeam: message.contest.awayTeam,
             status: message.contest.status,
+            visibility: message.contest.visibility,
             gameId: message.contest.gameId,
             game: message.contest.game,
           })
@@ -136,6 +138,22 @@ export function contestSocketEventHandler(eventParams: HandleWSEventParams) {
           message.quarterResult.winnerRow,
           message.quarterResult.winnerCol,
           message.quarterResult.winner
+        );
+      }
+      break;
+
+    case 'quarter_result_rollback':
+      if (isValidQuarterResultRollback(message)) {
+        dispatch(
+          rollbackQuarterResultFromWebSocket({
+            quarter: message.quarterResult.quarter,
+            status: message.contest?.status,
+          })
+        );
+        dispatch(setLatestMessage(message));
+        callbacks?.onQuarterResultRollback?.(
+          message.quarterResult.quarter,
+          message.quarterResult.winnerName
         );
       }
       break;
@@ -200,4 +218,10 @@ function isValidQuarterResultUpdate(
   message: WSUpdate
 ): message is WSUpdate & { quarterResult: QuarterResult } {
   return message.type === 'quarter_result_update' && !!message.quarterResult;
+}
+
+function isValidQuarterResultRollback(
+  message: WSUpdate
+): message is WSUpdate & { quarterResult: QuarterResult } {
+  return message.type === 'quarter_result_rollback' && !!message.quarterResult;
 }

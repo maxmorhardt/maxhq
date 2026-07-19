@@ -22,6 +22,11 @@ const useWebSocket =
 
 const RECONNECT_INTERVAL_MS = 1000;
 const FATAL_CLOSE_CODES = [4403, 4404, 4500, 4503];
+const GHOST_USER = 'ghost';
+
+// a ghosted square (owner left a private contest) keeps its value but has no owner name
+const winnerLabel = (winner: string, winnerName: string) =>
+  winner === GHOST_USER ? 'ghost' : winnerName;
 
 interface UseContestWebSocketParams {
   id: string | undefined;
@@ -148,7 +153,7 @@ export function useContestWebSocket({
       seeded.push({
         id: `seed-qr-${qr.id}`,
         type: 'quarter_winner',
-        message: `Q${qr.quarter} winner: ${qr.winnerName} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
+        message: `Q${qr.quarter} winner: ${winnerLabel(qr.winner, qr.winnerName)} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
         timestamp: qr.createdAt,
       });
     });
@@ -208,7 +213,7 @@ export function useContestWebSocket({
         ) => {
           addActivityEvent(
             'quarter_winner',
-            `Q${quarter} winner: ${winnerName} (${homeScore}-${awayScore})`
+            `Q${quarter} winner: ${winnerLabel(winner, winnerName)} (${homeScore}-${awayScore})`
           );
 
           onWinnerSquare(winnerRow, winnerCol);
@@ -216,6 +221,9 @@ export function useContestWebSocket({
           if (winner === auth.user?.profile?.email) {
             onWinnerDialog({ quarter, homeScore, awayScore, row: winnerRow, col: winnerCol });
           }
+        },
+        onQuarterResultRollback: (quarter) => {
+          addActivityEvent('contest_status', `Q${quarter} result was rolled back`);
         },
         onContestUpdate: (status) => {
           if (status) {

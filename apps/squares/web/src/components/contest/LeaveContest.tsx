@@ -92,8 +92,8 @@ export default function LeaveContest({
         <Typography
           sx={{ color: 'white', opacity: 0.8, fontSize: { xs: '0.875rem', md: '1rem' }, mb: 2 }}
         >
-          Are you sure you want to leave <strong>{contest.name}</strong>? Your squares will be
-          released and you'll need a new invite to rejoin.
+          Are you sure you want to leave <strong>{contest.name}</strong>? You'll be removed from the
+          contest and will need a new invite to rejoin.
         </Typography>
         {error && <Alert severity="error">{error}</Alert>}
       </DialogContent>

@@ -76,12 +76,15 @@ export default function ContestPage() {
 
   const onParticipantRemoved = useCallback(
     (isCurrentUser: boolean, isPrivate: boolean) => {
-      if (!isCurrentUser) return;
+      if (!isCurrentUser) {
+        return;
+      }
+
+      const severity = isPrivate ? 'warning' : 'info';
+      showToast('You have been removed from this contest', severity);
+
       if (isPrivate) {
-        showToast('You have been removed from this contest', 'warning');
         navigate('/contests');
-      } else {
-        showToast('You have been removed as a participant', 'info');
       }
     },
     [showToast, navigate]

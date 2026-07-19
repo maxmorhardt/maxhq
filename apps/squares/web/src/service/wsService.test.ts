@@ -3,6 +3,7 @@ import { getSocketUrl, contestSocketEventHandler } from './wsService';
 import {
   addParticipantFromWebSocket,
   removeParticipantFromWebSocket,
+  rollbackQuarterResultFromWebSocket,
   updateContestFromWebSocket,
   updateQuarterResultFromWebSocket,
   updateSquareFromWebSocket,
@@ -14,6 +15,7 @@ vi.mock('../features/contests/contestSlice', () => ({
   updateSquareFromWebSocket: vi.fn((p) => ({ type: 'updateSquare', payload: p })),
   updateContestFromWebSocket: vi.fn((p) => ({ type: 'updateContest', payload: p })),
   updateQuarterResultFromWebSocket: vi.fn((p) => ({ type: 'updateQR', payload: p })),
+  rollbackQuarterResultFromWebSocket: vi.fn((p) => ({ type: 'rollbackQR', payload: p })),
   addParticipantFromWebSocket: vi.fn((p) => ({ type: 'addParticipant', payload: p })),
   removeParticipantFromWebSocket: vi.fn((p) => ({ type: 'removeParticipant', payload: p })),
 }));
@@ -73,6 +75,7 @@ describe('contestSocketEventHandler', () => {
       onSquareUpdate: vi.fn(),
       onContestUpdate: vi.fn(),
       onQuarterResultUpdate: vi.fn(),
+      onQuarterResultRollback: vi.fn(),
       onContestDeleted: vi.fn(),
       onChatMessage: vi.fn(),
       onError: vi.fn(),
@@ -166,6 +169,7 @@ describe('contestSocketEventHandler', () => {
       homeTeam: 'Eagles',
       awayTeam: 'Chiefs',
       status: 'Q1',
+      visibility: 'private',
     };
     const data = JSON.stringify({
       type: 'contest_update',
@@ -177,7 +181,9 @@ describe('contestSocketEventHandler', () => {
 
     contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
 
-    expect(updateContestFromWebSocket).toHaveBeenCalledWith(contest);
+    expect(updateContestFromWebSocket).toHaveBeenCalledWith(
+      expect.objectContaining({ visibility: 'private' })
+    );
     expect(callbacks.onContestUpdate).toHaveBeenCalledWith('Q1');
   });
 
@@ -203,6 +209,31 @@ describe('contestSocketEventHandler', () => {
 
     expect(updateQuarterResultFromWebSocket).toHaveBeenCalledWith(quarterResult);
     expect(callbacks.onQuarterResultUpdate).toHaveBeenCalledWith(1, 'Bob', 14, 7, 4, 7, 'user2');
+  });
+
+  it('should handle quarter_result_rollback messages', () => {
+    const quarterResult = {
+      quarter: 2,
+      homeTeamScore: 21,
+      awayTeamScore: 10,
+      winnerRow: 1,
+      winnerCol: 0,
+      winner: 'user2',
+      winnerName: 'Bob',
+    };
+    const data = JSON.stringify({
+      type: 'quarter_result_rollback',
+      contestId: 'contest-1',
+      updatedBy: 'user1',
+      timestamp: '2025-01-01',
+      quarterResult,
+      contest: { status: 'Q2' },
+    });
+
+    contestSocketEventHandler(baseParams({ lastMessage: makeMessage(data) }));
+
+    expect(rollbackQuarterResultFromWebSocket).toHaveBeenCalledWith({ quarter: 2, status: 'Q2' });
+    expect(callbacks.onQuarterResultRollback).toHaveBeenCalledWith(2, 'Bob');
   });
 
   it('should handle contest_deleted messages', () => {

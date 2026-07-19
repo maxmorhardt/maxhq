@@ -497,6 +497,25 @@ describe('useContestWebSocket', () => {
       expect(defaultParams.onWinnerDialog).not.toHaveBeenCalled();
     });
 
+    it('onQuarterResultUpdate labels a ghost winner as "ghost" instead of a blank name', async () => {
+      mockReadyState = 1;
+      const store = createTestStore();
+      const { result } = renderHook(() => useContestWebSocket(defaultParams), {
+        wrapper: createWrapper(store),
+      });
+
+      act(() => {
+        // a ghosted square wins: no owner name, owner is the ghost sentinel
+        capturedEventParams?.callbacks?.onQuarterResultUpdate?.(2, '', 21, 14, 3, 5, 'ghost');
+      });
+
+      await waitFor(() => {
+        const qrEvent = result.current.activityEvents.find((e) => e.type === 'quarter_winner');
+        expect(qrEvent).toBeDefined();
+        expect(qrEvent?.message).toBe('Q2 winner: ghost (21-14)');
+      });
+    });
+
     it('onQuarterResultUpdate should call onWinnerDialog when winner is current user', async () => {
       mockReadyState = 1;
       const store = createTestStore();

@@ -19,11 +19,13 @@ const mockProfile = {
 };
 const mockStats = { contestsCreated: 3, contestsJoined: 7, squaresClaimed: 42, quarterWins: 5 };
 
-// the profile lives in the redux user slice; tests drive it through this fake state
+// the profile and stats live in the redux user slice; tests drive them through this fake state
 type FakeUserState = {
   profile: typeof mockProfile | null;
   loading: boolean;
   error: string | null;
+  stats: typeof mockStats | null;
+  statsError: boolean;
 };
 let userState: FakeUserState;
 
@@ -46,10 +48,10 @@ vi.mock('../../features/contests/contestThunks', () => ({
 }));
 vi.mock('../../features/user/userThunks', () => ({
   loadUserProfile: vi.fn(() => ({ type: 'loadUserProfile' })),
+  loadUserStats: vi.fn(() => ({ type: 'loadUserStats' })),
   updateUserInitials: vi.fn((initials: string) => ({ type: 'updateUserInitials', initials })),
 }));
 vi.mock('../../service/userService', () => ({
-  getMyStats: vi.fn(),
   getMyActiveContests: vi.fn(),
   deleteMyAccount: vi.fn(),
 }));
@@ -57,7 +59,7 @@ vi.mock('../../service/userService', () => ({
 import { useAuth } from 'react-oidc-context';
 import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
 import { loadUserProfile, updateUserInitials } from '../../features/user/userThunks';
-import { deleteMyAccount, getMyActiveContests, getMyStats } from '../../service/userService';
+import { deleteMyAccount, getMyActiveContests } from '../../service/userService';
 
 const theme = createTheme();
 
@@ -87,14 +89,19 @@ describe('ProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDispatch.mockReturnValue({ unwrap: () => Promise.resolve() });
-    userState = { profile: mockProfile, loading: false, error: null };
+    userState = {
+      profile: mockProfile,
+      loading: false,
+      error: null,
+      stats: mockStats,
+      statsError: false,
+    };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       removeUser: mockRemoveUser,
       user: { profile: { email: 'a@b.com' } },
     } as unknown as ReturnType<typeof useAuth>);
-    vi.mocked(getMyStats).mockResolvedValue(mockStats);
     vi.mocked(getMyActiveContests).mockResolvedValue([]);
   });
 
@@ -115,7 +122,7 @@ describe('ProfilePage', () => {
   });
 
   it('shows a top-of-page error and disables account deletion when loading fails', async () => {
-    userState = { profile: null, loading: false, error: 'down' };
+    userState = { profile: null, loading: false, error: 'down', stats: null, statsError: false };
     renderPage();
     expect(await screen.findByText(/couldn't load your profile/i)).toBeInTheDocument();
     expect(mockShowToast).not.toHaveBeenCalled();
@@ -125,7 +132,7 @@ describe('ProfilePage', () => {
 
   it('retries the profile load when the app-wide load already errored', async () => {
     // simulate the app-wide load having failed before navigating here
-    userState = { profile: null, loading: false, error: 'down' };
+    userState = { profile: null, loading: false, error: 'down', stats: null, statsError: false };
     renderPage();
     await waitFor(() => expect(loadUserProfile).toHaveBeenCalledTimes(1));
     expect(mockDispatch).toHaveBeenCalledWith({ type: 'loadUserProfile' });
@@ -242,7 +249,7 @@ describe('ProfilePage', () => {
   });
 
   it('shows the unauthorized page when signed out', () => {
-    userState = { profile: null, loading: false, error: null };
+    userState = { profile: null, loading: false, error: null, stats: null, statsError: false };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -251,6 +258,6 @@ describe('ProfilePage', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage();
-    expect(getMyStats).not.toHaveBeenCalled();
+    expect(screen.queryByText('Your Numbers')).not.toBeInTheDocument();
   });
 });

@@ -18,6 +18,7 @@ export interface WSUICallbacks {
     winnerCol: number,
     winner: string
   ) => void;
+  onQuarterResultRollback?: (quarter: number, winnerName: string) => void;
   onContestUpdate?: (status?: string) => void;
   onChatMessage?: (sender: string, message: string, timestamp: string) => void;
   onParticipantAdded?: (participant: Participant) => void;

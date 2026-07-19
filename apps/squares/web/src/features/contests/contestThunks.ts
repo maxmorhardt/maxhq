@@ -16,6 +16,7 @@ import {
   previewInvite,
   recordQuarterResult,
   removeParticipant,
+  rollbackQuarterResult,
   startContest,
   updateContestById,
   updateParticipant,
@@ -146,6 +147,19 @@ export const updateQuarterResult = createAsyncThunk<
 >('contests/recordQuarterResult', async ({ contestId, request }, { rejectWithValue }) => {
   try {
     const result = await recordQuarterResult(contestId, request);
+    return result;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
+  }
+});
+
+export const rollbackLastQuarterResult = createAsyncThunk<
+  QuarterResult,
+  { contestId: string },
+  { rejectValue: APIError }
+>('contests/rollbackQuarterResult', async ({ contestId }, { rejectWithValue }) => {
+  try {
+    const result = await rollbackQuarterResult(contestId);
     return result;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);

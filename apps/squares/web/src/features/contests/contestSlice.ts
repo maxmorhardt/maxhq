@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import type {
   Contest,
   ContestStatus,
+  ContestVisibility,
   Game,
   Invite,
   PaginatedContestsResponse,
@@ -22,12 +23,21 @@ import {
   fetchMyContests,
   fetchParticipants,
   removeContestParticipant,
+  rollbackLastQuarterResult,
   startContestThunk,
   claimSquare,
   updateContest,
   updateContestParticipant,
   updateQuarterResult,
 } from './contestThunks';
+
+// rolling back a quarter reverts the contest to that quarter's own in-game status
+const rollbackStatusMap: Record<number, ContestStatus> = {
+  1: 'Q1',
+  2: 'Q2',
+  3: 'Q3',
+  4: 'Q4',
+};
 
 interface ContestState {
   contests: Contest[] | null;
@@ -107,6 +117,7 @@ const contestSlice = createSlice({
         homeTeam?: string;
         awayTeam?: string;
         status?: ContestStatus;
+        visibility?: ContestVisibility;
         gameId?: string;
         game?: Game;
       }>
@@ -115,7 +126,8 @@ const contestSlice = createSlice({
         return;
       }
 
-      const { xLabels, yLabels, homeTeam, awayTeam, status, gameId, game } = action.payload;
+      const { xLabels, yLabels, homeTeam, awayTeam, status, visibility, gameId, game } =
+        action.payload;
       if (gameId !== undefined) {
         state.currentContest.gameId = gameId;
       }
@@ -142,6 +154,10 @@ const contestSlice = createSlice({
 
       if (status !== undefined) {
         state.currentContest.status = status;
+      }
+
+      if (visibility !== undefined) {
+        state.currentContest.visibility = visibility;
       }
     },
 
@@ -214,6 +230,25 @@ const contestSlice = createSlice({
       const nextStatus = quarterStatusMap[quarterResult.quarter];
       if (nextStatus) {
         state.currentContest.status = nextStatus;
+      }
+    },
+
+    // websocket rollback: drop the given quarter's result and revert contest status
+    rollbackQuarterResultFromWebSocket(
+      state,
+      action: PayloadAction<{ quarter: number; status?: ContestStatus }>
+    ) {
+      if (!state.currentContest?.quarterResults) {
+        return;
+      }
+
+      state.currentContest.quarterResults = state.currentContest.quarterResults.filter(
+        (qr) => qr.quarter !== action.payload.quarter
+      );
+
+      const revertStatus = action.payload.status ?? rollbackStatusMap[action.payload.quarter];
+      if (revertStatus) {
+        state.currentContest.status = revertStatus;
       }
     },
 
@@ -456,6 +491,32 @@ const contestSlice = createSlice({
         state.error = action.payload?.message ?? 'Error recording quarter result';
       });
 
+    // roll back the most recent quarter result and revert status
+    builder
+      .addCase(rollbackLastQuarterResult.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(
+        rollbackLastQuarterResult.fulfilled,
+        (state, action: PayloadAction<QuarterResult>) => {
+          if (!state.currentContest?.quarterResults) {
+            return;
+          }
+
+          state.currentContest.quarterResults = state.currentContest.quarterResults.filter(
+            (qr) => qr.quarter !== action.payload.quarter
+          );
+
+          const revertStatus = rollbackStatusMap[action.payload.quarter];
+          if (revertStatus) {
+            state.currentContest.status = revertStatus;
+          }
+        }
+      )
+      .addCase(rollbackLastQuarterResult.rejected, (state, action) => {
+        state.error = action.payload?.message ?? 'Error rolling back quarter result';
+      });
+
     // fetch my contests (where user is a participant)
     builder
       .addCase(fetchMyContests.pending, (state) => {
@@ -549,6 +610,7 @@ export const {
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
   updateQuarterResultFromWebSocket,
+  rollbackQuarterResultFromWebSocket,
   addParticipantFromWebSocket,
   removeParticipantFromWebSocket,
 } = contestSlice.actions;

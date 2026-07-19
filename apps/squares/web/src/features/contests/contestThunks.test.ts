@@ -11,6 +11,7 @@ import {
   updateContest,
   deleteContest,
   updateQuarterResult,
+  rollbackLastQuarterResult,
   fetchMyContests,
   createContestInvite,
   fetchInvites,
@@ -33,6 +34,7 @@ vi.mock('../../service/contestService', () => ({
   updateContestById: vi.fn(),
   deleteContestById: vi.fn(),
   recordQuarterResult: vi.fn(),
+  rollbackQuarterResult: vi.fn(),
   getMyContests: vi.fn(),
   createInvite: vi.fn(),
   getInvites: vi.fn(),
@@ -54,6 +56,7 @@ import {
   updateContestById,
   deleteContestById,
   recordQuarterResult,
+  rollbackQuarterResult,
   getMyContests,
   createInvite,
   getInvites,
@@ -342,6 +345,43 @@ describe('contestThunks', () => {
         updateQuarterResult({ contestId: 'c1', request: { homeTeamScore: 14, awayTeamScore: 7 } })
       );
       expect(store.getState().contest.error).toBe('qr fail');
+    });
+  });
+
+  describe('rollbackLastQuarterResult', () => {
+    it('fulfilled: rolls back result', async () => {
+      const qr = {
+        id: 'qr2',
+        contestId: 'c1',
+        quarter: 2,
+        homeTeamScore: 21,
+        awayTeamScore: 10,
+        winnerRow: 1,
+        winnerCol: 0,
+        winner: 'u1',
+        winnerName: 'User 1',
+        createdAt: '',
+        updatedAt: '',
+        createdBy: '',
+        updatedBy: '',
+      };
+      vi.mocked(rollbackQuarterResult).mockResolvedValue(qr);
+      const store = createTestStore();
+      await store.dispatch(rollbackLastQuarterResult({ contestId: 'c1' }));
+      expect(rollbackQuarterResult).toHaveBeenCalledWith('c1');
+      expect(store.getState().contest.error).toBeNull();
+    });
+
+    it('rejected: sets error', async () => {
+      vi.mocked(rollbackQuarterResult).mockRejectedValue({
+        code: 400,
+        message: 'rollback fail',
+        timestamp: '',
+        requestId: '',
+      });
+      const store = createTestStore();
+      await store.dispatch(rollbackLastQuarterResult({ contestId: 'c1' }));
+      expect(store.getState().contest.error).toBe('rollback fail');
     });
   });
 

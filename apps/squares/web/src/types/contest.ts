@@ -53,6 +53,7 @@ export interface WSUpdate {
     | 'square_update'
     | 'contest_update'
     | 'quarter_result_update'
+    | 'quarter_result_rollback'
     | 'chat_message'
     | 'connected'
     | 'disconnected'

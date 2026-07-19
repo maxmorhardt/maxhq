@@ -7,6 +7,7 @@ import {
   updateContestFromWebSocket,
   updateSquareFromWebSocket,
   updateQuarterResultFromWebSocket,
+  rollbackQuarterResultFromWebSocket,
   addParticipantFromWebSocket,
   removeParticipantFromWebSocket,
 } from './contestSlice';
@@ -20,6 +21,7 @@ import {
   updateContest,
   deleteContest,
   updateQuarterResult,
+  rollbackLastQuarterResult,
   fetchMyContests,
   fetchParticipants,
   updateContestParticipant,
@@ -132,6 +134,14 @@ describe('contestSlice reducers', () => {
         updateContestFromWebSocket({ homeTeam: 'New Home' })
       );
       expect(state.currentContest?.homeTeam).toBe('New Home');
+    });
+
+    it('should update visibility', () => {
+      const state = contestReducer(
+        { ...initialState, currentContest: { ...mockContest, visibility: 'public' } },
+        updateContestFromWebSocket({ visibility: 'private' })
+      );
+      expect(state.currentContest?.visibility).toBe('private');
     });
 
     it('should update awayTeam', () => {
@@ -262,6 +272,57 @@ describe('contestSlice reducers', () => {
         updateQuarterResultFromWebSocket(qrPayload)
       );
       expect(state.currentContest?.quarterResults).toHaveLength(1);
+    });
+  });
+
+  describe('rollbackQuarterResultFromWebSocket', () => {
+    const q1: QuarterResult = {
+      id: 'qr1',
+      contestId: 'c1',
+      quarter: 1,
+      homeTeamScore: 14,
+      awayTeamScore: 7,
+      winnerRow: 4,
+      winnerCol: 7,
+      winner: 'user1',
+      winnerName: 'User 1',
+      createdAt: '',
+      updatedAt: '',
+      createdBy: '',
+      updatedBy: '',
+    };
+    const q2: QuarterResult = { ...q1, id: 'qr2', quarter: 2 };
+
+    it('removes the given quarter and reverts to the provided status', () => {
+      const state = contestReducer(
+        {
+          ...initialState,
+          currentContest: { ...mockContest, status: 'Q3', quarterResults: [q1, q2] },
+        },
+        rollbackQuarterResultFromWebSocket({ quarter: 2, status: 'Q2' })
+      );
+      expect(state.currentContest?.quarterResults).toHaveLength(1);
+      expect(state.currentContest?.quarterResults?.[0].quarter).toBe(1);
+      expect(state.currentContest?.status).toBe('Q2');
+    });
+
+    it('falls back to the computed status when none is provided', () => {
+      const state = contestReducer(
+        {
+          ...initialState,
+          currentContest: { ...mockContest, status: 'Q3', quarterResults: [q1, q2] },
+        },
+        rollbackQuarterResultFromWebSocket({ quarter: 2 })
+      );
+      expect(state.currentContest?.status).toBe('Q2');
+    });
+
+    it('does nothing when there is no current contest', () => {
+      const state = contestReducer(
+        initialState,
+        rollbackQuarterResultFromWebSocket({ quarter: 2, status: 'Q2' })
+      );
+      expect(state.currentContest).toBeUndefined();
     });
   });
 });
@@ -562,6 +623,54 @@ describe('contestSlice extraReducers', () => {
         payload: { message: 'qr fail' },
       });
       expect(state.error).toBe('qr fail');
+    });
+  });
+
+  describe('rollbackLastQuarterResult', () => {
+    const qr: QuarterResult = {
+      id: 'qr2',
+      contestId: 'c1',
+      quarter: 2,
+      homeTeamScore: 21,
+      awayTeamScore: 10,
+      winnerRow: 1,
+      winnerCol: 0,
+      winner: 'user1',
+      winnerName: 'User 1',
+      createdAt: '',
+      updatedAt: '',
+      createdBy: '',
+      updatedBy: '',
+    };
+    const qr1: QuarterResult = { ...qr, id: 'qr1', quarter: 1 };
+
+    it('fulfilled: removes the quarter and reverts status', () => {
+      const state = contestReducer(
+        {
+          ...initialState,
+          currentContest: { ...mockContest, status: 'Q3', quarterResults: [qr1, qr] },
+        },
+        { type: rollbackLastQuarterResult.fulfilled.type, payload: qr }
+      );
+      expect(state.currentContest?.quarterResults).toHaveLength(1);
+      expect(state.currentContest?.quarterResults?.[0].quarter).toBe(1);
+      expect(state.currentContest?.status).toBe('Q2');
+    });
+
+    it('fulfilled: does nothing if no current contest', () => {
+      const state = contestReducer(initialState, {
+        type: rollbackLastQuarterResult.fulfilled.type,
+        payload: qr,
+      });
+      expect(state.currentContest).toBeUndefined();
+    });
+
+    it('rejected: sets error', () => {
+      const state = contestReducer(initialState, {
+        type: rollbackLastQuarterResult.rejected.type,
+        payload: { message: 'rollback fail' },
+      });
+      expect(state.error).toBe('rollback fail');
     });
   });
 

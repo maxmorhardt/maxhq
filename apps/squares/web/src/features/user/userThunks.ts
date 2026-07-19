@@ -1,13 +1,24 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { getMyProfile, updateMyProfile } from '../../service/userService';
+import { getMyProfile, getMyStats, updateMyProfile } from '../../service/userService';
 import type { APIError } from '../../types/error';
-import type { UserProfile } from '../../types/user';
+import type { UserProfile, UserStats } from '../../types/user';
 
 export const loadUserProfile = createAsyncThunk<UserProfile, void, { rejectValue: APIError }>(
   'user/loadProfile',
   async (_, { rejectWithValue }) => {
     try {
       return await getMyProfile();
+    } catch (err: unknown) {
+      return rejectWithValue(err as APIError);
+    }
+  }
+);
+
+export const loadUserStats = createAsyncThunk<UserStats, void, { rejectValue: APIError }>(
+  'user/loadStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getMyStats();
     } catch (err: unknown) {
       return rejectWithValue(err as APIError);
     }

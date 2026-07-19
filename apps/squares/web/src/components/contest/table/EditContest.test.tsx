@@ -102,4 +102,17 @@ describe('EditContest', () => {
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
     await waitFor(() => expect(updateContestById).toHaveBeenCalled());
   });
+
+  it('sends the updated visibility when the owner toggles it', async () => {
+    const { updateContestById } = await import('../../../service/contestService');
+    renderDialog();
+    fireEvent.click(screen.getByRole('button', { name: /private/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+    await waitFor(() =>
+      expect(updateContestById).toHaveBeenCalledWith(
+        'c-1',
+        expect.objectContaining({ visibility: 'private' })
+      )
+    );
+  });
 });

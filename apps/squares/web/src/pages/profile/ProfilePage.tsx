@@ -14,7 +14,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
@@ -27,13 +27,16 @@ import {
   selectUserProfile,
   selectUserProfileError,
   selectUserProfileLoading,
+  selectUserStats,
+  selectUserStatsLoading,
+  selectUserStatsError,
 } from '../../features/user/userSelectors';
-import { loadUserProfile, updateUserInitials } from '../../features/user/userThunks';
+import { loadUserProfile, loadUserStats, updateUserInitials } from '../../features/user/userThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useToast } from '../../hooks/useToast';
-import { deleteMyAccount, getMyActiveContests, getMyStats } from '../../service/userService';
-import type { UserActiveContest, UserStats } from '../../types/user';
+import { deleteMyAccount, getMyActiveContests } from '../../service/userService';
+import type { UserActiveContest } from '../../types/user';
 import UnauthorizedPage from '../error/UnauthorizedPage';
 
 export default function ProfilePage() {
@@ -44,13 +47,14 @@ export default function ProfilePage() {
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
 
-  // the profile is loaded app-wide (get-or-create) so it is seamless on first visit
+  // the profile and stats are loaded app-wide so they are seamless on first visit
   const profile = useAppSelector(selectUserProfile);
   const profileLoading = useAppSelector(selectUserProfileLoading);
   const profileError = useAppSelector(selectUserProfileError);
+  const stats = useAppSelector(selectUserStats);
+  const statsFetching = useAppSelector(selectUserStatsLoading);
+  const statsError = useAppSelector(selectUserStatsError);
 
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [statsError, setStatsError] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeContests, setActiveContests] = useState<UserActiveContest[] | null>(null);
@@ -66,27 +70,22 @@ export default function ProfilePage() {
   const loading = profileLoading && !profile;
   const loadError = Boolean(profileError) && !profile;
 
-  const loadStats = useCallback(async () => {
-    setStatsError(false);
-    try {
-      setStats(await getMyStats());
-    } catch {
-      setStatsError(true);
-    }
-  }, []);
-
   const profileRetried = useRef(false);
+  const statsRetried = useRef(false);
 
-  // wait for the bearer interceptor before fetching, or the first request goes out unauthenticated
   useEffect(() => {
-    if (auth.isAuthenticated && axiosReady) {
-      loadStats();
-      if (!profile && !profileLoading && !profileRetried.current) {
-        profileRetried.current = true;
-        dispatch(loadUserProfile());
-      }
+    if (!auth.isAuthenticated || !axiosReady) {
+      return;
     }
-  }, [auth.isAuthenticated, axiosReady, loadStats, profile, profileLoading, dispatch]);
+    if (!profile && !profileLoading && !profileRetried.current) {
+      profileRetried.current = true;
+      dispatch(loadUserProfile());
+    }
+    if (!stats && !statsFetching && !statsRetried.current) {
+      statsRetried.current = true;
+      dispatch(loadUserStats());
+    }
+  }, [auth.isAuthenticated, axiosReady, profile, profileLoading, stats, statsFetching, dispatch]);
 
   const startEditingInitials = () => {
     setInitialsValue(profile?.defaultInitials ?? '');

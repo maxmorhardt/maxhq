@@ -293,6 +293,66 @@ describe('ParticipantsManager', () => {
     await waitFor(() => expect(removeParticipant).toHaveBeenCalled());
   });
 
+  it('lets the owner remove a participant while the contest is in progress, ghosting squares', async () => {
+    const { removeParticipant } = await import('../../../service/contestService');
+    vi.mocked(removeParticipant).mockResolvedValueOnce(undefined);
+    const store = configureStore({
+      reducer: { contest: contestReducer },
+      preloadedState: {
+        contest: {
+          ...contestReducer(undefined, { type: '' }),
+          currentContest: { ...baseContest, status: 'Q1' as const },
+          participants: [participant],
+        } as ReturnType<typeof contestReducer>,
+      },
+      middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
+    });
+    render(
+      <ThemeProvider theme={theme}>
+        <Provider store={store}>
+          <ParticipantsManager open={true} onClose={vi.fn()} isOwner={true} />
+        </Provider>
+      </ThemeProvider>
+    );
+    await act(async () => {});
+    await waitFor(() => screen.getByText('bob'));
+
+    // in-game shows only the remove control (no edit), plus the dialog close button
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(2);
+    fireEvent.click(buttons[buttons.length - 1]);
+
+    await waitFor(() => expect(screen.getByText('Remove Participant')).toBeInTheDocument());
+    expect(screen.getByText(/need a new invite to rejoin/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^remove$/i }));
+    await waitFor(() => expect(removeParticipant).toHaveBeenCalled());
+  });
+
+  it('hides owner controls entirely once the contest is finalized', async () => {
+    const store = configureStore({
+      reducer: { contest: contestReducer },
+      preloadedState: {
+        contest: {
+          ...contestReducer(undefined, { type: '' }),
+          currentContest: { ...baseContest, status: 'FINISHED' as const },
+          participants: [participant],
+        } as ReturnType<typeof contestReducer>,
+      },
+      middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
+    });
+    render(
+      <ThemeProvider theme={theme}>
+        <Provider store={store}>
+          <ParticipantsManager open={true} onClose={vi.fn()} isOwner={true} />
+        </Provider>
+      </ThemeProvider>
+    );
+    await act(async () => {});
+    await waitFor(() => screen.getByText('bob'));
+    // only the dialog close button remains — no edit or remove controls
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
   it('closes remove confirm dialog on cancel', async () => {
     await renderManager(true, true);
     await waitFor(() => screen.getByText('bob'));

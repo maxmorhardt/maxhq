@@ -204,17 +204,20 @@ export default function ParticipantsManager({
                     )}
                   </Box>
 
-                  {isOwner && currentContest?.status === 'ACTIVE' && (
+                  {/* owner edits only pre-kickoff, but can remove anyone until the contest is finalized */}
+                  {isOwner && !isTerminalStatus(currentContest?.status) && (
                     <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditOpen(participant)}
-                          sx={{ color: 'rgba(255,255,255,0.6)' }}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      {currentContest?.status === 'ACTIVE' && (
+                        <Tooltip title="Edit">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditOpen(participant)}
+                            sx={{ color: 'rgba(255,255,255,0.6)' }}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                       {participant.role !== 'owner' && (
                         <Tooltip title="Remove">
                           <IconButton
@@ -368,8 +371,8 @@ export default function ParticipantsManager({
             variant="body2"
             sx={{ color: 'rgba(255,255,255,0.7)', overflowWrap: 'anywhere' }}
           >
-            Are you sure you want to remove <strong>{removeConfirm?.userId}</strong>? Their claimed
-            squares will be cleared.
+            Are you sure you want to remove <strong>{removeConfirm?.userId}</strong>? They'll be
+            removed from the contest and will need a new invite to rejoin.
           </Typography>
         </DialogContent>
         <DialogActions>

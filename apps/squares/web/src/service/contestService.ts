@@ -46,7 +46,7 @@ export async function createNewContest(request: CreateContestRequest) {
 
 export async function claimSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
-    const res = await api.patch<Square>(`/contests/${contestId}/squares/${squareId}`);
+    const res = await api.post<Square>(`/contests/${contestId}/squares/${squareId}/claim`);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -98,6 +98,15 @@ export async function recordQuarterResult(
 ): Promise<QuarterResult> {
   try {
     const res = await api.post<QuarterResult>(`/contests/${contestId}/quarter-result`, request);
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function rollbackQuarterResult(contestId: string): Promise<QuarterResult> {
+  try {
+    const res = await api.post<QuarterResult>(`/contests/${contestId}/quarter-result/rollback`);
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);

@@ -7,7 +7,7 @@ import ScrollToTop from './components/common/ScrollToTop';
 import Footer from './components/footer/Footer';
 import Header from './components/header/Header';
 import { ToastProvider } from './components/toast/ToastProvider';
-import { loadUserProfile } from './features/user/userThunks';
+import { loadUserProfile, loadUserStats } from './features/user/userThunks';
 import { useAppDispatch } from './hooks/reduxHooks';
 import { useAxiosAuth } from './hooks/useAxiosAuth';
 import { useToast } from './hooks/useToast';
@@ -29,6 +29,7 @@ export default function App() {
 
     hasLoadedProfile.current = true;
     dispatch(loadUserProfile());
+    dispatch(loadUserStats());
   }, [auth.isAuthenticated, axiosReady, dispatch]);
 
   const hasAttemptedSilentSignin = useRef(false);
