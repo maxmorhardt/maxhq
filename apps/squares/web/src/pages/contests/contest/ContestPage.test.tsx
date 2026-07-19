@@ -43,8 +43,8 @@ vi.mock('../../../hooks/useContestWebSocket', () => ({
 vi.mock('../../../components/contest/ContestPageSkeleton', () => ({
   default: () => <div data-testid="contest-skeleton">Skeleton</div>,
 }));
-vi.mock('../../../components/contest/GenericErrorDisplay', () => ({
-  default: () => <div data-testid="generic-error">Generic Error</div>,
+vi.mock('../../../components/contest/ContestError', () => ({
+  default: () => <div data-testid="contest-error">Contest Error</div>,
 }));
 vi.mock('../../../components/contest/grid/Contest', () => ({
   default: () => <div data-testid="contest-grid">Contest Grid</div>,
@@ -152,7 +152,7 @@ describe('ContestPage', () => {
     expect(screen.getByTestId('contest-skeleton')).toBeInTheDocument();
   });
 
-  it('shows GenericErrorDisplay when connection has failed', () => {
+  it('shows ContestError when connection has failed', () => {
     vi.mocked(useContestWebSocket).mockReturnValue({
       ...mockWebSocket,
       isConnecting: false,
@@ -161,7 +161,7 @@ describe('ContestPage', () => {
     });
 
     renderPage();
-    expect(screen.getByTestId('generic-error')).toBeInTheDocument();
+    expect(screen.getByTestId('contest-error')).toBeInTheDocument();
   });
 
   it('shows ForbiddenPage on fatal WS close code 4403', () => {

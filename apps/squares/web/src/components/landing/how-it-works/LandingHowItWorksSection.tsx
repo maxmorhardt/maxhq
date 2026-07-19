@@ -76,6 +76,7 @@ export default function LandingHowItWorksSection({ animRef, isVisible }: Props) 
           sx={{
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gridAutoRows: '1fr',
             gap: { xs: 2, sm: 2, md: 3 },
           }}
         >

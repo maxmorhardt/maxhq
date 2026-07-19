@@ -14,6 +14,7 @@ import { useAuth } from 'react-oidc-context';
 import { useLocation, useNavigate } from 'react-router-dom';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
+import { HEADER_HEIGHT } from '../../types/layout';
 
 const pages = [
   { name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' },
@@ -66,7 +67,7 @@ export default function Header() {
       {/* main app bar */}
       <AppBar position="static">
         <Container maxWidth="xl">
-          <Toolbar disableGutters>
+          <Toolbar disableGutters sx={{ minHeight: HEADER_HEIGHT, height: HEADER_HEIGHT }}>
             {/* desktop logo and brand */}
             <Box
               sx={{ display: { xs: 'none', md: 'flex' }, mr: 2, cursor: 'pointer' }}
@@ -138,7 +139,6 @@ export default function Header() {
                       navigate(page.navigate);
                     }}
                     sx={{
-                      my: 2,
                       mx: 1,
                       color: 'white',
                       display: 'flex',

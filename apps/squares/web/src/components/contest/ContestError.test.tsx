@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
-import GenericErrorDisplay from './GenericErrorDisplay';
+import ContestError from './ContestError';
 
 const mockNavigate = vi.fn();
 
@@ -17,13 +17,13 @@ function renderComponent() {
   return render(
     <ThemeProvider theme={theme}>
       <MemoryRouter>
-        <GenericErrorDisplay />
+        <ContestError />
       </MemoryRouter>
     </ThemeProvider>
   );
 }
 
-describe('GenericErrorDisplay', () => {
+describe('ContestError', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
   });
@@ -42,10 +42,9 @@ describe('GenericErrorDisplay', () => {
     vi.unstubAllGlobals();
   });
 
-  it('navigates to "/" when Go Home is clicked', () => {
+  it('does not offer a Go Home action', () => {
     renderComponent();
-    fireEvent.click(screen.getByRole('button', { name: /go home/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(screen.queryByRole('button', { name: /go home/i })).not.toBeInTheDocument();
   });
 
   it('navigates to "/contests" when Browse Contests is clicked', () => {

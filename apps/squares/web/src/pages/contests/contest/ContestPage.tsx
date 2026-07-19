@@ -7,7 +7,7 @@ import ContestComponent from '../../../components/contest/grid/Contest';
 import ContestDetails from '../../../components/contest/details/ContestDetails';
 import ContestPageSkeleton from '../../../components/contest/ContestPageSkeleton';
 import LoadingScreen from '../../../components/common/LoadingScreen';
-import GenericErrorDisplay from '../../../components/contest/GenericErrorDisplay';
+import ContestError from '../../../components/contest/ContestError';
 import WinnerCelebrationDialog from '../../../components/contest/WinnerCelebrationDialog';
 import NotFoundPage from '../../error/NotFoundPage';
 import ForbiddenPage from '../../error/ForbiddenPage';
@@ -25,6 +25,7 @@ import { selectDefaultInitials } from '../../../features/user/userSelectors';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
 import { useToast } from '../../../hooks/useToast';
+import { CONTEST_STACK_MAX_WIDTH } from '../../../types/layout';
 import { Helmet } from 'react-helmet-async';
 
 export default function ContestPage() {
@@ -182,7 +183,7 @@ export default function ContestPage() {
 
   // show error if connection failed after max retries
   if (connectionFailed) {
-    return <GenericErrorDisplay />;
+    return <ContestError />;
   }
 
   // handle fatal WS close codes
@@ -193,7 +194,7 @@ export default function ContestPage() {
     if (wsCloseCode === 4404) {
       return <NotFoundPage />;
     }
-    return <GenericErrorDisplay />;
+    return <ContestError />;
   }
 
   // show skeleton while connecting or loading contest data
@@ -295,7 +296,7 @@ export default function ContestPage() {
           flexDirection: 'column',
           gap: 3,
           width: '100%',
-          maxWidth: { xs: '360px', sm: '490px', md: '600px' },
+          maxWidth: CONTEST_STACK_MAX_WIDTH,
           margin: '0 auto',
           p: 1,
           mb: 3,

@@ -38,11 +38,12 @@ vi.mock('../../components/join/InviteSignIn', () => ({
 }));
 
 vi.mock('../../components/join/JoinError', () => ({
-  default: ({ message }: { message: string }) => <div data-testid="join-error">{message}</div>,
-}));
-
-vi.mock('../../components/join/JoinNoSquares', () => ({
-  default: () => <div data-testid="join-no-squares">No Squares</div>,
+  default: ({ variant, message }: { variant: string; message?: string }) =>
+    variant === 'no-squares' ? (
+      <div data-testid="join-no-squares">No Squares</div>
+    ) : (
+      <div data-testid="join-error">{message}</div>
+    ),
 }));
 
 import { useAuth } from 'react-oidc-context';
@@ -121,7 +122,7 @@ describe('JoinPage', () => {
     expect(screen.getByText(/redirecting to sign in/i)).toBeInTheDocument();
   });
 
-  it('shows JoinError when previewInviteToken rejects with a non-422 code', async () => {
+  it('shows the error status when previewInviteToken rejects with a non-422 code', async () => {
     vi.mocked(previewInviteToken).mockReturnValueOnce({
       type: 'contests/previewInviteToken/rejected',
       unwrap: () => Promise.reject({ message: 'Contest not found', code: 404 }),
@@ -138,7 +139,7 @@ describe('JoinPage', () => {
     expect(screen.getByText('Contest not found')).toBeInTheDocument();
   });
 
-  it('shows JoinNoSquares when previewInviteToken rejects with code 422', async () => {
+  it('shows the no-squares status when previewInviteToken rejects with code 422', async () => {
     vi.mocked(previewInviteToken).mockReturnValueOnce({
       type: 'contests/previewInviteToken/rejected',
       unwrap: () => Promise.reject({ message: 'No squares available', code: 422 }),

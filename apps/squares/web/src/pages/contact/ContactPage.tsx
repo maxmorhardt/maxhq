@@ -7,21 +7,19 @@ import ContactForm from '../../components/contact/ContactForm';
 import { submitContactForm } from '../../service/contestService';
 import { useToast } from '../../hooks/useToast';
 
-const iconColor = '#667eea';
-
 const contactMethods = [
   {
-    icon: <Email sx={{ color: iconColor, mr: 2 }} />,
+    icon: <Email sx={{ color: 'primary.dark', mr: 2 }} />,
     title: 'Email',
     details: 'support@maxstash.io',
   },
   {
-    icon: <Phone sx={{ color: iconColor, mr: 2 }} />,
+    icon: <Phone sx={{ color: 'primary.dark', mr: 2 }} />,
     title: 'Phone',
     details: 'Available via email only',
   },
   {
-    icon: <LocationOn sx={{ color: iconColor, mr: 2 }} />,
+    icon: <LocationOn sx={{ color: 'primary.dark', mr: 2 }} />,
     title: 'Response Time',
     details: 'We typically respond within a week',
   },

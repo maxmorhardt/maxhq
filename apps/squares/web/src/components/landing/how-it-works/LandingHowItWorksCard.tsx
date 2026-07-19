@@ -36,7 +36,7 @@ export default function LandingHowItWorksCard({
       }}
     >
       {/* icon and text content */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {/* colored icon container */}
         <Box
           sx={{

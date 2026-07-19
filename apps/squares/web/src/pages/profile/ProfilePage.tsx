@@ -331,7 +331,7 @@ export default function ProfilePage() {
           alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'space-between',
           gap: 2,
-          animation: `${popIn} 0.5s ease-out 0.05s both`,
+          animation: `${popIn} 0.5s ease-out 0.55s both`,
         }}
       >
         <Box>
@@ -401,7 +401,7 @@ export default function ProfilePage() {
           alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'space-between',
           gap: 2,
-          animation: `${popIn} 0.5s ease-out 0.55s both`,
+          animation: `${popIn} 0.5s ease-out 0.65s both`,
         }}
       >
         <Box>

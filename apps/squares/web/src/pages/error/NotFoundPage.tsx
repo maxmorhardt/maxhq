@@ -1,97 +1,42 @@
-import { Home, Search } from '@mui/icons-material';
-import { Box, Button, Container, Typography, useTheme } from '@mui/material';
+import { Home, LinkOff, Search, TravelExplore } from '@mui/icons-material';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
+import ErrorState, { type ErrorStateAction } from '../../components/common/ErrorState';
+import { gradients } from '../../types/gradients';
 
 export default function NotFoundPage() {
-  const theme = useTheme();
   const navigate = useNavigate();
   const auth = useAuth();
 
-  const handleGoHome = () => {
-    navigate('/');
-  };
+  const actions: ErrorStateAction[] = [
+    { label: 'Go Home', onClick: () => navigate('/'), icon: Home },
+  ];
 
-  const handleGoToContests = () => {
-    navigate('/contests');
-  };
+  if (auth.isAuthenticated) {
+    actions.push({ label: 'Browse Contests', onClick: () => navigate('/contests'), icon: Search });
+  }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
+    <>
       <Helmet>
         <title>Page Not Found – Squares</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      {/* main error message and navigation */}
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
-        {/* 404 number display */}
-        <Typography
-          variant="h1"
-          sx={{
-            fontWeight: 800,
-            fontSize: { xs: '4rem', md: '6rem' },
-            mb: 2,
-            color: theme.palette.primary.main,
-          }}
-        >
-          404
-        </Typography>
-
-        {/* page not found heading */}
-        <Typography
-          variant="h2"
-          sx={{
-            fontWeight: 700,
-            mb: 4,
-            fontSize: { xs: '1.5rem', md: '2.5rem' },
-            color: 'white',
-          }}
-        >
-          Page Not Found
-        </Typography>
-
-        {/* error description text */}
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'white',
-            opacity: 0.9,
-            fontWeight: 300,
-            maxWidth: 600,
-            mx: 'auto',
-            mb: 6,
-            lineHeight: 1.6,
-          }}
-        >
-          The page you're looking for doesn't exist. It might have been moved, deleted, or you
-          entered the wrong URL.
-        </Typography>
-
-        {/* navigation action buttons */}
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 3,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
-          <Button variant="contained" size="large" startIcon={<Home />} onClick={handleGoHome}>
-            Go Home
-          </Button>
-          {auth.isAuthenticated && (
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<Search />}
-              onClick={handleGoToContests}
-            >
-              Browse Contests
-            </Button>
-          )}
-        </Box>
-      </Box>
-    </Container>
+      <ErrorState
+        icon={TravelExplore}
+        accent={gradients.primary}
+        label="404"
+        title="Page Not Found"
+        description="The page you're looking for doesn't exist. It might have been moved, deleted, or the URL mistyped."
+        actions={actions}
+        hints={[
+          {
+            icon: LinkOff,
+            text: 'Double-check the address for typos. If you followed a link to get here, it may be out of date.',
+          },
+        ]}
+      />
+    </>
   );
 }

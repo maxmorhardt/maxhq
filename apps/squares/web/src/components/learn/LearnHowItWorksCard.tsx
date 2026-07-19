@@ -21,6 +21,7 @@ export default function LearnHowItWorksCard({
         background: theme.palette.grey[900],
         border: `1px solid ${theme.palette.grey[800]}`,
         borderRadius: 3,
+        height: '100%',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
         '&:hover': {
           transform: 'translateY(-6px)',
@@ -29,19 +30,19 @@ export default function LearnHowItWorksCard({
         },
       }}
     >
-      <CardContent sx={{ p: 4, textAlign: 'center' }}>
+      <CardContent sx={{ p: { xs: 4, md: 3, lg: 4 }, textAlign: 'center' }}>
         {/* circular step number badge */}
         <Box
           sx={{
-            width: 80,
-            height: 80,
+            width: { xs: 80, md: 64, lg: 80 },
+            height: { xs: 80, md: 64, lg: 80 },
             borderRadius: '50%',
             background: color,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
-            mb: 3,
+            mb: { xs: 3, md: 2, lg: 3 },
           }}
         >
           <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>

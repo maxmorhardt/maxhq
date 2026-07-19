@@ -1,6 +1,6 @@
-import { ErrorOutlineOutlined, Home, Refresh } from '@mui/icons-material';
-import { Box, Button, Container, Typography, useTheme } from '@mui/material';
+import { ErrorOutlineOutlined, Home, Refresh, Schedule } from '@mui/icons-material';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import ErrorState from '../../components/common/ErrorState';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -34,66 +34,28 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 }
 
 export function ErrorFallback() {
-  const theme = useTheme();
-
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <ErrorOutlineOutlined sx={{ fontSize: 64, color: '#ff6b6b' }} />
-        </Box>
-        <Typography
-          variant="h1"
-          sx={{
-            fontWeight: 800,
-            fontSize: { xs: '4rem', md: '6rem' },
-            mb: 2,
-            color: theme.palette.primary.main,
-          }}
-        >
-          Oops
-        </Typography>
-        <Typography
-          variant="h2"
-          sx={{ fontWeight: 700, mb: 4, fontSize: { xs: '1.5rem', md: '2.5rem' }, color: 'white' }}
-        >
-          Something Went Wrong
-        </Typography>
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'white',
-            opacity: 0.9,
-            fontWeight: 300,
-            maxWidth: 600,
-            mx: 'auto',
-            mb: 6,
-            lineHeight: 1.6,
-          }}
-        >
-          An unexpected error occurred. Please try refreshing the page.
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<Refresh />}
-            onClick={() => window.location.reload()}
-          >
-            Refresh Page
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<Home />}
-            onClick={() => {
-              window.location.href = '/';
-            }}
-          >
-            Go Home
-          </Button>
-        </Box>
-      </Box>
-    </Container>
+    <ErrorState
+      icon={ErrorOutlineOutlined}
+      label="Oops"
+      title="Something Went Wrong"
+      description="An unexpected error occurred. Please try refreshing the page."
+      actions={[
+        { label: 'Refresh Page', onClick: () => window.location.reload(), icon: Refresh },
+        {
+          label: 'Go Home',
+          onClick: () => {
+            window.location.href = '/';
+          },
+          icon: Home,
+        },
+      ]}
+      hints={[
+        {
+          icon: Schedule,
+          text: 'If refreshing does not help, the problem may be on our end. Try again in a few minutes.',
+        },
+      ]}
+    />
   );
 }

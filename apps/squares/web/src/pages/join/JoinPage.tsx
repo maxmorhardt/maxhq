@@ -4,7 +4,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import InviteSignIn from '../../components/join/InviteSignIn';
 import JoinError from '../../components/join/JoinError';
-import JoinNoSquares from '../../components/join/JoinNoSquares';
 import { joinContestByToken, previewInviteToken } from '../../features/contests/contestThunks';
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import { useToast } from '../../hooks/useToast';
@@ -73,11 +72,11 @@ export default function JoinPage() {
   }
 
   if (errorCode === 422) {
-    return <JoinNoSquares preview={preview} />;
+    return <JoinError variant="no-squares" preview={preview} />;
   }
 
   if (error) {
-    return <JoinError message={error} />;
+    return <JoinError variant="error" message={error} />;
   }
 
   if (!preview) {

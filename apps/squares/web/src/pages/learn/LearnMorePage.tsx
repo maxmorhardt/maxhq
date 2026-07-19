@@ -229,11 +229,15 @@ export default function LearnMorePage() {
               sx={{
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
-                gap: 4,
+                gap: { xs: 4, md: 3, lg: 4 },
               }}
             >
               {howItWorksSteps.map((step, index) => (
-                <Box key={step.stepNumber} className={`reveal delay-${index + 1}`}>
+                <Box
+                  key={step.stepNumber}
+                  className={`reveal delay-${index + 1}`}
+                  sx={{ height: '100%' }}
+                >
                   <LearnHowItWorksCard
                     stepNumber={step.stepNumber}
                     title={step.title}
@@ -266,7 +270,12 @@ export default function LearnMorePage() {
               Platform Features
             </Typography>
             <Box
-              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                gridAutoRows: '1fr',
+                gap: 4,
+              }}
             >
               {featuresList.map((feature, index) => (
                 <Box

@@ -1,4 +1,5 @@
 import { Box, Paper, Skeleton } from '@mui/material';
+import { CONTEST_STACK_MAX_WIDTH } from '../../types/layout';
 
 export default function ContestPageSkeleton() {
   const cardSx = {
@@ -108,7 +109,7 @@ export default function ContestPageSkeleton() {
                 <Skeleton
                   variant="rectangular"
                   sx={{
-                    width: { xs: 10, sm: 14, md: 16 },
+                    width: { xs: 16, sm: 19, md: 23 },
                     height: { xs: 100, sm: 130, md: 150 },
                     borderRadius: 1,
                     mr: { xs: 2, sm: 3.5 },
@@ -171,8 +172,8 @@ export default function ContestPageSkeleton() {
                           <Skeleton
                             variant="rectangular"
                             sx={{
-                              width: { xs: 24, sm: 43, md: 47.5 },
-                              height: { xs: 24, sm: 43, md: 47.5 },
+                              width: { xs: 24, sm: 42, md: 47 },
+                              height: { xs: 24, sm: 42, md: 47 },
                               m: { xs: 0, sm: 0.3, md: 0.4 },
                               borderRadius: 1.5,
                             }}
@@ -223,7 +224,7 @@ export default function ContestPageSkeleton() {
           flexDirection: 'column',
           gap: 3,
           width: '100%',
-          maxWidth: { xs: '360px', sm: '490px', md: '600px' },
+          maxWidth: CONTEST_STACK_MAX_WIDTH,
           margin: '0 auto',
           p: 1,
           mb: 3,

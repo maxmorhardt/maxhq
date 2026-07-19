@@ -1,59 +1,72 @@
-import { ErrorOutlineOutlined } from '@mui/icons-material';
-import { Box, Button, Container, Paper, Typography, useTheme } from '@mui/material';
+import { GridOff, HelpOutlineOutlined, HowToReg, LinkOff } from '@mui/icons-material';
+import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import ErrorState, { type ErrorStateHint } from '../common/ErrorState';
+import type { InvitePreviewResponse } from '../../types/contest';
+import { gradients } from '../../types/gradients';
+
+type JoinErrorVariant = 'error' | 'no-squares';
 
 interface JoinErrorProps {
-  message: string;
+  variant: JoinErrorVariant;
+  message?: string;
+  preview?: InvitePreviewResponse | null;
 }
 
-export default function JoinError({ message }: JoinErrorProps) {
-  const theme = useTheme();
+export default function JoinError({ variant, message, preview }: JoinErrorProps) {
   const navigate = useNavigate();
 
+  const noSquares = variant === 'no-squares';
+
+  const hints: ErrorStateHint[] = noSquares
+    ? [
+        {
+          icon: HowToReg,
+          text: (
+            <>
+              Ask{preview?.owner ? ` ${preview.owner}` : ' the contest owner'} to lower another
+              participant&apos;s square limit to free up space.
+            </>
+          ),
+        },
+        {
+          icon: HelpOutlineOutlined,
+          text: (
+            <>
+              Or ask for a <strong style={{ color: 'white' }}>viewer</strong> invite so you can
+              still follow along without claiming squares.
+            </>
+          ),
+        },
+      ]
+    : [
+        {
+          icon: HelpOutlineOutlined,
+          text: 'Invite links can expire or hit a use limit. Ask whoever invited you to send a fresh one.',
+        },
+      ];
+
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 }, px: { xs: 2, sm: 3 } }}>
-      <Paper
-        sx={{
-          background: theme.palette.grey[900],
-          border: `1px solid ${theme.palette.grey[800]}`,
-          borderRadius: 3,
-          p: { xs: 3, sm: 5 },
-          textAlign: 'center',
-        }}
-      >
-        <Box
-          sx={{
-            width: 64,
-            height: 64,
-            borderRadius: '50%',
-            background: 'rgba(255,100,100,0.12)',
-            border: '1px solid rgba(255,100,100,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 3,
-          }}
-        >
-          <ErrorOutlineOutlined sx={{ fontSize: 28, color: '#ff6b6b' }} />
-        </Box>
-
-        <Typography sx={{ fontWeight: 700, fontSize: '1.3rem', color: 'white', mb: 1.5 }}>
-          Unable to Join
-        </Typography>
-
-        <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.95rem', mb: 3 }}>
-          {message}
-        </Typography>
-
-        <Button
-          variant="outlined"
-          onClick={() => navigate('/contests')}
-          sx={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.2)' }}
-        >
-          My Contests
-        </Button>
-      </Paper>
-    </Container>
+    <ErrorState
+      icon={noSquares ? GridOff : LinkOff}
+      accent={noSquares ? gradients.primary : '#ff6b6b'}
+      label={noSquares ? 'Contest Full' : 'Invite Link'}
+      title={noSquares ? 'No Squares Available' : 'Unable to Join'}
+      description={
+        noSquares ? (
+          <>
+            Every square in{' '}
+            <Box component="span" sx={{ color: 'white', fontWeight: 600 }}>
+              {preview?.contestName ?? 'this contest'}
+            </Box>{' '}
+            has already been claimed.
+          </>
+        ) : (
+          (message ?? 'This invite link is invalid or expired')
+        )
+      }
+      hints={hints}
+      actions={[{ label: 'My Contests', onClick: () => navigate('/contests') }]}
+    />
   );
 }

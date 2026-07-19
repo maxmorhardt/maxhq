@@ -2,6 +2,7 @@ import { Box, Button, Container, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import LandingCreateContestButton from './LandingCreateContestButton';
 import { gradients } from '../../types/gradients';
+import { HEADER_HEIGHT } from '../../types/layout';
 
 export default function LandingHeroSection() {
   const navigate = useNavigate();
@@ -12,8 +13,11 @@ export default function LandingHeroSection() {
         position: 'relative',
         overflow: 'hidden',
         background: gradients.lightBlue,
-        // fill the viewport below the static AppBar (56px on xs, 64px from sm up)
-        minHeight: { xs: 'calc(100svh - 56px)', sm: 'calc(100svh - 64px)' },
+        // fill the viewport below the static AppBar
+        minHeight: {
+          xs: `calc(100svh - ${HEADER_HEIGHT.xs}px)`,
+          sm: `calc(100svh - ${HEADER_HEIGHT.sm}px)`,
+        },
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
