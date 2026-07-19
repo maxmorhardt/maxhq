@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { setupAxiosInterceptors } from '../axios/api';
+import { setupAxiosInterceptors, setUnauthorizedHandler } from '../axios/api';
 
 export const useAxiosAuth = () => {
-  const auth = useAuth();
+  const { user, isAuthenticated, removeUser } = useAuth();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!auth.isAuthenticated || !auth.user?.id_token) {
+    if (!isAuthenticated || !user?.id_token) {
       setReady(false);
       return;
     }
 
-    setupAxiosInterceptors(auth.user);
+    setupAxiosInterceptors(user);
+    setUnauthorizedHandler(() => {
+      void removeUser();
+    });
+
     setReady(true);
-  }, [auth.user, auth.isAuthenticated]);
+
+    return () => setUnauthorizedHandler(null);
+  }, [user, isAuthenticated, removeUser]);
 
   return ready;
 };

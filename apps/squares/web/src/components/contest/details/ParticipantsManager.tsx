@@ -32,6 +32,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import type { Participant, ParticipantRole } from '../../../types/contest';
+import { isTerminalStatus } from '../../../utils/contestStatus';
 import LeaveContest from '../LeaveContest';
 
 interface ParticipantsManagerProps {
@@ -231,10 +232,10 @@ export default function ParticipantsManager({
                     </Box>
                   )}
 
-                  {/* a non-owner can remove themselves */}
+                  {/* a non-owner can leave until the contest is finalized */}
                   {participant.userId === userEmail &&
                     participant.role !== 'owner' &&
-                    currentContest?.status === 'ACTIVE' && (
+                    !isTerminalStatus(currentContest?.status) && (
                       <Tooltip title="Leave contest">
                         <IconButton
                           aria-label="Leave contest"

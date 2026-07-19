@@ -11,7 +11,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 
@@ -29,6 +29,7 @@ const settings = [
 export default function Header() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // anchor elements for dropdown menus
   const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
@@ -48,8 +49,13 @@ export default function Header() {
     if (setting === 'Profile') {
       navigate('/profile');
     } else if (setting === 'Logout') {
-      // dex has no end-session endpoint, so logout just clears the local session
       void auth.removeUser();
+
+      // only leave pages that require auth
+      const path = location.pathname;
+      if (path === '/profile' || path.startsWith('/contests')) {
+        navigate('/');
+      }
     }
 
     handleCloseUserMenu();

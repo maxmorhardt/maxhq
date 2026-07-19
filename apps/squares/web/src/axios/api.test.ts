@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import api, { setupAxiosInterceptors } from './api';
+import api, { setupAxiosInterceptors, setUnauthorizedHandler } from './api';
 import type { User } from 'oidc-client-ts';
 import type { InternalAxiosRequestConfig } from 'axios';
 
@@ -80,6 +80,36 @@ describe('setupAxiosInterceptors', () => {
     const result = onFulfilled(config);
     expect(result.headers.Authorization).toBe('Bearer my-token');
 
+    useSpy.mockRestore();
+  });
+
+  it('should call the unauthorized handler on a 401 response', async () => {
+    const useSpy = vi.spyOn(api.interceptors.response, 'use');
+    setupAxiosInterceptors({ id_token: 'token' } as User);
+
+    const handler = vi.fn();
+    setUnauthorizedHandler(handler);
+
+    const onRejected = useSpy.mock.calls[0][1] as (error: unknown) => Promise<never>;
+    await expect(onRejected({ response: { status: 401 } })).rejects.toBeDefined();
+    expect(handler).toHaveBeenCalledOnce();
+
+    setUnauthorizedHandler(null);
+    useSpy.mockRestore();
+  });
+
+  it('should not call the unauthorized handler on non-401 errors', async () => {
+    const useSpy = vi.spyOn(api.interceptors.response, 'use');
+    setupAxiosInterceptors({ id_token: 'token' } as User);
+
+    const handler = vi.fn();
+    setUnauthorizedHandler(handler);
+
+    const onRejected = useSpy.mock.calls[0][1] as (error: unknown) => Promise<never>;
+    await expect(onRejected({ response: { status: 500 } })).rejects.toBeDefined();
+    expect(handler).not.toHaveBeenCalled();
+
+    setUnauthorizedHandler(null);
     useSpy.mockRestore();
   });
 });

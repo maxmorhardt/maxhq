@@ -62,10 +62,11 @@ export default function ContestsTable({
   const [leaveTarget, setLeaveTarget] = useState<Contest | null>(null);
 
   const userEmail = auth.user?.profile?.email;
-  const canLeave = (contest: Contest) =>
-    !!onLeave && !!userEmail && contest.owner !== userEmail && contest.status === 'ACTIVE';
 
-  // edit/delete on non-terminal contests; everyone else gets a read-only view
+  const canLeave = (contest: Contest) =>
+    !!onLeave && !!userEmail && contest.owner !== userEmail && !isTerminalStatus(contest.status);
+
+  // edit/delete on non-terminal contests
   const canModify = (contest: Contest) =>
     !!userEmail && contest.owner === userEmail && !isTerminalStatus(contest.status);
 

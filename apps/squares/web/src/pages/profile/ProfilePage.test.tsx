@@ -56,7 +56,7 @@ vi.mock('../../service/userService', () => ({
 
 import { useAuth } from 'react-oidc-context';
 import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
-import { updateUserInitials } from '../../features/user/userThunks';
+import { loadUserProfile, updateUserInitials } from '../../features/user/userThunks';
 import { deleteMyAccount, getMyActiveContests, getMyStats } from '../../service/userService';
 
 const theme = createTheme();
@@ -121,6 +121,14 @@ describe('ProfilePage', () => {
     expect(mockShowToast).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: /delete account/i })).toBeDisabled();
     expect(screen.queryByRole('button', { name: /retry/i })).not.toBeInTheDocument();
+  });
+
+  it('retries the profile load when the app-wide load already errored', async () => {
+    // simulate the app-wide load having failed before navigating here
+    userState = { profile: null, loading: false, error: 'down' };
+    renderPage();
+    await waitFor(() => expect(loadUserProfile).toHaveBeenCalledTimes(1));
+    expect(mockDispatch).toHaveBeenCalledWith({ type: 'loadUserProfile' });
   });
 
   it('shows the default initials and saves an edit', async () => {

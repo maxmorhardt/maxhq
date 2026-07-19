@@ -14,12 +14,13 @@ import {
 import { useState } from 'react';
 import { removeContestParticipant } from '../../features/contests/contestThunks';
 import { useAppDispatch } from '../../hooks/reduxHooks';
+import type { ContestStatus } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
 interface LeaveContestProps {
   open: boolean;
   onClose: () => void;
-  contest: { id: string; name: string } | null;
+  contest: { id: string; name: string; status?: ContestStatus } | null;
   userEmail: string;
   onLeft?: () => void;
 }
@@ -44,6 +45,7 @@ export default function LeaveContest({
       setError('Unable to identify your account. Please sign in again.');
       return;
     }
+
     setLoading(true);
     setError(null);
     try {
@@ -90,8 +92,8 @@ export default function LeaveContest({
         <Typography
           sx={{ color: 'white', opacity: 0.8, fontSize: { xs: '0.875rem', md: '1rem' }, mb: 2 }}
         >
-          Are you sure you want to leave <strong>{contest.name}</strong>? Your claimed squares will
-          be released and you'll need a new invite to rejoin.
+          Are you sure you want to leave <strong>{contest.name}</strong>? Your squares will be
+          released and you'll need a new invite to rejoin.
         </Typography>
         {error && <Alert severity="error">{error}</Alert>}
       </DialogContent>

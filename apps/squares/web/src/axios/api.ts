@@ -8,6 +8,13 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// invoked when an authenticated request comes back 401
+let onUnauthorized: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null) => {
+  onUnauthorized = handler;
+};
+
 export const setupAxiosInterceptors = (user: User | null | undefined) => {
   if (!user || !user.id_token) {
     return;
@@ -15,6 +22,7 @@ export const setupAxiosInterceptors = (user: User | null | undefined) => {
 
   // clear existing interceptors to avoid duplicates on token refresh
   api.interceptors.request.clear();
+  api.interceptors.response.clear();
 
   api.interceptors.request.use(
     (config) => {
@@ -22,6 +30,16 @@ export const setupAxiosInterceptors = (user: User | null | undefined) => {
       return config;
     },
     (error) => Promise.reject(error)
+  );
+
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        onUnauthorized?.();
+      }
+      return Promise.reject(error);
+    }
   );
 };
 

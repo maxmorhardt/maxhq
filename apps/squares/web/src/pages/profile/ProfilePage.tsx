@@ -14,7 +14,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
@@ -75,23 +75,18 @@ export default function ProfilePage() {
     }
   }, []);
 
+  const profileRetried = useRef(false);
+
   // wait for the bearer interceptor before fetching, or the first request goes out unauthenticated
   useEffect(() => {
     if (auth.isAuthenticated && axiosReady) {
       loadStats();
-      if (!profile && !profileLoading && !profileError) {
+      if (!profile && !profileLoading && !profileRetried.current) {
+        profileRetried.current = true;
         dispatch(loadUserProfile());
       }
     }
-  }, [
-    auth.isAuthenticated,
-    axiosReady,
-    loadStats,
-    profile,
-    profileLoading,
-    profileError,
-    dispatch,
-  ]);
+  }, [auth.isAuthenticated, axiosReady, loadStats, profile, profileLoading, dispatch]);
 
   const startEditingInitials = () => {
     setInitialsValue(profile?.defaultInitials ?? '');
@@ -125,7 +120,7 @@ export default function ProfilePage() {
     }
   };
 
-  // show redirecting state while a sign-in redirect is in flight instead of flashing the page
+  // show redirecting state while a sign-in redirect is in flight
   if (auth.activeNavigator === 'signinRedirect') {
     return (
       <LoadingScreen title="Redirecting to sign in..." subtitle="You will be redirected shortly" />
