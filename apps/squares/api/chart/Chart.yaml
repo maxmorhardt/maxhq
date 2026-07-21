@@ -3,5 +3,3 @@ name: squares-api
 description: Chart for squares
 type: application
 version: 1.1.1
-# renovate: image=maxmorhardt/squares-api
-appVersion: 1.1.1
