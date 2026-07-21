@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/maxmorhardt/charts/compare/maxstash/1.0.1...maxstash/1.0.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* require explicit image tags in Helm charts ([#40](https://github.com/maxmorhardt/charts/issues/40)) ([bd78108](https://github.com/maxmorhardt/charts/commit/bd78108aa32fe06fcccd8cb4cf427d0fbea3ac0e))
+
 ## [1.0.1](https://github.com/maxmorhardt/charts/compare/maxstash/1.0.0...maxstash/1.0.1) (2026-07-18)
 
 
