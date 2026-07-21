@@ -2,17 +2,11 @@
 
 ## Required
 
-- **Envoy Gateway** - `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef)
-- **TLS** - Terminated at the gateway (`maxstash.io-tls` in `envoy-gateway-system`)
-
-```bash
-kubectl create secret tls maxstash.io-tls \
-  --cert=path/to/tls.crt \
-  --key=path/to/tls.key
-```
-
-- **DNS Record** - Point `squares.maxstash.io` to the gateway external IP
+- **Envoy Gateway** — `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef)
+- **TLS** — terminated at the gateway (`maxstash.io-tls` in `envoy-gateway-system`)
+- **DNS** — `squares.maxstash.io` pointed at the gateway external IP
+- **squares-api** — the backend this UI talks to
 
 ## Optional
 
-- **Prometheus** - For metrics collection (port 9113)
+- **Prometheus** — metrics on port 9113

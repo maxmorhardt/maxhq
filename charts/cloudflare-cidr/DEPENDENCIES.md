@@ -1,23 +1,24 @@
-# Dependencies
+# External Dependencies
 
-This chart has no external Helm dependencies.
+CronJob that refreshes the trusted Cloudflare IP ranges used by the gateway's
+`ClientTrafficPolicy`, so real client IPs resolve correctly behind Cloudflare.
 
-## Runtime Dependencies
-- Kubernetes cluster with kubectl access
-- Python 3.x
-- Python packages (see requirements.txt)
+## Required
 
-## Example Secret
+- **RBAC** — the chart's Role and ServiceAccount let the job patch the CIDR list in-cluster
+- **Python** — the job runs a stock `python` image and installs
+  [requirements.txt](requirements.txt) at start; no app image is built for this chart
 
-You must create a Kubernetes Secret with your Cloudflare credentials. Example:
+## Secrets
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: cloudflare-cidr-env
-  namespace: jobs
-type: Opaque
-stringData:
-  DISCORD_WEBHOOK: "discord-webhook"
-```
+`cloudflare-cidr-env` in the `jobs` namespace. Sealed into `secrets/jobs/` — see
+[sealed-secrets](https://github.com/maxmorhardt/k8s/blob/main/sealed-secrets/SETUP.md).
+
+| key | purpose |
+| --- | --- |
+| `DISCORD_WEBHOOK` | run notifications |
+
+## Optional
+
+- **maxstash-gateway** — the consumer of the CIDR list; without it the job still runs but
+  nothing reads the output
