@@ -1,26 +1,25 @@
-# Dependencies
+# External Dependencies
 
-This chart has no external Helm dependencies.
+CronJob that keeps a Cloudflare DNS record pointed at the cluster's current public IP.
 
-## Runtime Dependencies
-- Kubernetes cluster with kubectl access
-- Python 3.x
-- Python packages (see requirements.txt)
+## Required
 
-## Example Secret
+- **Cloudflare API token** — scoped to edit DNS for the target zone
+- **Python** — the job runs a stock `python` image and installs
+  [requirements.txt](requirements.txt) at start; no app image is built for this chart
 
-You must create a Kubernetes Secret with your Cloudflare credentials. Example:
+## Secrets
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: cloudflare-ddns-env
-	namespace: jobs
-type: Opaque
-stringData:
-  ZONE_ID: "zone-id"
-  RECORD_NAME: "domain.com"
-  API_TOKEN: "cloudflare-api-token"
-  DISCORD_WEBHOOK: "discord-webhook"
-```
+`cloudflare-ddns-env` in the `jobs` namespace. Sealed into `secrets/jobs/` — see
+[sealed-secrets](https://github.com/maxmorhardt/k8s/blob/main/sealed-secrets/SETUP.md).
+
+| key | purpose |
+| --- | --- |
+| `ZONE_ID` | Cloudflare zone to update |
+| `RECORD_NAME` | the record, e.g. `maxstash.io` |
+| `API_TOKEN` | Cloudflare API token |
+| `DISCORD_WEBHOOK` | run notifications |
+
+## Runs
+
+Every 15 minutes (`schedule` in [values.yaml](values.yaml)).
