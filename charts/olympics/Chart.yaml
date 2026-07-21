@@ -3,5 +3,3 @@ name: olympics
 description: Chart for olympics
 type: application
 version: 1.0.1
-# renovate: image=maxmorhardt/olympics
-appVersion: 1.0.0
