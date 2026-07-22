@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../features/contests/contestSlice';
+import { leaderboardReducer } from '../features/leaderboard/leaderboardSlice';
 import { statsReducer } from '../features/stats/statsSlice';
 import { toastReducer } from '../features/toast/toastSlice';
 import { userReducer } from '../features/user/userSlice';
@@ -7,6 +8,7 @@ import { wsReducer } from '../features/ws/wsSlice';
 
 const rootReducer = {
   contest: contestReducer,
+  leaderboard: leaderboardReducer,
   stats: statsReducer,
   toast: toastReducer,
   user: userReducer,

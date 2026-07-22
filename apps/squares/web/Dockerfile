@@ -11,7 +11,7 @@ ENV NODE_ENV="production"
 
 WORKDIR /usr/share/nginx/html
 
-COPY --chown=nginx:nginx dist/ .
+COPY --chown=nginx:nginx dist/client/ .
 COPY --chown=nginx:nginx nginx.conf /etc/nginx/conf.d/default.conf
 
 USER nginx

@@ -26,3 +26,12 @@ jobs:
       artifact_path: dist
       push: ${{ github.event_name == 'push' }}
     secrets: inherit
+
+  deploy:
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    needs: docker-ci
+    if: ${{ github.event_name == 'push' }}
+    with:
+      app: ${{ github.event.repository.name }}
+      image_tag: ${{ github.ref_name }}
+    secrets: inherit

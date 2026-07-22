@@ -21,7 +21,10 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* react-router typegen output */
+    "rootDirs": [".", "./.react-router/types"]
   },
-  "include": ["src"]
+  "include": ["src", ".react-router/types/**/*"]
 }

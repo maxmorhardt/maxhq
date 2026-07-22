@@ -17,7 +17,13 @@ const mockProfile = {
   defaultInitials: 'MM',
   createdAt: '2026-07-11T00:00:00Z',
 };
-const mockStats = { contestsCreated: 3, contestsJoined: 7, squaresClaimed: 42, quarterWins: 5 };
+const mockStats = {
+  contestsCreated: 3,
+  contestsJoined: 7,
+  squaresClaimed: 42,
+  quarterWins: 5,
+  quartersPlayed: 20,
+};
 
 // the profile and stats live in the redux user slice; tests drive them through this fake state
 type FakeUserState = {
@@ -29,6 +35,14 @@ type FakeUserState = {
 };
 let userState: FakeUserState;
 
+// the leaderboard rank card reads its own slice; default it to a ranked user
+type FakeLeaderboardState = {
+  myRank: { rank: number; totalRanked: number; quarterWins: number; ranked: boolean } | null;
+  myRankLoading: boolean;
+  myRankError: string | null;
+};
+let leaderboardState: FakeLeaderboardState;
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: () => mockNavigate };
@@ -39,8 +53,12 @@ vi.mock('../../hooks/useAxiosAuth', () => ({ useAxiosAuth: () => true }));
 vi.mock('../../hooks/useToast', () => ({ useToast: () => ({ showToast: mockShowToast }) }));
 vi.mock('../../hooks/reduxHooks', () => ({
   useAppDispatch: () => mockDispatch,
-  useAppSelector: (selector: (state: { user: FakeUserState }) => unknown) =>
-    selector({ user: userState }),
+  useAppSelector: (
+    selector: (state: { user: FakeUserState; leaderboard: FakeLeaderboardState }) => unknown
+  ) => selector({ user: userState, leaderboard: leaderboardState }),
+}));
+vi.mock('../../features/leaderboard/leaderboardThunks', () => ({
+  fetchMyRank: vi.fn(() => ({ type: 'fetchMyRank' })),
 }));
 vi.mock('../../features/contests/contestThunks', () => ({
   deleteContest: vi.fn((id: string) => ({ type: 'deleteContest', id })),
@@ -96,6 +114,11 @@ describe('ProfilePage', () => {
       stats: mockStats,
       statsError: false,
     };
+    leaderboardState = {
+      myRank: { rank: 7, totalRanked: 143, quarterWins: 5, ranked: true },
+      myRankLoading: false,
+      myRankError: null,
+    };
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
@@ -118,7 +141,9 @@ describe('ProfilePage', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
     expect(screen.getByText('42')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText(/12% win rate/i)).toBeInTheDocument();
+    // 5 of 20 quarters played; the old squares-based rate would have shown 12%
+    expect(screen.getByText(/25% win rate/i)).toBeInTheDocument();
+    expect(screen.queryByText(/12% win rate/i)).not.toBeInTheDocument();
   });
 
   it('shows a top-of-page error and disables account deletion when loading fails', async () => {

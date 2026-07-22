@@ -1,6 +1,7 @@
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import GridViewIcon from '@mui/icons-material/GridView';
 import InfoIcon from '@mui/icons-material/Info';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import AppBar from '@mui/material/AppBar';
@@ -18,6 +19,7 @@ import { HEADER_HEIGHT } from '../../types/layout';
 
 const pages = [
   { name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' },
+  { name: 'Leaderboard', icon: <LeaderboardIcon />, navigate: '/leaderboard' },
   { name: 'Learn More', icon: <InfoIcon />, navigate: '/learn-more' },
   { name: 'Contact', icon: <ContactSupportIcon />, navigate: '/contact' },
 ];

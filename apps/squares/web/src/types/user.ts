@@ -14,6 +14,7 @@ export interface UserStats {
   contestsJoined: number;
   squaresClaimed: number;
   quarterWins: number;
+  quartersPlayed: number;
 }
 
 export interface UserActiveContest {

@@ -19,10 +19,17 @@ import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from '../../components/common/LoadingScreen';
+import LeaderboardRankCard from '../../components/leaderboard/LeaderboardRankCard';
 import { popIn } from '../../components/profile/animations';
 import DeleteAccountDialog from '../../components/profile/DeleteAccountDialog';
 import StatCard from '../../components/profile/StatCard';
 import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
+import {
+  selectMyRank,
+  selectMyRankError,
+  selectMyRankLoading,
+} from '../../features/leaderboard/leaderboardSelectors';
+import { fetchMyRank } from '../../features/leaderboard/leaderboardThunks';
 import {
   selectUserProfile,
   selectUserProfileError,
@@ -54,6 +61,9 @@ export default function ProfilePage() {
   const stats = useAppSelector(selectUserStats);
   const statsFetching = useAppSelector(selectUserStatsLoading);
   const statsError = useAppSelector(selectUserStatsError);
+  const myRank = useAppSelector(selectMyRank);
+  const myRankLoading = useAppSelector(selectMyRankLoading);
+  const myRankError = useAppSelector(selectMyRankError);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -72,6 +82,7 @@ export default function ProfilePage() {
 
   const profileRetried = useRef(false);
   const statsRetried = useRef(false);
+  const rankRetried = useRef(false);
 
   useEffect(() => {
     if (!auth.isAuthenticated || !axiosReady) {
@@ -84,6 +95,11 @@ export default function ProfilePage() {
     if (!stats && !statsFetching && !statsRetried.current) {
       statsRetried.current = true;
       dispatch(loadUserStats());
+    }
+    // the rank is not loaded app-wide, so the profile page always fetches it once
+    if (!rankRetried.current) {
+      rankRetried.current = true;
+      dispatch(fetchMyRank());
     }
   }, [auth.isAuthenticated, axiosReady, profile, profileLoading, stats, statsFetching, dispatch]);
 
@@ -202,9 +218,10 @@ export default function ProfilePage() {
     }
   };
 
+  // share of the quarters the user had a stake in that they actually won
   const winRate =
-    stats && stats.squaresClaimed > 0
-      ? `${((stats.quarterWins / stats.squaresClaimed) * 100).toFixed(0)}% win rate`
+    stats && stats.quartersPlayed > 0
+      ? `${((stats.quarterWins / stats.quartersPlayed) * 100).toFixed(0)}% win rate`
       : undefined;
 
   const memberSince = profile
@@ -317,6 +334,13 @@ export default function ProfilePage() {
           delay={0.45}
         />
       </Box>
+
+      {/* leaderboard standing */}
+      <LeaderboardRankCard
+        rank={myRank}
+        loading={myRankLoading && !myRank}
+        error={Boolean(myRankError)}
+      />
 
       {/* default initials */}
       <Paper

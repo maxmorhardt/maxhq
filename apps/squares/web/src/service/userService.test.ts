@@ -54,6 +54,7 @@ describe('userService', () => {
       contestsJoined: 7,
       squaresClaimed: 42,
       quarterWins: 5,
+      quartersPlayed: 20,
     };
 
     vi.mocked(api.get).mockResolvedValue({ data: mockStats });

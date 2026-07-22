@@ -5,14 +5,7 @@ import LandingFeatureCard from './LandingFeatureCard';
 import { gradients } from '../../../types/gradients';
 
 type GradientType =
-  | 'primary'
-  | 'pink'
-  | 'cyan'
-  | 'mint'
-  | 'secondary'
-  | 'lightBlue'
-  | 'black'
-  | 'green';
+  'primary' | 'pink' | 'cyan' | 'mint' | 'secondary' | 'lightBlue' | 'black' | 'green';
 
 interface Feature {
   icon?: ReactNode;
