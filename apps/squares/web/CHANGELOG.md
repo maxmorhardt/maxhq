@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/maxmorhardt/squares/compare/1.3.1...2.0.0) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* ssg and leaderboard feature ([#52](https://github.com/maxmorhardt/squares/issues/52))
+
+### Features
+
+* ssg and leaderboard feature ([#52](https://github.com/maxmorhardt/squares/issues/52)) ([1b494d0](https://github.com/maxmorhardt/squares/commit/1b494d0a83df1727de53994dc23db6ad2aba18c6))
+
 ## [1.3.1](https://github.com/maxmorhardt/squares/compare/1.3.0...1.3.1) (2026-07-19)
 
 
