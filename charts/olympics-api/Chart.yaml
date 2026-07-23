@@ -1,5 +1,0 @@
-apiVersion: v2
-name: olympics-api
-description: Chart for olympics-api
-type: application
-version: 1.0.2
