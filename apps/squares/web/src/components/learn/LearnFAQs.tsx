@@ -11,6 +11,8 @@ export default function LearnFAQs({ question, answer }: LearnFAQsProps) {
 
   return (
     <Accordion
+      disableGutters
+      slotProps={{ transition: { timeout: 200 } }}
       sx={{
         background: theme.palette.grey[900],
         border: `1px solid ${theme.palette.grey[800]}`,
