@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/maxmorhardt/squares/compare/2.0.2...2.0.3) (2026-07-23)
+
+
+### Bug Fixes
+
+* learn more mobile performance ([#60](https://github.com/maxmorhardt/squares/issues/60)) ([dae73ce](https://github.com/maxmorhardt/squares/commit/dae73ce0b06b11c42ffafa36426b1876e15c15ad))
+
 ## [2.0.2](https://github.com/maxmorhardt/squares/compare/2.0.1...2.0.2) (2026-07-23)
 
 
