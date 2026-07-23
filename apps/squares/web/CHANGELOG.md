@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/maxmorhardt/squares/compare/2.0.1...2.0.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* switch header nav to links and tune caching ([#58](https://github.com/maxmorhardt/squares/issues/58)) ([3cb050f](https://github.com/maxmorhardt/squares/commit/3cb050f661a166828cca0b0739b682eae2944a1e))
+
 ## [2.0.1](https://github.com/maxmorhardt/squares/compare/2.0.0...2.0.1) (2026-07-23)
 
 
