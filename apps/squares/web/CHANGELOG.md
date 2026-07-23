@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/maxmorhardt/squares/compare/2.0.0...2.0.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* refine leaderboard states and tighten layouts ([#55](https://github.com/maxmorhardt/squares/issues/55)) ([25affbe](https://github.com/maxmorhardt/squares/commit/25affbe0ac26c3a633fd9df670601306a59f1c9c))
+
 ## [2.0.0](https://github.com/maxmorhardt/squares/compare/1.3.1...2.0.0) (2026-07-22)
 
 
