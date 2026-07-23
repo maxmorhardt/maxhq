@@ -29,7 +29,7 @@ export default function StatCard({
       sx={{
         textAlign: 'center',
         px: 2,
-        py: 2.5,
+        py: 1.75,
         borderRadius: 3,
         background: highlight
           ? `linear-gradient(135deg, ${theme.palette.primary.dark}33 0%, ${theme.palette.primary.main}22 100%)`
@@ -44,17 +44,17 @@ export default function StatCard({
         sx={{
           display: 'flex',
           justifyContent: 'center',
-          mb: 1,
+          mb: 0.5,
           color: 'primary.main',
-          fontSize: 32,
+          fontSize: 26,
         }}
       >
         {icon}
       </Box>
       {loading ? (
-        <Skeleton variant="text" width={60} sx={{ mx: 'auto', fontSize: '2rem' }} />
+        <Skeleton variant="text" width={60} sx={{ mx: 'auto', fontSize: '1.75rem' }} />
       ) : (
-        <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.5 }}>
+        <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.25 }}>
           {value?.toLocaleString() ?? '–'}
         </Typography>
       )}

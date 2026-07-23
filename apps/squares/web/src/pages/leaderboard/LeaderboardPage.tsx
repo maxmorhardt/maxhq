@@ -75,30 +75,13 @@ export default function LeaderboardPage() {
       {/* hero */}
       <Box
         sx={{
-          position: 'relative',
           textAlign: 'center',
           mb: { xs: 4, md: 5 },
           animation: `${popIn} 0.5s ease-out both`,
         }}
       >
         <Box
-          aria-hidden
           sx={{
-            position: 'absolute',
-            top: -70,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 300,
-            height: 200,
-            background: 'radial-gradient(circle, #ffd70033 0%, transparent 68%)',
-            filter: 'blur(34px)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        <Box
-          sx={{
-            position: 'relative',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 1,
@@ -127,7 +110,6 @@ export default function LeaderboardPage() {
         <Typography
           component="h1"
           sx={{
-            position: 'relative',
             fontWeight: 900,
             fontSize: { xs: '2.25rem', md: '3rem' },
             lineHeight: 1.05,
@@ -143,7 +125,6 @@ export default function LeaderboardPage() {
 
         <Typography
           sx={{
-            position: 'relative',
             color: 'text.secondary',
             mt: 1,
             mx: 'auto',

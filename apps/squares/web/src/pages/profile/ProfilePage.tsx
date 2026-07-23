@@ -231,7 +231,7 @@ export default function ProfilePage() {
   const statsLoading = !stats && !statsError;
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
       <Helmet>
         <title>Profile – Squares</title>
         <meta name="robots" content="noindex, nofollow" />
@@ -245,30 +245,29 @@ export default function ProfilePage() {
       )}
 
       {/* profile header */}
-      <Box sx={{ textAlign: 'center', mb: 3, animation: `${popIn} 0.5s ease-out both` }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+      <Box sx={{ textAlign: 'center', mb: 2.5, animation: `${popIn} 0.5s ease-out both` }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
           <Box
             sx={{
-              width: 72,
-              height: 72,
+              width: 60,
+              height: 60,
               borderRadius: '50%',
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: `0 8px 32px ${theme.palette.primary.main}40`,
             }}
           >
-            <Typography variant="h4" sx={{ fontWeight: 800, color: 'white' }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: 'white' }}>
               {loading ? '' : (profile?.displayName?.charAt(0) || '?').toUpperCase()}
             </Typography>
           </Box>
         </Box>
 
         {loading ? (
-          <Skeleton variant="text" width={180} sx={{ mx: 'auto', fontSize: '2rem' }} />
+          <Skeleton variant="text" width={180} sx={{ mx: 'auto', fontSize: '1.5rem' }} />
         ) : (
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>
             {profile?.displayName || '–'}
           </Typography>
         )}
@@ -285,10 +284,10 @@ export default function ProfilePage() {
 
       {/* stats */}
       <Typography
-        variant="h6"
+        variant="subtitle1"
         sx={{
           fontWeight: 700,
-          mb: 2,
+          mb: 1.25,
           textAlign: 'center',
           animation: `${popIn} 0.5s ease-out 0.1s both`,
         }}
@@ -299,8 +298,8 @@ export default function ProfilePage() {
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' },
-          gap: 2,
-          mb: 4,
+          gap: 1.5,
+          mb: 2.5,
         }}
       >
         <StatCard
@@ -346,8 +345,8 @@ export default function ProfilePage() {
       <Paper
         elevation={0}
         sx={{
-          p: 2.5,
-          mb: 4,
+          p: 2,
+          mb: 2.5,
           borderRadius: 3,
           border: `1px solid ${theme.palette.divider}`,
           display: 'flex',
@@ -416,7 +415,7 @@ export default function ProfilePage() {
       <Paper
         elevation={0}
         sx={{
-          p: 2.5,
+          p: 2,
           borderRadius: 3,
           border: `1px solid ${theme.palette.error.main}55`,
           background: 'rgba(244,67,54,0.05)',

@@ -9,7 +9,6 @@ interface Props {
   rank: LeaderboardRankResponse | null;
   loading: boolean;
   error: boolean;
-  // the leaderboard page already shows the board, so it hides the link back to itself
   showAction?: boolean;
 }
 
@@ -25,8 +24,8 @@ export default function LeaderboardRankCard({ rank, loading, error, showAction =
     <Paper
       elevation={0}
       sx={{
-        p: 2.5,
-        mb: 4,
+        p: 2,
+        mb: 2.5,
         borderRadius: 3,
         border: `1px solid ${theme.palette.primary.main}44`,
         background: `linear-gradient(135deg, ${theme.palette.primary.dark}22 0%, ${theme.palette.primary.main}11 100%)`,

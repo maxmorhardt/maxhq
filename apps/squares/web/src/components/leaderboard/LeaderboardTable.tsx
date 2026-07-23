@@ -1,15 +1,15 @@
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
 import type { LeaderboardEntry } from '../../types/leaderboard';
 import { leaderboardKey } from '../../utils/publicName';
 import { stripDangerousChars } from '../../utils/sanitize';
 import { popIn } from '../profile/animations';
+import LeaderboardEmptyState from './LeaderboardEmptyState';
+import LeaderboardTableSkeleton from './LeaderboardTableSkeleton';
+import { GRID_COLUMNS, ROW_GAP } from './leaderboardLayout';
 
 // rows animate in sequence, but only for the first screenful so long lists stay snappy
 const MAX_STAGGERED_ROWS = 12;
 const STAGGER_STEP = 0.04;
-
-const GRID_COLUMNS = { xs: '38px 1fr auto', sm: '56px 1fr 84px 84px 76px' };
 
 interface Props {
   entries: LeaderboardEntry[];
@@ -30,40 +30,15 @@ export default function LeaderboardTable({ entries, loading, highlightKey }: Pro
   const theme = useTheme();
 
   if (loading) {
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} variant="rounded" height={54} sx={{ borderRadius: 2.5 }} />
-        ))}
-      </Box>
-    );
+    return <LeaderboardTableSkeleton />;
   }
 
   if (entries.length === 0) {
-    return (
-      <Paper
-        elevation={0}
-        sx={{
-          p: 5,
-          textAlign: 'center',
-          borderRadius: 4,
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px dashed rgba(255,255,255,0.12)',
-        }}
-      >
-        <EmojiEventsIcon sx={{ fontSize: 44, color: 'text.secondary', mb: 1.5, opacity: 0.6 }} />
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          No winners yet
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Once contests start paying out quarters, the top players will show up here.
-        </Typography>
-      </Paper>
-    );
+    return <LeaderboardEmptyState />;
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: ROW_GAP }}>
       {/* column headers, hidden on mobile where the row layout collapses */}
       <Box
         sx={{
