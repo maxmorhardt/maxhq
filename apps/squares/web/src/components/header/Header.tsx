@@ -12,7 +12,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 import { HEADER_HEIGHT } from '../../types/layout';
@@ -72,8 +72,10 @@ export default function Header() {
           <Toolbar disableGutters sx={{ minHeight: HEADER_HEIGHT, height: HEADER_HEIGHT }}>
             {/* desktop logo and brand */}
             <Box
+              component={Link}
+              to="/"
+              prefetch="intent"
               sx={{ display: { xs: 'none', md: 'flex' }, mr: 2, cursor: 'pointer' }}
-              onClick={() => navigate('/')}
             >
               <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
             </Box>
@@ -81,7 +83,9 @@ export default function Header() {
             <Typography
               variant="h6"
               noWrap
-              onClick={() => navigate('/')}
+              component={Link}
+              to="/"
+              prefetch="intent"
               sx={{
                 mr: 2,
                 display: { xs: 'none', md: 'flex' },
@@ -98,13 +102,17 @@ export default function Header() {
 
             {/* mobile logo and brand (left) */}
             <Box
+              component={Link}
+              to="/"
+              prefetch="intent"
               sx={{
                 display: { xs: 'flex', md: 'none' },
                 alignItems: 'center',
                 gap: 1,
                 cursor: 'pointer',
+                color: 'inherit',
+                textDecoration: 'none',
               }}
-              onClick={() => navigate('/')}
             >
               <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
               <Typography
@@ -136,10 +144,10 @@ export default function Header() {
                 return (
                   <Button
                     key={page.name}
-                    onClick={() => {
-                      handleCloseNavMenu();
-                      navigate(page.navigate);
-                    }}
+                    component={Link}
+                    to={page.navigate}
+                    prefetch="intent"
+                    onClick={handleCloseNavMenu}
                     sx={{
                       mx: 1,
                       color: 'white',

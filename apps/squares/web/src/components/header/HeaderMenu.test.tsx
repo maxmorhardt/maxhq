@@ -4,13 +4,6 @@ import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
 import HeaderMenu from './HeaderMenu';
 
-const mockNavigate = vi.fn();
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return { ...actual, useNavigate: () => mockNavigate };
-});
-
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 
 import { useAuth } from 'react-oidc-context';
@@ -23,13 +16,15 @@ const mockPages = [
   { name: 'Contact', icon: <span />, navigate: '/contact' },
 ];
 
+const mockCloseNavMenu = vi.fn();
+
 function renderMenu(overrides?: { anchorElNav?: HTMLElement | null }) {
   return render(
     <ThemeProvider theme={theme}>
       <MemoryRouter>
         <HeaderMenu
           handleOpenNavMenu={vi.fn()}
-          handleCloseNavMenu={vi.fn()}
+          handleCloseNavMenu={mockCloseNavMenu}
           anchorElNav={overrides?.anchorElNav ?? null}
           pages={mockPages}
         />
@@ -46,7 +41,7 @@ describe('HeaderMenu', () => {
       activeNavigator: undefined,
       signinRedirect: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
-    mockNavigate.mockClear();
+    mockCloseNavMenu.mockClear();
   });
 
   it('renders the hamburger menu button', () => {
@@ -90,7 +85,7 @@ describe('HeaderMenu', () => {
     document.body.removeChild(anchorEl);
   });
 
-  it('navigates when a menu item is clicked', () => {
+  it('renders menu items as prefetching links and closes the menu on click', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
@@ -102,8 +97,11 @@ describe('HeaderMenu', () => {
     document.body.appendChild(anchorEl);
     renderMenu({ anchorElNav: anchorEl });
 
-    fireEvent.click(screen.getByText('Learn More'));
-    expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
+    const learnMore = screen.getByRole('menuitem', { name: 'Learn More' });
+    expect(learnMore).toHaveAttribute('href', '/learn-more');
+
+    fireEvent.click(learnMore);
+    expect(mockCloseNavMenu).toHaveBeenCalled();
     document.body.removeChild(anchorEl);
   });
 });

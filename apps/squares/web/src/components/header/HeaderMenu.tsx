@@ -6,7 +6,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import type { JSX, MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface HeaderMenuProps {
   handleOpenNavMenu: (event: MouseEvent<HTMLElement>) => void;
@@ -22,7 +22,6 @@ export default function HeaderMenu({
   pages,
 }: HeaderMenuProps) {
   const auth = useAuth();
-  const navigate = useNavigate();
 
   return (
     // mobile menu button and dropdown
@@ -55,11 +54,11 @@ export default function HeaderMenu({
           return (
             <MenuItem
               key={page.name}
-              onClick={() => {
-                navigate(page.navigate);
-                handleCloseNavMenu();
-              }}
-              sx={{ py: 1.25 }}
+              component={Link}
+              to={page.navigate}
+              prefetch="intent"
+              onClick={handleCloseNavMenu}
+              sx={{ py: 1.25, color: 'inherit', textDecoration: 'none' }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 {page.icon}

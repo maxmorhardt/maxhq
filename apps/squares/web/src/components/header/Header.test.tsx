@@ -4,14 +4,8 @@ import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router-dom';
 import Header from './Header';
 
-const mockNavigate = vi.fn();
 const mockRemoveUser = vi.fn();
 const mockSigninRedirect = vi.fn();
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return { ...actual, useNavigate: () => mockNavigate };
-});
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 
@@ -63,7 +57,7 @@ describe('Header', () => {
 
   it('does not show Contests desktop link when unauthenticated', () => {
     renderHeader();
-    expect(screen.queryByRole('button', { name: /contests/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /contests/i })).not.toBeInTheDocument();
   });
 
   it('shows Contests desktop link when authenticated', () => {
@@ -75,29 +69,29 @@ describe('Header', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderHeader();
-    expect(screen.getByRole('button', { name: /contests/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^contests$/i })).toBeInTheDocument();
   });
 
-  it('navigates home when the brand name is clicked', () => {
+  it('links home from the brand name', () => {
     renderHeader();
-    // there are multiple "Squares" text elements; click the first desktop one
-    fireEvent.click(screen.getAllByText('Squares')[0]);
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    // there are multiple "Squares" text elements; check the first desktop one
+    expect(screen.getAllByText('Squares')[0].closest('a')).toHaveAttribute('href', '/');
   });
 
-  it('navigates to /learn-more when the desktop Learn More button is clicked', () => {
+  it('links to /learn-more from the desktop Learn More button', () => {
     renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: /learn more/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
+    expect(screen.getByRole('link', { name: /learn more/i })).toHaveAttribute(
+      'href',
+      '/learn-more'
+    );
   });
 
-  it('navigates to /contact when the desktop Contact button is clicked', () => {
+  it('links to /contact from the desktop Contact button', () => {
     renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: /contact/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/contact');
+    expect(screen.getByRole('link', { name: /contact/i })).toHaveAttribute('href', '/contact');
   });
 
-  it('navigates to /contests when the desktop Contests button is clicked (authenticated)', () => {
+  it('links to /contests from the desktop Contests button (authenticated)', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
@@ -106,8 +100,7 @@ describe('Header', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: /^contests$/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/contests');
+    expect(screen.getByRole('link', { name: /^contests$/i })).toHaveAttribute('href', '/contests');
   });
 
   it('disables the sign-in button while auth is loading', () => {
@@ -156,11 +149,12 @@ describe('Header', () => {
     await waitFor(() => expect(mockRemoveUser).toHaveBeenCalled());
   });
 
-  it('opens the hamburger menu and navigates via a menu item', () => {
+  it('opens the hamburger menu and links out from a menu item', () => {
     renderHeader();
     fireEvent.click(screen.getByRole('button', { name: /menu/i }));
-    const learnMoreItem = screen.getAllByText('Learn More')[0];
-    fireEvent.click(learnMoreItem);
-    expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
+    expect(screen.getByRole('menuitem', { name: 'Learn More' })).toHaveAttribute(
+      'href',
+      '/learn-more'
+    );
   });
 });
