@@ -131,7 +131,14 @@ diag_line() {
 }
 
 # ─── Discord ─────────────────────────────────────────────────────────────────
-json_escape() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+# Every summary spans two lines (headline + diag_line), and a literal newline
+# inside a JSON string is invalid JSON — Discord rejects the whole payload with
+# a 400 — so newlines have to become \n rather than being passed through.
+json_escape() {
+    printf '%s' "$1" \
+        | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\r//g' -e 's/\t/\\t/g' \
+        | awk 'BEGIN { ORS = "" } NR > 1 { print "\\n" } { print }'
+}
 
 # send a summary line + the full report as a file attachment
 send_discord() {
@@ -140,15 +147,22 @@ send_discord() {
         log "No DISCORD_WEBHOOK_URL configured — skipping Discord alert"
         return 0
     fi
+
     local fname="netwatch-$HOST-$(date +%Y%m%d-%H%M%S).log"
-    if curl -fsS -m 20 \
-        -F "payload_json={\"content\": \"$(json_escape "$summary")\"}" \
-        -F "file1=@$report;filename=$fname" \
-        "$DISCORD_WEBHOOK_URL" >/dev/null 2>&1; then
+    local -a args=(-sS -m 20 -w '\n%{http_code}'
+        -F "payload_json={\"content\": \"$(json_escape "$summary")\"}")
+    # a queued report can go missing; still deliver the summary rather than
+    # having curl fail on an unreadable -F @file
+    [ -s "$report" ] && args+=(-F "file1=@$report;filename=$fname")
+
+    local out code
+    out="$(curl "${args[@]}" "$DISCORD_WEBHOOK_URL" 2>&1)"
+    code="$(printf '%s' "$out" | tail -n 1)"
+    if [ "$code" = "200" ] || [ "$code" = "204" ]; then
         log "Discord alert sent"
         return 0
     fi
-    log "Discord alert FAILED to send"
+    log "Discord alert FAILED to send (http=${code:-none}): $(printf '%s' "$out" | tr '\n' ' ' | head -c 300)"
     return 1
 }
 
