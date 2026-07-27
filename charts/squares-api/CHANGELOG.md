@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/maxmorhardt/charts/compare/squares-api/1.1.2...squares-api/1.1.3) (2026-07-27)
+
+
+### Bug Fixes
+
+* **squares-api:** reposition scores worker dashboard section ([#43](https://github.com/maxmorhardt/charts/issues/43)) ([bfac651](https://github.com/maxmorhardt/charts/commit/bfac651837d7e22797de95c9f295208ec93911db))
+
 ## [1.1.2](https://github.com/maxmorhardt/charts/compare/squares-api/1.1.1...squares-api/1.1.2) (2026-07-21)
 
 
