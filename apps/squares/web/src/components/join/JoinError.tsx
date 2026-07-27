@@ -1,6 +1,6 @@
 import { GridOff, HelpOutlineOutlined, HowToReg, LinkOff } from '@mui/icons-material';
 import { Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import ErrorState, { type ErrorStateHint } from '../common/ErrorState';
 import type { InvitePreviewResponse } from '../../types/contest';
 import { gradients } from '../../types/gradients';

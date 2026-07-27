@@ -6,6 +6,9 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  ssr: {
+    noExternal: true,
+  },
   optimizeDeps: {
     needsInterop: ['react-use-websocket'],
   },
@@ -24,7 +27,7 @@ export default defineConfig({
               name: 'redux',
               test: /[\\/]node_modules[\\/](@reduxjs[\\/]toolkit|react-redux)[\\/]/,
             },
-            { name: 'router', test: /[\\/]node_modules[\\/]react-router(-dom)?[\\/]/ },
+            { name: 'router', test: /[\\/]node_modules[\\/]react-router[\\/]/ },
             { name: 'axios', test: /[\\/]node_modules[\\/]axios[\\/]/ },
           ],
         },

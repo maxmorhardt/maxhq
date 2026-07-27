@@ -12,7 +12,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 import { HEADER_HEIGHT } from '../../types/layout';

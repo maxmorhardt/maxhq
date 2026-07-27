@@ -6,7 +6,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import type { JSX, MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 interface HeaderMenuProps {
   handleOpenNavMenu: (event: MouseEvent<HTMLElement>) => void;

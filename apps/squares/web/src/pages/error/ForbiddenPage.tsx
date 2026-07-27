@@ -1,5 +1,5 @@
 import { Home, Lock, Search, Share } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import ErrorState from '../../components/common/ErrorState';
 
 export default function ForbiddenPage() {

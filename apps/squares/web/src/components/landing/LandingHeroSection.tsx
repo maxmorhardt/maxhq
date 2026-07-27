@@ -1,5 +1,5 @@
 import { Box, Button, Container, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import LandingCreateContestButton from './LandingCreateContestButton';
 import { gradients } from '../../types/gradients';
 import { HEADER_HEIGHT } from '../../types/layout';

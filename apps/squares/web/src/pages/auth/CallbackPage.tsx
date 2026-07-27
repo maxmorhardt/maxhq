@@ -1,7 +1,7 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import AuthLoadingAnimation from '../../components/common/AuthLoadingAnimation';
 import { useToast } from '../../hooks/useToast';
 

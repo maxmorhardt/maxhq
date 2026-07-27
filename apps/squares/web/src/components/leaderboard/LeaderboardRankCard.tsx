@@ -1,7 +1,7 @@
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import { Box, Button, Paper, Skeleton, Typography, useTheme } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import type { LeaderboardRankResponse } from '../../types/leaderboard';
 import { popIn } from '../profile/animations';
 

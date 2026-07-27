@@ -17,7 +17,7 @@ import {
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import LeaderboardRankCard from '../../components/leaderboard/LeaderboardRankCard';
 import { popIn } from '../../components/profile/animations';

@@ -1,7 +1,7 @@
 import { Groups, Link as LinkIcon, School } from '@mui/icons-material';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import InviteManager from './InviteManager';
 import ParticipantsManager from './ParticipantsManager';
 

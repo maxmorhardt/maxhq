@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import ContestsTable from '../../components/contest/table/ContestsTable';
 import ContestsTableSkeleton from '../../components/contest/table/ContestsTableSkeleton';
 import LoadingScreen from '../../components/common/LoadingScreen';

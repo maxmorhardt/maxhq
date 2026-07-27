@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import ActivityFeed from '../../../components/contest/sidebar/ActivityFeed';
 import ContestComponent from '../../../components/contest/grid/Contest';
 import ContestDetails from '../../../components/contest/details/ContestDetails';

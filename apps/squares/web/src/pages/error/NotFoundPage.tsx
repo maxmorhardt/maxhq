@@ -1,7 +1,7 @@
 import { Home, LinkOff, Search, TravelExplore } from '@mui/icons-material';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import ErrorState, { type ErrorStateAction } from '../../components/common/ErrorState';
 import { gradients } from '../../types/gradients';
 

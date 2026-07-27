@@ -1,5 +1,5 @@
 import { CloudOff, Refresh, Schedule, Search } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import ErrorState from '../common/ErrorState';
 
 export default function ContestError() {

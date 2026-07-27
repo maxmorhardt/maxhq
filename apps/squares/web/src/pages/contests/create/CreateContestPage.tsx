@@ -20,7 +20,7 @@ import {
 import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { selectContestLoading } from '../../../features/contests/contestSelectors';
 import { clearError } from '../../../features/contests/contestSlice';
 import { createContest, fetchUpcomingGames } from '../../../features/contests/contestThunks';

@@ -1,7 +1,7 @@
 import { Box, GlobalStyles } from '@mui/material';
 import { useEffect, useRef } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import './App.css';
 import ScrollToTop from './components/common/ScrollToTop';
 import Footer from './components/footer/Footer';

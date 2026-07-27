@@ -1,6 +1,6 @@
 import { Home, Login, LockPerson, Schedule } from '@mui/icons-material';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import SignInDialog from '../../components/auth/SignInDialog';
 import ErrorState from '../../components/common/ErrorState';
 import { gradients } from '../../types/gradients';

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import InviteSignIn from '../../components/join/InviteSignIn';
 import JoinError from '../../components/join/JoinError';

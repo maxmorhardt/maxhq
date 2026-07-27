@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { setCurrentContest } from '../../../features/contests/contestSlice';
 import { useAppDispatch } from '../../../hooks/reduxHooks';
 import type { Contest } from '../../../types/contest';

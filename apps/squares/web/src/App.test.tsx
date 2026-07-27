@@ -16,8 +16,8 @@ vi.mock('./components/common/ScrollToTop', () => ({ default: () => null }));
 vi.mock('./components/toast/ToastProvider', () => ({ ToastProvider: () => null }));
 vi.mock('./components/header/Header', () => ({ default: () => <div data-testid="header" /> }));
 vi.mock('./components/footer/Footer', () => ({ default: () => <div data-testid="footer" /> }));
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, Outlet: () => <div data-testid="outlet" /> };
 });
 
