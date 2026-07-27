@@ -676,6 +676,73 @@
       "collapsed": false,
       "datasource": null,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 114 },
+      "id": 300,
+      "panels": [],
+      "title": "Scores Worker",
+      "type": "row"
+    },
+    {
+      "datasource": "${prometheus_datasource}",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 21600 },
+              { "color": "red", "value": 28800 }
+            ]
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 115 },
+      "id": 301,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        { "expr": "time() - max(scores_worker_last_success_timestamp_seconds)", "refId": "A" }
+      ],
+      "title": "Time Since Last Successful Run",
+      "type": "stat"
+    },
+    {
+      "datasource": "${prometheus_datasource}",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 115 },
+      "id": 302,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(scores_worker_runs_total[5m])) by (result)", "legendFormat": "{{result}}/s", "refId": "A" }
+      ],
+      "title": "Worker Runs by Result",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${prometheus_datasource}",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 115 },
+      "id": 303,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(scores_recorded_total[5m]))", "legendFormat": "scores/s", "refId": "A" }
+      ],
+      "title": "New Quarter Scores Recorded",
+      "type": "timeseries"
+    },
+
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 123 },
       "id": 260,
       "panels": [],
       "title": "Auth & Security",
@@ -684,7 +751,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 115 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 124 },
       "id": 262,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
       "targets": [
@@ -696,7 +763,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 115 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 124 },
       "id": 264,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
       "targets": [
@@ -709,7 +776,7 @@
     {
       "collapsed": false,
       "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 123 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 132 },
       "id": 103,
       "panels": [],
       "title": "Kubernetes (Pods, Resources, Health)",
@@ -731,7 +798,7 @@
           "unit": "short"
         }
       },
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 124 },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 133 },
       "id": 40,
       "options": {
         "colorMode": "value",
@@ -757,7 +824,7 @@
           "unit": "short"
         }
       },
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 124 },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 133 },
       "id": 42,
       "options": {
         "colorMode": "value",
@@ -783,7 +850,7 @@
           "unit": "short"
         }
       },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 124 },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 133 },
       "id": 44,
       "options": {
         "colorMode": "value",
@@ -803,7 +870,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 128 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 137 },
       "id": 48,
       "options": { "legend": { "calcs": ["mean", "last"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "pluginVersion": "8.0.0",
@@ -818,7 +885,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 128 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 137 },
       "id": 282,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
       "targets": [
@@ -830,7 +897,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" } },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 136 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 145 },
       "id": 50,
       "options": { "legend": { "calcs": ["mean", "max", "last"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "pluginVersion": "8.0.0",
@@ -844,7 +911,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent" } },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 136 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 145 },
       "id": 52,
       "options": { "legend": { "calcs": ["mean", "last"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "pluginVersion": "8.0.0",
@@ -857,7 +924,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "percentunit" } },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 144 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 153 },
       "id": 284,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean"] }, "tooltip": { "mode": "multi" } },
       "targets": [
@@ -869,7 +936,7 @@
     {
       "datasource": "${prometheus_datasource}",
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "Bps" } },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 144 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 153 },
       "id": 286,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean"] }, "tooltip": { "mode": "multi" } },
       "targets": [
@@ -883,7 +950,7 @@
     {
       "collapsed": false,
       "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 152 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 161 },
       "id": 104,
       "panels": [],
       "title": "Logs (Loki)",
@@ -891,7 +958,7 @@
     },
     {
       "datasource": "${loki_datasource}",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 153 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 162 },
       "id": 54,
       "options": {
         "dedupStrategy": "none",
@@ -924,7 +991,7 @@
           "unit": "short"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 163 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 172 },
       "id": 56,
       "options": { "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
@@ -942,79 +1009,13 @@
           "unit": "short"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 163 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 172 },
       "id": 58,
       "options": { "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "expr": "sum(count_over_time({namespace=\"squares\", pod=~\"squares-api.*\"} |= \"5xx\" [1m])) by (pod)", "legendFormat": "{{pod}}", "refId": "A" }
       ],
       "title": "5xx Errors by Pod",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 171 },
-      "id": 300,
-      "panels": [],
-      "title": "Scores Worker",
-      "type": "row"
-    },
-    {
-      "datasource": "${prometheus_datasource}",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 21600 },
-              { "color": "red", "value": 28800 }
-            ]
-          },
-          "unit": "s"
-        }
-      },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 172 },
-      "id": 301,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.0.0",
-      "targets": [
-        { "expr": "time() - max(scores_worker_last_success_timestamp_seconds)", "refId": "A" }
-      ],
-      "title": "Time Since Last Successful Run",
-      "type": "stat"
-    },
-    {
-      "datasource": "${prometheus_datasource}",
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 172 },
-      "id": 302,
-      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
-      "targets": [
-        { "expr": "sum(rate(scores_worker_runs_total[5m])) by (result)", "legendFormat": "{{result}}/s", "refId": "A" }
-      ],
-      "title": "Worker Runs by Result",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "${prometheus_datasource}",
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 172 },
-      "id": 303,
-      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
-      "targets": [
-        { "expr": "sum(rate(scores_recorded_total[5m]))", "legendFormat": "scores/s", "refId": "A" }
-      ],
-      "title": "New Quarter Scores Recorded",
       "type": "timeseries"
     }
   ],
