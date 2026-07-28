@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.4](https://github.com/maxmorhardt/squares/compare/2.0.3...2.0.4) (2026-07-28)
+
+
+### Bug Fixes
+
+* enforce curly braces and tighten config ([#68](https://github.com/maxmorhardt/squares/issues/68)) ([8ab3409](https://github.com/maxmorhardt/squares/commit/8ab34093f1e1505bb764c15508cb9d47ac023175))
+* migrate app imports to react-router v8 ([#64](https://github.com/maxmorhardt/squares/issues/64)) ([75c63a5](https://github.com/maxmorhardt/squares/commit/75c63a57a22a5d006f700068352c6f8d295a8173))
+
 ## [2.0.3](https://github.com/maxmorhardt/squares/compare/2.0.2...2.0.3) (2026-07-23)
 
 
