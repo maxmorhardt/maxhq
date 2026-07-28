@@ -68,7 +68,9 @@ export default function WinnersBoard({ quarterResults = [] }: WinnersBoardProps)
     : 0;
 
   const handleConfirmRollback = async () => {
-    if (!currentContest) return;
+    if (!currentContest) {
+      return;
+    }
 
     setIsRollingBack(true);
     try {

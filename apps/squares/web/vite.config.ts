@@ -1,14 +1,12 @@
 import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [reactRouter()],
   server: {
     port: 3000,
   },
-  ssr: {
-    noExternal: true,
-  },
+  ...(command === 'build' ? { ssr: { noExternal: true } } : {}),
   optimizeDeps: {
     needsInterop: ['react-use-websocket'],
   },
@@ -34,4 +32,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

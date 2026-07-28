@@ -25,7 +25,6 @@ export interface WSUICallbacks {
   onParticipantRemoved?: (participant: Participant) => void;
 }
 
-// Internal handler params with dispatch and validation context
 export interface HandleWSEventParams {
   lastMessage: MessageEvent | null;
   dispatch: Dispatch;

@@ -103,7 +103,9 @@ export default function EditContest({ open, onClose }: EditContestProps) {
   }, [contest, open]);
 
   const handleSave = async () => {
-    if (!canEdit || !contest?.id) return;
+    if (!canEdit || !contest?.id) {
+      return;
+    }
     setLoading(true);
     try {
       await dispatch(
@@ -264,7 +266,9 @@ export default function EditContest({ open, onClose }: EditContestProps) {
                   value={visibility}
                   exclusive
                   onChange={(_, val) => {
-                    if (val) setVisibility(val as ContestVisibility);
+                    if (val) {
+                      setVisibility(val as ContestVisibility);
+                    }
                   }}
                   fullWidth
                   size="small"

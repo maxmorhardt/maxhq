@@ -174,7 +174,9 @@ export function useContestWebSocket({
 
   const sendChatMessage = useCallback(
     (message: string) => {
-      if (!isConnected) return;
+      if (!isConnected) {
+        return;
+      }
       sendJsonMessage({ message });
     },
     [isConnected, sendJsonMessage]

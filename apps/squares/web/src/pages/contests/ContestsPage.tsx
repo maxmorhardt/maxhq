@@ -60,7 +60,9 @@ export default function ContestsPage() {
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
     debounceRef.current = setTimeout(() => {
       setDebouncedSearch(value.trim());
       setOwnedPage(0);
@@ -313,8 +315,7 @@ export default function ContestsPage() {
     );
   }
 
-  // filter out owned contests from joined list to avoid duplicates
-  // (search is handled server-side now)
+  // drop owned contests from the joined list to avoid duplicates
   const ownedIds = new Set(ownedContests.map((c) => c.id));
   const joinedOnly = joinedContests.filter((c) => !ownedIds.has(c.id));
 

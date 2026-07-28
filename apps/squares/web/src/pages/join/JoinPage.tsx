@@ -23,7 +23,9 @@ export default function JoinPage() {
 
   // fetch invite preview on mount (no auth required)
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
     dispatch(previewInviteToken(token))
       .unwrap()
       .then(setPreview)
@@ -35,7 +37,9 @@ export default function JoinPage() {
 
   // auto-join when authenticated and preview is loaded
   useEffect(() => {
-    if (!auth.isAuthenticated || !token || !preview || hasJoined.current) return;
+    if (!auth.isAuthenticated || !token || !preview || hasJoined.current) {
+      return;
+    }
 
     hasJoined.current = true;
 

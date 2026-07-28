@@ -52,7 +52,8 @@
 - When the backend adds a NATS event subject, add the matching discriminated-union variant in `src/types/ws.ts` and handle it in `wsSlice.ts`. Components react through selectors and never read the socket directly.
 - Use `showToast(message, severity)` via `useToast` rather than rendering snackbars directly.
 - Keep the SPA fallback (`try_files ... /index.html`) in `nginx.conf` intact. Removing it breaks client-side routing.
-- Avoid comments unless the code is genuinely non-obvious.
+- Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
+- **Always brace control statements.** Never a one-line `if (x) return;` — write it as `if (x) {`, newline, body, newline, `}`. Enforced by the `curly` ESLint rule.
 - Do not change the Helm chart from this repo. Coordinate through the `charts` workspace.
 
 ## New Page Checklist

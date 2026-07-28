@@ -1,5 +1,4 @@
-// mirrors the backend's leaderboard name formatting so the signed-in user's own
-// profile name can be matched against the abbreviated names the API returns
+// mirror the backend's name abbreviation so leaderboard rows can be matched
 export function toPublicName(displayName: string): string {
   const at = displayName.indexOf('@');
   const base = at >= 0 ? displayName.slice(0, at) : displayName;

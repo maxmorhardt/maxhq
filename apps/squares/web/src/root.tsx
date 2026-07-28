@@ -76,9 +76,7 @@ export default function Root() {
   return <App />;
 }
 
-// shown during hydration of client-only (non-prerendered) routes; renders the
-// real app shell (header + background) with an empty content area so it reads as
-// the loaded app rather than a distinct loading page
+// show the real app shell while a client-only route hydrates
 export function HydrateFallback() {
   return (
     <Box

@@ -68,13 +68,19 @@ export default function CreateContestPage() {
     dispatch(fetchUpcomingGames())
       .unwrap()
       .then((g) => {
-        if (active) setGames(g);
+        if (active) {
+          setGames(g);
+        }
       })
       .catch(() => {
-        if (active) setGames([]);
+        if (active) {
+          setGames([]);
+        }
       })
       .finally(() => {
-        if (active) setGamesLoading(false);
+        if (active) {
+          setGamesLoading(false);
+        }
       });
     return () => {
       active = false;
@@ -337,7 +343,9 @@ export default function CreateContestPage() {
                 value={visibility}
                 exclusive
                 onChange={(_, val) => {
-                  if (val) setVisibility(val as ContestVisibility);
+                  if (val) {
+                    setVisibility(val as ContestVisibility);
+                  }
                 }}
                 fullWidth
                 size="small"

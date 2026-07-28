@@ -30,7 +30,9 @@ export default function LiveChat({
 
   const handleSend = () => {
     const trimmed = message.trim();
-    if (!trimmed || disabled) return;
+    if (!trimmed || disabled) {
+      return;
+    }
     onSend(trimmed);
     setMessage('');
   };

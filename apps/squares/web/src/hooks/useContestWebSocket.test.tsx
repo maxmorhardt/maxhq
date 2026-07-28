@@ -35,7 +35,9 @@ let wsOptions: Record<string, unknown> = {};
 vi.mock('react-use-websocket', () => ({
   __esModule: true,
   default: (_url: string | null, options?: Record<string, unknown>) => {
-    if (options) wsOptions = options;
+    if (options) {
+      wsOptions = options;
+    }
     return {
       lastMessage: mockLastMessage,
       readyState: mockReadyState,

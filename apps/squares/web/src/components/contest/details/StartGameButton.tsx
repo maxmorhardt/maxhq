@@ -13,7 +13,9 @@ export default function StartGameButton() {
   const [isStartingQ1, setIsStartingQ1] = useState(false);
 
   const handleStartQ1 = async () => {
-    if (!currentContest || isStartingQ1) return;
+    if (!currentContest || isStartingQ1) {
+      return;
+    }
 
     setIsStartingQ1(true);
 

@@ -29,9 +29,7 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
   },
-  // mui defaults buttons to uppercase; disable it at the source so normal casing
-  // applies app-wide, including the hydration fallback shell which renders
-  // outside App's GlobalStyles
+  // turn off mui's uppercase buttons app-wide, including the hydration shell
   typography: {
     button: {
       textTransform: 'none',

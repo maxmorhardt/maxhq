@@ -62,7 +62,9 @@ export default function InviteManager({ open, onClose }: InviteManagerProps) {
   }, [open, currentContest?.id, dispatch]);
 
   const handleCreateInvite = async () => {
-    if (!currentContest) return;
+    if (!currentContest) {
+      return;
+    }
     setCreating(true);
     setCreateError(false);
     try {

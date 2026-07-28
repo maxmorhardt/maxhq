@@ -145,7 +145,7 @@ describe('Contest (grid)', () => {
     renderContest();
     const buttons = screen.getAllByRole('button');
     fireEvent.click(buttons[0]);
-    // Charlie is not a participant, so showToast is called (mocked at top)
+    // charlie is not a participant, so showToast is called
     expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
   });
 
@@ -219,13 +219,10 @@ describe('Contest (grid)', () => {
       createdAt: '',
       updatedAt: '',
     };
-    // baseContest has alice owning square 0 (value 'JD', owner 'alice')
-    // isOwner = true (alice === baseContest.owner), so isReadOnly = false
-    // clicking empty square: alice already has 1 square claimed (sq-0)
-    // maxSquares=1 so should trigger limit warning
+    // alice already holds her one allowed square, so the next click warns
     renderContest(undefined, [participant]);
     const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[1]); // Click empty square (index 1)
+    fireEvent.click(buttons[1]); // click the empty square
     // toast was called (mocked at top level)
     expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
   });
