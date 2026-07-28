@@ -29,7 +29,7 @@ The application uses WebSocket connections to enable real-time collaborative edi
 This application requires the following services to be running:
 
 - **Squares API Backend** for data persistence and WebSocket handling
-- **OIDC Provider** for authentication
+- **OIDC Provider** (Dex, with Google and GitHub sign-in) for authentication
 - **Modern Web Browser** with WebSocket support
 
 ## Development
