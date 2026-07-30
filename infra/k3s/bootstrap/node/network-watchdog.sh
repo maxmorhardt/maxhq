@@ -1,294 +1,204 @@
 #!/bin/bash
-# Network connectivity watchdog + diagnostics.
-#
-# Runs every few minutes via a systemd timer. If the internet is unreachable it
-# captures a full snapshot of network state, then walks a gentle-to-aggressive
-# recovery ladder (stale-neighbour flush → networkd restart → DHCP renew →
-# interface bounce → reboot). Every outage produces a Discord alert saying what
-# was wrong and which step fixed it, with the full before/after log attached.
-#
-# Discord is unreachable while the net is down, so the reboot path queues its
-# report to disk and the next boot flushes it once connectivity is back.
+# Network watchdog. Runs every 5min via network-watchdog.timer.
+# Recovers local link faults; reports upstream ones without touching the node.
 set -uo pipefail
 
-# ─── Config ──────────────────────────────────────────────────────────────────
-LOG_TAG="network-watchdog"
-PING_TARGETS=("1.1.1.1" "8.8.8.8")
-DNS_TEST_HOST="one.one.one.one"
-BLIP_WAIT_SEC=60          # grace period before acting, in case it's an ISP blip
-RECHECK_WAIT_SEC=15       # settle time after each recovery step
-REBOOT_COOLDOWN_MIN=15
+###############################################################################
+# Config
+###############################################################################
 
-STATE_DIR="/var/lib/network-watchdog"
-LAST_REBOOT_FILE="$STATE_DIR/last-reboot"
-PENDING_SUMMARY="$STATE_DIR/pending-summary"   # queued alert (survives reboot)
-PENDING_REPORT="$STATE_DIR/pending-report"
+TARGETS="1.1.1.1 8.8.8.8"
+BLIP_WAIT=45            # rule out a momentary drop before acting
+SETTLE=15               # recheck delay after each fix
+REBOOT_AFTER_MIN=30     # sustained downtime before a reboot is on the table
+REBOOT_COOLDOWN_MIN=60
 
-# DISCORD_WEBHOOK_URL is injected via EnvironmentFile=-/etc/network-watchdog.env.
-# If unset, alerting is skipped and everything still logs to the journal.
-DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
+STATE=/var/lib/network-watchdog
+DOWN=$STATE/down-since
+ALERTED=$STATE/alerted
+REBOOTED=$STATE/last-reboot
+QUEUE=$STATE/queued-alerts
+WEBHOOK="${DISCORD_WEBHOOK_URL:-}"   # from /etc/network-watchdog.env
 
-HOST="$(hostname)"
-REPORT_FILE="$(mktemp /tmp/netwatch-report.XXXXXX)"
-DOWN_START=0
+# Discord embed colors, as the decimal ints its API expects
+GREEN=3066993
+YELLOW=15844367
+ORANGE=15105570
+RED=15158332
 
-mkdir -p "$STATE_DIR"
+HOST=$(hostname)
+mkdir -p "$STATE"
 
-# ─── Logging ─────────────────────────────────────────────────────────────────
-# log() goes to journal + stdout + the report; report()/run_cmd() append raw
-# command output to the report only.
+###############################################################################
+# Functions
+###############################################################################
+
 log() {
-    logger -t "$LOG_TAG" "$1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$REPORT_FILE"
+    logger -t network-watchdog "$1"
+    echo "$1"
 }
 
-run_cmd() {
-    {
-        echo "\$ $1"
-        eval "$1" 2>&1
-        echo
-    } >> "$REPORT_FILE"
-}
-
-cleanup() { rm -f "$REPORT_FILE"; }
-trap cleanup EXIT
-
-# ─── Network probes ──────────────────────────────────────────────────────────
-network_ok() {
-    for target in "${PING_TARGETS[@]}"; do
-        if ping -c 2 -W 3 "$target" &>/dev/null; then
+# true if any ping target answers
+up() {
+    local target
+    for target in $TARGETS; do
+        if ping -c2 -W3 "$target" &>/dev/null; then
             return 0
         fi
     done
     return 1
 }
 
-# default-route interface, e.g. "eth0"
-default_iface() { ip route show default 2>/dev/null | awk '{print $5}' | head -1; }
-
-# default gateway IP, e.g. "192.168.1.1"
-default_gw() { ip route show default 2>/dev/null | awk '{print $3}' | head -1; }
-
-gw_reachable() {
-    local gw; gw="$(default_gw)"
-    [ -n "$gw" ] && ping -c 2 -W 2 "$gw" &>/dev/null
+# minutes since this outage started
+mins() {
+    local start
+    start=$(cat "$DOWN" 2>/dev/null || date +%s)
+    echo $(( ($(date +%s) - start) / 60 ))
 }
 
-# ─── Diagnostics snapshot ────────────────────────────────────────────────────
-# Dumps everything we need to reason about *why* the link died. Called before we
-# touch anything and again after recovery so the before/after can be diffed —
-# a changed gateway MAC in `ip neigh`, for instance, confirms the ISP-pushed-
-# config / stale-ARP theory.
-capture_diagnostics() {
-    local label="$1"
-    {
-        echo "════════════════════════════════════════════════════════"
-        echo " $label — $(date '+%Y-%m-%d %H:%M:%S')  host=$HOST"
-        echo "════════════════════════════════════════════════════════"
-    } >> "$REPORT_FILE"
-
-    run_cmd "uptime"
-    run_cmd "ip -br link"
-    run_cmd "ip -br addr"
-    run_cmd "ip route"
-    run_cmd "ip neigh"
-
-    # physical link state per NIC — carrier=1 means the cable/switch link is fine
-    # (so the fault is L3/ARP/config, not the wire); carrier=0 means driver/link.
-    for path in /sys/class/net/*/; do
-        local n; n="$(basename "$path")"
-        [ "$n" = "lo" ] && continue
-        echo "iface $n: carrier=$(cat "$path/carrier" 2>/dev/null) operstate=$(cat "$path/operstate" 2>/dev/null) speed=$(cat "$path/speed" 2>/dev/null)Mb/s" >> "$REPORT_FILE"
-    done
-    echo >> "$REPORT_FILE"
-
-    local gw; gw="$(default_gw)"
-    echo "default gateway: ${gw:-<none>}" >> "$REPORT_FILE"
-    [ -n "$gw" ] && run_cmd "ping -c 3 -W 2 $gw"
-    for t in "${PING_TARGETS[@]}"; do
-        run_cmd "ping -c 3 -W 2 $t"
-    done
-    run_cmd "getent hosts $DNS_TEST_HOST"
-
-    run_cmd "networkctl status --no-pager"
-    run_cmd "systemctl status systemd-networkd --no-pager -l | tail -n 20"
-    run_cmd "journalctl -u systemd-networkd --no-pager -n 40"
-    run_cmd "dmesg | grep -iE 'eth|link|carrier|phy|dhcp' | tail -n 30"
-    run_cmd "cat /run/systemd/netif/leases/* 2>/dev/null"
+# Discord is unreachable mid-outage, so alerts queue and go out on a later run
+alert() {
+    log "$2"
+    echo "$1 $2" >> "$QUEUE"
 }
 
-# one-line classification for the alert headline
-diag_line() {
-    local gw carrier
-    gw="$(default_gw)"
-    carrier="$(cat /sys/class/net/"$(default_iface)"/carrier 2>/dev/null)"
-    printf 'iface=%s carrier=%s gw=%s gw_ping=%s inet=%s dns=%s' \
-        "$(default_iface)" "${carrier:-?}" "${gw:-none}" \
-        "$(gw_reachable && echo OK || echo FAIL)" \
-        "$(network_ok && echo OK || echo FAIL)" \
-        "$(getent hosts "$DNS_TEST_HOST" &>/dev/null && echo OK || echo FAIL)"
-}
-
-# ─── Discord ─────────────────────────────────────────────────────────────────
-# Every summary spans two lines (headline + diag_line), and a literal newline
-# inside a JSON string is invalid JSON — Discord rejects the whole payload with
-# a 400 — so newlines have to become \n rather than being passed through.
-json_escape() {
-    printf '%s' "$1" \
-        | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\r//g' -e 's/\t/\\t/g' \
-        | awk 'BEGIN { ORS = "" } NR > 1 { print "\\n" } { print }'
-}
-
-# send a summary line + the full report as a file attachment
-send_discord() {
-    local summary="$1" report="$2"
-    if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-        log "No DISCORD_WEBHOOK_URL configured — skipping Discord alert"
+send_queued_alerts() {
+    if [ ! -s "$QUEUE" ]; then
+        return 0
+    fi
+    if [ -z "$WEBHOOK" ]; then
+        rm -f "$QUEUE"
         return 0
     fi
 
-    local fname="netwatch-$HOST-$(date +%Y%m%d-%H%M%S).log"
-    local -a args=(-sS -m 20 -w '\n%{http_code}'
-        -F "payload_json={\"content\": \"$(json_escape "$summary")\"}")
-    # a queued report can go missing; still deliver the summary rather than
-    # having curl fail on an unreadable -F @file
-    [ -s "$report" ] && args+=(-F "file1=@$report;filename=$fname")
+    # each queued line is a color int followed by the message
+    local color message escaped payload
+    while read -r color message; do
+        # quotes and backslashes would otherwise break the JSON payload
+        escaped=$(sed 's/[\\"]/\\&/g' <<<"$message")
+        payload=$(printf '{"embeds":[{"title":"%s","description":"%s","color":%s}]}' "$HOST" "$escaped" "$color")
+        if ! curl -sfS -m 15 -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK" >/dev/null; then
+            log "Discord send failed, alerts stay queued"
+            return 0
+        fi
+    done < "$QUEUE"
+    rm -f "$QUEUE"
+}
 
-    local out code
-    out="$(curl "${args[@]}" "$DISCORD_WEBHOOK_URL" 2>&1)"
-    code="$(printf '%s' "$out" | tail -n 1)"
-    if [ "$code" = "200" ] || [ "$code" = "204" ]; then
-        log "Discord alert sent"
+# called after each fix; ends the run if that fix restored connectivity
+check_recovered() {
+    sleep "$SETTLE"
+    if ! up; then
+        log "Still down after $1"
         return 0
     fi
-    log "Discord alert FAILED to send (http=${code:-none}): $(printf '%s' "$out" | tr '\n' ' ' | head -c 300)"
-    return 1
-}
 
-# persist the report so the next boot can deliver it (reboot path only)
-queue_alert() {
-    local summary="$1"
-    echo "$summary" > "$PENDING_SUMMARY"
-    cp "$REPORT_FILE" "$PENDING_REPORT"
-    log "Queued alert for delivery after reboot"
-}
-
-flush_pending_alert() {
-    [ -f "$PENDING_SUMMARY" ] || return 0
-    log "Delivering queued alert from previous outage"
-    if send_discord "$(cat "$PENDING_SUMMARY")" "$PENDING_REPORT"; then
-        rm -f "$PENDING_SUMMARY" "$PENDING_REPORT"
-    fi
-}
-
-# ─── Recovery outcome helpers ────────────────────────────────────────────────
-down_secs() { echo $(( $(date +%s) - DOWN_START )); }
-
-recovered() {
-    local step="$1"
-    capture_diagnostics "AFTER RECOVERY (via: $step)"
-    log "RECOVERED via: $step — down ~$(down_secs)s"
-    send_discord "✅ **$HOST** network recovered via **$step** (down ~$(down_secs)s)
-\`$(diag_line)\`" "$REPORT_FILE"
+    alert "$GREEN" "Network recovered via $1 (down ~$(mins)m)"
+    rm -f "$DOWN" "$ALERTED"
+    send_queued_alerts
     exit 0
 }
 
-# recheck after a step; if we're back, finalise + alert + exit
-try_recover() {
-    local step="$1"
-    sleep "$RECHECK_WAIT_SEC"
-    if network_ok; then
-        recovered "$step"
+###############################################################################
+# Connectivity check
+###############################################################################
+
+# healthy: clear the outage state and deliver anything queued
+if up; then
+    if [ -f "$DOWN" ]; then
+        alert "$GREEN" "Network back on its own (down ~$(mins)m)"
     fi
-    log "Still unreachable after: $step"
-}
+    rm -f "$DOWN" "$ALERTED"
+    send_queued_alerts
+    exit 0
+fi
 
-do_reboot() {
-    capture_diagnostics "BEFORE REBOOT"
-    log "All soft recovery failed — rebooting"
-    queue_alert "🔁 **$HOST** rebooting: all soft recovery failed (down ~$(down_secs)s). Full report attached (delivered post-reboot).
-\`$(diag_line)\`"
-    date +%s > "$LAST_REBOOT_FILE"
-    sync
-    reboot
-}
+log "Network unreachable, waiting ${BLIP_WAIT}s to rule out a blip"
+sleep "$BLIP_WAIT"
+if up; then
+    log "Recovered on its own, no action taken"
+    exit 0
+fi
 
-# ─── Reboot cooldown ─────────────────────────────────────────────────────────
-# Give a freshly-rebooted node time to settle before attempting recovery again,
-# and flush any alert that was queued before that reboot.
-if [ -f "$LAST_REBOOT_FILE" ]; then
-    last_reboot="$(cat "$LAST_REBOOT_FILE")"
-    elapsed=$(( ($(date +%s) - last_reboot) / 60 ))
-    if [ "$elapsed" -lt "$REBOOT_COOLDOWN_MIN" ]; then
-        if network_ok; then flush_pending_alert; fi
-        log "Post-reboot cooldown: $(( REBOOT_COOLDOWN_MIN - elapsed ))m remaining — skipping recovery"
+# first run of a new outage starts the clock
+if [ ! -f "$DOWN" ]; then
+    date +%s > "$DOWN"
+fi
+
+###############################################################################
+# Fault diagnosis
+###############################################################################
+
+gw=$(ip route show default | awk '{print $3; exit}')
+iface=$(ip route show default | awk '{print $5; exit}')
+
+# no default route, so fall back to the first physical NIC
+if [ -z "$iface" ]; then
+    iface=$(ls /sys/class/net/*/device 2>/dev/null | cut -d/ -f5 | head -1)
+fi
+
+carrier=$(cat "/sys/class/net/$iface/carrier" 2>/dev/null)
+log "Down ~$(mins)m: iface=${iface:-none} carrier=${carrier:-?} gw=${gw:-none}"
+
+# A gateway that answers means the NIC, link, address and route are all fine and the break is upstream
+if [ -n "$gw" ] && ping -c2 -W2 "$gw" &>/dev/null; then
+    if [ ! -f "$ALERTED" ]; then
+        alert "$YELLOW" "No internet, gateway $gw still reachable. Upstream fault, no action taken."
+        touch "$ALERTED"
+    fi
+    exit 0
+fi
+
+if [ ! -f "$ALERTED" ]; then
+    alert "$ORANGE" "No internet, gateway unreachable. Attempting recovery."
+    touch "$ALERTED"
+fi
+
+###############################################################################
+# Recovery
+###############################################################################
+
+# stale gateway MAC blackholes traffic over a healthy link
+if [ -n "$iface" ]; then
+    log "Recovery: flushing neighbours on $iface"
+    ip neigh flush dev "$iface"
+    check_recovered "neighbour flush"
+fi
+
+# re-applies netplan config, re-arms DHCP and refreshes DNS
+log "Recovery: restarting networkd and resolved"
+systemctl restart systemd-networkd systemd-resolved
+check_recovered "networkd restart"
+
+# last soft option, resets driver and link state
+if [ -n "$iface" ]; then
+    log "Recovery: bouncing $iface"
+    ip link set "$iface" down
+    sleep 5
+    ip link set "$iface" up
+    check_recovered "interface bounce"
+fi
+
+###############################################################################
+# Reboot
+###############################################################################
+
+# a router still coming back up looks identical to a dead NIC for a few minutes
+down=$(mins)
+if [ "$down" -lt "$REBOOT_AFTER_MIN" ]; then
+    log "Down ~${down}m, under the ${REBOOT_AFTER_MIN}m reboot threshold. Retrying next run."
+    exit 0
+fi
+
+if [ -f "$REBOOTED" ]; then
+    since=$(( ($(date +%s) - $(cat "$REBOOTED")) / 60 ))
+    if [ "$since" -lt "$REBOOT_COOLDOWN_MIN" ]; then
+        log "Rebooted ${since}m ago, not rebooting again"
         exit 0
     fi
-    rm -f "$LAST_REBOOT_FILE"
 fi
 
-# ─── Step 1: happy path ──────────────────────────────────────────────────────
-if network_ok; then
-    flush_pending_alert
-    exit 0
-fi
-
-# ─── Step 2: blip wait ───────────────────────────────────────────────────────
-DOWN_START="$(date +%s)"
-log "Network unreachable — waiting ${BLIP_WAIT_SEC}s in case it's an ISP blip"
-sleep "$BLIP_WAIT_SEC"
-if network_ok; then
-    log "Network recovered on its own (brief blip, ~$(down_secs)s) — no action taken"
-    exit 0
-fi
-
-# ─── Step 3: snapshot before we touch anything ───────────────────────────────
-log "Still down after blip wait — capturing diagnostics before recovery"
-capture_diagnostics "OUTAGE DETECTED"
-log "State: $(diag_line)"
-
-# ─── Step 4: flush stale neighbours ──────────────────────────────────────────
-# Cheapest, least disruptive fix. After the router reboots / pushes new config
-# its gateway MAC can change; a stale ARP/neighbour entry then blackholes all
-# traffic even though the route and link are perfectly fine. Reboot "fixes" this
-# only as a side effect of clearing the cache.
-log "Flushing neighbour (ARP) cache"
-ip neigh flush all 2>/dev/null || true
-try_recover "neighbour cache flush"
-
-# ─── Step 5: restart systemd-networkd (+ resolved) ───────────────────────────
-# Re-applies network config: re-resolves the default route, re-arms DHCP, and
-# refreshes DNS. Handles the "route present but gateway stale" case the old
-# script skipped. Non-disruptive to the physical link.
-log "Restarting systemd-networkd and systemd-resolved"
-systemctl restart systemd-networkd 2>/dev/null || true
-systemctl restart systemd-resolved 2>/dev/null || true
-try_recover "systemd-networkd restart"
-
-# ─── Step 6: renew DHCP lease ────────────────────────────────────────────────
-IFACE="$(default_iface)"
-[ -z "$IFACE" ] && IFACE="$(ip -br link | awk '$1!="lo" && $2=="UP"{print $1; exit}')"
-if [ -n "$IFACE" ]; then
-    log "Renewing DHCP lease on $IFACE"
-    if systemctl is-active --quiet systemd-networkd; then
-        networkctl renew "$IFACE" 2>/dev/null || true
-    else
-        dhclient -r "$IFACE" 2>/dev/null || true
-        dhclient "$IFACE" 2>/dev/null || true
-    fi
-    try_recover "DHCP renewal on $IFACE"
-
-    # ─── Step 7: bounce the interface ────────────────────────────────────────
-    # Resets driver/link state. More disruptive, so it's near the bottom.
-    log "Bouncing interface $IFACE (down → up)"
-    ip link set "$IFACE" down 2>/dev/null || true
-    sleep 5
-    ip link set "$IFACE" up 2>/dev/null || true
-    try_recover "interface bounce on $IFACE"
-else
-    log "No usable interface found — skipping DHCP renew and interface bounce"
-fi
-
-# ─── Step 8: reboot (last resort) ────────────────────────────────────────────
-do_reboot
+alert "$RED" "Rebooting after ~${down}m with no gateway and no successful recovery."
+date +%s > "$REBOOTED"
+sync
+reboot
