@@ -208,6 +208,32 @@ metrics:
           summary: 'Critical client error rate'
           description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}'
 
+      # Scores Worker
+      - alert: ScoresWorkerFailing
+        expr: |
+          increase(scores_worker_runs_total{job="{{ include "app.fullname" . }}",result="error"}[1h]) >= 3
+        for: 5m
+        labels:
+          severity: warning
+          component: squares-api
+          layer: api
+        annotations:
+          summary: 'Scores worker runs are failing'
+          description: '{{ $value }} scores worker runs failed in the last hour on {{ $labels.job }}; the ESPN scoreboard response may have changed'
+
+      # threshold clears the 6h idle poll interval; the > 0 guard keeps a never-yet-run worker quiet
+      - alert: ScoresWorkerStale
+        expr: |
+          (time() - max(scores_worker_last_success_timestamp_seconds{job="{{ include "app.fullname" . }}"}) > 25200) and (max(scores_worker_last_success_timestamp_seconds{job="{{ include "app.fullname" . }}"}) > 0)
+        for: 30m
+        labels:
+          severity: critical
+          component: squares-api
+          layer: api
+        annotations:
+          summary: 'Scores worker has not succeeded recently'
+          description: 'Last successful scores worker run was {{ $value }}s ago; live contests are not being scored'
+
 dashboard:
   enabled: true
   namespace: monitoring
