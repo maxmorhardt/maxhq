@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/maxmorhardt/charts/compare/squares-api/1.1.3...squares-api/1.2.0) (2026-08-26)
+
+
+### Features
+
+* **squares-api:** add scores worker alerts ([#47](https://github.com/maxmorhardt/charts/issues/47)) ([35fb2a0](https://github.com/maxmorhardt/charts/commit/35fb2a070d4028ea2f546e7e26a4a17b5988c118))
+
 ## [1.1.3](https://github.com/maxmorhardt/charts/compare/squares-api/1.1.2...squares-api/1.1.3) (2026-07-27)
 
 
