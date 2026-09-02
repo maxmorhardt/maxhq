@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.5](https://github.com/maxmorhardt/squares/compare/2.0.4...2.0.5) (2026-09-02)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#75](https://github.com/maxmorhardt/squares/issues/75)) ([699f6da](https://github.com/maxmorhardt/squares/commit/699f6da1c66df065e6f9de1f39d43954ccef7b62))
+
 ## [2.0.4](https://github.com/maxmorhardt/squares/compare/2.0.3...2.0.4) (2026-07-28)
 
 
