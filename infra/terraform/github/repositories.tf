@@ -6,7 +6,6 @@ locals {
         "docker-ci / Docker CI - squares-api",
         "pr-title / pr-title",
       ]
-      strict = true
     }
 
     "squares" = {
@@ -15,7 +14,6 @@ locals {
         "docker-ci / Docker CI - squares",
         "pr-title / pr-title",
       ]
-      strict = true
     }
 
     "maxstash" = {
@@ -24,7 +22,6 @@ locals {
         "docker-ci / Docker CI - maxstash",
         "pr-title / pr-title",
       ]
-      strict = true
     }
 
     "charts" = {
@@ -32,7 +29,6 @@ locals {
         "pr-title / pr-title",
         "Validate Complete",
       ]
-      strict = true
     }
 
     "k8s" = {
@@ -40,7 +36,6 @@ locals {
         "pr-title / pr-title",
         "Validate Complete",
       ]
-      strict = true
       # argo cd pushes straight to main
       bypass_actors = [
         {
@@ -53,7 +48,6 @@ locals {
 
     "workflows" = {
       checks = ["pr-title"]
-      strict = true
     }
   }
 }
@@ -64,6 +58,6 @@ module "rulesets" {
 
   repository      = each.key
   required_checks = each.value.checks
-  strict          = each.value.strict
+  strict          = try(each.value.strict, false)
   bypass_actors   = try(each.value.bypass_actors, [])
 }

@@ -11,7 +11,7 @@ variable "required_checks" {
 variable "strict" {
   description = "Require the branch to be up to date with the base before merging"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "integration_id" {
