@@ -1,5 +1,6 @@
-import { Casino, GridOff, Info } from '@mui/icons-material';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import { Add, Casino, GridOff, Info, Remove } from '@mui/icons-material';
+import { Box, Button, Divider, IconButton, TextField, Typography } from '@mui/material';
+import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import {
   selectCurrentContest,
@@ -16,7 +17,7 @@ import StartGameButton from './StartGameButton';
 
 interface ContestDetailsProps {
   isOwner?: boolean;
-  onRandomSquare?: () => void;
+  onRandomSquares?: (count: number) => void;
   randomSquareLoading?: boolean;
   onClearMySquares?: () => void;
   clearMySquaresLoading?: boolean;
@@ -24,7 +25,7 @@ interface ContestDetailsProps {
 
 export default function ContestDetails({
   isOwner = false,
-  onRandomSquare,
+  onRandomSquares,
   randomSquareLoading = false,
   onClearMySquares,
   clearMySquaresLoading = false,
@@ -32,6 +33,7 @@ export default function ContestDetails({
   const auth = useAuth();
   const currentContest = useAppSelector(selectCurrentContest);
   const participants = useAppSelector(selectParticipants);
+  const [randomCount, setRandomCount] = useState(1);
 
   if (!currentContest || !currentContest.squares) {
     return;
@@ -72,15 +74,31 @@ export default function ContestDetails({
     return 'Active';
   };
 
-  const showRandomButton =
-    isActive &&
-    !allSquaresFilled &&
-    auth.isAuthenticated &&
-    isParticipant &&
-    squaresClaimed < (currentParticipant?.maxSquares ?? 0);
+  const showRandomButton = isActive && auth.isAuthenticated && isParticipant;
 
   const showClearMineButton =
     isActive && auth.isAuthenticated && isParticipant && squaresClaimed > 0;
+
+  const squaresLeftForUser = Math.max(0, (currentParticipant?.maxSquares ?? 0) - squaresClaimed);
+  const maxRandomFill = Math.min(squaresLeftForUser, totalSquares - filledSquares);
+  const randomFillCount = Math.min(Math.max(randomCount, 1), Math.max(maxRandomFill, 1));
+  const randomDisabled = randomSquareLoading || maxRandomFill === 0;
+
+  const getRandomButtonLabel = () => {
+    if (randomSquareLoading) {
+      return 'Selecting...';
+    }
+
+    if (squaresLeftForUser === 0) {
+      return 'No Squares Left';
+    }
+
+    if (allSquaresFilled) {
+      return 'Grid Is Full';
+    }
+
+    return randomFillCount > 1 ? `Randomly Select ${randomFillCount}` : 'Randomly Select Square';
+  };
 
   return (
     <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
@@ -129,16 +147,84 @@ export default function ContestDetails({
         {(showRandomButton || showClearMineButton) && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {showRandomButton && (
-              <Button
-                variant="outlined"
-                startIcon={<Casino />}
-                onClick={onRandomSquare}
-                disabled={randomSquareLoading}
-                size="small"
-                fullWidth
-              >
-                {randomSquareLoading ? 'Selecting...' : 'Randomly Select Square'}
-              </Button>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                {/* stepper only earns its space when more than one square can be claimed */}
+                {maxRandomFill > 1 && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <IconButton
+                      aria-label="decrease square count"
+                      size="small"
+                      onClick={() => setRandomCount(Math.max(1, randomFillCount - 1))}
+                      disabled={randomDisabled || randomFillCount <= 1}
+                      sx={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                      <Remove sx={{ fontSize: '1rem' }} />
+                    </IconButton>
+
+                    <TextField
+                      aria-label="number of squares to fill"
+                      type="number"
+                      value={randomFillCount}
+                      onKeyDown={(e) => {
+                        if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onChange={(e) => {
+                        const parsed = parseInt(e.target.value, 10);
+                        setRandomCount(
+                          isNaN(parsed) ? 1 : Math.min(Math.max(parsed, 1), maxRandomFill)
+                        );
+                      }}
+                      disabled={randomDisabled}
+                      size="small"
+                      sx={{
+                        flex: 1,
+                        '& input': { textAlign: 'center', py: 0.75, fontSize: '0.8rem' },
+                        '& input[type=number]': { MozAppearance: 'textfield' },
+                        '& input[type=number]::-webkit-outer-spin-button': {
+                          WebkitAppearance: 'none',
+                          margin: 0,
+                        },
+                        '& input[type=number]::-webkit-inner-spin-button': {
+                          WebkitAppearance: 'none',
+                          margin: 0,
+                        },
+                      }}
+                    />
+
+                    <IconButton
+                      aria-label="increase square count"
+                      size="small"
+                      onClick={() => setRandomCount(Math.min(maxRandomFill, randomFillCount + 1))}
+                      disabled={randomDisabled || randomFillCount >= maxRandomFill}
+                      sx={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                      <Add sx={{ fontSize: '1rem' }} />
+                    </IconButton>
+
+                    <Button
+                      size="small"
+                      onClick={() => setRandomCount(maxRandomFill)}
+                      disabled={randomDisabled || randomFillCount >= maxRandomFill}
+                      sx={{ minWidth: 'auto', px: 1, fontSize: '0.7rem' }}
+                    >
+                      Max
+                    </Button>
+                  </Box>
+                )}
+
+                <Button
+                  variant="outlined"
+                  startIcon={<Casino />}
+                  onClick={() => onRandomSquares?.(randomFillCount)}
+                  disabled={randomDisabled}
+                  size="small"
+                  fullWidth
+                >
+                  {getRandomButtonLabel()}
+                </Button>
+              </Box>
             )}
 
             {showClearMineButton && (

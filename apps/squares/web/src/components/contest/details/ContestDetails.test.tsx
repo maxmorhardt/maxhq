@@ -184,6 +184,62 @@ describe('ContestDetails', () => {
     ),
   };
 
+  const filledContest = {
+    ...baseContest,
+    squares: baseContest.squares.map((s) => ({ ...s, value: 'X' })),
+  };
+
+  it('disables the random button instead of hiding it when the participant has no squares left', () => {
+    authAsBob();
+    const cappedParticipant = { ...bobParticipant, maxSquares: 1 };
+    renderDetails({ currentContest: contestWithBobSquare, participants: [cappedParticipant] });
+    const button = screen.getByRole('button', { name: /no squares left/i });
+    expect(button).toBeInTheDocument();
+    expect(button).toBeDisabled();
+  });
+
+  it('disables the random button when the grid is full', () => {
+    authAsBob();
+    renderDetails({ currentContest: filledContest, participants: [bobParticipant] });
+    const button = screen.getByRole('button', { name: /grid is full/i });
+    expect(button).toBeInTheDocument();
+    expect(button).toBeDisabled();
+  });
+
+  it('hides the count stepper when only one square can be claimed', () => {
+    authAsBob();
+    const cappedParticipant = { ...bobParticipant, maxSquares: 1 };
+    renderDetails({ currentContest: baseContest, participants: [cappedParticipant] });
+    expect(screen.getByRole('button', { name: /randomly select square/i })).toBeEnabled();
+    expect(screen.queryByLabelText('increase square count')).not.toBeInTheDocument();
+  });
+
+  it('raises the fill count with the stepper and passes it to onRandomSquares', () => {
+    authAsBob();
+    const onRandomSquares = vi.fn();
+    renderDetails(
+      { currentContest: baseContest, participants: [bobParticipant] },
+      { onRandomSquares }
+    );
+    fireEvent.click(screen.getByLabelText('increase square count'));
+    fireEvent.click(screen.getByLabelText('increase square count'));
+    fireEvent.click(screen.getByRole('button', { name: /randomly select 3/i }));
+    expect(onRandomSquares).toHaveBeenCalledWith(3);
+  });
+
+  it('clamps the fill count to the squares actually available', () => {
+    authAsBob();
+    const onRandomSquares = vi.fn();
+    renderDetails(
+      { currentContest: baseContest, participants: [bobParticipant] },
+      { onRandomSquares }
+    );
+    // 9 empty squares against a limit of 10, so max is 9
+    fireEvent.click(screen.getByRole('button', { name: /^max$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /randomly select 9/i }));
+    expect(onRandomSquares).toHaveBeenCalledWith(9);
+  });
+
   it('shows Clear My Squares button when the participant owns at least one square', () => {
     authAsBob();
     renderDetails({ currentContest: contestWithBobSquare, participants: [bobParticipant] });
@@ -240,11 +296,6 @@ describe('ContestDetails', () => {
     renderDetails({ currentContest: { ...baseContest, visibility: 'public', owner: 'alice' } });
     expect(screen.getByText(/you're viewing this contest/i)).toBeInTheDocument();
   });
-
-  const filledContest = {
-    ...baseContest,
-    squares: baseContest.squares.map((s) => ({ ...s, value: 'X' })),
-  };
 
   it('shows the start button for a full manual contest', () => {
     renderDetails({ currentContest: filledContest }, { isOwner: true });

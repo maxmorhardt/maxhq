@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { Provider } from 'react-redux';
@@ -18,6 +18,13 @@ vi.mock('react-router', async () => {
 });
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+vi.mock('../../../service/contestService', async () => {
+  const actual = await vi.importActual<typeof import('../../../service/contestService')>(
+    '../../../service/contestService'
+  );
+  return { ...actual, claimSquareById: vi.fn() };
+});
+
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -50,7 +57,13 @@ vi.mock('../../../components/contest/grid/Contest', () => ({
   default: () => <div data-testid="contest-grid">Contest Grid</div>,
 }));
 vi.mock('../../../components/contest/details/ContestDetails', () => ({
-  default: () => <div data-testid="contest-details">Contest Details</div>,
+  default: ({ onRandomSquares }: { onRandomSquares?: (count: number) => void }) => (
+    <div data-testid="contest-details">
+      <button data-testid="fill-three" onClick={() => onRandomSquares?.(3)}>
+        Fill Three
+      </button>
+    </div>
+  ),
 }));
 vi.mock('../../../components/contest/sidebar/ActivityFeed', () => ({
   default: () => <div data-testid="activity-feed">Activity Feed</div>,
@@ -76,16 +89,23 @@ vi.mock('../../error/NotFoundPage', () => ({
 
 import { useAuth } from 'react-oidc-context';
 import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
+import { claimSquareById } from '../../../service/contestService';
 
 const theme = createTheme({ palette: { mode: 'dark' } });
 
-function createTestStore(currentContest?: unknown) {
+function createTestStore(currentContest?: unknown, initials?: string) {
   const baseState = contestReducer(undefined, { type: '' });
   const preloadedContest = currentContest ? { ...baseState, currentContest } : undefined;
+  const preloadedUser = initials
+    ? { ...userReducer(undefined, { type: '' }), profile: { defaultInitials: initials } }
+    : undefined;
   const store = // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (configureStore as unknown as (...args: any[]) => ReturnType<typeof configureStore>)({
       reducer: { contest: contestReducer, ws: wsReducer, toast: toastReducer, user: userReducer },
-      preloadedState: preloadedContest ? { contest: preloadedContest } : undefined,
+      preloadedState: {
+        ...(preloadedContest ? { contest: preloadedContest } : {}),
+        ...(preloadedUser ? { user: preloadedUser } : {}),
+      },
     });
   return store;
 }
@@ -240,5 +260,70 @@ describe('ContestPage', () => {
 
     renderPage(store);
     expect(screen.getByText('Super Bowl')).toBeInTheDocument();
+  });
+  const emptyGridContest = {
+    id: '1',
+    name: 'Super Bowl',
+    owner: 'other',
+    status: 'ACTIVE',
+    squares: Array.from({ length: 9 }, (_, i) => ({
+      id: `sq-${i}`,
+      contestId: '1',
+      row: Math.floor(i / 3),
+      col: i % 3,
+      value: '',
+      owner: '',
+    })),
+    quarterResults: [],
+    visibility: 'public',
+    maxSquares: 10,
+  };
+
+  function connected() {
+    vi.mocked(useContestWebSocket).mockReturnValue({
+      ...mockWebSocket,
+      isConnecting: false,
+      isConnected: true,
+      connectionFailed: false,
+      hasFatalWsError: false,
+    });
+  }
+
+  it('claims the requested number of distinct random squares', async () => {
+    connected();
+    vi.mocked(claimSquareById).mockImplementation((_contestId, squareId) =>
+      Promise.resolve({ id: squareId, row: 0, col: 0, value: 'ME', owner: 'user1' } as never)
+    );
+
+    renderPage(createTestStore(emptyGridContest, 'ME'));
+    fireEvent.click(screen.getAllByTestId('fill-three')[0]);
+
+    await waitFor(() => expect(claimSquareById).toHaveBeenCalledTimes(3));
+    const claimedIds = vi.mocked(claimSquareById).mock.calls.map((call) => call[1]);
+    expect(new Set(claimedIds).size).toBe(3);
+  });
+
+  it('stops claiming after a square is taken mid-fill', async () => {
+    connected();
+    vi.mocked(claimSquareById)
+      .mockResolvedValueOnce({ id: 'sq-0', row: 0, col: 0, value: 'ME', owner: 'user1' } as never)
+      .mockRejectedValue({ code: 409, message: 'already claimed' });
+
+    renderPage(createTestStore(emptyGridContest, 'ME'));
+    fireEvent.click(screen.getAllByTestId('fill-three')[0]);
+
+    await waitFor(() => expect(claimSquareById).toHaveBeenCalledTimes(2));
+    expect(claimSquareById).toHaveBeenCalledTimes(2);
+  });
+
+  it('sends the user to their profile instead of claiming when initials are unset', async () => {
+    connected();
+    vi.mocked(claimSquareById).mockResolvedValue({} as never);
+
+    renderPage(createTestStore(emptyGridContest));
+    fireEvent.click(screen.getAllByTestId('fill-three')[0]);
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/profile'));
+    expect(claimSquareById).not.toHaveBeenCalled();
   });
 });

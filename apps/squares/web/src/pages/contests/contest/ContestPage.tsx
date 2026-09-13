@@ -117,7 +117,7 @@ export default function ContestPage() {
     }
   }, [squareErrorCode, dispatch, forceReconnect]);
 
-  const handleRandomSquare = async () => {
+  const handleRandomSquares = async (count: number) => {
     if (!auth.isAuthenticated) {
       setSignInOpen(true);
       return;
@@ -134,8 +134,6 @@ export default function ContestPage() {
       return;
     }
 
-    const randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
-
     // claim uses the profile default initials, so require them to be set first
     if (!defaultInitials) {
       showToast('Set your initials in your profile before claiming a square', 'warning');
@@ -143,14 +141,34 @@ export default function ContestPage() {
       return;
     }
 
+    // shuffle a snapshot so every pick is distinct without re-reading state mid-loop
+    const shuffled = [...emptySquares];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    const picks = shuffled.slice(0, Math.max(1, count));
+
     setRandomSquareLoading(true);
+    let claimed = 0;
     try {
-      await dispatch(
-        claimSquare({
-          contestId: currentContest.id,
-          squareId: randomSquare.id,
-        })
-      ).unwrap();
+      for (const square of picks) {
+        await dispatch(
+          claimSquare({
+            contestId: currentContest.id,
+            squareId: square.id,
+          })
+        ).unwrap();
+        claimed++;
+      }
+    } catch {
+      // someone claimed a pick first, so stop and report what actually landed
+      const message =
+        claimed > 0
+          ? `Claimed ${claimed} of ${picks.length} squares`
+          : 'Could not claim that square, someone may have taken it';
+      showToast(message, 'warning');
     } finally {
       setRandomSquareLoading(false);
     }
@@ -275,7 +293,7 @@ export default function ContestPage() {
         >
           <ContestDetails
             isOwner={isOwner}
-            onRandomSquare={handleRandomSquare}
+            onRandomSquares={handleRandomSquares}
             randomSquareLoading={randomSquareLoading}
             onClearMySquares={handleClearMySquares}
             clearMySquaresLoading={clearMySquaresLoading}
@@ -305,7 +323,7 @@ export default function ContestPage() {
       >
         <ContestDetails
           isOwner={isOwner}
-          onRandomSquare={handleRandomSquare}
+          onRandomSquares={handleRandomSquares}
           randomSquareLoading={randomSquareLoading}
           onClearMySquares={handleClearMySquares}
           clearMySquaresLoading={clearMySquaresLoading}
