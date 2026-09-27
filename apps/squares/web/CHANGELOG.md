@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/maxmorhardt/squares/compare/2.1.1...2.2.0) (2026-09-27)
+
+
+### Features
+
+* **auth:** keep phone and computer sessions signed in together ([#88](https://github.com/maxmorhardt/squares/issues/88)) ([971832d](https://github.com/maxmorhardt/squares/commit/971832d2fba0bc7ccbcaa07afc261ed2dea56bb3))
+* multi-square random claim controls ([#84](https://github.com/maxmorhardt/squares/issues/84)) ([30bd455](https://github.com/maxmorhardt/squares/commit/30bd455404d8e6ead59e511095fe4b90ae8870de))
+
 ## [2.1.1](https://github.com/maxmorhardt/squares/compare/2.1.0...2.1.1) (2026-09-20)
 
 
