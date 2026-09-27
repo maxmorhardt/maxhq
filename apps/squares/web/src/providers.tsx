@@ -11,14 +11,17 @@ import {
 import { Provider } from 'react-redux';
 import { store } from './app/store';
 import ErrorBoundary from './pages/error/ErrorBoundary';
+import { getOidcClient, OIDC_AUTHORITY } from './utils/oidcHelpers';
+
+const oidcClient = getOidcClient();
 
 const oidcConfig: AuthProviderProps = {
-  authority: 'https://login.maxstash.io',
-  client_id: 'squares',
+  authority: OIDC_AUTHORITY,
+  client_id: oidcClient.clientId,
   redirect_uri: import.meta.env.PROD
     ? 'https://squares.maxstash.io/auth/callback'
     : 'http://localhost:3000/auth/callback',
-  scope: 'openid profile email offline_access',
+  scope: oidcClient.scope,
   userStore:
     typeof window !== 'undefined'
       ? new WebStorageStateStore({ store: window.localStorage })

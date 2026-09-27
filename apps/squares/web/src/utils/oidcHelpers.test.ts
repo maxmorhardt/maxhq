@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { AuthContextProps } from 'react-oidc-context';
-import { signInWithProvider } from './oidcHelpers';
+import { getOidcClient, OIDC_AUTHORITY, signInWithProvider } from './oidcHelpers';
 
 describe('signInWithProvider', () => {
   beforeEach(() => {
@@ -47,5 +47,69 @@ describe('signInWithProvider', () => {
     expect(signinRedirect).toHaveBeenCalledWith({
       extraQueryParams: { connector_id: 'github' },
     });
+  });
+});
+
+describe('getOidcClient', () => {
+  const stubPointer = (coarse: boolean) => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: coarse && query === '(pointer: coarse)',
+    }));
+  };
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('uses the web client on a fine pointer device', () => {
+    stubPointer(false);
+
+    expect(getOidcClient()).toEqual({
+      clientId: 'squares',
+      scope: 'openid profile email offline_access',
+    });
+  });
+
+  it('uses the mobile client with the web audience on a touch device', () => {
+    stubPointer(true);
+
+    expect(getOidcClient()).toEqual({
+      clientId: 'squares-mobile',
+      scope: 'openid profile email offline_access audience:server:client_id:squares',
+    });
+  });
+
+  it('keeps an existing web session on a touch device', () => {
+    stubPointer(true);
+    localStorage.setItem(`oidc.user:${OIDC_AUTHORITY}:squares`, '{}');
+
+    expect(getOidcClient().clientId).toBe('squares');
+  });
+
+  it('keeps an existing mobile session on a fine pointer device', () => {
+    stubPointer(false);
+    localStorage.setItem(`oidc.user:${OIDC_AUTHORITY}:squares-mobile`, '{}');
+
+    expect(getOidcClient().clientId).toBe('squares-mobile');
+  });
+
+  it('falls back to detection when storage is blocked', () => {
+    stubPointer(true);
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+
+    expect(getOidcClient().clientId).toBe('squares-mobile');
+  });
+
+  it('uses the web client when matchMedia is unavailable', () => {
+    vi.stubGlobal('matchMedia', undefined);
+
+    expect(getOidcClient().clientId).toBe('squares');
   });
 });

@@ -7,6 +7,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../../../features/contests/contestSlice';
 import { wsReducer } from '../../../features/ws/wsSlice';
 import { toastReducer } from '../../../features/toast/toastSlice';
+import { selectToastMessages } from '../../../features/toast/toastSelectors';
 import { userReducer } from '../../../features/user/userSlice';
 import ContestPage from './ContestPage';
 
@@ -109,6 +110,10 @@ function createTestStore(currentContest?: unknown, initials?: string) {
     });
   return store;
 }
+
+// the test store is loosely typed, so narrow its state to what the toast selector reads
+const getToasts = (store: ReturnType<typeof createTestStore>) =>
+  selectToastMessages(store.getState() as Parameters<typeof selectToastMessages>[0]);
 
 function renderPage(store = createTestStore()) {
   return render(
@@ -314,6 +319,37 @@ describe('ContestPage', () => {
 
     await waitFor(() => expect(claimSquareById).toHaveBeenCalledTimes(2));
     expect(claimSquareById).toHaveBeenCalledTimes(2);
+  });
+
+  it('warns about a conflict when a square is taken mid-fill', async () => {
+    connected();
+    vi.mocked(claimSquareById).mockRejectedValue({ code: 409, message: 'already claimed' });
+
+    const store = createTestStore(emptyGridContest, 'ME');
+    renderPage(store);
+    fireEvent.click(screen.getAllByTestId('fill-three')[0]);
+
+    await waitFor(() => expect(getToasts(store)).toHaveLength(1));
+    const toast = getToasts(store)[0];
+    expect(toast.severity).toBe('warning');
+    expect(toast.message).toMatch(/someone may have taken it/i);
+  });
+
+  it('surfaces a non-conflict claim failure as an error with the api message', async () => {
+    connected();
+    vi.mocked(claimSquareById).mockRejectedValue({
+      code: 0,
+      message: 'Network error: Unable to reach the server',
+    });
+
+    const store = createTestStore(emptyGridContest, 'ME');
+    renderPage(store);
+    fireEvent.click(screen.getAllByTestId('fill-three')[0]);
+
+    await waitFor(() => expect(getToasts(store)).toHaveLength(1));
+    const toast = getToasts(store)[0];
+    expect(toast.severity).toBe('error');
+    expect(toast.message).toMatch(/unable to reach the server/i);
   });
 
   it('sends the user to their profile instead of claiming when initials are unset', async () => {

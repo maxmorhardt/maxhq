@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
-import { signInWithProvider, type OidcProvider } from '../../utils/oidcHelpers';
+import { signInWithProvider, type OIDCProvider } from '../../utils/oidcHelpers';
 
 interface SignInDialogProps {
   open: boolean;
@@ -24,7 +24,7 @@ interface SignInDialogProps {
 export default function SignInDialog({ open, onClose, redirectPath }: SignInDialogProps) {
   const auth = useAuth();
 
-  const handleSignIn = (provider: OidcProvider) => {
+  const handleSignIn = (provider: OIDCProvider) => {
     onClose();
     signInWithProvider(auth, provider, redirectPath);
   };

@@ -25,6 +25,7 @@ import { selectDefaultInitials } from '../../../features/user/userSelectors';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
 import { useToast } from '../../../hooks/useToast';
+import type { APIError } from '../../../types/error';
 import { CONTEST_STACK_MAX_WIDTH } from '../../../types/layout';
 import { Helmet } from 'react-helmet-async';
 
@@ -162,13 +163,22 @@ export default function ContestPage() {
         ).unwrap();
         claimed++;
       }
-    } catch {
-      // someone claimed a pick first, so stop and report what actually landed
-      const message =
-        claimed > 0
-          ? `Claimed ${claimed} of ${picks.length} squares`
-          : 'Could not claim that square, someone may have taken it';
-      showToast(message, 'warning');
+    } catch (err: unknown) {
+      const apiError = err as APIError | undefined;
+
+      // only a 409 means someone claimed a pick first; anything else is a real failure
+      if (apiError?.code === 409) {
+        const message =
+          claimed > 0
+            ? `Claimed ${claimed} of ${picks.length} squares`
+            : 'Could not claim that square, someone may have taken it';
+        showToast(message, 'warning');
+      } else {
+        const reason = apiError?.message ?? 'Could not claim squares';
+        const message =
+          claimed > 0 ? `Claimed ${claimed} of ${picks.length} squares. ${reason}` : reason;
+        showToast(message, 'error');
+      }
     } finally {
       setRandomSquareLoading(false);
     }

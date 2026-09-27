@@ -13,7 +13,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useState, type JSX, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { signInWithProvider, type OidcProvider } from '../../utils/oidcHelpers';
+import { signInWithProvider, type OIDCProvider } from '../../utils/oidcHelpers';
 
 interface HeaderAuthProps {
   handleOpenUserMenu: (event: MouseEvent<HTMLElement>) => void;
@@ -36,7 +36,7 @@ export default function HeaderAuth({
 
   const [anchorElSignIn, setAnchorElSignIn] = useState<HTMLElement | null>(null);
 
-  const handleSignIn = (provider: OidcProvider) => {
+  const handleSignIn = (provider: OIDCProvider) => {
     setAnchorElSignIn(null);
     signInWithProvider(auth, provider);
   };

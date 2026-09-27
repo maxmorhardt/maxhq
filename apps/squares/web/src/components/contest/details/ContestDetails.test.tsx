@@ -263,6 +263,24 @@ describe('ContestDetails', () => {
     expect(onClearMySquares).toHaveBeenCalledTimes(1);
   });
 
+  it('disables Clear My Squares while a random fill is in flight', () => {
+    authAsBob();
+    renderDetails(
+      { currentContest: contestWithBobSquare, participants: [bobParticipant] },
+      { randomSquareLoading: true }
+    );
+    expect(screen.getByRole('button', { name: /clear my squares/i })).toBeDisabled();
+  });
+
+  it('disables the random fill button while squares are being cleared', () => {
+    authAsBob();
+    renderDetails(
+      { currentContest: contestWithBobSquare, participants: [bobParticipant] },
+      { clearMySquaresLoading: true }
+    );
+    expect(screen.getByRole('button', { name: /randomly select/i })).toBeDisabled();
+  });
+
   it('shows "Deleted" status text and no actions for DELETED owner contest', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,

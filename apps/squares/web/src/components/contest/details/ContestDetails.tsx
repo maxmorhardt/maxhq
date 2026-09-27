@@ -82,7 +82,8 @@ export default function ContestDetails({
   const squaresLeftForUser = Math.max(0, (currentParticipant?.maxSquares ?? 0) - squaresClaimed);
   const maxRandomFill = Math.min(squaresLeftForUser, totalSquares - filledSquares);
   const randomFillCount = Math.min(Math.max(randomCount, 1), Math.max(maxRandomFill, 1));
-  const randomDisabled = randomSquareLoading || maxRandomFill === 0;
+  const squareActionPending = randomSquareLoading || clearMySquaresLoading;
+  const randomDisabled = squareActionPending || maxRandomFill === 0;
 
   const getRandomButtonLabel = () => {
     if (randomSquareLoading) {
@@ -233,7 +234,7 @@ export default function ContestDetails({
                 color="warning"
                 startIcon={<GridOff />}
                 onClick={onClearMySquares}
-                disabled={clearMySquaresLoading}
+                disabled={squareActionPending}
                 size="small"
                 fullWidth
               >
