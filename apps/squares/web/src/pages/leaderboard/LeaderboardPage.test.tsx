@@ -82,6 +82,9 @@ describe('LeaderboardPage', () => {
     renderPage();
 
     expect(screen.getByRole('heading', { name: 'Leaderboard' })).toBeInTheDocument();
+
+    // let the leaderboard fetch settle so its state update lands inside the test
+    await screen.findByText('Max M.');
   });
 
   it('renders the top three on the podium and the rest in the table', async () => {
@@ -136,7 +139,7 @@ describe('LeaderboardPage', () => {
   it('does not fetch the user rank when signed out', async () => {
     renderPage();
 
-    await waitFor(() => expect(mockGetLeaderboard).toHaveBeenCalled());
+    await screen.findByText('Max M.');
     expect(mockGetMyRank).not.toHaveBeenCalled();
   });
 
