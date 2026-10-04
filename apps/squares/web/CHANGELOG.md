@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/maxmorhardt/squares/compare/2.2.0...2.2.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **auth:** pick the mobile client on phones that were already signed in ([#91](https://github.com/maxmorhardt/squares/issues/91)) ([c68d00a](https://github.com/maxmorhardt/squares/commit/c68d00a709a09ca375751407758d65d6473fe503))
+
 ## [2.2.0](https://github.com/maxmorhardt/squares/compare/2.1.1...2.2.0) (2026-09-27)
 
 
