@@ -63,7 +63,6 @@ describe('getOidcClient', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    vi.restoreAllMocks();
   });
 
   it('uses the web client on a fine pointer device', () => {
@@ -84,25 +83,9 @@ describe('getOidcClient', () => {
     });
   });
 
-  it('keeps an existing web session on a touch device', () => {
+  it('ignores a leftover web session on a touch device', () => {
     stubPointer(true);
     localStorage.setItem(`oidc.user:${OIDC_AUTHORITY}:squares`, '{}');
-
-    expect(getOidcClient().clientId).toBe('squares');
-  });
-
-  it('keeps an existing mobile session on a fine pointer device', () => {
-    stubPointer(false);
-    localStorage.setItem(`oidc.user:${OIDC_AUTHORITY}:squares-mobile`, '{}');
-
-    expect(getOidcClient().clientId).toBe('squares-mobile');
-  });
-
-  it('falls back to detection when storage is blocked', () => {
-    stubPointer(true);
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
 
     expect(getOidcClient().clientId).toBe('squares-mobile');
   });

@@ -26,17 +26,6 @@ const resolveClientId = (): string => {
     return WEB_CLIENT_ID;
   }
 
-  // stay on whichever client issued an existing session so a changed detection result never signs the user out
-  try {
-    for (const clientId of [WEB_CLIENT_ID, MOBILE_CLIENT_ID]) {
-      if (window.localStorage.getItem(`oidc.user:${OIDC_AUTHORITY}:${clientId}`)) {
-        return clientId;
-      }
-    }
-  } catch {
-    // storage can be blocked, fall through to detection
-  }
-
   // a coarse primary pointer means a touch-first device
   return window.matchMedia?.('(pointer: coarse)').matches ? MOBILE_CLIENT_ID : WEB_CLIENT_ID;
 };
