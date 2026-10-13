@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.0.3](https://github.com/maxmorhardt/maxstash/compare/maxstash/3.0.2...maxstash/3.0.3) (2026-10-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* the maxstash public monorepo ([#69](https://github.com/maxmorhardt/maxstash/issues/69))
+* charts/ and apps/*/chart are removed; use the charts repo.
+
+### Features
+
+* the maxstash public monorepo ([#69](https://github.com/maxmorhardt/maxstash/issues/69)) ([e15903c](https://github.com/maxmorhardt/maxstash/commit/e15903c095f902320c36cbead94841fec57fe081))
+
+
+### Bug Fixes
+
+* **maxstash:** describe squares as it is now built ([3c0d138](https://github.com/maxmorhardt/maxstash/commit/3c0d138b2e7d8cc551fc0d361a763c2499a7cf0e))
+
+
+### Code Refactoring
+
+* move charts to the charts repo, flatten libs, drop the root npm project and e2e ([d536e4c](https://github.com/maxmorhardt/maxstash/commit/d536e4c8e85cf5567737cef637e32cc364675ad7))
+
 ## [3.0.2](https://github.com/maxmorhardt/maxstash/compare/3.0.1...3.0.2) (2026-09-20)
 
 
