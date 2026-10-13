@@ -1,0 +1,6 @@
+apiVersion: v2
+name: squares-realtime
+description: Live contest updates over server-sent events for squares.maxstash.io
+type: application
+version: 1.0.0
+appVersion: 1.0.0

@@ -1,0 +1,13 @@
+# the build context is the repository root; only the shared go libs and this service are sent
+*
+!libs/go/
+!apps/squares/accounts/
+**/*_test.go
+**/*.md
+**/bin/
+**/coverage.*
+**/.env
+**/.env.*
+apps/squares/accounts/test/
+apps/squares/accounts/chart/
+apps/squares/accounts/internal/mocks/

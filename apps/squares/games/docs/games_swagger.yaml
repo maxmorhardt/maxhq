@@ -1,0 +1,162 @@
+definitions:
+  api.APIError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: invalid request
+        type: string
+      requestId:
+        example: 7db692fa-c767-468f-af3d-9231b0f88c69
+        type: string
+      timestamp:
+        example: "2025-10-05T13:45:00Z"
+        type: string
+    type: object
+  api.LivenessResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  api.ReadinessResponse:
+    properties:
+      checks:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+    type: object
+  model.Game:
+    properties:
+      awayAbbr:
+        type: string
+      awayScore:
+        type: integer
+      awayTeam:
+        type: string
+      createdAt:
+        type: string
+      espnId:
+        type: string
+      gameTime:
+        type: string
+      homeAbbr:
+        type: string
+      homeScore:
+        type: integer
+      homeTeam:
+        type: string
+      id:
+        type: string
+      period:
+        type: integer
+      scores:
+        items:
+          $ref: '#/definitions/model.GameScore'
+        type: array
+      season:
+        type: integer
+      seasonType:
+        type: integer
+      status:
+        $ref: '#/definitions/model.GameStatus'
+      updatedAt:
+        type: string
+      week:
+        type: integer
+    type: object
+  model.GameScore:
+    properties:
+      awayScore:
+        type: integer
+      createdAt:
+        type: string
+      gameId:
+        type: string
+      homeScore:
+        type: integer
+      id:
+        type: string
+      quarter:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  model.GameStatus:
+    enum:
+    - scheduled
+    - in_progress
+    - final
+    type: string
+    x-enum-varnames:
+    - GameStatusScheduled
+    - GameStatusInProgress
+    - GameStatusFinal
+info:
+  contact: {}
+  description: NFL schedule and live scores for squares.maxstash.io. Polls ESPN and
+    publishes game events to the games stream. Served under /squares behind the gateway,
+    which validates the bearer token.
+  title: Squares Games API
+  version: 1.0.0
+paths:
+  /games/upcoming:
+    get:
+      description: Returns NFL games available to link a contest to when creating
+        one
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Game'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get upcoming games
+      tags:
+      - games
+  /health/live:
+    get:
+      description: Returns UP if the service process is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.LivenessResponse'
+      summary: Liveness check
+      tags:
+      - health
+  /health/ready:
+    get:
+      description: Checks every dependency the service needs to serve traffic
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ReadinessResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.ReadinessResponse'
+      summary: Readiness check
+      tags:
+      - health
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

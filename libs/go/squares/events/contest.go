@@ -1,0 +1,73 @@
+package events
+
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+// contest event types: the entry type on a contest stream and the "type" field the frontend switches on
+const (
+	SquareUpdateType          = "square_update"
+	ContestUpdateType         = "contest_update"
+	QuarterResultUpdateType   = "quarter_result_update"
+	QuarterResultRollbackType = "quarter_result_rollback"
+	ContestDeletedType        = "contest_deleted"
+	ParticipantRemovedType    = "participant_removed"
+	ParticipantAddedType      = "participant_added"
+
+	// sent by realtime itself, never stored in a stream
+	ConnectedType = "connected"
+	RevokedType   = "revoked"
+)
+
+const ContestVisibilityPrivate = "private"
+
+// the fields of a contest event realtime reads to decide whether a viewer may keep watching; everything else
+// in the payload is passed to the browser untouched
+type ContestEventHeader struct {
+	Type        string             `json:"type"`
+	ContestID   uuid.UUID          `json:"contestId"`
+	Contest     *ContestVisibility `json:"contest,omitempty"`
+	Participant *ParticipantRef    `json:"participant,omitempty"`
+}
+
+type ContestVisibility struct {
+	Visibility string `json:"visibility"`
+}
+
+type ParticipantRef struct {
+	UserID string `json:"userId"`
+}
+
+// the events realtime writes on its own: the opening snapshot and the notice that access was lost.
+// Contest and Participants are passed through from the contests snapshot as-is
+type SystemEvent struct {
+	Type         string          `json:"type"`
+	ContestID    uuid.UUID       `json:"contestId"`
+	UpdatedBy    string          `json:"updatedBy"`
+	Timestamp    time.Time       `json:"timestamp"`
+	Contest      json.RawMessage `json:"contest,omitempty"`
+	Participants json.RawMessage `json:"participants,omitempty"`
+}
+
+func NewConnectedEvent(contestID uuid.UUID, contest, participants json.RawMessage) *SystemEvent {
+	return &SystemEvent{
+		Type:         ConnectedType,
+		ContestID:    contestID,
+		UpdatedBy:    "system",
+		Timestamp:    time.Now(),
+		Contest:      contest,
+		Participants: participants,
+	}
+}
+
+func NewRevokedEvent(contestID uuid.UUID) *SystemEvent {
+	return &SystemEvent{
+		Type:      RevokedType,
+		ContestID: contestID,
+		UpdatedBy: "system",
+		Timestamp: time.Now(),
+	}
+}

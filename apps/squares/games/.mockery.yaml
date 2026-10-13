@@ -1,0 +1,24 @@
+with-expecter: true
+dir: internal/mocks
+outpkg: mocks
+resolve-type-alias: false
+disable-version-string: true
+issue-845-fix: true
+mockname: "{{.InterfaceName}}"
+filename: "{{.InterfaceName}}.go"
+packages:
+  github.com/maxmorhardt/maxstash/libs/go/platform/database:
+    interfaces:
+      Transactor:
+  github.com/maxmorhardt/maxstash/libs/go/platform/streams:
+    interfaces:
+      Outbox:
+  github.com/maxmorhardt/maxstash/apps/squares/games/internal/clients:
+    interfaces:
+      ESPNClient:
+  github.com/maxmorhardt/maxstash/apps/squares/games/internal/repository:
+    interfaces:
+      GameRepository:
+  github.com/maxmorhardt/maxstash/apps/squares/games/internal/service:
+    interfaces:
+      GameService:
