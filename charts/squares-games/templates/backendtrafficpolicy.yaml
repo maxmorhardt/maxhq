@@ -14,18 +14,27 @@ spec:
     type: Local
     local:
       rules:
+        {{- $rules := prepend (.Values.route.rateLimit.rules | default list) (dict "requests" .Values.route.rateLimit.requests "unit" .Values.route.rateLimit.unit) }}
+        {{- range $rule := $rules }}
+        {{- range $cidr := list "0.0.0.0/0" "::/0" }}
         - clientSelectors:
             - sourceCIDR:
                 type: Distinct
-                value: 0.0.0.0/0
+                value: {{ $cidr }}
+              {{- if $rule.path }}
+              path:
+                type: Exact
+                value: {{ printf "%s%s" $.Values.route.prefix $rule.path }}
+              {{- end }}
+              {{- with $rule.methods }}
+              methods:
+                {{- range . }}
+                - value: {{ . }}
+                {{- end }}
+              {{- end }}
           limit:
-            requests: {{ .Values.route.rateLimit.requests }}
-            unit: {{ .Values.route.rateLimit.unit }}
-        - clientSelectors:
-            - sourceCIDR:
-                type: Distinct
-                value: ::/0
-          limit:
-            requests: {{ .Values.route.rateLimit.requests }}
-            unit: {{ .Values.route.rateLimit.unit }}
+            requests: {{ $rule.requests }}
+            unit: {{ $rule.unit }}
+        {{- end }}
+        {{- end }}
 {{- end }}

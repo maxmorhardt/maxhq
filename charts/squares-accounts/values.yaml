@@ -98,6 +98,12 @@ route:
     exact:
       - /users/me
   # the api reference is served at <prefix>/swagger/<swaggerName>
+    # per client ip and envoy replica, on top of the route-wide limit
+    rules:
+      - path: /contact
+        methods: [POST]
+        requests: 10
+        unit: Day
   swaggerName: accounts
   rateLimit:
     enabled: true

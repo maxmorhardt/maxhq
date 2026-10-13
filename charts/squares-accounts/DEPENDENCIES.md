@@ -35,7 +35,7 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | service-to-service | `INTERNAL_API_TOKEN` (the same value in contests, accounts, and realtime) |
 | email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SUPPORT_EMAIL` |
 | captcha | `TURNSTILE_SECRET_KEY` |
-| http | `ALLOWED_ORIGINS`, `CONTACT_RATE_LIMIT` |
+| http | `ALLOWED_ORIGINS` |
 
 `REDIS_URL` is `redis://squares:<password>@valkey.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
 `SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxstash repo for each one and its default).
