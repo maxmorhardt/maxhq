@@ -30,13 +30,18 @@ describe('ToastProvider', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders a toast for each active message', () => {
+  it('shows one toast at a time, oldest first, and the next when it closes', () => {
     const store = createStore([
       { message: 'First toast', severity: 'info' },
       { message: 'Second toast', severity: 'error' },
     ]);
     renderProvider(store);
     expect(screen.getByText('First toast')).toBeInTheDocument();
+    expect(screen.queryByText('Second toast')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /close/i }));
+
+    expect(screen.queryByText('First toast')).not.toBeInTheDocument();
     expect(screen.getByText('Second toast')).toBeInTheDocument();
   });
 

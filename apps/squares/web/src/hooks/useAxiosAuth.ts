@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { setupAxiosInterceptors, setUnauthorizedHandler } from '../axios/api';
+import {
+  clearAxiosInterceptors,
+  setupAxiosInterceptors,
+  setUnauthorizedHandler,
+} from '../axios/api';
 
 export const useAxiosAuth = () => {
   const { user, isAuthenticated, removeUser } = useAuth();
@@ -8,6 +12,7 @@ export const useAxiosAuth = () => {
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id_token) {
+      clearAxiosInterceptors();
       setReady(false);
       return;
     }

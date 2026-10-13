@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { useAxiosAuth } from './useAxiosAuth';
-import { setupAxiosInterceptors } from '../axios/api';
+import { clearAxiosInterceptors, setupAxiosInterceptors } from '../axios/api';
 
 vi.mock('react-oidc-context', () => ({
   useAuth: vi.fn(),
@@ -11,6 +11,7 @@ vi.mock('react-oidc-context', () => ({
 vi.mock('../axios/api', () => ({
   default: {},
   setupAxiosInterceptors: vi.fn(),
+  clearAxiosInterceptors: vi.fn(),
   setUnauthorizedHandler: vi.fn(),
 }));
 
@@ -29,6 +30,7 @@ describe('useAxiosAuth', () => {
 
     const { result } = renderHook(() => useAxiosAuth(), { wrapper: MemoryRouter });
     expect(result.current).toBe(false);
+    expect(clearAxiosInterceptors).toHaveBeenCalled();
   });
 
   it('should return false when user has no id token', () => {

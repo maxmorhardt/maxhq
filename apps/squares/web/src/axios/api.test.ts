@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import api, { setupAxiosInterceptors, setUnauthorizedHandler } from './api';
+import api, { clearAxiosInterceptors, setupAxiosInterceptors, setUnauthorizedHandler } from './api';
 import type { User } from 'oidc-client-ts';
 import type { InternalAxiosRequestConfig } from 'axios';
 
@@ -111,5 +111,24 @@ describe('setupAxiosInterceptors', () => {
 
     setUnauthorizedHandler(null);
     useSpy.mockRestore();
+  });
+});
+
+describe('clearAxiosInterceptors', () => {
+  it('stops sending the previous user token', async () => {
+    setupAxiosInterceptors({ id_token: 'old-token' } as Parameters<
+      typeof setupAxiosInterceptors
+    >[0]);
+    clearAxiosInterceptors();
+
+    let sent: string | undefined;
+    await api.get('/stats', {
+      adapter: async (config) => {
+        sent = config.headers.Authorization as string | undefined;
+        return { data: {}, status: 200, statusText: 'OK', headers: {}, config };
+      },
+    });
+
+    expect(sent).toBeUndefined();
   });
 });

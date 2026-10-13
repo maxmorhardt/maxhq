@@ -15,14 +15,20 @@ export const setUnauthorizedHandler = (handler: (() => void) | null) => {
   onUnauthorized = handler;
 };
 
+// drops the signed-in user's token; the gateway rejects an expired token even on public routes,
+// so requests after sign-out or a 401 must go out without one
+export const clearAxiosInterceptors = () => {
+  api.interceptors.request.clear();
+  api.interceptors.response.clear();
+};
+
 export const setupAxiosInterceptors = (user: User | null | undefined) => {
   if (!user || !user.id_token) {
     return;
   }
 
   // clear existing interceptors to avoid duplicates on token refresh
-  api.interceptors.request.clear();
-  api.interceptors.response.clear();
+  clearAxiosInterceptors();
 
   api.interceptors.request.use(
     (config) => {
