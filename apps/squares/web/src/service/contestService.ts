@@ -1,4 +1,5 @@
 import api from '../axios/api';
+import { idempotentRequest } from '../axios/idempotency';
 import type {
   Contest,
   CreateContestRequest,
@@ -37,7 +38,11 @@ export async function getContestsByOwner(
 
 export async function createNewContest(request: CreateContestRequest) {
   try {
-    const res = await api.put('/contests', request);
+    const res = await idempotentRequest<Contest>({
+      method: 'PUT',
+      url: '/contests',
+      data: request,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -46,7 +51,10 @@ export async function createNewContest(request: CreateContestRequest) {
 
 export async function claimSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
-    const res = await api.post<Square>(`/contests/${contestId}/squares/${squareId}/claim`);
+    const res = await idempotentRequest<Square>({
+      method: 'POST',
+      url: `/contests/${contestId}/squares/${squareId}/claim`,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -55,7 +63,10 @@ export async function claimSquareById(contestId: string, squareId: string): Prom
 
 export async function clearSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
-    const res = await api.post<Square>(`/contests/${contestId}/squares/${squareId}/clear`);
+    const res = await idempotentRequest<Square>({
+      method: 'POST',
+      url: `/contests/${contestId}/squares/${squareId}/clear`,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -64,7 +75,10 @@ export async function clearSquareById(contestId: string, squareId: string): Prom
 
 export async function clearMySquaresByContest(contestId: string): Promise<Square[]> {
   try {
-    const res = await api.post<Square[]>(`/contests/${contestId}/squares/clear-mine`);
+    const res = await idempotentRequest<Square[]>({
+      method: 'POST',
+      url: `/contests/${contestId}/squares/clear-mine`,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -73,10 +87,16 @@ export async function clearMySquaresByContest(contestId: string): Promise<Square
 
 export async function updateContestById(
   id: string,
-  updates: UpdateContestRequest
+  updates: UpdateContestRequest,
+  version?: number
 ): Promise<Contest> {
   try {
-    const res = await api.patch<Contest>(`/contests/${id}`, updates);
+    const res = await idempotentRequest<Contest>({
+      method: 'PATCH',
+      url: `/contests/${id}`,
+      data: updates,
+      headers: version ? { 'If-Match': `"${version}"` } : undefined,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -85,7 +105,7 @@ export async function updateContestById(
 
 export async function startContest(id: string): Promise<Contest> {
   try {
-    const res = await api.post<Contest>(`/contests/${id}/start`);
+    const res = await idempotentRequest<Contest>({ method: 'POST', url: `/contests/${id}/start` });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -97,7 +117,11 @@ export async function recordQuarterResult(
   request: QuarterResultRequest
 ): Promise<QuarterResult> {
   try {
-    const res = await api.post<QuarterResult>(`/contests/${contestId}/quarter-result`, request);
+    const res = await idempotentRequest<QuarterResult>({
+      method: 'POST',
+      url: `/contests/${contestId}/quarter-result`,
+      data: request,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -106,7 +130,10 @@ export async function recordQuarterResult(
 
 export async function rollbackQuarterResult(contestId: string): Promise<QuarterResult> {
   try {
-    const res = await api.post<QuarterResult>(`/contests/${contestId}/quarter-result/rollback`);
+    const res = await idempotentRequest<QuarterResult>({
+      method: 'POST',
+      url: `/contests/${contestId}/quarter-result/rollback`,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -115,7 +142,7 @@ export async function rollbackQuarterResult(contestId: string): Promise<QuarterR
 
 export async function deleteContestById(id: string): Promise<void> {
   try {
-    await api.delete<void>(`/contests/${id}`);
+    await idempotentRequest<void>({ method: 'DELETE', url: `/contests/${id}` });
   } catch (err: unknown) {
     throw handleError(err);
   }
@@ -129,7 +156,11 @@ export async function submitContactForm(request: {
   turnstileToken: string;
 }): Promise<{ message: string }> {
   try {
-    const res = await api.post<{ message: string }>('/contact', request);
+    const res = await idempotentRequest<{ message: string }>({
+      method: 'POST',
+      url: '/contact',
+      data: request,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -152,7 +183,11 @@ export async function createInvite(
   request: CreateInviteRequest
 ): Promise<Invite> {
   try {
-    const res = await api.post<Invite>(`/contests/${contestId}/invites`, request);
+    const res = await idempotentRequest<Invite>({
+      method: 'POST',
+      url: `/contests/${contestId}/invites`,
+      data: request,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -170,7 +205,10 @@ export async function getInvites(contestId: string): Promise<Invite[]> {
 
 export async function deleteInvite(contestId: string, inviteId: string): Promise<void> {
   try {
-    await api.delete<void>(`/contests/${contestId}/invites/${inviteId}`);
+    await idempotentRequest<void>({
+      method: 'DELETE',
+      url: `/contests/${contestId}/invites/${inviteId}`,
+    });
   } catch (err: unknown) {
     throw handleError(err);
   }
@@ -187,7 +225,10 @@ export async function getUpcomingGames(): Promise<Game[]> {
 
 export async function joinContest(token: string): Promise<Participant> {
   try {
-    const res = await api.post<Participant>(`/invites/${token}/redeem`);
+    const res = await idempotentRequest<Participant>({
+      method: 'POST',
+      url: `/invites/${token}/redeem`,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -218,10 +259,11 @@ export async function updateParticipant(
   request: UpdateParticipantRequest
 ): Promise<Participant> {
   try {
-    const res = await api.patch<Participant>(
-      `/contests/${contestId}/participants/${userId}`,
-      request
-    );
+    const res = await idempotentRequest<Participant>({
+      method: 'PATCH',
+      url: `/contests/${contestId}/participants/${userId}`,
+      data: request,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -230,7 +272,10 @@ export async function updateParticipant(
 
 export async function removeParticipant(contestId: string, userId: string): Promise<void> {
   try {
-    await api.delete<void>(`/contests/${contestId}/participants/${userId}`);
+    await idempotentRequest<void>({
+      method: 'DELETE',
+      url: `/contests/${contestId}/participants/${userId}`,
+    });
   } catch (err: unknown) {
     throw handleError(err);
   }

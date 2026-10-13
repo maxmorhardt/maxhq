@@ -1,12 +1,13 @@
 import type { Dispatch } from '@reduxjs/toolkit';
-import type { Contest, Participant } from './contest';
+import type { Contest, ContestEvent, Participant } from './contest';
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'failed';
 
-// UI-only callbacks for actions that require navigation or toasts
-export interface WSUICallbacks {
+// UI-only callbacks for events that require navigation or toasts
+export interface ContestEventCallbacks {
   onConnected?: (contest: Contest, participants: Participant[]) => void;
   onContestDeleted?: () => void;
+  onRevoked?: () => void;
   onError?: (error: string) => void;
   onSquareUpdate?: (value: string, row: number, col: number, ownerName: string) => void;
   onQuarterResultUpdate?: (
@@ -20,15 +21,20 @@ export interface WSUICallbacks {
   ) => void;
   onQuarterResultRollback?: (quarter: number, winnerName: string) => void;
   onContestUpdate?: (status?: string) => void;
-  onChatMessage?: (sender: string, message: string, timestamp: string) => void;
   onParticipantAdded?: (participant: Participant) => void;
   onParticipantRemoved?: (participant: Participant) => void;
 }
 
-export interface HandleWSEventParams {
-  lastMessage: MessageEvent | null;
+export interface HandleContestEventParams {
+  event: ContestEvent;
   dispatch: Dispatch;
   currentContestId: string;
-  lastProcessedMessageRef: React.RefObject<string | null>;
-  callbacks?: WSUICallbacks;
+  callbacks?: ContestEventCallbacks;
+}
+
+// one frame off the wire; id is the stream sequence the client resumes from
+export interface StreamFrame {
+  id: string | null;
+  event: string;
+  data: string;
 }

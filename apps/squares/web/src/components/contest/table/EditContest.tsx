@@ -116,6 +116,7 @@ export default function EditContest({ open, onClose }: EditContestProps) {
             awayTeam: awayTeam.trim() || undefined,
             visibility,
           },
+          version: contest.version,
         })
       ).unwrap();
       showToast('Contest updated successfully', 'success');

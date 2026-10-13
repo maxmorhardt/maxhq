@@ -18,6 +18,7 @@ import {
 import type { Contest, Square, Participant, Invite } from '../../types/contest';
 
 const mockContest: Contest = {
+  version: 1,
   id: 'c1',
   name: 'Test Contest',
   owner: 'user1',
@@ -34,6 +35,7 @@ const mockContest: Contest = {
 };
 
 const mockSquare: Square = {
+  version: 1,
   id: 'sq1',
   contestId: 'c1',
   row: 0,

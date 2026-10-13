@@ -118,11 +118,11 @@ export const startContestThunk = createAsyncThunk<Contest, string, { rejectValue
 
 export const updateContest = createAsyncThunk<
   Contest,
-  { id: string; updates: UpdateContestRequest },
+  { id: string; updates: UpdateContestRequest; version?: number },
   { rejectValue: APIError }
->('contests/updateContest', async ({ id, updates }, { rejectWithValue }) => {
+>('contests/updateContest', async ({ id, updates, version }, { rejectWithValue }) => {
   try {
-    const contest = await updateContestById(id, updates);
+    const contest = await updateContestById(id, updates, version);
     return contest;
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);

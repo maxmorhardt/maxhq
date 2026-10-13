@@ -38,6 +38,7 @@ describe('contestService', () => {
     const mockResponse: PaginatedContestsResponse = {
       contests: [
         {
+          version: 1,
           id: '1',
           name: 'Test Contest',
           owner: 'user123',
@@ -115,32 +116,42 @@ describe('contestService', () => {
 
   it('should create a new contest', async () => {
     const mockResponse = { id: 'new-1', name: 'New Contest' };
-    vi.mocked(api.put).mockResolvedValue({ data: mockResponse });
+    vi.mocked(api.request).mockResolvedValue({ data: mockResponse });
 
     const result = await createNewContest({ name: 'New Contest', owner: 'user1' });
 
     expect(result).toEqual(mockResponse);
-    expect(api.put).toHaveBeenCalledWith('/contests', { name: 'New Contest', owner: 'user1' });
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'PUT',
+        url: '/contests',
+        data: { name: 'New Contest', owner: 'user1' },
+      })
+    );
   });
 
   it('should claim a square', async () => {
     const mockSquare = { id: 'sq-1', value: 'AB', row: 0, col: 0 };
-    vi.mocked(api.post).mockResolvedValue({ data: mockSquare });
+    vi.mocked(api.request).mockResolvedValue({ data: mockSquare });
 
     const result = await claimSquareById('c1', 'sq-1');
 
     expect(result).toEqual(mockSquare);
-    expect(api.post).toHaveBeenCalledWith('/contests/c1/squares/sq-1/claim');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', url: '/contests/c1/squares/sq-1/claim' })
+    );
   });
 
   it('should clear a square', async () => {
     const mockSquare = { id: 'sq-1', value: '', row: 0, col: 0 };
-    vi.mocked(api.post).mockResolvedValue({ data: mockSquare });
+    vi.mocked(api.request).mockResolvedValue({ data: mockSquare });
 
     const result = await clearSquareById('c1', 'sq-1');
 
     expect(result).toEqual(mockSquare);
-    expect(api.post).toHaveBeenCalledWith('/contests/c1/squares/sq-1/clear');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', url: '/contests/c1/squares/sq-1/clear' })
+    );
   });
 
   it("should clear all of the caller's squares", async () => {
@@ -148,67 +159,87 @@ describe('contestService', () => {
       { id: 'sq-1', value: '', row: 0, col: 0 },
       { id: 'sq-2', value: '', row: 1, col: 1 },
     ];
-    vi.mocked(api.post).mockResolvedValue({ data: mockSquares });
+    vi.mocked(api.request).mockResolvedValue({ data: mockSquares });
 
     const result = await clearMySquaresByContest('c1');
 
     expect(result).toEqual(mockSquares);
-    expect(api.post).toHaveBeenCalledWith('/contests/c1/squares/clear-mine');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', url: '/contests/c1/squares/clear-mine' })
+    );
   });
 
   it('should update contest details', async () => {
     const mockContest = { id: 'c1', homeTeam: 'Eagles' };
-    vi.mocked(api.patch).mockResolvedValue({ data: mockContest });
+    vi.mocked(api.request).mockResolvedValue({ data: mockContest });
 
     const result = await updateContestById('c1', { homeTeam: 'Eagles' });
 
     expect(result).toEqual(mockContest);
-    expect(api.patch).toHaveBeenCalledWith('/contests/c1', { homeTeam: 'Eagles' });
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'PATCH',
+        url: '/contests/c1',
+        data: { homeTeam: 'Eagles' },
+      })
+    );
   });
 
   it('should start a contest', async () => {
     const mockContest = { id: 'c1', status: 'Q1' };
-    vi.mocked(api.post).mockResolvedValue({ data: mockContest });
+    vi.mocked(api.request).mockResolvedValue({ data: mockContest });
 
     const result = await startContest('c1');
 
     expect(result).toEqual(mockContest);
-    expect(api.post).toHaveBeenCalledWith('/contests/c1/start');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', url: '/contests/c1/start' })
+    );
   });
 
   it('should record a quarter result', async () => {
     const mockResult = { quarter: 1, homeTeamScore: 14, awayTeamScore: 7 };
-    vi.mocked(api.post).mockResolvedValue({ data: mockResult });
+    vi.mocked(api.request).mockResolvedValue({ data: mockResult });
 
     const result = await recordQuarterResult('c1', { homeTeamScore: 14, awayTeamScore: 7 });
 
     expect(result).toEqual(mockResult);
-    expect(api.post).toHaveBeenCalledWith('/contests/c1/quarter-result', {
-      homeTeamScore: 14,
-      awayTeamScore: 7,
-    });
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'POST',
+        url: '/contests/c1/quarter-result',
+        data: {
+          homeTeamScore: 14,
+          awayTeamScore: 7,
+        },
+      })
+    );
   });
 
   it('should roll back a quarter result', async () => {
     const mockResult = { quarter: 2, homeTeamScore: 21, awayTeamScore: 10 };
-    vi.mocked(api.post).mockResolvedValue({ data: mockResult });
+    vi.mocked(api.request).mockResolvedValue({ data: mockResult });
 
     const result = await rollbackQuarterResult('c1');
 
     expect(result).toEqual(mockResult);
-    expect(api.post).toHaveBeenCalledWith('/contests/c1/quarter-result/rollback');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', url: '/contests/c1/quarter-result/rollback' })
+    );
   });
 
   it('should delete a contest', async () => {
-    vi.mocked(api.delete).mockResolvedValue({});
+    vi.mocked(api.request).mockResolvedValue({});
 
     await expect(deleteContestById('c1')).resolves.toBeUndefined();
-    expect(api.delete).toHaveBeenCalledWith('/contests/c1');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'DELETE', url: '/contests/c1' })
+    );
   });
 
   it('should submit a contact form', async () => {
     const mockResponse = { message: 'Success' };
-    vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
+    vi.mocked(api.request).mockResolvedValue({ data: mockResponse });
 
     const request = {
       name: 'John',
@@ -220,7 +251,9 @@ describe('contestService', () => {
     const result = await submitContactForm(request);
 
     expect(result).toEqual(mockResponse);
-    expect(api.post).toHaveBeenCalledWith('/contact', request);
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', url: '/contact', data: request })
+    );
   });
 
   it('should fetch my contests', async () => {
@@ -305,15 +338,21 @@ describe('contestService', () => {
       createdBy: 'owner1',
       updatedAt: '2025-01-01T00:00:00Z',
     };
-    vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
+    vi.mocked(api.request).mockResolvedValue({ data: mockResponse });
 
     const result = await createInvite('c1', { maxSquares: 10, role: 'participant' });
 
     expect(result).toEqual(mockResponse);
-    expect(api.post).toHaveBeenCalledWith('/contests/c1/invites', {
-      maxSquares: 10,
-      role: 'participant',
-    });
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'POST',
+        url: '/contests/c1/invites',
+        data: {
+          maxSquares: 10,
+          role: 'participant',
+        },
+      })
+    );
   });
 
   it('should throw APIError when createInvite fails', async () => {
@@ -323,7 +362,7 @@ describe('contestService', () => {
       timestamp: '2025-01-01T00:00:00Z',
       requestId: 'req-003',
     };
-    vi.mocked(api.post).mockRejectedValue(
+    vi.mocked(api.request).mockRejectedValue(
       new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
         data: apiError,
         status: 400,
@@ -369,10 +408,12 @@ describe('contestService', () => {
   });
 
   it('should delete an invite', async () => {
-    vi.mocked(api.delete).mockResolvedValue({});
+    vi.mocked(api.request).mockResolvedValue({});
 
     await expect(deleteInvite('c1', 'i1')).resolves.toBeUndefined();
-    expect(api.delete).toHaveBeenCalledWith('/contests/c1/invites/i1');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'DELETE', url: '/contests/c1/invites/i1' })
+    );
   });
 
   it('should throw APIError when deleteInvite fails', async () => {
@@ -382,7 +423,7 @@ describe('contestService', () => {
       timestamp: '2025-01-01T00:00:00Z',
       requestId: 'req-005',
     };
-    vi.mocked(api.delete).mockRejectedValue(
+    vi.mocked(api.request).mockRejectedValue(
       new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
         data: apiError,
         status: 404,
@@ -397,12 +438,14 @@ describe('contestService', () => {
 
   it('should join a contest via invite token', async () => {
     const mockParticipant = { id: 'p1', userId: 'u1', role: 'participant' };
-    vi.mocked(api.post).mockResolvedValue({ data: mockParticipant });
+    vi.mocked(api.request).mockResolvedValue({ data: mockParticipant });
 
     const result = await joinContest('tok123');
 
     expect(result).toEqual(mockParticipant);
-    expect(api.post).toHaveBeenCalledWith('/invites/tok123/redeem');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', url: '/invites/tok123/redeem' })
+    );
   });
 
   it('should throw APIError when joinContest fails', async () => {
@@ -412,7 +455,7 @@ describe('contestService', () => {
       timestamp: '2025-01-01T00:00:00Z',
       requestId: 'req-006',
     };
-    vi.mocked(api.post).mockRejectedValue(
+    vi.mocked(api.request).mockRejectedValue(
       new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
         data: apiError,
         status: 409,
@@ -487,15 +530,21 @@ describe('contestService', () => {
 
   it('should update a participant', async () => {
     const mockParticipant = { id: 'p1', userId: 'u1', role: 'viewer', maxSquares: 5 };
-    vi.mocked(api.patch).mockResolvedValue({ data: mockParticipant });
+    vi.mocked(api.request).mockResolvedValue({ data: mockParticipant });
 
     const result = await updateParticipant('c1', 'u1', { role: 'viewer', maxSquares: 5 });
 
     expect(result).toEqual(mockParticipant);
-    expect(api.patch).toHaveBeenCalledWith('/contests/c1/participants/u1', {
-      role: 'viewer',
-      maxSquares: 5,
-    });
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'PATCH',
+        url: '/contests/c1/participants/u1',
+        data: {
+          role: 'viewer',
+          maxSquares: 5,
+        },
+      })
+    );
   });
 
   it('should throw APIError when updateParticipant fails', async () => {
@@ -505,7 +554,7 @@ describe('contestService', () => {
       timestamp: '2025-01-01T00:00:00Z',
       requestId: 'req-009',
     };
-    vi.mocked(api.patch).mockRejectedValue(
+    vi.mocked(api.request).mockRejectedValue(
       new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
         data: apiError,
         status: 400,
@@ -521,10 +570,12 @@ describe('contestService', () => {
   });
 
   it('should remove a participant', async () => {
-    vi.mocked(api.delete).mockResolvedValue({});
+    vi.mocked(api.request).mockResolvedValue({});
 
     await expect(removeParticipant('c1', 'u1')).resolves.toBeUndefined();
-    expect(api.delete).toHaveBeenCalledWith('/contests/c1/participants/u1');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'DELETE', url: '/contests/c1/participants/u1' })
+    );
   });
 
   it('should throw APIError when removeParticipant fails', async () => {
@@ -534,7 +585,7 @@ describe('contestService', () => {
       timestamp: '2025-01-01T00:00:00Z',
       requestId: 'req-010',
     };
-    vi.mocked(api.delete).mockRejectedValue(
+    vi.mocked(api.request).mockRejectedValue(
       new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
         data: apiError,
         status: 404,

@@ -4,12 +4,12 @@ import {
   clearError,
   setCurrentContest,
   setCurrentSquare,
-  updateContestFromWebSocket,
-  updateSquareFromWebSocket,
-  updateQuarterResultFromWebSocket,
-  rollbackQuarterResultFromWebSocket,
-  addParticipantFromWebSocket,
-  removeParticipantFromWebSocket,
+  updateContestFromEvent,
+  updateSquareFromEvent,
+  updateQuarterResultFromEvent,
+  rollbackQuarterResultFromEvent,
+  addParticipantFromEvent,
+  removeParticipantFromEvent,
 } from './contestSlice';
 import {
   fetchContestsByOwner,
@@ -57,6 +57,7 @@ const initialState = {
 };
 
 const mockContest: Contest = {
+  version: 1,
   id: 'c1',
   name: 'Test Contest',
   xLabels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -74,6 +75,7 @@ const mockContest: Contest = {
 };
 
 const mockSquare: Square = {
+  version: 1,
   id: 's1',
   contestId: 'c1',
   row: 0,
@@ -119,19 +121,16 @@ describe('contestSlice reducers', () => {
     expect(state.currentSquare).toEqual(mockSquare);
   });
 
-  describe('updateContestFromWebSocket', () => {
+  describe('updateContestFromEvent', () => {
     it('should do nothing if no current contest', () => {
-      const state = contestReducer(
-        initialState,
-        updateContestFromWebSocket({ homeTeam: 'New Home' })
-      );
+      const state = contestReducer(initialState, updateContestFromEvent({ homeTeam: 'New Home' }));
       expect(state.currentContest).toBeUndefined();
     });
 
     it('should update homeTeam', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest } },
-        updateContestFromWebSocket({ homeTeam: 'New Home' })
+        updateContestFromEvent({ homeTeam: 'New Home' })
       );
       expect(state.currentContest?.homeTeam).toBe('New Home');
     });
@@ -139,7 +138,7 @@ describe('contestSlice reducers', () => {
     it('should update visibility', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest, visibility: 'public' } },
-        updateContestFromWebSocket({ visibility: 'private' })
+        updateContestFromEvent({ visibility: 'private' })
       );
       expect(state.currentContest?.visibility).toBe('private');
     });
@@ -147,7 +146,7 @@ describe('contestSlice reducers', () => {
     it('should update awayTeam', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest } },
-        updateContestFromWebSocket({ awayTeam: 'New Away' })
+        updateContestFromEvent({ awayTeam: 'New Away' })
       );
       expect(state.currentContest?.awayTeam).toBe('New Away');
     });
@@ -155,7 +154,7 @@ describe('contestSlice reducers', () => {
     it('should update xLabels and yLabels', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest } },
-        updateContestFromWebSocket({ xLabels: [9, 8, 7], yLabels: [6, 5, 4] })
+        updateContestFromEvent({ xLabels: [9, 8, 7], yLabels: [6, 5, 4] })
       );
       expect(state.currentContest?.xLabels).toEqual([9, 8, 7]);
       expect(state.currentContest?.yLabels).toEqual([6, 5, 4]);
@@ -164,15 +163,15 @@ describe('contestSlice reducers', () => {
     it('should update status', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest } },
-        updateContestFromWebSocket({ status: 'Q1' })
+        updateContestFromEvent({ status: 'Q1' })
       );
       expect(state.currentContest?.status).toBe('Q1');
     });
   });
 
-  describe('updateSquareFromWebSocket', () => {
+  describe('updateSquareFromEvent', () => {
     it('should do nothing if no current contest', () => {
-      const state = contestReducer(initialState, updateSquareFromWebSocket(mockSquare));
+      const state = contestReducer(initialState, updateSquareFromEvent(mockSquare));
       expect(state.currentContest).toBeUndefined();
     });
 
@@ -181,7 +180,7 @@ describe('contestSlice reducers', () => {
       const updatedSquare = { ...mockSquare, value: 'updated' };
       const state = contestReducer(
         { ...initialState, currentContest: contestWithSquare },
-        updateSquareFromWebSocket(updatedSquare)
+        updateSquareFromEvent(updatedSquare)
       );
       expect(state.currentContest?.squares[0].value).toBe('updated');
     });
@@ -191,14 +190,14 @@ describe('contestSlice reducers', () => {
       const newSquare = { ...mockSquare, id: 'unknown' };
       const state = contestReducer(
         { ...initialState, currentContest: contestWithSquare },
-        updateSquareFromWebSocket(newSquare)
+        updateSquareFromEvent(newSquare)
       );
       expect(state.currentContest?.squares).toHaveLength(1);
       expect(state.currentContest?.squares[0].id).toBe('s1');
     });
   });
 
-  describe('updateQuarterResultFromWebSocket', () => {
+  describe('updateQuarterResultFromEvent', () => {
     const qrPayload = {
       quarter: 1,
       homeTeamScore: 14,
@@ -210,14 +209,14 @@ describe('contestSlice reducers', () => {
     };
 
     it('should do nothing if no current contest', () => {
-      const state = contestReducer(initialState, updateQuarterResultFromWebSocket(qrPayload));
+      const state = contestReducer(initialState, updateQuarterResultFromEvent(qrPayload));
       expect(state.currentContest).toBeUndefined();
     });
 
     it('should add quarter result and advance status to Q2', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest, status: 'Q1', quarterResults: [] } },
-        updateQuarterResultFromWebSocket(qrPayload)
+        updateQuarterResultFromEvent(qrPayload)
       );
       expect(state.currentContest?.quarterResults).toHaveLength(1);
       expect(state.currentContest?.quarterResults?.[0].quarter).toBe(1);
@@ -234,10 +233,7 @@ describe('contestSlice reducers', () => {
         },
       };
       for (let q = 1; q <= 4; q++) {
-        state = contestReducer(
-          state,
-          updateQuarterResultFromWebSocket({ ...qrPayload, quarter: q })
-        );
+        state = contestReducer(state, updateQuarterResultFromEvent({ ...qrPayload, quarter: q }));
       }
       expect(state.currentContest?.quarterResults).toHaveLength(4);
       expect(state.currentContest?.status).toBe('FINISHED');
@@ -246,7 +242,7 @@ describe('contestSlice reducers', () => {
     it('should initialize quarterResults if undefined', () => {
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest, quarterResults: undefined } },
-        updateQuarterResultFromWebSocket(qrPayload)
+        updateQuarterResultFromEvent(qrPayload)
       );
       expect(state.currentContest?.quarterResults).toHaveLength(1);
     });
@@ -269,13 +265,13 @@ describe('contestSlice reducers', () => {
       };
       const state = contestReducer(
         { ...initialState, currentContest: { ...mockContest, quarterResults: [existing] } },
-        updateQuarterResultFromWebSocket(qrPayload)
+        updateQuarterResultFromEvent(qrPayload)
       );
       expect(state.currentContest?.quarterResults).toHaveLength(1);
     });
   });
 
-  describe('rollbackQuarterResultFromWebSocket', () => {
+  describe('rollbackQuarterResultFromEvent', () => {
     const q1: QuarterResult = {
       id: 'qr1',
       contestId: 'c1',
@@ -299,7 +295,7 @@ describe('contestSlice reducers', () => {
           ...initialState,
           currentContest: { ...mockContest, status: 'Q3', quarterResults: [q1, q2] },
         },
-        rollbackQuarterResultFromWebSocket({ quarter: 2, status: 'Q2' })
+        rollbackQuarterResultFromEvent({ quarter: 2, status: 'Q2' })
       );
       expect(state.currentContest?.quarterResults).toHaveLength(1);
       expect(state.currentContest?.quarterResults?.[0].quarter).toBe(1);
@@ -312,7 +308,7 @@ describe('contestSlice reducers', () => {
           ...initialState,
           currentContest: { ...mockContest, status: 'Q3', quarterResults: [q1, q2] },
         },
-        rollbackQuarterResultFromWebSocket({ quarter: 2 })
+        rollbackQuarterResultFromEvent({ quarter: 2 })
       );
       expect(state.currentContest?.status).toBe('Q2');
     });
@@ -320,7 +316,7 @@ describe('contestSlice reducers', () => {
     it('does nothing when there is no current contest', () => {
       const state = contestReducer(
         initialState,
-        rollbackQuarterResultFromWebSocket({ quarter: 2, status: 'Q2' })
+        rollbackQuarterResultFromEvent({ quarter: 2, status: 'Q2' })
       );
       expect(state.currentContest).toBeUndefined();
     });
@@ -801,7 +797,7 @@ describe('contestSlice extraReducers', () => {
     });
   });
 
-  describe('addParticipantFromWebSocket', () => {
+  describe('addParticipantFromEvent', () => {
     const mockParticipant: Participant = {
       id: 'p1',
       contestId: 'c1',
@@ -815,7 +811,7 @@ describe('contestSlice extraReducers', () => {
     };
 
     it('adds a new participant', () => {
-      const state = contestReducer(initialState, addParticipantFromWebSocket(mockParticipant));
+      const state = contestReducer(initialState, addParticipantFromEvent(mockParticipant));
       expect(state.participants).toHaveLength(1);
       expect(state.participants[0].id).toBe('p1');
     });
@@ -823,13 +819,13 @@ describe('contestSlice extraReducers', () => {
     it('de-dupes if participant already exists', () => {
       const state = contestReducer(
         { ...initialState, participants: [mockParticipant] },
-        addParticipantFromWebSocket(mockParticipant)
+        addParticipantFromEvent(mockParticipant)
       );
       expect(state.participants).toHaveLength(1);
     });
   });
 
-  describe('removeParticipantFromWebSocket', () => {
+  describe('removeParticipantFromEvent', () => {
     const mockParticipant: Participant = {
       id: 'p1',
       contestId: 'c1',
@@ -845,7 +841,7 @@ describe('contestSlice extraReducers', () => {
     it('removes participant by userId', () => {
       const state = contestReducer(
         { ...initialState, participants: [mockParticipant] },
-        removeParticipantFromWebSocket('u1')
+        removeParticipantFromEvent('u1')
       );
       expect(state.participants).toHaveLength(0);
     });
@@ -853,7 +849,7 @@ describe('contestSlice extraReducers', () => {
     it('no-ops when userId does not match', () => {
       const state = contestReducer(
         { ...initialState, participants: [mockParticipant] },
-        removeParticipantFromWebSocket('u999')
+        removeParticipantFromEvent('u999')
       );
       expect(state.participants).toHaveLength(1);
     });

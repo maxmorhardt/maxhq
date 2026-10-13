@@ -188,7 +188,7 @@ export default function ContestPageSkeleton() {
           </Paper>
         </Box>
 
-        {/* right sidebar: contest details + live chat (desktop only) */}
+        {/* right sidebar: contest details (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -205,14 +205,6 @@ export default function ContestPageSkeleton() {
               <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
               <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
             </Box>
-          </Paper>
-
-          {/* live chat skeleton */}
-          <Paper sx={cardSx}>
-            <Skeleton variant="text" width={90} height={28} sx={{ mb: 1 }} />
-            <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
-            <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 1, mb: 1.5 }} />
-            <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 2 }} />
           </Paper>
         </Box>
       </Box>
@@ -261,14 +253,6 @@ export default function ContestPageSkeleton() {
               <Skeleton key={i} variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
             ))}
           </Box>
-        </Paper>
-
-        {/* live chat skeleton */}
-        <Paper sx={cardSx}>
-          <Skeleton variant="text" width={90} height={28} sx={{ mb: 1 }} />
-          <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
-          <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 1, mb: 1.5 }} />
-          <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 2 }} />
         </Paper>
       </Box>
     </Box>

@@ -40,12 +40,18 @@ describe('userService', () => {
       createdAt: '2026-07-11T00:00:00Z',
     };
 
-    vi.mocked(api.patch).mockResolvedValue({ data: mockProfile });
+    vi.mocked(api.request).mockResolvedValue({ data: mockProfile });
 
     const result = await updateMyProfile({ defaultInitials: 'MM' });
 
     expect(result).toEqual(mockProfile);
-    expect(api.patch).toHaveBeenCalledWith('/users/me', { defaultInitials: 'MM' });
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'PATCH',
+        url: '/users/me',
+        data: { defaultInitials: 'MM' },
+      })
+    );
   });
 
   it('should fetch stats successfully', async () => {
@@ -86,11 +92,13 @@ describe('userService', () => {
   });
 
   it('should delete the account successfully', async () => {
-    vi.mocked(api.delete).mockResolvedValue({});
+    vi.mocked(api.request).mockResolvedValue({});
 
     await deleteMyAccount();
 
-    expect(api.delete).toHaveBeenCalledWith('/users/me');
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'DELETE', url: '/users/me' })
+    );
   });
 
   it('should throw APIError on failure', async () => {

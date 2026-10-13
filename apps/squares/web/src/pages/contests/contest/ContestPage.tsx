@@ -13,7 +13,6 @@ import NotFoundPage from '../../error/NotFoundPage';
 import ForbiddenPage from '../../error/ForbiddenPage';
 import UnauthorizedPage from '../../error/UnauthorizedPage';
 import SignInDialog from '../../../components/auth/SignInDialog';
-import LiveChat from '../../../components/contest/sidebar/LiveChat';
 import WinnersBoard from '../../../components/contest/sidebar/WinnersBoard';
 import {
   selectCurrentContest,
@@ -23,7 +22,7 @@ import { clearSquareErrorCode } from '../../../features/contests/contestSlice';
 import { claimSquare, clearMySquares } from '../../../features/contests/contestThunks';
 import { selectDefaultInitials } from '../../../features/user/userSelectors';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
-import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
+import { useContestEvents } from '../../../hooks/useContestEvents';
 import { useToast } from '../../../hooks/useToast';
 import type { APIError } from '../../../types/error';
 import { CONTEST_STACK_MAX_WIDTH } from '../../../types/layout';
@@ -94,15 +93,13 @@ export default function ContestPage() {
 
   const {
     activityEvents,
-    chatMessages,
-    sendChatMessage,
     isConnected,
     isConnecting,
     connectionFailed,
-    wsCloseCode,
-    hasFatalWsError,
+    fatalStatus,
+    hasFatalError,
     forceReconnect,
-  } = useContestWebSocket({
+  } = useContestEvents({
     id,
     onContestDeleted,
     onParticipantRemoved,
@@ -110,7 +107,7 @@ export default function ContestPage() {
     onWinnerDialog,
   });
 
-  // on 409 conflict, our local state is stale — reconnect to get fresh data
+  // on 409 conflict, our local state is stale; start over from a fresh snapshot
   useEffect(() => {
     if (squareErrorCode === 409) {
       dispatch(clearSquareErrorCode());
@@ -214,12 +211,12 @@ export default function ContestPage() {
     return <ContestError />;
   }
 
-  // handle fatal WS close codes
-  if (hasFatalWsError) {
-    if (wsCloseCode === 4403) {
+  // the stream refused this viewer or this contest, and retrying will not change that
+  if (hasFatalError) {
+    if (fatalStatus === 403) {
       return <ForbiddenPage />;
     }
-    if (wsCloseCode === 4404) {
+    if (fatalStatus === 404) {
       return <NotFoundPage />;
     }
     return <ContestError />;
@@ -292,7 +289,7 @@ export default function ContestPage() {
           <ContestComponent newWinnerSquare={newWinnerSquare} />
         </Box>
 
-        {/* right sidebar with contest details and live chat (desktop only) */}
+        {/* right sidebar with contest details (desktop only) */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -307,12 +304,6 @@ export default function ContestPage() {
             randomSquareLoading={randomSquareLoading}
             onClearMySquares={handleClearMySquares}
             clearMySquaresLoading={clearMySquaresLoading}
-          />
-          <LiveChat
-            messages={chatMessages}
-            onSend={sendChatMessage}
-            currentUser={auth.user?.profile?.email as string}
-            disabled={!auth.isAuthenticated || !isConnected}
           />
         </Box>
       </Box>
@@ -339,12 +330,6 @@ export default function ContestPage() {
           clearMySquaresLoading={clearMySquaresLoading}
         />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
-        <LiveChat
-          messages={chatMessages}
-          onSend={sendChatMessage}
-          currentUser={auth.user?.profile?.email as string}
-          disabled={!auth.isAuthenticated || !isConnected}
-        />
         <ActivityFeed events={activityEvents} />
       </Box>
 

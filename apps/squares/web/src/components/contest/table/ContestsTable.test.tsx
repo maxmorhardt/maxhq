@@ -28,6 +28,7 @@ import { useAuth } from 'react-oidc-context';
 const theme = createTheme();
 
 const contest: Contest = {
+  version: 1,
   id: 'c-1',
   name: 'Super Bowl LX',
   xLabels: [],

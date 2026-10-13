@@ -1,4 +1,5 @@
 import api from '../axios/api';
+import { idempotentRequest } from '../axios/idempotency';
 import type {
   UpdateUserProfileRequest,
   UserActiveContest,
@@ -18,7 +19,11 @@ export async function getMyProfile(): Promise<UserProfile> {
 
 export async function updateMyProfile(request: UpdateUserProfileRequest): Promise<UserProfile> {
   try {
-    const res = await api.patch<UserProfile>('/users/me', request);
+    const res = await idempotentRequest<UserProfile>({
+      method: 'PATCH',
+      url: '/users/me',
+      data: request,
+    });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -45,7 +50,7 @@ export async function getMyActiveContests(): Promise<UserActiveContest[]> {
 
 export async function deleteMyAccount(): Promise<void> {
   try {
-    await api.delete('/users/me');
+    await idempotentRequest<void>({ method: 'DELETE', url: '/users/me' });
   } catch (err: unknown) {
     throw handleError(err);
   }

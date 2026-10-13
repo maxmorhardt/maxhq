@@ -69,6 +69,7 @@ import {
 } from '../../service/contestService';
 
 const mockContest: Contest = {
+  version: 1,
   id: 'c1',
   name: 'Test',
   xLabels: [],
@@ -86,6 +87,7 @@ const mockContest: Contest = {
 };
 
 const mockSquare: Square = {
+  version: 1,
   id: 's1',
   contestId: 'c1',
   row: 0,

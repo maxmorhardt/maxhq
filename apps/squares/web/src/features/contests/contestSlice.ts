@@ -109,7 +109,7 @@ const contestSlice = createSlice({
       state.currentSquare = action.payload;
     },
 
-    updateContestFromWebSocket(
+    updateContestFromEvent(
       state,
       action: PayloadAction<{
         xLabels?: number[];
@@ -120,14 +120,19 @@ const contestSlice = createSlice({
         visibility?: ContestVisibility;
         gameId?: string;
         game?: Game;
+        version?: number;
       }>
     ) {
       if (!state.currentContest) {
         return;
       }
 
-      const { xLabels, yLabels, homeTeam, awayTeam, status, visibility, gameId, game } =
+      const { xLabels, yLabels, homeTeam, awayTeam, status, visibility, gameId, game, version } =
         action.payload;
+      if (version !== undefined) {
+        state.currentContest.version = version;
+      }
+
       if (gameId !== undefined) {
         state.currentContest.gameId = gameId;
       }
@@ -161,7 +166,7 @@ const contestSlice = createSlice({
       }
     },
 
-    updateSquareFromWebSocket(state, action: PayloadAction<Square>) {
+    updateSquareFromEvent(state, action: PayloadAction<Square>) {
       if (!state.currentContest) {
         return;
       }
@@ -171,12 +176,20 @@ const contestSlice = createSlice({
       const squareIndex = state.currentContest.squares.findIndex(
         (square) => square.id === updatedSquare.id
       );
-      if (squareIndex !== -1) {
-        state.currentContest.squares[squareIndex] = updatedSquare;
+      if (squareIndex === -1) {
+        return;
       }
+
+      // a replayed event can be older than what the snapshot already holds
+      const current = state.currentContest.squares[squareIndex];
+      if (current.version !== undefined && updatedSquare.version < current.version) {
+        return;
+      }
+
+      state.currentContest.squares[squareIndex] = updatedSquare;
     },
-    // websocket quarter result: append if new and advance contest status
-    updateQuarterResultFromWebSocket(
+    // streamed quarter result: append if new and advance contest status
+    updateQuarterResultFromEvent(
       state,
       action: PayloadAction<{
         quarter: number;
@@ -233,8 +246,8 @@ const contestSlice = createSlice({
       }
     },
 
-    // websocket rollback: drop the given quarter's result and revert contest status
-    rollbackQuarterResultFromWebSocket(
+    // streamed rollback: drop the given quarter result and revert contest status
+    rollbackQuarterResultFromEvent(
       state,
       action: PayloadAction<{ quarter: number; status?: ContestStatus }>
     ) {
@@ -252,14 +265,14 @@ const contestSlice = createSlice({
       }
     },
 
-    addParticipantFromWebSocket(state, action: PayloadAction<Participant>) {
+    addParticipantFromEvent(state, action: PayloadAction<Participant>) {
       const exists = state.participants.some((p) => p.id === action.payload.id);
       if (!exists) {
         state.participants.push(action.payload);
       }
     },
 
-    removeParticipantFromWebSocket(state, action: PayloadAction<string>) {
+    removeParticipantFromEvent(state, action: PayloadAction<string>) {
       state.participants = state.participants.filter((p) => p.userId !== action.payload);
     },
   },
@@ -607,11 +620,11 @@ export const {
   setCurrentContest,
   setCurrentSquare,
   setParticipants,
-  updateContestFromWebSocket,
-  updateSquareFromWebSocket,
-  updateQuarterResultFromWebSocket,
-  rollbackQuarterResultFromWebSocket,
-  addParticipantFromWebSocket,
-  removeParticipantFromWebSocket,
+  updateContestFromEvent,
+  updateSquareFromEvent,
+  updateQuarterResultFromEvent,
+  rollbackQuarterResultFromEvent,
+  addParticipantFromEvent,
+  removeParticipantFromEvent,
 } = contestSlice.actions;
 export const contestReducer = contestSlice.reducer;

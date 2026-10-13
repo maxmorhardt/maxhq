@@ -45,6 +45,7 @@ const baseContest = {
   yLabels: [],
   status: 'ACTIVE' as const,
   visibility: 'public' as const,
+  version: 1,
   squares: [],
   owner: 'alice',
   createdAt: '',

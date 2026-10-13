@@ -18,6 +18,7 @@ export interface Contest {
   gameId?: string;
   game?: Game;
   owner: string;
+  version: number;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -42,29 +43,28 @@ export interface Square {
   value: string;
   owner: string;
   ownerName: string;
+  version: number;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
   updatedBy: string;
 }
 
-export interface WSUpdate {
+// one server-sent event on a contest stream; connected carries the snapshot, revoked ends the stream
+export interface ContestEvent {
   type:
     | 'square_update'
     | 'contest_update'
     | 'quarter_result_update'
     | 'quarter_result_rollback'
-    | 'chat_message'
     | 'connected'
-    | 'disconnected'
+    | 'revoked'
     | 'contest_deleted'
     | 'participant_removed'
     | 'participant_added';
   contestId: string;
-  connectionId?: string;
   updatedBy: string;
   timestamp: string;
-  message?: string;
   square?: Square;
   contest?: Contest;
   quarterResult?: QuarterResult;
@@ -154,13 +154,6 @@ export type ActivityEventType =
 export interface ActivityEvent {
   id: string;
   type: ActivityEventType;
-  message: string;
-  timestamp: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  sender: string;
   message: string;
   timestamp: string;
 }

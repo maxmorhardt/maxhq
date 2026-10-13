@@ -25,6 +25,7 @@ const baseContest = {
   yLabels: [0, 1, 2],
   status: 'Q1' as const,
   visibility: 'public' as const,
+  version: 1,
   squares: [],
   owner: 'alice',
   homeTeam: 'Chiefs',

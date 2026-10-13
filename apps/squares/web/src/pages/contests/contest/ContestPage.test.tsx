@@ -5,7 +5,6 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../../../features/contests/contestSlice';
-import { wsReducer } from '../../../features/ws/wsSlice';
 import { toastReducer } from '../../../features/toast/toastSlice';
 import { selectToastMessages } from '../../../features/toast/toastSelectors';
 import { userReducer } from '../../../features/user/userSlice';
@@ -30,22 +29,20 @@ vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-const mockWebSocket = {
+const mockEvents = {
   activityEvents: [],
-  chatMessages: [],
-  sendChatMessage: vi.fn(),
   isConnected: false,
   isConnecting: true,
   connectionFailed: false,
   connectionStatus: 'connecting' as const,
   retryCount: 0,
-  wsCloseCode: null,
-  hasFatalWsError: false,
+  fatalStatus: null as number | null,
+  hasFatalError: false,
   forceReconnect: vi.fn(),
 };
 
-vi.mock('../../../hooks/useContestWebSocket', () => ({
-  useContestWebSocket: vi.fn(() => mockWebSocket),
+vi.mock('../../../hooks/useContestEvents', () => ({
+  useContestEvents: vi.fn(() => mockEvents),
 }));
 
 vi.mock('../../../components/contest/ContestPageSkeleton', () => ({
@@ -69,9 +66,6 @@ vi.mock('../../../components/contest/details/ContestDetails', () => ({
 vi.mock('../../../components/contest/sidebar/ActivityFeed', () => ({
   default: () => <div data-testid="activity-feed">Activity Feed</div>,
 }));
-vi.mock('../../../components/contest/sidebar/LiveChat', () => ({
-  default: () => <div data-testid="live-chat">Live Chat</div>,
-}));
 vi.mock('../../../components/contest/sidebar/WinnersBoard', () => ({
   default: () => <div data-testid="winners-board">Winners Board</div>,
 }));
@@ -89,7 +83,7 @@ vi.mock('../../error/NotFoundPage', () => ({
 }));
 
 import { useAuth } from 'react-oidc-context';
-import { useContestWebSocket } from '../../../hooks/useContestWebSocket';
+import { useContestEvents } from '../../../hooks/useContestEvents';
 import { claimSquareById } from '../../../service/contestService';
 
 const theme = createTheme({ palette: { mode: 'dark' } });
@@ -102,7 +96,7 @@ function createTestStore(currentContest?: unknown, initials?: string) {
     : undefined;
   const store = // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (configureStore as unknown as (...args: any[]) => ReturnType<typeof configureStore>)({
-      reducer: { contest: contestReducer, ws: wsReducer, toast: toastReducer, user: userReducer },
+      reducer: { contest: contestReducer, toast: toastReducer, user: userReducer },
       preloadedState: {
         ...(preloadedContest ? { contest: preloadedContest } : {}),
         ...(preloadedUser ? { user: preloadedUser } : {}),
@@ -139,7 +133,7 @@ describe('ContestPage', () => {
       user: { profile: { email: 'user1', name: 'User One' } },
       signinRedirect: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
-    vi.mocked(useContestWebSocket).mockReturnValue(mockWebSocket);
+    vi.mocked(useContestEvents).mockReturnValue(mockEvents);
   });
 
   it('shows UnauthorizedPage when not authenticated', () => {
@@ -167,8 +161,8 @@ describe('ContestPage', () => {
   });
 
   it('shows skeleton while connecting', () => {
-    vi.mocked(useContestWebSocket).mockReturnValue({
-      ...mockWebSocket,
+    vi.mocked(useContestEvents).mockReturnValue({
+      ...mockEvents,
       isConnecting: true,
       isConnected: false,
     });
@@ -178,8 +172,8 @@ describe('ContestPage', () => {
   });
 
   it('shows ContestError when connection has failed', () => {
-    vi.mocked(useContestWebSocket).mockReturnValue({
-      ...mockWebSocket,
+    vi.mocked(useContestEvents).mockReturnValue({
+      ...mockEvents,
       isConnecting: false,
       isConnected: true,
       connectionFailed: true,
@@ -189,28 +183,28 @@ describe('ContestPage', () => {
     expect(screen.getByTestId('contest-error')).toBeInTheDocument();
   });
 
-  it('shows ForbiddenPage on fatal WS close code 4403', () => {
-    vi.mocked(useContestWebSocket).mockReturnValue({
-      ...mockWebSocket,
+  it('shows ForbiddenPage when the stream answers 403', () => {
+    vi.mocked(useContestEvents).mockReturnValue({
+      ...mockEvents,
       isConnecting: false,
       isConnected: true,
       connectionFailed: false,
-      hasFatalWsError: true,
-      wsCloseCode: 4403,
+      hasFatalError: true,
+      fatalStatus: 403,
     });
 
     renderPage();
     expect(screen.getByTestId('forbidden-page')).toBeInTheDocument();
   });
 
-  it('shows NotFoundPage on fatal WS close code 4404', () => {
-    vi.mocked(useContestWebSocket).mockReturnValue({
-      ...mockWebSocket,
+  it('shows NotFoundPage when the stream answers 404', () => {
+    vi.mocked(useContestEvents).mockReturnValue({
+      ...mockEvents,
       isConnecting: false,
       isConnected: true,
       connectionFailed: false,
-      hasFatalWsError: true,
-      wsCloseCode: 4404,
+      hasFatalError: true,
+      fatalStatus: 404,
     });
 
     renderPage();
@@ -230,12 +224,12 @@ describe('ContestPage', () => {
     };
     const store = createTestStore(contestData);
 
-    vi.mocked(useContestWebSocket).mockReturnValue({
-      ...mockWebSocket,
+    vi.mocked(useContestEvents).mockReturnValue({
+      ...mockEvents,
       isConnecting: false,
       isConnected: true,
       connectionFailed: false,
-      hasFatalWsError: false,
+      hasFatalError: false,
     });
 
     renderPage(store);
@@ -255,12 +249,12 @@ describe('ContestPage', () => {
     };
     const store = createTestStore(contestData);
 
-    vi.mocked(useContestWebSocket).mockReturnValue({
-      ...mockWebSocket,
+    vi.mocked(useContestEvents).mockReturnValue({
+      ...mockEvents,
       isConnecting: false,
       isConnected: true,
       connectionFailed: false,
-      hasFatalWsError: false,
+      hasFatalError: false,
     });
 
     renderPage(store);
@@ -285,12 +279,12 @@ describe('ContestPage', () => {
   };
 
   function connected() {
-    vi.mocked(useContestWebSocket).mockReturnValue({
-      ...mockWebSocket,
+    vi.mocked(useContestEvents).mockReturnValue({
+      ...mockEvents,
       isConnecting: false,
       isConnected: true,
       connectionFailed: false,
-      hasFatalWsError: false,
+      hasFatalError: false,
     });
   }
 

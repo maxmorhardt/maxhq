@@ -4,7 +4,7 @@
 
 - Project: Squares UI (`apps/squares/web` in `github.com/maxmorhardt/maxstash`)
 - Language: TypeScript, React 19
-- Purpose: Frontend for a real-time football squares pool. Vite SPA styled with MUI v9, state in Redux Toolkit, authenticated via OIDC, kept in sync over WebSockets.
+- Purpose: Frontend for a real-time football squares pool. Vite SPA styled with MUI v9, state in Redux Toolkit, authenticated via OIDC, kept in sync with server-sent events from the realtime service.
 - Target environments: Static bundle served by NGINX in a container on Kubernetes.
 - Related: `../api` (the backend services), `chart/` (this app's Helm chart, released with it), `k8s` (the Argo CD Application), `workflows` (shared CI).
 
@@ -14,12 +14,12 @@
 - `src/App.tsx` - app shell. Mounts `Header`, `Footer`, `<Outlet />`, the toast provider, and the silent OIDC sign-in effect.
 - `src/pages/` - route-level views grouped by feature (`contests/`, `contests/contest/`, `contests/create/`, `auth/`, `landing/`, `learn/`, `join/`, `contact/`, `privacy/`, `terms/`, `error/`).
 - `src/components/` - reusable components grouped by area (`common/`, `contest/`, `header/`, `footer/`, `join/`, `landing/`, `learn/`, `contact/`, `toast/`).
-- `src/features/` - Redux Toolkit slices, thunks, and selectors, one folder per domain (`contests/`, `stats/`, `toast/`, `ws/`).
+- `src/features/` - Redux Toolkit slices, thunks, and selectors, one folder per domain (`contests/`, `leaderboard/`, `stats/`, `toast/`, `user/`).
 - `src/app/store.ts` - `configureStore` composition root. Exports `RootState`, `AppDispatch`, `AppStore`.
-- `src/service/` - HTTP and WS clients wrapping axios and `react-use-websocket`, plus `handleError.ts`.
-- `src/axios/api.ts` - the shared axios instance every service uses.
-- `src/hooks/` - `reduxHooks`, `useAxiosAuth`, `useContestWebSocket`, `useToast`, `useScrollAnimation`.
-- `src/types/` - shared types and design tokens (`contest.ts`, `stats.ts`, `ws.ts`, `error.ts`, `gradients.ts`).
+- `src/service/` - HTTP clients wrapping axios, `contestEvents.ts` (the fetch-based event-stream reader and the handler that applies contest events to the store), plus `handleError.ts`.
+- `src/axios/api.ts` - the shared axios instance every service uses. `src/axios/idempotency.ts` - `idempotentRequest`, which every write goes through.
+- `src/hooks/` - `reduxHooks`, `useAxiosAuth`, `useContestEvents`, `useToast`, `useScrollAnimation`.
+- `src/types/` - shared types and design tokens (`contest.ts`, `stats.ts`, `events.ts`, `error.ts`, `gradients.ts`).
 - `src/utils/` - pure helpers (`contestStatus`, `oidcHelpers`, `sanitize`).
 - `Dockerfile`, `nginx.conf` - production container serving the built SPA with SPA fallback.
 
@@ -49,7 +49,9 @@
 - Props go in a local `interface Props { ... }` with `({ ... }: Props)` destructuring. Do not export `Props` unless it is reused.
 - Hooks live in `src/hooks/` and are named `useXxx`.
 - Register new slice reducers in `src/app/store.ts`.
-- When the backend adds a NATS event subject, add the matching discriminated-union variant in `src/types/ws.ts` and handle it in `wsSlice.ts`. Components react through selectors and never read the socket directly.
+- When the backend adds a contest event type, add it to `ContestEvent['type']` in `src/types/contest.ts` and handle it in `handleContestEvent` (`src/service/contestEvents.ts`). Reducers that apply events must be idempotent: a reconnect can replay events the snapshot already contains, and square updates carry a `version` so older ones are ignored.
+- `useContestEvents` owns the stream: it resumes with `Last-Event-ID` after drops and token refreshes, treats 403/404 and a `revoked` event as final, and gives up after repeated failures. Components never read the stream directly.
+- Every write goes through `idempotentRequest`, which sends one `Idempotency-Key` per action and retries network errors and 502/503/504 with the same key. Contest edits send the contest `version` as `If-Match`; a 412 means someone else changed it, and the stream delivers their change.
 - Use `showToast(message, severity)` via `useToast` rather than rendering snackbars directly.
 - Keep the SPA fallback (`try_files ... /index.html`) in `nginx.conf` intact. Removing it breaks client-side routing.
 - Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
@@ -72,7 +74,7 @@
 - Redux-dependent component tests wrap in a real store via `Provider`, or a per-test `configureStore` with the relevant reducer. Exercise the reducer rather than mocking the slice.
 - Service tests mock the axios instance from `src/axios/api.ts`, not `axios` itself.
 - Hook tests use `renderHook`. For OIDC-dependent hooks, mock `useAuth` from `react-oidc-context`.
-- When stubbing browser APIs (`IntersectionObserver`, `WebSocket`, `matchMedia`), restore the original in `afterEach`.
+- When stubbing browser APIs (`IntersectionObserver`, `fetch`, `matchMedia`), restore the original in `afterEach`.
 - Favor deterministic tests over timing-sensitive behavior.
 - Coverage is gated at **80%** for lines, branches, functions, and statements in `vitest.config.ts`. Do not lower a threshold to get a build green.
 - Always run `pnpm lint`, `pnpm type-check`, and `pnpm test` before committing.
@@ -108,19 +110,19 @@ Conventional commits, enforced on PR titles and consumed by release-please. The 
 - `test`: Test-only additions or maintenance.
 - `style`: Formatting only.
 
-Optional scopes: `pages`, `components`, `features`, `hooks`, `service`, `store`, `auth`, `ws`, `toast`, `tests`, `build`, `deploy`.
+Scope is `squares` so release-please attributes the change.
 
 Example commit subjects:
 
-- `feat(pages): add search input to ContestsPage`
-- `fix(ws): handle square_claimed events after reconnect`
-- `refactor(features): move contest selectors out of the slice file`
-- `chore(deps): bump vite to 7.2`
+- `feat(squares): add search input to ContestsPage`
+- `fix(squares): apply square events after a stream resume`
+- `refactor(squares): move contest selectors out of the slice file`
+- `chore(squares): bump vite to 7.2`
 
 ## Non-Goals for Routine Changes
 
 - Large refactors without a clear user-facing benefit.
-- Calling axios from a component or reading the WebSocket outside the `ws` slice.
+- Calling axios from a component, or reading the event stream outside `useContestEvents`.
 - New dependencies when MUI, React, or an existing helper is sufficient.
 - Rebuilding an MUI primitive with raw `sx`.
 - Lowering a coverage threshold or disabling a lint rule to get a build green.

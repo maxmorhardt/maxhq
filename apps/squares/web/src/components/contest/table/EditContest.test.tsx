@@ -23,6 +23,7 @@ import { useAuth } from 'react-oidc-context';
 const theme = createTheme();
 
 const contest: Contest = {
+  version: 1,
   id: 'c-1',
   name: 'Super Bowl LX',
   xLabels: [],
@@ -111,7 +112,8 @@ describe('EditContest', () => {
     await waitFor(() =>
       expect(updateContestById).toHaveBeenCalledWith(
         'c-1',
-        expect.objectContaining({ visibility: 'private' })
+        expect.objectContaining({ visibility: 'private' }),
+        1
       )
     );
   });

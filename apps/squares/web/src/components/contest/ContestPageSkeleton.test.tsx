@@ -10,7 +10,7 @@ describe('ContestPageSkeleton', () => {
 
   it('renders a placeholder card for each section on desktop and mobile', () => {
     const { container } = render(<ContestPageSkeleton />);
-    expect(container.querySelectorAll('.MuiPaper-root')).toHaveLength(9);
+    expect(container.querySelectorAll('.MuiPaper-root')).toHaveLength(7);
   });
 
   it('renders no text content', () => {
