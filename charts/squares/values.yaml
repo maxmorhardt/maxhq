@@ -7,9 +7,10 @@ image:
   revisionHistoryLimit: 2
   strategy:
     type: RollingUpdate
+    # start the new pod before stopping an old one, so both replicas keep serving through a rollout
     rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
+      maxSurge: 1
+      maxUnavailable: 0
   securityContext:
     runAsNonRoot: true
     runAsUser: 1000
@@ -86,8 +87,8 @@ affinity:
 
 hpa:
   enabled: true
-  minReplicas: 3
-  maxReplicas: 20
+  minReplicas: 2
+  maxReplicas: 5
   targetCPU: 80
   targetRAM: 80
 

@@ -1,0 +1,258 @@
+# the service's name, image, secret, and every resource it owns: squares-games
+fullnameOverride: squares-games
+# shared by every squares backend chart, so dashboards and selectors can find all of them
+partOf: squares
+
+image:
+  repository: maxmorhardt/squares-games
+  # set by argo cd for each release
+  tag: ''
+  pullPolicy: Always
+  revisionHistoryLimit: 2
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+  volumes:
+    - name: tmp
+      mountPath: /tmp
+      volumeType: emptyDir
+    - name: home
+      mountPath: /home/squares
+      volumeType: emptyDir
+    - name: log
+      mountPath: /var/log
+      volumeType: emptyDir
+  startupProbe:
+    path: /health/live
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+  readinessProbe:
+    path: /health/ready
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+  livenessProbe:
+    path: /health/live
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 5
+    successThreshold: 1
+
+# the secret every key in DEPENDENCIES.md comes from; empty means <fullname>-env
+secretName: ''
+
+# settings that are not secret; see DEPENDENCIES.md for the defaults the service applies itself
+env:
+  SCORES_ENABLED: 'true'
+
+# small pods, two to three of them: memory requests equal limits so a pod is never evicted for using
+# what it asked for, and cpu can burst past the request for startup and migrations
+resources:
+  limits:
+    cpu: 250m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+# the scores worker holds an advisory lock, so extra replicas only serve /games/upcoming
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 3
+  targetCPU: 80
+  targetRAM: 85
+
+pdb:
+  minAvailable: 1
+
+strategy:
+  maxSurge: 1
+  maxUnavailable: 0
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  name: http
+
+route:
+  enabled: true
+  gateway:
+    name: maxstash
+    namespace: envoy-gateway-system
+  hostnames:
+    - api.maxstash.io
+  # public path prefix; the gateway strips it before forwarding
+  prefix: /squares
+  paths:
+    prefixes:
+      - /games
+    exact: []
+  # the api reference is served at <prefix>/swagger/<swaggerName>
+  swaggerName: games
+  rateLimit:
+    enabled: true
+    requests: 100
+    unit: Second
+
+# the gateway validates dex id tokens and hands the claims to the service as headers
+auth:
+  enabled: true
+  issuer: https://login.maxstash.io
+  jwksURI: https://login.maxstash.io/keys
+  audiences:
+    - squares
+    - squares-mobile
+  # a missing token passes through without identity headers; the service decides which routes need one
+  optional: true
+  claimToHeaders:
+    - header: X-Auth-Email
+      claim: email
+    - header: X-Auth-Name
+      claim: name
+    - header: X-Auth-Email-Verified
+      claim: email_verified
+    - header: X-Auth-Iat
+      claim: iat
+    - header: X-Auth-Exp
+      claim: exp
+
+# app traffic only from the gateway, metrics only from prometheus
+networkPolicy:
+  enabled: true
+  gatewayNamespace: envoy-gateway-system
+  monitoringNamespace: monitoring
+  # other services that may call this one directly, by their app.kubernetes.io/name
+  internalCallers: []
+
+affinity:
+  podAntiAffinity:
+    enabled: true
+    weight: 100
+    topologyKey: kubernetes.io/hostname
+
+metrics:
+  enabled: true
+  service:
+    port: 9090
+    targetPort: 9090
+    type: ClusterIP
+    name: metrics
+  path: /metrics
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+    honorLabels: true
+  prometheusRule:
+    enabled: true
+    labels: {}
+    rules:
+      - alert: HighRequestLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le, method, path)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High request latency detected'
+          description: 'P99 latency is {{ $value }}s for {{ $labels.method }} {{ $labels.path }}'
+
+      - alert: CriticalRequestLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{ include "app.fullname" . }}"}[5m])) by (le, method, path)) > 3
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Critical request latency detected'
+          description: 'P99 latency is {{ $value }}s for {{ $labels.method }} {{ $labels.path }}'
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }}'
+
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Critical HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }}'
+
+      - alert: High4xxRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }}'
+
+      - alert: Critical4xxRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.50
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Critical client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }}'
+
+      - alert: OutboxBacklog
+        expr: |
+          max(outbox_oldest_pending_seconds{job="{{ include "app.fullname" . }}"}) > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Events are not reaching redis'
+          description: 'The oldest unrelayed outbox event is {{ $value }}s old; other services and live viewers are not seeing its changes'
+
+      - alert: ScoresWorkerFailing
+        expr: |
+          increase(scores_worker_runs_total{job="{{ include "app.fullname" . }}",result="error"}[1h]) >= 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Scores worker runs are failing'
+          description: '{{ $value }} scores worker runs failed in the last hour; the ESPN scoreboard response may have changed'
+
+      # threshold clears the 6h idle poll interval; the > 0 guard keeps a never-yet-run worker quiet
+      - alert: ScoresWorkerStale
+        expr: |
+          (time() - max(scores_worker_last_success_timestamp_seconds{job="{{ include "app.fullname" . }}"}) > 25200) and (max(scores_worker_last_success_timestamp_seconds{job="{{ include "app.fullname" . }}"}) > 0)
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Scores worker has not succeeded recently'
+          description: 'Last successful scores worker run was {{ $value }}s ago; live contests are not being scored'
+
+dashboard:
+  enabled: true
+  namespace: monitoring
+  file: squares-games-dashboard.json
+  labels:
+    grafana_dashboard: '1'
+  annotations: {}

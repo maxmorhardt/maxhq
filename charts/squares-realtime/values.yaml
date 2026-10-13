@@ -1,0 +1,231 @@
+# the service's name, image, secret, and every resource it owns: squares-realtime
+fullnameOverride: squares-realtime
+# shared by every squares backend chart, so dashboards and selectors can find all of them
+partOf: squares
+
+image:
+  repository: maxmorhardt/squares-realtime
+  # set by argo cd for each release
+  tag: ''
+  pullPolicy: Always
+  revisionHistoryLimit: 2
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+  volumes:
+    - name: tmp
+      mountPath: /tmp
+      volumeType: emptyDir
+    - name: home
+      mountPath: /home/squares
+      volumeType: emptyDir
+    - name: log
+      mountPath: /var/log
+      volumeType: emptyDir
+  startupProbe:
+    path: /health/live
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+  readinessProbe:
+    path: /health/ready
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+  livenessProbe:
+    path: /health/live
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 5
+    successThreshold: 1
+
+# the secret every key in DEPENDENCIES.md comes from; empty means <fullname>-env
+secretName: ''
+
+# settings that are not secret; see DEPENDENCIES.md for the defaults the service applies itself
+env:
+  CONTESTS_INTERNAL_URL: http://squares-contests:8080
+  SSE_HEARTBEAT_INTERVAL: 25s
+  SSE_REVOCATION_INTERVAL: 5m
+
+# small pods, two to three of them: memory requests equal limits so a pod is never evicted for using
+# what it asked for, and cpu can burst past the request for startup and migrations
+resources:
+  limits:
+    cpu: 250m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 3
+  targetCPU: 80
+  targetRAM: 85
+
+pdb:
+  minAvailable: 1
+
+# surge first so open streams have somewhere to reconnect to with their Last-Event-ID
+strategy:
+  maxSurge: 1
+  maxUnavailable: 0
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  name: http
+
+route:
+  enabled: true
+  gateway:
+    name: maxstash
+    namespace: envoy-gateway-system
+  hostnames:
+    - api.maxstash.io
+  # public path prefix; the gateway strips it before forwarding
+  prefix: /squares
+  paths:
+    prefixes:
+      - /events
+    exact: []
+  # the api reference is served at <prefix>/swagger/<swaggerName>
+  swaggerName: realtime
+  # responses stay open until the token expires
+  streaming: true
+  rateLimit:
+    enabled: true
+    requests: 100
+    unit: Second
+
+# the gateway validates dex id tokens and hands the claims to the service as headers
+auth:
+  enabled: true
+  issuer: https://login.maxstash.io
+  jwksURI: https://login.maxstash.io/keys
+  audiences:
+    - squares
+    - squares-mobile
+  # a missing token passes through without identity headers; the service decides which routes need one
+  optional: true
+  claimToHeaders:
+    - header: X-Auth-Email
+      claim: email
+    - header: X-Auth-Name
+      claim: name
+    - header: X-Auth-Email-Verified
+      claim: email_verified
+    - header: X-Auth-Iat
+      claim: iat
+    - header: X-Auth-Exp
+      claim: exp
+
+# app traffic only from the gateway, metrics only from prometheus
+networkPolicy:
+  enabled: true
+  gatewayNamespace: envoy-gateway-system
+  monitoringNamespace: monitoring
+  # other services that may call this one directly, by their app.kubernetes.io/name
+  internalCallers: []
+
+affinity:
+  podAntiAffinity:
+    enabled: true
+    weight: 100
+    topologyKey: kubernetes.io/hostname
+
+metrics:
+  enabled: true
+  service:
+    port: 9090
+    targetPort: 9090
+    type: ClusterIP
+    name: metrics
+  path: /metrics
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+    honorLabels: true
+  prometheusRule:
+    enabled: true
+    labels: {}
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }}'
+
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Critical HTTP error rate'
+          description: 'Error rate is {{ $value | humanizePercentage }}'
+
+      - alert: High4xxRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }}'
+
+      - alert: Critical4xxRate
+        expr: |
+          sum(rate(http_requests_total{job="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(http_requests_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.50
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Critical client error rate'
+          description: '4xx error rate is {{ $value | humanizePercentage }}'
+
+      - alert: RealtimeStreamsFailing
+        expr: |
+          sum(rate(sse_streams_total{job="{{ include "app.fullname" . }}",result="unavailable"}[5m])) / sum(rate(sse_streams_total{job="{{ include "app.fullname" . }}"}[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Live contest streams are failing to open'
+          description: '{{ $value | humanizePercentage }} of stream opens fail; check redis and the contests internal API'
+
+      - alert: RealtimeCannotReadStreams
+        expr: |
+          sum(increase(realtime_stream_read_errors_total{job="{{ include "app.fullname" . }}"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Realtime cannot read the contest streams'
+          description: 'Open streams are not receiving events; check redis'
+
+dashboard:
+  enabled: true
+  namespace: monitoring
+  file: squares-realtime-dashboard.json
+  labels:
+    grafana_dashboard: '1'
+  annotations: {}

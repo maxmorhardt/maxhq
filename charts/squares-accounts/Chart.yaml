@@ -1,0 +1,5 @@
+apiVersion: v2
+name: squares-accounts
+description: Profiles, account deletion, and the contact form for squares.maxstash.io
+type: application
+version: 1.0.0
