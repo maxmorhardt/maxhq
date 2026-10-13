@@ -9,8 +9,7 @@
     "apps/maxstash": {
       "release-type": "node",
       "component": "maxstash",
-      "changelog-path": "CHANGELOG.md",
-      "release-as": "3.0.3"
+      "changelog-path": "CHANGELOG.md"
     },
     "apps/squares/web": {
       "release-type": "node",
