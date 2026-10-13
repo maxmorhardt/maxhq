@@ -12,15 +12,14 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-// a running hub over an in-memory redis
 func newHub(t *testing.T) (*redis.Client, *service.Hub) {
 	t.Helper()
 	mr := miniredis.RunT(t)
@@ -34,7 +33,6 @@ func newHub(t *testing.T) (*redis.Client, *service.Hub) {
 	return client, hub
 }
 
-// appends a contest event the way the contests relay does and returns its entry id
 func publish(t *testing.T, client *redis.Client, contestID uuid.UUID, eventType string) string {
 	t.Helper()
 	data, err := json.Marshal(events.ContestEventHeader{Type: eventType, ContestID: contestID})
@@ -51,7 +49,7 @@ func allowAll(t *testing.T, contestID uuid.UUID) *mocks.ContestAccessClient {
 	t.Helper()
 	c := mocks.NewContestAccessClient(t)
 	c.EXPECT().GetSnapshot(mock.Anything, contestID, "v@b.com").
-		Return(&internalapi.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`)}, nil).Maybe()
+		Return(&contracts.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`)}, nil).Maybe()
 	return c
 }
 
@@ -80,7 +78,6 @@ func TestSubscribe_FreshStreamStartsFromASnapshot(t *testing.T) {
 	require.NotNil(t, sub.Snapshot)
 	assert.Equal(t, last, sub.SnapshotID, "the snapshot already reflects everything up to here")
 
-	// other contests have their own streams and never reach this subscription
 	publish(t, client, uuid.New(), events.SquareUpdateType)
 	live := publish(t, client, contestID, events.ContestUpdateType)
 

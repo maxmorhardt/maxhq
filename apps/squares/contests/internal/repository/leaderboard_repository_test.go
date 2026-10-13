@@ -82,7 +82,6 @@ func TestLeaderboardRepository_GetUserRank_Unranked(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewLeaderboardRepository(gdb)
 
-	// a user with no wins comes back at rank 0
 	mock.ExpectQuery(`WITH wins AS`).
 		WillReturnRows(sqlmock.NewRows([]string{"total_ranked", "quarter_wins", "rank"}).
 			AddRow(143, 0, 0))

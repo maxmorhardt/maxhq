@@ -10,16 +10,15 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
 const systemUser = "system"
 
 type ContestService interface {
-	GetContestsByOwnerPaginated(ctx context.Context, owner string, page, limit int, search string) ([]model.Contest, int64, error)
-
 	CreateContest(ctx context.Context, req *model.CreateContestRequest, user string) (*model.Contest, error)
 	UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error)
 	StartContest(ctx context.Context, contestID uuid.UUID, user string) (*model.Contest, error)
@@ -65,31 +64,9 @@ func NewContestService(
 	}
 }
 
-// ====================
-// Getters
-// ====================
-
-func (s *contestService) GetContestsByOwnerPaginated(ctx context.Context, owner string, page, limit int, search string) ([]model.Contest, int64, error) {
-	log := reqctx.LoggerFromContext(ctx)
-
-	contests, total, err := s.repo.GetAllByOwnerPaginated(ctx, owner, page, limit, search)
-	if err != nil {
-		log.Error("failed to get paginated contests by user", "owner", owner, "error", err)
-		return nil, 0, err
-	}
-
-	log.Info("retrieved paginated contests by owner", "count", len(contests))
-	return contests, total, nil
-}
-
-// ====================
-// Contest Lifecycle Actions
-// ====================
-
 func (s *contestService) CreateContest(ctx context.Context, req *model.CreateContestRequest, user string) (*model.Contest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// check if contest name already exists for user
 	exists, err := s.repo.ExistsByOwnerAndName(ctx, req.Owner, req.Name)
 	if err != nil {
 		log.Error("failed to check if contest exists", "owner", req.Owner, "name", req.Name, "error", err)
@@ -101,7 +78,6 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 		return nil, errs.ErrContestAlreadyExists
 	}
 
-	// build contest with initial labels
 	xLabelsJSON, yLabelsJSON := util.InitialLabels()
 	visibility := model.ContestVisibilityPrivate
 	if req.Visibility == "public" {
@@ -119,7 +95,6 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 		Status:     model.ContestStatusActive,
 	}
 
-	// game-linked contest scores automatically and takes its teams from the game
 	if req.GameID != "" {
 		gameID, parseErr := uuid.Parse(req.GameID)
 		if parseErr != nil {
@@ -135,13 +110,11 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 			return nil, errs.ErrDatabaseUnavailable
 		}
 
-		// set the foreign key and team names
 		contest.GameID = &game.ID
 		contest.HomeTeam = game.HomeTeam
 		contest.AwayTeam = game.AwayTeam
 	}
 
-	// atomically create contest, squares, and owner participant
 	ownerParticipant := &model.ContestParticipant{
 		UserID:     user,
 		Role:       model.ParticipantRoleOwner,
@@ -159,7 +132,7 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 }
 
 func (s *contestService) UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var contest *model.Contest
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
@@ -175,13 +148,11 @@ func (s *contestService) UpdateContest(ctx context.Context, contestID uuid.UUID,
 			return errs.ErrDatabaseUnavailable
 		}
 
-		// the client edited a version that is no longer current
 		if expectedVersion != nil && *expectedVersion != contest.Version {
 			log.Warn("contest update precondition failed", "contest_id", contestID, "expected", *expectedVersion, "current", contest.Version)
 			return errs.ErrVersionConflict
 		}
 
-		// game-linked contests read their quarter results from the shared game record
 		util.SynthesizeFromGame(contest)
 
 		if contest.Status.IsTerminal() {
@@ -199,7 +170,6 @@ func (s *contestService) UpdateContest(ctx context.Context, contestID uuid.UUID,
 			return nil
 		}
 
-		// the version check in the repository rejects this write if anyone changed the contest since it was read
 		contest.UpdatedBy = user
 		if err := s.repo.Update(ctx, contest); err != nil {
 			log.Warn("failed to save updated contest", "contest_id", contest.ID, "error", err)
@@ -217,7 +187,6 @@ func (s *contestService) UpdateContest(ctx context.Context, contestID uuid.UUID,
 }
 
 func applyContestChanges(contest *model.Contest, req *model.UpdateContestRequest) bool {
-	// game-linked contests take their team names from the game record
 	canEditTeams := contest.GameID == nil
 
 	changed := false
@@ -231,7 +200,6 @@ func applyContestChanges(contest *model.Contest, req *model.UpdateContestRequest
 		changed = true
 	}
 
-	// visibility is editable regardless of game link, as long as the contest isn't terminal
 	if req.Visibility != nil && model.ContestVisibility(*req.Visibility) != contest.Visibility {
 		contest.Visibility = model.ContestVisibility(*req.Visibility)
 		changed = true
@@ -241,11 +209,10 @@ func applyContestChanges(contest *model.Contest, req *model.UpdateContestRequest
 }
 
 func (s *contestService) StartContest(ctx context.Context, contestID uuid.UUID, user string) (*model.Contest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var contest *model.Contest
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
-		// the row lock waits out in-flight claims and clears, so the full-grid check below sees their result
 		var err error
 		contest, err = s.repo.GetByIDForUpdate(ctx, contestID)
 		if err != nil {
@@ -253,7 +220,6 @@ func (s *contestService) StartContest(ctx context.Context, contestID uuid.UUID, 
 			return err
 		}
 
-		// game-linked contests start automatically at kickoff; owners can't start them
 		if contest.GameID != nil {
 			log.Warn("cannot manually start a game-linked contest", "contest_id", contestID)
 			return errs.ErrContestIsGameLinked
@@ -280,19 +246,18 @@ func (s *contestService) StartContest(ctx context.Context, contestID uuid.UUID, 
 	return contest, nil
 }
 
-// game-linked contests lock and randomize on their own once the game kicks off with a full grid
 func (s *contestService) AutoStart(ctx context.Context, contest *model.Contest) error {
 	if err := s.transitionToQ1(ctx, contest, systemUser); err != nil {
 		return err
 	}
 
 	metrics.IncContestStarted()
-	reqctx.LoggerFromContext(ctx).Info("auto-started game-linked contest", "contest_id", contest.ID)
+	logging.FromContext(ctx).Info("auto-started game-linked contest", "contest_id", contest.ID)
 	return nil
 }
 
 func (s *contestService) transitionToQ1(ctx context.Context, contest *model.Contest, user string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	xLabels, yLabels, err := util.RandomizedLabels()
 	if err != nil {
@@ -319,7 +284,7 @@ func (s *contestService) transitionToQ1(ctx context.Context, contest *model.Cont
 }
 
 func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid.UUID, homeScore, awayScore int, user string) (*model.QuarterResult, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var recorded *model.QuarterResult
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
@@ -329,19 +294,16 @@ func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid
 			return err
 		}
 
-		// game-linked contests are scored automatically; they exit before the auth check so they're unaffected by it
 		if contest.GameID != nil {
 			log.Warn("cannot manually record quarter result for a game-linked contest", "contest_id", contestID)
 			return errs.ErrContestIsGameLinked
 		}
 
-		// only the contest owner may record scores
 		if err = s.participantService.Authorize(ctx, contestID, user, ActionEditContest); err != nil {
 			log.Warn("user is not authorized to record quarter result", "contest_id", contestID, "user", user)
 			return errs.ErrUnauthorizedContestEdit
 		}
 
-		// determine quarter and next status from current contest status
 		quarter, ok := contest.Status.Quarter()
 		if !ok {
 			log.Warn("invalid contest status for recording quarter result", "contest_id", contestID, "status", contest.Status)
@@ -349,7 +311,6 @@ func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid
 		}
 		nextStatus, _ := model.StatusAfterQuarter(quarter)
 
-		// no duplicate quarter results
 		for i := range contest.QuarterResults {
 			if contest.QuarterResults[i].Quarter == quarter {
 				log.Warn("quarter result already exists for given quarter", "quarter", quarter)
@@ -357,7 +318,6 @@ func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid
 			}
 		}
 
-		// compute the winning square from this contest's labels
 		result, err := util.QuarterResultFor(contest, quarter, homeScore, awayScore)
 		if err != nil {
 			log.Error("failed to compute quarter result", "contest_id", contestID, "error", err)
@@ -386,7 +346,7 @@ func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid
 }
 
 func (s *contestService) ApplyQuarterResult(ctx context.Context, contest *model.Contest, quarter, homeScore, awayScore int) (*model.QuarterResult, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	nextStatus, valid := model.StatusAfterQuarter(quarter)
 	if !valid {
@@ -412,9 +372,8 @@ func (s *contestService) ApplyQuarterResult(ctx context.Context, contest *model.
 }
 
 func (s *contestService) FinalizeFromScores(ctx context.Context, contest *model.Contest, scores []model.GameScore) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// assign labels and empty squares don't win
 	xLabels, yLabels, err := util.RandomizedLabels()
 	if err != nil {
 		return err
@@ -425,7 +384,6 @@ func (s *contestService) FinalizeFromScores(ctx context.Context, contest *model.
 	contest.Status = model.ContestStatusFinished
 	contest.UpdatedBy = systemUser
 
-	// labels are assigned above, so every quarter resolves against the grid this contest finishes with
 	results := make([]model.QuarterResult, 0, len(scores))
 	for i := range scores {
 		result, resultErr := util.QuarterResultFor(contest, scores[i].Quarter, scores[i].HomeScore, scores[i].AwayScore)
@@ -444,7 +402,6 @@ func (s *contestService) FinalizeFromScores(ctx context.Context, contest *model.
 		return err
 	}
 
-	// notify clients the contest resolved
 	if err := s.events.PublishContestUpdate(ctx, contest.ID, systemUser, contest); err != nil {
 		return err
 	}
@@ -458,7 +415,6 @@ func (s *contestService) applyQuarterResults(ctx context.Context, contest *model
 		return err
 	}
 
-	// publish in quarter order so clients apply the quarters sequentially
 	for i := range results {
 		metrics.IncQuarterResult(results[i].Quarter)
 		if err := s.events.PublishQuarterResult(ctx, contest.ID, user, &results[i]); err != nil {
@@ -470,7 +426,7 @@ func (s *contestService) applyQuarterResults(ctx context.Context, contest *model
 }
 
 func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestID uuid.UUID, user string) (*model.QuarterResult, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var rolledBack *model.QuarterResult
 	var quarter int
@@ -481,19 +437,16 @@ func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestI
 			return err
 		}
 
-		// game-linked contests are scored automatically; they exit before the auth check so they're unaffected by it
 		if contest.GameID != nil {
 			log.Warn("cannot roll back quarter result for a game-linked contest", "contest_id", contestID)
 			return errs.ErrContestIsGameLinked
 		}
 
-		// only the contest owner may roll back scores
 		if err = s.participantService.Authorize(ctx, contestID, user, ActionEditContest); err != nil {
 			log.Warn("user is not authorized to roll back quarter result", "contest_id", contestID, "user", user)
 			return errs.ErrUnauthorizedContestEdit
 		}
 
-		// determine the most recently recorded quarter and the status to revert to
 		var revertStatus model.ContestStatus
 		var ok bool
 		revertStatus, quarter, ok = model.PreviousQuarterStatus(contest.Status)
@@ -502,7 +455,6 @@ func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestI
 			return errs.ErrNoQuarterResultToRollback
 		}
 
-		// find the recorded result for that quarter
 		for i := range contest.QuarterResults {
 			if contest.QuarterResults[i].Quarter == quarter {
 				rolledBack = &contest.QuarterResults[i]
@@ -514,7 +466,6 @@ func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestI
 			return errs.ErrNoQuarterResultToRollback
 		}
 
-		// delete the result and revert the contest status atomically
 		contest.Status = revertStatus
 		contest.UpdatedBy = user
 		if err := s.repo.RollbackQuarterResult(ctx, rolledBack.ID, contest); err != nil {
@@ -522,7 +473,6 @@ func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestI
 			return err
 		}
 
-		// connected clients drop the quarter and revert status
 		return s.events.PublishQuarterResultRollback(ctx, contest.ID, user, rolledBack, contest)
 	})
 	if err != nil {
@@ -535,7 +485,7 @@ func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestI
 }
 
 func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		contest, err := s.repo.GetByIDForUpdate(ctx, contestID)
@@ -573,14 +523,9 @@ func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID,
 	return nil
 }
 
-// ====================
-// Square Actions
-// ====================
-
 func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// get contest to check status and find square
 	contest, err := s.repo.GetByID(ctx, contestID)
 	if err != nil {
 		log.Error("failed to get contest for square claim", "contest_id", contestID, "error", err)
@@ -590,13 +535,11 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	// a fast early answer; the repository re-checks the status under a lock
 	if contest.Status != model.ContestStatusActive {
 		log.Warn("cannot update square when contest is not active", "square_id", squareID, "contest_status", contest.Status)
 		return nil, errs.ErrSquareNotEditable
 	}
 
-	// check role-based permission to claim squares
 	if err = s.participantService.Authorize(ctx, contestID, user, ActionClaimSquare); err != nil {
 		log.Warn("user not authorized to claim squares", "contest_id", contestID, "user", user)
 		return nil, errs.ErrUnauthorizedSquareEdit
@@ -608,13 +551,11 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	// a claimed square can only be re-claimed by its owner
 	if square.Owner != "" && square.Owner != user {
 		log.Warn("user not authorized to update square", "square_id", squareID, "owner", square.Owner, "user", user)
 		return nil, errs.ErrUnauthorizedSquareEdit
 	}
 
-	// enforce square limit for the participant
 	participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, user)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -628,7 +569,6 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 	// capture whether the square was unclaimed before the update mutates square.Owner
 	wasUnclaimed := square.Owner == ""
 
-	// only check limit if claiming a new square (not re-editing own square)
 	if wasUnclaimed {
 		claimed, countErr := s.participantRepo.CountSquaresByUser(ctx, contestID, user)
 		if countErr != nil {
@@ -642,14 +582,12 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 		}
 	}
 
-	// get claims so we can capture the owner's display name
-	claims := reqctx.ClaimsFromContext(ctx)
+	claims := api.ClaimsFromContext(ctx)
 	if claims == nil {
 		log.Error("claims not found in context")
 		return nil, errs.ErrClaimsNotFound
 	}
 
-	// the square value is the claimant's profile default initials, seeded from their name on first visit
 	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, util.InitialsFromName(claims.Name))
 	if err != nil {
 		log.Error("failed to load profile for square claim", "user", user, "error", err)
@@ -695,9 +633,8 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 }
 
 func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// get contest to check status and find square
 	contest, err := s.repo.GetByID(ctx, contestID)
 	if err != nil {
 		log.Error("failed to get contest for square clear", "contest_id", contestID, "error", err)
@@ -708,7 +645,6 @@ func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uu
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	// a fast early answer; the repository re-checks the status under a lock
 	if contest.Status != model.ContestStatusActive {
 		log.Warn("cannot clear square when contest is not active", "square_id", squareID, "contest_status", contest.Status)
 		return nil, errs.ErrSquareNotEditable
@@ -720,7 +656,6 @@ func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uu
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	// check authorization - allow if user can edit contest or is the square owner
 	isSquareOwner := square.Owner == user
 	editErr := s.participantService.Authorize(ctx, contestID, user, ActionEditContest)
 	if editErr != nil && !isSquareOwner {
@@ -749,9 +684,8 @@ func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uu
 }
 
 func (s *contestService) ClearUserSquares(ctx context.Context, contestID uuid.UUID, user string) ([]model.Square, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// get contest to check status
 	contest, err := s.repo.GetByID(ctx, contestID)
 	if err != nil {
 		log.Error("failed to get contest for clearing user squares", "contest_id", contestID, "error", err)
@@ -762,7 +696,6 @@ func (s *contestService) ClearUserSquares(ctx context.Context, contestID uuid.UU
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	// a fast early answer; the repository re-checks the status under a lock
 	if contest.Status != model.ContestStatusActive {
 		log.Warn("cannot clear squares when contest is not active", "contest_id", contestID, "contest_status", contest.Status)
 		return nil, errs.ErrSquareNotEditable

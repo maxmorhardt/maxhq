@@ -48,12 +48,10 @@ func TestRunner_RunGuarded_LockAcquired(t *testing.T) {
 
 	r.runGuarded(context.Background())
 
-	// holding the lock, the worker actually polls (asserted by the FetchScoreboard expectation)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
 func TestRunner_RunGuarded_LockNotAcquired(t *testing.T) {
-	// no FetchScoreboard expectation: another replica holds the lock, so the worker must not poll
 	espn := mocks.NewESPNClient(t)
 	r, dbMock := mockRunner(t, espn, mocks.NewGameService(t))
 	dbMock.ExpectQuery(`pg_try_advisory_lock`).WillReturnRows(sqlmock.NewRows([]string{"locked"}).AddRow(false))
@@ -74,7 +72,6 @@ func TestRunner_Loop_StopsOnContextCancel(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		// cancelled context: the startup run can't acquire a connection and the loop exits immediately
 		r.loop(ctx)
 		close(done)
 	}()
@@ -97,7 +94,6 @@ func TestRunner_RunGuarded_TracksConsecutiveFailures(t *testing.T) {
 		r.runGuarded(context.Background())
 	}
 
-	// the third failure is the one that escalates from warn to error
 	assert.Equal(t, failureLogThreshold, r.consecutiveFailures)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

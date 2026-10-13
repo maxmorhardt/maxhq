@@ -20,22 +20,20 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
 	"github.com/maxmorhardt/maxstash/libs/platform/server"
 	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/redis/go-redis/v9"
 )
 
 const (
 	internalToken = "integration-internal-token"
 	eventually    = 15 * time.Second
-	contactLimit  = 3
 )
 
 var (
 	rawDB    *sql.DB
 	rdb      *redis.Client
-	contests = &fakeContests{active: map[string][]internalapi.UserActiveContest{}}
+	contests = &fakeContests{active: map[string][]contracts.UserActiveContest{}}
 	baseCfg  *model.AccountsConfig
-	// two replicas sharing postgres and redis, the way the deployment runs
 	replicaA string
 	replicaB string
 	stopAll  []func()
@@ -58,7 +56,6 @@ func run(m *testing.M) int {
 	defer pg.Terminate()
 	rawDB = pg.DB
 
-	// start from the monolith's tables, the way production does, so the service has to adopt them
 	legacy, err := os.ReadFile("testdata/legacy_schema.sql")
 	if err != nil {
 		slog.Error("legacy schema", "error", err)
@@ -88,7 +85,6 @@ func run(m *testing.M) int {
 		Contests:  model.ContestsConfig{URL: contestsSrv.URL},
 		SMTP:      model.SMTPConfig{Host: "127.0.0.1", Port: 1, User: "noreply@squares.test", SupportEmail: "support@squares.test"},
 		Turnstile: model.TurnstileConfig{SecretKey: "unused", BaseURL: "http://127.0.0.1:1"},
-		Contact:   model.ContactConfig{RateLimit: contactLimit},
 	}
 	defer func() {
 		for _, stop := range stopAll {
@@ -125,13 +121,12 @@ func startReplica(ctx context.Context) (string, *server.Infra, error) {
 	return srv.URL, infra, nil
 }
 
-// contests' internal activity endpoint, with whatever active contests a test assigns
 type fakeContests struct {
 	mu     sync.Mutex
-	active map[string][]internalapi.UserActiveContest
+	active map[string][]contracts.UserActiveContest
 }
 
-func (f *fakeContests) setActive(email string, contests ...internalapi.UserActiveContest) {
+func (f *fakeContests) setActive(email string, contests ...contracts.UserActiveContest) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.active[email] = contests
@@ -148,9 +143,9 @@ func (f *fakeContests) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	active := f.active[email]
 	f.mu.Unlock()
 	if active == nil {
-		active = []internalapi.UserActiveContest{}
+		active = []contracts.UserActiveContest{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(internalapi.UserActivitySummary{ActiveContests: active})
+	_ = json.NewEncoder(w).Encode(contracts.UserActivitySummary{ActiveContests: active})
 }

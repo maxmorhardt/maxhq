@@ -11,7 +11,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -51,9 +51,8 @@ func NewInviteService(
 }
 
 func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, req *model.CreateInviteRequest, user string) (*model.ContestInvite, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// reject invites once the contest is in a terminal state
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -68,12 +67,10 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 		return nil, errs.ErrContestFinalized
 	}
 
-	// verify user has permission to manage invites
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
 		return nil, err
 	}
 
-	// viewers never consume squares; participants must be granted at least one
 	role := model.ParticipantRole(req.Role)
 	if role == model.ParticipantRoleViewer {
 		req.MaxSquares = 0
@@ -81,7 +78,6 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 		return nil, errs.ErrInvalidSquareCount
 	}
 
-	// build invite
 	invite := &model.ContestInvite{
 		ContestID:  contestID,
 		MaxSquares: req.MaxSquares,
@@ -106,7 +102,7 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 }
 
 func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*model.InvitePreviewResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
 	if err != nil {
@@ -142,9 +138,8 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 }
 
 func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*model.ContestParticipant, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// get and validate invite
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -164,7 +159,6 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 		return nil, errs.ErrInviteMaxUsesReached
 	}
 
-	// check contest is not in a terminal state
 	contest, err := s.contestRepo.GetByID(ctx, invite.ContestID)
 	if err != nil {
 		log.Error("failed to get contest for invite redemption", "contest_id", invite.ContestID, "error", err)
@@ -176,7 +170,6 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 		return nil, errs.ErrContestFinalized
 	}
 
-	// reject if user is already a participant in this contest
 	_, err = s.participantRepo.GetByContestAndUser(ctx, invite.ContestID, user)
 	if err == nil {
 		log.Warn("user already a participant", "contest_id", invite.ContestID, "user", user)
@@ -187,7 +180,6 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	// reject if granting this invite would exceed the square pool
 	totalAllocated, err := s.participantRepo.GetTotalAllocatedSquares(ctx, invite.ContestID)
 	if err != nil {
 		log.Error("failed to get total allocated squares", "contest_id", invite.ContestID, "error", err)
@@ -199,7 +191,6 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 		return nil, errs.ErrNotEnoughSquares
 	}
 
-	// create participant and increment invite usage atomically
 	participant := &model.ContestParticipant{
 		ContestID:  invite.ContestID,
 		UserID:     user,
@@ -241,9 +232,8 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 }
 
 func (s *inviteService) GetInvitesByContestID(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestInvite, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// verify user has permission to manage invites
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
 		return nil, err
 	}
@@ -259,9 +249,8 @@ func (s *inviteService) GetInvitesByContestID(ctx context.Context, contestID uui
 }
 
 func (s *inviteService) DeleteInvite(ctx context.Context, contestID, inviteID uuid.UUID, user string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
-	// reject deletes once the contest is in a terminal state
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -276,7 +265,6 @@ func (s *inviteService) DeleteInvite(ctx context.Context, contestID, inviteID uu
 		return errs.ErrContestFinalized
 	}
 
-	// verify user has permission to manage invites
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
 		return err
 	}

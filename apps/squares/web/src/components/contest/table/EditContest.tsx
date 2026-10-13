@@ -23,18 +23,18 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
-import type { ContestVisibility } from '../../../types/contest';
+import type { ContestSummary, ContestVisibility } from '../../../types/contest';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import { useAuth } from 'react-oidc-context';
-import { selectCurrentContest } from '../../../features/contests/contestSelectors';
 import { updateContest } from '../../../features/contests/contestThunks';
-import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
+import { useAppDispatch } from '../../../hooks/reduxHooks';
 import { useToast } from '../../../hooks/useToast';
 import { getStatusOption, isInGameStatus, isTerminalStatus } from '../../../utils/contestStatus';
 
 interface EditContestProps {
   open: boolean;
   onClose: () => void;
+  contest: ContestSummary | null;
 }
 
 function DetailRow({
@@ -66,11 +66,10 @@ function DetailRow({
   );
 }
 
-export default function EditContest({ open, onClose }: EditContestProps) {
+export default function EditContest({ open, onClose, contest }: EditContestProps) {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
-  const contest = useAppSelector(selectCurrentContest);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const [homeTeam, setHomeTeam] = useState('');

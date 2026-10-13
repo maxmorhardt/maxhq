@@ -23,7 +23,6 @@ func TestLegacy_GameTablesMoveIntoTheGamesSchema(t *testing.T) {
 	}
 	assert.True(t, tableExists(t, "games.outbox"))
 
-	// contests' tables are left for contests to adopt, without the foreign key into games
 	assert.True(t, tableExists(t, "public.contests"))
 	var fks int
 	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM pg_constraint WHERE conname = 'contests_game_id_fkey'`).Scan(&fks))

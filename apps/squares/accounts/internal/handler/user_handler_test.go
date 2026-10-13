@@ -11,7 +11,6 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -30,10 +29,6 @@ func newUserRouter(t *testing.T) (*mocks.UserService, *gin.Engine) {
 
 	return svc, r
 }
-
-// ====================
-// GetMe
-// ====================
 
 func TestGetMe_Success(t *testing.T) {
 	svc, r := newUserRouter(t)
@@ -61,10 +56,6 @@ func TestGetMe_ServiceError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
-// ====================
-// UpdateMe
-// ====================
-
 func TestUpdateMe_Success(t *testing.T) {
 	svc, r := newUserRouter(t)
 	svc.EXPECT().UpdateProfile(mock.Anything, "a@b.com", "MM").
@@ -81,7 +72,6 @@ func TestUpdateMe_Success(t *testing.T) {
 func TestUpdateMe_InvalidBody(t *testing.T) {
 	_, r := newUserRouter(t)
 
-	// lowercase fails the uppercase/alphanum binding
 	w := doRequest(r, patchMe(model.UpdateUserProfileRequest{DefaultInitials: "mm"}))
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -105,10 +95,6 @@ func TestUpdateMe_UnknownUser(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
-
-// ====================
-// DeleteMe
-// ====================
 
 func TestDeleteMe_Success(t *testing.T) {
 	svc, r := newUserRouter(t)
@@ -153,8 +139,8 @@ func TestDeleteMe_ContestsUnavailable(t *testing.T) {
 func authenticatedMiddleware(userID string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := &api.Claims{Email: userID, EmailVerified: true, Name: "Test", Expire: 9999999999}
-		reqctx.SetGinContextValue(c, api.UserKey, userID)
-		reqctx.SetGinContextValue(c, api.ClaimsKey, claims)
+		api.SetContextValue(c, api.UserKey, userID)
+		api.SetContextValue(c, api.ClaimsKey, claims)
 		c.Next()
 	}
 }

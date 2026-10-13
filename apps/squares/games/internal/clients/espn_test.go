@@ -76,7 +76,6 @@ func TestESPNClient_FetchScoreboard_RequestsOneDatePerCall(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// espn rejects YYYYMMDD-YYYYMMDD ranges, so a window must become one request per day
 	_, err := NewESPNClient(server.URL).FetchScoreboard(context.Background(), []string{"20260911", "20260912"})
 	require.NoError(t, err)
 	assert.Equal(t, []string{"20260911", "20260912"}, got)
@@ -90,7 +89,6 @@ func TestESPNClient_FetchScoreboard_OmitsDatesWhenEmpty(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// no dates means espn returns the current week, which is all a live poll needs
 	_, err := NewESPNClient(server.URL).FetchScoreboard(context.Background(), nil)
 	require.NoError(t, err)
 	assert.False(t, hadParam)
@@ -102,7 +100,6 @@ func TestESPNClient_FetchScoreboard_DedupesGamesAcrossDates(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// a late game lands on both adjacent dates, so the same espn id must not ingest twice
 	games, err := NewESPNClient(server.URL).FetchScoreboard(context.Background(), []string{"20260911", "20260912"})
 	require.NoError(t, err)
 	require.Len(t, games, 1)
@@ -120,7 +117,6 @@ func TestESPNClient_FetchScoreboard_StopsOnFirstDateFailure(t *testing.T) {
 	_, err := NewESPNClient(server.URL).FetchScoreboard(context.Background(), []string{"20260911", "20260912"})
 	require.Error(t, err)
 
-	// the failing date is named so a future espn parameter change is diagnosable from the log
 	assert.Contains(t, err.Error(), "20260911")
 	assert.NotContains(t, got, "20260912")
 }

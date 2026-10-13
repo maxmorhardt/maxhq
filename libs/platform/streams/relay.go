@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -24,9 +24,6 @@ const (
 	dedupeWindow = time.Hour
 )
 
-// appends one outbox event unless it was appended before, trims entries older than the retention,
-// and keeps the stream key alive for as long as it keeps receiving events
-//
 // KEYS[1] stream, KEYS[2] dedupe marker
 // ARGV[1] min id to keep, ARGV[2] stream ttl ms, ARGV[3] dedupe ttl ms, ARGV[4] type, ARGV[5] data, ARGV[6] event id
 var appendScript = redis.NewScript(`
@@ -40,7 +37,6 @@ redis.call('SET', KEYS[2], id, 'PX', ARGV[3])
 return id
 `)
 
-// moves committed outbox rows to their redis streams in insertion order
 type Relay struct {
 	db        *gorm.DB
 	rdb       redis.Scripter
@@ -50,8 +46,6 @@ type Relay struct {
 	wake      chan struct{}
 }
 
-// lockKey keeps one replica relaying at a time, which is what preserves append order;
-// retention is how long entries stay in a stream before they are trimmed
 func NewRelay(db *gorm.DB, rdb redis.Scripter, lockKey int64, retention time.Duration) *Relay {
 	return &Relay{
 		db:        db,
@@ -71,15 +65,14 @@ func (r *Relay) Notify() {
 }
 
 func (r *Relay) Run(ctx context.Context) {
-	log := reqctx.LoggerFromContext(ctx).With("component", "outbox-relay")
-	ctx = reqctx.ContextWithLogger(ctx, log)
+	log := logging.FromContext(ctx).With("component", "outbox-relay")
+	ctx = logging.NewContext(ctx, log)
 
 	ticker := time.NewTicker(r.interval)
 	defer ticker.Stop()
 	cleanup := time.NewTicker(relayCleanupEvery)
 	defer cleanup.Stop()
 
-	// drain anything left behind by a previous process before waiting
 	r.Flush(ctx)
 
 	for {
@@ -97,12 +90,11 @@ func (r *Relay) Run(ctx context.Context) {
 	}
 }
 
-// appends until the backlog is empty, the lock is held elsewhere, or redis refuses an entry
 func (r *Relay) Flush(ctx context.Context) {
 	for {
 		published, more, err := r.publishBatch(ctx)
 		if err != nil {
-			reqctx.LoggerFromContext(ctx).Warn("outbox relay pass failed, retrying next tick", "error", err, "published", published)
+			logging.FromContext(ctx).Warn("outbox relay pass failed, retrying next tick", "error", err, "published", published)
 			return
 		}
 		if !more {
@@ -166,7 +158,7 @@ func (r *Relay) recordBacklog(ctx context.Context) {
 		Select("COUNT(*) AS pending, MIN(created_at) AS oldest").
 		Where("published_at IS NULL").
 		Scan(&backlog).Error; err != nil {
-		reqctx.LoggerFromContext(ctx).Warn("failed to measure outbox backlog", "error", err)
+		logging.FromContext(ctx).Warn("failed to measure outbox backlog", "error", err)
 		return
 	}
 
@@ -182,11 +174,11 @@ func (r *Relay) cleanup(ctx context.Context) {
 		Where("published_at < ?", time.Now().Add(-publishedRetention)).
 		Delete(&OutboxEvent{})
 	if res.Error != nil {
-		reqctx.LoggerFromContext(ctx).Warn("failed to prune published outbox events", "error", res.Error)
+		logging.FromContext(ctx).Warn("failed to prune published outbox events", "error", res.Error)
 		return
 	}
 	if res.RowsAffected > 0 {
-		reqctx.LoggerFromContext(ctx).Info("pruned published outbox events", "count", res.RowsAffected)
+		logging.FromContext(ctx).Info("pruned published outbox events", "count", res.RowsAffected)
 	}
 }
 

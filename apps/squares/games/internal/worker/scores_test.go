@@ -31,7 +31,6 @@ func newWorker(t *testing.T, espn *mocks.ESPNClient, gameSvc *mocks.GameService)
 func TestScoresWorker_Run_FetchError(t *testing.T) {
 	espn := mocks.NewESPNClient(t)
 	espn.EXPECT().FetchScoreboard(mock.Anything, mock.Anything).Return(nil, errors.New("boom"))
-	// must not run when the fetch fails
 	require.Error(t, newWorker(t, espn, mocks.NewGameService(t)).run(context.Background()))
 }
 
@@ -46,11 +45,9 @@ func TestScoresWorker_Run_IngestError(t *testing.T) {
 }
 
 func TestScoresWorker_ScoreboardDates(t *testing.T) {
-	// 00:20 UTC on the 22nd is still the evening of the 21st in ET, mid-game
 	now := time.Date(2026, 8, 22, 0, 20, 0, 0, time.UTC)
 	dates := scoreboardDates(now)
 
-	// espn takes one day per request, so the window is every date from the lookback to the horizon
 	require.Len(t, dates, 14)
 	assert.Equal(t, "20260819", dates[0])
 	assert.Equal(t, "20260901", dates[len(dates)-1])
@@ -87,7 +84,6 @@ func TestScoresWorker_NextDelay_KickoffImminent(t *testing.T) {
 		Return(model.GameActivity{NextKickoff: time.Now().Add(10 * time.Second)}, nil)
 
 	w := newWorker(t, mocks.NewESPNClient(t), gameSvc)
-	// kickoff sooner than the active interval collapses to the active interval
 	assert.Equal(t, w.activeInterval, w.nextDelay(context.Background()))
 }
 
@@ -98,7 +94,6 @@ func TestScoresWorker_NextDelay_WakesAtKickoff(t *testing.T) {
 
 	w := newWorker(t, mocks.NewESPNClient(t), gameSvc)
 	delay := w.nextDelay(context.Background())
-	// between active and idle: sleep until roughly the kickoff
 	assert.Greater(t, delay, w.activeInterval)
 	assert.LessOrEqual(t, delay, 30*time.Minute)
 }
@@ -108,7 +103,6 @@ func TestScoresWorker_NextDelay_ActivityError(t *testing.T) {
 	gameSvc.EXPECT().Activity(mock.Anything).Return(model.GameActivity{}, errors.New("db"))
 
 	w := newWorker(t, mocks.NewESPNClient(t), gameSvc)
-	// on error, fall back to the active interval rather than sleeping through a game
 	assert.Equal(t, w.activeInterval, w.nextDelay(context.Background()))
 }
 
@@ -144,7 +138,6 @@ func TestScoresWorker_Run_NarrowsWindowUntilIdleIntervalElapses(t *testing.T) {
 	require.NoError(t, w.run(context.Background()))
 	require.NoError(t, w.run(context.Background()))
 
-	// age the last sync past the idle interval so the schedule refreshes again
 	w.lastScheduleSync = time.Now().Add(-2 * w.idleInterval)
 	require.NoError(t, w.run(context.Background()))
 
@@ -160,7 +153,6 @@ func TestScoresWorker_Run_FetchErrorLeavesScheduleUnsynced(t *testing.T) {
 	w := newWorker(t, espn, mocks.NewGameService(t))
 	require.Error(t, w.run(context.Background()))
 
-	// a failed wide fetch must not count as a schedule sync, or the window stays narrow
 	assert.True(t, w.lastScheduleSync.IsZero())
 }
 
@@ -179,7 +171,6 @@ func TestScoresWorker_Run_IngestErrorLeavesScheduleUnsynced(t *testing.T) {
 	w := newWorker(t, espn, gameSvc)
 	require.Error(t, w.run(context.Background()))
 
-	// the wide window was never persisted, so the next run must retry it instead of narrowing
 	assert.True(t, w.lastScheduleSync.IsZero())
 
 	require.NoError(t, w.run(context.Background()))

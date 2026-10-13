@@ -15,10 +15,12 @@ func TestSetupValidators(t *testing.T) {
 	v, ok := binding.Validator.Engine().(*validator.Validate)
 	require.True(t, ok)
 
-	// safestring
-	assert.NoError(t, v.Var("hello world", "safestring"))
-	assert.NoError(t, v.Var("", "safestring"), "empty is allowed")
-	assert.Error(t, v.Var("bad<script>", "safestring"))
+	for _, s := range []string{"", "hello123", "hello, world!", "my-name"} {
+		assert.NoError(t, v.Var(s, "safestring"), s)
+	}
+	for _, s := range []string{"a<b", "a>b", "a{b", "a}b", "a[b", "a]b", `a\b`, "a|b", "a`b"} {
+		assert.Error(t, v.Var(s, "safestring"), s)
+	}
 }
 
 func TestRegisterValidation(t *testing.T) {

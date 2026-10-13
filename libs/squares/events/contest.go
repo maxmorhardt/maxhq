@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// contest event types: the entry type on a contest stream and the "type" field the frontend switches on
 const (
 	SquareUpdateType          = "square_update"
 	ContestUpdateType         = "contest_update"
@@ -17,15 +16,12 @@ const (
 	ParticipantRemovedType    = "participant_removed"
 	ParticipantAddedType      = "participant_added"
 
-	// sent by realtime itself, never stored in a stream
 	ConnectedType = "connected"
 	RevokedType   = "revoked"
 )
 
 const ContestVisibilityPrivate = "private"
 
-// the fields of a contest event realtime reads to decide whether a viewer may keep watching; everything else
-// in the payload is passed to the browser untouched
 type ContestEventHeader struct {
 	Type        string             `json:"type"`
 	ContestID   uuid.UUID          `json:"contestId"`
@@ -41,8 +37,6 @@ type ParticipantRef struct {
 	UserID string `json:"userId"`
 }
 
-// the events realtime writes on its own: the opening snapshot and the notice that access was lost.
-// Contest and Participants are passed through from the contests snapshot as-is
 type SystemEvent struct {
 	Type         string          `json:"type"`
 	ContestID    uuid.UUID       `json:"contestId"`

@@ -20,7 +20,6 @@ const (
 	maxConnLifetime time.Duration = time.Hour
 )
 
-// every service owns one postgres schema; search_path keeps its unqualified table names inside it
 func InitDB(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (*gorm.DB, error) {
 	db, err := setupPrimary(cfg, schema, migrations)
 	if err != nil {
@@ -60,7 +59,6 @@ func setupPrimary(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (
 		return nil, fmt.Errorf("failed to create schema %s: %w", schema, err)
 	}
 
-	// apply schema migrations before serving (migrate uses its own connection)
 	if migErr := runMigrations(cfg, schema, migrations); migErr != nil {
 		_ = sqlDB.Close()
 		return nil, migErr
@@ -70,7 +68,6 @@ func setupPrimary(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (
 	sqlDB.SetMaxIdleConns(maxIdleConns)
 	sqlDB.SetConnMaxLifetime(maxConnLifetime)
 
-	// expose database/sql pool stats via the official prometheus collector
 	if err := prometheus.Register(collectors.NewDBStatsCollector(sqlDB, cfg.Name)); err != nil {
 		slog.Warn("failed to register db stats collector", "error", err)
 	}

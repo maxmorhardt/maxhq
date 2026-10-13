@@ -35,7 +35,6 @@ func NewLeaderboardRepository(db *gorm.DB) LeaderboardRepository {
 func (r *leaderboardRepository) GetTopWinners(ctx context.Context, limit int) ([]model.LeaderboardEntry, error) {
 	entries := make([]model.LeaderboardEntry, 0, limit)
 
-	// joining users drops scrubbed accounts, so only live profiles are ever exposed
 	if err := database.Conn(ctx, r.db).Raw(winsCTE+`
 		SELECT u.display_name AS display_name,
 			w.quarter_wins AS quarter_wins,

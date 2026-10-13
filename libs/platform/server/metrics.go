@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// metrics live on their own port so they are never routed through the gateway
 func StartMetricsServer(cfg config.ServerConfig) *http.Server {
 	if !cfg.MetricsEnabled {
 		slog.Info("metrics disabled")

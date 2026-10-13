@@ -55,7 +55,6 @@ func TestEvents_GameKickoffAutoStartsAndScoresLinkedContests(t *testing.T) {
 		GameTime: time.Now().Add(time.Hour), Status: events.GameStatusScheduled, UpdatedAt: time.Now()}
 	publish(t, events.GamesStream, events.GameUpdatedType, events.GameUpdated{Game: game})
 
-	// contests only links a game it has already heard about
 	var contest model.Contest
 	require.Eventually(t, func() bool {
 		resp := call(t, testkit.As(ownerUser), http.MethodPut, "/contests", model.CreateContestRequest{

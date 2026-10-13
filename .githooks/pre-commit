@@ -1,8 +1,4 @@
 #!/bin/sh
-# One hook for the whole repo (git allows one hooks directory per repository). Each UI's
-# `pnpm install` points git here through its prepare script.
-#
-# Runs each UI's own lint-staged when files in it are staged, and gofmt on staged Go files.
 set -e
 
 staged=$(git diff --cached --name-only --diff-filter=ACMR)

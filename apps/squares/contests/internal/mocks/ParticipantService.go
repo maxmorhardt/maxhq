@@ -73,66 +73,6 @@ func (_c *ParticipantService_Authorize_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
-// GetMyContests provides a mock function with given fields: ctx, user, search
-func (_m *ParticipantService) GetMyContests(ctx context.Context, user string, search string) ([]model.Contest, error) {
-	ret := _m.Called(ctx, user, search)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetMyContests")
-	}
-
-	var r0 []model.Contest
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) ([]model.Contest, error)); ok {
-		return rf(ctx, user, search)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) []model.Contest); ok {
-		r0 = rf(ctx, user, search)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Contest)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, user, search)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ParticipantService_GetMyContests_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetMyContests'
-type ParticipantService_GetMyContests_Call struct {
-	*mock.Call
-}
-
-// GetMyContests is a helper method to define mock.On call
-//   - ctx context.Context
-//   - user string
-//   - search string
-func (_e *ParticipantService_Expecter) GetMyContests(ctx interface{}, user interface{}, search interface{}) *ParticipantService_GetMyContests_Call {
-	return &ParticipantService_GetMyContests_Call{Call: _e.mock.On("GetMyContests", ctx, user, search)}
-}
-
-func (_c *ParticipantService_GetMyContests_Call) Run(run func(ctx context.Context, user string, search string)) *ParticipantService_GetMyContests_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *ParticipantService_GetMyContests_Call) Return(_a0 []model.Contest, _a1 error) *ParticipantService_GetMyContests_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *ParticipantService_GetMyContests_Call) RunAndReturn(run func(context.Context, string, string) ([]model.Contest, error)) *ParticipantService_GetMyContests_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetParticipants provides a mock function with given fields: ctx, contestID, user
 func (_m *ParticipantService) GetParticipants(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestParticipant, error) {
 	ret := _m.Called(ctx, contestID, user)

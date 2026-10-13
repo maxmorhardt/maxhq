@@ -12,7 +12,7 @@ import {
   removeParticipantFromEvent,
 } from './contestSlice';
 import {
-  fetchContestsByOwner,
+  fetchContestFeed,
   createContest,
   claimSquare,
   clearSquare,
@@ -22,7 +22,6 @@ import {
   deleteContest,
   updateQuarterResult,
   rollbackLastQuarterResult,
-  fetchMyContests,
   fetchParticipants,
   updateContestParticipant,
   removeContestParticipant,
@@ -35,13 +34,17 @@ import type {
   Square,
   Participant,
   Invite,
-  PaginatedContestsResponse,
+  ContestSummary,
   QuarterResult,
 } from '../../types/contest';
 
 const initialState = {
-  contests: [] as Contest[],
-  myContests: [] as Contest[],
+  feed: {
+    items: null as ContestSummary[] | null,
+    nextCursor: null as string | null,
+    loading: false,
+    loadingMore: false,
+  },
   currentContest: undefined as Contest | null | undefined,
   currentSquare: undefined as Square | null | undefined,
   participants: [] as Participant[],
@@ -53,7 +56,22 @@ const initialState = {
   invitesLoading: false,
   error: null as string | null,
   squareErrorCode: null as number | null,
-  pagination: { page: 1, limit: 5, total: 0, totalPages: 0, hasNext: false, hasPrevious: false },
+};
+
+const mockSummary: ContestSummary = {
+  id: 'c1',
+  name: 'Test Contest',
+  homeTeam: 'Home',
+  awayTeam: 'Away',
+  status: 'ACTIVE',
+  visibility: 'public',
+  owner: 'user1',
+  role: 'owner',
+  claimedSquares: 0,
+  mySquares: 0,
+  version: 1,
+  createdAt: '',
+  updatedAt: '',
 };
 
 const mockContest: Contest = {
@@ -92,8 +110,8 @@ const mockSquare: Square = {
 describe('contestSlice reducers', () => {
   it('should return initial state', () => {
     const state = contestReducer(undefined, { type: 'unknown' });
-    expect(state.contests).toBeNull();
-    expect(state.myContests).toBeNull();
+    expect(state.feed.items).toBeNull();
+    expect(state.feed.nextCursor).toBeNull();
     expect(state.error).toBeNull();
     expect(state.contestLoading).toBe(false);
   });
@@ -324,51 +342,66 @@ describe('contestSlice reducers', () => {
 });
 
 describe('contestSlice extraReducers', () => {
-  describe('fetchContestsByOwner', () => {
-    it('pending: sets loading, clears error', () => {
+  describe('fetchContestFeed', () => {
+    const feedAction = (type: string, payload?: unknown, append = false) => ({
+      type,
+      payload,
+      meta: { arg: { params: {}, append } },
+    });
+
+    it('pending: a fresh load sets loading and clears the error', () => {
       const state = contestReducer(
         { ...initialState, error: 'old' },
-        { type: fetchContestsByOwner.pending.type }
+        feedAction(fetchContestFeed.pending.type)
       );
-      expect(state.contestLoading).toBe(true);
+      expect(state.feed.loading).toBe(true);
+      expect(state.feed.loadingMore).toBe(false);
       expect(state.error).toBeNull();
     });
 
-    it('fulfilled: sets contests and pagination', () => {
-      const payload: PaginatedContestsResponse = {
-        contests: [mockContest],
-        page: 1,
-        limit: 5,
-        total: 1,
-        totalPages: 1,
-        hasNext: false,
-        hasPrevious: false,
-      };
-      const state = contestReducer(initialState, {
-        type: fetchContestsByOwner.fulfilled.type,
-        payload,
-      });
-      expect(state.contestLoading).toBe(false);
-      expect(state.contests).not.toBeNull();
-      expect(state.contests).toHaveLength(1);
-      expect(state.pagination.total).toBe(1);
+    it('pending: a next page sets loadingMore', () => {
+      const state = contestReducer(
+        initialState,
+        feedAction(fetchContestFeed.pending.type, undefined, true)
+      );
+      expect(state.feed.loadingMore).toBe(true);
+      expect(state.feed.loading).toBe(false);
     });
 
-    it('rejected: clears contests, sets error', () => {
-      const state = contestReducer(initialState, {
-        type: fetchContestsByOwner.rejected.type,
-        payload: { message: 'fail' },
-      });
-      expect(state.contestLoading).toBe(false);
-      expect(state.contests).toEqual([]);
+    it('fulfilled: a fresh load replaces the list', () => {
+      const state = contestReducer(
+        { ...initialState, feed: { ...initialState.feed, items: [{ ...mockSummary, id: 'old' }] } },
+        feedAction(fetchContestFeed.fulfilled.type, { contests: [mockSummary], nextCursor: 'next' })
+      );
+      expect(state.feed.items).toEqual([mockSummary]);
+      expect(state.feed.nextCursor).toBe('next');
+      expect(state.feed.loading).toBe(false);
+    });
+
+    it('fulfilled: a next page appends and clears a spent cursor', () => {
+      const second = { ...mockSummary, id: 'c2' };
+      const state = contestReducer(
+        {
+          ...initialState,
+          feed: { ...initialState.feed, items: [mockSummary], nextCursor: 'next' },
+        },
+        feedAction(fetchContestFeed.fulfilled.type, { contests: [second] }, true)
+      );
+      expect(state.feed.items?.map((c) => c.id)).toEqual(['c1', 'c2']);
+      expect(state.feed.nextCursor).toBeNull();
+    });
+
+    it('rejected: settles the list and sets the error', () => {
+      const state = contestReducer(
+        initialState,
+        feedAction(fetchContestFeed.rejected.type, { message: 'fail' })
+      );
+      expect(state.feed.items).toEqual([]);
       expect(state.error).toBe('fail');
     });
 
     it('rejected: uses default error message', () => {
-      const state = contestReducer(initialState, {
-        type: fetchContestsByOwner.rejected.type,
-        payload: undefined,
-      });
+      const state = contestReducer(initialState, feedAction(fetchContestFeed.rejected.type));
       expect(state.error).toBe('Error fetching contests');
     });
   });
@@ -381,12 +414,11 @@ describe('contestSlice extraReducers', () => {
       expect(state.contestLoading).toBe(true);
     });
 
-    it('fulfilled: adds contest to list', () => {
-      const state = contestReducer(initialState, {
-        type: createContest.fulfilled.type,
-        payload: mockContest,
-      });
-      expect(state.contests).toHaveLength(1);
+    it('fulfilled: clears loading', () => {
+      const state = contestReducer(
+        { ...initialState, contestLoading: true },
+        { type: createContest.fulfilled.type, payload: mockContest }
+      );
       expect(state.contestLoading).toBe(false);
     });
 
@@ -533,13 +565,15 @@ describe('contestSlice extraReducers', () => {
       expect(state.currentContest?.homeTeam).toBe('Updated Home');
     });
 
-    it('fulfilled: updates contest in list', () => {
-      const updated = { ...mockContest, homeTeam: 'Updated Home' };
+    it('fulfilled: updates the matching feed row', () => {
+      const updated = { ...mockContest, homeTeam: 'Updated Home', version: 2 };
       const state = contestReducer(
-        { ...initialState, contests: [mockContest] },
+        { ...initialState, feed: { ...initialState.feed, items: [mockSummary] } },
         { type: updateContest.fulfilled.type, payload: updated }
       );
-      expect(state.contests?.[0]?.homeTeam).toBe('Updated Home');
+      expect(state.feed.items?.[0]?.homeTeam).toBe('Updated Home');
+      expect(state.feed.items?.[0]?.version).toBe(2);
+      expect(state.feed.items?.[0]?.role).toBe('owner');
     });
   });
 
@@ -553,10 +587,14 @@ describe('contestSlice extraReducers', () => {
 
     it('fulfilled: removes contest and clears current', () => {
       const state = contestReducer(
-        { ...initialState, contests: [mockContest], currentContest: mockContest },
-        { type: deleteContest.fulfilled.type }
+        {
+          ...initialState,
+          feed: { ...initialState.feed, items: [mockSummary] },
+          currentContest: mockContest,
+        },
+        { type: deleteContest.fulfilled.type, meta: { arg: 'c1' } }
       );
-      expect(state.contests).toHaveLength(0);
+      expect(state.feed.items).toHaveLength(0);
       expect(state.currentContest).toBeNull();
       expect(state.deleteContestLoading).toBe(false);
     });
@@ -667,34 +705,6 @@ describe('contestSlice extraReducers', () => {
         payload: { message: 'rollback fail' },
       });
       expect(state.error).toBe('rollback fail');
-    });
-  });
-
-  describe('fetchMyContests', () => {
-    it('pending: sets loading', () => {
-      const state = contestReducer(initialState, {
-        type: fetchMyContests.pending.type,
-      });
-      expect(state.contestLoading).toBe(true);
-    });
-
-    it('fulfilled: sets myContests', () => {
-      const state = contestReducer(initialState, {
-        type: fetchMyContests.fulfilled.type,
-        payload: [mockContest],
-      });
-      expect(state.myContests).toHaveLength(1);
-      expect(state.contestLoading).toBe(false);
-      expect(state.myContests).not.toBeNull();
-    });
-
-    it('rejected: sets error and settles myContests', () => {
-      const state = contestReducer(initialState, {
-        type: fetchMyContests.rejected.type,
-        payload: { message: 'fetch fail' },
-      });
-      expect(state.error).toBe('fetch fail');
-      expect(state.myContests).toEqual([]);
     });
   });
 

@@ -7,7 +7,6 @@ import (
 	"github.com/swaggo/swag"
 )
 
-// the page works both locally (/swagger) and behind a gateway path prefix (/<app>/swagger/<service>)
 const scalarPage = `<!doctype html>
 <html>
 <head>
@@ -36,7 +35,6 @@ const scalarPage = `<!doctype html>
 </body>
 </html>`
 
-// swaggerInstance is the --instanceName the service's docs were generated with
 func RegisterRootRoutes(r *gin.Engine, health HealthHandler, swaggerInstance string) {
 	r.GET("/health/live", health.Liveness)
 	r.GET("/health/ready", health.Readiness)

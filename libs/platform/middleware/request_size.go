@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
 const (
@@ -16,8 +16,6 @@ const (
 	errorMessage   = "Request body too large. Maximum size is 1MB"
 )
 
-// rejects bodies over 1MB with 413 whatever their content type or transfer encoding. The body is read
-// here, up to one byte past the limit, and handed on intact, so handlers decode it as usual
 func RequestSizeLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.ContentLength > maxRequestSize {
@@ -33,7 +31,7 @@ func RequestSizeLimitMiddleware() gin.HandlerFunc {
 		body, err := io.ReadAll(io.LimitReader(c.Request.Body, maxRequestSize+1))
 		_ = c.Request.Body.Close()
 		if err != nil {
-			reqctx.LoggerFromGinContext(c).Warn("failed to read request body", "error", err)
+			logging.FromGin(c).Warn("failed to read request body", "error", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Could not read request body", c))
 			return
 		}
@@ -47,9 +45,8 @@ func RequestSizeLimitMiddleware() gin.HandlerFunc {
 	}
 }
 
-// declared is the Content-Length, or -1 for a chunked body that ran past the limit
 func rejectTooLarge(c *gin.Context, declared int64) {
-	reqctx.LoggerFromGinContext(c).Warn("request body too large", "content_length", declared)
+	logging.FromGin(c).Warn("request body too large", "content_length", declared)
 	metrics.IncRequestSizeRejected()
 	c.AbortWithStatusJSON(http.StatusRequestEntityTooLarge, api.NewAPIError(
 		http.StatusRequestEntityTooLarge,

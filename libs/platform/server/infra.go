@@ -11,24 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
-// the connections a service holds; DB is nil for services that own no schema
 type Infra struct {
 	DB    *gorm.DB
 	Redis *redis.Client
 }
 
-// DB is optional; KeyPrefix scopes every redis key and stream the service touches
 type InfraConfig struct {
-	DB         *config.DatabaseConfig
-	Schema     string
-	Migrations fs.FS
-	Redis      config.RedisConfig
-	KeyPrefix  string
-	// lets the service start while redis is down, for services that only use it in ways that fail open
+	DB            *config.DatabaseConfig
+	Schema        string
+	Migrations    fs.FS
+	Redis         config.RedisConfig
+	KeyPrefix     string
 	RedisOptional bool
 }
 
-// connects in dependency order and unwinds whatever opened if a later step fails
 func Connect(cfg *InfraConfig) (*Infra, error) {
 	infra := &Infra{}
 

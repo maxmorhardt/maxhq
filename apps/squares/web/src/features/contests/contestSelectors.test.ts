@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
-  selectContests,
-  selectMyContests,
+  selectContestFeed,
+  selectContestFeedCursor,
+  selectContestFeedFetched,
+  selectContestFeedLoading,
+  selectContestFeedLoadingMore,
   selectCurrentContest,
   selectCurrentSquare,
   selectParticipants,
@@ -11,11 +14,10 @@ import {
   selectParticipantsLoading,
   selectInvitesLoading,
   selectContestError,
-  selectContestPagination,
   selectDeleteContestLoading,
   selectSquareErrorCode,
 } from './contestSelectors';
-import type { Contest, Square, Participant, Invite } from '../../types/contest';
+import type { Contest, ContestSummary, Square, Participant, Invite } from '../../types/contest';
 
 const mockContest: Contest = {
   version: 1,
@@ -73,21 +75,11 @@ const mockInvite: Invite = {
   updatedAt: '',
 };
 
-const defaultPagination = {
-  page: 1,
-  limit: 5,
-  total: 0,
-  totalPages: 0,
-  hasNext: false,
-  hasPrevious: false,
-};
-
 // construct a minimal state shape that satisfies the selectors' RootState expectations
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const makeState = (overrides: Record<string, unknown> = {}): any => ({
   contest: {
-    contests: [],
-    myContests: [],
+    feed: { items: null, nextCursor: null, loading: false, loadingMore: false },
     currentContest: undefined,
     currentSquare: undefined,
     participants: [],
@@ -99,20 +91,32 @@ const makeState = (overrides: Record<string, unknown> = {}): any => ({
     participantsLoading: false,
     invitesLoading: false,
     error: null,
-    pagination: defaultPagination,
     ...overrides,
   },
 });
 
 describe('contestSelectors', () => {
-  it('selectContests returns the contests array', () => {
-    const state = makeState({ contests: [mockContest] });
-    expect(selectContests(state)).toEqual([mockContest]);
+  it('feed selectors read the feed', () => {
+    const row = {
+      ...mockContest,
+      role: 'owner',
+      claimedSquares: 3,
+      mySquares: 1,
+    } as ContestSummary;
+    const state = makeState({
+      feed: { items: [row], nextCursor: 'next', loading: true, loadingMore: true },
+    });
+    expect(selectContestFeed(state)).toEqual([row]);
+    expect(selectContestFeedFetched(state)).toBe(true);
+    expect(selectContestFeedCursor(state)).toBe('next');
+    expect(selectContestFeedLoading(state)).toBe(true);
+    expect(selectContestFeedLoadingMore(state)).toBe(true);
   });
 
-  it('selectMyContests returns the myContests array', () => {
-    const state = makeState({ myContests: [mockContest] });
-    expect(selectMyContests(state)).toEqual([mockContest]);
+  it('an unfetched feed is empty and not fetched', () => {
+    const state = makeState();
+    expect(selectContestFeed(state)).toEqual([]);
+    expect(selectContestFeedFetched(state)).toBe(false);
   });
 
   it('selectCurrentContest returns the current contest', () => {
@@ -158,19 +162,6 @@ describe('contestSelectors', () => {
   it('selectContestError returns the error string', () => {
     const state = makeState({ error: 'Something went wrong' });
     expect(selectContestError(state)).toBe('Something went wrong');
-  });
-
-  it('selectContestPagination returns the pagination object', () => {
-    const pagination = {
-      page: 2,
-      limit: 10,
-      total: 20,
-      totalPages: 2,
-      hasNext: false,
-      hasPrevious: true,
-    };
-    const state = makeState({ pagination });
-    expect(selectContestPagination(state)).toEqual(pagination);
   });
 
   it('selectDeleteContestLoading returns the deleteContestLoading flag', () => {

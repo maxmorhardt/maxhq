@@ -22,7 +22,6 @@ const (
 	shutdownTimeout   = 10 * time.Second
 )
 
-// json logs tagged with the service, so loki can split deployments
 func InitLogger(service string) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelInfo,
@@ -39,7 +38,6 @@ func InitLogger(service string) {
 	slog.SetDefault(logger)
 }
 
-// the middleware every service shares, in the order it must run
 func NewEngine(cfg config.ServerConfig) *gin.Engine {
 	r := gin.New()
 
@@ -67,7 +65,6 @@ func NewHTTPServer(cfg config.ServerConfig, handler http.Handler, writeTimeout t
 	}
 }
 
-// serves until ctx is cancelled (normally by SIGTERM), then drains in-flight requests
 func Serve(ctx context.Context, srv *http.Server) error {
 	errCh := make(chan error, 1)
 	go func() {

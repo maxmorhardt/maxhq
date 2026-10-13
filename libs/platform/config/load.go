@@ -7,7 +7,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// T is the service's own config struct, built from the pieces in this package plus its own settings
 func Load[T any]() (*T, error) {
 	_ = godotenv.Load()
 

@@ -10,7 +10,6 @@ var (
 	ErrInvalidRequestBody    = errors.New("invalid request body")
 )
 
-// captcha and email notification errors
 var (
 	ErrInvalidTurnstile      = errors.New("invalid or expired captcha")
 	ErrTurnstileVerification = errors.New("failed to verify turnstile token")

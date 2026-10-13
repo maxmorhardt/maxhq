@@ -10,11 +10,10 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
-// applies game events from the games service: refresh the local copy, then move linked contests forward
 type GameSyncService interface {
 	ApplyGameUpdate(ctx context.Context, game *model.Game) error
 }
@@ -24,6 +23,7 @@ type gameSyncService struct {
 	contestRepo    repository.ContestRepository
 	contestService ContestService
 	tx             database.Transactor
+	feed           FeedService
 }
 
 func NewGameSyncService(
@@ -31,29 +31,29 @@ func NewGameSyncService(
 	contestRepo repository.ContestRepository,
 	contestService ContestService,
 	tx database.Transactor,
+	feed FeedService,
 ) GameSyncService {
 	return &gameSyncService{
 		gameRepo:       gameRepo,
 		contestRepo:    contestRepo,
 		contestService: contestService,
 		tx:             tx,
+		feed:           feed,
 	}
 }
 
 func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game) error {
-	log := reqctx.LoggerFromContext(ctx).With("game_id", game.ID)
+	log := logging.FromContext(ctx).With("game_id", game.ID)
 
 	if err := s.gameRepo.Upsert(ctx, game); err != nil {
 		log.Error("failed to update game projection", "error", err)
 		return err
 	}
 
-	// scheduled games have nothing to apply yet; only reconcile once play starts
 	if game.Status == model.GameStatusScheduled {
 		return nil
 	}
 
-	// reconcile against the stored copy, which merges every score seen so far
 	stored, err := s.gameRepo.GetByID(ctx, game.ID)
 	if err != nil {
 		log.Error("failed to reload game projection", "error", err)
@@ -75,6 +75,7 @@ func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game)
 				firstErr = err
 			}
 		}
+		s.feed.InvalidateContest(ctx, contestID)
 	}
 
 	return firstErr
@@ -96,25 +97,21 @@ func (s *gameSyncService) reconcileContest(ctx context.Context, contestID uuid.U
 
 // idempotent: replaying the same game state leaves the contest where it already is
 func (s *gameSyncService) reconcile(ctx context.Context, contest *model.Contest, game *model.Game) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	if contest.Status.IsTerminal() {
 		return nil
 	}
 
-	// an ACTIVE contest hasn't locked its grid yet
 	if contest.Status == model.ContestStatusActive {
 		switch {
 		case game.Status == model.GameStatusFinal:
-			// the game ended before the grid ever locked; finalize straight from the final scores
 			return s.contestService.FinalizeFromScores(ctx, contest, game.Scores)
 		case game.Status == model.GameStatusInProgress && util.AllSquaresClaimed(contest):
-			// full grid at kickoff; lock, randomize, and score live
 			if err := s.contestService.AutoStart(ctx, contest); err != nil {
 				return err
 			}
 		default:
-			// grid stays fillable until it fills up or the game ends
 			return nil
 		}
 	}
@@ -132,7 +129,6 @@ func (s *gameSyncService) reconcile(ctx context.Context, contest *model.Contest,
 
 		result, err := s.contestService.ApplyQuarterResult(ctx, contest, score.Quarter, score.HomeScore, score.AwayScore)
 		if err != nil {
-			// a score this grid can't resolve shouldn't stall the quarters after it
 			if errors.Is(err, errs.ErrWinnerNotDeterminable) || errors.Is(err, errs.ErrInvalidQuarter) {
 				log.Warn("skipping quarter", "contest_id", contest.ID, "quarter", score.Quarter, "error", err)
 				continue

@@ -15,8 +15,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/worker"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/maxmorhardt/maxstash/libs/platform/server"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 )
@@ -25,10 +25,8 @@ const (
 	Service = "games"
 	Schema  = "games"
 
-	// every key and stream this service touches starts with this; the redis acl is scoped to it
 	KeyPrefix = "squares"
 
-	// one advisory lock per schema keeps a single replica relaying, which preserves event order
 	outboxLockKey int64 = 910102
 
 	writeTimeout = 30 * time.Second
@@ -44,12 +42,11 @@ type App struct {
 
 func Connect(cfg *model.GamesConfig) (*server.Infra, error) {
 	return server.Connect(&server.InfraConfig{
-		DB:         &cfg.DB,
-		Schema:     Schema,
-		Migrations: migrations.FS,
-		Redis:      cfg.Redis,
-		KeyPrefix:  KeyPrefix,
-		// requests and outbox writes work without redis, so a redis outage must not stop a restart
+		DB:            &cfg.DB,
+		Schema:        Schema,
+		Migrations:    migrations.FS,
+		Redis:         cfg.Redis,
+		KeyPrefix:     KeyPrefix,
 		RedisOptional: true,
 	})
 }
@@ -67,7 +64,6 @@ func New(cfg *model.GamesConfig, infra *server.Infra) *App {
 
 	engine := server.NewEngine(cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
-		// redis is left out on purpose: without it requests still work and events wait in the outbox
 		"database": server.DatabaseCheck(db),
 	}), Service)
 	routes.Register(engine, handler.NewGameHandler(gameService), middleware.Authenticate(cache.NewRevocationStore(infra.Redis)))
@@ -80,7 +76,6 @@ func New(cfg *model.GamesConfig, infra *server.Infra) *App {
 	return &App{Engine: engine, cfg: cfg, infra: infra, relay: relay, runner: runner}
 }
 
-// polls espn on the replica holding the scores lock and relays game events until ctx ends
 func (a *App) Start(ctx context.Context) {
 	go a.relay.Run(ctx)
 
@@ -89,11 +84,10 @@ func (a *App) Start(ctx context.Context) {
 		return
 	}
 
-	a.runner.Start(reqctx.ContextWithLogger(ctx, slog.Default().With("component", "scores-worker")))
+	a.runner.Start(logging.NewContext(ctx, slog.Default().With("component", "scores-worker")))
 	slog.Info("scores worker started", "active_interval", a.cfg.Worker.ActiveInterval, "idle_interval", a.cfg.Worker.IdleInterval)
 }
 
-// serves the upcoming games list alongside the background work in Start until ctx ends
 func (a *App) Run(ctx context.Context) error {
 	defer a.infra.Close()
 

@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	contracts "github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,23 +23,23 @@ func (_m *ContestActivityClient) EXPECT() *ContestActivityClient_Expecter {
 }
 
 // GetUserActivity provides a mock function with given fields: ctx, email
-func (_m *ContestActivityClient) GetUserActivity(ctx context.Context, email string) (*internalapi.UserActivitySummary, error) {
+func (_m *ContestActivityClient) GetUserActivity(ctx context.Context, email string) (*contracts.UserActivitySummary, error) {
 	ret := _m.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUserActivity")
 	}
 
-	var r0 *internalapi.UserActivitySummary
+	var r0 *contracts.UserActivitySummary
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*internalapi.UserActivitySummary, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*contracts.UserActivitySummary, error)); ok {
 		return rf(ctx, email)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *internalapi.UserActivitySummary); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *contracts.UserActivitySummary); ok {
 		r0 = rf(ctx, email)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*internalapi.UserActivitySummary)
+			r0 = ret.Get(0).(*contracts.UserActivitySummary)
 		}
 	}
 
@@ -71,12 +71,12 @@ func (_c *ContestActivityClient_GetUserActivity_Call) Run(run func(ctx context.C
 	return _c
 }
 
-func (_c *ContestActivityClient_GetUserActivity_Call) Return(_a0 *internalapi.UserActivitySummary, _a1 error) *ContestActivityClient_GetUserActivity_Call {
+func (_c *ContestActivityClient_GetUserActivity_Call) Return(_a0 *contracts.UserActivitySummary, _a1 error) *ContestActivityClient_GetUserActivity_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ContestActivityClient_GetUserActivity_Call) RunAndReturn(run func(context.Context, string) (*internalapi.UserActivitySummary, error)) *ContestActivityClient_GetUserActivity_Call {
+func (_c *ContestActivityClient_GetUserActivity_Call) RunAndReturn(run func(context.Context, string) (*contracts.UserActivitySummary, error)) *ContestActivityClient_GetUserActivity_Call {
 	_c.Call.Return(run)
 	return _c
 }

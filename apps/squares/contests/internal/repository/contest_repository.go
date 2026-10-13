@@ -16,8 +16,6 @@ type ContestRepository interface {
 	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error)
 	ExistsByOwnerAndName(ctx context.Context, owner, name string) (bool, error)
-	GetAllByOwnerPaginated(ctx context.Context, owner string, page, limit int, search string) ([]model.Contest, int64, error)
-	GetAllByParticipantUserID(ctx context.Context, userID, search string) ([]model.Contest, error)
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
 
 	Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error
@@ -41,10 +39,6 @@ func NewContestRepository(db *gorm.DB) ContestRepository {
 		db: db,
 	}
 }
-
-// ====================
-// Getters
-// ====================
 
 func (r *contestRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Contest, error) {
 	return r.getByID(database.Conn(ctx, r.db), id)
@@ -88,55 +82,6 @@ func (r *contestRepository) ExistsByOwnerAndName(ctx context.Context, owner, nam
 	return count > 0, err
 }
 
-func (r *contestRepository) GetAllByOwnerPaginated(ctx context.Context, owner string, page, limit int, search string) ([]model.Contest, int64, error) {
-	var contests []model.Contest
-	var total int64
-
-	q := database.Conn(ctx, r.db).Model(&model.Contest{}).Where("created_by = ? AND status != ?", owner, model.ContestStatusDeleted)
-	if search != "" {
-		q = q.Where("name ILIKE ?", "%"+search+"%")
-	}
-
-	// get total count of contests for user
-	if err := q.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	// calculate offset and fetch paginated contests
-	offset := (page - 1) * limit
-	err := q.
-		Order("updated_at DESC").
-		Offset(offset).
-		Limit(limit).
-		Find(&contests).Error
-
-	return contests, total, err
-}
-
-func (r *contestRepository) GetAllByParticipantUserID(ctx context.Context, userID, search string) ([]model.Contest, error) {
-	var contests []model.Contest
-
-	q := database.Conn(ctx, r.db).
-		Model(&model.Contest{}).
-		Select("contests.*").
-		Preload("Squares").
-		Preload("QuarterResults", func(db *gorm.DB) *gorm.DB {
-			return db.Order("quarter ASC")
-		}).
-		Preload("Game.Scores", func(db *gorm.DB) *gorm.DB {
-			return db.Order("quarter ASC")
-		}).
-		Joins("JOIN contest_participants cp ON cp.contest_id = contests.id").
-		Where("cp.user_id = ? AND cp.role != ? AND contests.status != ?", userID, model.ParticipantRoleOwner, model.ContestStatusDeleted)
-
-	if search != "" {
-		q = q.Where("contests.name ILIKE ?", "%"+search+"%")
-	}
-
-	err := q.Order("cp.joined_at DESC").Find(&contests).Error
-	return contests, err
-}
-
 // ids only: each contest is reloaded under its own lock before it is reconciled
 func (r *contestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error) {
 	var ids []uuid.UUID
@@ -147,10 +92,6 @@ func (r *contestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID
 	return ids, err
 }
 
-// ====================
-// Contest Lifecycle Actions
-// ====================
-
 func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {
 	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
 		contest.Version = 1
@@ -158,7 +99,6 @@ func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, 
 			return err
 		}
 
-		// initialize 10x10 grid of squares
 		squares := make([]model.Square, 0, model.MaxContestSquares)
 		for row := range 10 {
 			for col := range 10 {
@@ -176,7 +116,6 @@ func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, 
 			return err
 		}
 
-		// create owner participant within the same transaction
 		owner.ContestID = contest.ID
 		return tx.Create(owner).Error
 	})
@@ -246,10 +185,6 @@ func (r *contestRepository) RollbackQuarterResult(ctx context.Context, resultID 
 	})
 }
 
-// ====================
-// Square Actions
-// ====================
-
 // squares only change while the contest is ACTIVE; the shared lock blocks a concurrent start until this edit commits
 func lockActiveContest(tx *gorm.DB, contestID uuid.UUID) error {
 	var contest model.Contest
@@ -284,7 +219,6 @@ func (r *contestRepository) ClaimSquare(ctx context.Context, square *model.Squar
 			return err
 		}
 
-		// only an unclaimed square or one the caller already owns can be written, decided by the database
 		res := tx.Model(&model.Square{}).
 			Where("id = ? AND (owner = ? OR owner = ?)", square.ID, "", owner).
 			Updates(map[string]any{
@@ -376,7 +310,6 @@ func (r *contestRepository) ClearSquaresByOwner(ctx context.Context, contestID u
 			return err
 		}
 
-		// note which squares are about to change so their cleared state can be broadcast
 		var ids []uuid.UUID
 		if err := tx.Model(&model.Square{}).
 			Where("contest_id = ? AND owner = ?", contestID, owner).

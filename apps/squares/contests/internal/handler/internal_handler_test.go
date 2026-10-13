@@ -10,7 +10,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -65,7 +65,7 @@ func TestGetContestSnapshot_BadRequest(t *testing.T) {
 func TestGetUserActivity(t *testing.T) {
 	activity := mocks.NewUserActivityService(t)
 	activity.EXPECT().GetActivitySummary(mock.Anything, "a@b.com").
-		Return(&internalapi.UserActivitySummary{ActiveContests: []internalapi.UserActiveContest{}}, nil)
+		Return(&contracts.UserActivitySummary{ActiveContests: []contracts.UserActiveContest{}}, nil)
 
 	w := doRequest(internalRouter(nil, activity), jsonReq(http.MethodGet, "/internal/users/a@b.com/activity", nil))
 

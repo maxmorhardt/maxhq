@@ -15,8 +15,7 @@ func PrometheusMiddleware(c *gin.Context) {
 
 	metrics.HTTPActiveConnections.Inc()
 
-	// deferred so a handler panic, which gin.Recovery only catches further up the chain, is still counted
-	// (as the 500 Recovery will answer with) and never leaves the connection gauge raised
+	// deferred so a handler panic is still counted, as the 500 gin.Recovery answers with
 	defer func() {
 		status := c.Writer.Status()
 		recovered := recover()

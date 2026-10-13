@@ -8,7 +8,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +16,6 @@ type Runner interface {
 	Start(ctx context.Context)
 }
 
-// transient upstream failures are self-healing, so only a sustained run of them is worth an error
 const failureLogThreshold = 3
 
 type runner struct {
@@ -36,12 +35,11 @@ func NewRunner(db *gorm.DB, gameService service.GameService, cfg model.WorkerCon
 }
 
 func (r *runner) Start(ctx context.Context) {
-	ctx = reqctx.ContextWithLogger(ctx, reqctx.LoggerFromContext(ctx).With("job", "scores"))
+	ctx = logging.NewContext(ctx, logging.FromContext(ctx).With("job", "scores"))
 	go r.loop(ctx)
 }
 
 func (r *runner) loop(ctx context.Context) {
-	// run once at startup so a fresh deploy syncs without waiting a full interval
 	r.runGuarded(ctx)
 
 	for {
@@ -57,7 +55,7 @@ func (r *runner) loop(ctx context.Context) {
 }
 
 func (r *runner) runGuarded(ctx context.Context) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// pin a single connection so the advisory lock lives on one session
 	sqlDB, err := r.db.DB()
@@ -73,13 +71,11 @@ func (r *runner) runGuarded(ctx context.Context) {
 	}
 	defer func() { _ = conn.Close() }()
 
-	// only one replica should poll ESPN at a time
 	var locked bool
 	if err := conn.QueryRowContext(ctx, "SELECT pg_try_advisory_lock($1)", r.lockKey).Scan(&locked); err != nil {
 		log.Error("failed to acquire advisory lock", "error", err)
 		return
 	}
-	// another replica holds the lock, so skip this turn
 	if !locked {
 		return
 	}
@@ -92,7 +88,6 @@ func (r *runner) runGuarded(ctx context.Context) {
 		}
 	}()
 
-	// record the outcome so an alert can fire when the worker stops making progress
 	if err := r.worker.run(ctx); err != nil {
 		r.consecutiveFailures++
 		if r.consecutiveFailures >= failureLogThreshold {

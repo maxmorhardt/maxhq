@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 type GameHandler interface {
@@ -32,7 +32,7 @@ func NewGameHandler(gameService service.GameService) GameHandler {
 // @Security BearerAuth
 // @Router /games/upcoming [get]
 func (h *gameHandler) GetUpcoming(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	games, err := h.gameService.GetUpcoming(c.Request.Context())
 	if err != nil {

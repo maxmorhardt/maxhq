@@ -7,6 +7,7 @@ import (
 
 type Handlers struct {
 	Contest      handler.ContestHandler
+	Feed         handler.FeedHandler
 	Participant  handler.ParticipantHandler
 	Invite       handler.InviteHandler
 	Leaderboard  handler.LeaderboardHandler
@@ -15,22 +16,20 @@ type Handlers struct {
 	Internal     handler.InternalHandler
 }
 
-// Auth trusts the gateway's identity headers, Idempotent replays retried writes, Internal checks the service token
 type Guards struct {
 	Auth       gin.HandlerFunc
 	Idempotent gin.HandlerFunc
 	Internal   gin.HandlerFunc
+	FeedWrite  gin.HandlerFunc
 }
 
 func Register(r *gin.Engine, h *Handlers, g Guards) {
-	// every write is authenticated first so idempotency keys are scoped to the caller
 	write := func(final gin.HandlerFunc) []gin.HandlerFunc {
-		return []gin.HandlerFunc{g.Auth, g.Idempotent, final}
+		return []gin.HandlerFunc{g.Auth, g.FeedWrite, g.Idempotent, final}
 	}
 
 	contests := r.Group("/contests")
-	contests.GET("/owner/:owner", g.Auth, h.Contest.GetContestsByOwner)
-	contests.GET("/me", g.Auth, h.Participant.GetMyContests)
+	contests.GET("", g.Auth, h.Feed.GetFeed)
 	contests.PUT("", write(h.Contest.CreateContest)...)
 	contests.PATCH("/:id", write(h.Contest.UpdateContest)...)
 	contests.POST("/:id/start", write(h.Contest.StartContest)...)

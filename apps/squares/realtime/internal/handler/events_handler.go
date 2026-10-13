@@ -19,12 +19,10 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 const (
-	// how long a browser waits before reconnecting after the stream drops
 	clientRetry = 3 * time.Second
 
 	HeaderLastEventID = "Last-Event-ID"
@@ -41,7 +39,6 @@ type eventsHandler struct {
 	shutdown <-chan struct{}
 }
 
-// shutdown closes every open stream so clients reconnect to another replica with their Last-Event-ID
 func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdown <-chan struct{}) EventsHandler {
 	return &eventsHandler{streams: svc, cfg: cfg, shutdown: shutdown}
 }
@@ -61,7 +58,7 @@ func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdow
 // @Security BearerAuth
 // @Router /events/contests/{id} [get]
 func (h *eventsHandler) StreamContest(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -78,9 +75,9 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	}
 
 	user := c.GetString(api.UserKey)
-	claims := reqctx.ClaimsFromContext(c.Request.Context())
+	claims := api.ClaimsFromContext(c.Request.Context())
 	log = log.With("contest_id", contestID)
-	ctx := reqctx.ContextWithLogger(c.Request.Context(), log)
+	ctx := logging.NewContext(c.Request.Context(), log)
 
 	sub, err := h.streams.Subscribe(ctx, contestID, user, lastEventID)
 	if err != nil {
@@ -127,27 +124,25 @@ func (h *eventsHandler) rejectSubscribe(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, errs.ErrContestNotFound):
 		metrics.RecordStreamResult(model.StreamResultNotFound)
-		c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+		c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 	case errors.Is(err, errs.ErrInsufficientRole):
 		metrics.RecordStreamResult(model.StreamResultUnauthorized)
 		c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, "Not authorized to view this contest", c))
 	default:
-		reqctx.LoggerFromGinContext(c).Error("failed to open contest stream", "error", err)
+		logging.FromGin(c).Error("failed to open contest stream", "error", err)
 		metrics.RecordStreamResult(model.StreamResultUnavailable)
 		c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, "Real-time updates unavailable", c))
 	}
 }
 
-// forwards events until the client leaves, the token lapses, access is revoked, or the server shuts down
 func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *service.Subscription, contestID uuid.UUID, user string, claims *api.Claims) model.StreamCloseReason {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	heartbeat := time.NewTicker(h.cfg.HeartbeatInterval)
 	defer heartbeat.Stop()
 	revocationCheck := time.NewTicker(h.cfg.RevocationInterval)
 	defer revocationCheck.Stop()
 
-	// the stream outlives no token; the client reconnects with a fresh one and its Last-Event-ID
 	expiry := time.NewTimer(tokenLifetime(claims))
 	defer expiry.Stop()
 
@@ -179,7 +174,6 @@ func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *se
 			}
 		case event, ok := <-sub.Events:
 			if !ok {
-				// the viewer fell too far behind or the stream could not be read; it reconnects and resumes
 				return model.StreamCloseFellBehind
 			}
 
@@ -209,7 +203,7 @@ func (h *eventsHandler) stillAllowed(ctx context.Context, contestID uuid.UUID, u
 		return false
 	}
 	if err != nil {
-		reqctx.LoggerFromContext(ctx).Warn("access re-check failed, keeping stream open", "error", err)
+		logging.FromContext(ctx).Warn("access re-check failed, keeping stream open", "error", err)
 	}
 	return true
 }
@@ -226,7 +220,6 @@ func tokenLifetime(claims *api.Claims) time.Duration {
 	return remaining
 }
 
-// an empty id means a fresh connection; anything else must be a stream entry id
 func parseLastEventID(c *gin.Context) (string, bool) {
 	raw := c.GetHeader(HeaderLastEventID)
 	if raw == "" {

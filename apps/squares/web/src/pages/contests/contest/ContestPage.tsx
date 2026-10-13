@@ -13,6 +13,7 @@ import NotFoundPage from '../../error/NotFoundPage';
 import ForbiddenPage from '../../error/ForbiddenPage';
 import UnauthorizedPage from '../../error/UnauthorizedPage';
 import SignInDialog from '../../../components/auth/SignInDialog';
+import WhatIfScoreboard from '../../../components/contest/sidebar/WhatIfScoreboard';
 import WinnersBoard from '../../../components/contest/sidebar/WinnersBoard';
 import {
   selectCurrentContest,
@@ -305,6 +306,7 @@ export default function ContestPage() {
             onClearMySquares={handleClearMySquares}
             clearMySquaresLoading={clearMySquaresLoading}
           />
+          <WhatIfScoreboard />
         </Box>
       </Box>
 
@@ -330,6 +332,7 @@ export default function ContestPage() {
           clearMySquaresLoading={clearMySquaresLoading}
         />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
+        <WhatIfScoreboard />
         <ActivityFeed events={activityEvents} />
       </Box>
 

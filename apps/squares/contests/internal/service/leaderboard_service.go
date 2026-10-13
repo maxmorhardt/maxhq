@@ -9,7 +9,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 const (
@@ -31,7 +31,6 @@ type leaderboardService struct {
 	cache cache.Cache
 }
 
-// the cache is shared by every replica, so a leaderboard computed once serves all of them for the ttl
 func NewLeaderboardService(repo repository.LeaderboardRepository, c cache.Cache) LeaderboardService {
 	return &leaderboardService{
 		repo:  repo,
@@ -40,7 +39,7 @@ func NewLeaderboardService(repo repository.LeaderboardRepository, c cache.Cache)
 }
 
 func (s *leaderboardService) GetLeaderboard(ctx context.Context, limit int) (*model.LeaderboardResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	if limit <= 0 {
 		limit = DefaultLeaderboardLimit
@@ -81,7 +80,6 @@ func assignRanks(entries []model.LeaderboardEntry) []model.LeaderboardEntry {
 }
 
 func publicName(displayName string) string {
-	// a display name defaults to the email when the provider sends no name claim
 	if at := strings.Index(displayName, "@"); at >= 0 {
 		displayName = displayName[:at]
 	}
@@ -102,7 +100,7 @@ func publicName(displayName string) string {
 }
 
 func (s *leaderboardService) GetUserRank(ctx context.Context, email string) (*model.LeaderboardRankResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	rank, err := s.repo.GetUserRank(ctx, email)
 	if err != nil {

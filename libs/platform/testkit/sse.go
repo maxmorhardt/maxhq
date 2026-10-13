@@ -29,7 +29,6 @@ type Stream struct {
 	cancel context.CancelFunc
 }
 
-// a minimal event-stream reader, the same shape the frontend's fetch reader parses
 func OpenStream(t *testing.T, url string, id Identity, lastEventID string) *Stream {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -83,7 +82,6 @@ func OpenStream(t *testing.T, url string, id Identity, lastEventID string) *Stre
 	return s
 }
 
-// the next event, failing the test if none arrives within 10 seconds or the stream ends
 func (s *Stream) Next(t *testing.T) Event {
 	t.Helper()
 	select {
@@ -98,7 +96,6 @@ func (s *Stream) Next(t *testing.T) Event {
 	}
 }
 
-// reports whether the server ended the stream within the timeout
 func (s *Stream) Ended(timeout time.Duration) bool {
 	deadline := time.After(timeout)
 	for {

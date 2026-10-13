@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -22,15 +22,12 @@ const (
 
 type Handler func(ctx context.Context, entry Entry) error
 
-// Name identifies the consumer's saved position, Stream is the logical stream it reads, and LockKey is a
-// postgres advisory lock unique to this consumer that keeps one replica processing at a time
 type ConsumerSpec struct {
 	Name    string
 	Stream  string
 	LockKey int64
 }
 
-// how far a consumer has read; kept in the consuming service's own schema
 type StreamOffset struct {
 	Consumer  string `gorm:"primaryKey"`
 	LastID    string `gorm:"not null"`
@@ -41,8 +38,6 @@ func (StreamOffset) TableName() string {
 	return "stream_offsets"
 }
 
-// reads a stream in order, one replica at a time, and saves its position in postgres after each batch.
-// A failing entry is retried with backoff before anything after it is handled, so ordering holds;
 // handlers must tolerate seeing an entry again after a crash
 type Consumer struct {
 	db      *gorm.DB
@@ -57,8 +52,8 @@ func NewConsumer(db *gorm.DB, rdb redis.Cmdable, spec ConsumerSpec, handler Hand
 }
 
 func (c *Consumer) Run(ctx context.Context) {
-	log := reqctx.LoggerFromContext(ctx).With("consumer", c.spec.Name, "stream", c.spec.Stream)
-	ctx = reqctx.ContextWithLogger(ctx, log)
+	log := logging.FromContext(ctx).With("consumer", c.spec.Name, "stream", c.spec.Stream)
+	ctx = logging.NewContext(ctx, log)
 	log.Info("stream consumer started")
 
 	failures := 0
@@ -71,7 +66,6 @@ func (c *Consumer) Run(ctx context.Context) {
 			log.Warn("stream consumer failed, retrying", "error", err, "delay", delay)
 			sleep(ctx, delay)
 		case !res.locked:
-			// another replica holds the lock; check back soon in case it goes away
 			failures = 0
 			sleep(ctx, consumerLockedWait)
 		case res.handled == 0:
@@ -89,7 +83,6 @@ type batchResult struct {
 	offset  string
 }
 
-// handles entries after the saved position until one fails or the batch ends, then saves the new position
 func (c *Consumer) processBatch(ctx context.Context) (batchResult, error) {
 	var res batchResult
 	var handlerErr error
@@ -144,9 +137,9 @@ func (c *Consumer) processBatch(ctx context.Context) (batchResult, error) {
 }
 
 func (c *Consumer) handle(ctx context.Context, entry Entry) error {
-	log := reqctx.LoggerFromContext(ctx).With("entry_id", entry.ID, "type", entry.Type)
+	log := logging.FromContext(ctx).With("entry_id", entry.ID, "type", entry.Type)
 
-	if err := c.handler(reqctx.ContextWithLogger(ctx, log), entry); err != nil {
+	if err := c.handler(logging.NewContext(ctx, log), entry); err != nil {
 		metrics.IncConsumerMessage(c.spec.Name, "error")
 		return fmt.Errorf("entry %s (%s): %w", entry.ID, entry.Type, err)
 	}
@@ -155,8 +148,7 @@ func (c *Consumer) handle(ctx context.Context, entry Entry) error {
 	return nil
 }
 
-// entries newer than the saved position were trimmed before they were handled, which only happens when the
-// consumer was down for longer than the stream retention
+// entries past the saved position were trimmed: the consumer was down longer than the stream retention
 func (c *Consumer) checkGap(ctx context.Context, offset string) {
 	info, err := c.rdb.XInfoStream(ctx, Key(c.spec.Stream)).Result()
 	if err != nil || info.MaxDeletedEntryID == "" || info.MaxDeletedEntryID == "0-0" {
@@ -165,16 +157,15 @@ func (c *Consumer) checkGap(ctx context.Context, offset string) {
 
 	if CompareIDs(info.MaxDeletedEntryID, offset) > 0 {
 		metrics.IncConsumerGap(c.spec.Name)
-		reqctx.LoggerFromContext(ctx).Error("stream entries were trimmed before this consumer handled them",
+		logging.FromContext(ctx).Error("stream entries were trimmed before this consumer handled them",
 			"offset", offset, "max_deleted_entry_id", info.MaxDeletedEntryID)
 	}
 }
 
-// blocks until something is appended after offset, the block window passes, or ctx ends
 func (c *Consumer) wait(ctx context.Context, offset string) {
 	_, err := Read(ctx, c.rdb, map[string]string{c.spec.Stream: offset}, 1, c.block)
 	if err != nil && !errors.Is(err, context.Canceled) {
-		reqctx.LoggerFromContext(ctx).Warn("failed to wait for stream entries", "error", err)
+		logging.FromContext(ctx).Warn("failed to wait for stream entries", "error", err)
 		sleep(ctx, consumerLockedWait)
 	}
 }

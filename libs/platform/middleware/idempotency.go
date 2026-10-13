@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
 const (
@@ -38,7 +38,6 @@ func (w *capturingWriter) WriteString(s string) (int, error) {
 	return w.ResponseWriter.WriteString(s)
 }
 
-// replays the first response for a repeated Idempotency-Key, so a retried create cannot create twice
 func Idempotency(store cache.IdempotencyStore, service string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idemKey := c.GetHeader(HeaderIdempotencyKey)
@@ -47,7 +46,7 @@ func Idempotency(store cache.IdempotencyStore, service string) gin.HandlerFunc {
 			return
 		}
 
-		log := reqctx.LoggerFromGinContext(c)
+		log := logging.FromGin(c)
 		if len(idemKey) > maxIdempotencyKeyLen {
 			c.AbortWithStatusJSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Idempotency-Key must be at most 255 characters", c))
 			return
@@ -134,7 +133,6 @@ func respondFromRecord(c *gin.Context, record *cache.IdempotencyRecord, fingerpr
 	}
 }
 
-// same method, path, and body means the same request; anything else under the same key is a client bug
 func requestFingerprint(c *gin.Context) (string, error) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {

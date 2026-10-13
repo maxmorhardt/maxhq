@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// rows from testdata/legacy_schema.sql
 var (
 	legacyContestID = uuid.MustParse("0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001")
 	legacyGameID    = uuid.MustParse("0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0002")
@@ -34,7 +33,6 @@ func TestLegacy_ContestTablesMoveIntoTheContestsSchema(t *testing.T) {
 		assert.True(t, tableExists(t, table), table)
 	}
 
-	// the tables games and accounts own stay in public until those services adopt them
 	assert.True(t, tableExists(t, "public.users"))
 	assert.True(t, tableExists(t, "public.games"))
 
@@ -58,7 +56,7 @@ func TestLegacy_ExistingContestsKeepWorking(t *testing.T) {
 	require.NoError(t, rawDB.QueryRow(`SELECT version FROM contests.contests WHERE id = $1`, legacyContestID).Scan(&version))
 	assert.Equal(t, int64(1), version, "existing rows start at version 1")
 
-	resp := call(t, testkit.As(legacyUser), http.MethodGet, "/contests/owner/"+legacyUser+"?page=1&limit=10", nil)
+	resp := call(t, testkit.As(legacyUser), http.MethodGet, "/contests", nil)
 	require.Equal(t, http.StatusOK, resp.Status)
 	assert.Contains(t, string(resp.Body), "Legacy Pool")
 
@@ -73,7 +71,6 @@ func TestLegacy_ExistingContestsKeepWorking(t *testing.T) {
 	}
 	assert.Equal(t, 1, claimed)
 
-	// the legacy owner can keep playing
 	for _, sq := range snap.Contest.Squares {
 		if sq.Owner == "" {
 			claim(t, legacyUser, legacyContestID, sq.ID)

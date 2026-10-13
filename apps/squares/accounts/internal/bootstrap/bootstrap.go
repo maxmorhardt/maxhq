@@ -21,17 +21,11 @@ import (
 )
 
 const (
-	Service = "accounts"
-	Schema  = "accounts"
-
-	// every key and stream this service touches starts with this; the redis acl is scoped to it
-	KeyPrefix = "squares"
-
-	// one advisory lock per schema keeps a single replica relaying, which preserves event order
+	Service             = "accounts"
+	Schema              = "accounts"
+	KeyPrefix           = "squares"
 	outboxLockKey int64 = 910103
-
-	contactWindow = 24 * time.Hour
-	writeTimeout  = 30 * time.Second
+	writeTimeout        = 30 * time.Second
 )
 
 type App struct {
@@ -44,12 +38,11 @@ type App struct {
 
 func Connect(cfg *model.AccountsConfig) (*server.Infra, error) {
 	return server.Connect(&server.InfraConfig{
-		DB:         &cfg.DB,
-		Schema:     Schema,
-		Migrations: migrations.FS,
-		Redis:      cfg.Redis,
-		KeyPrefix:  KeyPrefix,
-		// requests and outbox writes work without redis, so a redis outage must not stop a restart
+		DB:            &cfg.DB,
+		Schema:        Schema,
+		Migrations:    migrations.FS,
+		Redis:         cfg.Redis,
+		KeyPrefix:     KeyPrefix,
 		RedisOptional: true,
 	})
 }
@@ -70,7 +63,6 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 
 	engine := server.NewEngine(cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
-		// redis is left out on purpose: without it requests still work and events wait in the outbox
 		"database": server.DatabaseCheck(db),
 	}), Service)
 
@@ -78,15 +70,13 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		User:    handler.NewUserHandler(userService),
 		Contact: handler.NewContactHandler(contactService),
 	}, routes.Guards{
-		Auth:         middleware.Authenticate(revocations),
-		Idempotent:   middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
-		ContactLimit: middleware.RateLimit(cache.NewRateLimiter(infra.Redis), "contact", cfg.Contact.RateLimit, contactWindow),
+		Auth:       middleware.Authenticate(revocations),
+		Idempotent: middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
 	})
 
 	return &App{Engine: engine, cfg: cfg, infra: infra, relay: relay, userService: userService}
 }
 
-// restores revocations to redis and relays user events until ctx ends
 func (a *App) Start(ctx context.Context) {
 	// a redis that lost its data must not let deleted accounts back in
 	if err := a.userService.SyncRevocations(ctx); err != nil {

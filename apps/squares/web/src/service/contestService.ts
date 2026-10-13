@@ -2,13 +2,13 @@ import api from '../axios/api';
 import { idempotentRequest } from '../axios/idempotency';
 import type {
   Contest,
+  ContestFeedParams,
+  ContestFeedResponse,
   CreateContestRequest,
   CreateInviteRequest,
   Game,
   Invite,
   InvitePreviewResponse,
-  PaginatedContestsResponse,
-  PaginationParams,
   Participant,
   QuarterResult,
   QuarterResultRequest,
@@ -18,16 +18,12 @@ import type {
 } from '../types/contest';
 import { handleError } from './handleError';
 
-export async function getContestsByOwner(
-  owner: string,
-  pagination: PaginationParams
-): Promise<PaginatedContestsResponse> {
+export async function getContestFeed(params: ContestFeedParams = {}): Promise<ContestFeedResponse> {
   try {
-    const res = await api.get<PaginatedContestsResponse>(`/contests/owner/${owner}`, {
+    const res = await api.get<ContestFeedResponse>('/contests', {
       params: {
-        page: pagination.page,
-        limit: pagination.limit,
-        ...(pagination.search ? { search: pagination.search } : {}),
+        ...params,
+        status: params.status?.length ? params.status.join(',') : undefined,
       },
     });
     return res.data;
@@ -160,17 +156,6 @@ export async function submitContactForm(request: {
       method: 'POST',
       url: '/contact',
       data: request,
-    });
-    return res.data;
-  } catch (err: unknown) {
-    throw handleError(err);
-  }
-}
-
-export async function getMyContests(search?: string): Promise<Contest[]> {
-  try {
-    const res = await api.get<Contest[]>('/contests/me', {
-      params: search ? { search } : undefined,
     });
     return res.data;
   } catch (err: unknown) {

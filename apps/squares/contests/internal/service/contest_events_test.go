@@ -54,7 +54,6 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 		model.QuarterResultRollbackType, model.ContestDeletedType, model.ParticipantRemovedType, model.ParticipantAddedType,
 	}, types)
 
-	// subscribers already hold the grid, so contest updates leave the heavy relations behind
 	update := (*captured)[1].Contest
 	assert.Nil(t, update.Squares)
 	assert.Nil(t, update.QuarterResults)

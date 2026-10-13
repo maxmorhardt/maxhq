@@ -24,16 +24,6 @@ type ContestSwagger struct {
 	UpdatedBy      string          `json:"updatedBy"`
 }
 
-type PaginatedContestResponseSwagger struct {
-	Contests    []ContestSwagger `json:"contests"`
-	Page        int              `json:"page"`
-	Limit       int              `json:"limit"`
-	Total       int64            `json:"total"`
-	TotalPages  int              `json:"totalPages"`
-	HasNext     bool             `json:"hasNext"`
-	HasPrevious bool             `json:"hasPrevious"`
-}
-
 type ContestSnapshotSwagger struct {
 	Contest      ContestSwagger       `json:"contest"`
 	Participants []ContestParticipant `json:"participants"`

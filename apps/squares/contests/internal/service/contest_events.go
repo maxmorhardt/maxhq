@@ -9,7 +9,6 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
 )
 
-// every contest event goes through the outbox, so call these inside the transaction that made the change
 type ContestEventPublisher interface {
 	PublishSquareUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, square *model.Square) error
 	PublishContestUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, contest *model.Contest) error
@@ -32,7 +31,6 @@ func (p *contestEventPublisher) PublishSquareUpdate(ctx context.Context, contest
 	return p.publish(ctx, model.NewSquareUpdateEvent(contestID, updatedBy, square))
 }
 
-// strips heavy relations: subscribers already hold the grid and patch the contest row in place
 func (p *contestEventPublisher) PublishContestUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, contest *model.Contest) error {
 	return p.publish(ctx, model.NewContestUpdateEvent(contestID, updatedBy, lightweight(contest)))
 }

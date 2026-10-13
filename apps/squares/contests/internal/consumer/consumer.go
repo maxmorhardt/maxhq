@@ -6,21 +6,19 @@ import (
 
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
 )
 
-// each consumer has its own advisory lock, so one replica reads each stream at a time and order holds
 var (
 	GamesSpec = streams.ConsumerSpec{Name: "contests-games", Stream: events.GamesStream, LockKey: 910111}
 	UsersSpec = streams.ConsumerSpec{Name: "contests-users", Stream: events.UsersStream, LockKey: 910112}
 )
 
-// game updates refresh contests' copy of the game and move linked contests forward
 func GameHandler(gameSync service.GameSyncService) streams.Handler {
 	return func(ctx context.Context, entry streams.Entry) error {
-		log := reqctx.LoggerFromContext(ctx)
+		log := logging.FromContext(ctx)
 
 		if entry.Type != events.GameUpdatedType {
 			log.Warn("ignoring unknown game event")
@@ -38,10 +36,9 @@ func GameHandler(gameSync service.GameSyncService) streams.Handler {
 	}
 }
 
-// profile changes cascade onto squares; deletions scrub the user from every contest
 func UserHandler(userActivity service.UserActivityService) streams.Handler {
 	return func(ctx context.Context, entry streams.Entry) error {
-		log := reqctx.LoggerFromContext(ctx)
+		log := logging.FromContext(ctx)
 
 		switch entry.Type {
 		case events.UserUpdatedType:
@@ -65,7 +62,6 @@ func UserHandler(userActivity service.UserActivityService) streams.Handler {
 	}
 }
 
-// contests keeps its own copy of each game in its own schema, built only from what games publishes
 func toProjection(g *events.Game) *model.Game {
 	scores := make([]model.GameScore, 0, len(g.Scores))
 	for _, sc := range g.Scores {

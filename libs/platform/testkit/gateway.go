@@ -13,20 +13,17 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
 )
 
-// a signed-in user as the gateway presents them to a service
 type Identity struct {
 	Email    string
 	IssuedAt time.Time
 }
 
-// a token issued a minute ago, so it predates anything the test does next
 func As(email string) Identity {
 	return Identity{Email: email, IssuedAt: time.Now().Add(-time.Minute)}
 }
 
 var Anonymous = Identity{}
 
-// sets the claim headers envoy gateway adds after validating the dex token
 func (id Identity) Apply(req *http.Request) {
 	if id.Email == "" {
 		return
@@ -51,7 +48,6 @@ func (r Response) Decode(t *testing.T, v any) {
 	}
 }
 
-// sends body as JSON when it is not nil; headers are name, value pairs
 func Call(t *testing.T, base string, id Identity, method, path string, body any, headers ...string) Response {
 	t.Helper()
 

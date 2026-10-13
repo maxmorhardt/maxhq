@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// runs the unit of work inline, standing in for a real transaction
 func passTx() *mocks.Transactor {
 	m := &mocks.Transactor{}
 	m.On("Do", mock.Anything, mock.Anything).
@@ -56,7 +55,6 @@ func gameSvc(t *testing.T, g *mocks.GameRepository, ob *mocks.Outbox) service.Ga
 
 func TestGameService_GetUpcoming_CachesResult(t *testing.T) {
 	g := mocks.NewGameRepository(t)
-	// mockery fails on cleanup if the repo is hit more than once
 	g.EXPECT().GetUpcoming(mock.Anything).Return([]model.Game{{ESPNID: "1"}, {ESPNID: "2"}}, nil).Once()
 
 	svc := gameSvc(t, g, nil)
@@ -109,7 +107,6 @@ func TestGameService_Ingest_NewQuarterScorePublishesEvenIfRowUnchanged(t *testin
 	g.EXPECT().Upsert(mock.Anything, mock.Anything).
 		Run(func(_ context.Context, game *model.Game) { game.ID = gameID }).
 		Return(false, nil)
-	// in Q2, so Q1 is complete and gets recorded
 	g.EXPECT().UpsertScore(mock.Anything, mock.MatchedBy(func(s *model.GameScore) bool { return s.Quarter == 1 && s.GameID == gameID })).Return(true, nil).Once()
 	g.EXPECT().GetByID(mock.Anything, gameID).Return(&model.Game{ID: gameID, Status: model.GameStatusInProgress}, nil)
 	ob := mocks.NewOutbox(t)

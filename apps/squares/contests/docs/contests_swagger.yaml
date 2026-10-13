@@ -28,7 +28,7 @@ definitions:
       status:
         type: string
     type: object
-  internalapi.UserActiveContest:
+  contracts.UserActiveContest:
     properties:
       id:
         example: 550e8400-e29b-41d4-a716-446655440000
@@ -43,13 +43,22 @@ definitions:
         example: owner
         type: string
     type: object
-  internalapi.UserActivitySummary:
+  contracts.UserActivitySummary:
     properties:
       activeContests:
         items:
-          $ref: '#/definitions/internalapi.UserActiveContest'
+          $ref: '#/definitions/contracts.UserActiveContest'
         type: array
       firstActivity:
+        type: string
+    type: object
+  model.ContestFeedResponse:
+    properties:
+      contests:
+        items:
+          $ref: '#/definitions/model.ContestSummary'
+        type: array
+      nextCursor:
         type: string
     type: object
   model.ContestInvite:
@@ -107,6 +116,70 @@ definitions:
           $ref: '#/definitions/model.ContestParticipant'
         type: array
     type: object
+  model.ContestStatus:
+    enum:
+    - ACTIVE
+    - Q1
+    - Q2
+    - Q3
+    - Q4
+    - FINISHED
+    - DELETED
+    type: string
+    x-enum-varnames:
+    - ContestStatusActive
+    - ContestStatusQ1
+    - ContestStatusQ2
+    - ContestStatusQ3
+    - ContestStatusQ4
+    - ContestStatusFinished
+    - ContestStatusDeleted
+  model.ContestSummary:
+    properties:
+      awayTeam:
+        example: Dallas Cowboys
+        type: string
+      claimedSquares:
+        example: 42
+        type: integer
+      createdAt:
+        type: string
+      gameId:
+        type: string
+      gameTime:
+        type: string
+      homeTeam:
+        example: New York Giants
+        type: string
+      id:
+        type: string
+      mySquares:
+        example: 5
+        type: integer
+      name:
+        example: Sunday Night Squares
+        type: string
+      owner:
+        example: user@example.com
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/model.ParticipantRole'
+        example: owner
+      status:
+        allOf:
+        - $ref: '#/definitions/model.ContestStatus'
+        example: ACTIVE
+      updatedAt:
+        type: string
+      version:
+        example: 3
+        type: integer
+      visibility:
+        allOf:
+        - $ref: '#/definitions/model.ContestVisibility'
+        example: private
+    type: object
   model.ContestSwagger:
     properties:
       awayTeam:
@@ -148,6 +221,14 @@ definitions:
           type: integer
         type: array
     type: object
+  model.ContestVisibility:
+    enum:
+    - private
+    - public
+    type: string
+    x-enum-varnames:
+    - ContestVisibilityPrivate
+    - ContestVisibilityPublic
   model.CreateContestRequest:
     properties:
       awayTeam:
@@ -251,25 +332,6 @@ definitions:
         items:
           $ref: '#/definitions/model.LeaderboardEntry'
         type: array
-    type: object
-  model.PaginatedContestResponseSwagger:
-    properties:
-      contests:
-        items:
-          $ref: '#/definitions/model.ContestSwagger'
-        type: array
-      hasNext:
-        type: boolean
-      hasPrevious:
-        type: boolean
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-      totalPages:
-        type: integer
     type: object
   model.ParticipantRole:
     enum:
@@ -413,6 +475,68 @@ info:
   version: 1.0.0
 paths:
   /contests:
+    get:
+      description: Contests the caller owns or has joined, newest first, one page
+        at a time. Pass nextCursor back as cursor for the next page.
+      parameters:
+      - description: nextCursor from the previous page
+        in: query
+        name: cursor
+        type: string
+      - default: 20
+        description: Page size
+        in: query
+        maximum: 50
+        minimum: 1
+        name: limit
+        type: integer
+      - description: owned or joined
+        enum:
+        - owned
+        - joined
+        in: query
+        name: role
+        type: string
+      - description: 'Comma-separated: open, live, finished'
+        in: query
+        name: status
+        type: string
+      - description: Case-insensitive name filter
+        in: query
+        name: search
+        type: string
+      - description: RFC 3339 time; only contests updated at or after it
+        in: query
+        name: updatedSince
+        type: string
+      - default: updated
+        description: Sort by last update or creation
+        enum:
+        - updated
+        - created
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContestFeedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: List my contests
+      tags:
+      - contests
     put:
       consumes:
       - application/json
@@ -1049,78 +1173,6 @@ paths:
       summary: Start contest
       tags:
       - contests
-  /contests/me:
-    get:
-      description: Returns all contests where the authenticated user is a participant
-      parameters:
-      - description: Filter contests by name (case-insensitive)
-        in: query
-        name: search
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/model.ContestSwagger'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Get all contests the user participates in
-      tags:
-      - participants
-  /contests/owner/{owner}:
-    get:
-      description: Returns all contests created by a specific owner with pagination
-      parameters:
-      - description: Owner
-        in: path
-        name: owner
-        required: true
-        type: string
-      - description: Page number
-        in: query
-        minimum: 1
-        name: page
-        required: true
-        type: integer
-      - description: Items per page (max 25)
-        in: query
-        maximum: 25
-        minimum: 1
-        name: limit
-        required: true
-        type: integer
-      - description: Filter contests by name (case-insensitive)
-        in: query
-        name: search
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.PaginatedContestResponseSwagger'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Get all contests by owner
-      tags:
-      - contests
   /health/live:
     get:
       description: Returns UP if the service process is running
@@ -1218,7 +1270,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internalapi.UserActivitySummary'
+            $ref: '#/definitions/contracts.UserActivitySummary'
         "500":
           description: Internal Server Error
           schema:
@@ -1374,7 +1426,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/internalapi.UserActiveContest'
+              $ref: '#/definitions/contracts.UserActiveContest'
             type: array
         "500":
           description: Internal Server Error

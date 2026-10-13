@@ -22,7 +22,6 @@ func newMockDB(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = sqlDB.Close() })
 
-	// gorm preloads run in non-deterministic order, so don't require ordering
 	mock.MatchExpectationsInOrder(false)
 
 	gdb, err := gorm.Open(postgres.New(postgres.Config{
@@ -40,7 +39,6 @@ func TestGameRepository_Upsert_Insert(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewGameRepository(gdb)
 
-	// existing lookup returns no rows -> insert path
 	mock.ExpectQuery(`SELECT .* FROM "games"`).WillReturnRows(sqlmock.NewRows([]string{"id"}))
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "games"`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -120,10 +118,8 @@ func TestGameRepository_GetUpcoming(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewGameRepository(gdb)
 
-	// first query anchors the window to the next scheduled game
 	mock.ExpectQuery(`SELECT "game_time" FROM "games"`).
 		WillReturnRows(sqlmock.NewRows([]string{"game_time"}).AddRow(time.Now().Add(24 * time.Hour)))
-	// second query fetches games within the window
 	mock.ExpectQuery(`SELECT \* FROM "games"`).
 		WillReturnRows(sqlmock.NewRows([]string{"espn_id"}).AddRow("1").AddRow("2"))
 
@@ -137,7 +133,6 @@ func TestGameRepository_GetUpcoming_NoScheduledGames(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewGameRepository(gdb)
 
-	// no upcoming scheduled game: returns empty without a second query
 	mock.ExpectQuery(`SELECT "game_time" FROM "games"`).
 		WillReturnRows(sqlmock.NewRows([]string{"game_time"}))
 
@@ -191,7 +186,6 @@ func TestGameRepository_NextKickoff_None(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewGameRepository(gdb)
 
-	// no upcoming scheduled game returns the zero time without error
 	mock.ExpectQuery(`SELECT "game_time" FROM "games"`).
 		WillReturnRows(sqlmock.NewRows([]string{"game_time"}))
 

@@ -27,7 +27,6 @@ func TestStatsService_GetStats_Success(t *testing.T) {
 func TestStatsService_GetStats_CachesResult(t *testing.T) {
 	want := &model.StatsResponse{ContestsCreatedToday: 3}
 	repo := mocks.NewStatsRepository(t)
-	// mockery fails on cleanup if the repo is hit more than once
 	repo.EXPECT().GetStats(mock.Anything).Return(want, nil).Once()
 
 	svc := service.NewStatsService(repo, newMemCache())

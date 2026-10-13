@@ -7,7 +7,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 const statsCacheTTL = 30 * time.Second
@@ -29,7 +29,7 @@ func NewStatsService(repo repository.StatsRepository, c cache.Cache) StatsServic
 }
 
 func (s *statsService) GetStats(ctx context.Context) (*model.StatsResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	stats, err := cache.GetOrLoad(ctx, s.cache, "stats", "global", statsCacheTTL, s.repo.GetStats)
 	if err != nil {

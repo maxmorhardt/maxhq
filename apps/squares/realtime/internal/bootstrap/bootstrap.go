@@ -11,15 +11,14 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/routes"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/maxmorhardt/maxstash/libs/platform/server"
 )
 
 const (
 	Service = "realtime"
 
-	// every key and stream this service touches starts with this; the redis acl is scoped to it
 	KeyPrefix = "squares"
 )
 
@@ -57,9 +56,8 @@ func New(cfg *model.RealtimeConfig, infra *server.Infra, shutdown <-chan struct{
 	return &App{Engine: engine, cfg: cfg, infra: infra, hub: hub}
 }
 
-// reads the contest streams for every open stream on this replica until ctx ends
 func (a *App) Start(ctx context.Context) {
-	go a.hub.Run(reqctx.ContextWithLogger(ctx, slog.Default()))
+	go a.hub.Run(logging.NewContext(ctx, slog.Default()))
 }
 
 func (a *App) Run(ctx context.Context) error {

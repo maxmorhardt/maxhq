@@ -21,7 +21,6 @@ func newMockDB(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = sqlDB.Close() })
 
-	// gorm preloads run in non-deterministic order, so don't require ordering
 	mock.MatchExpectationsInOrder(false)
 
 	gdb, err := gorm.Open(postgres.New(postgres.Config{

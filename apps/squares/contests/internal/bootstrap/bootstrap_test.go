@@ -70,7 +70,6 @@ func TestNew_WiresRoutesAndGuards(t *testing.T) {
 		assert.True(t, routes[want], want)
 	}
 
-	// writes need the gateway's identity, and internal routes need the service token
 	w := httptest.NewRecorder()
 	app.Engine.ServeHTTP(w, httptest.NewRequest(http.MethodPut, "/contests", http.NoBody))
 	assert.Equal(t, http.StatusUnauthorized, w.Code)

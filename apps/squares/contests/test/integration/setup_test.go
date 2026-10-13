@@ -54,7 +54,6 @@ func run(m *testing.M) int {
 	defer pg.Terminate()
 	rawDB = pg.DB
 
-	// start from the monolith's tables, the way production does, so the service has to adopt them
 	legacy, err := os.ReadFile("testdata/legacy_schema.sql")
 	if err != nil {
 		slog.Error("legacy schema", "error", err)
@@ -113,7 +112,6 @@ func createContest(t *testing.T, owner, name string, maxSquares int, headers ...
 	return &contest, resp
 }
 
-// the internal snapshot is how realtime reads a whole contest
 func snapshot(t *testing.T, user string, contestID uuid.UUID) *model.ContestSnapshot {
 	t.Helper()
 	resp := call(t, testkit.Anonymous, http.MethodGet,
@@ -131,7 +129,6 @@ func claim(t *testing.T, user string, contestID, squareID uuid.UUID) {
 	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
 }
 
-// appends an event the way another service's relay would
 func publish(t *testing.T, stream, eventType string, payload any) {
 	t.Helper()
 	data, err := json.Marshal(payload)

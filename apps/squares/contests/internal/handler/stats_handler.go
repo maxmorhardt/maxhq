@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 type StatsHandler interface {
@@ -32,7 +32,7 @@ func NewStatsHandler(statsService service.StatsService) StatsHandler {
 // @Failure 500 {object} api.APIError
 // @Router /stats [get]
 func (h *statsHandler) GetStats(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	stats, err := h.statsService.GetStats(c.Request.Context())
 	if err != nil {

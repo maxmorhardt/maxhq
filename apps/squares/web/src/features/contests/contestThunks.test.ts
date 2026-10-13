@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from './contestSlice';
 import {
-  fetchContestsByOwner,
+  fetchContestFeed,
   createContest,
   claimSquare,
   clearSquare,
@@ -12,7 +12,6 @@ import {
   deleteContest,
   updateQuarterResult,
   rollbackLastQuarterResult,
-  fetchMyContests,
   createContestInvite,
   fetchInvites,
   deleteContestInvite,
@@ -25,7 +24,7 @@ import {
 import type { Contest, Square } from '../../types/contest';
 
 vi.mock('../../service/contestService', () => ({
-  getContestsByOwner: vi.fn(),
+  getContestFeed: vi.fn(),
   createNewContest: vi.fn(),
   claimSquareById: vi.fn(),
   clearSquareById: vi.fn(),
@@ -35,7 +34,6 @@ vi.mock('../../service/contestService', () => ({
   deleteContestById: vi.fn(),
   recordQuarterResult: vi.fn(),
   rollbackQuarterResult: vi.fn(),
-  getMyContests: vi.fn(),
   createInvite: vi.fn(),
   getInvites: vi.fn(),
   deleteInvite: vi.fn(),
@@ -47,7 +45,7 @@ vi.mock('../../service/contestService', () => ({
 }));
 
 import {
-  getContestsByOwner,
+  getContestFeed,
   createNewContest,
   claimSquareById,
   clearSquareById,
@@ -57,7 +55,6 @@ import {
   deleteContestById,
   recordQuarterResult,
   rollbackQuarterResult,
-  getMyContests,
   createInvite,
   getInvites,
   deleteInvite,
@@ -108,63 +105,48 @@ function createTestStore() {
 beforeEach(() => vi.clearAllMocks());
 
 describe('contestThunks', () => {
-  describe('fetchContestsByOwner', () => {
-    it('fulfilled: dispatches with paginated response', async () => {
-      const response = {
-        contests: [mockContest],
-        page: 1,
-        limit: 5,
-        total: 1,
-        totalPages: 1,
-        hasNext: false,
-        hasPrevious: false,
-      };
-      vi.mocked(getContestsByOwner).mockResolvedValue(response);
+  describe('fetchContestFeed', () => {
+    const row = { ...mockContest, role: 'owner' as const, claimedSquares: 0, mySquares: 0 };
+
+    it('fulfilled: loads the first page, then appends the next', async () => {
+      vi.mocked(getContestFeed)
+        .mockResolvedValueOnce({ contests: [row], nextCursor: 'next' })
+        .mockResolvedValueOnce({ contests: [{ ...row, id: 'c2' }] });
       const store = createTestStore();
+
+      await store.dispatch(fetchContestFeed({ params: { limit: 1 } }));
+      expect(store.getState().contest.feed.nextCursor).toBe('next');
+
       await store.dispatch(
-        fetchContestsByOwner({ owner: 'u1', pagination: { page: 1, limit: 5 } })
+        fetchContestFeed({ params: { limit: 1, cursor: 'next' }, append: true })
       );
-      expect(store.getState().contest.contests).toHaveLength(1);
+      expect(store.getState().contest.feed.items).toHaveLength(2);
+      expect(store.getState().contest.feed.nextCursor).toBeNull();
+      expect(getContestFeed).toHaveBeenLastCalledWith({ limit: 1, cursor: 'next' });
     });
 
     it('rejected: sets error on failure', async () => {
-      vi.mocked(getContestsByOwner).mockRejectedValue({
+      vi.mocked(getContestFeed).mockRejectedValue({
         code: 500,
         message: 'fail',
         timestamp: '',
         requestId: '',
       });
       const store = createTestStore();
-      await store.dispatch(
-        fetchContestsByOwner({ owner: 'u1', pagination: { page: 1, limit: 5 } })
-      );
+      await store.dispatch(fetchContestFeed({ params: {} }));
       expect(store.getState().contest.error).toBe('fail');
-    });
-
-    it('passes search through pagination to service', async () => {
-      vi.mocked(getContestsByOwner).mockResolvedValue({
-        contests: [],
-        page: 1,
-        limit: 5,
-        total: 0,
-        totalPages: 0,
-        hasNext: false,
-        hasPrevious: false,
-      });
-      const store = createTestStore();
-      await store.dispatch(
-        fetchContestsByOwner({ owner: 'u1', pagination: { page: 1, limit: 5, search: 'foo' } })
-      );
-      expect(getContestsByOwner).toHaveBeenCalledWith('u1', { page: 1, limit: 5, search: 'foo' });
     });
   });
 
   describe('createContest', () => {
-    it('fulfilled: adds contest', async () => {
+    it('fulfilled: returns the contest', async () => {
       vi.mocked(createNewContest).mockResolvedValue(mockContest);
       const store = createTestStore();
-      await store.dispatch(createContest({ name: 'Test', owner: 'u1', maxSquares: 10 }));
-      expect(store.getState().contest.contests).toHaveLength(1);
+      const result = await store.dispatch(
+        createContest({ name: 'Test', owner: 'u1', maxSquares: 10 })
+      );
+      expect(result.payload).toEqual(mockContest);
+      expect(store.getState().contest.contestLoading).toBe(false);
     });
 
     it('rejected: sets error', async () => {
@@ -384,41 +366,6 @@ describe('contestThunks', () => {
       const store = createTestStore();
       await store.dispatch(rollbackLastQuarterResult({ contestId: 'c1' }));
       expect(store.getState().contest.error).toBe('rollback fail');
-    });
-  });
-
-  describe('fetchMyContests', () => {
-    it('fulfilled: sets myContests', async () => {
-      vi.mocked(getMyContests).mockResolvedValue([mockContest]);
-      const store = createTestStore();
-      await store.dispatch(fetchMyContests());
-      expect(store.getState().contest.myContests).toHaveLength(1);
-    });
-
-    it('passes search arg through to service', async () => {
-      vi.mocked(getMyContests).mockResolvedValue([]);
-      const store = createTestStore();
-      await store.dispatch(fetchMyContests('hello'));
-      expect(getMyContests).toHaveBeenCalledWith('hello');
-    });
-
-    it('passes undefined when no search arg', async () => {
-      vi.mocked(getMyContests).mockResolvedValue([]);
-      const store = createTestStore();
-      await store.dispatch(fetchMyContests());
-      expect(getMyContests).toHaveBeenCalledWith(undefined);
-    });
-
-    it('rejected: sets error', async () => {
-      vi.mocked(getMyContests).mockRejectedValue({
-        code: 500,
-        message: 'my fail',
-        timestamp: '',
-        requestId: '',
-      });
-      const store = createTestStore();
-      await store.dispatch(fetchMyContests());
-      expect(store.getState().contest.error).toBe('my fail');
     });
   });
 

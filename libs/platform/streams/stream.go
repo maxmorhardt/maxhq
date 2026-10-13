@@ -1,9 +1,3 @@
-// Package streams moves events between services through redis streams.
-//
-// Services never write to a stream directly: they add events to their postgres outbox inside the
-// transaction that made the change, and a Relay appends committed events to the stream. Consumers
-// track their position in postgres, so a redis restart cannot make them skip or repeat work they
-// already recorded.
 package streams
 
 import (
@@ -18,14 +12,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// field names inside every stream entry
 const (
 	fieldType    = "type"
 	fieldData    = "data"
 	fieldEventID = "event_id"
 )
 
-// one event as it sits in a stream; ID is the redis entry id ("<ms>-<seq>"), which orders entries within the stream
 type Entry struct {
 	ID      string
 	Type    string
@@ -33,12 +25,10 @@ type Entry struct {
 	EventID string
 }
 
-// Key maps a logical stream name ("games", "contest:<id>") to its redis key
 func Key(name string) string {
 	return cache.Key("events", name)
 }
 
-// Range returns up to count entries that come after the given id; an empty after starts at the beginning
 func Range(ctx context.Context, rdb redis.Cmdable, name, after string, count int64) ([]Entry, error) {
 	start := "-"
 	if after != "" {
@@ -57,7 +47,6 @@ func Range(ctx context.Context, rdb redis.Cmdable, name, after string, count int
 	return toEntries(msgs), nil
 }
 
-// Bounds returns the ids of the oldest and newest entries still in the stream, or empty strings when there are none
 func Bounds(ctx context.Context, rdb redis.Cmdable, name string) (first, last string, err error) {
 	key := Key(name)
 
@@ -80,7 +69,6 @@ func Bounds(ctx context.Context, rdb redis.Cmdable, name string) (first, last st
 	return head[0].ID, tail[0].ID, nil
 }
 
-// Read blocks up to block for entries after each stream's position and returns what arrived, keyed by stream name
 func Read(ctx context.Context, rdb redis.Cmdable, positions map[string]string, count int64, block time.Duration) (map[string][]Entry, error) {
 	if len(positions) == 0 {
 		return nil, nil
@@ -120,7 +108,6 @@ func Read(ctx context.Context, rdb redis.Cmdable, positions map[string]string, c
 	return out, nil
 }
 
-// CompareIDs orders two entry ids like strings.Compare; malformed ids sort first
 func CompareIDs(a, b string) int {
 	ams, aseq, aerr := parseID(a)
 	bms, bseq, berr := parseID(b)
@@ -146,13 +133,11 @@ func CompareIDs(a, b string) int {
 	}
 }
 
-// ValidID reports whether s is a redis stream entry id
 func ValidID(s string) bool {
 	_, _, err := parseID(s)
 	return err == nil
 }
 
-// NextID is the smallest id after id, which turns an inclusive range start into an exclusive one
 func NextID(id string) (string, error) {
 	ms, seq, err := parseID(id)
 	if err != nil {

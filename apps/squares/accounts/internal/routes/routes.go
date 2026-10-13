@@ -10,11 +10,9 @@ type Handlers struct {
 	Contact handler.ContactHandler
 }
 
-// ContactLimit throttles the public form per client ip; Idempotent replays retried writes
 type Guards struct {
-	Auth         gin.HandlerFunc
-	Idempotent   gin.HandlerFunc
-	ContactLimit gin.HandlerFunc
+	Auth       gin.HandlerFunc
+	Idempotent gin.HandlerFunc
 }
 
 func Register(r *gin.Engine, h Handlers, g Guards) {
@@ -23,5 +21,5 @@ func Register(r *gin.Engine, h Handlers, g Guards) {
 	me.PATCH("", g.Idempotent, h.User.UpdateMe)
 	me.DELETE("", g.Idempotent, h.User.DeleteMe)
 
-	r.POST("/contact", g.ContactLimit, g.Idempotent, h.Contact.SubmitContact)
+	r.POST("/contact", g.Idempotent, h.Contact.SubmitContact)
 }

@@ -9,11 +9,10 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
-// the full state a realtime stream starts from, served only to someone allowed to view the contest
 type SnapshotService interface {
 	GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*model.ContestSnapshot, error)
 }
@@ -28,7 +27,7 @@ func NewSnapshotService(contestRepo repository.ContestRepository, participantSer
 }
 
 func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*model.ContestSnapshot, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionView); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -50,7 +49,6 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	// game-linked contests read their quarter results from the shared game record
 	util.SynthesizeFromGame(contest)
 
 	participants, err := s.participantService.GetParticipantsInternal(ctx, contestID)

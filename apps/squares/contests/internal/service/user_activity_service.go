@@ -8,16 +8,15 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 )
 
-// everything contests knows about a person: their stats, their live contests, and its copy of their profile
 type UserActivityService interface {
 	GetStats(ctx context.Context, email string) (*model.UserStatsResponse, error)
-	GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error)
-	GetActivitySummary(ctx context.Context, email string) (*internalapi.UserActivitySummary, error)
+	GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error)
+	GetActivitySummary(ctx context.Context, email string) (*contracts.UserActivitySummary, error)
 	ApplyUserUpdated(ctx context.Context, event *events.UserUpdated) error
 	ApplyUserDeleted(ctx context.Context, event *events.UserDeleted) error
 }
@@ -33,7 +32,7 @@ func NewUserActivityService(repo repository.UserProjectionRepository, tx databas
 }
 
 func (s *userActivityService) GetStats(ctx context.Context, email string) (*model.UserStatsResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	stats, err := s.repo.GetStats(ctx, email)
 	if err != nil {
@@ -45,8 +44,8 @@ func (s *userActivityService) GetStats(ctx context.Context, email string) (*mode
 	return stats, nil
 }
 
-func (s *userActivityService) GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+func (s *userActivityService) GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error) {
+	log := logging.FromContext(ctx)
 
 	active, err := s.repo.GetActiveContests(ctx, email)
 	if err != nil {
@@ -58,9 +57,8 @@ func (s *userActivityService) GetActiveContests(ctx context.Context, email strin
 	return active, nil
 }
 
-// what accounts asks before it creates a profile or deletes an account
-func (s *userActivityService) GetActivitySummary(ctx context.Context, email string) (*internalapi.UserActivitySummary, error) {
-	log := reqctx.LoggerFromContext(ctx)
+func (s *userActivityService) GetActivitySummary(ctx context.Context, email string) (*contracts.UserActivitySummary, error) {
+	log := logging.FromContext(ctx)
 
 	active, err := s.repo.GetActiveContests(ctx, email)
 	if err != nil {
@@ -75,15 +73,14 @@ func (s *userActivityService) GetActivitySummary(ctx context.Context, email stri
 	}
 
 	if active == nil {
-		active = []internalapi.UserActiveContest{}
+		active = []contracts.UserActiveContest{}
 	}
 
-	return &internalapi.UserActivitySummary{ActiveContests: active, FirstActivity: first}, nil
+	return &contracts.UserActivitySummary{ActiveContests: active, FirstActivity: first}, nil
 }
 
-// new initials flow onto the user's squares in live contests, and connected clients see them change
 func (s *userActivityService) ApplyUserUpdated(ctx context.Context, event *events.UserUpdated) error {
-	log := reqctx.LoggerFromContext(ctx).With("user", event.Email)
+	log := logging.FromContext(ctx).With("user", event.Email)
 
 	var cascaded int
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
@@ -124,9 +121,8 @@ func (s *userActivityService) ApplyUserUpdated(ctx context.Context, event *event
 	return nil
 }
 
-// accounts already tombstoned the user; this frees their live squares and anonymizes their history
 func (s *userActivityService) ApplyUserDeleted(ctx context.Context, event *events.UserDeleted) error {
-	log := reqctx.LoggerFromContext(ctx).With("user", event.Email)
+	log := logging.FromContext(ctx).With("user", event.Email)
 
 	if err := s.repo.ScrubUserData(ctx, event.Email); err != nil {
 		log.Error("failed to scrub deleted user", "error", err)

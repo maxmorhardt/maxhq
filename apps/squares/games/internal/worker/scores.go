@@ -7,7 +7,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/clients"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 const scheduleWindow = 10 * 24 * time.Hour
@@ -34,7 +34,6 @@ func newScoresWorker(espn clients.ESPNClient, gameService service.GameService, a
 func (w *scoresWorker) run(ctx context.Context) error {
 	now := time.Now()
 
-	// the full schedule only needs refreshing occasionally, so live polls take espn's default current week
 	wide := now.Sub(w.lastScheduleSync) >= w.idleInterval
 	var dates []string
 	if wide {
@@ -46,20 +45,17 @@ func (w *scoresWorker) run(ctx context.Context) error {
 		return err
 	}
 
-	// the service owns all persistence and contest reconciliation
 	newScores, err := w.gameService.Ingest(ctx, games)
 	if err != nil {
 		return err
 	}
 
-	// only count the sync once the wide window actually landed, so a failed ingest retries it
 	if wide {
 		w.lastScheduleSync = now
 	}
 
-	// stay silent in steady state; only surface actual scoring changes
 	if newScores > 0 {
-		reqctx.LoggerFromContext(ctx).Info("recorded new quarter scores", "count", newScores)
+		logging.FromContext(ctx).Info("recorded new quarter scores", "count", newScores)
 		metrics.AddScoresRecorded(newScores)
 	}
 
@@ -82,11 +78,9 @@ func (w *scoresWorker) nextDelay(ctx context.Context) time.Duration {
 	// derive pacing from shared DB state so every replica agrees, lock holder or not
 	act, err := w.gameService.Activity(ctx)
 	if err != nil {
-		// couldn't tell, so check back soon rather than sleeping through a game
 		return w.activeInterval
 	}
 
-	// a live game means poll fast
 	if act.Live {
 		return w.activeInterval
 	}
@@ -95,14 +89,11 @@ func (w *scoresWorker) nextDelay(ctx context.Context) time.Duration {
 		until := time.Until(act.NextKickoff)
 		switch {
 		case until <= w.activeInterval:
-			// kickoff is imminent, so ramp up now
 			return w.activeInterval
 		case until < w.idleInterval:
-			// nothing live yet, but wake right as the game starts
 			return until
 		}
 	}
 
-	// nothing on the horizon, so idle
 	return w.idleInterval
 }

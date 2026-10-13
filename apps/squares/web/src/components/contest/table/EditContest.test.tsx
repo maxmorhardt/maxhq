@@ -56,7 +56,15 @@ function renderDialog(open = true, currentContest: Contest | null = contest) {
   return render(
     <ThemeProvider theme={theme}>
       <Provider store={makeStore(currentContest)}>
-        <EditContest open={open} onClose={vi.fn()} />
+        <EditContest
+          open={open}
+          onClose={vi.fn()}
+          contest={
+            currentContest
+              ? { ...currentContest, role: 'owner', claimedSquares: 0, mySquares: 0 }
+              : null
+          }
+        />
       </Provider>
     </ThemeProvider>
   );

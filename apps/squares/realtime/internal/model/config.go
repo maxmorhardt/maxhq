@@ -14,7 +14,6 @@ type RealtimeConfig struct {
 	Stream   StreamConfig
 }
 
-// contests decides who may watch a contest; realtime asks it on connect and whenever access may have changed
 type ContestsConfig struct {
 	URL string `env:"CONTESTS_INTERNAL_URL" envDefault:"http://squares-contests:8080"`
 }

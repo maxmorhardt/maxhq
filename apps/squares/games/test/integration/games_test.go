@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// the latest game.updated entry for an espn game, or nil
 func latestGameEvent(t *testing.T, espnID string) *events.Game {
 	t.Helper()
 	entries, err := streams.Range(context.Background(), rdb, events.GamesStream, "", 1000)
@@ -66,7 +65,6 @@ func TestGames_LiveScoresArePublishedOncePerChange(t *testing.T) {
 	assert.Equal(t, 7, g.Scores[0].HomeScore)
 	assert.Equal(t, 3, g.Scores[0].AwayScore)
 
-	// several more polls of the same scoreboard change nothing, so nothing more is published
 	countFor := func() int {
 		entries, err := streams.Range(context.Background(), rdb, events.GamesStream, "", 1000)
 		require.NoError(t, err)

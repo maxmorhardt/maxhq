@@ -178,7 +178,6 @@ func TestConsumer_RunHandlesNewEntriesThenStops(t *testing.T) {
 	db, mock := newMockDB(t)
 	_, client := newRedis(t)
 
-	// the first pass finds nothing and waits; the next picks up the entry appended meanwhile
 	mock.ExpectBegin()
 	expectLock(mock, true)
 	expectOffset(mock, "")
@@ -188,7 +187,6 @@ func TestConsumer_RunHandlesNewEntriesThenStops(t *testing.T) {
 	expectOffset(mock, "")
 	mock.ExpectExec(`INSERT INTO "stream_offsets"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
-	// later passes see the saved position and nothing new
 	for range 20 {
 		mock.ExpectBegin()
 		expectLock(mock, true)

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 type LeaderboardHandler interface {
@@ -36,7 +36,7 @@ func NewLeaderboardHandler(leaderboardService service.LeaderboardService) Leader
 // @Failure 500 {object} api.APIError
 // @Router /leaderboard [get]
 func (h *leaderboardHandler) GetLeaderboard(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	limit := service.DefaultLeaderboardLimit
 	if raw := c.Query("limit"); raw != "" {
@@ -70,7 +70,7 @@ func (h *leaderboardHandler) GetLeaderboard(c *gin.Context) {
 // @Failure 500 {object} api.APIError
 // @Router /leaderboard/me [get]
 func (h *leaderboardHandler) GetMyRank(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	rank, err := h.leaderboardService.GetUserRank(c.Request.Context(), c.GetString(api.UserKey))
 	if err != nil {

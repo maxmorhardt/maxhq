@@ -16,7 +16,6 @@ func TestScoreboardToGames(t *testing.T) {
 
 	games := ScoreboardToGames(&resp)
 
-	// the event with no competitions is skipped
 	require.Len(t, games, 1)
 	g := games[0]
 	assert.Equal(t, "401", g.ESPNID)
@@ -81,7 +80,6 @@ func TestCompletedQuarters_Completed(t *testing.T) {
 
 	quarters := CompletedQuarters(eg)
 
-	// q1-q3 use cumulative line scores; q4 uses the final score (covers overtime)
 	require.Len(t, quarters, 4)
 	assert.Equal(t, model.QuarterScore{Quarter: 1, Home: 7, Away: 3}, quarters[0])
 	assert.Equal(t, model.QuarterScore{Quarter: 2, Home: 10, Away: 10}, quarters[1])
@@ -90,7 +88,6 @@ func TestCompletedQuarters_Completed(t *testing.T) {
 }
 
 func TestCompletedQuarters_InProgress(t *testing.T) {
-	// mid-third-quarter: only quarters play has moved past are counted
 	eg := &model.ESPNGame{
 		Period:   3,
 		HomeLine: []int{7, 3, 7},
@@ -119,7 +116,6 @@ func TestParseESPNTime(t *testing.T) {
 	rfc := parseESPNTime("2026-01-04T18:00:00Z")
 	assert.Equal(t, time.Date(2026, 1, 4, 18, 0, 0, 0, time.UTC), rfc.UTC())
 
-	// espn also emits a minute-precision layout without seconds
 	short := parseESPNTime("2026-01-04T18:00Z")
 	assert.Equal(t, time.Date(2026, 1, 4, 18, 0, 0, 0, time.UTC), short.UTC())
 

@@ -47,7 +47,6 @@ func shuffledDigits() ([]int8, error) {
 		labels[i] = int8(i)
 	}
 
-	// fisher-yates shuffle with a cryptographic source
 	for i := len(labels) - 1; i > 0; i-- {
 		n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(i+1)))
 		if err != nil {

@@ -36,7 +36,6 @@ func fullContest(status model.ContestStatus, gameID uuid.UUID) *model.Contest {
 	return &model.Contest{ID: uuid.New(), Status: status, GameID: &gameID, XLabels: labels, YLabels: labels, Squares: squares}
 }
 
-// wires a game sync around one linked contest; the game update is stored and reloaded as given
 func syncFixture(t *testing.T, game *model.Game, contest *model.Contest) (*mocks.GameProjectionRepository, *mocks.ContestRepository, *mocks.ContestService) {
 	t.Helper()
 	g := mocks.NewGameProjectionRepository(t)
@@ -63,7 +62,7 @@ func TestGameSync_ScheduledGameOnlyRefreshesProjection(t *testing.T) {
 	game := &model.Game{ID: uuid.New(), Status: model.GameStatusScheduled}
 	g, c, cs := syncFixture(t, game, nil)
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_AdvancesStartedContest(t *testing.T) {
@@ -72,7 +71,7 @@ func TestGameSync_AdvancesStartedContest(t *testing.T) {
 	g, c, cs := syncFixture(t, game, contest)
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 1, 7, 3).Return(&model.QuarterResult{Quarter: 1, Winner: "u"}, nil).Once()
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_AutoStartsAndBackfills(t *testing.T) {
@@ -91,7 +90,7 @@ func TestGameSync_AutoStartsAndBackfills(t *testing.T) {
 		Run(func(_ context.Context, _ *model.Contest, quarter, _, _ int) { quarters = append(quarters, quarter) }).
 		Return(&model.QuarterResult{}, nil).Twice()
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 	assert.Equal(t, []int{1, 2}, quarters)
 }
 
@@ -101,7 +100,7 @@ func TestGameSync_AutoStartFailureIsRetried(t *testing.T) {
 	g, c, cs := syncFixture(t, game, contest)
 	cs.EXPECT().AutoStart(mock.Anything, contest).Return(errs.ErrVersionConflict)
 
-	err := service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game)
+	err := service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game)
 
 	assert.ErrorIs(t, err, errs.ErrVersionConflict, "the event is redelivered so the start is retried")
 }
@@ -114,11 +113,10 @@ func TestGameSync_SkipsUnresolvableQuarter(t *testing.T) {
 	contest := fullContest(model.ContestStatusQ1, game.ID)
 	g, c, cs := syncFixture(t, game, contest)
 
-	// an unresolvable Q1 must not stop Q2 from being applied
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 1, 7, 3).Return(nil, errs.ErrWinnerNotDeterminable).Once()
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 2, 14, 10).Return(&model.QuarterResult{Quarter: 2}, nil).Once()
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_StopsOnApplyErrorAndAsksForRedelivery(t *testing.T) {
@@ -129,10 +127,9 @@ func TestGameSync_StopsOnApplyErrorAndAsksForRedelivery(t *testing.T) {
 	contest := fullContest(model.ContestStatusQ1, game.ID)
 	g, c, cs := syncFixture(t, game, contest)
 
-	// a real write failure stops the loop so quarters can't be applied out of order
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 1, 7, 3).Return(nil, errors.New("db")).Once()
 
-	assert.Error(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	assert.Error(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_SkipsWhenGridNotFull(t *testing.T) {
@@ -141,16 +138,15 @@ func TestGameSync_SkipsWhenGridNotFull(t *testing.T) {
 	contest.Squares[0].Owner = ""
 	g, c, cs := syncFixture(t, game, contest)
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_SkipsAlreadyAppliedQuarter(t *testing.T) {
 	game := liveGame(uuid.New(), model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3})
-	// contest already past Q1; replaying the Q1 score must not re-advance it
 	contest := fullContest(model.ContestStatusQ2, game.ID)
 	g, c, cs := syncFixture(t, game, contest)
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_IgnoresTerminalContests(t *testing.T) {
@@ -158,7 +154,7 @@ func TestGameSync_IgnoresTerminalContests(t *testing.T) {
 	contest := fullContest(model.ContestStatusFinished, game.ID)
 	g, c, cs := syncFixture(t, game, contest)
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_FinalizesWhenGameEndsBeforeKickoffLock(t *testing.T) {
@@ -175,7 +171,7 @@ func TestGameSync_FinalizesWhenGameEndsBeforeKickoffLock(t *testing.T) {
 		Run(func(_ context.Context, _ *model.Contest, s []model.GameScore) { scores = s }).
 		Return(nil).Once()
 
-	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 	require.Len(t, scores, 2)
 	assert.Equal(t, 4, scores[1].Quarter)
 }
@@ -190,7 +186,7 @@ func TestGameSync_ContestDeletedMeanwhileIsSkipped(t *testing.T) {
 	c.EXPECT().GetIDsByGameID(mock.Anything, game.ID).Return([]uuid.UUID{contestID}, nil)
 	c.EXPECT().GetByIDForUpdate(mock.Anything, contestID).Return(nil, gorm.ErrRecordNotFound)
 
-	require.NoError(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx()).ApplyGameUpdate(context.Background(), game))
+	require.NoError(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_Errors(t *testing.T) {
@@ -198,19 +194,19 @@ func TestGameSync_Errors(t *testing.T) {
 
 	g := mocks.NewGameProjectionRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(errors.New("db"))
-	assert.Error(t, service.NewGameSyncService(g, mocks.NewContestRepository(t), mocks.NewContestService(t), passTx()).ApplyGameUpdate(context.Background(), game))
+	assert.Error(t, service.NewGameSyncService(g, mocks.NewContestRepository(t), mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 
 	g = mocks.NewGameProjectionRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
 	g.EXPECT().GetByID(mock.Anything, game.ID).Return(nil, errors.New("db"))
-	assert.Error(t, service.NewGameSyncService(g, mocks.NewContestRepository(t), mocks.NewContestService(t), passTx()).ApplyGameUpdate(context.Background(), game))
+	assert.Error(t, service.NewGameSyncService(g, mocks.NewContestRepository(t), mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 
 	g = mocks.NewGameProjectionRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
 	g.EXPECT().GetByID(mock.Anything, game.ID).Return(game, nil)
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetIDsByGameID(mock.Anything, game.ID).Return(nil, errors.New("db"))
-	assert.Error(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx()).ApplyGameUpdate(context.Background(), game))
+	assert.Error(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 
 	g = mocks.NewGameProjectionRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
@@ -219,5 +215,11 @@ func TestGameSync_Errors(t *testing.T) {
 	contestID := uuid.New()
 	c.EXPECT().GetIDsByGameID(mock.Anything, game.ID).Return([]uuid.UUID{contestID}, nil)
 	c.EXPECT().GetByIDForUpdate(mock.Anything, contestID).Return(nil, errors.New("lock timeout"))
-	assert.Error(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx()).ApplyGameUpdate(context.Background(), game))
+	assert.Error(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
+}
+
+func quietFeed(t *testing.T) *mocks.FeedService {
+	f := mocks.NewFeedService(t)
+	f.EXPECT().InvalidateContest(mock.Anything, mock.Anything).Maybe()
+	return f
 }

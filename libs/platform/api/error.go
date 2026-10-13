@@ -1,4 +1,3 @@
-// Package api holds the request context keys, gateway claims, and response shapes every service shares.
 package api
 
 import (

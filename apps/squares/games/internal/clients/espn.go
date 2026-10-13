@@ -14,7 +14,6 @@ import (
 
 const scoreboardPath = "/apis/site/v2/sports/football/nfl/scoreboard"
 
-// identify ourselves rather than sending resty's default
 const userAgent = "squares-games (+https://github.com/maxmorhardt/maxstash)"
 
 type ESPNClient interface {
@@ -49,7 +48,6 @@ func NewESPNClient(baseURL string) ESPNClient {
 }
 
 func (c *espnClient) FetchScoreboard(ctx context.Context, dates []string) ([]model.ESPNGame, error) {
-	// no dates at all falls back to espn's default, which is the current week's slate
 	if len(dates) == 0 {
 		return c.fetchOne(ctx, "")
 	}

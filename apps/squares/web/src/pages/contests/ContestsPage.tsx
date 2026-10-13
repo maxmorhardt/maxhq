@@ -3,33 +3,72 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Container,
   InputAdornment,
+  MenuItem,
   Skeleton,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
+import LoadingScreen from '../../components/common/LoadingScreen';
 import ContestsTable from '../../components/contest/table/ContestsTable';
 import ContestsTableSkeleton from '../../components/contest/table/ContestsTableSkeleton';
-import LoadingScreen from '../../components/common/LoadingScreen';
 import {
   selectContestError,
-  selectContestLoading,
-  selectContests,
-  selectContestsFetched,
-  selectMyContests,
+  selectContestFeed,
+  selectContestFeedCursor,
+  selectContestFeedFetched,
+  selectContestFeedLoading,
+  selectContestFeedLoadingMore,
 } from '../../features/contests/contestSelectors';
 import { clearError } from '../../features/contests/contestSlice';
-import { fetchContestsByOwner, fetchMyContests } from '../../features/contests/contestThunks';
+import { fetchContestFeed } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import type { ContestFeedParams, FeedRole, FeedSort, FeedStatus } from '../../types/contest';
 import { gradients } from '../../types/gradients';
-import type { PaginatedContestsResponse } from '../../types/contest';
-import { Helmet } from 'react-helmet-async';
+
+const PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 500;
+
+type RoleFilter = 'all' | FeedRole;
+type UpdatedFilter = 'any' | 'week' | 'month';
+
+const statusOptions: { value: FeedStatus; label: string }[] = [
+  { value: 'open', label: 'Open' },
+  { value: 'live', label: 'Live' },
+  { value: 'finished', label: 'Finished' },
+];
+
+// whole days, so the same filter keeps hitting the same cached page
+function updatedSince(filter: UpdatedFilter): string | undefined {
+  if (filter === 'any') {
+    return undefined;
+  }
+  const now = new Date();
+  const days = filter === 'week' ? 7 : 30;
+  const since = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - days);
+  return new Date(since).toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.22)' },
+    '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+  },
+  '& .MuiInputBase-input': { color: 'rgba(255,255,255,0.85)' },
+};
 
 export default function ContestsPage() {
   const auth = useAuth();
@@ -37,117 +76,74 @@ export default function ContestsPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  // owned contests pagination state
-  const [ownedPage, setOwnedPage] = useState(0);
-  const [ownedRowsPerPage, setOwnedRowsPerPage] = useState(5);
-  const [ownedPagination, setOwnedPagination] = useState({
-    page: 1,
-    limit: 5,
-    total: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrevious: false,
-  });
+  const contests = useAppSelector(selectContestFeed);
+  const fetched = useAppSelector(selectContestFeedFetched);
+  const nextCursor = useAppSelector(selectContestFeedCursor);
+  const loading = useAppSelector(selectContestFeedLoading);
+  const loadingMore = useAppSelector(selectContestFeedLoadingMore);
+  const error = useAppSelector(selectContestError);
 
-  // search input + debounced value used to actually fire the request
+  const [role, setRole] = useState<RoleFilter>('all');
+  const [statuses, setStatuses] = useState<FeedStatus[]>([]);
+  const [updated, setUpdated] = useState<UpdatedFilter>('any');
+  const [sort, setSort] = useState<FeedSort>('updated');
   const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [search, setSearch] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // seed from the store so navigating back renders cached contests without a skeleton
-  const hasFetched = useAppSelector(selectContestsFetched);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(hasFetched);
+  const params = useMemo<ContestFeedParams>(
+    () => ({
+      limit: PAGE_SIZE,
+      role: role === 'all' ? undefined : role,
+      status: statuses.length ? statuses : undefined,
+      search: search || undefined,
+      updatedSince: updatedSince(updated),
+      sort,
+    }),
+    [role, statuses, search, updated, sort]
+  );
+
+  const canFetch = auth.isAuthenticated && isInterceptorReady;
+
+  const reload = useCallback(() => {
+    dispatch(fetchContestFeed({ params }));
+  }, [dispatch, params]);
+
+  useEffect(() => {
+    if (canFetch) {
+      reload();
+    }
+  }, [canFetch, reload]);
+
+  useEffect(
+    () => () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    },
+    []
+  );
+
+  const loadMore = useCallback(() => {
+    if (nextCursor && !loading && !loadingMore) {
+      dispatch(fetchContestFeed({ params: { ...params, cursor: nextCursor }, append: true }));
+    }
+  }, [dispatch, params, nextCursor, loading, loadingMore]);
+
+  const sentinelRef = useInfiniteScroll<HTMLDivElement>(loadMore, canFetch && !!nextCursor);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
-    debounceRef.current = setTimeout(() => {
-      setDebouncedSearch(value.trim());
-      setOwnedPage(0);
-    }, 1000);
+    debounceRef.current = setTimeout(() => setSearch(value.trim()), SEARCH_DEBOUNCE_MS);
   };
 
-  // clear pending debounce on unmount to avoid setState on unmounted component
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = null;
-      }
-    };
-  }, []);
-
-  const loading = useAppSelector(selectContestLoading);
-  const error = useAppSelector(selectContestError);
-  const ownedContests = useAppSelector(selectContests);
-  const joinedContests = useAppSelector(selectMyContests);
-
-  // fetch owned contests when authenticated and pagination/search changes
-  useEffect(() => {
-    if (!auth.isAuthenticated || !isInterceptorReady) {
-      return;
-    }
-
-    const owner = auth.user?.profile?.email;
-    if (!owner) {
-      // never leave the skeleton up when the fetch cannot be dispatched
-      setHasLoadedOnce(true);
-      return;
-    }
-
-    dispatch(
-      fetchContestsByOwner({
-        owner,
-        pagination: {
-          page: ownedPage + 1,
-          limit: ownedRowsPerPage,
-          search: debouncedSearch || undefined,
-        },
-      })
-    ).then((result) => {
-      if (result.meta.requestStatus === 'fulfilled') {
-        const payload = result.payload as PaginatedContestsResponse;
-        setOwnedPagination({
-          page: payload.page,
-          limit: payload.limit,
-          total: payload.total,
-          totalPages: payload.totalPages,
-          hasNext: payload.hasNext,
-          hasPrevious: payload.hasPrevious,
-        });
-      }
-
-      setHasLoadedOnce(true);
-    });
-  }, [
-    auth.isAuthenticated,
-    auth.user,
-    dispatch,
-    isInterceptorReady,
-    ownedPage,
-    ownedRowsPerPage,
-    debouncedSearch,
-  ]);
-
-  // fetch contests where the current user is a participant
-  useEffect(() => {
-    if (!auth.isAuthenticated || !isInterceptorReady) {
-      return;
-    }
-
-    dispatch(fetchMyContests(debouncedSearch || undefined));
-  }, [auth.isAuthenticated, dispatch, isInterceptorReady, debouncedSearch]);
-
-  const handleOwnedPageChange = (_event: MouseEvent<HTMLButtonElement> | null, newPage: number) => {
-    setOwnedPage(newPage);
-  };
-
-  const handleOwnedRowsPerPageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setOwnedRowsPerPage(parseInt(event.target.value, 10));
-    setOwnedPage(0);
-  };
+  const toggleStatus = (value: FeedStatus) =>
+    setStatuses((prev) =>
+      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
+    );
 
   if (auth.isLoading && auth.activeNavigator === 'signinRedirect') {
     return (
@@ -155,12 +151,90 @@ export default function ContestsPage() {
     );
   }
 
-  const isSearching =
-    hasLoadedOnce &&
-    (searchInput.trim() !== debouncedSearch || (loading && debouncedSearch !== ''));
+  const firstLoad =
+    !fetched &&
+    ((auth.isLoading && auth.activeNavigator !== 'signoutSilent') || auth.isAuthenticated);
+  const refreshing = fetched && (loading || searchInput.trim() !== search);
 
-  // hero section shared between all states
-  const heroSection = (skeletonMode = false) => (
+  const filters = (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
+      <TextField
+        size="small"
+        placeholder="Search contests..."
+        value={searchInput}
+        onChange={(e) => handleSearchChange(e.target.value)}
+        disabled={!auth.isAuthenticated}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }} />
+              </InputAdornment>
+            ),
+            endAdornment: refreshing ? (
+              <InputAdornment position="end">
+                <CircularProgress size={16} thickness={5} sx={{ color: 'rgba(255,255,255,0.5)' }} />
+              </InputAdornment>
+            ) : undefined,
+          },
+        }}
+        sx={{ ...fieldSx, width: { xs: '100%', sm: 300 } }}
+      />
+      <ToggleButtonGroup
+        size="small"
+        exclusive
+        value={role}
+        onChange={(_, value: RoleFilter | null) => value && setRole(value)}
+        disabled={!auth.isAuthenticated}
+        aria-label="Role"
+      >
+        <ToggleButton value="all">All</ToggleButton>
+        <ToggleButton value="owned">Created</ToggleButton>
+        <ToggleButton value="joined">Joined</ToggleButton>
+      </ToggleButtonGroup>
+      <Box sx={{ display: 'flex', gap: 0.75 }}>
+        {statusOptions.map((option) => (
+          <Chip
+            key={option.value}
+            label={option.label}
+            clickable
+            disabled={!auth.isAuthenticated}
+            onClick={() => toggleStatus(option.value)}
+            color={statuses.includes(option.value) ? 'primary' : 'default'}
+            variant={statuses.includes(option.value) ? 'filled' : 'outlined'}
+            size="small"
+          />
+        ))}
+      </Box>
+      <TextField
+        select
+        size="small"
+        label="Updated"
+        value={updated}
+        onChange={(e) => setUpdated(e.target.value as UpdatedFilter)}
+        disabled={!auth.isAuthenticated}
+        sx={{ ...fieldSx, minWidth: 140 }}
+      >
+        <MenuItem value="any">Any time</MenuItem>
+        <MenuItem value="week">Past week</MenuItem>
+        <MenuItem value="month">Past month</MenuItem>
+      </TextField>
+      <TextField
+        select
+        size="small"
+        label="Sort"
+        value={sort}
+        onChange={(e) => setSort(e.target.value as FeedSort)}
+        disabled={!auth.isAuthenticated}
+        sx={{ ...fieldSx, minWidth: 170 }}
+      >
+        <MenuItem value="updated">Recently updated</MenuItem>
+        <MenuItem value="created">Newest</MenuItem>
+      </TextField>
+    </Box>
+  );
+
+  const hero = (
     <Box
       sx={{
         borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -195,10 +269,10 @@ export default function ContestsPage() {
               Contests
             </Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.45)', mt: 0.5, fontSize: '0.9rem' }}>
-              Manage and track your football squares contests
+              Everything you created or joined, in one place
             </Typography>
           </Box>
-          {skeletonMode ? (
+          {firstLoad ? (
             <Skeleton variant="rectangular" width={148} height={40} sx={{ borderRadius: 1 }} />
           ) : auth.isAuthenticated ? (
             <Button
@@ -211,113 +285,14 @@ export default function ContestsPage() {
             </Button>
           ) : null}
         </Box>
-
-        {skeletonMode ? (
-          <Skeleton
-            variant="rectangular"
-            height={40}
-            sx={{ maxWidth: 380, borderRadius: 1, width: '100%' }}
-          />
+        {firstLoad ? (
+          <Skeleton variant="rectangular" height={40} sx={{ maxWidth: 640, borderRadius: 1 }} />
         ) : (
-          <TextField
-            size="small"
-            placeholder="Search contests..."
-            value={searchInput}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            disabled={!auth.isAuthenticated}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: isSearching ? (
-                  <InputAdornment position="end">
-                    <CircularProgress
-                      size={16}
-                      thickness={5}
-                      sx={{ color: 'rgba(255,255,255,0.5)' }}
-                    />
-                  </InputAdornment>
-                ) : undefined,
-              },
-            }}
-            sx={{
-              width: { xs: '100%', sm: 380 },
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.22)' },
-                '&.Mui-focused fieldset': { borderColor: 'primary.main' },
-              },
-              '& .MuiInputBase-input': {
-                color: 'rgba(255,255,255,0.85)',
-                fontSize: '1rem',
-                '&::placeholder': { color: 'rgba(255,255,255,0.3)' },
-              },
-            }}
-          />
+          filters
         )}
       </Container>
     </Box>
   );
-
-  // full-page skeleton only on first load; later refetches show an inline spinner
-  if (
-    !hasLoadedOnce &&
-    ((auth.isLoading && auth.activeNavigator !== 'signoutSilent') || auth.isAuthenticated)
-  ) {
-    return (
-      <Box>
-        {heroSection(true)}
-        <Container maxWidth="lg" sx={{ py: 3, px: { xs: 2, sm: 3 } }}>
-          <ContestsTableSkeleton title="My Contests" rowCount={2} />
-          <Box sx={{ mt: 3 }}>
-            <ContestsTableSkeleton title="Joined Contests" rowCount={2} />
-          </Box>
-        </Container>
-      </Box>
-    );
-  }
-
-  // show warning if not authenticated
-  if (!auth.isAuthenticated) {
-    return (
-      <Box>
-        {heroSection()}
-        <Container maxWidth="lg" sx={{ py: 3, px: { xs: 2, sm: 3 } }}>
-          <Alert severity="warning" sx={{ mb: 3 }}>
-            Sign in to view your contests
-          </Alert>
-          <ContestsTable
-            contests={[]}
-            totalCount={0}
-            page={0}
-            rowsPerPage={5}
-            onPageChange={() => {}}
-            onRowsPerPageChange={() => {}}
-            title="My Contests"
-          />
-          <Box sx={{ mt: 3 }}>
-            <ContestsTable
-              contests={[]}
-              totalCount={0}
-              page={0}
-              rowsPerPage={5}
-              onPageChange={() => {}}
-              onRowsPerPageChange={() => {}}
-              title="Joined Contests"
-            />
-          </Box>
-        </Container>
-      </Box>
-    );
-  }
-
-  // drop owned contests from the joined list to avoid duplicates
-  const ownedIds = new Set(ownedContests.map((c) => c.id));
-  const joinedOnly = joinedContests.filter((c) => !ownedIds.has(c.id));
 
   return (
     <Box>
@@ -326,54 +301,51 @@ export default function ContestsPage() {
         <meta name="description" content="Browse and manage your NFL football squares contests." />
         <link rel="canonical" href="https://squares.maxstash.io/contests" />
       </Helmet>
-      {heroSection()}
+      {hero}
 
       <Container maxWidth="lg" sx={{ py: 3, px: { xs: 2, sm: 3 } }}>
+        {!auth.isAuthenticated && !firstLoad && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            Sign in to view your contests
+          </Alert>
+        )}
         {error && (
           <Alert severity="error" onClose={() => dispatch(clearError())} sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
 
-        <Box
-          sx={{
-            opacity: isSearching ? 0.5 : 1,
-            transition: 'opacity 0.25s ease',
-            pointerEvents: isSearching ? 'none' : 'auto',
-          }}
-        >
-          <ContestsTable
-            contests={ownedContests}
-            totalCount={ownedPagination.total}
-            page={ownedPage}
-            rowsPerPage={ownedRowsPerPage}
-            onPageChange={handleOwnedPageChange}
-            onRowsPerPageChange={handleOwnedRowsPerPageChange}
-            title="My Contests"
-          />
-        </Box>
-
-        <Box sx={{ mt: 3 }}>
+        {firstLoad ? (
+          <ContestsTableSkeleton title="" rowCount={4} />
+        ) : (
           <Box
             sx={{
-              opacity: isSearching ? 0.5 : 1,
+              opacity: refreshing ? 0.5 : 1,
               transition: 'opacity 0.25s ease',
-              pointerEvents: isSearching ? 'none' : 'auto',
+              pointerEvents: refreshing ? 'none' : 'auto',
             }}
           >
             <ContestsTable
-              contests={joinedOnly}
-              totalCount={joinedOnly.length}
-              page={0}
-              rowsPerPage={joinedOnly.length || 5}
-              onPageChange={() => {}}
-              onRowsPerPageChange={() => {}}
-              title="Joined Contests"
-              hidePagination
-              onLeave={() => dispatch(fetchMyContests(debouncedSearch || undefined))}
+              contests={auth.isAuthenticated ? contests : []}
+              onLeave={reload}
+              emptyTitle={
+                params.role || params.status || params.search || params.updatedSince
+                  ? 'No contests match these filters'
+                  : undefined
+              }
+              footer={
+                <Box ref={sentinelRef} sx={{ display: 'flex', justifyContent: 'center' }}>
+                  {loadingMore && <CircularProgress size={22} sx={{ my: 2 }} />}
+                  {!loadingMore && nextCursor && typeof IntersectionObserver === 'undefined' && (
+                    <Button onClick={loadMore} sx={{ my: 1 }}>
+                      Load more
+                    </Button>
+                  )}
+                </Box>
+              }
             />
           </Box>
-        </Box>
+        )}
       </Container>
     </Box>
   );

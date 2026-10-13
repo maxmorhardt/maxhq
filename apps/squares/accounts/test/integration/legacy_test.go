@@ -36,7 +36,6 @@ func TestLegacy_ExistingProfilesAreKept(t *testing.T) {
 }
 
 func TestLegacy_ExistingTombstonesRevokeTokens(t *testing.T) {
-	// accounts copies deleted_accounts into redis on start, so tokens from before the deletion are rejected
 	stale := testkit.Identity{Email: "gone@squares.test", IssuedAt: time.Now().Add(-2 * time.Hour)}
 
 	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaA, stale, http.MethodGet, "/users/me", nil).Status)

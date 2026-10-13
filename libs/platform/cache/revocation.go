@@ -9,10 +9,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// outlives any token minted before the deletion, after which the tombstone has nothing left to reject
 const revocationTTL = 30 * 24 * time.Hour
 
-// deleted accounts, checked on every authenticated request in every service
 type RevocationStore interface {
 	Revoke(ctx context.Context, email string, at time.Time) error
 	IsRevoked(ctx context.Context, email string, issuedAt int64) (bool, error)
@@ -35,7 +33,6 @@ func (s *redisRevocationStore) Revoke(ctx context.Context, email string, at time
 	return s.client.Set(ctx, Key("revoked", email), strconv.FormatInt(at.Unix(), 10), ttl).Err()
 }
 
-// a tombstone revokes every token issued at or before the deletion instant
 func (s *redisRevocationStore) IsRevoked(ctx context.Context, email string, issuedAt int64) (bool, error) {
 	raw, err := s.client.Get(ctx, Key("revoked", email)).Result()
 	if errors.Is(err, redis.Nil) {

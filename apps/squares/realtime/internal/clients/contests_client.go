@@ -11,14 +11,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
 	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 )
 
 const requestTimeout = 5 * time.Second
 
-// contests decides who may watch a contest; realtime asks on connect and whenever access may have changed
 type ContestAccessClient interface {
-	GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*internalapi.ContestSnapshot, error)
+	GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*contracts.ContestSnapshot, error)
 }
 
 type contestAccessClient struct {
@@ -35,8 +34,8 @@ func NewContestAccessClient(baseURL, token string) ContestAccessClient {
 	}
 }
 
-func (c *contestAccessClient) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*internalapi.ContestSnapshot, error) {
-	endpoint := c.baseURL + internalapi.SnapshotPath(contestID, user)
+func (c *contestAccessClient) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*contracts.ContestSnapshot, error) {
+	endpoint := c.baseURL + contracts.SnapshotPath(contestID, user)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, http.NoBody)
 	if err != nil {
 		return nil, err
@@ -59,7 +58,7 @@ func (c *contestAccessClient) GetSnapshot(ctx context.Context, contestID uuid.UU
 		return nil, fmt.Errorf("%w: contests snapshot returned %d", errs.ErrDependencyFailed, resp.StatusCode)
 	}
 
-	var snapshot internalapi.ContestSnapshot
+	var snapshot contracts.ContestSnapshot
 	if err := json.NewDecoder(resp.Body).Decode(&snapshot); err != nil {
 		return nil, fmt.Errorf("%w: failed to decode snapshot: %w", errs.ErrDependencyFailed, err)
 	}

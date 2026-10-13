@@ -9,10 +9,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
 )
 
-// service-to-service reads for realtime and accounts; never routed by the gateway
 type InternalHandler interface {
 	GetContestSnapshot(c *gin.Context)
 	GetUserActivity(c *gin.Context)
@@ -53,11 +51,11 @@ func (h *internalHandler) GetContestSnapshot(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrContestNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(errs.ErrDatabaseUnavailable), c))
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(errs.ErrDatabaseUnavailable), c))
 		}
 		return
 	}
@@ -72,13 +70,13 @@ func (h *internalHandler) GetContestSnapshot(c *gin.Context) {
 // @Produce json
 // @Param email path string true "User email"
 // @Param X-Internal-Token header string true "Shared service token"
-// @Success 200 {object} internalapi.UserActivitySummary
+// @Success 200 {object} contracts.UserActivitySummary
 // @Failure 500 {object} api.APIError
 // @Router /internal/users/{email}/activity [get]
 func (h *internalHandler) GetUserActivity(c *gin.Context) {
 	summary, err := h.userActivityService.GetActivitySummary(c.Request.Context(), c.Param("email"))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 

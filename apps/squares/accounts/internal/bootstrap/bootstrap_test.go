@@ -43,7 +43,6 @@ func testInfra(t *testing.T) (*server.Infra, sqlmock.Sqlmock) {
 
 func testConfig() *model.AccountsConfig {
 	return &model.AccountsConfig{
-		Contact:  model.ContactConfig{RateLimit: 1},
 		Internal: config.InternalConfig{Token: "internal"},
 		Contests: model.ContestsConfig{URL: "http://127.0.0.1:1"},
 	}
@@ -58,16 +57,11 @@ func TestNew_WiresProfileAndContactRoutes(t *testing.T) {
 	app.Engine.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/users/me", http.NoBody))
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 
-	// the contact form is public but rate limited per client ip
-	post := func() int {
-		rec := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodPost, "/contact", strings.NewReader("{}"))
-		req.Header.Set("Content-Type", "application/json")
-		app.Engine.ServeHTTP(rec, req)
-		return rec.Code
-	}
-	assert.Equal(t, http.StatusBadRequest, post())
-	assert.Equal(t, http.StatusTooManyRequests, post())
+	w = httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/contact", strings.NewReader("{}"))
+	req.Header.Set("Content-Type", "application/json")
+	app.Engine.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestRun_SyncsRevocationsAndStopsWithContext(t *testing.T) {

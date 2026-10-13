@@ -18,23 +18,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestGetContestsByOwnerPaginated(t *testing.T) {
-	want := []model.Contest{{Name: "c"}}
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetAllByOwnerPaginated(mock.Anything, "o", 1, 10, "").Return(want, int64(1), nil)
-
-	got, total, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		GetContestsByOwnerPaginated(context.Background(), "o", 1, 10, "")
-	require.NoError(t, err)
-	assert.Equal(t, want, got)
-	assert.Equal(t, int64(1), total)
-}
-
 func contestSvc(repo *mocks.ContestRepository, pRepo *mocks.ParticipantRepository, pSvc *mocks.ParticipantService) service.ContestService {
 	return service.NewContestService(repo, pRepo, &mocks.GameProjectionRepository{}, anyUser(), passTx(), anyEvents(), pSvc)
 }
 
-// runs the unit of work inline, standing in for a real transaction
 func passTx() *mocks.Transactor {
 	m := &mocks.Transactor{}
 	m.On("Do", mock.Anything, mock.Anything).
@@ -42,7 +29,6 @@ func passTx() *mocks.Transactor {
 	return m
 }
 
-// accepts every event so tests can focus on state changes
 func anyEvents() *mocks.ContestEventPublisher {
 	m := &mocks.ContestEventPublisher{}
 	for _, method := range []string{"PublishSquareUpdate", "PublishContestUpdate", "PublishQuarterResult", "PublishContestDeleted", "PublishParticipantRemoved"} {
@@ -54,7 +40,6 @@ func anyEvents() *mocks.ContestEventPublisher {
 	return m
 }
 
-// yields non-empty default initials so square claims proceed
 func anyUser() *mocks.UserProjectionRepository {
 	m := &mocks.UserProjectionRepository{}
 	m.On("GetOrCreate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -66,7 +51,6 @@ func contestSvcWithGame(repo *mocks.ContestRepository, pRepo *mocks.ParticipantR
 	return service.NewContestService(repo, pRepo, gameRepo, anyUser(), passTx(), anyEvents(), pSvc)
 }
 
-// participant service that authorizes every action it's asked about
 func okAuth(t *testing.T) *mocks.ParticipantService {
 	m := mocks.NewParticipantService(t)
 	m.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
@@ -107,7 +91,6 @@ func TestCreateContest_WithGame(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().ExistsByOwnerAndName(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-	// the foreign key is set (not the association) and teams come from the game
 	repo.EXPECT().Create(mock.Anything, mock.MatchedBy(func(c *model.Contest) bool {
 		return c.GameID != nil && *c.GameID == gameID && c.HomeTeam == "Chiefs" && c.AwayTeam == "Eagles"
 	}), mock.Anything).Return(nil)
@@ -322,7 +305,6 @@ func TestRecordQuarterResult_Success(t *testing.T) {
 		YLabels: orderedLabels(t),
 		Squares: []model.Square{{Row: 3, Col: 7, Owner: "winner", OwnerName: "Win Ner"}},
 	}, nil)
-	// the row and the Q1 -> Q2 transition land in a single call
 	repo.EXPECT().ApplyQuarterResults(mock.Anything, mock.MatchedBy(func(c *model.Contest) bool {
 		return c.Status == model.ContestStatusQ2
 	}), mock.MatchedBy(func(results []model.QuarterResult) bool {
@@ -479,7 +461,6 @@ func TestClaimSquare_MissingInitials(t *testing.T) {
 	pRepo.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(&model.ContestParticipant{MaxSquares: 5}, nil)
 	pRepo.EXPECT().CountSquaresByUser(mock.Anything, mock.Anything, mock.Anything).Return(0, nil)
 
-	// user profile exists but has no default initials set
 	userRepo := &mocks.UserProjectionRepository{}
 	userRepo.On("GetOrCreate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(&model.User{Email: "u", DefaultInitials: ""}, nil).Maybe()
@@ -606,7 +587,6 @@ func TestRecordQuarterResult_WinnerNotFound(t *testing.T) {
 		Status: model.ContestStatusQ1, XLabels: short, YLabels: short,
 	}, nil)
 
-	// away digit 3 not present in [0,1,2] -> calculateWinnerCoordinates errors
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
 		RecordQuarterResult(context.Background(), uuid.New(), 17, 23, "u")
 	assert.Error(t, err)
@@ -696,7 +676,6 @@ func TestFinalizeFromScores_RecordsEveryQuarter(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
 	assert.Equal(t, "system", contest.UpdatedBy)
-	// labels are randomized on finalize, so assert the quarters landed rather than a fixed winner
 	require.Len(t, persisted, 2)
 	assert.Equal(t, 1, persisted[0].Quarter)
 	assert.Equal(t, 4, persisted[1].Quarter)
@@ -763,7 +742,6 @@ func TestClaimSquare_LimitReachedConcurrently(t *testing.T) {
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	pRepo := mocks.NewParticipantRepository(t)
-	// the unsynchronized precheck passes, so only the repository can catch the limit breach
 	pRepo.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(&model.ContestParticipant{MaxSquares: 5}, nil)
 	pRepo.EXPECT().CountSquaresByUser(mock.Anything, mock.Anything, mock.Anything).Return(4, nil)
 
@@ -781,23 +759,12 @@ func TestClaimSquare_ReEditOwnSquare(t *testing.T) {
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	pRepo := mocks.NewParticipantRepository(t)
 
-	// already owns the square -> no square-limit count check
 	pRepo.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(&model.ContestParticipant{MaxSquares: 5}, nil)
 
 	ctx := context.WithValue(context.Background(), api.ClaimsKey, &api.Claims{Name: "N"})
 	got, err := contestSvc(repo, pRepo, pSvc).ClaimSquare(ctx, uuid.New(), squareID, "u")
 	require.NoError(t, err)
 	assert.Equal(t, "XY", got.Value)
-}
-
-func TestGetContestsByOwnerPaginated_Error(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetAllByOwnerPaginated(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil, int64(0), errors.New("db"))
-
-	_, _, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		GetContestsByOwnerPaginated(context.Background(), "o", 1, 10, "")
-	assert.Error(t, err)
 }
 
 func TestRecordQuarterResult_BadLabels(t *testing.T) {
@@ -831,7 +798,6 @@ func TestClearSquare_OwnerDespiteAuthFail(t *testing.T) {
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
 
-	// authorize fails, but the caller owns the square, so the clear proceeds
 	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
 		ClearSquare(context.Background(), uuid.New(), squareID, "u")
 	require.NoError(t, err)
@@ -889,7 +855,6 @@ func TestRollbackLastQuarterResult_NothingToRollback(t *testing.T) {
 
 func TestRollbackLastQuarterResult_MissingResult(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
-	// status says Q1 was recorded but the result row is absent
 	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ2}, nil)
 
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
@@ -951,7 +916,6 @@ func TestRecordQuarterResult_GameLinkedSkipsAuth(t *testing.T) {
 		GameID: &gameID,
 	}, nil)
 
-	// a bare participant service asserts Authorize is never reached for game-linked contests
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
 		RecordQuarterResult(context.Background(), uuid.New(), 7, 3, "u")
 	assert.ErrorIs(t, err, errs.ErrContestIsGameLinked)

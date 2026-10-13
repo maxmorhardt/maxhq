@@ -9,14 +9,13 @@ import (
 	"time"
 
 	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 )
 
 const requestTimeout = 5 * time.Second
 
-// accounts' only synchronous dependency: contests decides whether an account is still in use
 type ContestActivityClient interface {
-	GetUserActivity(ctx context.Context, email string) (*internalapi.UserActivitySummary, error)
+	GetUserActivity(ctx context.Context, email string) (*contracts.UserActivitySummary, error)
 }
 
 type contestActivityClient struct {
@@ -33,8 +32,8 @@ func NewContestActivityClient(baseURL, token string) ContestActivityClient {
 	}
 }
 
-func (c *contestActivityClient) GetUserActivity(ctx context.Context, email string) (*internalapi.UserActivitySummary, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+internalapi.UserActivityPath(email), http.NoBody)
+func (c *contestActivityClient) GetUserActivity(ctx context.Context, email string) (*contracts.UserActivitySummary, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+contracts.UserActivityPath(email), http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +49,7 @@ func (c *contestActivityClient) GetUserActivity(ctx context.Context, email strin
 		return nil, fmt.Errorf("contests activity request returned %d", resp.StatusCode)
 	}
 
-	var summary internalapi.UserActivitySummary
+	var summary contracts.UserActivitySummary
 	if err := json.NewDecoder(resp.Body).Decode(&summary); err != nil {
 		return nil, fmt.Errorf("failed to decode contests activity: %w", err)
 	}

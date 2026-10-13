@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
-// envoy gateway validates the dex id token and copies these claims onto the request; the gateway strips any client-sent copies first
+// set by the gateway's jwt filter, which strips any client-sent copies first
 const (
 	HeaderAuthEmail         = "X-Auth-Email"
 	HeaderAuthName          = "X-Auth-Name"
@@ -23,12 +23,11 @@ const (
 
 const authErrorMessage = "Authentication required. Please log in to continue"
 
-// trusts the gateway for signature, issuer, and audience; still enforces verification, expiry, and account deletion here
 func Authenticate(revocations cache.RevocationStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, reason := claimsFromHeaders(c)
 		if claims == nil {
-			reqctx.LoggerFromGinContext(c).Warn("rejecting request without valid gateway identity", "reason", reason)
+			logging.FromGin(c).Warn("rejecting request without valid gateway identity", "reason", reason)
 			metrics.RecordAuthFailure(reason)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, authErrorMessage, c))
 			return
@@ -40,9 +39,9 @@ func Authenticate(revocations cache.RevocationStore) gin.HandlerFunc {
 			return
 		}
 
-		reqctx.SetGinContextValue(c, api.UserKey, claims.Email)
-		reqctx.SetGinContextValue(c, api.ClaimsKey, claims)
-		reqctx.SetGinContextValue(c, api.LoggerKey, reqctx.LoggerFromGinContext(c).With("user", claims.Email))
+		api.SetContextValue(c, api.UserKey, claims.Email)
+		api.SetContextValue(c, api.ClaimsKey, claims)
+		api.SetContextValue(c, api.LoggerKey, logging.FromGin(c).With("user", claims.Email))
 
 		c.Next()
 	}
@@ -93,12 +92,12 @@ func isRevoked(c *gin.Context, revocations cache.RevocationStore, claims *api.Cl
 	revoked, err := revocations.IsRevoked(c.Request.Context(), claims.Email, claims.IssuedAt)
 	if err != nil {
 		metrics.IncRedisError("revocation_check")
-		reqctx.LoggerFromGinContext(c).Warn("revocation check failed, allowing request", "error", err)
+		logging.FromGin(c).Warn("revocation check failed, allowing request", "error", err)
 		return false
 	}
 
 	if revoked {
-		reqctx.LoggerFromGinContext(c).Warn("rejecting token issued before account deletion", "user", claims.Email)
+		logging.FromGin(c).Warn("rejecting token issued before account deletion", "user", claims.Email)
 	}
 
 	return revoked

@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// contests' copy of the games service's data, kept current by game events
 type GameProjectionRepository interface {
 	Upsert(ctx context.Context, game *model.Game) error
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error)

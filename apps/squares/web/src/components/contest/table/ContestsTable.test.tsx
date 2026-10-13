@@ -7,7 +7,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { contestReducer } from '../../../features/contests/contestSlice';
 import ContestsTable from './ContestsTable';
-import type { Contest } from '../../../types/contest';
+import type { ContestSummary } from '../../../types/contest';
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 
@@ -17,61 +17,49 @@ vi.mock('react-router', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 vi.mock('./DeleteContest', () => ({
-  default: ({ open }: { open: boolean }) => (open ? <div data-testid="delete-dialog" /> : null),
+  default: ({ open, contest }: { open: boolean; contest: ContestSummary | null }) =>
+    open ? <div data-testid="delete-dialog">{contest?.name}</div> : null,
 }));
 vi.mock('./EditContest', () => ({
-  default: ({ open }: { open: boolean }) => (open ? <div data-testid="edit-dialog" /> : null),
+  default: ({ open, contest }: { open: boolean; contest: ContestSummary | null }) =>
+    open ? <div data-testid="edit-dialog">{contest?.name}</div> : null,
 }));
 
 import { useAuth } from 'react-oidc-context';
 
 const theme = createTheme();
 
-const contest: Contest = {
+const contest: ContestSummary = {
   version: 1,
   id: 'c-1',
   name: 'Super Bowl LX',
-  xLabels: [],
-  yLabels: [],
   status: 'ACTIVE',
   visibility: 'public',
-  squares: [],
   owner: 'alice',
+  role: 'owner',
   homeTeam: 'Chiefs',
   awayTeam: 'Eagles',
+  claimedSquares: 42,
+  mySquares: 0,
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
-  createdBy: 'alice',
-  updatedBy: 'alice',
 };
 
-function makeStore() {
-  return configureStore({
-    reducer: { contest: contestReducer },
-    preloadedState: {
-      contest: { ...contestReducer(undefined, { type: '' }), currentContest: null },
-    },
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
-  });
-}
-
-const defaultProps = {
-  contests: [contest],
-  totalCount: 1,
-  page: 0,
-  rowsPerPage: 5,
-  onPageChange: vi.fn(),
-  onRowsPerPageChange: vi.fn(),
-  hidePagination: false,
-  title: 'My Contests',
+const joined: ContestSummary = {
+  ...contest,
+  id: 'c-2',
+  name: 'Office Pool',
+  role: 'participant',
+  mySquares: 5,
 };
 
-function renderTable(props: ComponentProps<typeof ContestsTable> = defaultProps) {
+function renderTable(props: Partial<ComponentProps<typeof ContestsTable>> = {}) {
+  const store = configureStore({ reducer: { contest: contestReducer } });
   return render(
     <ThemeProvider theme={theme}>
-      <Provider store={makeStore()}>
+      <Provider store={store}>
         <MemoryRouter>
-          <ContestsTable {...props} />
+          <ContestsTable contests={[contest]} {...props} />
         </MemoryRouter>
       </Provider>
     </ThemeProvider>
@@ -87,121 +75,82 @@ describe('ContestsTable', () => {
     } as unknown as ReturnType<typeof useAuth>);
   });
 
-  it('renders the table title', () => {
-    renderTable();
-    expect(screen.getByText('My Contests')).toBeInTheDocument();
-  });
-
-  it('shows "No contests yet" when contests list is empty', () => {
-    renderTable({ ...defaultProps, contests: [], totalCount: 0 });
+  it('shows the empty state', () => {
+    renderTable({ contests: [] });
     expect(screen.getByText('No contests yet')).toBeInTheDocument();
   });
 
-  it('renders contest rows', () => {
-    renderTable();
+  it('shows a custom empty title', () => {
+    renderTable({ contests: [], emptyTitle: 'No contests match these filters' });
+    expect(screen.getByText('No contests match these filters')).toBeInTheDocument();
+  });
+
+  it('renders owned and joined contests together with their role', () => {
+    renderTable({ contests: [contest, joined] });
     expect(screen.getByText('Super Bowl LX')).toBeInTheDocument();
+    expect(screen.getByText('Office Pool')).toBeInTheDocument();
+    expect(screen.getByText('Owner')).toBeInTheDocument();
+    expect(screen.getByText('Joined')).toBeInTheDocument();
   });
 
-  it('opens the delete dialog when the delete icon is clicked', () => {
+  it('shows claimed squares and the caller’s own count', () => {
+    renderTable({ contests: [contest, joined] });
+    expect(screen.getByText('42/100')).toBeInTheDocument();
+    expect(screen.getByText('42/100 · 5 yours')).toBeInTheDocument();
+  });
+
+  it('shows the matchup, one team, or a dash', () => {
+    renderTable({
+      contests: [
+        contest,
+        { ...joined, awayTeam: undefined },
+        { ...joined, id: 'c-3', homeTeam: undefined, awayTeam: undefined },
+      ],
+    });
+    expect(screen.getByText('Chiefs vs Eagles')).toBeInTheDocument();
+    expect(screen.getByText('Chiefs')).toBeInTheDocument();
+    expect(screen.getByText('–')).toBeInTheDocument();
+  });
+
+  it('opens the edit and delete dialogs with the clicked contest', () => {
     renderTable();
-    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-    fireEvent.click(deleteButtons[0]);
-    expect(screen.getByTestId('delete-dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /edit contest/i }));
+    expect(screen.getByTestId('edit-dialog')).toHaveTextContent('Super Bowl LX');
+    fireEvent.click(screen.getByRole('button', { name: /delete contest/i }));
+    expect(screen.getByTestId('delete-dialog')).toHaveTextContent('Super Bowl LX');
   });
 
-  it('opens the edit dialog when the edit icon is clicked', () => {
-    renderTable();
-    const editButtons = screen.getAllByRole('button', { name: /edit/i });
-    fireEvent.click(editButtons[0]);
-    expect(screen.getByTestId('edit-dialog')).toBeInTheDocument();
-  });
-
-  it('navigates to contest detail when row is clicked', () => {
+  it('navigates to the contest when a row is clicked', () => {
     renderTable();
     fireEvent.click(screen.getByText('Super Bowl LX'));
     expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1');
   });
 
-  it('does not show edit/delete buttons when user is not the owner', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: true,
-      user: { profile: { email: 'bob' } },
-    } as unknown as ReturnType<typeof useAuth>);
-    renderTable();
-    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+  it('only offers view and leave on joined contests', () => {
+    renderTable({ contests: [joined], onLeave: vi.fn() });
+    expect(screen.getByRole('button', { name: /view contest/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /leave contest/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /edit contest/i })).not.toBeInTheDocument();
   });
 
-  it('shows the leave icon for a non-owned active contest when authenticated', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: true,
-      user: { profile: { email: 'bob' } },
-    } as unknown as ReturnType<typeof useAuth>);
-    renderTable({ ...defaultProps, onLeave: vi.fn() });
-    expect(screen.getAllByRole('button', { name: /leave contest/i }).length).toBeGreaterThan(0);
-  });
-
-  it('does not show the leave icon when the user email is unavailable', () => {
+  it('hides leave without a signed-in email', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       user: undefined,
     } as unknown as ReturnType<typeof useAuth>);
-    renderTable({ ...defaultProps, onLeave: vi.fn() });
+    renderTable({ contests: [joined], onLeave: vi.fn() });
     expect(screen.queryByRole('button', { name: /leave contest/i })).not.toBeInTheDocument();
   });
 
-  it('shows pagination when hidePagination is false (default)', () => {
-    renderTable();
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
-  });
-
-  it('hides pagination when hidePagination is true', () => {
-    renderTable({ ...defaultProps, hidePagination: true });
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-  });
-
-  it('shows contest name and matchup when homeTeam and awayTeam are set', () => {
-    renderTable();
-    expect(screen.getByText('Chiefs vs Eagles')).toBeInTheDocument();
-  });
-
-  it('shows only homeTeam when awayTeam is absent', () => {
-    renderTable({ ...defaultProps, contests: [{ ...contest, awayTeam: undefined }] });
-    expect(screen.getByText('Chiefs')).toBeInTheDocument();
-  });
-
-  it('shows dash when both homeTeam and awayTeam are absent', () => {
-    renderTable({
-      ...defaultProps,
-      contests: [{ ...contest, homeTeam: undefined, awayTeam: undefined }],
-    });
-    expect(screen.getByText('–')).toBeInTheDocument();
-  });
-
-  it('shows a view button (not edit/delete) for a finished contest the user owns', () => {
-    renderTable({ ...defaultProps, contests: [{ ...contest, status: 'FINISHED' }] });
-    expect(screen.getByRole('button', { name: /view contest/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /edit contest/i })).not.toBeInTheDocument();
+  it('only offers view on a finished contest the user owns', () => {
+    renderTable({ contests: [{ ...contest, status: 'FINISHED' }] });
+    fireEvent.click(screen.getByRole('button', { name: /view contest/i }));
+    expect(screen.getByTestId('edit-dialog')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete contest/i })).not.toBeInTheDocument();
   });
 
-  it('shows a view button for a contest the user does not own', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: true,
-      user: { profile: { email: 'bob' } },
-    } as unknown as ReturnType<typeof useAuth>);
-    renderTable();
-    expect(screen.getByRole('button', { name: /view contest/i })).toBeInTheDocument();
-  });
-
-  it('opens the dialog when the view icon is clicked', () => {
-    renderTable({ ...defaultProps, contests: [{ ...contest, status: 'FINISHED' }] });
-    fireEvent.click(screen.getByRole('button', { name: /view contest/i }));
-    expect(screen.getByTestId('edit-dialog')).toBeInTheDocument();
-  });
-
-  it('shows custom title when title prop is provided', () => {
-    renderTable({ ...defaultProps, title: 'Joined Contests' });
-    expect(screen.getByText('Joined Contests')).toBeInTheDocument();
+  it('renders the footer', () => {
+    renderTable({ footer: <div data-testid="footer" /> });
+    expect(screen.getByTestId('footer')).toBeInTheDocument();
   });
 });

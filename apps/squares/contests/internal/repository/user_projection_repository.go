@@ -8,18 +8,17 @@ import (
 
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-// contests' copy of the accounts profile: enough to put initials on a square and a name on the leaderboard
 type UserProjectionRepository interface {
 	GetOrCreate(ctx context.Context, email, defaultDisplayName, defaultInitials string) (*model.User, error)
 	Upsert(ctx context.Context, user *model.User) error
 	CascadeInitials(ctx context.Context, email, initials string) ([]model.Square, error)
 	GetStats(ctx context.Context, email string) (*model.UserStatsResponse, error)
-	GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error)
+	GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error)
 	FirstActivity(ctx context.Context, email string) (*time.Time, error)
 	ScrubUserData(ctx context.Context, email string) error
 }
@@ -46,7 +45,6 @@ func (r *userProjectionRepository) GetOrCreate(ctx context.Context, email, defau
 		return nil, err
 	}
 
-	// accounts derives the same defaults from the same claims, so the copy agrees until the user edits it there
 	newUser := &model.User{Email: email, DisplayName: defaultDisplayName, DefaultInitials: defaultInitials}
 	if err := conn.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "email"}}, DoNothing: true}).
 		Create(newUser).Error; err != nil {
@@ -76,14 +74,12 @@ func (r *userProjectionRepository) CascadeInitials(ctx context.Context, email, i
 	err := database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
 		liveContests := tx.Model(&model.Contest{}).Select("id").Where("status NOT IN ?", liveStatuses)
 
-		// finished grids keep the initials they were scored with
 		if err := tx.Model(&model.Square{}).
 			Where("owner = ? AND value != ? AND contest_id IN (?)", email, "", liveContests).
 			Updates(map[string]any{"value": initials, "version": gorm.Expr("version + 1")}).Error; err != nil {
 			return err
 		}
 
-		// re-select the affected squares so the caller can broadcast the change
 		return tx.Where("owner = ? AND value != ? AND contest_id IN (?)", email, "", liveContests).
 			Find(&squares).Error
 	})
@@ -129,7 +125,6 @@ func (r *userProjectionRepository) GetStats(ctx context.Context, email string) (
 		return nil, err
 	}
 
-	// every quarter the user had a stake in, so the win rate is wins per opportunity
 	if err := conn.Raw(
 		`SELECT COUNT(*)
 		FROM quarter_results q
@@ -144,10 +139,9 @@ func (r *userProjectionRepository) GetStats(ctx context.Context, email string) (
 	return &stats, nil
 }
 
-func (r *userProjectionRepository) GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error) {
-	var contests []internalapi.UserActiveContest
+func (r *userProjectionRepository) GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error) {
+	var contests []contracts.UserActiveContest
 
-	// contests that still receive live updates, where the user is the owner or a participant
 	if err := database.Conn(ctx, r.db).Raw(
 		`SELECT c.id, c.name, c.owner, CASE WHEN c.owner = ? THEN 'owner' ELSE 'participant' END AS role
 		FROM contests c
@@ -162,7 +156,6 @@ func (r *userProjectionRepository) GetActiveContests(ctx context.Context, email 
 	return contests, nil
 }
 
-// member since reflects the user's first activity, not their first profile visit
 func (r *userProjectionRepository) FirstActivity(ctx context.Context, email string) (*time.Time, error) {
 	var firstActivity sql.NullTime
 	if err := database.Conn(ctx, r.db).Raw(
@@ -181,10 +174,8 @@ func (r *userProjectionRepository) FirstActivity(ctx context.Context, email stri
 	return &firstActivity.Time, nil
 }
 
-// accounts owns the tombstone and the profile; this removes everything contests holds about the user
 func (r *userProjectionRepository) ScrubUserData(ctx context.Context, email string) error {
 	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		// free the user's squares in contests that are still being played
 		if err := tx.Model(&model.Square{}).
 			Where("owner = ? AND contest_id IN (?)", email,
 				tx.Model(&model.Contest{}).Select("id").Where("status NOT IN ?", liveStatuses)).
@@ -192,7 +183,6 @@ func (r *userProjectionRepository) ScrubUserData(ctx context.Context, email stri
 			return err
 		}
 
-		// finished/deleted contests keep their history under the ghost identity
 		anonymize := []struct {
 			tableModel any
 			column     string

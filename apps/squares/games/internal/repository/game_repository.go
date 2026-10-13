@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// offseason shows week 1 while an in-season list stays capped to ~2 weeks of fixtures
 const upcomingWindow = 14 * 24 * time.Hour
 
 type GameRepository interface {
@@ -34,20 +33,17 @@ func NewGameRepository(db *gorm.DB) GameRepository {
 	return &gameRepository{db: db}
 }
 
-// liveColumns are the mutable fields refreshed from ESPN on every upsert
 var liveColumns = []string{
 	"home_team", "away_team", "home_abbr", "away_abbr", "game_time",
 	"week", "season", "season_type", "status", "period", "home_score", "away_score",
 }
 
-// changed reports whether anything a subscriber cares about moved, so unchanged polls publish nothing
 func (r *gameRepository) Upsert(ctx context.Context, game *model.Game) (bool, error) {
 	conn := database.Conn(ctx, r.db)
 
 	existing := &model.Game{}
 	err := conn.Where("espn_id = ?", game.ESPNID).First(existing).Error
 	if err == nil {
-		// preserve identity, refresh the mutable fields in place
 		game.ID = existing.ID
 		game.CreatedAt = existing.CreatedAt
 		if sameLiveFields(existing, game) {
@@ -83,7 +79,6 @@ func (r *gameRepository) GetUpcoming(ctx context.Context) ([]model.Game, error) 
 	now := time.Now()
 	conn := database.Conn(ctx, r.db)
 
-	// only games that haven't kicked off yet can be linked to a new contest
 	var nextKickoff []time.Time
 	if err := conn.Model(&model.Game{}).
 		Where("status = ? AND game_time > ?", model.GameStatusScheduled, now).

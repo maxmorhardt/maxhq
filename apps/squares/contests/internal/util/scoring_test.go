@@ -34,7 +34,6 @@ func startedContest(status model.ContestStatus) *model.Contest {
 
 func TestComputeWinner(t *testing.T) {
 	labels := identityLabels()
-	// home 17 -> last digit 7 (col), away 23 -> last digit 3 (row)
 	row, col, ok := ComputeWinner(17, 23, labels, labels)
 	require.True(t, ok)
 	assert.Equal(t, 3, row)
@@ -84,7 +83,6 @@ func TestRandomizedLabels(t *testing.T) {
 	require.NoError(t, json.Unmarshal(xJSON, &x))
 	require.NoError(t, json.Unmarshal(yJSON, &y))
 
-	// each axis is a permutation of 0-9
 	for _, labels := range [][]int8{x, y} {
 		require.Len(t, labels, 10)
 		for d := int8(0); d < 10; d++ {

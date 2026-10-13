@@ -25,7 +25,6 @@ type healthHandler struct {
 	checks map[string]Check
 }
 
-// each service passes only the dependencies it actually needs to serve
 func NewHealthHandler(checks map[string]Check) HealthHandler {
 	return &healthHandler{checks: checks}
 }
