@@ -8,6 +8,16 @@ gatewayClassName: maxstash
 tls:
   secretName: maxstash.io-tls
 
+# apps behind this gateway trust these headers, so whatever a client sends is dropped first;
+# the X-Auth-* set comes back only from a SecurityPolicy jwt filter (see apps/squares/api/chart)
+strippedRequestHeaders:
+  - X-Auth-Email
+  - X-Auth-Name
+  - X-Auth-Email-Verified
+  - X-Auth-Iat
+  - X-Auth-Exp
+  - X-Internal-Token
+
 proxy:
   replicas: 2
   resources:
