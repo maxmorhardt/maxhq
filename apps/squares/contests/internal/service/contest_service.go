@@ -19,8 +19,6 @@ import (
 const systemUser = "system"
 
 type ContestService interface {
-	GetContestsByOwnerPaginated(ctx context.Context, owner string, page, limit int, search string) ([]model.Contest, int64, error)
-
 	CreateContest(ctx context.Context, req *model.CreateContestRequest, user string) (*model.Contest, error)
 	UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error)
 	StartContest(ctx context.Context, contestID uuid.UUID, user string) (*model.Contest, error)
@@ -64,23 +62,6 @@ func NewContestService(
 		events:             events,
 		participantService: participantService,
 	}
-}
-
-// ====================
-// Getters
-// ====================
-
-func (s *contestService) GetContestsByOwnerPaginated(ctx context.Context, owner string, page, limit int, search string) ([]model.Contest, int64, error) {
-	log := logging.FromContext(ctx)
-
-	contests, total, err := s.repo.GetAllByOwnerPaginated(ctx, owner, page, limit, search)
-	if err != nil {
-		log.Error("failed to get paginated contests by user", "owner", owner, "error", err)
-		return nil, 0, err
-	}
-
-	log.Info("retrieved paginated contests by owner", "count", len(contests))
-	return contests, total, nil
 }
 
 // ====================

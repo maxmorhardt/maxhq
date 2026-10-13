@@ -121,26 +121,6 @@ func TestGetParticipantsInternal_Error(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
-func TestGetMyContests_Success(t *testing.T) {
-	want := []model.Contest{{Name: "c1"}}
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetAllByParticipantUserID(mock.Anything, "u", "search").Return(want, nil)
-
-	svc := service.NewParticipantService(mocks.NewParticipantRepository(t), c, passTx(), anyEvents())
-	got, err := svc.GetMyContests(context.Background(), "u", " search ")
-	require.NoError(t, err)
-	assert.Equal(t, want, got)
-}
-
-func TestGetMyContests_Error(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetAllByParticipantUserID(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db down"))
-
-	svc := service.NewParticipantService(mocks.NewParticipantRepository(t), c, passTx(), anyEvents())
-	_, err := svc.GetMyContests(context.Background(), "u", "")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
 func TestUpdateParticipant_ContestNotFound(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)

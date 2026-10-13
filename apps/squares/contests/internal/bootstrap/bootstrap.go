@@ -73,7 +73,8 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	leaderboardService := service.NewLeaderboardService(repository.NewLeaderboardRepository(db), sharedCache)
 	statsService := service.NewStatsService(repository.NewStatsRepository(db), sharedCache)
 	userActivityService := service.NewUserActivityService(userRepo, tx, events)
-	gameSyncService := service.NewGameSyncService(gameRepo, contestRepo, contestService, tx)
+	feedService := service.NewFeedService(repository.NewFeedRepository(db), sharedCache)
+	gameSyncService := service.NewGameSyncService(gameRepo, contestRepo, contestService, tx, feedService)
 	snapshotService := service.NewSnapshotService(contestRepo, participantService)
 
 	engine := server.NewEngine(cfg.Server)
@@ -85,6 +86,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 
 	routes.Register(engine, &routes.Handlers{
 		Contest:      handler.NewContestHandler(contestService),
+		Feed:         handler.NewFeedHandler(feedService),
 		Participant:  handler.NewParticipantHandler(participantService),
 		Invite:       handler.NewInviteHandler(inviteService),
 		Leaderboard:  handler.NewLeaderboardHandler(leaderboardService),
@@ -95,6 +97,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 		Auth:       middleware.Authenticate(cache.NewRevocationStore(infra.Redis)),
 		Idempotent: middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
 		Internal:   middleware.RequireInternalToken(cfg.Internal.Token),
+		FeedWrite:  handler.InvalidateFeeds(feedService),
 	})
 
 	return &App{

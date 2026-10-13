@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	uuid "github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
+	contracts "github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	mock "github.com/stretchr/testify/mock"
 )
 

@@ -8,6 +8,97 @@
     },
     "paths": {
         "/contests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Contests the caller owns or has joined, newest first, one page at a time. Pass nextCursor back as cursor for the next page.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contests"
+                ],
+                "summary": "List my contests",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "nextCursor from the previous page",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 50,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Page size",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "owned",
+                            "joined"
+                        ],
+                        "type": "string",
+                        "description": "owned or joined",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated: open, live, finished",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Case-insensitive name filter",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "RFC 3339 time; only contests updated at or after it",
+                        "name": "updatedSince",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "updated",
+                            "created"
+                        ],
+                        "type": "string",
+                        "default": "updated",
+                        "description": "Sort by last update or creation",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ContestFeedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -63,117 +154,6 @@
                     },
                     "403": {
                         "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/contests/me": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all contests where the authenticated user is a participant",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "participants"
-                ],
-                "summary": "Get all contests the user participates in",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter contests by name (case-insensitive)",
-                        "name": "search",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.ContestSwagger"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/contests/owner/{owner}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all contests created by a specific owner with pagination",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "contests"
-                ],
-                "summary": "Get all contests by owner",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Owner",
-                        "name": "owner",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "minimum": 1,
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maximum": 25,
-                        "minimum": 1,
-                        "type": "integer",
-                        "description": "Items per page (max 25)",
-                        "name": "limit",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter contests by name (case-insensitive)",
-                        "name": "search",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.PaginatedContestResponseSwagger"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -1237,7 +1217,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internalapi.UserActivitySummary"
+                            "$ref": "#/definitions/contracts.UserActivitySummary"
                         }
                     },
                     "500": {
@@ -1478,7 +1458,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internalapi.UserActiveContest"
+                                "$ref": "#/definitions/contracts.UserActiveContest"
                             }
                         }
                     },
@@ -1567,7 +1547,7 @@
                 }
             }
         },
-        "internalapi.UserActiveContest": {
+        "contracts.UserActiveContest": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1588,16 +1568,30 @@
                 }
             }
         },
-        "internalapi.UserActivitySummary": {
+        "contracts.UserActivitySummary": {
             "type": "object",
             "properties": {
                 "activeContests": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internalapi.UserActiveContest"
+                        "$ref": "#/definitions/contracts.UserActiveContest"
                     }
                 },
                 "firstActivity": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ContestFeedResponse": {
+            "type": "object",
+            "properties": {
+                "contests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ContestSummary"
+                    }
+                },
+                "nextCursor": {
                     "type": "string"
                 }
             }
@@ -1686,6 +1680,99 @@
                 }
             }
         },
+        "model.ContestStatus": {
+            "type": "string",
+            "enum": [
+                "ACTIVE",
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4",
+                "FINISHED",
+                "DELETED"
+            ],
+            "x-enum-varnames": [
+                "ContestStatusActive",
+                "ContestStatusQ1",
+                "ContestStatusQ2",
+                "ContestStatusQ3",
+                "ContestStatusQ4",
+                "ContestStatusFinished",
+                "ContestStatusDeleted"
+            ]
+        },
+        "model.ContestSummary": {
+            "type": "object",
+            "properties": {
+                "awayTeam": {
+                    "type": "string",
+                    "example": "Dallas Cowboys"
+                },
+                "claimedSquares": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "gameId": {
+                    "type": "string"
+                },
+                "gameTime": {
+                    "type": "string"
+                },
+                "homeTeam": {
+                    "type": "string",
+                    "example": "New York Giants"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mySquares": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Sunday Night Squares"
+                },
+                "owner": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "role": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ParticipantRole"
+                        }
+                    ],
+                    "example": "owner"
+                },
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ContestStatus"
+                        }
+                    ],
+                    "example": "ACTIVE"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "visibility": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ContestVisibility"
+                        }
+                    ],
+                    "example": "private"
+                }
+            }
+        },
         "model.ContestSwagger": {
             "type": "object",
             "properties": {
@@ -1747,6 +1834,17 @@
                     }
                 }
             }
+        },
+        "model.ContestVisibility": {
+            "type": "string",
+            "enum": [
+                "private",
+                "public"
+            ],
+            "x-enum-varnames": [
+                "ContestVisibilityPrivate",
+                "ContestVisibilityPublic"
+            ]
         },
         "model.CreateContestRequest": {
             "type": "object",
@@ -1892,35 +1990,6 @@
                     "items": {
                         "$ref": "#/definitions/model.LeaderboardEntry"
                     }
-                }
-            }
-        },
-        "model.PaginatedContestResponseSwagger": {
-            "type": "object",
-            "properties": {
-                "contests": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ContestSwagger"
-                    }
-                },
-                "hasNext": {
-                    "type": "boolean"
-                },
-                "hasPrevious": {
-                    "type": "boolean"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
                 }
             }
         },

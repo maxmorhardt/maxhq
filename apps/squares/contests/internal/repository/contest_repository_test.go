@@ -65,23 +65,6 @@ func TestContestRepository_ExistsByOwnerAndName(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestContestRepository_GetAllByOwnerPaginated(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(2))
-	mock.ExpectQuery(`SELECT \* FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("C1").AddRow("C2"))
-
-	contests, total, err := repo.GetAllByOwnerPaginated(context.Background(), "owner", 1, 10, "foo")
-
-	require.NoError(t, err)
-	assert.Equal(t, int64(2), total)
-	assert.Len(t, contests, 2)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestContestRepository_Delete(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewContestRepository(gdb)
@@ -444,25 +427,6 @@ func TestContestRepository_Create_Error(t *testing.T) {
 
 	err := repo.Create(context.Background(), &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestParticipant{UserID: "owner"})
 	require.Error(t, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_GetAllByParticipantUserID(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	id := uuid.New()
-	mock.ExpectQuery(`SELECT contests\.\* FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name"}).AddRow(id, "C1"))
-	mock.ExpectQuery(`SELECT \* FROM "squares"`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id"}))
-	mock.ExpectQuery(`SELECT \* FROM "quarter_results"`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id"}))
-
-	contests, err := repo.GetAllByParticipantUserID(context.Background(), "user1", "foo")
-
-	require.NoError(t, err)
-	assert.Len(t, contests, 1)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

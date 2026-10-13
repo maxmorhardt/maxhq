@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
+	contracts "github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	events "github.com/maxmorhardt/maxstash/libs/squares/events"
 	mock "github.com/stretchr/testify/mock"
 )

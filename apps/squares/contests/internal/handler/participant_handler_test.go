@@ -83,61 +83,6 @@ func TestGetParticipants_InternalError(t *testing.T) {
 }
 
 // ====================
-// GetMyContests
-// ====================
-
-func TestGetMyContests_Success(t *testing.T) {
-	svc := mocks.NewParticipantService(t)
-	svc.EXPECT().GetMyContests(mock.Anything, mock.Anything, mock.Anything).Return([]model.Contest{{ID: uuid.New(), Name: "MyContest"}}, nil)
-	h := NewParticipantHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("user1"))
-	r.GET("/contests/me", h.GetMyContests)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/me", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp []model.Contest
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Len(t, resp, 1)
-}
-
-func TestGetMyContests_Error(t *testing.T) {
-	svc := mocks.NewParticipantService(t)
-	svc.EXPECT().GetMyContests(mock.Anything, mock.Anything, mock.Anything).Return(nil, assert.AnError)
-	h := NewParticipantHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("user1"))
-	r.GET("/contests/me", h.GetMyContests)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/me", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-}
-
-func getMyContestsSearch(t *testing.T, query, wantSearch string) {
-	t.Helper()
-	svc := mocks.NewParticipantService(t)
-	svc.EXPECT().GetMyContests(mock.Anything, mock.Anything, wantSearch).Return([]model.Contest{}, nil)
-	h := NewParticipantHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("user1"))
-	r.GET("/contests/me", h.GetMyContests)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/me?"+query, http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestGetMyContests_PassesSearchQuery(t *testing.T) { getMyContestsSearch(t, "search=foo", "foo") }
-func TestGetMyContests_TrimsSearchQuery(t *testing.T) {
-	getMyContestsSearch(t, "search=%20%20bar%20%20", "bar")
-}
-
-// ====================
 // UpdateParticipant
 // ====================
 

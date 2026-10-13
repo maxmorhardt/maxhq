@@ -3,7 +3,6 @@ package handler
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -17,7 +16,6 @@ import (
 
 type ParticipantHandler interface {
 	GetParticipants(c *gin.Context)
-	GetMyContests(c *gin.Context)
 	UpdateParticipant(c *gin.Context)
 	RemoveParticipant(c *gin.Context)
 }
@@ -70,30 +68,6 @@ func (h *participantHandler) GetParticipants(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, participants)
-}
-
-// @Summary Get all contests the user participates in
-// @Description Returns all contests where the authenticated user is a participant
-// @Tags participants
-// @Produce json
-// @Param search query string false "Filter contests by name (case-insensitive)"
-// @Success 200 {array} model.ContestSwagger
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/me [get]
-func (h *participantHandler) GetMyContests(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	user := c.GetString(api.UserKey)
-	search := strings.TrimSpace(c.Query("search"))
-	contests, err := h.participantService.GetMyContests(c.Request.Context(), user, search)
-	if err != nil {
-		log.Error("failed to get user contests", "error", err)
-		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get contests", c))
-		return
-	}
-
-	c.JSON(http.StatusOK, contests)
 }
 
 // @Summary Update a participant's role or square limit

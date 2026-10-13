@@ -3,8 +3,6 @@ package handler
 import (
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -17,8 +15,6 @@ import (
 )
 
 type ContestHandler interface {
-	GetContestsByOwner(c *gin.Context)
-
 	CreateContest(c *gin.Context)
 	UpdateContest(c *gin.Context)
 	DeleteContest(c *gin.Context)
@@ -39,93 +35,6 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 	return &contestHandler{
 		contestService: contestService,
 	}
-}
-
-// ====================
-// Getters
-// ====================
-
-// @Summary Get all contests by owner
-// @Description Returns all contests created by a specific owner with pagination
-// @Tags contests
-// @Produce json
-// @Param owner path string true "Owner"
-// @Param page query int true "Page number" minimum(1)
-// @Param limit query int true "Items per page (max 25)" minimum(1) maximum(25)
-// @Param search query string false "Filter contests by name (case-insensitive)"
-// @Success 200 {object} model.PaginatedContestResponseSwagger
-// @Failure 400 {object} api.APIError
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/owner/{owner} [get]
-func (h *contestHandler) GetContestsByOwner(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	// parse owner from path
-	owner := c.Param("owner")
-	if owner == "" {
-		log.Warn("contest owner not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Contest Owner is required", c))
-		return
-	}
-
-	// extract pagination parameters
-	page, limit, err := h.extractPaginationParams(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		return
-	}
-
-	// optional search filter
-	search := strings.TrimSpace(c.Query("search"))
-
-	// get paginated contests from service
-	contests, total, err := h.contestService.GetContestsByOwnerPaginated(c.Request.Context(), owner, page, limit, search)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to retrieve contests", c))
-		return
-	}
-
-	totalPages := int((total + int64(limit) - 1) / int64(limit))
-	response := model.PaginatedContestResponse{
-		Contests:    contests,
-		Page:        page,
-		Limit:       limit,
-		Total:       total,
-		TotalPages:  totalPages,
-		HasNext:     page < totalPages,
-		HasPrevious: page > 1,
-	}
-	c.JSON(http.StatusOK, response)
-}
-
-func (h *contestHandler) extractPaginationParams(c *gin.Context) (page, limit int, err error) {
-	// get page parameter
-	pageStr := c.Query("page")
-	if pageStr == "" {
-		return 0, 0, errs.ErrInvalidPage
-	}
-
-	// get limit parameter
-	limitStr := c.Query("limit")
-	if limitStr == "" {
-		return 0, 0, errs.ErrInvalidLimit
-	}
-
-	// parse and validate page and limit
-	if p, parseErr := strconv.Atoi(pageStr); parseErr == nil && p > 0 {
-		page = p
-	} else {
-		return 0, 0, errs.ErrInvalidPage
-	}
-
-	if l, parseErr := strconv.Atoi(limitStr); parseErr == nil && l > 0 && l <= 25 {
-		limit = l
-	} else {
-		return 0, 0, errs.ErrInvalidLimit
-	}
-
-	return page, limit, nil
 }
 
 // ====================

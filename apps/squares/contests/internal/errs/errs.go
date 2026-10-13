@@ -41,10 +41,10 @@ var (
 	ErrClaimsNotFound     = errors.New("authentication required")
 )
 
-// pagination errors for list endpoints
 var (
-	ErrInvalidPage  = errors.New("invalid page parameter")
-	ErrInvalidLimit = errors.New("invalid limit parameter")
+	ErrInvalidCursor = errors.New("invalid cursor parameter")
+	ErrInvalidLimit  = errors.New("invalid limit parameter")
+	ErrInvalidFilter = errors.New("invalid filter parameter")
 )
 
 // game, contest, and invite related errors

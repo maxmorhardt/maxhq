@@ -18,18 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestGetContestsByOwnerPaginated(t *testing.T) {
-	want := []model.Contest{{Name: "c"}}
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetAllByOwnerPaginated(mock.Anything, "o", 1, 10, "").Return(want, int64(1), nil)
-
-	got, total, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		GetContestsByOwnerPaginated(context.Background(), "o", 1, 10, "")
-	require.NoError(t, err)
-	assert.Equal(t, want, got)
-	assert.Equal(t, int64(1), total)
-}
-
 func contestSvc(repo *mocks.ContestRepository, pRepo *mocks.ParticipantRepository, pSvc *mocks.ParticipantService) service.ContestService {
 	return service.NewContestService(repo, pRepo, &mocks.GameProjectionRepository{}, anyUser(), passTx(), anyEvents(), pSvc)
 }
@@ -788,16 +776,6 @@ func TestClaimSquare_ReEditOwnSquare(t *testing.T) {
 	got, err := contestSvc(repo, pRepo, pSvc).ClaimSquare(ctx, uuid.New(), squareID, "u")
 	require.NoError(t, err)
 	assert.Equal(t, "XY", got.Value)
-}
-
-func TestGetContestsByOwnerPaginated_Error(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetAllByOwnerPaginated(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil, int64(0), errors.New("db"))
-
-	_, _, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		GetContestsByOwnerPaginated(context.Background(), "o", 1, 10, "")
-	assert.Error(t, err)
 }
 
 func TestRecordQuarterResult_BadLabels(t *testing.T) {

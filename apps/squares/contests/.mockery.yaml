@@ -16,6 +16,7 @@ packages:
   github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository:
     interfaces:
       ContestRepository:
+      FeedRepository:
       ParticipantRepository:
       InviteRepository:
       StatsRepository:
@@ -25,6 +26,7 @@ packages:
   github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service:
     interfaces:
       ContestService:
+      FeedService:
       ContestEventPublisher:
       ParticipantService:
       InviteService:

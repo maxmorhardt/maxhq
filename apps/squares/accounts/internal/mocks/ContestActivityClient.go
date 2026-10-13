@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
+	contracts "github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	mock "github.com/stretchr/testify/mock"
 )
 

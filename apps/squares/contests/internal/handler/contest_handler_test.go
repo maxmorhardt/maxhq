@@ -23,107 +23,6 @@ import (
 )
 
 // ====================
-// GetContestsByOwner
-// ====================
-
-func TestGetContestsByOwner_Success(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().GetContestsByOwnerPaginated(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return([]model.Contest{{ID: uuid.New(), Name: "C1"}}, int64(1), nil)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/owner/:owner", h.GetContestsByOwner)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/owner/owner1?page=1&limit=10", http.NoBody)
-	w := doRequest(r, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp model.PaginatedContestResponse
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Len(t, resp.Contests, 1)
-	assert.Equal(t, int64(1), resp.Total)
-}
-
-func authenticatedMiddleware(userID string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		claims := &api.Claims{Email: userID, EmailVerified: true, Name: "Test", Expire: 9999999999}
-		api.SetContextValue(c, api.UserKey, userID)
-		api.SetContextValue(c, api.ClaimsKey, claims)
-		c.Next()
-	}
-}
-
-func TestGetContestsByOwner_MissingPage(t *testing.T)  { getContestsBadRequest(t, "limit=10") }
-func TestGetContestsByOwner_MissingLimit(t *testing.T) { getContestsBadRequest(t, "page=1") }
-func TestGetContestsByOwner_InvalidLimit(t *testing.T) { getContestsBadRequest(t, "page=1&limit=50") }
-func TestGetContestsByOwner_InvalidPageFormat(t *testing.T) {
-	getContestsBadRequest(t, "page=abc&limit=10")
-}
-func TestGetContestsByOwner_ZeroPage(t *testing.T) { getContestsBadRequest(t, "page=0&limit=10") }
-func TestGetContestsByOwner_InvalidLimitFormat(t *testing.T) {
-	getContestsBadRequest(t, "page=1&limit=abc")
-}
-
-func getContestsBadRequest(t *testing.T, query string) {
-	t.Helper()
-	h := NewContestHandler(mocks.NewContestService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/owner/:owner", h.GetContestsByOwner)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/owner/owner1?"+query, http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestGetContestsByOwner_ServiceError(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().GetContestsByOwnerPaginated(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil, int64(0), assert.AnError)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/owner/:owner", h.GetContestsByOwner)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/owner/owner1?page=1&limit=10", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-}
-
-func TestGetContestsByOwner_PassesSearchQuery(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().GetContestsByOwnerPaginated(mock.Anything, mock.Anything, mock.Anything, mock.Anything, "foo").
-		Return([]model.Contest{}, int64(0), nil)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/owner/:owner", h.GetContestsByOwner)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/owner/owner1?page=1&limit=10&search=foo", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestGetContestsByOwner_TrimsSearchQuery(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().GetContestsByOwnerPaginated(mock.Anything, mock.Anything, mock.Anything, mock.Anything, "bar").
-		Return([]model.Contest{}, int64(0), nil)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/owner/:owner", h.GetContestsByOwner)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/owner/owner1?page=1&limit=10&search=%20%20bar%20%20", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-// ====================
 // CreateContest
 // ====================
 
@@ -722,6 +621,15 @@ func clearMySquaresErr(t *testing.T, svcErr error, wantCode int) {
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/squares/clear-mine", uuid.New()), http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
+}
+
+func authenticatedMiddleware(userID string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims := &api.Claims{Email: userID, EmailVerified: true, Name: "Test", Expire: 9999999999}
+		api.SetContextValue(c, api.UserKey, userID)
+		api.SetContextValue(c, api.ClaimsKey, claims)
+		c.Next()
+	}
 }
 
 func doRequest(r *gin.Engine, req *http.Request) *httptest.ResponseRecorder {

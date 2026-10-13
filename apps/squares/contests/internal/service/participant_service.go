@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
 	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
@@ -19,7 +17,6 @@ import (
 type ParticipantService interface {
 	GetParticipants(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestParticipant, error)
 	GetParticipantsInternal(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error)
-	GetMyContests(ctx context.Context, user, search string) ([]model.Contest, error)
 	UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error)
 	RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error
 	Authorize(ctx context.Context, contestID uuid.UUID, userID string, act Action) error
@@ -140,24 +137,6 @@ func (s *participantService) fetchParticipants(ctx context.Context, contestID uu
 
 	log.Info("retrieved participants", "contest_id", contestID, "count", len(participants))
 	return participants, nil
-}
-
-func (s *participantService) GetMyContests(ctx context.Context, user, search string) ([]model.Contest, error) {
-	log := logging.FromContext(ctx)
-
-	contests, err := s.contestRepo.GetAllByParticipantUserID(ctx, user, strings.TrimSpace(search))
-	if err != nil {
-		log.Error("failed to get user contests", "user", user, "error", err)
-		return nil, errs.ErrDatabaseUnavailable
-	}
-
-	// game-linked contests read their quarter results from the shared game record
-	for i := range contests {
-		util.SynthesizeFromGame(&contests[i])
-	}
-
-	log.Info("retrieved joined contests", "count", len(contests))
-	return contests, nil
 }
 
 func (s *participantService) UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error) {

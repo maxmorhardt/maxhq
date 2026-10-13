@@ -24,6 +24,7 @@ type gameSyncService struct {
 	contestRepo    repository.ContestRepository
 	contestService ContestService
 	tx             database.Transactor
+	feed           FeedService
 }
 
 func NewGameSyncService(
@@ -31,12 +32,14 @@ func NewGameSyncService(
 	contestRepo repository.ContestRepository,
 	contestService ContestService,
 	tx database.Transactor,
+	feed FeedService,
 ) GameSyncService {
 	return &gameSyncService{
 		gameRepo:       gameRepo,
 		contestRepo:    contestRepo,
 		contestService: contestService,
 		tx:             tx,
+		feed:           feed,
 	}
 }
 
@@ -75,6 +78,7 @@ func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game)
 				firstErr = err
 			}
 		}
+		s.feed.InvalidateContest(ctx, contestID)
 	}
 
 	return firstErr

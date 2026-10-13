@@ -58,7 +58,7 @@ func TestLegacy_ExistingContestsKeepWorking(t *testing.T) {
 	require.NoError(t, rawDB.QueryRow(`SELECT version FROM contests.contests WHERE id = $1`, legacyContestID).Scan(&version))
 	assert.Equal(t, int64(1), version, "existing rows start at version 1")
 
-	resp := call(t, testkit.As(legacyUser), http.MethodGet, "/contests/owner/"+legacyUser+"?page=1&limit=10", nil)
+	resp := call(t, testkit.As(legacyUser), http.MethodGet, "/contests", nil)
 	require.Equal(t, http.StatusOK, resp.Status)
 	assert.Contains(t, string(resp.Body), "Legacy Pool")
 
