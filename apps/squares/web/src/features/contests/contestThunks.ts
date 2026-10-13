@@ -38,7 +38,6 @@ import type {
 } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
-// append loads the next page onto the list; otherwise the list starts over with these params
 export const fetchContestFeed = createAsyncThunk<
   ContestFeedResponse,
   { params: ContestFeedParams; append?: boolean },

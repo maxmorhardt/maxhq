@@ -14,7 +14,6 @@ import (
 
 const requestTimeout = 5 * time.Second
 
-// accounts' only synchronous dependency: contests decides whether an account is still in use
 type ContestActivityClient interface {
 	GetUserActivity(ctx context.Context, email string) (*contracts.UserActivitySummary, error)
 }

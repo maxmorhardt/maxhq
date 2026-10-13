@@ -15,7 +15,6 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/platform/config"
 )
 
-// migrations is an fs whose root holds the NNNNNN_name.up/down.sql files for one service
 func runMigrations(cfg *config.DatabaseConfig, schema string, migrations fs.FS) error {
 	src, err := iofs.New(migrations, ".")
 	if err != nil {
@@ -48,7 +47,6 @@ func runMigrations(cfg *config.DatabaseConfig, schema string, migrations fs.FS) 
 	return nil
 }
 
-// search_path scopes both the migrated tables and migrate's own version table to the service schema
 func migrationDatabaseURL(cfg *config.DatabaseConfig, schema string) string {
 	u := &url.URL{
 		Scheme: "postgres",

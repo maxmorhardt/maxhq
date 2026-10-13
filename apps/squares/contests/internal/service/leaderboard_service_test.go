@@ -43,7 +43,6 @@ func TestLeaderboardService_GetLeaderboard_TiedPlayersShareRank(t *testing.T) {
 	got, err := service.NewLeaderboardService(repo, newMemCache()).GetLeaderboard(context.Background(), 25)
 
 	require.NoError(t, err)
-	// ties share a rank and the next player skips to the position they actually hold
 	assert.Equal(t, 1, got.Entries[0].Rank)
 	assert.Equal(t, 2, got.Entries[1].Rank)
 	assert.Equal(t, 2, got.Entries[2].Rank)
@@ -66,11 +65,8 @@ func TestLeaderboardService_GetLeaderboard_PublishesFirstNameLastInitial(t *test
 
 	require.NoError(t, err)
 	assert.Equal(t, "Max M.", got.Entries[0].DisplayName)
-	// only the final token is treated as the surname
 	assert.Equal(t, "Mary W.", got.Entries[1].DisplayName)
-	// a single name has no surname to abbreviate
 	assert.Equal(t, "Jordan", got.Entries[2].DisplayName)
-	// an email-shaped name is never published whole
 	assert.Equal(t, "max.morhardt", got.Entries[3].DisplayName)
 	assert.Equal(t, "ada L.", got.Entries[4].DisplayName)
 	assert.Equal(t, "Player", got.Entries[5].DisplayName)
@@ -152,7 +148,6 @@ func TestLeaderboardService_GetUserRank_Error(t *testing.T) {
 	assert.Nil(t, got)
 }
 
-// an in-process stand-in for the shared redis cache
 type memCache struct {
 	entries map[string][]byte
 }

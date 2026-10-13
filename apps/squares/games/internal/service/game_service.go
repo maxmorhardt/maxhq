@@ -55,7 +55,6 @@ func (s *gameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
 	return games, nil
 }
 
-// stores each scoreboard snapshot and emits game.updated for every game that actually changed
 func (s *gameService) Ingest(ctx context.Context, games []model.ESPNGame) (int, error) {
 	log := logging.FromContext(ctx)
 
@@ -90,7 +89,6 @@ func (s *gameService) Ingest(ctx context.Context, games []model.ESPNGame) (int, 
 	return newScores, nil
 }
 
-// stores one game and its completed quarters; published reports whether anything changed and was emitted
 func (s *gameService) ingestOne(ctx context.Context, eg *model.ESPNGame) (created int, published bool, err error) {
 	game := util.ESPNGameToGame(eg)
 
@@ -99,7 +97,6 @@ func (s *gameService) ingestOne(ctx context.Context, eg *model.ESPNGame) (create
 		return 0, false, err
 	}
 
-	// record each newly completed quarter's cumulative score
 	for _, q := range util.CompletedQuarters(eg) {
 		score := &model.GameScore{GameID: game.ID, Quarter: q.Quarter, HomeScore: q.Home, AwayScore: q.Away}
 		isNew, scoreErr := s.gameRepo.UpsertScore(ctx, score)
@@ -115,7 +112,6 @@ func (s *gameService) ingestOne(ctx context.Context, eg *model.ESPNGame) (create
 		return 0, false, nil
 	}
 
-	// publish the stored game with every score so far; contests rebuilds its copy from this alone
 	stored, err := s.gameRepo.GetByID(ctx, game.ID)
 	if err != nil {
 		return 0, false, err
@@ -131,14 +127,12 @@ func (s *gameService) ingestOne(ctx context.Context, eg *model.ESPNGame) (create
 func (s *gameService) Activity(ctx context.Context) (model.GameActivity, error) {
 	log := logging.FromContext(ctx)
 
-	// a live game means the worker should poll aggressively
 	live, err := s.gameRepo.HasLiveGame(ctx)
 	if err != nil {
 		log.Error("failed to check for live games", "error", err)
 		return model.GameActivity{}, errs.ErrDatabaseUnavailable
 	}
 
-	// otherwise the next kickoff tells the worker when to ramp back up
 	kickoff, err := s.gameRepo.NextKickoff(ctx)
 	if err != nil {
 		log.Error("failed to get next kickoff", "error", err)

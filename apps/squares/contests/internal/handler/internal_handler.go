@@ -11,7 +11,6 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
 )
 
-// service-to-service reads for realtime and accounts; never routed by the gateway
 type InternalHandler interface {
 	GetContestSnapshot(c *gin.Context)
 	GetUserActivity(c *gin.Context)

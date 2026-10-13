@@ -40,10 +40,6 @@ func NewContestRepository(db *gorm.DB) ContestRepository {
 	}
 }
 
-// ====================
-// Getters
-// ====================
-
 func (r *contestRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Contest, error) {
 	return r.getByID(database.Conn(ctx, r.db), id)
 }
@@ -96,10 +92,6 @@ func (r *contestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID
 	return ids, err
 }
 
-// ====================
-// Contest Lifecycle Actions
-// ====================
-
 func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {
 	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
 		contest.Version = 1
@@ -107,7 +99,6 @@ func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, 
 			return err
 		}
 
-		// initialize 10x10 grid of squares
 		squares := make([]model.Square, 0, model.MaxContestSquares)
 		for row := range 10 {
 			for col := range 10 {
@@ -125,7 +116,6 @@ func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, 
 			return err
 		}
 
-		// create owner participant within the same transaction
 		owner.ContestID = contest.ID
 		return tx.Create(owner).Error
 	})
@@ -195,10 +185,6 @@ func (r *contestRepository) RollbackQuarterResult(ctx context.Context, resultID 
 	})
 }
 
-// ====================
-// Square Actions
-// ====================
-
 // squares only change while the contest is ACTIVE; the shared lock blocks a concurrent start until this edit commits
 func lockActiveContest(tx *gorm.DB, contestID uuid.UUID) error {
 	var contest model.Contest
@@ -233,7 +219,6 @@ func (r *contestRepository) ClaimSquare(ctx context.Context, square *model.Squar
 			return err
 		}
 
-		// only an unclaimed square or one the caller already owns can be written, decided by the database
 		res := tx.Model(&model.Square{}).
 			Where("id = ? AND (owner = ? OR owner = ?)", square.ID, "", owner).
 			Updates(map[string]any{
@@ -325,7 +310,6 @@ func (r *contestRepository) ClearSquaresByOwner(ctx context.Context, contestID u
 			return err
 		}
 
-		// note which squares are about to change so their cleared state can be broadcast
 		var ids []uuid.UUID
 		if err := tx.Model(&model.Square{}).
 			Where("contest_id = ? AND owner = ?", contestID, owner).

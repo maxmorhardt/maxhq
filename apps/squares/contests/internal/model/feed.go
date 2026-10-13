@@ -30,7 +30,6 @@ const (
 	FeedSortCreated FeedSort = "created"
 )
 
-// open is ACTIVE, live is any quarter, finished is FINISHED
 var FeedStatusGroups = map[string][]ContestStatus{
 	"open":     {ContestStatusActive},
 	"live":     {ContestStatusQ1, ContestStatusQ2, ContestStatusQ3, ContestStatusQ4},

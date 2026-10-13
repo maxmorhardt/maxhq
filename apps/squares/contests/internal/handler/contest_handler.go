@@ -37,10 +37,6 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 	}
 }
 
-// ====================
-// Contest Lifecycle Actions
-// ====================
-
 // @Summary Create a new Contest
 // @Description Creates a new 10x10 contest
 // @Tags contests
@@ -58,7 +54,6 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 func (h *contestHandler) CreateContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse request body
 	var req model.CreateContestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Warn("failed to bind create contest json", "error", err)
@@ -66,7 +61,6 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user
 	user := c.GetString(api.UserKey)
 
 	if req.Owner != user {
@@ -75,7 +69,6 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	// create contest via service
 	contest, err := h.contestService.CreateContest(c.Request.Context(), &req, user)
 	if err != nil {
 		switch {
@@ -116,7 +109,6 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 func (h *contestHandler) UpdateContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestIDParam := c.Param("id")
 	if contestIDParam == "" {
 		log.Warn("contest id not provided")
@@ -131,7 +123,6 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	// parse request body
 	var req model.UpdateContestRequest
 	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
 		log.Warn("invalid request body", "error", bindErr)
@@ -146,10 +137,8 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user
 	user := c.GetString(api.UserKey)
 
-	// update contest via service
 	updatedContest, err := h.contestService.UpdateContest(c.Request.Context(), contestID, &req, user, expectedVersion)
 	if err != nil {
 		switch {
@@ -190,7 +179,6 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 func (h *contestHandler) DeleteContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestIDParam := c.Param("id")
 	if contestIDParam == "" {
 		log.Warn("contest id not provided")
@@ -205,7 +193,6 @@ func (h *contestHandler) DeleteContest(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user and delete contest
 	user := c.GetString(api.UserKey)
 	if err = h.contestService.DeleteContest(c.Request.Context(), contestID, user); err != nil {
 		switch {
@@ -238,7 +225,6 @@ func (h *contestHandler) DeleteContest(c *gin.Context) {
 func (h *contestHandler) StartContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestIDParam := c.Param("id")
 	if contestIDParam == "" {
 		log.Warn("contest id not provided")
@@ -253,7 +239,6 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user and start contest
 	user := c.GetString(api.UserKey)
 	contest, err := h.contestService.StartContest(c.Request.Context(), contestID, user)
 	if err != nil {
@@ -290,7 +275,6 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		log.Warn("invalid contest id", "error", err)
@@ -298,7 +282,6 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 		return
 	}
 
-	// parse request body
 	var req model.QuarterResultRequest
 	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
 		log.Warn("failed to bind request", "error", bindErr)
@@ -306,7 +289,6 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user
 	user := c.GetString(api.UserKey)
 	if user == "" {
 		log.Error("user not found in context")
@@ -314,7 +296,6 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 		return
 	}
 
-	// record quarter result
 	result, err := h.contestService.RecordQuarterResult(c.Request.Context(), contestID, req.HomeTeamScore, req.AwayTeamScore, user)
 	if err != nil {
 		switch {
@@ -362,7 +343,6 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		log.Warn("invalid contest id", "error", err)
@@ -370,7 +350,6 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user
 	user := c.GetString(api.UserKey)
 	if user == "" {
 		log.Error("user not found in context")
@@ -378,7 +357,6 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 		return
 	}
 
-	// roll back the most recent quarter result
 	result, err := h.contestService.RollbackLastQuarterResult(c.Request.Context(), contestID, user)
 	if err != nil {
 		switch {
@@ -404,10 +382,6 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// ====================
-// Square Actions
-// ====================
-
 // @Summary Claim a single square in a contest
 // @Description Claims a square for the authenticated user using their profile default initials
 // @Tags contests
@@ -425,7 +399,6 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 func (h *contestHandler) ClaimSquare(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestIDParam := c.Param("id")
 	if contestIDParam == "" {
 		log.Warn("contest id not provided")
@@ -440,7 +413,6 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 		return
 	}
 
-	// parse square id from path
 	squareIDParam := c.Param("squareId")
 	if squareIDParam == "" {
 		log.Warn("square id not provided")
@@ -455,10 +427,8 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user
 	user := c.GetString(api.UserKey)
 
-	// claim square via service; the value comes from the user's profile initials
 	claimedSquare, err := h.contestService.ClaimSquare(c.Request.Context(), contestID, squareID, user)
 	if err != nil {
 		switch {
@@ -500,7 +470,6 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 func (h *contestHandler) ClearSquare(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestIDParam := c.Param("id")
 	if contestIDParam == "" {
 		log.Warn("contest id not provided")
@@ -515,7 +484,6 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 		return
 	}
 
-	// parse square id from path
 	squareIDParam := c.Param("squareId")
 	if squareIDParam == "" {
 		log.Warn("square id not provided")
@@ -530,7 +498,6 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user and clear square
 	user := c.GetString(api.UserKey)
 	clearedSquare, err := h.contestService.ClearSquare(c.Request.Context(), contestID, squareID, user)
 	if err != nil {
@@ -568,7 +535,6 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 func (h *contestHandler) ClearMySquares(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse contest id from path
 	contestIDParam := c.Param("id")
 	if contestIDParam == "" {
 		log.Warn("contest id not provided")
@@ -583,7 +549,6 @@ func (h *contestHandler) ClearMySquares(c *gin.Context) {
 		return
 	}
 
-	// get authenticated user and clear their squares
 	user := c.GetString(api.UserKey)
 	clearedSquares, err := h.contestService.ClearUserSquares(c.Request.Context(), contestID, user)
 	if err != nil {

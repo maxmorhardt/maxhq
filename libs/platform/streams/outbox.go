@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// an event recorded in the same transaction as the change it describes; the relay appends it to Stream later
 type OutboxEvent struct {
 	ID          uuid.UUID      `gorm:"type:uuid;primaryKey"`
 	Seq         int64          `gorm:"->"`
@@ -27,7 +26,6 @@ func (OutboxEvent) TableName() string {
 	return "outbox"
 }
 
-// the only way services emit events, so nothing reaches a stream unless its transaction committed
 type Outbox interface {
 	Add(ctx context.Context, stream, eventType string, payload any) error
 }
@@ -62,7 +60,6 @@ func (o *outbox) Add(ctx context.Context, stream, eventType string, payload any)
 		return fmt.Errorf("failed to write outbox event for %s: %w", eventType, err)
 	}
 
-	// wake the relay as soon as the row is visible instead of waiting for its next tick
 	database.AfterCommit(ctx, o.notify)
 	return nil
 }

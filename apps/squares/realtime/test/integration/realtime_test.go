@@ -77,7 +77,6 @@ func run(m *testing.M) int {
 	return m.Run()
 }
 
-// contests' snapshot endpoint: a contest exists once it has members, and only members may watch
 type fakeContests struct {
 	mu      sync.Mutex
 	members map[uuid.UUID]map[string]bool
@@ -118,7 +117,6 @@ func (f *fakeContests) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// appends a contest event the way the contests relay does and returns its entry id
 func publish(t *testing.T, contestID uuid.UUID, header events.ContestEventHeader) string {
 	t.Helper()
 	header.ContestID = contestID

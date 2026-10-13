@@ -34,7 +34,6 @@ func TestGetLeaderboard_Success(t *testing.T) {
 	require.Len(t, resp.Entries, 1)
 	assert.Equal(t, 1, resp.Entries[0].Rank)
 	assert.Equal(t, "Max", resp.Entries[0].DisplayName)
-	// the response must never carry the email that identifies the user
 	assert.NotContains(t, w.Body.String(), "@")
 }
 

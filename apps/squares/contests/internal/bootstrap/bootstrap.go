@@ -24,10 +24,8 @@ const (
 	Service = "contests"
 	Schema  = "contests"
 
-	// every key and stream this service touches starts with this; the redis acl is scoped to it
 	KeyPrefix = "squares"
 
-	// one advisory lock per schema keeps a single replica relaying, which preserves event order
 	outboxLockKey int64 = 910101
 
 	writeTimeout = 30 * time.Second
@@ -43,17 +41,15 @@ type App struct {
 
 func Connect(cfg *model.ContestsConfig) (*server.Infra, error) {
 	return server.Connect(&server.InfraConfig{
-		DB:         &cfg.DB,
-		Schema:     Schema,
-		Migrations: migrations.FS,
-		Redis:      cfg.Redis,
-		KeyPrefix:  KeyPrefix,
-		// requests and outbox writes work without redis, so a redis outage must not stop a restart
+		DB:            &cfg.DB,
+		Schema:        Schema,
+		Migrations:    migrations.FS,
+		Redis:         cfg.Redis,
+		KeyPrefix:     KeyPrefix,
 		RedisOptional: true,
 	})
 }
 
-// the composition root: the only place concrete repositories, services, and handlers are built
 func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	db := infra.DB
 	tx := database.NewTransactor(db)
@@ -80,7 +76,6 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	engine := server.NewEngine(cfg.Server)
 	server.RegisterValidation("contestname", handler.ValidateContestName)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
-		// redis is left out on purpose: without it requests still work and events wait in the outbox
 		"database": server.DatabaseCheck(db),
 	}), Service)
 
@@ -112,7 +107,6 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	}
 }
 
-// relays the outbox and consumes game and user events until ctx ends
 func (a *App) Start(ctx context.Context) {
 	go a.relay.Run(ctx)
 
@@ -121,7 +115,6 @@ func (a *App) Start(ctx context.Context) {
 	}
 }
 
-// serves http alongside the background work in Start until ctx ends
 func (a *App) Run(ctx context.Context) error {
 	defer a.infra.Close()
 

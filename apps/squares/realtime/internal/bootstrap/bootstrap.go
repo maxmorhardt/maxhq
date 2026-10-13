@@ -19,7 +19,6 @@ import (
 const (
 	Service = "realtime"
 
-	// every key and stream this service touches starts with this; the redis acl is scoped to it
 	KeyPrefix = "squares"
 )
 
@@ -57,7 +56,6 @@ func New(cfg *model.RealtimeConfig, infra *server.Infra, shutdown <-chan struct{
 	return &App{Engine: engine, cfg: cfg, infra: infra, hub: hub}
 }
 
-// reads the contest streams for every open stream on this replica until ctx ends
 func (a *App) Start(ctx context.Context) {
 	go a.hub.Run(logging.NewContext(ctx, slog.Default()))
 }

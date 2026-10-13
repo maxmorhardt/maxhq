@@ -56,7 +56,6 @@ func (r *inviteRepository) RedeemInvite(ctx context.Context, inviteID uuid.UUID,
 			return err
 		}
 
-		// re-check the allocation under the lock, since the caller's check was unsynchronized
 		var allocated int64
 		if err := tx.Model(&model.ContestParticipant{}).
 			Where("contest_id = ?", participant.ContestID).

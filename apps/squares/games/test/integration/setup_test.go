@@ -46,7 +46,6 @@ func run(m *testing.M) int {
 	defer pg.Terminate()
 	rawDB = pg.DB
 
-	// start from the monolith's tables, the way production does, so the service has to adopt them
 	legacy, err := os.ReadFile("testdata/legacy_schema.sql")
 	if err != nil {
 		slog.Error("legacy schema", "error", err)
@@ -97,7 +96,6 @@ func run(m *testing.M) int {
 	return m.Run()
 }
 
-// an espn scoreboard the tests rewrite as games progress
 type fakeESPN struct {
 	mu    sync.Mutex
 	games []fakeGame

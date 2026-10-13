@@ -31,7 +31,6 @@ type leaderboardService struct {
 	cache cache.Cache
 }
 
-// the cache is shared by every replica, so a leaderboard computed once serves all of them for the ttl
 func NewLeaderboardService(repo repository.LeaderboardRepository, c cache.Cache) LeaderboardService {
 	return &leaderboardService{
 		repo:  repo,
@@ -81,7 +80,6 @@ func assignRanks(entries []model.LeaderboardEntry) []model.LeaderboardEntry {
 }
 
 func publicName(displayName string) string {
-	// a display name defaults to the email when the provider sends no name claim
 	if at := strings.Index(displayName, "@"); at >= 0 {
 		displayName = displayName[:at]
 	}

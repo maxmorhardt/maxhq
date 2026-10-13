@@ -41,7 +41,6 @@ func NewUserHandler(userService service.UserService) UserHandler {
 func (h *userHandler) GetMe(c *gin.Context) {
 	user := c.GetString(api.UserKey)
 
-	// provider full name seeds the display name on first visit
 	defaultDisplayName := user
 	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil && claims.Name != "" {
 		defaultDisplayName = claims.Name

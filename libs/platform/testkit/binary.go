@@ -16,21 +16,16 @@ import (
 	"time"
 )
 
-// a service binary running as its own process, the way the image runs it
 type Process struct {
 	URL string
 	cmd *exec.Cmd
 	log *syncBuffer
 }
 
-// Logs is everything the process wrote to stdout and stderr so far
 func (p *Process) Logs() string {
 	return p.log.String()
 }
 
-// StartBinary builds the package at pkg (for example "./cmd/contests") from moduleDir, starts it on a free
-// port with env, and waits until /health/ready answers 200. The process is killed when the test ends, and its
-// output is printed if the test failed.
 func StartBinary(t *testing.T, moduleDir, pkg string, env []string) *Process {
 	t.Helper()
 
@@ -104,7 +99,6 @@ func freePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-// Env is the DB_* settings for a service, from a started Postgres
 func (p *Postgres) Env() []string {
 	return []string{
 		"DB_HOST=" + p.Config.Host,

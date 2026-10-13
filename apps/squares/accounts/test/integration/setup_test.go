@@ -34,7 +34,6 @@ var (
 	rdb      *redis.Client
 	contests = &fakeContests{active: map[string][]contracts.UserActiveContest{}}
 	baseCfg  *model.AccountsConfig
-	// two replicas sharing postgres and redis, the way the deployment runs
 	replicaA string
 	replicaB string
 	stopAll  []func()
@@ -57,7 +56,6 @@ func run(m *testing.M) int {
 	defer pg.Terminate()
 	rawDB = pg.DB
 
-	// start from the monolith's tables, the way production does, so the service has to adopt them
 	legacy, err := os.ReadFile("testdata/legacy_schema.sql")
 	if err != nil {
 		slog.Error("legacy schema", "error", err)
@@ -123,7 +121,6 @@ func startReplica(ctx context.Context) (string, *server.Infra, error) {
 	return srv.URL, infra, nil
 }
 
-// contests' internal activity endpoint, with whatever active contests a test assigns
 type fakeContests struct {
 	mu     sync.Mutex
 	active map[string][]contracts.UserActiveContest

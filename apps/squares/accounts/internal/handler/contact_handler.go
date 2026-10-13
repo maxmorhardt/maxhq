@@ -41,7 +41,6 @@ func NewContactHandler(contactService service.ContactService) ContactHandler {
 func (h *contactHandler) SubmitContact(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	// parse request body
 	var req model.ContactRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Warn("failed to bind contact request json", "error", err)
@@ -49,10 +48,8 @@ func (h *contactHandler) SubmitContact(c *gin.Context) {
 		return
 	}
 
-	// get client ip address
 	ipAddress := c.ClientIP()
 
-	// submit contact via service
 	if err := h.contactService.SubmitContact(c.Request.Context(), &req, ipAddress); err != nil {
 		if errors.Is(err, errs.ErrInvalidTurnstile) {
 			log.Error("invalid contact submission captcha", "error", err)

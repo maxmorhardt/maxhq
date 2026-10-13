@@ -30,10 +30,6 @@ func newUserRouter(t *testing.T) (*mocks.UserService, *gin.Engine) {
 	return svc, r
 }
 
-// ====================
-// GetMe
-// ====================
-
 func TestGetMe_Success(t *testing.T) {
 	svc, r := newUserRouter(t)
 	svc.EXPECT().GetProfile(mock.Anything, "a@b.com", "Test").
@@ -60,10 +56,6 @@ func TestGetMe_ServiceError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
-// ====================
-// UpdateMe
-// ====================
-
 func TestUpdateMe_Success(t *testing.T) {
 	svc, r := newUserRouter(t)
 	svc.EXPECT().UpdateProfile(mock.Anything, "a@b.com", "MM").
@@ -80,7 +72,6 @@ func TestUpdateMe_Success(t *testing.T) {
 func TestUpdateMe_InvalidBody(t *testing.T) {
 	_, r := newUserRouter(t)
 
-	// lowercase fails the uppercase/alphanum binding
 	w := doRequest(r, patchMe(model.UpdateUserProfileRequest{DefaultInitials: "mm"}))
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -104,10 +95,6 @@ func TestUpdateMe_UnknownUser(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
-
-// ====================
-// DeleteMe
-// ====================
 
 func TestDeleteMe_Success(t *testing.T) {
 	svc, r := newUserRouter(t)

@@ -11,7 +11,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// a shared read-through cache; every replica sees the same cached value instead of warming its own
 type Cache interface {
 	Get(ctx context.Context, key string) ([]byte, bool, error)
 	Set(ctx context.Context, key string, value []byte, ttl time.Duration) error
@@ -56,7 +55,6 @@ func (c *redisCache) Delete(ctx context.Context, keys ...string) error {
 	return c.client.Del(ctx, full...).Err()
 }
 
-// a cache outage degrades to hitting the database, never to an error
 func GetOrLoad[T any](ctx context.Context, c Cache, name, k string, ttl time.Duration, load func(context.Context) (T, error)) (T, error) {
 	log := logging.FromContext(ctx)
 

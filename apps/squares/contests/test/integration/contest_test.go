@@ -138,7 +138,6 @@ func TestContest_IdempotentCreate(t *testing.T) {
 	assert.Equal(t, first.ID, second.ID, "the retry returns the original contest")
 	assert.Equal(t, "true", resp2.Header.Get("Idempotent-Replayed"))
 
-	// without a key the duplicate name is refused, proving the replay never reached the handler
 	_, resp3 := createContest(t, ownerUser, "Idempotent Bowl", 10)
 	assert.Equal(t, http.StatusBadRequest, resp3.Status)
 }

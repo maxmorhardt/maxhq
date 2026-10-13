@@ -23,7 +23,6 @@ import (
 )
 
 const (
-	// how long a browser waits before reconnecting after the stream drops
 	clientRetry = 3 * time.Second
 
 	HeaderLastEventID = "Last-Event-ID"
@@ -40,7 +39,6 @@ type eventsHandler struct {
 	shutdown <-chan struct{}
 }
 
-// shutdown closes every open stream so clients reconnect to another replica with their Last-Event-ID
 func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdown <-chan struct{}) EventsHandler {
 	return &eventsHandler{streams: svc, cfg: cfg, shutdown: shutdown}
 }
@@ -137,7 +135,6 @@ func (h *eventsHandler) rejectSubscribe(c *gin.Context, err error) {
 	}
 }
 
-// forwards events until the client leaves, the token lapses, access is revoked, or the server shuts down
 func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *service.Subscription, contestID uuid.UUID, user string, claims *api.Claims) model.StreamCloseReason {
 	log := logging.FromContext(ctx)
 
@@ -146,7 +143,6 @@ func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *se
 	revocationCheck := time.NewTicker(h.cfg.RevocationInterval)
 	defer revocationCheck.Stop()
 
-	// the stream outlives no token; the client reconnects with a fresh one and its Last-Event-ID
 	expiry := time.NewTimer(tokenLifetime(claims))
 	defer expiry.Stop()
 
@@ -178,7 +174,6 @@ func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *se
 			}
 		case event, ok := <-sub.Events:
 			if !ok {
-				// the viewer fell too far behind or the stream could not be read; it reconnects and resumes
 				return model.StreamCloseFellBehind
 			}
 
@@ -225,7 +220,6 @@ func tokenLifetime(claims *api.Claims) time.Duration {
 	return remaining
 }
 
-// an empty id means a fresh connection; anything else must be a stream entry id
 func parseLastEventID(c *gin.Context) (string, bool) {
 	raw := c.GetHeader(HeaderLastEventID)
 	if raw == "" {

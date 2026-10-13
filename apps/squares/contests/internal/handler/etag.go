@@ -10,7 +10,6 @@ import (
 
 var errInvalidIfMatch = errors.New("if-match must be a single contest version")
 
-// contest versions are exposed as strong etags so clients can send them back in If-Match
 func setETag(c *gin.Context, version int64) {
 	c.Header("ETag", strconv.Quote(strconv.FormatInt(version, 10)))
 }

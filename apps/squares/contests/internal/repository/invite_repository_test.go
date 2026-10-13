@@ -119,7 +119,6 @@ func TestInviteRepository_RedeemInvite_UsesExhausted(t *testing.T) {
 		WithArgs(contestID).
 		WillReturnRows(sqlmock.NewRows([]string{"coalesce"}).AddRow(0))
 	mock.ExpectExec(`INSERT INTO "contest_participants"`).WillReturnResult(sqlmock.NewResult(1, 1))
-	// the guarded update matches nothing once the last use is consumed
 	mock.ExpectExec(`UPDATE "contest_invites"`).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectRollback()
 

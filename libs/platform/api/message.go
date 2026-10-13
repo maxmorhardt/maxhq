@@ -2,7 +2,6 @@ package api
 
 import "unicode"
 
-// an error's text with its first letter capitalized, for APIError.Message
 func Message(err error) string {
 	if err == nil {
 		return ""

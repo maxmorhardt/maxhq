@@ -12,7 +12,7 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
 )
 
-// envoy gateway validates the dex id token and copies these claims onto the request; the gateway strips any client-sent copies first
+// set by the gateway's jwt filter, which strips any client-sent copies first
 const (
 	HeaderAuthEmail         = "X-Auth-Email"
 	HeaderAuthName          = "X-Auth-Name"
@@ -23,7 +23,6 @@ const (
 
 const authErrorMessage = "Authentication required. Please log in to continue"
 
-// trusts the gateway for signature, issuer, and audience; still enforces verification, expiry, and account deletion here
 func Authenticate(revocations cache.RevocationStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, reason := claimsFromHeaders(c)

@@ -1,4 +1,3 @@
-// Package testkit starts the containers and fakes the gateway for integration tests. Test code only.
 package testkit
 
 import (
@@ -17,8 +16,7 @@ import (
 
 const (
 	PostgresImage = "postgres:17-alpine"
-	// the same engine the cluster runs
-	RedisImage = "valkey/valkey:9.1-alpine"
+	RedisImage    = "valkey/valkey:9.1-alpine"
 
 	postgresDB       = "squares"
 	postgresUser     = "test_user"
@@ -26,8 +24,7 @@ const (
 )
 
 type Postgres struct {
-	Config config.DatabaseConfig
-	// a plain connection with no search_path, for seeding and for asserting across schemas
+	Config    config.DatabaseConfig
 	DB        *sql.DB
 	container testcontainers.Container
 }

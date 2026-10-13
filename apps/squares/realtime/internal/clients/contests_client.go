@@ -16,7 +16,6 @@ import (
 
 const requestTimeout = 5 * time.Second
 
-// contests decides who may watch a contest; realtime asks on connect and whenever access may have changed
 type ContestAccessClient interface {
 	GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*contracts.ContestSnapshot, error)
 }

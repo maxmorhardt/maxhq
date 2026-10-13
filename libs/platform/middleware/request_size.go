@@ -16,8 +16,6 @@ const (
 	errorMessage   = "Request body too large. Maximum size is 1MB"
 )
 
-// rejects bodies over 1MB with 413 whatever their content type or transfer encoding. The body is read
-// here, up to one byte past the limit, and handed on intact, so handlers decode it as usual
 func RequestSizeLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.ContentLength > maxRequestSize {
@@ -47,7 +45,6 @@ func RequestSizeLimitMiddleware() gin.HandlerFunc {
 	}
 }
 
-// declared is the Content-Length, or -1 for a chunked body that ran past the limit
 func rejectTooLarge(c *gin.Context, declared int64) {
 	logging.FromGin(c).Warn("request body too large", "content_length", declared)
 	metrics.IncRequestSizeRejected()

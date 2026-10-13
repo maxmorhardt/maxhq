@@ -19,7 +19,6 @@ const (
 	ParticipantAddedType      = events.ParticipantAddedType
 )
 
-// one event on the contest's stream; realtime forwards it verbatim as the sse data payload
 type ContestEvent struct {
 	Type          string               `json:"type"`
 	ContestID     uuid.UUID            `json:"contestId"`
@@ -32,7 +31,6 @@ type ContestEvent struct {
 	Participant   *ContestParticipant  `json:"participant,omitempty"`
 }
 
-// what realtime needs to open a stream: the full contest and who is in it (contracts.ContestSnapshot on the wire)
 type ContestSnapshot struct {
 	Contest      *Contest             `json:"contest"`
 	Participants []ContestParticipant `json:"participants"`

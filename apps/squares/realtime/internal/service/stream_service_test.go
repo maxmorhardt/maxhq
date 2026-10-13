@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// a running hub over an in-memory redis
 func newHub(t *testing.T) (*redis.Client, *service.Hub) {
 	t.Helper()
 	mr := miniredis.RunT(t)
@@ -34,7 +33,6 @@ func newHub(t *testing.T) (*redis.Client, *service.Hub) {
 	return client, hub
 }
 
-// appends a contest event the way the contests relay does and returns its entry id
 func publish(t *testing.T, client *redis.Client, contestID uuid.UUID, eventType string) string {
 	t.Helper()
 	data, err := json.Marshal(events.ContestEventHeader{Type: eventType, ContestID: contestID})
@@ -80,7 +78,6 @@ func TestSubscribe_FreshStreamStartsFromASnapshot(t *testing.T) {
 	require.NotNil(t, sub.Snapshot)
 	assert.Equal(t, last, sub.SnapshotID, "the snapshot already reflects everything up to here")
 
-	// other contests have their own streams and never reach this subscription
 	publish(t, client, uuid.New(), events.SquareUpdateType)
 	live := publish(t, client, contestID, events.ContestUpdateType)
 

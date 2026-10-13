@@ -86,7 +86,6 @@ func TestRequestSizeLimit_OversizedJSONIs413(t *testing.T) {
 
 func TestRequestSizeLimit_OversizedChunkedBodyIs413(t *testing.T) {
 	var seen string
-	// no Content-Length, the way a chunked upload arrives
 	req := httptest.NewRequest(http.MethodPost, "/x", io.NopCloser(strings.NewReader(strings.Repeat("a", (1<<20)+1))))
 	req.ContentLength = -1
 	req.Header.Set("Content-Type", "application/json")

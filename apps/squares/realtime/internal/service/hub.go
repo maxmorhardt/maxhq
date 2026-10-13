@@ -12,16 +12,12 @@ import (
 )
 
 const (
-	// how long one read waits for new entries; a contest that gets its first viewer joins the read within this
-	hubBlock = time.Second
-	hubBatch = 100
-	// entries a listener may have queued before it is cut off and has to reconnect with its Last-Event-ID
+	hubBlock       = time.Second
+	hubBatch       = 100
 	listenerBuffer = 256
 	hubRetryDelay  = time.Second
 )
 
-// Hub reads every contest stream that has a viewer on this replica through one blocking read, so open
-// streams cost no redis connections of their own, and fans each entry out to that contest's listeners
 type Hub struct {
 	rdb    redis.Cmdable
 	block  time.Duration
@@ -35,7 +31,6 @@ type topic struct {
 	listeners map[*Listener]struct{}
 }
 
-// receives every entry appended to one stream after it subscribed; C closes if the listener falls too far behind
 type Listener struct {
 	C      <-chan streams.Entry
 	ch     chan streams.Entry
@@ -51,7 +46,6 @@ func NewHub(rdb redis.Cmdable) *Hub {
 	}
 }
 
-// the listener sees everything appended to the stream from about now on; callers replay anything older themselves
 func (h *Hub) Subscribe(ctx context.Context, stream string) (*Listener, error) {
 	ch := make(chan streams.Entry, listenerBuffer)
 	l := &Listener{C: ch, ch: ch, stream: stream}
@@ -60,7 +54,6 @@ func (h *Hub) Subscribe(ctx context.Context, stream string) (*Listener, error) {
 		return l, nil
 	}
 
-	// first viewer of this contest here: start reading where the stream ends now
 	_, last, err := streams.Bounds(ctx, h.rdb, stream)
 	if err != nil {
 		return nil, err
@@ -73,7 +66,6 @@ func (h *Hub) Subscribe(ctx context.Context, stream string) (*Listener, error) {
 	return l, nil
 }
 
-// adds l to its topic, creating the topic at position when one is given; reports whether l was added
 func (h *Hub) attach(l *Listener, position string) bool {
 	h.mu.Lock()
 	t, ok := h.topics[l.stream]
@@ -120,7 +112,6 @@ func (h *Hub) drop(l *Listener) {
 	metrics.SetContestsWatched(len(h.topics))
 }
 
-// reads until ctx ends; listeners only receive entries while this is running
 func (h *Hub) Run(ctx context.Context) {
 	log := logging.FromContext(ctx).With("component", "stream-hub")
 
@@ -181,7 +172,6 @@ func (h *Hub) deliver(got map[string][]streams.Entry) {
 				select {
 				case l.ch <- entry:
 				default:
-					// a viewer this far behind reconnects and replays from its Last-Event-ID instead of stalling the rest
 					h.drop(l)
 				}
 			}

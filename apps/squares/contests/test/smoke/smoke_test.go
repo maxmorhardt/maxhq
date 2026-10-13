@@ -1,4 +1,3 @@
-// Package smoke builds the service binary, starts it the way the image does, and checks it comes up.
 package smoke
 
 import (

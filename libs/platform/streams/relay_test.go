@@ -116,7 +116,6 @@ func TestRelay_StopsAtFirstPublishFailureAndKeepsEarlierProgress(t *testing.T) {
 	mock.ExpectCommit()
 
 	mr, client := newRedis(t)
-	// the second event's dedupe marker is the wrong type, so its append fails after the first succeeded
 	mr.HSet("app:outbox:"+ids[1].String(), "x", "y")
 	published, more, err := NewRelay(db, client, 1, time.Hour).publishBatch(context.Background())
 

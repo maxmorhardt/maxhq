@@ -38,7 +38,6 @@ func (w *capturingWriter) WriteString(s string) (int, error) {
 	return w.ResponseWriter.WriteString(s)
 }
 
-// replays the first response for a repeated Idempotency-Key, so a retried create cannot create twice
 func Idempotency(store cache.IdempotencyStore, service string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idemKey := c.GetHeader(HeaderIdempotencyKey)
@@ -134,7 +133,6 @@ func respondFromRecord(c *gin.Context, record *cache.IdempotencyRecord, fingerpr
 	}
 }
 
-// same method, path, and body means the same request; anything else under the same key is a client bug
 func requestFingerprint(c *gin.Context) (string, error) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {

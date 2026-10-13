@@ -18,10 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// ====================
-// CreateInvite
-// ====================
-
 func TestCreateInvite_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
 	svc.EXPECT().CreateInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -85,10 +81,6 @@ func createInviteErr(t *testing.T, user string, svcErr error, wantCode int) {
 	assert.Equal(t, wantCode, w.Code)
 }
 
-// ====================
-// GetInvitePreview
-// ====================
-
 func TestGetInvitePreview_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
 	svc.EXPECT().GetInvitePreview(mock.Anything, mock.Anything).
@@ -132,10 +124,6 @@ func getInvitePreviewErr(t *testing.T, svcErr error, wantCode int) {
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
-
-// ====================
-// RedeemInvite
-// ====================
 
 func TestRedeemInvite_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
@@ -185,10 +173,6 @@ func redeemInviteErr(t *testing.T, svcErr error, wantCode int) {
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
-
-// ====================
-// GetInvites
-// ====================
 
 func TestGetInvites_Success(t *testing.T) {
 	contestID := uuid.New()
@@ -244,10 +228,6 @@ func getInvitesErr(t *testing.T, user string, svcErr error, wantCode int) {
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
-
-// ====================
-// DeleteInvite
-// ====================
 
 func TestDeleteInvite_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)

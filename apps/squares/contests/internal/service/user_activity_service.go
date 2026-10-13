@@ -13,7 +13,6 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
 )
 
-// everything contests knows about a person: their stats, their live contests, and its copy of their profile
 type UserActivityService interface {
 	GetStats(ctx context.Context, email string) (*model.UserStatsResponse, error)
 	GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error)
@@ -58,7 +57,6 @@ func (s *userActivityService) GetActiveContests(ctx context.Context, email strin
 	return active, nil
 }
 
-// what accounts asks before it creates a profile or deletes an account
 func (s *userActivityService) GetActivitySummary(ctx context.Context, email string) (*contracts.UserActivitySummary, error) {
 	log := logging.FromContext(ctx)
 
@@ -81,7 +79,6 @@ func (s *userActivityService) GetActivitySummary(ctx context.Context, email stri
 	return &contracts.UserActivitySummary{ActiveContests: active, FirstActivity: first}, nil
 }
 
-// new initials flow onto the user's squares in live contests, and connected clients see them change
 func (s *userActivityService) ApplyUserUpdated(ctx context.Context, event *events.UserUpdated) error {
 	log := logging.FromContext(ctx).With("user", event.Email)
 
@@ -124,7 +121,6 @@ func (s *userActivityService) ApplyUserUpdated(ctx context.Context, event *event
 	return nil
 }
 
-// accounts already tombstoned the user; this frees their live squares and anonymizes their history
 func (s *userActivityService) ApplyUserDeleted(ctx context.Context, event *events.UserDeleted) error {
 	log := logging.FromContext(ctx).With("user", event.Email)
 

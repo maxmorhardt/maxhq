@@ -48,10 +48,8 @@ func TestStatsRepository_GetStats_SquaresClaimedTodayError(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewStatsRepository(gdb)
 
-	// first contests query succeeds
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	// squares query fails
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
 		WillReturnError(errors.New("squares query failed"))
 
@@ -66,12 +64,10 @@ func TestStatsRepository_GetStats_TotalActiveContestsError(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewStatsRepository(gdb)
 
-	// first two queries succeed
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(12))
-	// third (active contests) query fails
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
 		WillReturnError(errors.New("active contests query failed"))
 

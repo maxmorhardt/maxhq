@@ -73,14 +73,11 @@ func ESPNGameToGame(e *model.ESPNGame) *model.Game {
 func CompletedQuarters(e *model.ESPNGame) []model.QuarterScore {
 	out := make([]model.QuarterScore, 0, 4)
 
-	// accumulate the running totals squares are scored against
 	homeTotal, awayTotal := 0, 0
 	n := min(len(e.HomeLine), len(e.AwayLine))
 	for q := 1; q <= 3 && q-1 < n; q++ {
-		// sum each quarter's line score into the cumulative total
 		homeTotal += e.HomeLine[q-1]
 		awayTotal += e.AwayLine[q-1]
-		// only count a quarter once play has moved past it or the game is over
 		if e.Period > q || e.Completed {
 			out = append(out, model.QuarterScore{Quarter: q, Home: homeTotal, Away: awayTotal})
 		}

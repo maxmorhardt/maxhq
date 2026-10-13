@@ -22,7 +22,6 @@ const (
 	replayBatch = 500
 )
 
-// one contest event as it sits in the stream; ID becomes the sse id the client resumes from
 type Event struct {
 	ID     string
 	Data   []byte
@@ -30,12 +29,10 @@ type Event struct {
 }
 
 type Subscription struct {
-	// set when the client could not resume, so it must replace its state before applying Events
 	Snapshot   *contracts.ContestSnapshot
 	SnapshotID string
-	// closes when the subscription ends or the viewer falls too far behind
-	Events <-chan Event
-	Stop   func()
+	Events     <-chan Event
+	Stop       func()
 }
 
 type StreamService interface {
@@ -87,7 +84,6 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 	switch {
 	case lastEventID != "" && first != "" &&
 		streams.CompareIDs(lastEventID, first) >= 0 && streams.CompareIDs(lastEventID, last) <= 0:
-		// everything the client missed is still in the stream, so replay just the gap
 		start = lastEventID
 		metrics.RecordStreamResume(true)
 	default:
@@ -109,7 +105,6 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 	return sub, nil
 }
 
-// replays what came after start, then forwards live entries, skipping any the replay already sent
 func (s *streamService) pump(ctx context.Context, stream, start string, listener *Listener) <-chan Event {
 	out := make(chan Event, eventBuffer)
 	log := logging.FromContext(ctx)
@@ -172,7 +167,6 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 	return out
 }
 
-// nil means the user may still watch; ErrInsufficientRole or ErrContestNotFound means they may not
 func (s *streamService) CheckAccess(ctx context.Context, contestID uuid.UUID, user string) error {
 	_, err := s.contests.GetSnapshot(ctx, contestID, user)
 	return err
@@ -182,7 +176,6 @@ func (s *streamService) IsRevoked(ctx context.Context, user string, issuedAt int
 	return s.revocations.IsRevoked(ctx, user, issuedAt)
 }
 
-// only these events can take away someone's view of a contest, so only they trigger a re-check
 func RequiresAccessCheck(header *events.ContestEventHeader, user string) bool {
 	switch header.Type {
 	case events.ContestUpdateType:

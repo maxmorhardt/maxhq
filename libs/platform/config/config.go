@@ -1,4 +1,3 @@
-// Package config holds the environment settings every service shares and loads a service's config struct from the environment.
 package config
 
 import (
@@ -31,12 +30,10 @@ type RedisConfig struct {
 	URL string `env:"REDIS_URL,required"`
 }
 
-// event streams live in redis; entries older than Retention are trimmed as new ones arrive
 type StreamsConfig struct {
 	Retention time.Duration `env:"STREAM_RETENTION" envDefault:"168h"`
 }
 
-// service-to-service calls never leave the cluster and carry a shared token on top of the network policy
 type InternalConfig struct {
 	Token string `env:"INTERNAL_API_TOKEN,required"`
 }

@@ -171,7 +171,6 @@ func TestUpdateParticipant_Success(t *testing.T) {
 	p := mocks.NewParticipantRepository(t)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(&model.ContestParticipant{Role: model.ParticipantRoleOwner}, nil)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target").Return(&model.ContestParticipant{Role: model.ParticipantRoleParticipant, MaxSquares: 10}, nil)
-	// demoting a participant to viewer drops their allotment to 0, which runs the square checks
 	p.EXPECT().CountSquaresByUser(mock.Anything, mock.Anything, "target").Return(0, nil)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(10, nil)
 	p.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
@@ -361,7 +360,6 @@ func TestRemoveParticipant_InProgressGhostsSquares(t *testing.T) {
 	}
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(contestWithSquare, nil)
-	// an in-progress leave preserves the square by reassigning it to the ghost user
 	c.EXPECT().GhostSquare(mock.Anything, mock.Anything).Return(&model.Square{}, nil)
 	p := mocks.NewParticipantRepository(t)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target").Return(&model.ContestParticipant{Role: model.ParticipantRoleParticipant}, nil)

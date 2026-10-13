@@ -22,10 +22,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// ====================
-// CreateContest
-// ====================
-
 func TestCreateContest_Success(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewContestService(t)
@@ -96,10 +92,6 @@ func createContestErr(t *testing.T, svcErr error, wantCode int) {
 	w := doRequest(r, jsonReq(http.MethodPut, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "Test", MaxSquares: 10}))
 	assert.Equal(t, wantCode, w.Code)
 }
-
-// ====================
-// UpdateContest
-// ====================
 
 func TestUpdateContest_Success(t *testing.T) {
 	contestID := uuid.New()
@@ -172,10 +164,6 @@ func updateContestErr(t *testing.T, user string, svcErr error, wantCode int) {
 	assert.Equal(t, wantCode, w.Code)
 }
 
-// ====================
-// DeleteContest
-// ====================
-
 func TestDeleteContest_Success(t *testing.T) {
 	svc := mocks.NewContestService(t)
 	svc.EXPECT().DeleteContest(mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -229,10 +217,6 @@ func deleteContestErr(t *testing.T, user string, svcErr error, wantCode int) {
 	assert.Equal(t, wantCode, w.Code)
 }
 
-// ====================
-// StartContest
-// ====================
-
 func TestStartContest_Success(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewContestService(t)
@@ -281,10 +265,6 @@ func startContestErr(t *testing.T, svcErr error, wantCode int) {
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
-
-// ====================
-// RecordQuarterResult
-// ====================
 
 func TestRecordQuarterResult_Success(t *testing.T) {
 	contestID := uuid.New()
@@ -353,10 +333,6 @@ func recordQuarterErr(t *testing.T, svcErr error, wantCode int) {
 	assert.Equal(t, wantCode, w.Code)
 }
 
-// ====================
-// RollbackLastQuarterResult
-// ====================
-
 func TestRollbackLastQuarterResult_Success(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewContestService(t)
@@ -411,10 +387,6 @@ func rollbackQuarterErr(t *testing.T, svcErr error, wantCode int) {
 	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-result/rollback", uuid.New()), nil))
 	assert.Equal(t, wantCode, w.Code)
 }
-
-// ====================
-// ClaimSquare
-// ====================
 
 func TestClaimSquare_Success(t *testing.T) {
 	contestID, squareID := uuid.New(), uuid.New()
@@ -491,10 +463,6 @@ func claimSquareErr(t *testing.T, user string, svcErr error, wantCode int) {
 	assert.Equal(t, wantCode, w.Code)
 }
 
-// ====================
-// ClearSquare
-// ====================
-
 func TestClearSquare_Success(t *testing.T) {
 	contestID, squareID := uuid.New(), uuid.New()
 	svc := mocks.NewContestService(t)
@@ -560,10 +528,6 @@ func clearSquareErr(t *testing.T, user string, svcErr error, wantCode int) {
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
-
-// ====================
-// ClearMySquares
-// ====================
 
 func TestClearMySquares_Success(t *testing.T) {
 	contestID := uuid.New()

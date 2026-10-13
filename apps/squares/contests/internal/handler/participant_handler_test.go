@@ -18,10 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// ====================
-// GetParticipants
-// ====================
-
 func TestGetParticipants_Success(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewParticipantService(t)
@@ -81,10 +77,6 @@ func TestGetParticipants_InsufficientRole(t *testing.T) {
 func TestGetParticipants_InternalError(t *testing.T) {
 	getParticipantsErr(t, "user1", assert.AnError, http.StatusInternalServerError)
 }
-
-// ====================
-// UpdateParticipant
-// ====================
 
 func TestUpdateParticipant_Success(t *testing.T) {
 	contestID := uuid.New()
@@ -156,10 +148,6 @@ func TestUpdateParticipant_NotParticipant(t *testing.T) {
 func TestUpdateParticipant_InternalError(t *testing.T) {
 	updateParticipantErr(t, "owner1", "user1", assert.AnError, http.StatusInternalServerError)
 }
-
-// ====================
-// RemoveParticipant
-// ====================
 
 func TestRemoveParticipant_Success(t *testing.T) {
 	svc := mocks.NewParticipantService(t)

@@ -24,9 +24,6 @@ const (
 	dedupeWindow = time.Hour
 )
 
-// appends one outbox event unless it was appended before, trims entries older than the retention,
-// and keeps the stream key alive for as long as it keeps receiving events
-//
 // KEYS[1] stream, KEYS[2] dedupe marker
 // ARGV[1] min id to keep, ARGV[2] stream ttl ms, ARGV[3] dedupe ttl ms, ARGV[4] type, ARGV[5] data, ARGV[6] event id
 var appendScript = redis.NewScript(`
@@ -40,7 +37,6 @@ redis.call('SET', KEYS[2], id, 'PX', ARGV[3])
 return id
 `)
 
-// moves committed outbox rows to their redis streams in insertion order
 type Relay struct {
 	db        *gorm.DB
 	rdb       redis.Scripter
@@ -50,8 +46,6 @@ type Relay struct {
 	wake      chan struct{}
 }
 
-// lockKey keeps one replica relaying at a time, which is what preserves append order;
-// retention is how long entries stay in a stream before they are trimmed
 func NewRelay(db *gorm.DB, rdb redis.Scripter, lockKey int64, retention time.Duration) *Relay {
 	return &Relay{
 		db:        db,
@@ -79,7 +73,6 @@ func (r *Relay) Run(ctx context.Context) {
 	cleanup := time.NewTicker(relayCleanupEvery)
 	defer cleanup.Stop()
 
-	// drain anything left behind by a previous process before waiting
 	r.Flush(ctx)
 
 	for {
@@ -97,7 +90,6 @@ func (r *Relay) Run(ctx context.Context) {
 	}
 }
 
-// appends until the backlog is empty, the lock is held elsewhere, or redis refuses an entry
 func (r *Relay) Flush(ctx context.Context) {
 	for {
 		published, more, err := r.publishBatch(ctx)

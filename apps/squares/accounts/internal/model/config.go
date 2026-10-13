@@ -13,7 +13,6 @@ type AccountsConfig struct {
 	Turnstile TurnstileConfig
 }
 
-// accounts asks contests whether an account is still in use before creating or deleting it
 type ContestsConfig struct {
 	URL string `env:"CONTESTS_INTERNAL_URL" envDefault:"http://squares-contests:8080"`
 }

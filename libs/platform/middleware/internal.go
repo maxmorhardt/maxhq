@@ -12,7 +12,6 @@ import (
 
 const HeaderInternalToken = "X-Internal-Token"
 
-// guards /internal routes; they are never routed by the gateway and network policy limits who can reach them
 func RequireInternalToken(token string) gin.HandlerFunc {
 	expected := []byte(token)
 

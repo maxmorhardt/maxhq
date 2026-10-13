@@ -2,7 +2,6 @@ package errs
 
 import "errors"
 
-// authorization errors for contest and square actions
 var (
 	ErrUnauthorizedContestEdit   = errors.New("only the contest owner can update this contest")
 	ErrUnauthorizedContestDelete = errors.New("only the contest owner can delete this contest")
@@ -10,12 +9,10 @@ var (
 	ErrMissingInitials           = errors.New("set your default initials in your profile before claiming a square")
 )
 
-// validation errors for contest, team, and square attributes
 var (
 	ErrInvalidSquareValue = errors.New("value must be 1-3 uppercase letters or numbers")
 )
 
-// state errors for contests and squares
 var (
 	ErrContestNotEditable         = errors.New("contest is not in an editable state")
 	ErrContestFinalized           = errors.New("contest is finished or deleted and cannot be modified")
@@ -28,12 +25,10 @@ var (
 	ErrVersionConflict            = errors.New("this contest was changed by someone else, refresh and try again")
 )
 
-// database errors for service availability
 var (
 	ErrDatabaseUnavailable = errors.New("service temporarily unavailable, please try again later")
 )
 
-// not found and request errors
 var (
 	ErrContestNotFound    = errors.New("contest not found")
 	ErrSquareNotFound     = errors.New("square not found")
@@ -47,7 +42,6 @@ var (
 	ErrInvalidFilter = errors.New("invalid filter parameter")
 )
 
-// game, contest, and invite related errors
 var (
 	ErrGameNotFound            = errors.New("game not found")
 	ErrContestIsGameLinked     = errors.New("this contest is linked to a live game and scores are updated automatically")

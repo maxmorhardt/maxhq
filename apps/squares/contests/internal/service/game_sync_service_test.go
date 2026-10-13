@@ -36,7 +36,6 @@ func fullContest(status model.ContestStatus, gameID uuid.UUID) *model.Contest {
 	return &model.Contest{ID: uuid.New(), Status: status, GameID: &gameID, XLabels: labels, YLabels: labels, Squares: squares}
 }
 
-// wires a game sync around one linked contest; the game update is stored and reloaded as given
 func syncFixture(t *testing.T, game *model.Game, contest *model.Contest) (*mocks.GameProjectionRepository, *mocks.ContestRepository, *mocks.ContestService) {
 	t.Helper()
 	g := mocks.NewGameProjectionRepository(t)
@@ -114,7 +113,6 @@ func TestGameSync_SkipsUnresolvableQuarter(t *testing.T) {
 	contest := fullContest(model.ContestStatusQ1, game.ID)
 	g, c, cs := syncFixture(t, game, contest)
 
-	// an unresolvable Q1 must not stop Q2 from being applied
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 1, 7, 3).Return(nil, errs.ErrWinnerNotDeterminable).Once()
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 2, 14, 10).Return(&model.QuarterResult{Quarter: 2}, nil).Once()
 
@@ -129,7 +127,6 @@ func TestGameSync_StopsOnApplyErrorAndAsksForRedelivery(t *testing.T) {
 	contest := fullContest(model.ContestStatusQ1, game.ID)
 	g, c, cs := syncFixture(t, game, contest)
 
-	// a real write failure stops the loop so quarters can't be applied out of order
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 1, 7, 3).Return(nil, errors.New("db")).Once()
 
 	assert.Error(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
@@ -146,7 +143,6 @@ func TestGameSync_SkipsWhenGridNotFull(t *testing.T) {
 
 func TestGameSync_SkipsAlreadyAppliedQuarter(t *testing.T) {
 	game := liveGame(uuid.New(), model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3})
-	// contest already past Q1; replaying the Q1 score must not re-advance it
 	contest := fullContest(model.ContestStatusQ2, game.ID)
 	g, c, cs := syncFixture(t, game, contest)
 

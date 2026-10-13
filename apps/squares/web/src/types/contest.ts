@@ -88,7 +88,6 @@ export interface ContestFeedParams {
   sort?: FeedSort;
 }
 
-// one row of the caller's contests; role says whether they own it or joined it
 export interface ContestSummary {
   id: string;
   name: string;

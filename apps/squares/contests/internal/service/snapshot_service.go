@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// the full state a realtime stream starts from, served only to someone allowed to view the contest
 type SnapshotService interface {
 	GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*model.ContestSnapshot, error)
 }
@@ -50,7 +49,6 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	// game-linked contests read their quarter results from the shared game record
 	util.SynthesizeFromGame(contest)
 
 	participants, err := s.participantService.GetParticipantsInternal(ctx, contestID)

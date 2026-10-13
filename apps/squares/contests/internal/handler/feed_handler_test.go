@@ -21,7 +21,7 @@ func feedRouter(svc *mocks.FeedService) *gin.Engine {
 	return r
 }
 
-func getFeed(r *gin.Engine, query string) (int, []byte) {
+func getFeed(r *gin.Engine, query string) (code int, body []byte) {
 	req, _ := http.NewRequest(http.MethodGet, "/contests?"+query, http.NoBody)
 	w := doRequest(r, req)
 	return w.Code, w.Body.Bytes()

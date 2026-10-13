@@ -19,7 +19,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// runs the unit of work inline, standing in for a real transaction
 func passTx() *mocks.Transactor {
 	m := &mocks.Transactor{}
 	m.On("Do", mock.Anything, mock.Anything).

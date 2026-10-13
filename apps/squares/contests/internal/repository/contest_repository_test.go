@@ -23,7 +23,6 @@ func newMockDB(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = sqlDB.Close() })
 
-	// gorm preloads run in non-deterministic order, so don't require ordering
 	mock.MatchExpectationsInOrder(false)
 
 	gdb, err := gorm.Open(postgres.New(postgres.Config{
@@ -96,7 +95,6 @@ func TestContestRepository_Update_StaleVersionConflicts(t *testing.T) {
 	repo := NewContestRepository(gdb)
 
 	mock.ExpectBegin()
-	// someone else bumped the version since this contest was read, so the guarded update matches nothing
 	mock.ExpectExec(`UPDATE "contests"`).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectCommit()
 
@@ -186,7 +184,6 @@ func TestContestRepository_ClaimSquare_ContestNoLongerActive(t *testing.T) {
 
 	contestID := uuid.New()
 	mock.ExpectBegin()
-	// the contest started between the service's check and this transaction
 	expectActiveContestLock(mock, contestID, model.ContestStatusQ1)
 	mock.ExpectRollback()
 
@@ -205,7 +202,6 @@ func TestContestRepository_ClaimSquare_LostRace(t *testing.T) {
 	mock.ExpectBegin()
 	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
 	expectClaimParticipantLock(mock, contestID, 5)
-	// another claim committed first, so the guarded update matches no rows
 	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectRollback()
 
@@ -225,7 +221,6 @@ func TestContestRepository_ClaimSquare_OverLimit(t *testing.T) {
 	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
 	expectClaimParticipantLock(mock, contestID, 3)
 	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 1))
-	// the claim pushed the caller past their allotment, so the write is rolled back
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
 		WithArgs(contestID, "owner", "").
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(4))

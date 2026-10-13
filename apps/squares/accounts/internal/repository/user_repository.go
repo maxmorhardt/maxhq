@@ -15,7 +15,6 @@ type Tombstone struct {
 	DeletedAt time.Time
 }
 
-// the source of truth for profiles and deleted accounts
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	CreateIfMissing(ctx context.Context, user *model.User) (*model.User, error)
@@ -80,7 +79,6 @@ func (r *userRepository) UpdateInitials(ctx context.Context, email, initials str
 	return user, nil
 }
 
-// tombstone the account so every service can reject tokens minted before the deletion
 func (r *userRepository) DeleteWithTombstone(ctx context.Context, email string, deletedAt time.Time) error {
 	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("email = ?", email).Delete(&model.User{}).Error; err != nil {

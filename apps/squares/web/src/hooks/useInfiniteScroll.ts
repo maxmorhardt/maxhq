@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-// calls onLoadMore when the returned sentinel scrolls near the viewport
 export function useInfiniteScroll<T extends Element>(onLoadMore: () => void, enabled: boolean) {
   const sentinelRef = useRef<T | null>(null);
   const loadMore = useRef(onLoadMore);

@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// every users-stream entry about one email, oldest first
 func userEvents(t *testing.T, email string) []streams.Entry {
 	t.Helper()
 	entries, err := streams.Range(context.Background(), rdb, events.UsersStream, "", 1000)
@@ -51,7 +50,6 @@ func TestAccounts_FirstSignInCreatesTheProfileAndPublishesIt(t *testing.T) {
 	entry := userEvents(t, user)[0]
 	assert.Equal(t, events.UserUpdatedType, entry.Type)
 
-	// a second sign-in, on either replica, changes nothing
 	require.Equal(t, http.StatusOK, testkit.Call(t, replicaB, testkit.As(user), http.MethodGet, "/users/me", nil).Status)
 	time.Sleep(500 * time.Millisecond)
 	assert.Len(t, userEvents(t, user), 1)
@@ -86,7 +84,6 @@ func TestAccounts_DeletionIsBlockedByActiveContestsThenRevokesTheToken(t *testin
 	contests.setActive(user)
 	require.Equal(t, http.StatusNoContent, testkit.Call(t, replicaA, signedIn, http.MethodDelete, "/users/me", nil).Status)
 
-	// the same token is rejected by every replica, since the revocation lives in redis
 	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaB, signedIn, http.MethodGet, "/users/me", nil).Status)
 
 	require.Eventually(t, func() bool {
@@ -94,7 +91,6 @@ func TestAccounts_DeletionIsBlockedByActiveContestsThenRevokesTheToken(t *testin
 		return len(evs) > 0 && evs[len(evs)-1].Type == events.UserDeletedType
 	}, eventually, 100*time.Millisecond, "contests learns about the deletion from the users stream")
 
-	// signing in again mints a newer token, which is allowed and starts a fresh profile
 	fresh := testkit.Identity{Email: user, IssuedAt: time.Now().Add(time.Second)}
 	time.Sleep(time.Until(fresh.IssuedAt))
 	assert.Equal(t, http.StatusOK, testkit.Call(t, replicaB, fresh, http.MethodGet, "/users/me", nil).Status)
@@ -107,7 +103,6 @@ func TestAccounts_StartupRestoresRevocationsFromTombstones(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, rdb.Del(context.Background(), cache.Key("revoked", user)).Err())
 
-	// a replica starting after redis lost the key puts it back
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	infra, err := bootstrap.Connect(baseCfg)

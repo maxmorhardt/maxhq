@@ -117,7 +117,6 @@ func parseFeedFilter(c *gin.Context) (*model.ContestFeedFilter, error) {
 	return f, nil
 }
 
-// after a successful write, the caller's feed and every feed showing the contest are refetched
 func InvalidateFeeds(feedService service.FeedService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()

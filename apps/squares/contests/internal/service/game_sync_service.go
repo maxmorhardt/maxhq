@@ -14,7 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// applies game events from the games service: refresh the local copy, then move linked contests forward
 type GameSyncService interface {
 	ApplyGameUpdate(ctx context.Context, game *model.Game) error
 }
@@ -51,12 +50,10 @@ func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game)
 		return err
 	}
 
-	// scheduled games have nothing to apply yet; only reconcile once play starts
 	if game.Status == model.GameStatusScheduled {
 		return nil
 	}
 
-	// reconcile against the stored copy, which merges every score seen so far
 	stored, err := s.gameRepo.GetByID(ctx, game.ID)
 	if err != nil {
 		log.Error("failed to reload game projection", "error", err)
@@ -106,19 +103,15 @@ func (s *gameSyncService) reconcile(ctx context.Context, contest *model.Contest,
 		return nil
 	}
 
-	// an ACTIVE contest hasn't locked its grid yet
 	if contest.Status == model.ContestStatusActive {
 		switch {
 		case game.Status == model.GameStatusFinal:
-			// the game ended before the grid ever locked; finalize straight from the final scores
 			return s.contestService.FinalizeFromScores(ctx, contest, game.Scores)
 		case game.Status == model.GameStatusInProgress && util.AllSquaresClaimed(contest):
-			// full grid at kickoff; lock, randomize, and score live
 			if err := s.contestService.AutoStart(ctx, contest); err != nil {
 				return err
 			}
 		default:
-			// grid stays fillable until it fills up or the game ends
 			return nil
 		}
 	}
@@ -136,7 +129,6 @@ func (s *gameSyncService) reconcile(ctx context.Context, contest *model.Contest,
 
 		result, err := s.contestService.ApplyQuarterResult(ctx, contest, score.Quarter, score.HomeScore, score.AwayScore)
 		if err != nil {
-			// a score this grid can't resolve shouldn't stall the quarters after it
 			if errors.Is(err, errs.ErrWinnerNotDeterminable) || errors.Is(err, errs.ErrInvalidQuarter) {
 				log.Warn("skipping quarter", "contest_id", contest.ID, "quarter", score.Quarter, "error", err)
 				continue

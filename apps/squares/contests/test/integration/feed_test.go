@@ -24,7 +24,7 @@ func feed(t *testing.T, user string, query url.Values) model.ContestFeedResponse
 func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 	const owner, member = "feed-owner@squares.test", "feed-member@squares.test"
 
-	var names []string
+	names := make([]string, 0, 3)
 	for i := range 3 {
 		name := fmt.Sprintf("Feed %d", i)
 		_, resp := createContest(t, owner, name, 10)
