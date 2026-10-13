@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,8 +19,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

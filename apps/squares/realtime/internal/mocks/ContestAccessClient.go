@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	uuid "github.com/google/uuid"
-	internalapi "github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	mock "github.com/stretchr/testify/mock"
 )
 

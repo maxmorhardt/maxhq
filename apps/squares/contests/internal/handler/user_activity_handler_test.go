@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

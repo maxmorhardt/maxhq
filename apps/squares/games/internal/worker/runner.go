@@ -8,7 +8,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"gorm.io/gorm"
 )
 

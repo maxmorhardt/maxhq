@@ -8,7 +8,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

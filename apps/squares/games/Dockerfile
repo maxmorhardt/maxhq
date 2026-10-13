@@ -10,12 +10,12 @@ RUN apk add --no-cache make
 WORKDIR /src
 
 # module files first, so dependency downloads are cached until they change
-COPY libs/go/platform/go.mod libs/go/platform/go.sum libs/go/platform/
-COPY libs/go/squares/go.mod libs/go/squares/go.sum libs/go/squares/
+COPY libs/platform/go.mod libs/platform/go.sum libs/platform/
+COPY libs/squares/go.mod libs/squares/go.sum libs/squares/
 COPY apps/squares/games/go.mod apps/squares/games/go.sum apps/squares/games/
 RUN cd apps/squares/games && GOWORK=off go mod download
 
-COPY libs/go libs/go
+COPY libs libs
 COPY apps/squares/games apps/squares/games
 
 WORKDIR /src/apps/squares/games

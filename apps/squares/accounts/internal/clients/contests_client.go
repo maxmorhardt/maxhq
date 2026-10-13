@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/go/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
+	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 )
 
 const requestTimeout = 5 * time.Second

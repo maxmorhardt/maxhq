@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -18,9 +18,9 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
 )
 
 const (

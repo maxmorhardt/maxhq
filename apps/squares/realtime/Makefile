@@ -41,8 +41,12 @@ test: ## Run unit tests
 	go test $(RACE) ./internal/... ./cmd/...
 
 .PHONY: test-integration
-test-integration: ## Run integration tests (requires Docker)
-	go test $(RACE) ./test/integration/...
+test-integration: ## Run integration and smoke tests (requires Docker); CI runs this
+	go test $(RACE) ./test/...
+
+.PHONY: test-smoke
+test-smoke: ## Build the binary, start it against Postgres and Valkey, and check it comes up (requires Docker)
+	go test $(RACE) ./test/smoke/...
 
 .PHONY: test-all
 test-all: ## Run all tests
@@ -71,7 +75,7 @@ mocks: ## Regenerate testify mocks
 
 .PHONY: swag
 swag: ## Regenerate the swagger docs
-	$(SWAG) init --quiet -g main.go -d ./cmd/$(SERVICE),./internal/handler,../../../libs/go/platform/server \
+	$(SWAG) init --quiet -g main.go -d ./cmd/$(SERVICE),./internal/handler,../../../libs/platform/server \
 		--parseDependency --instanceName $(SERVICE) -o docs
 
 .PHONY: swag-check

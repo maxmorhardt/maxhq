@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/go/platform/config"
+	"github.com/maxmorhardt/maxstash/libs/platform/config"
 )
 
 type RealtimeConfig struct {

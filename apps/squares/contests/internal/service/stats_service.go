@@ -6,8 +6,8 @@ import (
 
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
 const statsCacheTTL = 30 * time.Second

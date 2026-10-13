@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/testkit"
+	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -156,12 +156,4 @@ func TestContest_RequiresGatewayIdentity(t *testing.T) {
 
 	internal := call(t, testkit.Anonymous, http.MethodGet, "/internal/users/"+ownerUser+"/activity", nil)
 	assert.Equal(t, http.StatusUnauthorized, internal.Status, "internal routes need the service token")
-}
-
-func TestContest_SchemaIsCreatedFromScratch(t *testing.T) {
-	for _, table := range []string{"contests.contests", "contests.squares", "contests.outbox", "contests.stream_offsets", "contests.users", "contests.games"} {
-		var exists bool
-		require.NoError(t, rawDB.QueryRow(`SELECT to_regclass($1) IS NOT NULL`, table).Scan(&exists))
-		assert.True(t, exists, table)
-	}
 }

@@ -16,9 +16,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/bootstrap"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/testkit"
+	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )
@@ -53,6 +53,17 @@ func run(m *testing.M) int {
 	}
 	defer pg.Terminate()
 	rawDB = pg.DB
+
+	// start from the monolith's tables, the way production does, so the service has to adopt them
+	legacy, err := os.ReadFile("testdata/legacy_schema.sql")
+	if err != nil {
+		slog.Error("legacy schema", "error", err)
+		return 1
+	}
+	if _, err = rawDB.Exec(string(legacy)); err != nil {
+		slog.Error("legacy schema", "error", err)
+		return 1
+	}
 
 	rd, err := testkit.StartRedis(ctx)
 	if err != nil {

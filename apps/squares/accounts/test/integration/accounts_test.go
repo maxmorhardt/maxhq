@@ -10,11 +10,11 @@ import (
 
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/bootstrap"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/testkit"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

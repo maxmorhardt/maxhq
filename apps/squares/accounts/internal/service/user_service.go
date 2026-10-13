@@ -10,12 +10,12 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/util"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
 	"gorm.io/gorm"
 )
 

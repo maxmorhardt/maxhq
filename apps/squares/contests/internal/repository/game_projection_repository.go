@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/database"
+	"github.com/maxmorhardt/maxstash/libs/platform/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

@@ -9,9 +9,9 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
 )
 
 type UserHandler interface {

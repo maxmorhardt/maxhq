@@ -8,120 +8,36 @@
     "apps/maxstash": {
       "release-type": "node",
       "component": "maxstash",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
-      ]
+      "changelog-path": "CHANGELOG.md"
     },
     "apps/squares/web": {
       "release-type": "node",
       "component": "squares",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
-      ]
+      "changelog-path": "CHANGELOG.md"
     },
     "apps/squares/contests": {
       "release-type": "go",
       "component": "squares-contests",
       "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
-      ]
+      "initial-version": "1.0.0"
     },
     "apps/squares/games": {
       "release-type": "go",
       "component": "squares-games",
       "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
-      ]
+      "initial-version": "1.0.0"
     },
     "apps/squares/accounts": {
       "release-type": "go",
       "component": "squares-accounts",
       "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
-      ]
+      "initial-version": "1.0.0"
     },
     "apps/squares/realtime": {
       "release-type": "go",
       "component": "squares-realtime",
       "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "chart/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
-      ]
-    },
-    "charts/maxstash-gateway": {
-      "release-type": "helm",
-      "component": "maxstash-gateway"
-    },
-    "charts/cloudflare-ddns": {
-      "release-type": "helm",
-      "component": "cloudflare-ddns"
-    },
-    "charts/cloudflare-cidr": {
-      "release-type": "helm",
-      "component": "cloudflare-cidr"
+      "initial-version": "1.0.0"
     }
   }
 }

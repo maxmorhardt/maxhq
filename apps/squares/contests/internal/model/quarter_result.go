@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/api"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
 	"gorm.io/gorm"
 )
 

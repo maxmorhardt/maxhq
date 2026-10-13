@@ -6,9 +6,9 @@ import (
 
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
 )
 
 // each consumer has its own advisory lock, so one replica reads each stream at a time and order holds

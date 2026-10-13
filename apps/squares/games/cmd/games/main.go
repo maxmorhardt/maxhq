@@ -10,8 +10,8 @@ import (
 	_ "github.com/maxmorhardt/maxstash/apps/squares/games/docs"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/bootstrap"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/server"
+	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxstash/libs/platform/server"
 )
 
 // @title           Squares Games API

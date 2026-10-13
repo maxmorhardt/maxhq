@@ -4,9 +4,8 @@ go 1.26.1
 use (
 	./apps/squares/accounts
 	./apps/squares/contests
-	./apps/squares/e2e
 	./apps/squares/games
 	./apps/squares/realtime
-	./libs/go/platform
-	./libs/go/squares
+	./libs/platform
+	./libs/squares
 )

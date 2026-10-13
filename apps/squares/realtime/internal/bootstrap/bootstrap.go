@@ -10,10 +10,10 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/routes"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/server"
+	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/server"
 )
 
 const (

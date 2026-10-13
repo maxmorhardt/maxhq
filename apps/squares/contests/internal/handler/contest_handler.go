@@ -11,9 +11,9 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
 	"gorm.io/gorm"
 )
 

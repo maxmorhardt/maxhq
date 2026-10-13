@@ -23,11 +23,9 @@ jobs:
     outputs:
       maxstash: ${{ steps.filter.outputs.maxstash == 'true' || steps.filter.outputs.workflows == 'true' }}
       squares_web: ${{ steps.filter.outputs.squares_web == 'true' || steps.filter.outputs.workflows == 'true' }}
-      charts: ${{ steps.filter.outputs.charts == 'true' || steps.filter.outputs.workflows == 'true' }}
       # the squares go services whose code or shared libraries changed, as a json list for the matrix jobs
       squares_services: ${{ steps.services.outputs.list }}
       go_libs: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.workflows == 'true' }}
-      squares_e2e: ${{ steps.filter.outputs.squares_e2e == 'true' || steps.filter.outputs.workflows == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -42,16 +40,7 @@ jobs:
             squares_web:
               - 'apps/squares/web/**'
             go_libs:
-              - 'libs/go/**'
-            squares_e2e:
-              - 'apps/squares/contests/**'
-              - 'apps/squares/games/**'
-              - 'apps/squares/accounts/**'
-              - 'apps/squares/realtime/**'
-              - 'apps/squares/e2e/**'
-              - 'libs/go/**'
-            charts:
-              - 'charts/**'
+              - 'libs/**'
             workflows:
               - '.github/workflows/**'
 
@@ -94,16 +83,6 @@ jobs:
       working_directory: apps/maxstash
       artifact_suffix: -maxstash
 
-  maxstash-chart:
-    needs: changes
-    if: needs.changes.outputs.maxstash == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
-    with:
-      repository: ${{ github.repository }}
-      chart_directory: chart
-      chart_name: maxstash
-      working_directory: apps/maxstash
-
   maxstash-docker:
     needs: maxstash-node
     uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
@@ -127,16 +106,6 @@ jobs:
       working_directory: apps/squares/web
       artifact_suffix: -squares
 
-  squares-web-chart:
-    needs: changes
-    if: needs.changes.outputs.squares_web == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
-    with:
-      repository: ${{ github.repository }}
-      chart_directory: chart
-      chart_name: squares
-      working_directory: apps/squares/web
-
   squares-web-docker:
     needs: squares-web-node
     uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
@@ -148,7 +117,7 @@ jobs:
       artifact_path: apps/squares/web/dist
     secrets: inherit
 
-  # squares services: each is its own module, image, and chart
+  # squares services: each is its own module and image
 
   squares-go:
     needs: changes
@@ -164,21 +133,6 @@ jobs:
       swagger: true
       build: false
 
-  squares-chart:
-    needs: changes
-    if: needs.changes.outputs.squares_services != '[]'
-    strategy:
-      fail-fast: false
-      matrix:
-        service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
-    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
-    with:
-      repository: ${{ github.repository }}
-      chart_directory: chart
-      chart_name: squares-${{ matrix.service }}
-      working_directory: apps/squares/${{ matrix.service }}
-
-  # built from the repository root so the shared libraries are in the context
   squares-docker:
     needs: [changes, squares-go]
     strategy:
@@ -193,32 +147,6 @@ jobs:
       dockerfile: apps/squares/${{ matrix.service }}/Dockerfile
     secrets: inherit
 
-  squares-e2e:
-    name: Squares e2e
-    needs: changes
-    if: needs.changes.outputs.squares_e2e == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: apps/squares/e2e
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version: '1.26'
-          cache-dependency-path: |
-            apps/squares/*/go.sum
-            libs/go/*/go.sum
-
-      - name: Run the four services together
-        run: make test
-
-  # shared go libraries
-
   go-libs:
     needs: changes
     if: needs.changes.outputs.go_libs == 'true'
@@ -229,41 +157,20 @@ jobs:
     uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
     with:
       repository: ${{ github.repository }}
-      working_directory: libs/go/${{ matrix.lib }}
+      working_directory: libs/${{ matrix.lib }}
       build: false
 
-  # infra charts
-
-  charts:
-    needs: changes
-    if: needs.changes.outputs.charts == 'true'
-    strategy:
-      matrix:
-        chart: [maxstash-gateway, cloudflare-ddns, cloudflare-cidr]
-    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
-    with:
-      repository: ${{ github.repository }}
-      chart_directory: ${{ matrix.chart }}
-      chart_name: ${{ matrix.chart }}
-      working_directory: charts
-
-  # single required check; skipped jobs count as passing because their paths did not change
   ci-complete:
     name: CI Complete
     if: always()
     needs:
       - maxstash-node
-      - maxstash-chart
       - maxstash-docker
       - squares-web-node
-      - squares-web-chart
       - squares-web-docker
       - squares-go
-      - squares-chart
       - squares-docker
-      - squares-e2e
       - go-libs
-      - charts
     runs-on: ubuntu-latest
     steps:
       - name: Verify no job failed

@@ -6,8 +6,8 @@ import (
 	context "context"
 
 	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	events "github.com/maxmorhardt/maxstash/libs/go/squares/events"
-	internalapi "github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	events "github.com/maxmorhardt/maxstash/libs/squares/events"
+	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	mock "github.com/stretchr/testify/mock"
 )
 

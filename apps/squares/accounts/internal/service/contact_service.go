@@ -17,7 +17,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/templates"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
 var contactEmailTmpl = template.Must(template.New("contact_email").Parse(templates.ContactEmailHTML))

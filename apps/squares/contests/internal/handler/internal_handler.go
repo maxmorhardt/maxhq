@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
 )
 
 // service-to-service reads for realtime and accounts; never routed by the gateway

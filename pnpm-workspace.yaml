@@ -1,3 +1,0 @@
-# root holds only the git hooks; each app under apps/ is its own pnpm project with its own lockfile
-packages: []
-minimumReleaseAge: 1440

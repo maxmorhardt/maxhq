@@ -12,7 +12,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/server"
+	"github.com/maxmorhardt/maxstash/libs/platform/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

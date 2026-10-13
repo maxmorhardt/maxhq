@@ -7,7 +7,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/clients"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
 const scheduleWindow = 10 * 24 * time.Hour

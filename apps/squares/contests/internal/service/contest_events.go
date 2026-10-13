@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
 )
 
 // every contest event goes through the outbox, so call these inside the transaction that made the change

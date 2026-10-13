@@ -10,8 +10,6 @@ A real-time football squares pool at [squares.maxstash.io](https://squares.maxst
 | [accounts](accounts/) | Profiles, account deletion, contact form | `accounts` schema | writes the `users` stream; asks contests for a user's activity |
 | [realtime](realtime/) | Live updates over server-sent events | nothing | reads the contest streams; asks contests who may watch |
 
-[e2e](e2e/) builds all four services and runs them together against Postgres and Valkey.
-
 ## How a change reaches a viewer
 
 ```
@@ -31,7 +29,7 @@ Games and accounts publish the same way, to the `games` and `users` streams, and
 
 ## Shared code
 
-- [`libs/go/platform`](../../libs/go/platform) - config, Postgres, Redis, outbox and streams, middleware, server.
-- [`libs/go/squares`](../../libs/go/squares) - the contract between the services: stream names, event payloads, and the `/internal` API.
+- [`libs/platform`](../../libs/platform) - config, Postgres, Redis, outbox and streams, middleware, server.
+- [`libs/squares`](../../libs/squares) - the contract between the services: stream names, event payloads, and the `/internal` API.
 
 Rules for working across the services are in [AGENTS.md](AGENTS.md).

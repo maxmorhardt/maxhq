@@ -11,7 +11,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

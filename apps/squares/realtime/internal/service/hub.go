@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 	"github.com/redis/go-redis/v9"
 )
 

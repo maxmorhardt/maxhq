@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	internalapi "github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	mock "github.com/stretchr/testify/mock"
 
 	time "time"

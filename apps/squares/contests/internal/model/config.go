@@ -1,6 +1,6 @@
 package model
 
-import "github.com/maxmorhardt/maxstash/libs/go/platform/config"
+import "github.com/maxmorhardt/maxstash/libs/platform/config"
 
 type ContestsConfig struct {
 	Server   config.ServerConfig

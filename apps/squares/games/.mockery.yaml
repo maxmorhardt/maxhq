@@ -7,10 +7,10 @@ issue-845-fix: true
 mockname: "{{.InterfaceName}}"
 filename: "{{.InterfaceName}}.go"
 packages:
-  github.com/maxmorhardt/maxstash/libs/go/platform/database:
+  github.com/maxmorhardt/maxstash/libs/platform/database:
     interfaces:
       Transactor:
-  github.com/maxmorhardt/maxstash/libs/go/platform/streams:
+  github.com/maxmorhardt/maxstash/libs/platform/streams:
     interfaces:
       Outbox:
   github.com/maxmorhardt/maxstash/apps/squares/games/internal/clients:

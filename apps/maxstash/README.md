@@ -17,7 +17,7 @@ Personal portfolio website built with React 19 and TypeScript. Features a full-w
 - **React Router** framework mode for routing and build-time prerendering
 - **Light / Dark Mode** via MUI color schemes, persisted and applied before first paint
 - **Scroll Animations** powered by the `IntersectionObserver` API
-- **ESLint + Prettier + Husky** for code quality
+- **ESLint + Prettier + lint-staged** for code quality
 - **Vitest + Testing Library** for unit testing
 
 ## Architecture

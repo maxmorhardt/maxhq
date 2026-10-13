@@ -5,7 +5,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 ## Project Context
 
 - Service: `realtime` (`apps/squares/realtime`, module `github.com/maxmorhardt/maxstash/apps/squares/realtime`). Live contest updates for browsers, over server-sent events.
-- Image `maxmorhardt/squares-realtime`, chart `squares-realtime` in `chart/`, release-please component `squares-realtime`.
+- Image `maxmorhardt/squares-realtime`, release-please component `squares-realtime`. Chart: `squares-realtime` in the `charts` repo, whose `DEPENDENCIES.md` lists every secret key and setting.
 - Owns no data. It needs only Redis and the contests internal API.
 
 ## Layout
@@ -20,7 +20,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 - `internal/mocks/` - mockery output for `.mockery.yaml`.
 - `docs/` - swag output (`make swag`).
 - `test/integration/` - the service against a real Valkey container, with contests faked.
-- `chart/` - the Helm chart; `chart/DEPENDENCIES.md` lists every secret key and setting.
+- `test/smoke/` - builds the binary and checks it starts, migrates, and serves.
 
 ## Events
 

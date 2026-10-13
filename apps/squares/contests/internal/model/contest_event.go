@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
 
 	"github.com/google/uuid"
 )

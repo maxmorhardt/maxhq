@@ -1,7 +1,4 @@
 {
   "apps/maxstash": "3.0.2",
-  "apps/squares/web": "2.2.1",
-  "charts/maxstash-gateway": "1.0.0",
-  "charts/cloudflare-ddns": "1.0.1",
-  "charts/cloudflare-cidr": "1.0.1"
+  "apps/squares/web": "2.2.1"
 }

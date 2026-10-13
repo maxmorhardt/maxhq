@@ -7,10 +7,10 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 )
 
 // everything contests knows about a person: their stats, their live contests, and its copy of their profile

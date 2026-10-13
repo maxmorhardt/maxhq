@@ -9,11 +9,11 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/clients"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/redis/go-redis/v9"
 )
 

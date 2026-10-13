@@ -10,8 +10,8 @@ import (
 	_ "github.com/maxmorhardt/maxstash/apps/squares/accounts/docs"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/bootstrap"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/server"
+	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxstash/libs/platform/server"
 )
 
 // @title           Squares Accounts API

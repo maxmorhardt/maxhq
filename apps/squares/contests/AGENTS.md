@@ -5,7 +5,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 ## Project Context
 
 - Service: `contests` (`apps/squares/contests`, module `github.com/maxmorhardt/maxstash/apps/squares/contests`). Contests, squares, participants, invites, the leaderboard, and stats.
-- Image `maxmorhardt/squares-contests`, chart `squares-contests` in `chart/`, release-please component `squares-contests`.
+- Image `maxmorhardt/squares-contests`, release-please component `squares-contests`. Chart: `squares-contests` in the `charts` repo, whose `DEPENDENCIES.md` lists every secret key and setting.
 - Owns the `contests` schema. Migrations in `internal/migrations` run at startup with `search_path=contests`.
 
 ## Layout
@@ -19,7 +19,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 - `internal/mocks/` - mockery output for `.mockery.yaml`.
 - `docs/` - swag output (`make swag`).
 - `test/integration/` - the service against real Postgres and Valkey containers.
-- `chart/` - the Helm chart; `chart/DEPENDENCIES.md` lists every secret key and setting.
+- `test/smoke/` - builds the binary and checks it starts, migrates, and serves.
 
 ## Events
 

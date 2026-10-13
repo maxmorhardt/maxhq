@@ -6,7 +6,7 @@
 - Language: TypeScript, React 19
 - Purpose: Personal portfolio site. Vite build routed and prerendered by React Router framework mode, styled with Material UI over Emotion from a single themed token set.
 - Target environments: Fully prerendered static HTML served by NGINX in a container on Kubernetes. Public and search-indexed.
-- Related: `chart/` (this app's Helm chart, released with it), `charts/maxstash-gateway` at the repo root, `k8s` (the Argo CD Application), `workflows` (shared CI).
+- Related: the `maxstash` chart in the `charts` repo, `k8s` (the Argo CD Application), `workflows` (shared CI).
 
 ## Repository Layout
 
@@ -60,7 +60,7 @@
 - `HeroTerminal` deliberately keeps its own hard-coded GitHub-dark palette in both color schemes. It is a terminal, not a themed surface.
 - Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
 - **Always brace control statements.** Never a one-line `if (x) return;` — write it as `if (x) {`, newline, body, newline, `}`. Enforced by the `curly` ESLint rule.
-- The Helm chart lives in `chart/` and ships at the app's version. Follow the chart conventions in `chart/DEPENDENCIES.md` and the root `AGENTS.md`.
+- The Helm chart lives in the `charts` repo. A change that needs a chart change (env, port, route) needs a `charts` PR released first.
 
 ## New Page Checklist
 
@@ -111,7 +111,7 @@ These two must change together or every route silently breaks.
 - Package manager is **pnpm**, pinned by the `packageManager` field. `npm` and `yarn` are blocked by an `only-allow pnpm` preinstall hook. Enable with `corepack enable`.
 - `pnpm dev`, `pnpm build`, `pnpm preview`, all via the React Router CLI.
 - `pnpm lint` (ESLint flat config), `pnpm type-check` (runs `react-router typegen` then `tsc -b`), `pnpm format` (Prettier).
-- Prettier is enforced on commit via Husky and lint-staged.
+- Prettier and ESLint run on commit through lint-staged, from the repo's `.githooks/pre-commit` (enabled by `pnpm install`).
 
 ## Commit Tags
 

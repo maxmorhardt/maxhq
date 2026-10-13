@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/maxmorhardt/maxstash/libs/go/platform/middleware"
+	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

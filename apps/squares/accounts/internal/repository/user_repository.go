@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/go/platform/database"
+	"github.com/maxmorhardt/maxstash/libs/platform/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

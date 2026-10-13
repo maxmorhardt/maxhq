@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	internalapi "github.com/maxmorhardt/maxstash/libs/go/squares/internalapi"
+	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	mock "github.com/stretchr/testify/mock"
 )
 

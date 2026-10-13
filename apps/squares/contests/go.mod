@@ -135,11 +135,11 @@ require (
 )
 
 require (
-	github.com/maxmorhardt/maxstash/libs/go/platform v0.0.0
-	github.com/maxmorhardt/maxstash/libs/go/squares v0.0.0
+	github.com/maxmorhardt/maxstash/libs/platform v0.0.0
+	github.com/maxmorhardt/maxstash/libs/squares v0.0.0
 )
 
 replace (
-	github.com/maxmorhardt/maxstash/libs/go/platform => ../../../libs/go/platform
-	github.com/maxmorhardt/maxstash/libs/go/squares => ../../../libs/go/squares
+	github.com/maxmorhardt/maxstash/libs/platform => ../../../libs/platform
+	github.com/maxmorhardt/maxstash/libs/squares => ../../../libs/squares
 )
