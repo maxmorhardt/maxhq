@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	model "github.com/maxmorhardt/squares-api/internal/model"
+	model "github.com/maxmorhardt/maxstash/apps/squares/api/internal/model"
 	mock "github.com/stretchr/testify/mock"
 
 	uuid "github.com/google/uuid"
@@ -82,6 +82,53 @@ func (_c *ContestService_ApplyQuarterResult_Call) Return(_a0 *model.QuarterResul
 }
 
 func (_c *ContestService_ApplyQuarterResult_Call) RunAndReturn(run func(context.Context, *model.Contest, int, int, int) (*model.QuarterResult, error)) *ContestService_ApplyQuarterResult_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// AutoStart provides a mock function with given fields: ctx, contest
+func (_m *ContestService) AutoStart(ctx context.Context, contest *model.Contest) error {
+	ret := _m.Called(ctx, contest)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AutoStart")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.Contest) error); ok {
+		r0 = rf(ctx, contest)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ContestService_AutoStart_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AutoStart'
+type ContestService_AutoStart_Call struct {
+	*mock.Call
+}
+
+// AutoStart is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contest *model.Contest
+func (_e *ContestService_Expecter) AutoStart(ctx interface{}, contest interface{}) *ContestService_AutoStart_Call {
+	return &ContestService_AutoStart_Call{Call: _e.mock.On("AutoStart", ctx, contest)}
+}
+
+func (_c *ContestService_AutoStart_Call) Run(run func(ctx context.Context, contest *model.Contest)) *ContestService_AutoStart_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*model.Contest))
+	})
+	return _c
+}
+
+func (_c *ContestService_AutoStart_Call) Return(_a0 error) *ContestService_AutoStart_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ContestService_AutoStart_Call) RunAndReturn(run func(context.Context, *model.Contest) error) *ContestService_AutoStart_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -675,9 +722,9 @@ func (_c *ContestService_StartContest_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// UpdateContest provides a mock function with given fields: ctx, contestID, req, user
-func (_m *ContestService) UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string) (*model.Contest, error) {
-	ret := _m.Called(ctx, contestID, req, user)
+// UpdateContest provides a mock function with given fields: ctx, contestID, req, user, expectedVersion
+func (_m *ContestService) UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error) {
+	ret := _m.Called(ctx, contestID, req, user, expectedVersion)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateContest")
@@ -685,19 +732,19 @@ func (_m *ContestService) UpdateContest(ctx context.Context, contestID uuid.UUID
 
 	var r0 *model.Contest
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string) (*model.Contest, error)); ok {
-		return rf(ctx, contestID, req, user)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) (*model.Contest, error)); ok {
+		return rf(ctx, contestID, req, user, expectedVersion)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string) *model.Contest); ok {
-		r0 = rf(ctx, contestID, req, user)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) *model.Contest); ok {
+		r0 = rf(ctx, contestID, req, user, expectedVersion)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Contest)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string) error); ok {
-		r1 = rf(ctx, contestID, req, user)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) error); ok {
+		r1 = rf(ctx, contestID, req, user, expectedVersion)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -715,13 +762,14 @@ type ContestService_UpdateContest_Call struct {
 //   - contestID uuid.UUID
 //   - req *model.UpdateContestRequest
 //   - user string
-func (_e *ContestService_Expecter) UpdateContest(ctx interface{}, contestID interface{}, req interface{}, user interface{}) *ContestService_UpdateContest_Call {
-	return &ContestService_UpdateContest_Call{Call: _e.mock.On("UpdateContest", ctx, contestID, req, user)}
+//   - expectedVersion *int64
+func (_e *ContestService_Expecter) UpdateContest(ctx interface{}, contestID interface{}, req interface{}, user interface{}, expectedVersion interface{}) *ContestService_UpdateContest_Call {
+	return &ContestService_UpdateContest_Call{Call: _e.mock.On("UpdateContest", ctx, contestID, req, user, expectedVersion)}
 }
 
-func (_c *ContestService_UpdateContest_Call) Run(run func(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string)) *ContestService_UpdateContest_Call {
+func (_c *ContestService_UpdateContest_Call) Run(run func(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64)) *ContestService_UpdateContest_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(*model.UpdateContestRequest), args[3].(string))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(*model.UpdateContestRequest), args[3].(string), args[4].(*int64))
 	})
 	return _c
 }
@@ -731,7 +779,7 @@ func (_c *ContestService_UpdateContest_Call) Return(_a0 *model.Contest, _a1 erro
 	return _c
 }
 
-func (_c *ContestService_UpdateContest_Call) RunAndReturn(run func(context.Context, uuid.UUID, *model.UpdateContestRequest, string) (*model.Contest, error)) *ContestService_UpdateContest_Call {
+func (_c *ContestService_UpdateContest_Call) RunAndReturn(run func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) (*model.Contest, error)) *ContestService_UpdateContest_Call {
 	_c.Call.Return(run)
 	return _c
 }

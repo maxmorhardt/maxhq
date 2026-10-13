@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/maxmorhardt/squares-api/internal/model"
+	"github.com/maxmorhardt/maxstash/apps/squares/api/internal/model"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

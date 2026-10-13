@@ -12,6 +12,8 @@ type AuthFailureReason string
 
 const (
 	AuthFailureMissingHeader AuthFailureReason = "missing_header"
-	AuthFailureVerifyFailed  AuthFailureReason = "verify_failed"
-	AuthFailureClaimsParse   AuthFailureReason = "claims_parse_failed"
+	AuthFailureUnverified    AuthFailureReason = "email_unverified"
+	AuthFailureExpired       AuthFailureReason = "expired"
+	AuthFailureRevoked       AuthFailureReason = "revoked"
+	AuthFailureInternalToken AuthFailureReason = "internal_token"
 )

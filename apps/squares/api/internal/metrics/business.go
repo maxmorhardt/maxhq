@@ -40,13 +40,6 @@ var (
 		[]string{"quarter"},
 	)
 
-	chatMessagesTotal = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "chat_messages_total",
-			Help: "Total number of chat messages sent",
-		},
-	)
-
 	invitesCreatedTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "invites_created_total",
@@ -98,7 +91,6 @@ func init() {
 		contestsStartedTotal,
 		quarterResultsRecordedTotal,
 		quarterResultsRolledBackTotal,
-		chatMessagesTotal,
 		invitesCreatedTotal,
 		invitesRedeemedTotal,
 		participantsJoinedTotal,
@@ -126,10 +118,6 @@ func IncQuarterResult(quarter int) {
 
 func IncQuarterResultRolledBack(quarter int) {
 	quarterResultsRolledBackTotal.WithLabelValues(quarterLabel(quarter)).Inc()
-}
-
-func IncChatMessage() {
-	chatMessagesTotal.Inc()
 }
 
 func IncInviteCreated() {

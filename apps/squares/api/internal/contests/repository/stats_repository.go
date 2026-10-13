@@ -1,0 +1,51 @@
+package repository
+
+import (
+	"context"
+
+	"github.com/maxmorhardt/maxstash/apps/squares/api/internal/model"
+	"github.com/maxmorhardt/maxstash/apps/squares/api/internal/platform/database"
+	"gorm.io/gorm"
+)
+
+type StatsRepository interface {
+	GetStats(ctx context.Context) (*model.StatsResponse, error)
+}
+
+type statsRepository struct {
+	db *gorm.DB
+}
+
+func NewStatsRepository(db *gorm.DB) StatsRepository {
+	return &statsRepository{
+		db: db,
+	}
+}
+
+func (r *statsRepository) GetStats(ctx context.Context) (*model.StatsResponse, error) {
+	var stats model.StatsResponse
+
+	if err := database.Conn(ctx, r.db).
+		Model(&model.Contest{}).
+		Where("created_at::date = CURRENT_DATE AND status != ?", model.ContestStatusDeleted).
+		Count(&stats.ContestsCreatedToday).Error; err != nil {
+		return nil, err
+	}
+
+	if err := database.Conn(ctx, r.db).
+		Model(&model.Square{}).
+		Joins("JOIN contests c ON c.id = squares.contest_id AND c.status <> ?", model.ContestStatusDeleted).
+		Where("squares.owner != '' AND squares.updated_at::date = CURRENT_DATE").
+		Count(&stats.SquaresClaimedToday).Error; err != nil {
+		return nil, err
+	}
+
+	if err := database.Conn(ctx, r.db).
+		Model(&model.Contest{}).
+		Where("status NOT IN ?", []model.ContestStatus{model.ContestStatusDeleted, model.ContestStatusFinished}).
+		Count(&stats.TotalActiveContests).Error; err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
+}

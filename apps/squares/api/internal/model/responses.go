@@ -1,16 +1,18 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type LivenessResponse struct {
 	Status string `json:"status"`
 }
 
 type ReadinessResponse struct {
-	Status   string `json:"status"`
-	Database string `json:"database"`
-	Nats     string `json:"nats"`
-	OIDC     string `json:"oidc"`
+	Status string            `json:"status"`
+	Checks map[string]string `json:"checks"`
 }
 
 type PaginatedContestResponse struct {
@@ -64,6 +66,12 @@ type UserActiveContest struct {
 	Name  string `json:"name" example:"test"`
 	Owner string `json:"owner" example:"user@example.com"`
 	Role  string `json:"role" example:"owner"`
+}
+
+// what accounts needs from contests before it creates or deletes a profile
+type UserActivitySummary struct {
+	ActiveContests []UserActiveContest `json:"activeContests"`
+	FirstActivity  *time.Time          `json:"firstActivity,omitempty"`
 }
 
 type UserStatsResponse struct {

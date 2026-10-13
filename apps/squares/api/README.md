@@ -8,29 +8,36 @@
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
 ## Overview
-A real-time football squares pool API built with Go and Gin. Supports contest lifecycle management, square claiming, automated winner calculation, and WebSocket-based real-time updates.
+A real-time football squares pool backend built with Go and Gin, deployed as four services from one module:
+
+| Service | Owns | Serves (behind `/squares` on the gateway) |
+| --- | --- | --- |
+| contests | `contests` schema | `/contests`, `/invites`, `/leaderboard`, `/stats`, `/users/me/stats`, `/users/me/active-contests` |
+| games | `games` schema | `/games` |
+| accounts | `accounts` schema | `/users/me`, `/contact` |
+| realtime | nothing | `/events/contests/{id}` (server-sent events) |
 
 ## Features
-- **Contest Management** - Create and manage football squares contests with 10x10 grids
-- **Contest Lifecycle** - State machine: ACTIVE → Q1 → Q2 → Q3 → Q4 → FINISHED (or DELETED at any time)
-- **Square Claiming** - Users can claim squares during ACTIVE state only
-- **Automatic Label Randomization** - X/Y axis labels (0-9) are randomly shuffled when transitioning to Q1
-- **Quarter Results** - Record scores and automatically calculate winners based on last digit matching
-- **Winner Tracking** - Stores the winner's email and display name for each quarter
-- **Real-time Updates** - WebSocket connections for live contest, square, and quarter result updates
-- **OIDC Authentication** - JWT token validation on the `email` and `email_verified` claims; email is the user identity
-- **NATS Messaging** - Scales horizontally with cross-instance WebSocket broadcasting
-- **PostgreSQL** - Data persistence with GORM ORM; schema managed by versioned **golang-migrate** migrations applied at startup
-- **Swagger Documentation** - Auto-generated API documentation
+- **Contest lifecycle** - ACTIVE → Q1 → Q2 → Q3 → Q4 → FINISHED (or DELETED), with labels randomized at kickoff and winners computed per quarter
+- **Game-linked contests** - games publishes score events; contests auto-starts and scores linked contests
+- **Server-sent events** - realtime streams contest events from JetStream; reconnecting with `Last-Event-ID` replays only what was missed
+- **Transactional outbox** - every cross-service event is committed with the change that caused it, then relayed to JetStream
+- **Optimistic locking** - contests and squares carry `version`; `PATCH /contests/{id}` honors `If-Match` and returns `ETag`
+- **Idempotency keys** - any write accepts `Idempotency-Key` and replays the first response for a retry
+- **Gateway authentication** - Envoy Gateway validates the Dex token; services read the claims from `X-Auth-*` headers and check the Redis revocation list for deleted accounts
+- **Redis** - shared cache, revocation list, distributed rate limiting, idempotency records
+- **PostgreSQL** - one schema per service, migrated at startup with golang-migrate
+- **Swagger** - per service at `/squares/swagger/<service>`
 
 ## Dependencies
-This application requires the following services to be deployed:
-- **OIDC Provider** (Dex, with Google and GitHub sign-in) for authentication
-- **PostgreSQL** database for data persistence
-- **NATS** for pub/sub messaging and real-time event broadcasting
-- **SMTP Server** for email notifications
+- **Envoy Gateway** with the squares `SecurityPolicy` (validates the Dex token, sets `X-Auth-*`)
+- **PostgreSQL** (one database, one schema per service)
+- **NATS** with **JetStream** enabled (stream `SQUARES`)
+- **Redis**
+- **SMTP** (accounts, for the contact form)
 
 ## Development
 1. Copy `.env.example` to `.env` and fill in the values
-2. Start required services (PostgreSQL, NATS, OIDC provider)
-3. Run the API with `make run` (run `make help` to list all available tasks)
+2. Start PostgreSQL, NATS (`nats-server -js`), and Redis
+3. Run a service with `make run SERVICE=contests` (or `games`, `accounts`, `realtime`); `make help` lists every task
+4. Without the gateway, send the identity headers yourself, e.g. `curl -H "X-Auth-Email: you@example.com" -H "X-Auth-Email-Verified: true" -H "X-Auth-Iat: $(date +%s)" -H "X-Auth-Exp: $(( $(date +%s) + 3600 ))" localhost:8080/users/me/stats`

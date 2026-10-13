@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/squares-api/internal/model"
+	"github.com/maxmorhardt/maxstash/apps/squares/api/internal/model"
 )
 
 func LoggerFromContext(ctx context.Context) *slog.Logger {

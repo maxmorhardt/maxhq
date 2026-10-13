@@ -2,28 +2,38 @@
 
 ## Project Context
 
-- Project: Squares API (`github.com/maxmorhardt/squares-api`)
+- Project: Squares API (`apps/squares/api` in `github.com/maxmorhardt/maxstash`, module `github.com/maxmorhardt/maxstash/apps/squares/api`)
 - Language: Go (`go 1.26`)
-- Purpose: Backend for a real-time football squares pool. Gin HTTP API over PostgreSQL via GORM, OIDC-authenticated, with NATS pub/sub fanning WebSocket events across replicas.
-- Target environments: Linux containers (`amd64`/`arm64`) on Kubernetes, multiple replicas behind a single Envoy Gateway.
-- Related repos: `charts` (the `squares-api` Helm chart), `k8s` (the Argo CD Application that deploys it), `squares` (the frontend), `workflows` (shared CI).
+- Purpose: Backend for a real-time football squares pool, split into four services built from one module:
+  - **contests** - contests, squares, participants, invites, leaderboard, stats. Owns the `contests` schema plus local copies of users and games.
+  - **games** - ESPN schedule and live scores. Owns the `games` schema and publishes `game.updated` events.
+  - **accounts** - profiles, account deletion, the contact form. Owns the `accounts` schema and publishes `user.updated` / `user.deleted`.
+  - **realtime** - server-sent events for one contest, resumable with `Last-Event-ID`. Owns no data.
+- Target environments: Linux containers (`amd64`/`arm64`) on Kubernetes, one image per service (`maxmorhardt/squares-<service>`), behind the `maxstash` Envoy Gateway, which validates the Dex token and passes the claims as `X-Auth-*` headers.
+- Related: `chart/` (one chart deploying all four), `../web` (the frontend), `k8s` (the Argo CD Application), `workflows` (shared CI).
 
 ## Repository Layout
 
-- `cmd/main.go` - process entrypoint. Loads env, builds the bootstrap, starts the server.
-- `internal/bootstrap/` - composition root. The only place concrete handlers, services, and repositories are constructed and wired.
-- `internal/config/` - env loading, typed config, DB/NATS/OIDC init, and schema migrations (`migrate.go` plus embedded `migrations/*.sql`).
-- `internal/errs/` - sentinel errors handlers map to HTTP status codes.
-- `internal/handler/` - Gin handlers, one file per resource. Each defines its own interface so it can be stubbed.
-- `internal/metrics/` - Prometheus collectors, registered via package `init()`.
-- `internal/middleware/` - auth, CORS, logging, Prometheus, request size.
-- `internal/model/` - GORM entities, request/response DTOs, swagger types, context keys.
-- `internal/repository/` - GORM data access, one file per aggregate root.
-- `internal/routes/` - route registration grouped by resource.
-- `internal/service/` - business logic, validation, cross-aggregate orchestration, NATS publishes.
-- `internal/util/` - logger-from-context, error helpers, capitalization.
-- `test/` - testcontainers integration suite (real Postgres and NATS, needs Docker).
-- `docs/` - swag-generated OpenAPI output.
+- `cmd/<service>/main.go` - one entrypoint per service. Loads that service's config, connects, and runs its bootstrap.
+- `internal/<service>/` - one directory per service. **Packages under one service never import another service's packages.**
+  - `bootstrap/` - composition root. The only place concrete handlers, services, and repositories are constructed and wired. `Connect` opens infrastructure, `New` wires, `Start` runs background work, `Run` serves.
+  - `handler/`, `service/`, `repository/`, `routes/` - the usual layers, one file per resource.
+  - `migrations/` - embedded SQL applied at startup with `search_path` set to the service's schema.
+  - contests also has `consumer/` (JetStream handlers for game and user events); games has `clients/` (ESPN) and `worker/` (polling); accounts and realtime have `clients/` (internal calls to contests).
+- `internal/platform/` - shared infrastructure every service uses: `database` (schema-scoped connections, migrations, the `Transactor`), `messaging` (NATS, JetStream stream, transactional outbox and relay, durable consumers), `cache` (Redis: shared cache, revocation list, rate limiter, idempotency records), `middleware`, `server` (engine, health, swagger, graceful shutdown).
+- `internal/events/` - the event contract between services: subjects and payloads.
+- `internal/model/`, `internal/errs/`, `internal/metrics/`, `internal/util/` - shared types, sentinel errors, Prometheus collectors, helpers.
+- `internal/mocks/` - mockery output for every interface in `.mockery.yaml`.
+- `test/integration/` - boots all four services against real Postgres, NATS (JetStream), and Redis containers, starting from a copy of the pre-split schema.
+- `docs/<service>/` - swag output per service.
+
+## Service Boundaries
+
+- A service writes only its own schema. Data another service owns arrives as events and is stored as a local copy (contests keeps `users`, `games`, `game_scores`).
+- Every change another service cares about is written to the `outbox` table **in the same transaction** as the change, through `messaging.Outbox`. The relay publishes it to the `SQUARES` stream with the outbox id as `Nats-Msg-Id`. Never publish to NATS directly.
+- Consumers must be idempotent: a message can be redelivered. They run with one message in flight, in stream order.
+- Synchronous calls between services are limited to two internal reads on contests (`/internal/contests/:id/snapshot` for realtime, `/internal/users/:email/activity` for accounts), guarded by `X-Internal-Token`. Keep it that way.
+- Contest rows carry `version`. Every write goes through the repository's version check; a stale write returns `errs.ErrVersionConflict`. Square edits lock the contest row `FOR SHARE` and re-check `ACTIVE` inside the transaction.
 
 ## Core Principles
 
@@ -59,7 +69,8 @@
 - After changing handler annotations, run `make swag` to regenerate `docs/`.
 - `prealloc`, `gocritic`, and `unparam` are enabled, so give slices capacity hints and drop unused parameters.
 - Avoid comments unless the code is genuinely non-obvious. Prefer expressive names.
-- When adding a NATS subject, update the WS service consumer in the same change or the event is published into the void.
+- When adding an event, add its subject and payload to `internal/events`, write it through the outbox, and add the consumer (or the frontend handler, for contest events) in the same change.
+- A new mutating route goes behind both `Auth` and `Idempotent` in that service's `routes.go`.
 - The Helm chart lives in `chart/` and ships at the module's version. A change that needs a new env var, port, or route updates the chart in the same commit.
 
 ## New Endpoint Checklist
@@ -67,8 +78,8 @@
 1. Add the method to the handler interface and implement it, with swag annotations (`@Summary`, `@Tags`, `@Param`, `@Success`, `@Router`, `@Security BearerAuth`).
 2. Add the service method and interface entry if new business logic is needed.
 3. Add the repository method and interface entry if new persistence is needed.
-4. Add a migration if the schema changes.
-5. Register the route in `internal/routes/<resource>_routes.go`.
+4. Add a migration to the owning service's `migrations/` if the schema changes.
+5. Register the route in `internal/<service>/routes/routes.go`, and add its path to the service's `HTTPRoute` in `chart/values.yaml` if the gateway does not already send it there.
 6. Run `make mocks`.
 7. Add handler tests for success, validation error, and service error.
 8. Run `make swag`.
@@ -79,8 +90,8 @@
 - White-box (`package <pkg>`) for unexported helpers; black-box (`package <pkg>_test`) when the test needs mockery mocks, since `internal/mocks` imports the real packages and would otherwise cycle.
 - Use the testify expecter API: `m := mocks.NewContestService(t); m.EXPECT().CreateContest(...).Return(...)`.
 - Repositories are tested with go-sqlmock (pure Go, no cgo). Set `mock.MatchExpectationsInOrder(false)`, because GORM preloads run in non-deterministic order.
-- Run targeted package tests first, then `make test` for the full unit run. `make test-integration` needs a working Docker daemon; on Windows use Docker Desktop, since testcontainers does not support rootless Docker.
-- Coverage is gated at **80%** by `.testcoverage.yml` via `make cover`, measuring `handler`, `service`, `util`, `middleware`, `bootstrap`, `config`, and `repository`. Do not lower the threshold to get a build green.
+- Run targeted package tests first, then `make test` for the full unit run. `make test-integration` needs a working Docker daemon (Postgres, NATS with JetStream, and Redis containers); on Windows use Docker Desktop, since testcontainers does not support rootless Docker.
+- Coverage is gated at **80%** by `.testcoverage.yml` via `make cover`, measuring every service package plus `platform`, `events`, and `util`. Do not lower the threshold to get a build green.
 - Always run `make test` and `make lint` before committing.
 
 ## Dependency Checklist
@@ -98,7 +109,7 @@ Before adding a new dependency, verify:
 Conventional commits, enforced on PR titles and consumed by release-please. The type determines the release, so it is a functional choice, not a stylistic one.
 
 - `feat`: New user-facing capability. Cuts a minor release.
-  - Use for a new endpoint, a new NATS event, or new behavior on an existing route.
+  - Use for a new endpoint, a new event, or new behavior on an existing route.
 - `fix`: Corrects wrong behavior, a regression, a crash, or a security issue. Cuts a patch release.
   - Use for failure-path and edge-case corrections. Renovate security PRs land as `fix(deps)` for this reason.
 - `refactor`: Restructuring with no behavior change.
@@ -108,14 +119,14 @@ Conventional commits, enforced on PR titles and consumed by release-please. The 
 - `test`: Test-only additions or maintenance.
 - `style`: Formatting only.
 
-Optional scopes: `handler`, `service`, `repository`, `routes`, `middleware`, `model`, `bootstrap`, `ws`, `nats`, `auth`, `tests`, `build`, `deploy`.
+Scope is `squares-api` so release-please attributes the change; mention the service in the subject.
 
 Example commit subjects:
 
-- `feat(handler): add search query param to /contests/me`
-- `fix(service): exclude deleted contests from stats queries`
-- `refactor(repository): collapse duplicate preload chains`
-- `ci: run integration tests with the race detector`
+- `feat(squares-api): add search query param to contests /contests/me`
+- `fix(squares-api): exclude deleted contests from contests stats queries`
+- `refactor(squares-api): collapse duplicate preload chains in contests`
+- `ci: run squares-api integration tests with the race detector`
 
 ## Non-Goals for Routine Changes
 

@@ -15,6 +15,7 @@ type Square struct {
 	Value     string    `json:"value"`
 	Owner     string    `json:"owner"`
 	OwnerName string    `json:"ownerName"`
+	Version   int64     `json:"version" gorm:"not null;default:1"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	CreatedBy string    `json:"createdBy"`

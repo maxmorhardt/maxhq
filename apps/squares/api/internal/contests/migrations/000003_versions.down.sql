@@ -1,0 +1,2 @@
+ALTER TABLE squares DROP COLUMN IF EXISTS version;
+ALTER TABLE contests DROP COLUMN IF EXISTS version;

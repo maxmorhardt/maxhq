@@ -12,5 +12,8 @@ exclude:
     - internal/metrics
     - internal/mocks
     - internal/model
-    - internal/routes
-    - internal/templates
+    - internal/.*/routes
+    - internal/.*/migrations
+    - internal/accounts/templates
+    # test-only helper that runs an in-process nats server
+    - internal/platform/messaging/natstest

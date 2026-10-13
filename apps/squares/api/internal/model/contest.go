@@ -29,6 +29,7 @@ type Contest struct {
 	Owner          string            `json:"owner"`
 	Visibility     ContestVisibility `json:"visibility" gorm:"not null;default:private"`
 	Status         ContestStatus     `json:"status" gorm:"not null;default:ACTIVE"`
+	Version        int64             `json:"version" gorm:"not null;default:1"`
 	GameID         *uuid.UUID        `json:"gameId,omitempty" gorm:"type:uuid;index"`
 	Game           *Game             `json:"game,omitempty" gorm:"foreignKey:GameID;constraint:OnDelete:SET NULL"`
 	CreatedAt      time.Time         `json:"createdAt"`

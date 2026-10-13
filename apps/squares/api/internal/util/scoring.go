@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/maxmorhardt/squares-api/internal/errs"
-	"github.com/maxmorhardt/squares-api/internal/model"
+	"github.com/maxmorhardt/maxstash/apps/squares/api/internal/errs"
+	"github.com/maxmorhardt/maxstash/apps/squares/api/internal/model"
 )
 
 func RandomizedLabels() (xLabels, yLabels []byte, err error) {

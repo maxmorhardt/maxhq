@@ -17,6 +17,7 @@ type ContestSwagger struct {
 	QuarterResults []QuarterResult `json:"quarterResults,omitempty"`
 	Owner          string          `json:"owner"`
 	Status         string          `json:"status"`
+	Version        int64           `json:"version"`
 	CreatedAt      time.Time       `json:"createdAt"`
 	UpdatedAt      time.Time       `json:"updatedAt"`
 	CreatedBy      string          `json:"createdBy"`
@@ -31,4 +32,9 @@ type PaginatedContestResponseSwagger struct {
 	TotalPages  int              `json:"totalPages"`
 	HasNext     bool             `json:"hasNext"`
 	HasPrevious bool             `json:"hasPrevious"`
+}
+
+type ContestSnapshotSwagger struct {
+	Contest      ContestSwagger       `json:"contest"`
+	Participants []ContestParticipant `json:"participants"`
 }

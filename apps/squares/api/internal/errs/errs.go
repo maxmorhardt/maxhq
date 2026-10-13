@@ -28,11 +28,13 @@ var (
 	ErrContestAlreadyExists       = errors.New("contest already exists with this name")
 	ErrQuarterResultAlreadyExists = errors.New("result of this quarter has already been recorded")
 	ErrNoQuarterResultToRollback  = errors.New("there is no recorded quarter result to roll back")
+	ErrVersionConflict            = errors.New("this contest was changed by someone else, refresh and try again")
 )
 
 // database errors for service availability
 var (
 	ErrDatabaseUnavailable = errors.New("service temporarily unavailable, please try again later")
+	ErrDependencyFailed    = errors.New("a dependent service is unavailable, please try again later")
 )
 
 // not found and request errors for contests, squares, and users
@@ -43,7 +45,6 @@ var (
 	ErrAccountActiveContests = errors.New("you must delete or leave your active contests before deleting your account")
 	ErrInvalidRequestBody    = errors.New("invalid request body")
 	ErrClaimsNotFound        = errors.New("authentication required")
-	ErrClaimsParse           = errors.New("claims parse failed")
 	ErrEmailUnverified       = errors.New("token has no verified email")
 	ErrTokenInvalid          = errors.New("token is no longer valid")
 )

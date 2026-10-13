@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/squares-api/internal/model"
+	"github.com/maxmorhardt/maxstash/apps/squares/api/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 

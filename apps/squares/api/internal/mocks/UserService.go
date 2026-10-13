@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	model "github.com/maxmorhardt/squares-api/internal/model"
+	model "github.com/maxmorhardt/maxstash/apps/squares/api/internal/model"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -65,65 +65,6 @@ func (_c *UserService_DeleteAccount_Call) Return(_a0 error) *UserService_DeleteA
 }
 
 func (_c *UserService_DeleteAccount_Call) RunAndReturn(run func(context.Context, string) error) *UserService_DeleteAccount_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetActiveContests provides a mock function with given fields: ctx, email
-func (_m *UserService) GetActiveContests(ctx context.Context, email string) ([]model.UserActiveContest, error) {
-	ret := _m.Called(ctx, email)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetActiveContests")
-	}
-
-	var r0 []model.UserActiveContest
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]model.UserActiveContest, error)); ok {
-		return rf(ctx, email)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []model.UserActiveContest); ok {
-		r0 = rf(ctx, email)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.UserActiveContest)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, email)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UserService_GetActiveContests_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetActiveContests'
-type UserService_GetActiveContests_Call struct {
-	*mock.Call
-}
-
-// GetActiveContests is a helper method to define mock.On call
-//   - ctx context.Context
-//   - email string
-func (_e *UserService_Expecter) GetActiveContests(ctx interface{}, email interface{}) *UserService_GetActiveContests_Call {
-	return &UserService_GetActiveContests_Call{Call: _e.mock.On("GetActiveContests", ctx, email)}
-}
-
-func (_c *UserService_GetActiveContests_Call) Run(run func(ctx context.Context, email string)) *UserService_GetActiveContests_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *UserService_GetActiveContests_Call) Return(_a0 []model.UserActiveContest, _a1 error) *UserService_GetActiveContests_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *UserService_GetActiveContests_Call) RunAndReturn(run func(context.Context, string) ([]model.UserActiveContest, error)) *UserService_GetActiveContests_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -188,118 +129,48 @@ func (_c *UserService_GetProfile_Call) RunAndReturn(run func(context.Context, st
 	return _c
 }
 
-// GetStats provides a mock function with given fields: ctx, email
-func (_m *UserService) GetStats(ctx context.Context, email string) (*model.UserStatsResponse, error) {
-	ret := _m.Called(ctx, email)
+// SyncRevocations provides a mock function with given fields: ctx
+func (_m *UserService) SyncRevocations(ctx context.Context) error {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetStats")
+		panic("no return value specified for SyncRevocations")
 	}
 
-	var r0 *model.UserStatsResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.UserStatsResponse, error)); ok {
-		return rf(ctx, email)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *model.UserStatsResponse); ok {
-		r0 = rf(ctx, email)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.UserStatsResponse)
-		}
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, email)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
-// UserService_GetStats_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetStats'
-type UserService_GetStats_Call struct {
+// UserService_SyncRevocations_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SyncRevocations'
+type UserService_SyncRevocations_Call struct {
 	*mock.Call
 }
 
-// GetStats is a helper method to define mock.On call
+// SyncRevocations is a helper method to define mock.On call
 //   - ctx context.Context
-//   - email string
-func (_e *UserService_Expecter) GetStats(ctx interface{}, email interface{}) *UserService_GetStats_Call {
-	return &UserService_GetStats_Call{Call: _e.mock.On("GetStats", ctx, email)}
+func (_e *UserService_Expecter) SyncRevocations(ctx interface{}) *UserService_SyncRevocations_Call {
+	return &UserService_SyncRevocations_Call{Call: _e.mock.On("SyncRevocations", ctx)}
 }
 
-func (_c *UserService_GetStats_Call) Run(run func(ctx context.Context, email string)) *UserService_GetStats_Call {
+func (_c *UserService_SyncRevocations_Call) Run(run func(ctx context.Context)) *UserService_SyncRevocations_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *UserService_GetStats_Call) Return(_a0 *model.UserStatsResponse, _a1 error) *UserService_GetStats_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *UserService_SyncRevocations_Call) Return(_a0 error) *UserService_SyncRevocations_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *UserService_GetStats_Call) RunAndReturn(run func(context.Context, string) (*model.UserStatsResponse, error)) *UserService_GetStats_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// IsTokenValid provides a mock function with given fields: ctx, claims
-func (_m *UserService) IsTokenValid(ctx context.Context, claims *model.Claims) (bool, error) {
-	ret := _m.Called(ctx, claims)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsTokenValid")
-	}
-
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *model.Claims) (bool, error)); ok {
-		return rf(ctx, claims)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *model.Claims) bool); ok {
-		r0 = rf(ctx, claims)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *model.Claims) error); ok {
-		r1 = rf(ctx, claims)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UserService_IsTokenValid_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsTokenValid'
-type UserService_IsTokenValid_Call struct {
-	*mock.Call
-}
-
-// IsTokenValid is a helper method to define mock.On call
-//   - ctx context.Context
-//   - claims *model.Claims
-func (_e *UserService_Expecter) IsTokenValid(ctx interface{}, claims interface{}) *UserService_IsTokenValid_Call {
-	return &UserService_IsTokenValid_Call{Call: _e.mock.On("IsTokenValid", ctx, claims)}
-}
-
-func (_c *UserService_IsTokenValid_Call) Run(run func(ctx context.Context, claims *model.Claims)) *UserService_IsTokenValid_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*model.Claims))
-	})
-	return _c
-}
-
-func (_c *UserService_IsTokenValid_Call) Return(_a0 bool, _a1 error) *UserService_IsTokenValid_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *UserService_IsTokenValid_Call) RunAndReturn(run func(context.Context, *model.Claims) (bool, error)) *UserService_IsTokenValid_Call {
+func (_c *UserService_SyncRevocations_Call) RunAndReturn(run func(context.Context) error) *UserService_SyncRevocations_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -360,65 +231,6 @@ func (_c *UserService_UpdateProfile_Call) Return(_a0 *model.User, _a1 error) *Us
 }
 
 func (_c *UserService_UpdateProfile_Call) RunAndReturn(run func(context.Context, string, string) (*model.User, error)) *UserService_UpdateProfile_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// VerifyToken provides a mock function with given fields: ctx, token
-func (_m *UserService) VerifyToken(ctx context.Context, token string) (*model.Claims, error) {
-	ret := _m.Called(ctx, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for VerifyToken")
-	}
-
-	var r0 *model.Claims
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.Claims, error)); ok {
-		return rf(ctx, token)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *model.Claims); ok {
-		r0 = rf(ctx, token)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Claims)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, token)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UserService_VerifyToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'VerifyToken'
-type UserService_VerifyToken_Call struct {
-	*mock.Call
-}
-
-// VerifyToken is a helper method to define mock.On call
-//   - ctx context.Context
-//   - token string
-func (_e *UserService_Expecter) VerifyToken(ctx interface{}, token interface{}) *UserService_VerifyToken_Call {
-	return &UserService_VerifyToken_Call{Call: _e.mock.On("VerifyToken", ctx, token)}
-}
-
-func (_c *UserService_VerifyToken_Call) Run(run func(ctx context.Context, token string)) *UserService_VerifyToken_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *UserService_VerifyToken_Call) Return(_a0 *model.Claims, _a1 error) *UserService_VerifyToken_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *UserService_VerifyToken_Call) RunAndReturn(run func(context.Context, string) (*model.Claims, error)) *UserService_VerifyToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

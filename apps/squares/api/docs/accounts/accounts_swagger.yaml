@@ -1,0 +1,254 @@
+definitions:
+  model.APIError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: invalid request
+        type: string
+      requestId:
+        example: 7db692fa-c767-468f-af3d-9231b0f88c69
+        type: string
+      timestamp:
+        example: "2025-10-05T13:45:00Z"
+        type: string
+    type: object
+  model.ContactRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      message:
+        maxLength: 2000
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      subject:
+        maxLength: 200
+        minLength: 1
+        type: string
+      turnstileToken:
+        maxLength: 2000
+        minLength: 1
+        type: string
+    required:
+    - email
+    - message
+    - name
+    - subject
+    - turnstileToken
+    type: object
+  model.ContactResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  model.LivenessResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  model.ReadinessResponse:
+    properties:
+      checks:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+    type: object
+  model.UpdateUserProfileRequest:
+    properties:
+      defaultInitials:
+        maxLength: 3
+        minLength: 1
+        type: string
+    required:
+    - defaultInitials
+    type: object
+  model.UserProfileResponse:
+    properties:
+      createdAt:
+        example: "2026-07-11T00:00:00Z"
+        type: string
+      defaultInitials:
+        example: MM
+        type: string
+      displayName:
+        example: Max
+        type: string
+      email:
+        example: user@example.com
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Profiles, account deletion, and the contact form for squares.maxstash.io.
+    Served under /squares behind the gateway, which validates the bearer token.
+  title: Squares Accounts API
+  version: 3.0.0
+paths:
+  /contact:
+    post:
+      consumes:
+      - application/json
+      description: Submit a contact form message
+      parameters:
+      - description: Contact form data
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/model.ContactRequest'
+      - description: Replays the first response when a submission is retried with
+          the same key
+        in: header
+        name: Idempotency-Key
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContactResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      summary: Submit a contact form
+      tags:
+      - contact
+  /health/live:
+    get:
+      description: Returns UP if the service process is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LivenessResponse'
+      summary: Liveness check
+      tags:
+      - health
+  /health/ready:
+    get:
+      description: Checks every dependency the service needs to serve traffic
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ReadinessResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/model.ReadinessResponse'
+      summary: Readiness check
+      tags:
+      - health
+  /users/me:
+    delete:
+      description: Deletes the account and tombstones it so older tokens stop working
+        everywhere; contests anonymizes the history under the ghost identity. Blocked
+        while the user owns or participates in any active contest.
+      responses:
+        "204":
+          description: No Content
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete the current user's account
+      tags:
+      - users
+    get:
+      description: Returns the profile of the authenticated user, creating it on first
+        access
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UserProfileResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get the current user's profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's default initials; contests applies
+        them to the user's squares in live contests
+      parameters:
+      - description: Profile
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateUserProfileRequest'
+      - description: Replays the first response when an update is retried with the
+          same key
+        in: header
+        name: Idempotency-Key
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UserProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update the current user's profile
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

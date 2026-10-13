@@ -7,28 +7,66 @@ issue-845-fix: true
 mockname: "{{.InterfaceName}}"
 filename: "{{.InterfaceName}}.go"
 packages:
-  github.com/maxmorhardt/squares-api/internal/clients:
+  # platform
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/platform/database:
     interfaces:
-      ESPNClient:
-  github.com/maxmorhardt/squares-api/internal/repository:
+      Transactor:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/platform/messaging:
+    interfaces:
+      Outbox:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/platform/cache:
+    interfaces:
+      Cache:
+      RevocationStore:
+      RateLimiter:
+      IdempotencyStore:
+  # contests
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/contests/repository:
     interfaces:
       ContestRepository:
-      GameRepository:
       ParticipantRepository:
       InviteRepository:
-      ContactRepository:
       StatsRepository:
       LeaderboardRepository:
-      UserRepository:
-  github.com/maxmorhardt/squares-api/internal/service:
+      UserProjectionRepository:
+      GameProjectionRepository:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/contests/service:
     interfaces:
-      ParticipantService:
-      NatsService:
       ContestService:
-      GameService:
+      ContestEventPublisher:
+      ParticipantService:
       InviteService:
-      ContactService:
       StatsService:
       LeaderboardService:
+      UserActivityService:
+      GameSyncService:
+      SnapshotService:
+  # games
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/games/clients:
+    interfaces:
+      ESPNClient:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/games/repository:
+    interfaces:
+      GameRepository:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/games/service:
+    interfaces:
+      GameService:
+  # accounts
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/accounts/clients:
+    interfaces:
+      ContestActivityClient:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/accounts/repository:
+    interfaces:
+      UserRepository:
+      ContactRepository:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/accounts/service:
+    interfaces:
       UserService:
-      WebSocketService:
+      ContactService:
+  # realtime
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/realtime/clients:
+    interfaces:
+      ContestAccessClient:
+  github.com/maxmorhardt/maxstash/apps/squares/api/internal/realtime/service:
+    interfaces:
+      StreamService:
