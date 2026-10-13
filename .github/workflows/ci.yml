@@ -115,7 +115,7 @@ jobs:
       artifact_path: apps/squares/web/dist
     secrets: inherit
 
-  # squares services: each is its own module and image
+  # squares services
 
   squares-go:
     needs: changes

@@ -1,7 +1,5 @@
 name: Release
 
-# release-please tags each app as <component>/<version>; the tag builds and publishes the image and points
-# the app's argo cd application at it (image.tag). Charts live in the charts repo and release on their own.
 on:
   push:
     tags:
@@ -27,7 +25,6 @@ jobs:
     outputs:
       component: ${{ steps.parse.outputs.component }}
       version: ${{ steps.parse.outputs.version }}
-      # set for the squares go services: the directory under apps/squares
       service: ${{ steps.parse.outputs.service }}
     steps:
       - name: Split tag into component and version
@@ -111,7 +108,7 @@ jobs:
       image_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
 
-  # squares services: each release builds, publishes, and deploys just that service
+  # squares services
 
   squares-service-go:
     needs: parse
