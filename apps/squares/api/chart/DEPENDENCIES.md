@@ -6,7 +6,7 @@ One chart deploys all four squares backend services (`squares-contests`, `square
 
 - **PostgreSQL** - 17+, primary and optional read replica. One database; each service migrates its own schema (`contests`, `games`, `accounts`) at startup and adopts the pre-split tables from `public` on first boot.
 - **NATS with JetStream** - the `SQUARES` stream is created by whichever service starts first. `NATS_STREAM_REPLICAS` (3) must not exceed the JetStream cluster size.
-- **Redis** - shared cache, deleted-account revocation list, contact rate limit, and idempotency records. Services keep working (fail open) if it is briefly unavailable.
+- **Redis** (Valkey in the `redis` namespace, see the k8s repo's `redis/SETUP.md`) - shared cache, deleted-account revocation list, contact rate limit, and idempotency records. Services keep working (fail open) if it is briefly unavailable.
 - **Dex** - `squares` and `squares-mobile` clients at `login.maxstash.io`. The gateway validates tokens against `https://login.maxstash.io/keys`.
 - **SMTP** - outbound email for the contact form (accounts).
 - **Envoy Gateway** - `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). The gateway's `ClientTrafficPolicy` must strip client-sent `X-Auth-*` headers (see `charts/maxstash-gateway`), because the services trust those headers.
@@ -34,7 +34,7 @@ One chart deploys all four squares backend services (`squares-contests`, `square
 | database | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL_MODE` |
 | read replica | the same six with a `DB_READ_` prefix |
 | messaging | `NATS_URL` |
-| cache | `REDIS_URL` (`redis://:<password>@redis-master.redis.svc:6379/0`) |
+| cache | `REDIS_URL` (`redis://squares:<password>@redis.redis.svc:6379/0`; the `squares` ACL user from the k8s repo's `redis-users` secret) |
 | service-to-service | `INTERNAL_API_TOKEN` (any long random string, shared by all four) |
 | email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SUPPORT_EMAIL` |
 | captcha | `TURNSTILE_SECRET_KEY` |
