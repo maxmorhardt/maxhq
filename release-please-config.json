@@ -4,11 +4,13 @@
   "include-v-in-tag": false,
   "include-component-in-tag": true,
   "separate-pull-requests": true,
+  "bootstrap-sha": "873adead9500f16ede27a032f7c88cd7b142e377",
   "packages": {
     "apps/maxstash": {
       "release-type": "node",
       "component": "maxstash",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "release-as": "3.0.3"
     },
     "apps/squares/web": {
       "release-type": "node",
