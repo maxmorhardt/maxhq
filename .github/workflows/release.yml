@@ -6,7 +6,10 @@ on:
     tags:
       - 'maxstash/*'
       - 'squares/*'
-      - 'squares-api/*'
+      - 'squares-contests/*'
+      - 'squares-games/*'
+      - 'squares-accounts/*'
+      - 'squares-realtime/*'
       - 'maxstash-gateway/*'
       - 'cloudflare-ddns/*'
       - 'cloudflare-cidr/*'
@@ -26,6 +29,8 @@ jobs:
     outputs:
       component: ${{ steps.parse.outputs.component }}
       version: ${{ steps.parse.outputs.version }}
+      # set for the squares go services: the directory under apps/squares
+      service: ${{ steps.parse.outputs.service }}
     steps:
       - name: Split tag into component and version
         id: parse
@@ -36,6 +41,10 @@ jobs:
           VERSION="${TAG#*/}"
           echo "component=${COMPONENT}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          case "$COMPONENT" in
+            squares-contests|squares-games|squares-accounts|squares-realtime)
+              echo "service=${COMPONENT#squares-}" >> "$GITHUB_OUTPUT" ;;
+          esac
           echo "Component: ${COMPONENT}, Version: ${VERSION}"
 
   # maxstash
@@ -128,49 +137,46 @@ jobs:
       chart_version: ${{ needs.parse.outputs.version }}
     secrets: inherit
 
-  # squares api: one module, four images, one chart, versioned together
+  # squares services: each release builds, publishes, and deploys just that service
 
-  squares-api-go:
+  squares-service-go:
     needs: parse
-    if: needs.parse.outputs.component == 'squares-api'
+    if: needs.parse.outputs.service != ''
     uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
     with:
       repository: ${{ github.repository }}
-      working_directory: apps/squares/api
+      working_directory: apps/squares/${{ needs.parse.outputs.service }}
       swagger: true
       build: false
 
-  squares-api-docker:
-    needs: [parse, squares-api-go]
-    strategy:
-      matrix:
-        service: [contests, games, accounts, realtime]
+  squares-service-docker:
+    needs: [parse, squares-service-go]
     uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
     with:
       repository: ${{ github.repository }}
-      app_name: squares-${{ matrix.service }}
+      app_name: ${{ needs.parse.outputs.component }}
       app_version: ${{ needs.parse.outputs.version }}
-      context: apps/squares/api
-      build_args: SERVICE=${{ matrix.service }}
+      context: .
+      dockerfile: apps/squares/${{ needs.parse.outputs.service }}/Dockerfile
       push: true
     secrets: inherit
 
-  squares-api-chart:
+  squares-service-chart:
     needs: parse
-    if: needs.parse.outputs.component == 'squares-api'
+    if: needs.parse.outputs.service != ''
     uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
     with:
       repository: ${{ github.repository }}
       chart_directory: chart
-      chart_name: squares-api
-      working_directory: apps/squares/api
+      chart_name: ${{ needs.parse.outputs.component }}
+      working_directory: apps/squares/${{ needs.parse.outputs.service }}
       push: true
 
-  squares-api-deploy:
-    needs: [parse, squares-api-docker, squares-api-chart]
+  squares-service-deploy:
+    needs: [parse, squares-service-docker, squares-service-chart]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
-      app: squares-api
+      app: ${{ needs.parse.outputs.component }}
       image_tag: ${{ needs.parse.outputs.version }}
       chart_version: ${{ needs.parse.outputs.version }}
     secrets: inherit

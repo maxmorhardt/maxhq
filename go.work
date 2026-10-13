@@ -1,0 +1,12 @@
+go 1.26.1
+
+// for editors only: every module also builds on its own through its replace directives, and the Makefiles set GOWORK=off
+use (
+	./apps/squares/accounts
+	./apps/squares/contests
+	./apps/squares/e2e
+	./apps/squares/games
+	./apps/squares/realtime
+	./libs/go/platform
+	./libs/go/squares
+)
