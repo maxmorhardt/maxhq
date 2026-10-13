@@ -6,7 +6,7 @@
 - Language: TypeScript, React 19
 - Purpose: Personal portfolio site. Vite build routed and prerendered by React Router framework mode, styled with Material UI over Emotion from a single themed token set.
 - Target environments: Fully prerendered static HTML served by NGINX in a container on Kubernetes. Public and search-indexed.
-- Related: the `maxstash` chart in the `charts` repo, `k8s` (the Argo CD Application), `workflows` (shared CI).
+- Related: the `maxstash` chart in the `charts` repo, `infra` (the Argo CD Application), `workflows` (shared CI).
 
 ## Repository Layout
 

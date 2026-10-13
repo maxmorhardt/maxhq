@@ -6,7 +6,7 @@
 - Language: TypeScript, React 19
 - Purpose: Frontend for a real-time football squares pool. Vite SPA styled with MUI v9, state in Redux Toolkit, authenticated via OIDC, kept in sync with server-sent events from the realtime service.
 - Target environments: Static bundle served by NGINX in a container on Kubernetes.
-- Related: `../contests`, `../games`, `../accounts`, `../realtime` (the backend services), the `squares` chart in the `charts` repo, `k8s` (the Argo CD Application), `workflows` (shared CI).
+- Related: `../contests`, `../games`, `../accounts`, `../realtime` (the backend services), the `squares` chart in the `charts` repo, `infra` (the Argo CD Application), `workflows` (shared CI).
 
 ## Repository Layout
 

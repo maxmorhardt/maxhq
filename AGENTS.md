@@ -4,7 +4,7 @@
 
 - Project: maxstash monorepo (`github.com/maxmorhardt/maxstash`)
 - Purpose: Every public app under `maxstash.io`.
-- Related repos: `charts` (every app's Helm chart, released on its own), `k8s` (Argo CD Applications pinning which chart version and image tag run), `workflows` (shared reusable CI).
+- Related repos: `charts` (every app's Helm chart, released on its own), `infra` (Argo CD Applications pinning which chart version and image tag run), `workflows` (shared reusable CI).
 
 **Each app has its own `AGENTS.md`. Read the one for the directory you are changing; it overrides this file for that directory.**
 
@@ -28,7 +28,7 @@
 3. Apps stay independent
    - No app imports from another app's directory. Shared Go code lives in `libs` and is consumed through `replace` directives.
 4. Git is the only source of truth for the cluster
-   - Nothing here runs `helm install` or `kubectl apply`. CI commits version bumps to `k8s` and Argo CD reconciles.
+   - Nothing here runs `helm install` or `kubectl apply`. CI commits version bumps to `infra` and Argo CD reconciles.
 
 ## Commit Tags
 

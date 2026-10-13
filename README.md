@@ -13,11 +13,11 @@ Monorepo for everything served under `maxstash.io`.
 | [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
 | [`assets`](assets) | Brand assets: logos, wordmarks, favicons | - |
 
-Helm charts live in [`maxmorhardt/charts`](https://github.com/maxmorhardt/charts) and release on their own. Cluster state (which chart version and image tag each app runs) lives in [`maxmorhardt/k8s`](https://github.com/maxmorhardt/k8s). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
+Helm charts live in [`maxmorhardt/charts`](https://github.com/maxmorhardt/charts) and release on their own. Cluster state (which chart version and image tag each app runs) lives in [`maxmorhardt/infra`](https://github.com/maxmorhardt/infra). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
 
 ## Releases
 
-[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and commits the new `image.tag` to its Argo CD Application in `k8s`.
+[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and commits the new `image.tag` to its Argo CD Application in `infra`.
 
 ## CI
 
