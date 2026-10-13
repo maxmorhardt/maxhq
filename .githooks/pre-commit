@@ -1,0 +1,30 @@
+#!/bin/sh
+# One hook for the whole repo (git allows one hooks directory per repository). Each UI's
+# `pnpm install` points git here through its prepare script.
+#
+# Runs each UI's own lint-staged when files in it are staged, and gofmt on staged Go files.
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+for app in apps/maxstash apps/squares/web; do
+  if printf '%s\n' "$staged" | grep -q "^$app/"; then
+    if [ ! -d "$app/node_modules" ]; then
+      echo "pre-commit: skipping $app (run pnpm install in it to enable its checks)"
+      continue
+    fi
+    (cd "$app" && pnpm exec lint-staged)
+  fi
+done
+
+go_files=$(printf '%s\n' "$staged" | grep '\.go$' || true)
+if [ -n "$go_files" ] && command -v gofmt >/dev/null 2>&1; then
+  # shellcheck disable=SC2086
+  unformatted=$(gofmt -l $go_files)
+  if [ -n "$unformatted" ]; then
+    echo "pre-commit: these Go files need gofmt (run make fmt in their module):"
+    printf '%s\n' "$unformatted"
+    exit 1
+  fi
+fi

@@ -1,0 +1,12 @@
+# the build context is the repository root; only the shared go libs and this service are sent
+*
+!libs/
+!apps/squares/realtime/
+**/*_test.go
+**/*.md
+**/bin/
+**/coverage.*
+**/.env
+**/.env.*
+apps/squares/realtime/test/
+apps/squares/realtime/internal/mocks/

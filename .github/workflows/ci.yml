@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      maxstash: ${{ steps.filter.outputs.maxstash == 'true' || steps.filter.outputs.workflows == 'true' }}
+      squares_web: ${{ steps.filter.outputs.squares_web == 'true' || steps.filter.outputs.workflows == 'true' }}
+      squares_services: ${{ steps.services.outputs.list }}
+      go_libs: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.workflows == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            maxstash:
+              - 'apps/maxstash/**'
+            squares_web:
+              - 'apps/squares/web/**'
+            go_libs:
+              - 'libs/**'
+            workflows:
+              - '.github/workflows/**'
+
+      - name: Filter squares services
+        id: go
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            contests:
+              - 'apps/squares/contests/**'
+            games:
+              - 'apps/squares/games/**'
+            accounts:
+              - 'apps/squares/accounts/**'
+            realtime:
+              - 'apps/squares/realtime/**'
+
+      - name: List squares services to test
+        id: services
+        env:
+          CHANGED: ${{ steps.go.outputs.changes }}
+          ALL: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.workflows == 'true' }}
+        run: |
+          if [ "$ALL" = "true" ]; then
+            echo 'list=["contests","games","accounts","realtime"]' >> "$GITHUB_OUTPUT"
+          else
+            echo "list=${CHANGED:-[]}" >> "$GITHUB_OUTPUT"
+          fi
+
+  # maxstash
+
+  maxstash-node:
+    needs: changes
+    if: needs.changes.outputs.maxstash == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      working_directory: apps/maxstash
+      artifact_suffix: -maxstash
+
+  maxstash-docker:
+    needs: maxstash-node
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      context: apps/maxstash
+      artifact_name: dist-maxstash
+      artifact_path: apps/maxstash/dist
+    secrets: inherit
+
+  # squares web
+
+  squares-web-node:
+    needs: changes
+    if: needs.changes.outputs.squares_web == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      working_directory: apps/squares/web
+      artifact_suffix: -squares
+
+  squares-web-docker:
+    needs: squares-web-node
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      context: apps/squares/web
+      artifact_name: dist-squares
+      artifact_path: apps/squares/web/dist
+    secrets: inherit
+
+  # squares services: each is its own module and image
+
+  squares-go:
+    needs: changes
+    if: needs.changes.outputs.squares_services != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
+    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
+    with:
+      repository: ${{ github.repository }}
+      working_directory: apps/squares/${{ matrix.service }}
+      swagger: true
+      build: false
+
+  squares-docker:
+    needs: [changes, squares-go]
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares-${{ matrix.service }}
+      context: .
+      dockerfile: apps/squares/${{ matrix.service }}/Dockerfile
+    secrets: inherit
+
+  go-libs:
+    needs: changes
+    if: needs.changes.outputs.go_libs == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        lib: [platform, squares]
+    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
+    with:
+      repository: ${{ github.repository }}
+      working_directory: libs/${{ matrix.lib }}
+      build: false
+
+  ci-complete:
+    name: CI Complete
+    if: always()
+    needs:
+      - maxstash-node
+      - maxstash-docker
+      - squares-web-node
+      - squares-web-docker
+      - squares-go
+      - squares-docker
+      - go-libs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify no job failed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "one or more CI jobs failed"
+              exit 1
+            fi
+          done

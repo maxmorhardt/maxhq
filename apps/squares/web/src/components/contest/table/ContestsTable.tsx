@@ -1,0 +1,523 @@
+import { Delete, Edit, EmojiEvents, Logout, Visibility } from '@mui/icons-material';
+import {
+  Box,
+  Chip,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import { useState, type ChangeEvent, type MouseEvent } from 'react';
+import { useAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router';
+import { setCurrentContest } from '../../../features/contests/contestSlice';
+import { useAppDispatch } from '../../../hooks/reduxHooks';
+import type { Contest } from '../../../types/contest';
+import { getStatusLabel, getStatusOption, isTerminalStatus } from '../../../utils/contestStatus';
+import LeaveContest from '../LeaveContest';
+import DeleteContest from './DeleteContest';
+import EditContest from './EditContest';
+
+interface ContestsTableProps {
+  contests: Contest[];
+  totalCount: number;
+  page: number;
+  rowsPerPage: number;
+  onPageChange: (event: MouseEvent<HTMLButtonElement> | null, newPage: number) => void;
+  onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  title?: string;
+  hidePagination?: boolean;
+  onLeave?: () => void;
+}
+
+export default function ContestsTable({
+  contests,
+  totalCount,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
+  title = 'My Contests',
+  hidePagination = false,
+  onLeave,
+}: ContestsTableProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const auth = useAuth();
+
+  // modal state for delete and edit dialogs
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [leaveTarget, setLeaveTarget] = useState<Contest | null>(null);
+
+  const userEmail = auth.user?.profile?.email;
+
+  const canLeave = (contest: Contest) =>
+    !!onLeave && !!userEmail && contest.owner !== userEmail && !isTerminalStatus(contest.status);
+
+  // edit/delete on non-terminal contests
+  const canModify = (contest: Contest) =>
+    !!userEmail && contest.owner === userEmail && !isTerminalStatus(contest.status);
+
+  const headerSx = {
+    color: 'white',
+    fontWeight: 600,
+    fontSize: { xs: '0.75rem', md: '0.875rem' },
+  };
+
+  const handleRowClick = (id: string) => {
+    navigate(`/contests/${id}`);
+  };
+
+  const handleDelete = (contest: Contest) => {
+    dispatch(setCurrentContest(contest));
+    setDeleteModalOpen(true);
+  };
+
+  const openContestDialog = (contest: Contest) => {
+    dispatch(setCurrentContest(contest));
+    setEditModalOpen(true);
+  };
+
+  return (
+    <>
+      <Box sx={{ p: { xs: 0, sm: 1 } }}>
+        {/* section header: title + optional create button */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
+          <Typography
+            sx={{
+              color: 'white',
+              fontWeight: 800,
+              fontSize: { xs: '1.25rem', sm: '1.5rem' },
+            }}
+          >
+            {title}
+          </Typography>
+        </Box>
+
+        {/* table container */}
+        <Paper
+          sx={{
+            background: theme.palette.grey[900],
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 3,
+          }}
+        >
+          {contests.length === 0 ? (
+            /* empty state */
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                py: 8,
+                px: 3,
+              }}
+            >
+              <EmojiEvents
+                sx={{
+                  fontSize: 60,
+                  color: 'rgba(255,255,255,0.15)',
+                }}
+              />
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: 'rgba(255,255,255,0.5)',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  No contests yet
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.3)',
+                  }}
+                >
+                  Create your first contest to get started
+                </Typography>
+              </Box>
+            </Box>
+          ) : isMobile ? (
+            /* mobile card layout */
+            <Box sx={{ p: 1.5 }}>
+              {contests.map((contest, index) => (
+                <Box
+                  key={contest.id}
+                  onClick={() => handleRowClick(contest.id)}
+                  sx={{
+                    cursor: 'pointer',
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
+                    transition: 'background-color 0.2s',
+                    '&:not(:last-child)': {
+                      borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      mb: 1,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: 'rgba(255,255,255,0.9)',
+                        fontWeight: 600,
+                        fontSize: '0.875rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        mr: 1,
+                      }}
+                    >
+                      {contest.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                      {canModify(contest) ? (
+                        <>
+                          <IconButton
+                            aria-label="Edit contest"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openContestDialog(contest);
+                            }}
+                            sx={{
+                              color: 'rgba(255,255,255,0.7)',
+                              padding: '4px',
+                              '&:hover': {
+                                color: 'white',
+                                backgroundColor: 'rgba(255,255,255,0.1)',
+                              },
+                            }}
+                          >
+                            <Edit sx={{ fontSize: '1rem' }} />
+                          </IconButton>
+                          <IconButton
+                            aria-label="Delete contest"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(contest);
+                            }}
+                            sx={{
+                              color: 'rgba(255,255,255,0.7)',
+                              padding: '4px',
+                              '&:hover': {
+                                color: '#ff4444',
+                                backgroundColor: 'rgba(255,68,68,0.1)',
+                              },
+                            }}
+                          >
+                            <Delete sx={{ fontSize: '1rem' }} />
+                          </IconButton>
+                        </>
+                      ) : (
+                        <IconButton
+                          aria-label="View contest"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openContestDialog(contest);
+                          }}
+                          sx={{
+                            color: 'rgba(255,255,255,0.7)',
+                            padding: '4px',
+                            '&:hover': {
+                              color: 'white',
+                              backgroundColor: 'rgba(255,255,255,0.1)',
+                            },
+                          }}
+                        >
+                          <Visibility sx={{ fontSize: '1rem' }} />
+                        </IconButton>
+                      )}
+                      {canLeave(contest) && (
+                        <IconButton
+                          aria-label="Leave contest"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLeaveTarget(contest);
+                          }}
+                          sx={{
+                            color: 'rgba(255,255,255,0.7)',
+                            padding: '4px',
+                            '&:hover': {
+                              color: '#ff4444',
+                              backgroundColor: 'rgba(255,68,68,0.1)',
+                            },
+                          }}
+                        >
+                          <Logout sx={{ fontSize: '1rem' }} />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                    }}
+                  >
+                    <Chip
+                      label={getStatusLabel(contest.status)}
+                      size="small"
+                      sx={{
+                        bgcolor: getStatusOption(contest.status).color,
+                        color: 'white',
+                        fontWeight: 500,
+                        fontSize: '0.65rem',
+                        height: 22,
+                        '& .MuiChip-label': { fontSize: '0.65rem' },
+                      }}
+                    />
+                    {(contest.homeTeam || contest.awayTeam) && (
+                      <Typography
+                        sx={{
+                          color: 'rgba(255,255,255,0.4)',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {[contest.homeTeam, contest.awayTeam].filter(Boolean).join(' vs ')}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            /* desktop table layout */
+            <TableContainer>
+              <Table sx={{ tableLayout: 'fixed' }}>
+                <TableHead>
+                  <TableRow sx={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <TableCell sx={{ ...headerSx, width: '35%' }}>Name</TableCell>
+                    <TableCell sx={{ ...headerSx, width: '30%' }}>Matchup</TableCell>
+                    <TableCell sx={{ ...headerSx, width: '20%' }}>Status</TableCell>
+                    <TableCell sx={{ ...headerSx, width: '15%', textAlign: 'right' }}>
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {contests.map((contest, index) => (
+                    <TableRow
+                      key={contest.id}
+                      onClick={() => handleRowClick(contest.id)}
+                      sx={{
+                        cursor: 'pointer',
+                        backgroundColor: index % 2 === 0 ? '' : 'rgba(255,255,255,0.02)',
+                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.07)' },
+                        transition: 'background-color 0.15s ease',
+                        '&:last-child td': { borderBottom: 0 },
+                      }}
+                    >
+                      <TableCell
+                        sx={{
+                          color: 'rgba(255,255,255,0.9)',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {contest.name}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: 'rgba(255,255,255,0.55)',
+                          fontSize: '0.8rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {contest.homeTeam && contest.awayTeam
+                          ? `${contest.homeTeam} vs ${contest.awayTeam}`
+                          : contest.homeTeam ||
+                            contest.awayTeam || (
+                              <span style={{ color: 'rgba(255,255,255,0.2)' }}>–</span>
+                            )}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getStatusLabel(contest.status)}
+                          size="small"
+                          sx={{
+                            bgcolor: getStatusOption(contest.status).color,
+                            color: 'white',
+                            fontWeight: 500,
+                            fontSize: '0.72rem',
+                            height: 24,
+                            '& .MuiChip-label': { fontSize: '0.72rem', px: 1.25 },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'right' }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            gap: 0.5,
+                            justifyContent: 'flex-end',
+                          }}
+                        >
+                          {canModify(contest) ? (
+                            <>
+                              <Tooltip title="Edit Contest">
+                                <IconButton
+                                  aria-label="Edit contest"
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openContestDialog(contest);
+                                  }}
+                                  sx={{
+                                    color: 'rgba(255,255,255,0.6)',
+                                    '&:hover': {
+                                      color: 'white',
+                                      backgroundColor: 'rgba(255,255,255,0.1)',
+                                    },
+                                  }}
+                                >
+                                  <Edit fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete Contest">
+                                <IconButton
+                                  aria-label="Delete contest"
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(contest);
+                                  }}
+                                  sx={{
+                                    color: 'rgba(255,255,255,0.6)',
+                                    '&:hover': {
+                                      color: '#ff4444',
+                                      backgroundColor: 'rgba(255,68,68,0.1)',
+                                    },
+                                  }}
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          ) : (
+                            <Tooltip title="View Contest">
+                              <IconButton
+                                aria-label="View contest"
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openContestDialog(contest);
+                                }}
+                                sx={{
+                                  color: 'rgba(255,255,255,0.6)',
+                                  '&:hover': {
+                                    color: 'white',
+                                    backgroundColor: 'rgba(255,255,255,0.1)',
+                                  },
+                                }}
+                              >
+                                <Visibility fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {canLeave(contest) && (
+                            <Tooltip title="Leave Contest">
+                              <IconButton
+                                aria-label="Leave contest"
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setLeaveTarget(contest);
+                                }}
+                                sx={{
+                                  color: 'rgba(255,255,255,0.6)',
+                                  '&:hover': {
+                                    color: '#ff4444',
+                                    backgroundColor: 'rgba(255,68,68,0.1)',
+                                  },
+                                }}
+                              >
+                                <Logout fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          {/* pagination — only when there are contests and not hidden */}
+          {contests.length > 0 && !hidePagination && (
+            <TablePagination
+              component="div"
+              count={totalCount}
+              page={page}
+              onPageChange={onPageChange}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={onRowsPerPageChange}
+              rowsPerPageOptions={[5, 10, 25]}
+              sx={{
+                '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                },
+              }}
+            />
+          )}
+        </Paper>
+      </Box>
+
+      {/* delete, edit, and leave modals */}
+      <DeleteContest open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} />
+      <EditContest open={editModalOpen} onClose={() => setEditModalOpen(false)} />
+      <LeaveContest
+        open={!!leaveTarget}
+        onClose={() => setLeaveTarget(null)}
+        contest={leaveTarget}
+        userEmail={userEmail ?? ''}
+        onLeft={onLeave}
+      />
+    </>
+  );
+}

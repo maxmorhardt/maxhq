@@ -1,47 +1,41 @@
-# Maxstash
+# maxstash
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![MUI](https://img.shields.io/badge/MUI-%230081CB.svg?style=for-the-badge&logo=mui&logoColor=white)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=for-the-badge)
+Monorepo for everything served under `maxstash.io`.
 
-## Overview
+| Path | What | Image |
+| --- | --- | --- |
+| [`apps/maxstash`](apps/maxstash) | Portfolio site (`maxstash.io`) | `maxmorhardt/maxstash` |
+| [`apps/squares/web`](apps/squares/web) | Squares frontend (`squares.maxstash.io`) | `maxmorhardt/squares` |
+| [`apps/squares/contests`](apps/squares/contests) | Squares contests service | `maxmorhardt/squares-contests` |
+| [`apps/squares/games`](apps/squares/games) | Squares schedule and live scores | `maxmorhardt/squares-games` |
+| [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
+| [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
+| [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
+| [`assets`](assets) | Brand assets: logos, wordmarks, favicons | - |
 
-Personal portfolio website built with React 19 and TypeScript. Features a full-width landing page with an interactive terminal, scroll-driven animations, light/dark theming, and a router-based multi-page layout for showcasing projects, apps, background, and contact information.
+Helm charts live in [`maxmorhardt/charts`](https://github.com/maxmorhardt/charts) and release on their own. Cluster state (which chart version and image tag each app runs) lives in [`maxmorhardt/infra`](https://github.com/maxmorhardt/infra). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
 
-## Features
+## Releases
 
-- **React 19** with TypeScript
-- **Material UI + Emotion** for the design system, driven by a single themed token set
-- **React Router** framework mode for routing and build-time prerendering
-- **Light / Dark Mode** via MUI color schemes, persisted and applied before first paint
-- **Scroll Animations** powered by the `IntersectionObserver` API
-- **ESLint + Prettier + Husky** for code quality
-- **Vitest + Testing Library** for unit testing
+[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and commits the new `image.tag` to its Argo CD Application in `infra`.
 
-## Architecture
+## CI
 
-The application is prerendered to static HTML by React Router in SPA mode — every route ships a real HTML file with its own title, description, and canonical, then hydrates into a client-routed app. Pages are lazy-loaded route chunks served behind a sticky header and full-width hero sections. Colors, spacing, and typography come from an MUI theme with `light` and `dark` color schemes emitted as CSS variables, so switching schemes repaints without re-rendering the tree.
+[`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs` tests every Go service. `CI Complete` is the single required check.
 
-## Development
+The Go modules are tied together by `replace` directives, so each builds on its own. [`go.work`](go.work) only lets editors see all of them at once.
 
-This project uses [pnpm](https://pnpm.io) (`npm`/`yarn` installs are blocked). Enable it with `corepack enable`.
+## Git hooks
 
-1. Install dependencies: `pnpm install`
-2. Start the development server: `pnpm dev`
-3. Open browser to `http://localhost:3000`
+[`.githooks/pre-commit`](.githooks/pre-commit) runs each UI's own lint-staged when its files are staged, and gofmt on staged Go files. `pnpm install` in either UI turns it on (`git config core.hooksPath .githooks`); there is no npm project at the root.
 
-## Production Build
+## Licenses
 
-Build the application for production deployment:
+| Path | License |
+| --- | --- |
+| everything not listed below (`apps/maxstash`, CI, repo config) | Apache-2.0 ([`LICENSE`](LICENSE)) |
+| `apps/squares/**` | PolyForm Noncommercial 1.0.0 (the `LICENSE` in each squares app) |
+| `libs/**` | PolyForm Noncommercial 1.0.0 ([`libs/platform/LICENSE`](libs/platform/LICENSE), [`libs/squares/LICENSE`](libs/squares/LICENSE)); both were extracted from the squares API |
+| `assets/**` | CC BY-NC-ND 4.0 ([`assets/LICENSE`](assets/LICENSE)) |
 
-```bash
-pnpm build
-```
-
-Output is written to `dist/client/`, which is what the Docker image serves.
-
-## License
-
-Released under the [Apache License 2.0](./LICENSE).
+A directory's own `LICENSE` overrides the root one for everything under it.

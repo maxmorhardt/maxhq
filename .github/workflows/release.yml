@@ -1,0 +1,144 @@
+name: Release
+
+# release-please tags each app as <component>/<version>; the tag builds and publishes the image and points
+# the app's argo cd application at it (image.tag). Charts live in the charts repo and release on their own.
+on:
+  push:
+    tags:
+      - 'maxstash/*'
+      - 'squares/*'
+      - 'squares-contests/*'
+      - 'squares-games/*'
+      - 'squares-accounts/*'
+      - 'squares-realtime/*'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  parse:
+    name: Parse tag
+    runs-on: ubuntu-latest
+    outputs:
+      component: ${{ steps.parse.outputs.component }}
+      version: ${{ steps.parse.outputs.version }}
+      # set for the squares go services: the directory under apps/squares
+      service: ${{ steps.parse.outputs.service }}
+    steps:
+      - name: Split tag into component and version
+        id: parse
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          COMPONENT="${TAG%%/*}"
+          VERSION="${TAG#*/}"
+          echo "component=${COMPONENT}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          case "$COMPONENT" in
+            squares-contests|squares-games|squares-accounts|squares-realtime)
+              echo "service=${COMPONENT#squares-}" >> "$GITHUB_OUTPUT" ;;
+          esac
+          echo "Component: ${COMPONENT}, Version: ${VERSION}"
+
+  # maxstash
+
+  maxstash-node:
+    needs: parse
+    if: needs.parse.outputs.component == 'maxstash'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      working_directory: apps/maxstash
+      artifact_suffix: -maxstash
+
+  maxstash-docker:
+    needs: [parse, maxstash-node]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      app_version: ${{ needs.parse.outputs.version }}
+      context: apps/maxstash
+      artifact_name: dist-maxstash
+      artifact_path: apps/maxstash/dist
+      push: true
+    secrets: inherit
+
+  maxstash-deploy:
+    needs: [parse, maxstash-docker]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: maxstash
+      image_tag: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  # squares web
+
+  squares-web-node:
+    needs: parse
+    if: needs.parse.outputs.component == 'squares'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      working_directory: apps/squares/web
+      artifact_suffix: -squares
+
+  squares-web-docker:
+    needs: [parse, squares-web-node]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      app_version: ${{ needs.parse.outputs.version }}
+      context: apps/squares/web
+      artifact_name: dist-squares
+      artifact_path: apps/squares/web/dist
+      push: true
+    secrets: inherit
+
+  squares-web-deploy:
+    needs: [parse, squares-web-docker]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: squares
+      image_tag: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  # squares services: each release builds, publishes, and deploys just that service
+
+  squares-service-go:
+    needs: parse
+    if: needs.parse.outputs.service != ''
+    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
+    with:
+      repository: ${{ github.repository }}
+      working_directory: apps/squares/${{ needs.parse.outputs.service }}
+      swagger: true
+      build: false
+
+  squares-service-docker:
+    needs: [parse, squares-service-go]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: ${{ needs.parse.outputs.component }}
+      app_version: ${{ needs.parse.outputs.version }}
+      context: .
+      dockerfile: apps/squares/${{ needs.parse.outputs.service }}/Dockerfile
+      push: true
+    secrets: inherit
+
+  squares-service-deploy:
+    needs: [parse, squares-service-docker]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: ${{ needs.parse.outputs.component }}
+      image_tag: ${{ needs.parse.outputs.version }}
+    secrets: inherit

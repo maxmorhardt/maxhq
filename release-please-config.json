@@ -1,11 +1,45 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "tag-separator": "/",
+  "include-v-in-tag": false,
+  "include-component-in-tag": true,
+  "separate-pull-requests": true,
+  "bootstrap-sha": "873adead9500f16ede27a032f7c88cd7b142e377",
   "packages": {
-    ".": {
+    "apps/maxstash": {
       "release-type": "node",
-      "include-component-in-tag": false,
-      "include-v-in-tag": false,
+      "component": "maxstash",
+      "changelog-path": "CHANGELOG.md",
+      "release-as": "3.0.3"
+    },
+    "apps/squares/web": {
+      "release-type": "node",
+      "component": "squares",
       "changelog-path": "CHANGELOG.md"
+    },
+    "apps/squares/contests": {
+      "release-type": "go",
+      "component": "squares-contests",
+      "changelog-path": "CHANGELOG.md",
+      "initial-version": "1.0.0"
+    },
+    "apps/squares/games": {
+      "release-type": "go",
+      "component": "squares-games",
+      "changelog-path": "CHANGELOG.md",
+      "initial-version": "1.0.0"
+    },
+    "apps/squares/accounts": {
+      "release-type": "go",
+      "component": "squares-accounts",
+      "changelog-path": "CHANGELOG.md",
+      "initial-version": "1.0.0"
+    },
+    "apps/squares/realtime": {
+      "release-type": "go",
+      "component": "squares-realtime",
+      "changelog-path": "CHANGELOG.md",
+      "initial-version": "1.0.0"
     }
   }
 }
