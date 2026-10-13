@@ -23,7 +23,6 @@ jobs:
     outputs:
       maxstash: ${{ steps.filter.outputs.maxstash == 'true' || steps.filter.outputs.workflows == 'true' }}
       squares_web: ${{ steps.filter.outputs.squares_web == 'true' || steps.filter.outputs.workflows == 'true' }}
-      # the squares go services whose code or shared libraries changed, as a json list for the matrix jobs
       squares_services: ${{ steps.services.outputs.list }}
       go_libs: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.workflows == 'true' }}
     steps:
@@ -58,7 +57,6 @@ jobs:
             realtime:
               - 'apps/squares/realtime/**'
 
-      # a library change can break any service, so it tests all of them
       - name: List squares services to test
         id: services
         env:

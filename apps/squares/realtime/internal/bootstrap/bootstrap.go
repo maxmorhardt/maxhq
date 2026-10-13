@@ -30,7 +30,6 @@ type App struct {
 	hub    *service.Hub
 }
 
-// realtime owns no data: it reads the contest streams in redis and asks contests who may watch
 func Connect(cfg *model.RealtimeConfig) (*server.Infra, error) {
 	return server.Connect(&server.InfraConfig{
 		Redis:     cfg.Redis,
