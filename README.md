@@ -11,6 +11,7 @@ Monorepo for everything served under `maxstash.io`.
 | [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
 | [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
+| [`assets`](assets) | Brand assets: logos, wordmarks, favicons | - |
 
 Helm charts live in [`maxmorhardt/charts`](https://github.com/maxmorhardt/charts) and release on their own. Cluster state (which chart version and image tag each app runs) lives in [`maxmorhardt/k8s`](https://github.com/maxmorhardt/k8s). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
 
@@ -30,4 +31,11 @@ The Go modules are tied together by `replace` directives, so each builds on its 
 
 ## Licenses
 
-The repository is Apache-2.0 ([`LICENSE`](LICENSE)) except `apps/squares/**`, which is PolyForm Noncommercial 1.0.0 (see the `LICENSE` in each squares app).
+| Path | License |
+| --- | --- |
+| everything not listed below (`apps/maxstash`, CI, repo config) | Apache-2.0 ([`LICENSE`](LICENSE)) |
+| `apps/squares/**` | PolyForm Noncommercial 1.0.0 (the `LICENSE` in each squares app) |
+| `libs/**` | PolyForm Noncommercial 1.0.0 ([`libs/platform/LICENSE`](libs/platform/LICENSE), [`libs/squares/LICENSE`](libs/squares/LICENSE)); both were extracted from the squares API |
+| `assets/**` | CC BY-NC-ND 4.0 ([`assets/LICENSE`](assets/LICENSE)) |
+
+A directory's own `LICENSE` overrides the root one for everything under it.
