@@ -1,0 +1,1563 @@
+definitions:
+  model.APIError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: invalid request
+        type: string
+      requestId:
+        example: 7db692fa-c767-468f-af3d-9231b0f88c69
+        type: string
+      timestamp:
+        example: "2025-10-05T13:45:00Z"
+        type: string
+    type: object
+  model.ContactRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      message:
+        maxLength: 2000
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      subject:
+        maxLength: 200
+        minLength: 1
+        type: string
+      turnstileToken:
+        maxLength: 2000
+        minLength: 1
+        type: string
+    required:
+    - email
+    - message
+    - name
+    - subject
+    - turnstileToken
+    type: object
+  model.ContactResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  model.ContestInvite:
+    properties:
+      contestId:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        type: string
+      maxSquares:
+        type: integer
+      maxUses:
+        type: integer
+      role:
+        $ref: '#/definitions/model.ParticipantRole'
+      token:
+        type: string
+      updatedAt:
+        type: string
+      uses:
+        type: integer
+    type: object
+  model.ContestParticipant:
+    properties:
+      contestId:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      inviteId:
+        type: string
+      joinedAt:
+        type: string
+      maxSquares:
+        type: integer
+      role:
+        $ref: '#/definitions/model.ParticipantRole'
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  model.ContestSwagger:
+    properties:
+      awayTeam:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      homeTeam:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      owner:
+        type: string
+      quarterResults:
+        items:
+          $ref: '#/definitions/model.QuarterResult'
+        type: array
+      squares:
+        items:
+          $ref: '#/definitions/model.Square'
+        type: array
+      status:
+        type: string
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+      xLabels:
+        items:
+          type: integer
+        type: array
+      yLabels:
+        items:
+          type: integer
+        type: array
+    type: object
+  model.CreateContestRequest:
+    properties:
+      awayTeam:
+        maxLength: 20
+        type: string
+      gameId:
+        type: string
+      homeTeam:
+        maxLength: 20
+        type: string
+      maxSquares:
+        maximum: 100
+        minimum: 0
+        type: integer
+      name:
+        maxLength: 20
+        minLength: 1
+        type: string
+      owner:
+        maxLength: 255
+        type: string
+      visibility:
+        enum:
+        - private
+        - public
+        type: string
+    required:
+    - name
+    - owner
+    type: object
+  model.CreateInviteRequest:
+    properties:
+      expiresIn:
+        description: minutes, 0 = no expiry
+        minimum: 0
+        type: integer
+      maxSquares:
+        maximum: 100
+        minimum: 0
+        type: integer
+      maxUses:
+        minimum: 0
+        type: integer
+      role:
+        enum:
+        - participant
+        - viewer
+        type: string
+    required:
+    - role
+    type: object
+  model.Game:
+    properties:
+      awayAbbr:
+        type: string
+      awayScore:
+        type: integer
+      awayTeam:
+        type: string
+      createdAt:
+        type: string
+      espnId:
+        type: string
+      gameTime:
+        type: string
+      homeAbbr:
+        type: string
+      homeScore:
+        type: integer
+      homeTeam:
+        type: string
+      id:
+        type: string
+      period:
+        type: integer
+      scores:
+        items:
+          $ref: '#/definitions/model.GameScore'
+        type: array
+      season:
+        type: integer
+      seasonType:
+        type: integer
+      status:
+        $ref: '#/definitions/model.GameStatus'
+      updatedAt:
+        type: string
+      week:
+        type: integer
+    type: object
+  model.GameScore:
+    properties:
+      awayScore:
+        type: integer
+      createdAt:
+        type: string
+      gameId:
+        type: string
+      homeScore:
+        type: integer
+      id:
+        type: string
+      quarter:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  model.GameStatus:
+    enum:
+    - scheduled
+    - in_progress
+    - final
+    type: string
+    x-enum-varnames:
+    - GameStatusScheduled
+    - GameStatusInProgress
+    - GameStatusFinal
+  model.InvitePreviewResponse:
+    properties:
+      contestId:
+        type: string
+      contestName:
+        type: string
+      maxSquares:
+        type: integer
+      owner:
+        type: string
+      role:
+        type: string
+    type: object
+  model.LeaderboardEntry:
+    properties:
+      displayName:
+        example: Max
+        type: string
+      quarterWins:
+        example: 12
+        type: integer
+      quartersPlayed:
+        example: 40
+        type: integer
+      rank:
+        example: 1
+        type: integer
+      squaresClaimed:
+        example: 48
+        type: integer
+    type: object
+  model.LeaderboardRankResponse:
+    properties:
+      quarterWins:
+        example: 5
+        type: integer
+      rank:
+        example: 7
+        type: integer
+      ranked:
+        example: true
+        type: boolean
+      totalRanked:
+        example: 143
+        type: integer
+    type: object
+  model.LeaderboardResponse:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/model.LeaderboardEntry'
+        type: array
+    type: object
+  model.LivenessResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  model.PaginatedContestResponseSwagger:
+    properties:
+      contests:
+        items:
+          $ref: '#/definitions/model.ContestSwagger'
+        type: array
+      hasNext:
+        type: boolean
+      hasPrevious:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  model.ParticipantRole:
+    enum:
+    - owner
+    - participant
+    - viewer
+    type: string
+    x-enum-varnames:
+    - ParticipantRoleOwner
+    - ParticipantRoleParticipant
+    - ParticipantRoleViewer
+  model.QuarterResult:
+    properties:
+      awayTeamScore:
+        type: integer
+      contestId:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      homeTeamScore:
+        type: integer
+      id:
+        type: string
+      quarter:
+        type: integer
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+      winner:
+        type: string
+      winnerCol:
+        type: integer
+      winnerName:
+        type: string
+      winnerRow:
+        type: integer
+    type: object
+  model.QuarterResultRequest:
+    properties:
+      awayTeamScore:
+        maximum: 9999
+        minimum: 0
+        type: integer
+      homeTeamScore:
+        maximum: 9999
+        minimum: 0
+        type: integer
+    type: object
+  model.ReadinessResponse:
+    properties:
+      database:
+        type: string
+      nats:
+        type: string
+      oidc:
+        type: string
+      status:
+        type: string
+    type: object
+  model.Square:
+    properties:
+      col:
+        type: integer
+      contestId:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      id:
+        type: string
+      owner:
+        type: string
+      ownerName:
+        type: string
+      row:
+        type: integer
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+      value:
+        type: string
+    type: object
+  model.StatsResponse:
+    properties:
+      contestsCreatedToday:
+        example: 5
+        type: integer
+      squaresClaimedToday:
+        example: 42
+        type: integer
+      totalActiveContests:
+        example: 12
+        type: integer
+    type: object
+  model.UpdateContestRequest:
+    properties:
+      awayTeam:
+        maxLength: 20
+        type: string
+      homeTeam:
+        maxLength: 20
+        type: string
+      visibility:
+        enum:
+        - private
+        - public
+        type: string
+    type: object
+  model.UpdateParticipantRequest:
+    properties:
+      maxSquares:
+        maximum: 100
+        minimum: 0
+        type: integer
+      role:
+        enum:
+        - participant
+        - viewer
+        type: string
+    type: object
+  model.UpdateUserProfileRequest:
+    properties:
+      defaultInitials:
+        maxLength: 3
+        minLength: 1
+        type: string
+    required:
+    - defaultInitials
+    type: object
+  model.UserActiveContest:
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      name:
+        example: test
+        type: string
+      owner:
+        example: user@example.com
+        type: string
+      role:
+        example: owner
+        type: string
+    type: object
+  model.UserProfileResponse:
+    properties:
+      createdAt:
+        example: "2026-07-11T00:00:00Z"
+        type: string
+      defaultInitials:
+        example: MM
+        type: string
+      displayName:
+        example: Max
+        type: string
+      email:
+        example: user@example.com
+        type: string
+    type: object
+  model.UserStatsResponse:
+    properties:
+      contestsCreated:
+        example: 3
+        type: integer
+      contestsJoined:
+        example: 7
+        type: integer
+      quarterWins:
+        example: 5
+        type: integer
+      quartersPlayed:
+        example: 20
+        type: integer
+      squaresClaimed:
+        example: 42
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: API for squares.maxstash.io
+  title: Squares API
+  version: 1.0.0
+paths:
+  /contact:
+    post:
+      consumes:
+      - application/json
+      description: Submit a contact form message
+      parameters:
+      - description: Contact form data
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/model.ContactRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContactResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      summary: Submit a contact form
+      tags:
+      - contact
+  /contests:
+    put:
+      consumes:
+      - application/json
+      description: Creates a new 10x10 contest
+      parameters:
+      - description: Contest
+        in: body
+        name: contest
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateContestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContestSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Create a new Contest
+      tags:
+      - contests
+  /contests/{id}:
+    delete:
+      description: Deletes a contest by id. Only the contest owner can delete
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Contest deleted successfully
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete contest
+      tags:
+      - contests
+    patch:
+      consumes:
+      - application/json
+      description: Updates the values of a contest
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Contest update data
+        in: body
+        name: contest
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateContestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContestSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update contest
+      tags:
+      - contests
+  /contests/{id}/invites:
+    get:
+      description: Owner gets all invite links for a contest
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ContestInvite'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get all invites for a contest
+      tags:
+      - invites
+    post:
+      consumes:
+      - application/json
+      description: Owner creates an invite link with specified role and square limit
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Invite details
+        in: body
+        name: invite
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContestInvite'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Create an invite link for a contest
+      tags:
+      - invites
+  /contests/{id}/invites/{inviteId}:
+    delete:
+      description: Owner deletes an invite link
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Invite ID
+        in: path
+        name: inviteId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete an invite link
+      tags:
+      - invites
+  /contests/{id}/participants:
+    get:
+      description: Returns all participants and their roles. Any participant can view.
+        Public contests allow any authenticated user
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ContestParticipant'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get all participants for a contest
+      tags:
+      - participants
+  /contests/{id}/participants/{userId}:
+    delete:
+      description: Owner removes a participant, or a participant removes themselves;
+        the removed participant's squares are cleared. The owner cannot be removed.
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Target user ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Remove a participant from a contest
+      tags:
+      - participants
+    patch:
+      consumes:
+      - application/json
+      description: Owner updates a participant's role or max squares
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Target user ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Update details
+        in: body
+        name: participant
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateParticipantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContestParticipant'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update a participant's role or square limit
+      tags:
+      - participants
+  /contests/{id}/quarter-result:
+    post:
+      consumes:
+      - application/json
+      description: Records the score and winner for a specific quarter
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Quarter result data
+        in: body
+        name: quarterResult
+        required: true
+        schema:
+          $ref: '#/definitions/model.QuarterResultRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.QuarterResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Record quarter result
+      tags:
+      - contests
+  /contests/{id}/quarter-result/rollback:
+    post:
+      description: Deletes the most recently recorded quarter result and reverts the
+        contest to the prior quarter. Only for manual (non game-linked) contests.
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.QuarterResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Roll back the last quarter result
+      tags:
+      - contests
+  /contests/{id}/squares/{squareId}/claim:
+    post:
+      description: Claims a square for the authenticated user using their profile
+        default initials
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Square ID
+        in: path
+        name: squareId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Square'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Claim a single square in a contest
+      tags:
+      - contests
+  /contests/{id}/squares/{squareId}/clear:
+    post:
+      consumes:
+      - application/json
+      description: Clears a square's value and owner, making it available for anyone
+        to claim
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Square ID
+        in: path
+        name: squareId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Square'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Clear square value and owner
+      tags:
+      - contests
+  /contests/{id}/squares/clear-mine:
+    post:
+      consumes:
+      - application/json
+      description: Clears the value and owner of every square owned by the authenticated
+        user. Only the caller's own squares are affected.
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Square'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Clear all of the caller's squares in a contest
+      tags:
+      - contests
+  /contests/{id}/start:
+    post:
+      description: Starts the contest, transitioning from ACTIVE to Q1 and randomizing
+        labels
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContestSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Start contest
+      tags:
+      - contests
+  /contests/me:
+    get:
+      description: Returns all contests where the authenticated user is a participant
+      parameters:
+      - description: Filter contests by name (case-insensitive)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ContestSwagger'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get all contests the user participates in
+      tags:
+      - participants
+  /contests/owner/{owner}:
+    get:
+      description: Returns all contests created by a specific owner with pagination
+      parameters:
+      - description: Owner
+        in: path
+        name: owner
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - description: Items per page (max 25)
+        in: query
+        maximum: 25
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - description: Filter contests by name (case-insensitive)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.PaginatedContestResponseSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get all contests by owner
+      tags:
+      - contests
+  /games/upcoming:
+    get:
+      description: Returns NFL games available to link a contest to when creating
+        one
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Game'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get upcoming games
+      tags:
+      - games
+  /health/live:
+    get:
+      description: Returns UP if the service process is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LivenessResponse'
+      summary: Liveness check
+      tags:
+      - health
+  /health/ready:
+    get:
+      description: Checks database, NATS, and OIDC provider connectivity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ReadinessResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/model.ReadinessResponse'
+      summary: Readiness check
+      tags:
+      - health
+  /invites/{token}:
+    get:
+      description: Returns contest name and invite details without authentication
+      parameters:
+      - description: Invite token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.InvitePreviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      summary: Preview an invite link
+      tags:
+      - invites
+  /invites/{token}/redeem:
+    post:
+      description: Authenticated user joins a contest via invite token
+      parameters:
+      - description: Invite token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.ContestParticipant'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Redeem an invite link
+      tags:
+      - invites
+  /leaderboard:
+    get:
+      description: Returns players ranked by quarter wins. Display names only, no
+        emails
+      parameters:
+      - description: Number of players to return (1-100, default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LeaderboardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      summary: Get the all-time leaderboard
+      tags:
+      - leaderboard
+  /leaderboard/me:
+    get:
+      description: Returns the authenticated user's rank, total ranked players, and
+        quarter wins
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LeaderboardRankResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get the current user's leaderboard rank
+      tags:
+      - leaderboard
+  /stats:
+    get:
+      description: Returns public stats including contests created today, squares
+        claimed today, and total active contests
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.StatsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      summary: Get platform stats
+      tags:
+      - stats
+  /users/me:
+    delete:
+      description: Anonymizes contest history under the ghost identity and deletes
+        the account; blocked while the user owns or participates in any active contest
+      responses:
+        "204":
+          description: No Content
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete the current user's account
+      tags:
+      - users
+    get:
+      description: Returns the profile of the authenticated user, creating it on first
+        access
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UserProfileResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get the current user's profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's default initials and applies them
+        to their squares in active contests
+      parameters:
+      - description: Profile
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateUserProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UserProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update the current user's profile
+      tags:
+      - users
+  /users/me/active-contests:
+    get:
+      description: Returns the non-terminal contests the user owns or participates
+        in, which block account deletion
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.UserActiveContest'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get the current user's active contests
+      tags:
+      - users
+  /users/me/stats:
+    get:
+      description: Returns contest and square stats for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UserStatsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get the current user's stats
+      tags:
+      - users
+  /ws/contests/{id}:
+    get:
+      description: Establishes a persistent WebSocket connection to receive real-time
+        updates for a specific contest
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "101":
+          description: WebSocket connection upgraded
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.APIError'
+      security:
+      - BearerAuth: []
+      summary: Connect to WebSocket for real-time contest updates
+      tags:
+      - ws
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
