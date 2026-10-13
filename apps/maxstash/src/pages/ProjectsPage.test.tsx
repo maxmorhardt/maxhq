@@ -33,7 +33,14 @@ describe('ProjectsPage', () => {
   it('renders a card for every repository', () => {
     renderWithProviders(<ProjectsPage />);
 
-    for (const name of ['squares', 'squares-api', 'k8s', 'charts', 'workflows', 'maxstash']) {
+    for (const name of [
+      'squares',
+      'squares services',
+      'infra',
+      'charts',
+      'workflows',
+      'maxstash',
+    ]) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();
     }
   });

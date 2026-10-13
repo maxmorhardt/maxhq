@@ -76,8 +76,8 @@ const stack: { name: string; icon: ReactElement }[] = [
   { name: 'PrimeNG', icon: icons.component },
   { name: 'Material UI', icon: icons.palette },
   { name: 'PostgreSQL', icon: icons.database },
-  { name: 'NATS', icon: icons.sync },
-  { name: 'WebSockets', icon: icons.bolt },
+  { name: 'Redis', icon: icons.sync },
+  { name: 'Server-sent events', icon: icons.bolt },
   { name: 'Docker', icon: icons.box },
   { name: 'Kubernetes', icon: icons.server },
   { name: 'k3s', icon: icons.server },
@@ -120,7 +120,7 @@ const highlights = [
   },
   {
     title: 'Real-time and self-hosted systems',
-    body: 'A production k3s cluster fronted by Envoy Gateway, with Dex federated sign-in, highly available PostgreSQL, and NATS pub/sub for horizontally scaled WebSocket broadcasting, delivered continuously through Argo CD GitOps.',
+    body: 'A production k3s cluster fronted by Envoy Gateway, with Dex federated sign-in, highly available PostgreSQL, and Redis streams fanning live updates out over server-sent events, delivered continuously through Argo CD GitOps.',
     icon: <BoltIcon />,
   },
 ];

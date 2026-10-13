@@ -20,7 +20,7 @@ const platform: { icon: ReactElement; title: string; body: string }[] = [
   {
     icon: <BoltIcon />,
     title: 'Real-time everywhere',
-    body: 'Live grids, scores, and standings update instantly for everyone, powered by WebSockets fanned out across instances over NATS.',
+    body: 'Live grids, scores, and standings update instantly for everyone, streamed over server-sent events that resume from the last update after a dropped connection.',
   },
   {
     icon: <DnsIcon />,
@@ -40,27 +40,31 @@ const projects: Project[] = [
     category: 'Frontend',
     description:
       'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. Includes a contest state machine, automated winner calculation, and Google and GitHub sign-in through Dex.',
-    href: 'https://github.com/maxmorhardt/squares',
+    href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares/web',
     links: [{ label: 'Live site', href: 'https://squares.maxstash.io', icon: <OpenInNewIcon /> }],
-    tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSG', 'OIDC', 'WebSocket'],
+    tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSG', 'OIDC', 'SSE'],
   },
   {
-    name: 'squares-api',
+    name: 'squares services',
     category: 'Backend',
     description:
-      'Backend API that powers the Super Bowl squares game. Owns the contest lifecycle, persists state in PostgreSQL, and fans real-time updates out to every connected client. Documented with Swagger and protected with OIDC-validated JWTs.',
-    href: 'https://github.com/maxmorhardt/squares-api',
+      'Four Go microservices behind the squares game: contests, games (live ESPN scores), accounts, and realtime. Each owns its own schema and publishes changes through a transactional outbox to Redis streams, and realtime fans them out to every viewer over server-sent events. Tokens are validated once at the gateway.',
+    href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares',
     links: [
-      { label: 'Swagger', href: 'https://api.maxstash.io/squares/swagger', icon: <MenuBookIcon /> },
+      {
+        label: 'Swagger',
+        href: 'https://api.maxstash.io/squares/swagger/contests',
+        icon: <MenuBookIcon />,
+      },
     ],
-    tags: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'NATS', 'OIDC', 'Swagger'],
+    tags: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'Redis', 'SSE', 'Swagger'],
   },
   {
-    name: 'k8s',
+    name: 'infra',
     category: 'Infrastructure',
     description:
-      'Self-hosted k3s cluster that runs every app on this site: Argo CD keeps it in sync with this repo, Envoy Gateway fronts all traffic, and Dex federates Google and GitHub sign-in. Highly available Postgres, NATS messaging, Sealed Secrets, and a full metrics and logs stack back it all, with Terraform managing S3 remote state, Cloudflare DNS, and GitHub repo settings.',
-    href: 'https://github.com/maxmorhardt/k8s',
+      'Self-hosted k3s cluster that runs every app on this site: Argo CD keeps it in sync with this repo, Envoy Gateway fronts all traffic, and Dex federates Google and GitHub sign-in. Highly available Postgres, Valkey, Sealed Secrets, and a full metrics and logs stack back it all, with Terraform managing S3 remote state, Cloudflare DNS, and GitHub repo settings.',
+    href: 'https://github.com/maxmorhardt/infra',
     tags: [
       'Kubernetes',
       'Argo CD',
@@ -69,7 +73,7 @@ const projects: Project[] = [
       'Dex',
       'Sealed Secrets',
       'PostgreSQL',
-      'NATS',
+      'Valkey',
     ],
   },
   {
@@ -92,7 +96,7 @@ const projects: Project[] = [
     name: 'maxstash',
     category: 'Frontend',
     description:
-      'This portfolio site. React 19 + Vite prerendered to static HTML with React Router framework mode, styled with Material UI and Emotion, with persistent light/dark theming and scroll-driven animations. Shipped as a Docker image through the same workflows that deploy everything else.',
+      'The public monorepo for this portfolio site and squares. The site is React 19 + Vite prerendered to static HTML with React Router framework mode, styled with Material UI and Emotion, with persistent light/dark theming and scroll-driven animations. Shipped as a Docker image through the same workflows that deploy everything else.',
     href: 'https://github.com/maxmorhardt/maxstash',
     links: [{ label: 'Live site', href: 'https://maxstash.io', icon: <OpenInNewIcon /> }],
     tags: ['React 19', 'TypeScript', 'Vite', 'SSG', 'Material UI', 'Emotion'],
@@ -104,7 +108,7 @@ export default function ProjectsPage() {
     <Box component="section" sx={pageSection}>
       <PageMeta
         title="Projects – Max Morhardt"
-        description="Explore Max Morhardt's projects: a real-time NFL squares app, a Go API, a self-hosted Kubernetes platform, reusable Helm charts, and GitHub Actions workflows."
+        description="Explore Max Morhardt's projects: a real-time NFL squares app, its Go microservices, a self-hosted Kubernetes platform, reusable Helm charts, and GitHub Actions workflows."
         canonical="https://maxstash.io/projects"
       />
 

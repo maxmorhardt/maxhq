@@ -61,7 +61,7 @@ const STACK = [
   { label: 'backend', value: 'spring boot · gin · gorm · jpa' },
   { label: 'frontend', value: 'react · angular · primeng · material ui' },
   { label: 'cloud', value: 'aws · eks · ec2 · s3 · efs · lambda · dynamodb' },
-  { label: 'platform', value: 'kubernetes · docker · helm · terraform · envoy · dex · nats' },
+  { label: 'platform', value: 'kubernetes · docker · helm · terraform · envoy · dex · valkey' },
   { label: 'ops', value: 'gha · jenkins · argo cd · prometheus · grafana · datadog' },
 ];
 

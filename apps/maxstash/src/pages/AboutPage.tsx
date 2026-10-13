@@ -150,13 +150,14 @@ export default function AboutPage() {
           <RoleHead title="Squares" meta="Go · React · Kubernetes" />
 
           <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
-            A full-stack real-time football squares platform: a <C>Go</C> and <C>Gin</C> REST API
-            behind a <C>React</C> and <C>TypeScript</C> front end, deployed to my self-hosted
-            Kubernetes cluster through GitHub Actions and <C>Argo CD</C>. It implements a contest
-            state machine, automated winner calculation, <C>NATS</C> pub/sub for horizontally scaled
-            WebSocket broadcasting, Google and GitHub sign-in through <C>Dex</C>, and{' '}
-            <C>PostgreSQL</C> persistence with <C>GORM</C>, instrumented end to end with{' '}
-            <C>Prometheus</C>, <C>Grafana</C>, and <C>Loki</C>.
+            A full-stack real-time football squares platform: four <C>Go</C> and <C>Gin</C>{' '}
+            microservices behind a <C>React</C> and <C>TypeScript</C> front end, deployed to my
+            self-hosted Kubernetes cluster through GitHub Actions and <C>Argo CD</C>. It implements
+            a contest state machine, automated winner calculation, a transactional outbox feeding{' '}
+            <C>Redis</C> streams, resumable server-sent events for live updates, Google and GitHub
+            sign-in validated at the gateway through <C>Dex</C>, and <C>PostgreSQL</C> persistence
+            with <C>GORM</C>, instrumented end to end with <C>Prometheus</C>, <C>Grafana</C>, and{' '}
+            <C>Loki</C>.
           </Typography>
 
           <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
@@ -171,7 +172,7 @@ export default function AboutPage() {
             </MuiLink>
 
             <MuiLink
-              href="https://github.com/maxmorhardt/squares"
+              href="https://github.com/maxmorhardt/maxstash/tree/main/apps/squares"
               target="_blank"
               rel="noreferrer"
               sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
@@ -186,15 +187,15 @@ export default function AboutPage() {
           <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
             Everything I build runs on a self-hosted <C>k3s</C> cluster: <C>Envoy Gateway</C>{' '}
             routing every app through one front door, <C>Dex</C> federating Google and GitHub
-            sign-in, highly available <C>PostgreSQL</C>, <C>NATS</C> messaging, and a full{' '}
-            <C>Prometheus</C>, <C>Grafana</C>, and <C>Loki</C> observability stack. <C>Argo CD</C>{' '}
-            keeps the cluster in sync with Git, so reusable Helm charts and GitHub Actions workflows
-            release every app the same way. <C>Sealed Secrets</C> lets secrets live safely in the
-            repo, <C>Renovate</C> keeps dependencies current, and <C>system-upgrade-controller</C>{' '}
-            and <C>kured</C> handle k3s upgrades and coordinated rolling node reboots. The
-            infrastructure around it is code too: <C>Terraform</C> runs through GitHub Actions to
-            manage S3 remote state, <C>Cloudflare</C> DNS and edge security, and GitHub repo
-            settings.
+            sign-in, highly available <C>PostgreSQL</C>, <C>Valkey</C> for caching and event
+            streams, and a full <C>Prometheus</C>, <C>Grafana</C>, and <C>Loki</C> observability
+            stack. <C>Argo CD</C> keeps the cluster in sync with Git, so reusable Helm charts and
+            GitHub Actions workflows release every app the same way. <C>Sealed Secrets</C> lets
+            secrets live safely in the repo, <C>Renovate</C> keeps dependencies current, and{' '}
+            <C>system-upgrade-controller</C> and <C>kured</C> handle k3s upgrades and coordinated
+            rolling node reboots. The infrastructure around it is code too: <C>Terraform</C> runs
+            through GitHub Actions to manage S3 remote state, <C>Cloudflare</C> DNS and edge
+            security, and GitHub repo settings.
           </Typography>
         </Row>
 

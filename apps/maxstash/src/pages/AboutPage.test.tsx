@@ -35,7 +35,7 @@ describe('AboutPage', () => {
     );
     expect(screen.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
-      'https://github.com/maxmorhardt/squares'
+      'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares'
     );
   });
 
