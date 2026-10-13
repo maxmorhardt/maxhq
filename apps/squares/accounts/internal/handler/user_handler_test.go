@@ -11,7 +11,6 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -153,8 +152,8 @@ func TestDeleteMe_ContestsUnavailable(t *testing.T) {
 func authenticatedMiddleware(userID string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := &api.Claims{Email: userID, EmailVerified: true, Name: "Test", Expire: 9999999999}
-		reqctx.SetGinContextValue(c, api.UserKey, userID)
-		reqctx.SetGinContextValue(c, api.ClaimsKey, claims)
+		api.SetContextValue(c, api.UserKey, userID)
+		api.SetContextValue(c, api.ClaimsKey, claims)
 		c.Next()
 	}
 }

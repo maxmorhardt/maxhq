@@ -12,8 +12,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
 	"gorm.io/gorm"
@@ -54,7 +54,7 @@ func NewUserService(
 }
 
 func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err == nil {
@@ -99,7 +99,7 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 
 // contests applies the new initials to the user's live squares when it consumes the event
 func (s *userService) UpdateProfile(ctx context.Context, email, initials string) (*model.User, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var user *model.User
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
@@ -124,7 +124,7 @@ func (s *userService) UpdateProfile(ctx context.Context, email, initials string)
 }
 
 func (s *userService) DeleteAccount(ctx context.Context, email string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// deletion is blocked while the user owns or participates in live contests, which only contests knows
 	summary, err := s.contests.GetUserActivity(ctx, email)
@@ -164,7 +164,7 @@ func (s *userService) DeleteAccount(ctx context.Context, email string) error {
 
 // rebuilds the redis revocation list from the durable tombstones, so a flushed redis cannot resurrect deleted tokens
 func (s *userService) SyncRevocations(ctx context.Context) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	tombstones, err := s.repo.TombstonesSince(ctx, time.Now().Add(-revocationWindow))
 	if err != nil {

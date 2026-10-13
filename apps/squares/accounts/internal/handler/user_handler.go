@@ -10,8 +10,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 type UserHandler interface {
@@ -44,13 +43,13 @@ func (h *userHandler) GetMe(c *gin.Context) {
 
 	// provider full name seeds the display name on first visit
 	defaultDisplayName := user
-	if claims := reqctx.ClaimsFromContext(c.Request.Context()); claims != nil && claims.Name != "" {
+	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil && claims.Name != "" {
 		defaultDisplayName = claims.Name
 	}
 
 	profile, err := h.userService.GetProfile(c.Request.Context(), user, defaultDisplayName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 
@@ -85,18 +84,18 @@ func (h *userHandler) UpdateMe(c *gin.Context) {
 
 	var req model.UpdateUserProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		reqctx.LoggerFromGinContext(c).Warn("failed to bind json", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(errs.ErrInvalidRequestBody), c))
+		logging.FromGin(c).Warn("failed to bind json", "error", err)
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
 		return
 	}
 
 	profile, err := h.userService.UpdateProfile(c.Request.Context(), user, req.DefaultInitials)
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 
@@ -119,11 +118,11 @@ func (h *userHandler) DeleteMe(c *gin.Context) {
 	if err := h.userService.DeleteAccount(c.Request.Context(), user); err != nil {
 		switch {
 		case errors.Is(err, errs.ErrAccountActiveContests):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrDependencyFailed):
-			c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, api.Message(err), c))
 		default:
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		}
 		return
 	}

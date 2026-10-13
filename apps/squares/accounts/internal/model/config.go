@@ -11,7 +11,6 @@ type AccountsConfig struct {
 	Contests  ContestsConfig
 	SMTP      SMTPConfig
 	Turnstile TurnstileConfig
-	Contact   ContactConfig
 }
 
 // accounts asks contests whether an account is still in use before creating or deleting it
@@ -30,8 +29,4 @@ type SMTPConfig struct {
 type TurnstileConfig struct {
 	SecretKey string `env:"TURNSTILE_SECRET_KEY,required"`
 	BaseURL   string `env:"TURNSTILE_BASE_URL" envDefault:"https://challenges.cloudflare.com"`
-}
-
-type ContactConfig struct {
-	RateLimit int `env:"CONTACT_RATE_LIMIT" envDefault:"10"`
 }

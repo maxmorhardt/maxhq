@@ -11,8 +11,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/service"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -61,7 +61,7 @@ func TestGetProfile_CreatesWithFirstActivityAndAnnouncesIt(t *testing.T) {
 	first := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
 	d := newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(nil, gorm.ErrRecordNotFound)
-	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&internalapi.UserActivitySummary{FirstActivity: &first}, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{FirstActivity: &first}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool {
 		return u.DefaultInitials == "MM" && u.CreatedAt.Equal(first)
 	})).RunAndReturn(func(_ context.Context, u *model.User) (*model.User, error) { return u, nil })
@@ -94,7 +94,7 @@ func TestGetProfile_Errors(t *testing.T) {
 
 	d = newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&internalapi.UserActivitySummary{}, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 	_, err = d.svc().GetProfile(context.Background(), "a@b.com", "Max")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
@@ -126,7 +126,7 @@ func TestUpdateProfile_Errors(t *testing.T) {
 
 func TestDeleteAccount_TombstonesAnnouncesAndRevokes(t *testing.T) {
 	d := newUserDeps(t)
-	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&internalapi.UserActivitySummary{}, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().DeleteWithTombstone(mock.Anything, "a@b.com", mock.Anything).Return(nil)
 	d.outbox.EXPECT().Add(mock.Anything, events.UsersStream, events.UserDeletedType, mock.MatchedBy(func(e events.UserDeleted) bool { return e.Email == "a@b.com" })).Return(nil)
 	d.revocations.EXPECT().Revoke(mock.Anything, "a@b.com", mock.Anything).Return(nil)
@@ -137,7 +137,7 @@ func TestDeleteAccount_TombstonesAnnouncesAndRevokes(t *testing.T) {
 func TestDeleteAccount_BlockedByActiveContests(t *testing.T) {
 	d := newUserDeps(t)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).
-		Return(&internalapi.UserActivitySummary{ActiveContests: []internalapi.UserActiveContest{{Name: "C"}}}, nil)
+		Return(&contracts.UserActivitySummary{ActiveContests: []contracts.UserActiveContest{{Name: "C"}}}, nil)
 
 	assert.ErrorIs(t, d.svc().DeleteAccount(context.Background(), "a@b.com"), errs.ErrAccountActiveContests)
 }
@@ -151,7 +151,7 @@ func TestDeleteAccount_RefusesWhenContestsCannotBeAsked(t *testing.T) {
 
 func TestDeleteAccount_DatabaseFailure(t *testing.T) {
 	d := newUserDeps(t)
-	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&internalapi.UserActivitySummary{}, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().DeleteWithTombstone(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
 
 	assert.ErrorIs(t, d.svc().DeleteAccount(context.Background(), "a@b.com"), errs.ErrDatabaseUnavailable)
@@ -159,7 +159,7 @@ func TestDeleteAccount_DatabaseFailure(t *testing.T) {
 
 func TestDeleteAccount_RedisFailureStillSucceeds(t *testing.T) {
 	d := newUserDeps(t)
-	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&internalapi.UserActivitySummary{}, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().DeleteWithTombstone(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	d.revocations.EXPECT().Revoke(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("redis down"))

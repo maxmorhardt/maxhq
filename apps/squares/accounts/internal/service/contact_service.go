@@ -17,7 +17,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/templates"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 var contactEmailTmpl = template.Must(template.New("contact_email").Parse(templates.ContactEmailHTML))
@@ -41,7 +41,7 @@ func NewContactService(repo repository.ContactRepository, smtpCfg model.SMTPConf
 }
 
 func (s *contactService) SubmitContact(ctx context.Context, req *model.ContactRequest, ipAddress string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// validate turnstile token
 	if err := s.validateTurnstile(ctx, req.TurnstileToken, ipAddress); err != nil {

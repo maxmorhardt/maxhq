@@ -25,7 +25,6 @@ const (
 	Schema              = "accounts"
 	KeyPrefix           = "squares"
 	outboxLockKey int64 = 910103
-	contactWindow       = 24 * time.Hour
 	writeTimeout        = 30 * time.Second
 )
 
@@ -71,9 +70,8 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		User:    handler.NewUserHandler(userService),
 		Contact: handler.NewContactHandler(contactService),
 	}, routes.Guards{
-		Auth:         middleware.Authenticate(revocations),
-		Idempotent:   middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
-		ContactLimit: middleware.RateLimit(cache.NewRateLimiter(infra.Redis), "contact", cfg.Contact.RateLimit, contactWindow),
+		Auth:       middleware.Authenticate(revocations),
+		Idempotent: middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
 	})
 
 	return &App{Engine: engine, cfg: cfg, infra: infra, relay: relay, userService: userService}
