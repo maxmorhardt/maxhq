@@ -29,3 +29,9 @@ variable "bypass_actors" {
   }))
   default = []
 }
+
+variable "merge_methods" {
+  description = "Merge methods allowed on the default branch"
+  type        = list(string)
+  default     = ["squash"]
+}

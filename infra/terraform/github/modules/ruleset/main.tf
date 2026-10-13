@@ -30,7 +30,7 @@ resource "github_repository_ruleset" "main" {
       require_code_owner_review         = false
       require_last_push_approval        = false
       required_review_thread_resolution = false
-      allowed_merge_methods             = ["squash"]
+      allowed_merge_methods             = var.merge_methods
     }
 
     required_status_checks {

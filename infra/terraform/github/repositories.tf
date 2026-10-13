@@ -1,29 +1,16 @@
 locals {
   repositories = {
-    "squares-api" = {
-      checks = [
-        "go-ci / Go CI - squares-api",
-        "docker-ci / Docker CI - squares-api",
-        "pr-title / pr-title",
-      ]
-    }
-
-    "squares" = {
-      checks = [
-        "node-ci / Node CI - squares",
-        "docker-ci / Docker CI - squares",
-        "pr-title / pr-title",
-      ]
-    }
-
+    # monorepo for every public app; ci.yml only builds what changed
     "maxstash" = {
       checks = [
-        "node-ci / Node CI - maxstash",
-        "docker-ci / Docker CI - maxstash",
         "pr-title / pr-title",
+        "CI Complete",
       ]
+      # merge commits stay allowed so imported histories survive the monorepo pull request
+      merge_methods = ["squash", "merge"]
     }
 
+    # every helm chart, app and infra, each released on its own
     "charts" = {
       checks = [
         "pr-title / pr-title",
@@ -31,7 +18,7 @@ locals {
       ]
     }
 
-    "k8s" = {
+    "infra" = {
       checks = [
         "pr-title / pr-title",
         "Validate Complete",
@@ -60,4 +47,11 @@ module "rulesets" {
   required_checks = each.value.checks
   strict          = try(each.value.strict, false)
   bypass_actors   = try(each.value.bypass_actors, [])
+  merge_methods   = try(each.value.merge_methods, ["squash"])
+}
+
+# the repository was renamed from k8s; keep its ruleset instead of creating a second one
+moved {
+  from = module.rulesets["k8s"]
+  to   = module.rulesets["infra"]
 }
