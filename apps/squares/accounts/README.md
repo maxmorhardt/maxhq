@@ -23,7 +23,7 @@ Profiles, account deletion, and the contact form. One of the squares backend ser
 ## Development
 
 1. Copy `.env.example` to `.env` and fill it in.
-2. Start PostgreSQL and Redis (or `make redis` to port-forward the cluster's).
+2. Start PostgreSQL and Valkey (or `make valkey` to port-forward the cluster's).
 3. `make run`. `make help` lists every task.
 4. Without the gateway, send the identity headers yourself:
    ```bash

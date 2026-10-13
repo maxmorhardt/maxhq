@@ -105,9 +105,9 @@ deps: ## Upgrade dependencies and tidy
 	go get -u -t ./...
 	go mod tidy
 
-.PHONY: redis
-redis: ## Port-forward the cluster redis for local dev
-	while true; do kubectl port-forward svc/redis 6379:6379 -n redis; done
+.PHONY: valkey
+valkey: ## Port-forward the cluster valkey for local dev
+	while true; do kubectl port-forward svc/valkey 6379:6379 -n valkey; done
 
 .PHONY: clean
 clean: ## Remove build and coverage artifacts
