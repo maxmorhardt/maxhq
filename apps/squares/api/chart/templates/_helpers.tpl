@@ -36,7 +36,7 @@ Common labels
 {{- define "app.labels" -}}
 helm.sh/chart: {{ include "app.chart" . }}
 {{ include "app.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
+app.kubernetes.io/version: {{ include "squares.imageTag" . | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
@@ -46,4 +46,42 @@ Selector labels
 {{- define "app.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "app.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Per-service name, e.g. squares-contests. Call with (dict "root" $ "name" $name).
+*/}}
+{{- define "squares.serviceName" -}}
+{{- printf "%s-%s" (include "app.fullname" .root) .name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Per-service selector labels: the chart's selector labels plus the service as the component.
+*/}}
+{{- define "squares.serviceSelectorLabels" -}}
+{{ include "app.selectorLabels" .root }}
+app.kubernetes.io/component: {{ .name }}
+{{- end }}
+
+{{/*
+Per-service labels.
+*/}}
+{{- define "squares.serviceLabels" -}}
+{{ include "app.labels" .root }}
+app.kubernetes.io/component: {{ .name }}
+app.kubernetes.io/part-of: {{ include "app.fullname" .root }}-api
+{{- end }}
+
+{{/*
+Name for resources the chart renders once; the frontend chart already owns the bare fullname.
+*/}}
+{{- define "squares.apiName" -}}
+{{- printf "%s-api" (include "app.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Image tag, defaulting to the chart appVersion that release-please keeps in step with the app.
+*/}}
+{{- define "squares.imageTag" -}}
+{{- .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}

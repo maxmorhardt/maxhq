@@ -1,31 +1,70 @@
-{{- if .Values.route.enabled -}}
-{{- $fullName := include "app.fullname" . -}}
+{{- if .Values.route.enabled }}
+{{- range $name, $svc := .Values.services }}
+{{- $ctx := dict "root" $ "name" $name }}
+{{- $prefix := $.Values.route.prefix }}
+---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "squares.serviceName" $ctx }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "squares.serviceLabels" $ctx | nindent 4 }}
 spec:
   parentRefs:
-    - name: {{ .Values.route.gateway.name }}
-      namespace: {{ .Values.route.gateway.namespace }}
+    - name: {{ $.Values.route.gateway.name }}
+      namespace: {{ $.Values.route.gateway.namespace }}
   hostnames:
-    {{- range .Values.route.hostnames }}
+    {{- range $.Values.route.hostnames }}
     - {{ . | quote }}
     {{- end }}
   rules:
-    {{- range .Values.route.rules }}
+    {{- range $svc.routes.prefixes }}
     - matches:
-        {{- toYaml .matches | nindent 8 }}
-      {{- if .urlRewrite }}
+        - path:
+            type: PathPrefix
+            value: {{ printf "%s%s" $prefix . }}
       filters:
         - type: URLRewrite
           urlRewrite:
-            {{- toYaml .urlRewrite | nindent 12 }}
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ . }}
+      {{- if $svc.streaming }}
+      timeouts:
+        request: 0s
       {{- end }}
       backendRefs:
-        - name: {{ $fullName }}
+        - name: {{ include "squares.serviceName" $ctx }}
           port: {{ $.Values.service.port }}
     {{- end }}
+    {{- range $svc.routes.exact }}
+    - matches:
+        - path:
+            type: Exact
+            value: {{ printf "%s%s" $prefix . }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: {{ . }}
+      backendRefs:
+        - name: {{ include "squares.serviceName" $ctx }}
+          port: {{ $.Values.service.port }}
+    {{- end }}
+    # each service serves its own api reference at /squares/swagger/<service>
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ printf "%s/swagger/%s" $prefix $name }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /swagger
+      backendRefs:
+        - name: {{ include "squares.serviceName" $ctx }}
+          port: {{ $.Values.service.port }}
+{{- end }}
 {{- end }}

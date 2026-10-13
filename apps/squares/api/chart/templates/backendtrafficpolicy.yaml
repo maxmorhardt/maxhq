@@ -1,15 +1,18 @@
-{{- if and .Values.route.enabled .Values.route.rateLimit.enabled -}}
+{{- if and .Values.route.enabled .Values.route.rateLimit.enabled }}
+{{- range $name, $svc := .Values.services }}
+{{- $ctx := dict "root" $ "name" $name }}
+---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: BackendTrafficPolicy
 metadata:
-  name: {{ include "app.fullname" . }}
+  name: {{ include "squares.serviceName" $ctx }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "squares.serviceLabels" $ctx | nindent 4 }}
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: {{ include "app.fullname" . }}
+      name: {{ include "squares.serviceName" $ctx }}
   rateLimit:
     type: Local
     local:
@@ -19,13 +22,14 @@ spec:
                 type: Distinct
                 value: 0.0.0.0/0
           limit:
-            requests: {{ .Values.route.rateLimit.requests }}
-            unit: {{ .Values.route.rateLimit.unit }}
+            requests: {{ $.Values.route.rateLimit.requests }}
+            unit: {{ $.Values.route.rateLimit.unit }}
         - clientSelectors:
             - sourceCIDR:
                 type: Distinct
                 value: ::/0
           limit:
-            requests: {{ .Values.route.rateLimit.requests }}
-            unit: {{ .Values.route.rateLimit.unit }}
+            requests: {{ $.Values.route.rateLimit.requests }}
+            unit: {{ $.Values.route.rateLimit.unit }}
+{{- end }}
 {{- end }}

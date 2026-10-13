@@ -1,0 +1,45 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- range $name, $svc := .Values.services }}
+{{- $ctx := dict "root" $ "name" $name }}
+---
+# services trust the gateway's X-Auth-* headers, so app traffic may only arrive through the gateway
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "squares.serviceName" $ctx }}
+  labels:
+    {{- include "squares.serviceLabels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "squares.serviceSelectorLabels" $ctx | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.Values.networkPolicy.gatewayNamespace }}
+      ports:
+        - port: {{ $.Values.service.targetPort }}
+          protocol: TCP
+    {{- if $.Values.metrics.enabled }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.Values.networkPolicy.monitoringNamespace }}
+      ports:
+        - port: {{ $.Values.metrics.service.targetPort }}
+          protocol: TCP
+    {{- end }}
+    {{- range $svc.internalCallers }}
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "squares.serviceSelectorLabels" (dict "root" $ "name" .) | nindent 14 }}
+      ports:
+        - port: {{ $.Values.service.targetPort }}
+          protocol: TCP
+    {{- end }}
+{{- end }}
+{{- end }}

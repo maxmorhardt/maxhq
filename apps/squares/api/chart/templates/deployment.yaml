@@ -1,108 +1,119 @@
+{{- range $name, $svc := .Values.services }}
+{{- $ctx := dict "root" $ "name" $name }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "app.fullname" . }}
+  name: {{ include "squares.serviceName" $ctx }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "squares.serviceLabels" $ctx | nindent 4 }}
 spec:
-  revisionHistoryLimit: {{ .Values.image.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ $.Values.image.revisionHistoryLimit }}
+  {{- if not $svc.hpa.enabled }}
+  replicas: {{ $svc.hpa.minReplicas }}
+  {{- end }}
   strategy:
-    type: {{ .Values.image.strategy.type }}
+    type: RollingUpdate
     rollingUpdate:
-      maxSurge: {{ .Values.image.strategy.rollingUpdate.maxSurge }}
-      maxUnavailable: {{ .Values.image.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ $svc.strategy.maxSurge }}
+      maxUnavailable: {{ $svc.strategy.maxUnavailable }}
   selector:
     matchLabels:
-      {{- include "app.selectorLabels" . | nindent 6 }}
+      {{- include "squares.serviceSelectorLabels" $ctx | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "app.labels" . | nindent 8 }}
+        {{- include "squares.serviceLabels" $ctx | nindent 8 }}
     spec:
       securityContext:
-        runAsNonRoot: {{ .runAsNonRoot }}
-        runAsUser: {{ .runAsUser }}
-        fsGroup: {{ .fsGroup }}
+        runAsNonRoot: {{ $.Values.image.securityContext.runAsNonRoot }}
+        runAsUser: {{ $.Values.image.securityContext.runAsUser }}
+        fsGroup: {{ $.Values.image.securityContext.fsGroup }}
         seccompProfile:
           type: RuntimeDefault
-      {{- if .Values.affinity.podAntiAffinity.enabled }}
+      {{- if $.Values.affinity.podAntiAffinity.enabled }}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: {{ .Values.affinity.podAntiAffinity.weight }}
+            - weight: {{ $.Values.affinity.podAntiAffinity.weight }}
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    {{- include "app.selectorLabels" . | nindent 20 }}
-                topologyKey: {{ .Values.affinity.podAntiAffinity.topologyKey }}
+                    {{- include "squares.serviceSelectorLabels" $ctx | nindent 20 }}
+                topologyKey: {{ $.Values.affinity.podAntiAffinity.topologyKey }}
       {{- end }}
       containers:
-        - name: {{ include "app.fullname" . }}
-          image: "{{ .Values.image.repository }}:{{ required "image.tag is required" .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - name: {{ $name }}
+          image: "{{ $.Values.image.repositoryPrefix }}{{ $name }}:{{ include "squares.imageTag" $ }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           securityContext:
-            allowPrivilegeEscalation: {{ .Values.image.securityContext.allowPrivilegeEscalation }}
-            readOnlyRootFilesystem: {{ .Values.image.securityContext.readOnlyRootFilesystem }}
-            runAsNonRoot: {{ .Values.image.securityContext.runAsNonRoot }}
-            runAsUser: {{ .Values.image.securityContext.runAsUser }}
+            allowPrivilegeEscalation: {{ $.Values.image.securityContext.allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ $.Values.image.securityContext.readOnlyRootFilesystem }}
+            runAsNonRoot: {{ $.Values.image.securityContext.runAsNonRoot }}
+            runAsUser: {{ $.Values.image.securityContext.runAsUser }}
             capabilities:
               drop:
                 - ALL
-          {{- with .Values.image.envFrom }}
+          {{- with $.Values.image.envFrom }}
           envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
+            - name: SERVER_PORT
+              value: {{ $.Values.service.targetPort | quote }}
             - name: METRICS_ENABLED
-              value: {{ .Values.metrics.enabled | quote }}
+              value: {{ $.Values.metrics.enabled | quote }}
+            - name: METRICS_PORT
+              value: {{ $.Values.metrics.service.targetPort | quote }}
+            {{- range $key, $value := $.Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $value := $svc.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
           ports:
-            - name: {{ .Values.service.name }}
-              containerPort: {{ .Values.service.targetPort }}
+            - name: {{ $.Values.service.name }}
+              containerPort: {{ $.Values.service.targetPort }}
               protocol: TCP
-          {{- if .Values.image.volumes }}
+            {{- if $.Values.metrics.enabled }}
+            - name: {{ $.Values.metrics.service.name }}
+              containerPort: {{ $.Values.metrics.service.targetPort }}
+              protocol: TCP
+            {{- end }}
+          {{- if $.Values.image.volumes }}
           volumeMounts:
-            {{- range .Values.image.volumes }}
+            {{- range $.Values.image.volumes }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
             {{- end }}
           {{- end }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          startupProbe:
+            {{- toYaml $svc.resources | nindent 12 }}
+          {{- range $probe := list "startupProbe" "readinessProbe" "livenessProbe" }}
+          {{- with index $.Values.image $probe }}
+          {{ $probe }}:
             httpGet:
-              port: {{ .Values.service.targetPort }}
-              path: {{ .Values.image.startupProbe.path }}
+              port: {{ $.Values.service.targetPort }}
+              path: {{ .path }}
               scheme: HTTP
-            initialDelaySeconds: {{ .Values.image.startupProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.image.startupProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.image.startupProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.image.startupProbe.failureThreshold }}
-          readinessProbe:
-            httpGet:
-              port: {{ .Values.service.targetPort }}
-              path: {{ .Values.image.readinessProbe.path }}
-              scheme: HTTP
-            initialDelaySeconds: {{ .Values.image.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.image.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.image.readinessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.image.readinessProbe.failureThreshold }}
-            successThreshold: {{ .Values.image.readinessProbe.successThreshold }}
-          livenessProbe:
-            httpGet:
-              port: {{ .Values.service.targetPort }}
-              path: {{ .Values.image.livenessProbe.path }}
-              scheme: HTTP
-            initialDelaySeconds: {{ .Values.image.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.image.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.image.livenessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.image.livenessProbe.failureThreshold }}
-            successThreshold: {{ .Values.image.livenessProbe.successThreshold }}
-      {{- if .Values.image.volumes }}
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            failureThreshold: {{ .failureThreshold }}
+            {{- with .successThreshold }}
+            successThreshold: {{ . }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+      {{- if $.Values.image.volumes }}
       volumes:
-        {{- range .Values.image.volumes }}
+        {{- range $.Values.image.volumes }}
         - name: {{ .name }}
           {{- if eq .volumeType "emptyDir" }}
           emptyDir: {}
           {{- end }}
         {{- end }}
       {{- end }}
+{{- end }}

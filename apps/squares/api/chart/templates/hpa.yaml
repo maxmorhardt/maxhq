@@ -1,29 +1,33 @@
-{{- if .Values.hpa.enabled }}
+{{- range $name, $svc := .Values.services }}
+{{- if $svc.hpa.enabled }}
+{{- $ctx := dict "root" $ "name" $name }}
+---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "app.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "squares.serviceName" $ctx }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "squares.serviceLabels" $ctx | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "app.fullname" . }}
-  minReplicas: {{ .Values.hpa.minReplicas }}
-  maxReplicas: {{ .Values.hpa.maxReplicas }}
+    name: {{ include "squares.serviceName" $ctx }}
+  minReplicas: {{ $svc.hpa.minReplicas }}
+  maxReplicas: {{ $svc.hpa.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .Values.hpa.targetCPU }}
+          averageUtilization: {{ $svc.hpa.targetCPU }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: {{ .Values.hpa.targetRAM }}
+          averageUtilization: {{ $svc.hpa.targetRAM }}
+{{- end }}
 {{- end }}

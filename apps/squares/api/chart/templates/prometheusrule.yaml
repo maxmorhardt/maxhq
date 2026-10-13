@@ -2,7 +2,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ include "app.fullname" . }}
+  name: {{ include "squares.apiName" . }}
   labels:
     {{- include "app.labels" . | nindent 4 }}
     {{- with .Values.metrics.prometheusRule.labels }}
@@ -10,7 +10,7 @@ metadata:
     {{- end }}
 spec:
   groups:
-    - name: {{ include "app.fullname" . }}.rules
+    - name: {{ include "squares.apiName" . }}.rules
       interval: 30s
       rules:
         {{- range .Values.metrics.prometheusRule.rules }}

@@ -1,21 +1,25 @@
+{{- range $name, $svc := .Values.services }}
+{{- $ctx := dict "root" $ "name" $name }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "app.fullname" . }}
+  name: {{ include "squares.serviceName" $ctx }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "squares.serviceLabels" $ctx | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ $.Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
+    - port: {{ $.Values.service.port }}
+      targetPort: {{ $.Values.service.targetPort }}
       protocol: TCP
-      name: {{ .Values.service.name }}
-    {{- if .Values.metrics.enabled }}
-    - port: {{ .Values.metrics.service.port }}
-      targetPort: {{ .Values.metrics.service.targetPort }}
+      name: {{ $.Values.service.name }}
+    {{- if $.Values.metrics.enabled }}
+    - port: {{ $.Values.metrics.service.port }}
+      targetPort: {{ $.Values.metrics.service.targetPort }}
       protocol: TCP
-      name: {{ .Values.metrics.service.name }}
+      name: {{ $.Values.metrics.service.name }}
     {{- end }}
   selector:
-    {{- include "app.selectorLabels" . | nindent 4 }}
+    {{- include "squares.serviceSelectorLabels" $ctx | nindent 4 }}
+{{- end }}

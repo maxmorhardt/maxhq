@@ -1,0 +1,28 @@
+{{- if and .Values.route.enabled .Values.auth.enabled }}
+# validates the dex id token once at the gateway and forwards its claims as X-Auth-* headers;
+# the maxstash gateway strips client-sent X-Auth-* headers before this filter runs
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: {{ include "squares.apiName" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  targetRefs:
+    {{- range $name, $svc := .Values.services }}
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: {{ include "squares.serviceName" (dict "root" $ "name" $name) }}
+    {{- end }}
+  jwt:
+    optional: {{ .Values.auth.optional }}
+    providers:
+      - name: dex
+        issuer: {{ .Values.auth.issuer | quote }}
+        audiences:
+          {{- toYaml .Values.auth.audiences | nindent 10 }}
+        remoteJWKS:
+          uri: {{ .Values.auth.jwksURI | quote }}
+        claimToHeaders:
+          {{- toYaml .Values.auth.claimToHeaders | nindent 10 }}
+{{- end }}
