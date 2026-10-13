@@ -7,9 +7,8 @@ import {
   createNewContest,
   deleteContestById,
   deleteInvite,
-  getContestsByOwner,
+  getContestFeed,
   getInvites,
-  getMyContests,
   getParticipants,
   getUpcomingGames,
   joinContest,
@@ -23,13 +22,13 @@ import {
 } from '../../service/contestService';
 import type {
   Contest,
+  ContestFeedParams,
+  ContestFeedResponse,
   CreateContestRequest,
   CreateInviteRequest,
   Game,
   Invite,
   InvitePreviewResponse,
-  PaginatedContestsResponse,
-  PaginationParams,
   Participant,
   QuarterResult,
   QuarterResultRequest,
@@ -39,14 +38,14 @@ import type {
 } from '../../types/contest';
 import type { APIError } from '../../types/error';
 
-export const fetchContestsByOwner = createAsyncThunk<
-  PaginatedContestsResponse,
-  { owner: string; pagination: PaginationParams },
+// append loads the next page onto the list; otherwise the list starts over with these params
+export const fetchContestFeed = createAsyncThunk<
+  ContestFeedResponse,
+  { params: ContestFeedParams; append?: boolean },
   { rejectValue: APIError }
->('contests/fetchByUser', async ({ owner, pagination }, { rejectWithValue }) => {
+>('contests/fetchFeed', async ({ params }, { rejectWithValue }) => {
   try {
-    const response = await getContestsByOwner(owner, pagination);
-    return response;
+    return await getContestFeed(params);
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
   }
@@ -176,19 +175,6 @@ export const fetchUpcomingGames = createAsyncThunk<Game[], void, { rejectValue: 
     }
   }
 );
-
-export const fetchMyContests = createAsyncThunk<
-  Contest[],
-  string | void,
-  { rejectValue: APIError }
->('contests/fetchMyContests', async (search, { rejectWithValue }) => {
-  try {
-    const response = await getMyContests(typeof search === 'string' ? search : undefined);
-    return response;
-  } catch (err: unknown) {
-    return rejectWithValue(err as APIError);
-  }
-});
 
 export const createContestInvite = createAsyncThunk<
   Invite,

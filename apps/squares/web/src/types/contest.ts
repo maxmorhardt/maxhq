@@ -1,3 +1,5 @@
+export const MAX_CONTEST_SQUARES = 100;
+
 export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'DELETED';
 
 export type ContestVisibility = 'public' | 'private';
@@ -72,20 +74,42 @@ export interface ContestEvent {
   participants?: Participant[];
 }
 
-export interface PaginationParams {
-  page: number;
-  limit: number;
+export type FeedRole = 'owned' | 'joined';
+export type FeedStatus = 'open' | 'live' | 'finished';
+export type FeedSort = 'updated' | 'created';
+
+export interface ContestFeedParams {
+  cursor?: string;
+  limit?: number;
+  role?: FeedRole;
+  status?: FeedStatus[];
   search?: string;
+  updatedSince?: string;
+  sort?: FeedSort;
 }
 
-export interface PaginatedContestsResponse {
-  contests: Contest[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
+// one row of the caller's contests; role says whether they own it or joined it
+export interface ContestSummary {
+  id: string;
+  name: string;
+  homeTeam?: string;
+  awayTeam?: string;
+  status: ContestStatus;
+  visibility: ContestVisibility;
+  owner: string;
+  role: ParticipantRole;
+  gameId?: string;
+  gameTime?: string;
+  claimedSquares: number;
+  mySquares: number;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContestFeedResponse {
+  contests: ContestSummary[];
+  nextCursor?: string;
 }
 
 export interface QuarterResult {

@@ -46,7 +46,15 @@ function renderDialog(open = true, currentContest: typeof contest | null = conte
   return render(
     <ThemeProvider theme={theme}>
       <Provider store={makeStore(currentContest)}>
-        <DeleteContest open={open} onClose={vi.fn()} />
+        <DeleteContest
+          open={open}
+          onClose={vi.fn()}
+          contest={
+            currentContest
+              ? { version: 1, ...currentContest, role: 'owner', claimedSquares: 0, mySquares: 0 }
+              : null
+          }
+        />
       </Provider>
     </ThemeProvider>
   );

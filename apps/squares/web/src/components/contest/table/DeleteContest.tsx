@@ -10,22 +10,24 @@ import {
   IconButton,
   Typography,
 } from '@mui/material';
-import {
-  selectCurrentContest,
-  selectDeleteContestLoading,
-} from '../../../features/contests/contestSelectors';
+import { selectDeleteContestLoading } from '../../../features/contests/contestSelectors';
 import { deleteContest } from '../../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
+import type { ContestSummary } from '../../../types/contest';
 
 interface DeleteContestProps {
   open: boolean;
   onClose: () => void;
+  contest: ContestSummary | null;
 }
 
-export default function DeleteContest({ open, onClose }: DeleteContestProps) {
+export default function DeleteContest({
+  open,
+  onClose,
+  contest: currentContest,
+}: DeleteContestProps) {
   const dispatch = useAppDispatch();
 
-  const currentContest = useAppSelector(selectCurrentContest);
   const loading = useAppSelector(selectDeleteContestLoading);
 
   if (!currentContest) {

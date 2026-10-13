@@ -2,11 +2,12 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import type {
   Contest,
+  ContestFeedResponse,
+  ContestSummary,
   ContestStatus,
   ContestVisibility,
   Game,
   Invite,
-  PaginatedContestsResponse,
   Participant,
   QuarterResult,
   Square,
@@ -18,9 +19,8 @@ import {
   createContestInvite,
   deleteContest,
   deleteContestInvite,
-  fetchContestsByOwner,
+  fetchContestFeed,
   fetchInvites,
-  fetchMyContests,
   fetchParticipants,
   removeContestParticipant,
   rollbackLastQuarterResult,
@@ -40,8 +40,12 @@ const rollbackStatusMap: Record<number, ContestStatus> = {
 };
 
 interface ContestState {
-  contests: Contest[] | null;
-  myContests: Contest[] | null;
+  feed: {
+    items: ContestSummary[] | null;
+    nextCursor: string | null;
+    loading: boolean;
+    loadingMore: boolean;
+  };
   currentContest?: Contest | null;
   currentSquare?: Square | null;
   participants: Participant[];
@@ -53,19 +57,10 @@ interface ContestState {
   participantsLoading: boolean;
   invitesLoading: boolean;
   error: string | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  };
 }
 
 const initialState: ContestState = {
-  contests: null,
-  myContests: null,
+  feed: { items: null, nextCursor: null, loading: false, loadingMore: false },
   participants: [],
   invites: [],
   contestLoading: false,
@@ -75,14 +70,6 @@ const initialState: ContestState = {
   participantsLoading: false,
   invitesLoading: false,
   error: null,
-  pagination: {
-    page: 1,
-    limit: 5,
-    total: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrevious: false,
-  },
 };
 
 const contestSlice = createSlice({
@@ -277,30 +264,32 @@ const contestSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // fetch contests by owner
     builder
-      .addCase(fetchContestsByOwner.pending, (state) => {
-        state.contestLoading = true;
+      .addCase(fetchContestFeed.pending, (state, action) => {
+        if (action.meta.arg.append) {
+          state.feed.loadingMore = true;
+        } else {
+          state.feed.loading = true;
+        }
         state.error = null;
       })
       .addCase(
-        fetchContestsByOwner.fulfilled,
-        (state, action: PayloadAction<PaginatedContestsResponse>) => {
-          state.contestLoading = false;
-          state.contests = action.payload.contests ?? [];
-          state.pagination = {
-            page: action.payload.page,
-            limit: action.payload.limit,
-            total: action.payload.total,
-            totalPages: action.payload.totalPages,
-            hasNext: action.payload.hasNext,
-            hasPrevious: action.payload.hasPrevious,
-          };
+        fetchContestFeed.fulfilled,
+        (
+          state,
+          action: PayloadAction<ContestFeedResponse, string, { arg: { append?: boolean } }>
+        ) => {
+          const page = action.payload.contests ?? [];
+          state.feed.items = action.meta.arg.append ? [...(state.feed.items ?? []), ...page] : page;
+          state.feed.nextCursor = action.payload.nextCursor ?? null;
+          state.feed.loading = false;
+          state.feed.loadingMore = false;
         }
       )
-      .addCase(fetchContestsByOwner.rejected, (state, action) => {
-        state.contestLoading = false;
-        state.contests = [];
+      .addCase(fetchContestFeed.rejected, (state, action) => {
+        state.feed.items = state.feed.items ?? [];
+        state.feed.loading = false;
+        state.feed.loadingMore = false;
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 
@@ -310,9 +299,8 @@ const contestSlice = createSlice({
         state.contestLoading = true;
         state.error = null;
       })
-      .addCase(createContest.fulfilled, (state, action: PayloadAction<Contest>) => {
+      .addCase(createContest.fulfilled, (state) => {
         state.contestLoading = false;
-        state.contests = [...(state.contests ?? []), action.payload];
       })
       .addCase(createContest.rejected, (state, action) => {
         state.contestLoading = false;
@@ -433,11 +421,20 @@ const contestSlice = createSlice({
           state.currentContest = action.payload;
         }
 
-        if (state.contests) {
-          const index = state.contests.findIndex((c) => c.id === action.payload.id);
-          if (index !== -1) {
-            state.contests[index] = action.payload;
-          }
+        const row = state.feed.items?.find((c) => c.id === action.payload.id);
+        if (row) {
+          const { name, homeTeam, awayTeam, status, visibility, gameId, version, updatedAt } =
+            action.payload;
+          Object.assign(row, {
+            name,
+            homeTeam,
+            awayTeam,
+            status,
+            visibility,
+            gameId,
+            version,
+            updatedAt,
+          });
         }
       })
       .addCase(updateContest.rejected, (state, action) => {
@@ -450,12 +447,10 @@ const contestSlice = createSlice({
         state.deleteContestLoading = true;
         state.error = null;
       })
-      .addCase(deleteContest.fulfilled, (state) => {
+      .addCase(deleteContest.fulfilled, (state, action) => {
         state.deleteContestLoading = false;
-        if (state.contests) {
-          state.contests = state.contests.filter(
-            (contest) => contest.id !== state.currentContest?.id
-          );
+        if (state.feed.items) {
+          state.feed.items = state.feed.items.filter((contest) => contest.id !== action.meta.arg);
         }
         state.currentContest = null;
       })
@@ -528,22 +523,6 @@ const contestSlice = createSlice({
       )
       .addCase(rollbackLastQuarterResult.rejected, (state, action) => {
         state.error = action.payload?.message ?? 'Error rolling back quarter result';
-      });
-
-    // fetch my contests (where user is a participant)
-    builder
-      .addCase(fetchMyContests.pending, (state) => {
-        state.contestLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchMyContests.fulfilled, (state, action: PayloadAction<Contest[]>) => {
-        state.contestLoading = false;
-        state.myContests = action.payload ?? [];
-      })
-      .addCase(fetchMyContests.rejected, (state, action) => {
-        state.contestLoading = false;
-        state.myContests = state.myContests ?? [];
-        state.error = action.payload?.message ?? 'Error fetching contests';
       });
 
     // fetch participants

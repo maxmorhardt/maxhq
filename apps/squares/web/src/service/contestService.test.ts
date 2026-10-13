@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios';
 import api from '../axios/api';
 import {
-  getContestsByOwner,
+  getContestFeed,
   createNewContest,
   claimSquareById,
   clearSquareById,
@@ -13,7 +13,6 @@ import {
   rollbackQuarterResult,
   deleteContestById,
   submitContactForm,
-  getMyContests,
   getUpcomingGames,
   createInvite,
   getInvites,
@@ -24,7 +23,7 @@ import {
   updateParticipant,
   removeParticipant,
 } from './contestService';
-import type { PaginatedContestsResponse, Participant } from '../types/contest';
+import type { Participant } from '../types/contest';
 
 // mock the axios api module
 vi.mock('../axios/api');
@@ -34,84 +33,58 @@ describe('contestService', () => {
     vi.clearAllMocks();
   });
 
-  it('should fetch paginated contests for owner successfully', async () => {
-    const mockResponse: PaginatedContestsResponse = {
-      contests: [
-        {
-          version: 1,
-          id: '1',
-          name: 'Test Contest',
-          owner: 'user123',
-          createdAt: '2025-01-01T00:00:00Z',
-          updatedAt: '2025-01-01T00:00:00Z',
-          createdBy: 'user123',
-          updatedBy: 'user123',
-          xLabels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-          yLabels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-          status: 'ACTIVE',
-          squares: [],
-          quarterResults: [],
-          visibility: 'public',
-        },
-      ],
-      page: 1,
-      limit: 10,
-      total: 1,
-      totalPages: 1,
-      hasNext: false,
-      hasPrevious: false,
-    };
-
+  it('should fetch the contest feed with defaults', async () => {
+    const mockResponse = { contests: [{ id: 'c1', name: 'Test Contest' }], nextCursor: 'next' };
     vi.mocked(api.get).mockResolvedValue({ data: mockResponse });
 
-    const result = await getContestsByOwner('user123', { page: 1, limit: 10 });
+    const result = await getContestFeed();
 
     expect(result).toEqual(mockResponse);
-    expect(result.contests).toHaveLength(1);
-    expect(result.contests[0].name).toBe('Test Contest');
-    expect(api.get).toHaveBeenCalledWith('/contests/owner/user123', {
-      params: { page: 1, limit: 10 },
-    });
+    expect(api.get).toHaveBeenCalledWith('/contests', { params: { status: undefined } });
   });
 
-  it('should fetch contests by owner with a search query', async () => {
-    const mockResponse = {
-      contests: [],
-      page: 1,
+  it('should send feed filters, joining statuses with commas', async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: { contests: [] } });
+
+    await getContestFeed({
+      cursor: 'abc',
       limit: 10,
-      total: 0,
-      totalPages: 0,
-      hasNext: false,
-      hasPrevious: false,
-    };
+      role: 'joined',
+      status: ['open', 'live'],
+      search: 'foo',
+      sort: 'created',
+    });
 
-    vi.mocked(api.get).mockResolvedValue({ data: mockResponse });
-
-    await getContestsByOwner('user123', { page: 1, limit: 10, search: 'foo' });
-
-    expect(api.get).toHaveBeenCalledWith('/contests/owner/user123', {
-      params: { page: 1, limit: 10, search: 'foo' },
+    expect(api.get).toHaveBeenCalledWith('/contests', {
+      params: {
+        cursor: 'abc',
+        limit: 10,
+        role: 'joined',
+        status: 'open,live',
+        search: 'foo',
+        sort: 'created',
+      },
     });
   });
 
-  it('should throw APIError when getContestsByOwner fails', async () => {
+  it('should throw APIError when getContestFeed fails', async () => {
     const apiError = {
-      code: 404,
-      message: 'Not found',
+      code: 400,
+      message: 'Invalid cursor parameter',
       timestamp: '2025-01-01T00:00:00Z',
       requestId: 'req-001',
     };
     vi.mocked(api.get).mockRejectedValue(
       new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
         data: apiError,
-        status: 404,
-        statusText: 'Not Found',
+        status: 400,
+        statusText: 'Bad Request',
         headers: {},
         config: { headers: new AxiosHeaders() },
       } as AxiosResponse)
     );
 
-    await expect(getContestsByOwner('user123', { page: 1, limit: 10 })).rejects.toEqual(apiError);
+    await expect(getContestFeed({ cursor: 'abc' })).rejects.toEqual(apiError);
   });
 
   it('should create a new contest', async () => {
@@ -254,46 +227,6 @@ describe('contestService', () => {
     expect(api.request).toHaveBeenCalledWith(
       expect.objectContaining({ method: 'POST', url: '/contact', data: request })
     );
-  });
-
-  it('should fetch my contests', async () => {
-    const mockContests = [{ id: 'c1', name: 'My Contest' }];
-    vi.mocked(api.get).mockResolvedValue({ data: mockContests });
-
-    const result = await getMyContests();
-
-    expect(result).toEqual(mockContests);
-    expect(api.get).toHaveBeenCalledWith('/contests/me', { params: undefined });
-  });
-
-  it('should fetch my contests with search query', async () => {
-    const mockContests = [{ id: 'c1', name: 'Foo Contest' }];
-    vi.mocked(api.get).mockResolvedValue({ data: mockContests });
-
-    const result = await getMyContests('foo');
-
-    expect(result).toEqual(mockContests);
-    expect(api.get).toHaveBeenCalledWith('/contests/me', { params: { search: 'foo' } });
-  });
-
-  it('should throw APIError when getMyContests fails', async () => {
-    const apiError = {
-      code: 401,
-      message: 'Unauthorized',
-      timestamp: '2025-01-01T00:00:00Z',
-      requestId: 'req-002',
-    };
-    vi.mocked(api.get).mockRejectedValue(
-      new AxiosError('fail', 'ERR_BAD_REQUEST', undefined, {}, {
-        data: apiError,
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: {},
-        config: { headers: new AxiosHeaders() },
-      } as AxiosResponse)
-    );
-
-    await expect(getMyContests()).rejects.toEqual(apiError);
   });
 
   it('should fetch upcoming games', async () => {
