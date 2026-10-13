@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="maxstash">
+  <defs>
+    <linearGradient id="fav-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6d28d9" />
+      <stop offset="1" stop-color="#2563eb" />
+    </linearGradient>
+  </defs>
+  <rect x="22" y="22" width="32" height="32" rx="8" fill="url(#fav-grad)" fill-opacity="0.3" />
+  <rect x="16" y="16" width="32" height="32" rx="8" fill="url(#fav-grad)" fill-opacity="0.6" />
+  <rect x="10" y="10" width="32" height="32" rx="8" fill="url(#fav-grad)" />
+</svg>
