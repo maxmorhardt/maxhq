@@ -10,8 +10,9 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
+	"github.com/maxmorhardt/maxstash/libs/platform/api"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -70,7 +71,7 @@ func NewContestService(
 // ====================
 
 func (s *contestService) GetContestsByOwnerPaginated(ctx context.Context, owner string, page, limit int, search string) ([]model.Contest, int64, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	contests, total, err := s.repo.GetAllByOwnerPaginated(ctx, owner, page, limit, search)
 	if err != nil {
@@ -87,7 +88,7 @@ func (s *contestService) GetContestsByOwnerPaginated(ctx context.Context, owner 
 // ====================
 
 func (s *contestService) CreateContest(ctx context.Context, req *model.CreateContestRequest, user string) (*model.Contest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// check if contest name already exists for user
 	exists, err := s.repo.ExistsByOwnerAndName(ctx, req.Owner, req.Name)
@@ -159,7 +160,7 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 }
 
 func (s *contestService) UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var contest *model.Contest
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
@@ -241,7 +242,7 @@ func applyContestChanges(contest *model.Contest, req *model.UpdateContestRequest
 }
 
 func (s *contestService) StartContest(ctx context.Context, contestID uuid.UUID, user string) (*model.Contest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var contest *model.Contest
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
@@ -287,12 +288,12 @@ func (s *contestService) AutoStart(ctx context.Context, contest *model.Contest) 
 	}
 
 	metrics.IncContestStarted()
-	reqctx.LoggerFromContext(ctx).Info("auto-started game-linked contest", "contest_id", contest.ID)
+	logging.FromContext(ctx).Info("auto-started game-linked contest", "contest_id", contest.ID)
 	return nil
 }
 
 func (s *contestService) transitionToQ1(ctx context.Context, contest *model.Contest, user string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	xLabels, yLabels, err := util.RandomizedLabels()
 	if err != nil {
@@ -319,7 +320,7 @@ func (s *contestService) transitionToQ1(ctx context.Context, contest *model.Cont
 }
 
 func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid.UUID, homeScore, awayScore int, user string) (*model.QuarterResult, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var recorded *model.QuarterResult
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
@@ -386,7 +387,7 @@ func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid
 }
 
 func (s *contestService) ApplyQuarterResult(ctx context.Context, contest *model.Contest, quarter, homeScore, awayScore int) (*model.QuarterResult, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	nextStatus, valid := model.StatusAfterQuarter(quarter)
 	if !valid {
@@ -412,7 +413,7 @@ func (s *contestService) ApplyQuarterResult(ctx context.Context, contest *model.
 }
 
 func (s *contestService) FinalizeFromScores(ctx context.Context, contest *model.Contest, scores []model.GameScore) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// assign labels and empty squares don't win
 	xLabels, yLabels, err := util.RandomizedLabels()
@@ -470,7 +471,7 @@ func (s *contestService) applyQuarterResults(ctx context.Context, contest *model
 }
 
 func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestID uuid.UUID, user string) (*model.QuarterResult, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	var rolledBack *model.QuarterResult
 	var quarter int
@@ -535,7 +536,7 @@ func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestI
 }
 
 func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		contest, err := s.repo.GetByIDForUpdate(ctx, contestID)
@@ -578,7 +579,7 @@ func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID,
 // ====================
 
 func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// get contest to check status and find square
 	contest, err := s.repo.GetByID(ctx, contestID)
@@ -643,7 +644,7 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 	}
 
 	// get claims so we can capture the owner's display name
-	claims := reqctx.ClaimsFromContext(ctx)
+	claims := api.ClaimsFromContext(ctx)
 	if claims == nil {
 		log.Error("claims not found in context")
 		return nil, errs.ErrClaimsNotFound
@@ -695,7 +696,7 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 }
 
 func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// get contest to check status and find square
 	contest, err := s.repo.GetByID(ctx, contestID)
@@ -749,7 +750,7 @@ func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uu
 }
 
 func (s *contestService) ClearUserSquares(ctx context.Context, contestID uuid.UUID, user string) ([]model.Square, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// get contest to check status
 	contest, err := s.repo.GetByID(ctx, contestID)

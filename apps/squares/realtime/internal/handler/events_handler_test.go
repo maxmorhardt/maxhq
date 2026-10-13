@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,7 +20,6 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -32,8 +31,8 @@ func streamRouter(svc service.StreamService, cfg model.StreamConfig, shutdown <-
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
-		reqctx.SetGinContextValue(c, api.UserKey, "v@b.com")
-		reqctx.SetGinContextValue(c, api.ClaimsKey, &api.Claims{Email: "v@b.com", IssuedAt: 1, Expire: expire})
+		api.SetContextValue(c, api.UserKey, "v@b.com")
+		api.SetContextValue(c, api.ClaimsKey, &api.Claims{Email: "v@b.com", IssuedAt: 1, Expire: expire})
 		c.Next()
 	})
 	r.GET("/events/contests/:id", NewEventsHandler(svc, cfg, shutdown).StreamContest)
@@ -68,7 +67,7 @@ func TestStreamContest_SnapshotThenEventsUntilDeleted(t *testing.T) {
 
 	svc := mocks.NewStreamService(t)
 	svc.EXPECT().Subscribe(mock.Anything, contestID, "v@b.com", "").Return(&service.Subscription{
-		Snapshot:   &internalapi.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`), Participants: json.RawMessage(`[]`)},
+		Snapshot:   &contracts.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`), Participants: json.RawMessage(`[]`)},
 		SnapshotID: "7-0",
 		Events:     ch,
 		Stop:       func() { stopped = true },

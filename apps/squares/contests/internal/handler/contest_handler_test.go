@@ -15,7 +15,6 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/maxmorhardt/maxstash/libs/platform/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -50,8 +49,8 @@ func TestGetContestsByOwner_Success(t *testing.T) {
 func authenticatedMiddleware(userID string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := &api.Claims{Email: userID, EmailVerified: true, Name: "Test", Expire: 9999999999}
-		reqctx.SetGinContextValue(c, api.UserKey, userID)
-		reqctx.SetGinContextValue(c, api.ClaimsKey, claims)
+		api.SetContextValue(c, api.UserKey, userID)
+		api.SetContextValue(c, api.ClaimsKey, claims)
 		c.Next()
 	}
 }

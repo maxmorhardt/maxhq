@@ -13,9 +13,9 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `realtime/` - server-sent events for one contest, resumable with `Last-Event-ID`. Owns no data.
 - Each service is its own Go module, image (`maxmorhardt/squares-<service>`), Argo CD Application, and release-please component. Its Helm chart is `squares-<service>` in the `charts` repo. A service never imports another service's packages; Go's `internal` rule enforces it.
 - Shared code lives in two library modules, consumed through `replace` directives:
-  - `libs/platform` - infrastructure every Go service uses: config, database, Redis (cache, revocations, rate limits, idempotency), streams (outbox, relay, consumers), middleware, server, metrics.
-  - `libs/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`internalapi`).
-- Everything sits behind the `maxstash` Envoy Gateway at `api.maxstash.io/squares`. The gateway validates the Dex token and passes its claims as `X-Auth-*` headers.
+  - `libs/platform` - infrastructure every Go service uses: config, database, Redis (cache, revocations, idempotency), streams (outbox, relay, consumers), middleware, server, metrics.
+  - `libs/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
+- Everything sits behind the `maxstash` Envoy Gateway at `api.maxstash.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
 
 ## Service Boundaries
 
@@ -43,14 +43,14 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
    - Services translate `gorm.ErrRecordNotFound` into a domain error; repositories pass GORM errors through unchanged.
 4. Context is a first-class parameter
    - `context.Context` comes first in any function crossing a layer or touching Postgres or Redis.
-   - Pull loggers from context with `reqctx.LoggerFromContext(ctx)`. Never call `slog.Default()` in a service or repository.
+   - Pull loggers from context with `logging.FromContext(ctx)`. Never call `slog.Default()` in a service or repository.
 5. Migrations own the schema
    - Changing a model means adding a migration in the owning service's `internal/migrations`.
    - Migrations are embedded and applied at startup with `search_path` set to the service's schema.
 6. Identity stays a plain value
    - Handlers read identity with `c.GetString(api.UserKey)` and pass it down as a `string`. Services never depend on `*gin.Context`.
 7. Redis outages degrade, they do not fail requests
-   - Caches, rate limits, idempotency, and revocation checks fail open. Events cannot: they wait in the outbox until Redis is back.
+   - Caches, idempotency, and revocation checks fail open. Events cannot: they wait in the outbox until Redis is back.
 
 ## Agent Instructions
 

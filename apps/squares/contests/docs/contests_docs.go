@@ -1245,7 +1245,7 @@ const docTemplatecontests = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internalapi.UserActivitySummary"
+                            "$ref": "#/definitions/contracts.UserActivitySummary"
                         }
                     },
                     "500": {
@@ -1486,7 +1486,7 @@ const docTemplatecontests = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internalapi.UserActiveContest"
+                                "$ref": "#/definitions/contracts.UserActiveContest"
                             }
                         }
                     },
@@ -1575,7 +1575,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "internalapi.UserActiveContest": {
+        "contracts.UserActiveContest": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1596,13 +1596,13 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "internalapi.UserActivitySummary": {
+        "contracts.UserActivitySummary": {
             "type": "object",
             "properties": {
                 "activeContests": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internalapi.UserActiveContest"
+                        "$ref": "#/definitions/contracts.UserActiveContest"
                     }
                 },
                 "firstActivity": {

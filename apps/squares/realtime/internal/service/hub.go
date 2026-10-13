@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 	"github.com/redis/go-redis/v9"
 )
@@ -122,7 +122,7 @@ func (h *Hub) drop(l *Listener) {
 
 // reads until ctx ends; listeners only receive entries while this is running
 func (h *Hub) Run(ctx context.Context) {
-	log := reqctx.LoggerFromContext(ctx).With("component", "stream-hub")
+	log := logging.FromContext(ctx).With("component", "stream-hub")
 
 	for ctx.Err() == nil {
 		positions := h.positions()

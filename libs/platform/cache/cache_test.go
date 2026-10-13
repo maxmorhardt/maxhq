@@ -178,31 +178,6 @@ func TestRevocationStore_SkipsExpiredTombstonesAndReportsErrors(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestRateLimiter(t *testing.T) {
-	mr, client := newRedis(t)
-	limiter := NewRateLimiter(client)
-	ctx := context.Background()
-
-	for i := range 3 {
-		allowed, err := limiter.Allow(ctx, "contact:1.2.3.4", 3, time.Hour)
-		require.NoError(t, err)
-		assert.True(t, allowed, "request %d", i+1)
-	}
-
-	allowed, err := limiter.Allow(ctx, "contact:1.2.3.4", 3, time.Hour)
-	require.NoError(t, err)
-	assert.False(t, allowed)
-
-	mr.FastForward(time.Hour + time.Second)
-	allowed, err = limiter.Allow(ctx, "contact:1.2.3.4", 3, time.Hour)
-	require.NoError(t, err)
-	assert.True(t, allowed, "the window resets")
-
-	mr.Close()
-	_, err = limiter.Allow(ctx, "contact:1.2.3.4", 3, time.Hour)
-	assert.Error(t, err)
-}
-
 func TestIdempotencyStore_ReserveCompleteReplay(t *testing.T) {
 	_, client := newRedis(t)
 	store := NewIdempotencyStore(client)

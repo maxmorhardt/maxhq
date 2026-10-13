@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -43,7 +43,7 @@ func TestGetMyStats_Error(t *testing.T) {
 
 func TestGetMyActiveContests(t *testing.T) {
 	svc := mocks.NewUserActivityService(t)
-	svc.EXPECT().GetActiveContests(mock.Anything, "me@b.com").Return([]internalapi.UserActiveContest{{Name: "C"}}, nil)
+	svc.EXPECT().GetActiveContests(mock.Anything, "me@b.com").Return([]contracts.UserActiveContest{{Name: "C"}}, nil)
 
 	w := doRequest(userActivityRouter(svc), jsonReq(http.MethodGet, "/users/me/active-contests", nil))
 

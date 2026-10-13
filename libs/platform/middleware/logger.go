@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
 func LoggerMiddleware(c *gin.Context) {
@@ -28,8 +27,8 @@ func LoggerMiddleware(c *gin.Context) {
 	)
 
 	// store request id and logger in context
-	reqctx.SetGinContextValue(c, api.RequestIDKey, requestID)
-	reqctx.SetGinContextValue(c, api.LoggerKey, log)
+	api.SetContextValue(c, api.RequestIDKey, requestID)
+	api.SetContextValue(c, api.LoggerKey, log)
 
 	c.Next()
 }

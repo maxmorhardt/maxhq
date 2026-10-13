@@ -1,10 +1,13 @@
 package server
 
 import (
+	"regexp"
+
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
 )
+
+var dangerousChars = regexp.MustCompile(`[<>{}[\]\\|` + "`" + `]`)
 
 // registers the validators every service can use in binding tags
 func SetupValidators() {
@@ -25,5 +28,5 @@ func validateSafeString(fl validator.FieldLevel) bool {
 		return true
 	}
 
-	return strutil.IsSafeString(str)
+	return !dangerousChars.MatchString(str)
 }

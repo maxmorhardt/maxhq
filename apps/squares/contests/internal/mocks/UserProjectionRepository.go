@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	mock "github.com/stretchr/testify/mock"
 
 	time "time"
@@ -145,23 +145,23 @@ func (_c *UserProjectionRepository_FirstActivity_Call) RunAndReturn(run func(con
 }
 
 // GetActiveContests provides a mock function with given fields: ctx, email
-func (_m *UserProjectionRepository) GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error) {
+func (_m *UserProjectionRepository) GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error) {
 	ret := _m.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetActiveContests")
 	}
 
-	var r0 []internalapi.UserActiveContest
+	var r0 []contracts.UserActiveContest
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]internalapi.UserActiveContest, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]contracts.UserActiveContest, error)); ok {
 		return rf(ctx, email)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []internalapi.UserActiveContest); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) []contracts.UserActiveContest); ok {
 		r0 = rf(ctx, email)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]internalapi.UserActiveContest)
+			r0 = ret.Get(0).([]contracts.UserActiveContest)
 		}
 	}
 
@@ -193,12 +193,12 @@ func (_c *UserProjectionRepository_GetActiveContests_Call) Run(run func(ctx cont
 	return _c
 }
 
-func (_c *UserProjectionRepository_GetActiveContests_Call) Return(_a0 []internalapi.UserActiveContest, _a1 error) *UserProjectionRepository_GetActiveContests_Call {
+func (_c *UserProjectionRepository_GetActiveContests_Call) Return(_a0 []contracts.UserActiveContest, _a1 error) *UserProjectionRepository_GetActiveContests_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *UserProjectionRepository_GetActiveContests_Call) RunAndReturn(run func(context.Context, string) ([]internalapi.UserActiveContest, error)) *UserProjectionRepository_GetActiveContests_Call {
+func (_c *UserProjectionRepository_GetActiveContests_Call) RunAndReturn(run func(context.Context, string) ([]contracts.UserActiveContest, error)) *UserProjectionRepository_GetActiveContests_Call {
 	_c.Call.Return(run)
 	return _c
 }

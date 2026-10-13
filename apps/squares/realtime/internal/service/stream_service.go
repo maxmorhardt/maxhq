@@ -10,10 +10,10 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -31,7 +31,7 @@ type Event struct {
 
 type Subscription struct {
 	// set when the client could not resume, so it must replace its state before applying Events
-	Snapshot   *internalapi.ContestSnapshot
+	Snapshot   *contracts.ContestSnapshot
 	SnapshotID string
 	// closes when the subscription ends or the viewer falls too far behind
 	Events <-chan Event
@@ -56,7 +56,7 @@ func NewStreamService(rdb redis.Cmdable, hub *Hub, contests clients.ContestAcces
 }
 
 func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user, lastEventID string) (*Subscription, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 	stream := events.ContestStream(contestID)
 
 	// listen before reading the stream bounds, so anything appended from here on is either replayed or delivered live
@@ -112,7 +112,7 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 // replays what came after start, then forwards live entries, skipping any the replay already sent
 func (s *streamService) pump(ctx context.Context, stream, start string, listener *Listener) <-chan Event {
 	out := make(chan Event, eventBuffer)
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	go func() {
 		defer close(out)

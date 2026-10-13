@@ -6,8 +6,8 @@ import (
 	context "context"
 
 	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	events "github.com/maxmorhardt/maxstash/libs/squares/events"
-	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -119,23 +119,23 @@ func (_c *UserActivityService_ApplyUserUpdated_Call) RunAndReturn(run func(conte
 }
 
 // GetActiveContests provides a mock function with given fields: ctx, email
-func (_m *UserActivityService) GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error) {
+func (_m *UserActivityService) GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error) {
 	ret := _m.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetActiveContests")
 	}
 
-	var r0 []internalapi.UserActiveContest
+	var r0 []contracts.UserActiveContest
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]internalapi.UserActiveContest, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]contracts.UserActiveContest, error)); ok {
 		return rf(ctx, email)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []internalapi.UserActiveContest); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) []contracts.UserActiveContest); ok {
 		r0 = rf(ctx, email)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]internalapi.UserActiveContest)
+			r0 = ret.Get(0).([]contracts.UserActiveContest)
 		}
 	}
 
@@ -167,34 +167,34 @@ func (_c *UserActivityService_GetActiveContests_Call) Run(run func(ctx context.C
 	return _c
 }
 
-func (_c *UserActivityService_GetActiveContests_Call) Return(_a0 []internalapi.UserActiveContest, _a1 error) *UserActivityService_GetActiveContests_Call {
+func (_c *UserActivityService_GetActiveContests_Call) Return(_a0 []contracts.UserActiveContest, _a1 error) *UserActivityService_GetActiveContests_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *UserActivityService_GetActiveContests_Call) RunAndReturn(run func(context.Context, string) ([]internalapi.UserActiveContest, error)) *UserActivityService_GetActiveContests_Call {
+func (_c *UserActivityService_GetActiveContests_Call) RunAndReturn(run func(context.Context, string) ([]contracts.UserActiveContest, error)) *UserActivityService_GetActiveContests_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetActivitySummary provides a mock function with given fields: ctx, email
-func (_m *UserActivityService) GetActivitySummary(ctx context.Context, email string) (*internalapi.UserActivitySummary, error) {
+func (_m *UserActivityService) GetActivitySummary(ctx context.Context, email string) (*contracts.UserActivitySummary, error) {
 	ret := _m.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetActivitySummary")
 	}
 
-	var r0 *internalapi.UserActivitySummary
+	var r0 *contracts.UserActivitySummary
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*internalapi.UserActivitySummary, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*contracts.UserActivitySummary, error)); ok {
 		return rf(ctx, email)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *internalapi.UserActivitySummary); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *contracts.UserActivitySummary); ok {
 		r0 = rf(ctx, email)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*internalapi.UserActivitySummary)
+			r0 = ret.Get(0).(*contracts.UserActivitySummary)
 		}
 	}
 
@@ -226,12 +226,12 @@ func (_c *UserActivityService_GetActivitySummary_Call) Run(run func(ctx context.
 	return _c
 }
 
-func (_c *UserActivityService_GetActivitySummary_Call) Return(_a0 *internalapi.UserActivitySummary, _a1 error) *UserActivityService_GetActivitySummary_Call {
+func (_c *UserActivityService_GetActivitySummary_Call) Return(_a0 *contracts.UserActivitySummary, _a1 error) *UserActivityService_GetActivitySummary_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *UserActivityService_GetActivitySummary_Call) RunAndReturn(run func(context.Context, string) (*internalapi.UserActivitySummary, error)) *UserActivityService_GetActivitySummary_Call {
+func (_c *UserActivityService_GetActivitySummary_Call) RunAndReturn(run func(context.Context, string) (*contracts.UserActivitySummary, error)) *UserActivityService_GetActivitySummary_Call {
 	_c.Call.Return(run)
 	return _c
 }

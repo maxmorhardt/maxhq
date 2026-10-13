@@ -9,7 +9,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ func NewSnapshotService(contestRepo repository.ContestRepository, participantSer
 }
 
 func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*model.ContestSnapshot, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionView); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

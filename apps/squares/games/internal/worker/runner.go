@@ -8,7 +8,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -36,7 +36,7 @@ func NewRunner(db *gorm.DB, gameService service.GameService, cfg model.WorkerCon
 }
 
 func (r *runner) Start(ctx context.Context) {
-	ctx = reqctx.ContextWithLogger(ctx, reqctx.LoggerFromContext(ctx).With("job", "scores"))
+	ctx = logging.NewContext(ctx, logging.FromContext(ctx).With("job", "scores"))
 	go r.loop(ctx)
 }
 
@@ -57,7 +57,7 @@ func (r *runner) loop(ctx context.Context) {
 }
 
 func (r *runner) runGuarded(ctx context.Context) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// pin a single connection so the advisory lock lives on one session
 	sqlDB, err := r.db.DB()

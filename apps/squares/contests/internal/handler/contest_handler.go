@@ -12,8 +12,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -60,7 +59,7 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 // @Security BearerAuth
 // @Router /contests/owner/{owner} [get]
 func (h *contestHandler) GetContestsByOwner(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse owner from path
 	owner := c.Param("owner")
@@ -73,7 +72,7 @@ func (h *contestHandler) GetContestsByOwner(c *gin.Context) {
 	// extract pagination parameters
 	page, limit, err := h.extractPaginationParams(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		return
 	}
 
@@ -148,13 +147,13 @@ func (h *contestHandler) extractPaginationParams(c *gin.Context) (page, limit in
 // @Security BearerAuth
 // @Router /contests [put]
 func (h *contestHandler) CreateContest(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse request body
 	var req model.CreateContestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Warn("failed to bind create contest json", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(errs.ErrInvalidRequestBody), c))
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
 		return
 	}
 
@@ -172,11 +171,11 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrDatabaseUnavailable):
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestAlreadyExists):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		case errors.Is(err, errs.ErrGameNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		default:
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to create contest", c))
 		}
@@ -206,7 +205,7 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id} [patch]
 func (h *contestHandler) UpdateContest(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestIDParam := c.Param("id")
@@ -227,7 +226,7 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 	var req model.UpdateContestRequest
 	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
 		log.Warn("invalid request body", "error", bindErr)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(errs.ErrInvalidRequestBody), c))
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
 		return
 	}
 
@@ -246,19 +245,19 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrVersionConflict) && expectedVersion != nil:
-			c.JSON(http.StatusPreconditionFailed, api.NewAPIError(http.StatusPreconditionFailed, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusPreconditionFailed, api.NewAPIError(http.StatusPreconditionFailed, api.Message(err), c))
 		case errors.Is(err, errs.ErrVersionConflict):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedContestEdit):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrDatabaseUnavailable):
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		default:
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		}
 		return
 	}
@@ -280,7 +279,7 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id} [delete]
 func (h *contestHandler) DeleteContest(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestIDParam := c.Param("id")
@@ -302,11 +301,11 @@ func (h *contestHandler) DeleteContest(c *gin.Context) {
 	if err = h.contestService.DeleteContest(c.Request.Context(), contestID, user); err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedContestDelete):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to delete contest", c))
 		}
@@ -328,7 +327,7 @@ func (h *contestHandler) DeleteContest(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/start [post]
 func (h *contestHandler) StartContest(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestIDParam := c.Param("id")
@@ -351,11 +350,11 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrVersionConflict):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		default:
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		}
 		return
 	}
@@ -380,7 +379,7 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/quarter-result [post]
 func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestID, err := uuid.Parse(c.Param("id"))
@@ -394,7 +393,7 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 	var req model.QuarterResultRequest
 	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
 		log.Warn("failed to bind request", "error", bindErr)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(errs.ErrInvalidRequestBody), c))
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
 		return
 	}
 
@@ -412,23 +411,23 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			log.Warn("contest not found", "contest_id", contestID)
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, gorm.ErrInvalidData), errors.Is(err, errs.ErrWinnerNotDeterminable):
 			log.Warn("invalid quarter data", "error", err)
 			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid quarter data", c))
 		case errors.Is(err, errs.ErrContestIsGameLinked):
 			log.Warn("manual scoring blocked for game-linked contest", "contest_id", contestID)
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedContestEdit):
 			log.Warn("unauthorized quarter result record", "contest_id", contestID, "user", user)
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrQuarterResultAlreadyExists):
 			log.Warn("quarter results already exists for given quarter")
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(errs.ErrQuarterResultAlreadyExists), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrQuarterResultAlreadyExists), c))
 		case errors.Is(err, errs.ErrContestNotEditable):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		case errors.Is(err, errs.ErrVersionConflict):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		default:
 			log.Error("failed to record quarter result", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to record quarter result", c))
@@ -452,7 +451,7 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/quarter-result/rollback [post]
 func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestID, err := uuid.Parse(c.Param("id"))
@@ -476,16 +475,16 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			log.Warn("contest not found", "contest_id", contestID)
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrContestIsGameLinked):
 			log.Warn("rollback blocked for game-linked contest", "contest_id", contestID)
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedContestEdit):
 			log.Warn("unauthorized quarter result rollback", "contest_id", contestID, "user", user)
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrNoQuarterResultToRollback):
 			log.Warn("no quarter result to roll back", "contest_id", contestID)
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		default:
 			log.Error("failed to roll back quarter result", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to roll back quarter result", c))
@@ -515,7 +514,7 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/squares/{squareId}/claim [post]
 func (h *contestHandler) ClaimSquare(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestIDParam := c.Param("id")
@@ -555,19 +554,19 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrSquareNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrSquareNotFound), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedSquareEdit):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrMissingInitials), errors.Is(err, errs.ErrSquareTaken):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrClaimsNotFound):
-			c.JSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, api.Message(err), c))
 		case errors.Is(err, errs.ErrDatabaseUnavailable):
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		default:
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		}
 		return
 	}
@@ -590,7 +589,7 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/squares/{squareId}/clear [post]
 func (h *contestHandler) ClearSquare(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestIDParam := c.Param("id")
@@ -628,15 +627,15 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrSquareNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrSquareNotFound), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedSquareEdit):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrDatabaseUnavailable):
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		default:
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		}
 		return
 	}
@@ -658,7 +657,7 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/squares/clear-mine [post]
 func (h *contestHandler) ClearMySquares(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	// parse contest id from path
 	contestIDParam := c.Param("id")
@@ -681,13 +680,13 @@ func (h *contestHandler) ClearMySquares(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrDatabaseUnavailable):
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		default:
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		}
 		return
 	}

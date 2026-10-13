@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
 )
 
 type UserActivityHandler interface {
@@ -36,7 +35,7 @@ func (h *userActivityHandler) GetMyStats(c *gin.Context) {
 
 	stats, err := h.userActivityService.GetStats(c.Request.Context(), user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 
@@ -48,7 +47,7 @@ func (h *userActivityHandler) GetMyStats(c *gin.Context) {
 // @Description Returns the non-terminal contests the user owns or participates in, which block account deletion
 // @Tags users
 // @Produce json
-// @Success 200 {array} internalapi.UserActiveContest
+// @Success 200 {array} contracts.UserActiveContest
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /users/me/active-contests [get]
@@ -57,7 +56,7 @@ func (h *userActivityHandler) GetMyActiveContests(c *gin.Context) {
 
 	active, err := h.userActivityService.GetActiveContests(c.Request.Context(), user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, strutil.CapitalizeFirstLetter(err), c))
+		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 

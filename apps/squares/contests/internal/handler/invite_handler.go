@@ -10,8 +10,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -48,7 +47,7 @@ func NewInviteHandler(inviteService service.InviteService) InviteHandler {
 // @Security BearerAuth
 // @Router /contests/{id}/invites [post]
 func (h *inviteHandler) CreateInvite(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -60,7 +59,7 @@ func (h *inviteHandler) CreateInvite(c *gin.Context) {
 	var req model.CreateInviteRequest
 	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
 		log.Warn("failed to bind create invite json", "error", bindErr)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(errs.ErrInvalidRequestBody), c))
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
 		return
 	}
 
@@ -69,13 +68,13 @@ func (h *inviteHandler) CreateInvite(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInvalidSquareCount):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		default:
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to create invite", c))
 		}
@@ -96,7 +95,7 @@ func (h *inviteHandler) CreateInvite(c *gin.Context) {
 // @Failure 500 {object} api.APIError
 // @Router /invites/{token} [get]
 func (h *inviteHandler) GetInvitePreview(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	token := c.Param("token")
 	if token == "" {
@@ -108,9 +107,9 @@ func (h *inviteHandler) GetInvitePreview(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrInviteExpired), errors.Is(err, errs.ErrInviteMaxUsesReached):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		default:
 			log.Error("failed to get invite preview", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get invite", c))
@@ -134,7 +133,7 @@ func (h *inviteHandler) GetInvitePreview(c *gin.Context) {
 // @Security BearerAuth
 // @Router /invites/{token}/redeem [post]
 func (h *inviteHandler) RedeemInvite(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	token := c.Param("token")
 	if token == "" {
@@ -147,15 +146,15 @@ func (h *inviteHandler) RedeemInvite(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrInviteExpired), errors.Is(err, errs.ErrInviteMaxUsesReached):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrAlreadyParticipant):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrNotEnoughSquares):
-			c.JSON(http.StatusUnprocessableEntity, api.NewAPIError(http.StatusUnprocessableEntity, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusUnprocessableEntity, api.NewAPIError(http.StatusUnprocessableEntity, api.Message(err), c))
 		default:
 			log.Error("failed to redeem invite", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to redeem invite", c))
@@ -178,7 +177,7 @@ func (h *inviteHandler) RedeemInvite(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/invites [get]
 func (h *inviteHandler) GetInvites(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -192,9 +191,9 @@ func (h *inviteHandler) GetInvites(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
 			log.Error("failed to get invites", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get invites", c))
@@ -217,7 +216,7 @@ func (h *inviteHandler) GetInvites(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/invites/{inviteId} [delete]
 func (h *inviteHandler) DeleteInvite(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -237,11 +236,11 @@ func (h *inviteHandler) DeleteInvite(c *gin.Context) {
 	if err := h.inviteService.DeleteInvite(c.Request.Context(), contestID, inviteID, user); err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
 			log.Error("failed to delete invite", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to delete invite", c))

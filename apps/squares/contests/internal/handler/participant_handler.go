@@ -11,8 +11,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
-	"github.com/maxmorhardt/maxstash/libs/platform/strutil"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -46,7 +45,7 @@ func NewParticipantHandler(participantService service.ParticipantService) Partic
 // @Security BearerAuth
 // @Router /contests/{id}/participants [get]
 func (h *participantHandler) GetParticipants(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -60,9 +59,9 @@ func (h *participantHandler) GetParticipants(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(errs.ErrContestNotFound), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
 		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(errs.ErrInsufficientRole), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(errs.ErrInsufficientRole), c))
 		default:
 			log.Error("failed to get participants", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get participants", c))
@@ -83,7 +82,7 @@ func (h *participantHandler) GetParticipants(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/me [get]
 func (h *participantHandler) GetMyContests(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	user := c.GetString(api.UserKey)
 	search := strings.TrimSpace(c.Query("search"))
@@ -113,7 +112,7 @@ func (h *participantHandler) GetMyContests(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/participants/{userId} [patch]
 func (h *participantHandler) UpdateParticipant(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -131,7 +130,7 @@ func (h *participantHandler) UpdateParticipant(c *gin.Context) {
 	var req model.UpdateParticipantRequest
 	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
 		log.Warn("failed to bind update participant json", "error", bindErr)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(errs.ErrInvalidRequestBody), c))
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
 		return
 	}
 
@@ -140,14 +139,14 @@ func (h *participantHandler) UpdateParticipant(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrNotParticipant):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrCannotChangeOwner):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrSquareLimitTooLow), errors.Is(err, errs.ErrNotEnoughSquares),
 			errors.Is(err, errs.ErrInvalidSquareCount), errors.Is(err, errs.ErrViewerCannotHaveSquares):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		default:
 			log.Error("failed to update participant", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to update participant", c))
@@ -171,7 +170,7 @@ func (h *participantHandler) UpdateParticipant(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/participants/{userId} [delete]
 func (h *participantHandler) RemoveParticipant(c *gin.Context) {
-	log := reqctx.LoggerFromGinContext(c)
+	log := logging.FromGin(c)
 
 	contestID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -190,11 +189,11 @@ func (h *participantHandler) RemoveParticipant(c *gin.Context) {
 	if err := h.participantService.RemoveParticipant(c.Request.Context(), contestID, targetUserID, user); err != nil {
 		switch {
 		case errors.Is(err, errs.ErrNotParticipant):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrCannotRemoveOwner):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, strutil.CapitalizeFirstLetter(err), c))
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
 			log.Error("failed to remove participant", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to remove participant", c))

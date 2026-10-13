@@ -11,8 +11,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -40,7 +40,7 @@ func TestUserActivity_GetStats_Error(t *testing.T) {
 
 func TestUserActivity_GetActiveContests(t *testing.T) {
 	repo := mocks.NewUserProjectionRepository(t)
-	repo.EXPECT().GetActiveContests(mock.Anything, "a@b.com").Return([]internalapi.UserActiveContest{{Name: "C"}}, nil)
+	repo.EXPECT().GetActiveContests(mock.Anything, "a@b.com").Return([]contracts.UserActiveContest{{Name: "C"}}, nil)
 
 	got, err := service.NewUserActivityService(repo, passTx(), anyEvents()).GetActiveContests(context.Background(), "a@b.com")
 	require.NoError(t, err)

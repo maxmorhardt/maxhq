@@ -11,7 +11,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -51,7 +51,7 @@ func NewInviteService(
 }
 
 func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, req *model.CreateInviteRequest, user string) (*model.ContestInvite, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// reject invites once the contest is in a terminal state
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
@@ -106,7 +106,7 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 }
 
 func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*model.InvitePreviewResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
 	if err != nil {
@@ -142,7 +142,7 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 }
 
 func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*model.ContestParticipant, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// get and validate invite
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
@@ -241,7 +241,7 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 }
 
 func (s *inviteService) GetInvitesByContestID(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestInvite, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// verify user has permission to manage invites
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
@@ -259,7 +259,7 @@ func (s *inviteService) GetInvitesByContestID(ctx context.Context, contestID uui
 }
 
 func (s *inviteService) DeleteInvite(ctx context.Context, contestID, inviteID uuid.UUID, user string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// reject deletes once the contest is in a terminal state
 	contest, err := s.contestRepo.GetByID(ctx, contestID)

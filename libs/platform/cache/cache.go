@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -58,7 +58,7 @@ func (c *redisCache) Delete(ctx context.Context, keys ...string) error {
 
 // a cache outage degrades to hitting the database, never to an error
 func GetOrLoad[T any](ctx context.Context, c Cache, name, k string, ttl time.Duration, load func(context.Context) (T, error)) (T, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	if c != nil {
 		raw, ok, err := c.Get(ctx, k)

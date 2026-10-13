@@ -10,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,7 +32,7 @@ func buildRouter(mw gin.HandlerFunc) (router *gin.Engine, reached *bool) {
 	router = gin.New()
 	router.GET("/protected", mw, func(c *gin.Context) {
 		didReach = true
-		claims := reqctx.ClaimsFromContext(c.Request.Context())
+		claims := api.ClaimsFromContext(c.Request.Context())
 		c.String(http.StatusOK, c.GetString(api.UserKey)+"|"+claims.Name)
 	})
 	return router, &didReach

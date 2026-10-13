@@ -12,7 +12,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -78,7 +78,7 @@ var rolePermissions = map[model.ParticipantRole]map[Action]bool{
 }
 
 func (s *participantService) Authorize(ctx context.Context, contestID uuid.UUID, userID string, act Action) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// for view actions, check if contest is public first
 	if act == ActionView {
@@ -130,7 +130,7 @@ func (s *participantService) GetParticipantsInternal(ctx context.Context, contes
 }
 
 func (s *participantService) fetchParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)
 	if err != nil {
@@ -143,7 +143,7 @@ func (s *participantService) fetchParticipants(ctx context.Context, contestID uu
 }
 
 func (s *participantService) GetMyContests(ctx context.Context, user, search string) ([]model.Contest, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	contests, err := s.contestRepo.GetAllByParticipantUserID(ctx, user, strings.TrimSpace(search))
 	if err != nil {
@@ -161,7 +161,7 @@ func (s *participantService) GetMyContests(ctx context.Context, user, search str
 }
 
 func (s *participantService) UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// check contest is not in a terminal state
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
@@ -260,7 +260,7 @@ func (s *participantService) UpdateParticipant(ctx context.Context, contestID uu
 }
 
 func (s *participantService) RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// check contest is not in a terminal state
 	contest, err := s.contestRepo.GetByID(ctx, contestID)

@@ -15,8 +15,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/worker"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/maxmorhardt/maxstash/libs/platform/server"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 )
@@ -89,7 +89,7 @@ func (a *App) Start(ctx context.Context) {
 		return
 	}
 
-	a.runner.Start(reqctx.ContextWithLogger(ctx, slog.Default().With("component", "scores-worker")))
+	a.runner.Start(logging.NewContext(ctx, slog.Default().With("component", "scores-worker")))
 	slog.Info("scores worker started", "active_interval", a.cfg.Worker.ActiveInterval, "idle_interval", a.cfg.Worker.IdleInterval)
 }
 

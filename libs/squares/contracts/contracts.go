@@ -1,6 +1,6 @@
-// Package internalapi is the contract for the /internal endpoints contests serves to the other squares
+// Package contracts is the contract for the /internal endpoints contests serves to the other squares
 // services. Those routes are never exposed by the gateway and require the shared internal token.
-package internalapi
+package contracts
 
 import (
 	"encoding/json"

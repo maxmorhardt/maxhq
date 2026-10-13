@@ -8,7 +8,7 @@ import (
 
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -19,7 +19,7 @@ type UserProjectionRepository interface {
 	Upsert(ctx context.Context, user *model.User) error
 	CascadeInitials(ctx context.Context, email, initials string) ([]model.Square, error)
 	GetStats(ctx context.Context, email string) (*model.UserStatsResponse, error)
-	GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error)
+	GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error)
 	FirstActivity(ctx context.Context, email string) (*time.Time, error)
 	ScrubUserData(ctx context.Context, email string) error
 }
@@ -144,8 +144,8 @@ func (r *userProjectionRepository) GetStats(ctx context.Context, email string) (
 	return &stats, nil
 }
 
-func (r *userProjectionRepository) GetActiveContests(ctx context.Context, email string) ([]internalapi.UserActiveContest, error) {
-	var contests []internalapi.UserActiveContest
+func (r *userProjectionRepository) GetActiveContests(ctx context.Context, email string) ([]contracts.UserActiveContest, error) {
+	var contests []contracts.UserActiveContest
 
 	// contests that still receive live updates, where the user is the owner or a participant
 	if err := database.Conn(ctx, r.db).Raw(

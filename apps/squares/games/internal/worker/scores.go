@@ -7,7 +7,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/clients"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/metrics"
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 const scheduleWindow = 10 * 24 * time.Hour
@@ -59,7 +59,7 @@ func (w *scoresWorker) run(ctx context.Context) error {
 
 	// stay silent in steady state; only surface actual scoring changes
 	if newScores > 0 {
-		reqctx.LoggerFromContext(ctx).Info("recorded new quarter scores", "count", newScores)
+		logging.FromContext(ctx).Info("recorded new quarter scores", "count", newScores)
 		metrics.AddScoresRecorded(newScores)
 	}
 

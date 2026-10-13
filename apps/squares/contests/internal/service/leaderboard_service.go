@@ -9,7 +9,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 )
 
 const (
@@ -40,7 +40,7 @@ func NewLeaderboardService(repo repository.LeaderboardRepository, c cache.Cache)
 }
 
 func (s *leaderboardService) GetLeaderboard(ctx context.Context, limit int) (*model.LeaderboardResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	if limit <= 0 {
 		limit = DefaultLeaderboardLimit
@@ -102,7 +102,7 @@ func publicName(displayName string) string {
 }
 
 func (s *leaderboardService) GetUserRank(ctx context.Context, email string) (*model.LeaderboardRankResponse, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	rank, err := s.repo.GetUserRank(ctx, email)
 	if err != nil {

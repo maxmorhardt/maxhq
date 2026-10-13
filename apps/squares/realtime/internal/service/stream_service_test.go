@@ -12,8 +12,8 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/mocks"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
-	"github.com/maxmorhardt/maxstash/libs/squares/internalapi"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -51,7 +51,7 @@ func allowAll(t *testing.T, contestID uuid.UUID) *mocks.ContestAccessClient {
 	t.Helper()
 	c := mocks.NewContestAccessClient(t)
 	c.EXPECT().GetSnapshot(mock.Anything, contestID, "v@b.com").
-		Return(&internalapi.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`)}, nil).Maybe()
+		Return(&contracts.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`)}, nil).Maybe()
 	return c
 }
 

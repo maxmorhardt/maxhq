@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	uuid "github.com/google/uuid"
-	internalapi "github.com/maxmorhardt/maxstash/libs/squares/internalapi"
+	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -24,23 +24,23 @@ func (_m *ContestAccessClient) EXPECT() *ContestAccessClient_Expecter {
 }
 
 // GetSnapshot provides a mock function with given fields: ctx, contestID, user
-func (_m *ContestAccessClient) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*internalapi.ContestSnapshot, error) {
+func (_m *ContestAccessClient) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*contracts.ContestSnapshot, error) {
 	ret := _m.Called(ctx, contestID, user)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSnapshot")
 	}
 
-	var r0 *internalapi.ContestSnapshot
+	var r0 *contracts.ContestSnapshot
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (*internalapi.ContestSnapshot, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (*contracts.ContestSnapshot, error)); ok {
 		return rf(ctx, contestID, user)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) *internalapi.ContestSnapshot); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) *contracts.ContestSnapshot); ok {
 		r0 = rf(ctx, contestID, user)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*internalapi.ContestSnapshot)
+			r0 = ret.Get(0).(*contracts.ContestSnapshot)
 		}
 	}
 
@@ -73,12 +73,12 @@ func (_c *ContestAccessClient_GetSnapshot_Call) Run(run func(ctx context.Context
 	return _c
 }
 
-func (_c *ContestAccessClient_GetSnapshot_Call) Return(_a0 *internalapi.ContestSnapshot, _a1 error) *ContestAccessClient_GetSnapshot_Call {
+func (_c *ContestAccessClient_GetSnapshot_Call) Return(_a0 *contracts.ContestSnapshot, _a1 error) *ContestAccessClient_GetSnapshot_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ContestAccessClient_GetSnapshot_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (*internalapi.ContestSnapshot, error)) *ContestAccessClient_GetSnapshot_Call {
+func (_c *ContestAccessClient_GetSnapshot_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (*contracts.ContestSnapshot, error)) *ContestAccessClient_GetSnapshot_Call {
 	_c.Call.Return(run)
 	return _c
 }

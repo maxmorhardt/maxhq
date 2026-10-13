@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/libs/platform/api"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 )
 
 const (
@@ -47,7 +47,7 @@ func Idempotency(store cache.IdempotencyStore, service string) gin.HandlerFunc {
 			return
 		}
 
-		log := reqctx.LoggerFromGinContext(c)
+		log := logging.FromGin(c)
 		if len(idemKey) > maxIdempotencyKeyLen {
 			c.AbortWithStatusJSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Idempotency-Key must be at most 255 characters", c))
 			return

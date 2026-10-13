@@ -6,7 +6,7 @@ import (
 
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
 )
@@ -20,7 +20,7 @@ var (
 // game updates refresh contests' copy of the game and move linked contests forward
 func GameHandler(gameSync service.GameSyncService) streams.Handler {
 	return func(ctx context.Context, entry streams.Entry) error {
-		log := reqctx.LoggerFromContext(ctx)
+		log := logging.FromContext(ctx)
 
 		if entry.Type != events.GameUpdatedType {
 			log.Warn("ignoring unknown game event")
@@ -41,7 +41,7 @@ func GameHandler(gameSync service.GameSyncService) streams.Handler {
 // profile changes cascade onto squares; deletions scrub the user from every contest
 func UserHandler(userActivity service.UserActivityService) streams.Handler {
 	return func(ctx context.Context, entry streams.Entry) error {
-		log := reqctx.LoggerFromContext(ctx)
+		log := logging.FromContext(ctx)
 
 		switch entry.Type {
 		case events.UserUpdatedType:

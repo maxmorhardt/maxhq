@@ -10,7 +10,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/streams"
 	"github.com/maxmorhardt/maxstash/libs/squares/events"
 )
@@ -44,7 +44,7 @@ func NewGameService(gameRepo repository.GameRepository, tx database.Transactor, 
 }
 
 func (s *gameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	games, err := cache.GetOrLoad(ctx, s.cache, upcomingCacheName, upcomingCacheKey, upcomingCacheTTL, s.gameRepo.GetUpcoming)
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *gameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
 
 // stores each scoreboard snapshot and emits game.updated for every game that actually changed
 func (s *gameService) Ingest(ctx context.Context, games []model.ESPNGame) (int, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	newScores := 0
 	anyChanged := false
@@ -129,7 +129,7 @@ func (s *gameService) ingestOne(ctx context.Context, eg *model.ESPNGame) (create
 }
 
 func (s *gameService) Activity(ctx context.Context) (model.GameActivity, error) {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	// a live game means the worker should poll aggressively
 	live, err := s.gameRepo.HasLiveGame(ctx)

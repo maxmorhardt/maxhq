@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -71,8 +71,8 @@ func (r *Relay) Notify() {
 }
 
 func (r *Relay) Run(ctx context.Context) {
-	log := reqctx.LoggerFromContext(ctx).With("component", "outbox-relay")
-	ctx = reqctx.ContextWithLogger(ctx, log)
+	log := logging.FromContext(ctx).With("component", "outbox-relay")
+	ctx = logging.NewContext(ctx, log)
 
 	ticker := time.NewTicker(r.interval)
 	defer ticker.Stop()
@@ -102,7 +102,7 @@ func (r *Relay) Flush(ctx context.Context) {
 	for {
 		published, more, err := r.publishBatch(ctx)
 		if err != nil {
-			reqctx.LoggerFromContext(ctx).Warn("outbox relay pass failed, retrying next tick", "error", err, "published", published)
+			logging.FromContext(ctx).Warn("outbox relay pass failed, retrying next tick", "error", err, "published", published)
 			return
 		}
 		if !more {
@@ -166,7 +166,7 @@ func (r *Relay) recordBacklog(ctx context.Context) {
 		Select("COUNT(*) AS pending, MIN(created_at) AS oldest").
 		Where("published_at IS NULL").
 		Scan(&backlog).Error; err != nil {
-		reqctx.LoggerFromContext(ctx).Warn("failed to measure outbox backlog", "error", err)
+		logging.FromContext(ctx).Warn("failed to measure outbox backlog", "error", err)
 		return
 	}
 
@@ -182,11 +182,11 @@ func (r *Relay) cleanup(ctx context.Context) {
 		Where("published_at < ?", time.Now().Add(-publishedRetention)).
 		Delete(&OutboxEvent{})
 	if res.Error != nil {
-		reqctx.LoggerFromContext(ctx).Warn("failed to prune published outbox events", "error", res.Error)
+		logging.FromContext(ctx).Warn("failed to prune published outbox events", "error", res.Error)
 		return
 	}
 	if res.RowsAffected > 0 {
-		reqctx.LoggerFromContext(ctx).Info("pruned published outbox events", "count", res.RowsAffected)
+		logging.FromContext(ctx).Info("pruned published outbox events", "count", res.RowsAffected)
 	}
 }
 

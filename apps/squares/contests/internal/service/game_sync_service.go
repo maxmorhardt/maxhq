@@ -10,7 +10,7 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/reqctx"
+	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -41,7 +41,7 @@ func NewGameSyncService(
 }
 
 func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game) error {
-	log := reqctx.LoggerFromContext(ctx).With("game_id", game.ID)
+	log := logging.FromContext(ctx).With("game_id", game.ID)
 
 	if err := s.gameRepo.Upsert(ctx, game); err != nil {
 		log.Error("failed to update game projection", "error", err)
@@ -96,7 +96,7 @@ func (s *gameSyncService) reconcileContest(ctx context.Context, contestID uuid.U
 
 // idempotent: replaying the same game state leaves the contest where it already is
 func (s *gameSyncService) reconcile(ctx context.Context, contest *model.Contest, game *model.Game) error {
-	log := reqctx.LoggerFromContext(ctx)
+	log := logging.FromContext(ctx)
 
 	if contest.Status.IsTerminal() {
 		return nil

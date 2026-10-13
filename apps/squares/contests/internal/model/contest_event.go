@@ -32,7 +32,7 @@ type ContestEvent struct {
 	Participant   *ContestParticipant  `json:"participant,omitempty"`
 }
 
-// what realtime needs to open a stream: the full contest and who is in it (internalapi.ContestSnapshot on the wire)
+// what realtime needs to open a stream: the full contest and who is in it (contracts.ContestSnapshot on the wire)
 type ContestSnapshot struct {
 	Contest      *Contest             `json:"contest"`
 	Participants []ContestParticipant `json:"participants"`
