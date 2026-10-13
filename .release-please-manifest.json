@@ -3,5 +3,6 @@
   "apps/squares/web": "2.2.1",
   "apps/squares/games": "1.0.0\r",
   "apps/squares/contests": "1.0.0\r",
-  "apps/squares/accounts": "1.0.0\r"
+  "apps/squares/accounts": "1.0.0\r",
+  "apps/squares/realtime": "1.0.0\r"
 }
