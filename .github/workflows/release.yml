@@ -1,0 +1,197 @@
+name: Release
+
+# release-please tags each package as <component>/<version>; the tag is what builds, publishes, and deploys it
+on:
+  push:
+    tags:
+      - 'maxstash/*'
+      - 'squares/*'
+      - 'squares-api/*'
+      - 'maxstash-gateway/*'
+      - 'cloudflare-ddns/*'
+      - 'cloudflare-cidr/*'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  parse:
+    name: Parse tag
+    runs-on: ubuntu-latest
+    outputs:
+      component: ${{ steps.parse.outputs.component }}
+      version: ${{ steps.parse.outputs.version }}
+    steps:
+      - name: Split tag into component and version
+        id: parse
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          COMPONENT="${TAG%%/*}"
+          VERSION="${TAG#*/}"
+          echo "component=${COMPONENT}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Component: ${COMPONENT}, Version: ${VERSION}"
+
+  # maxstash
+
+  maxstash-node:
+    needs: parse
+    if: needs.parse.outputs.component == 'maxstash'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      working_directory: apps/maxstash
+      artifact_suffix: -maxstash
+
+  maxstash-docker:
+    needs: [parse, maxstash-node]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      app_version: ${{ needs.parse.outputs.version }}
+      context: apps/maxstash
+      artifact_name: dist-maxstash
+      artifact_path: apps/maxstash/dist
+      push: true
+    secrets: inherit
+
+  maxstash-chart:
+    needs: parse
+    if: needs.parse.outputs.component == 'maxstash'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: chart
+      chart_name: maxstash
+      working_directory: apps/maxstash
+      push: true
+
+  maxstash-deploy:
+    needs: [parse, maxstash-docker, maxstash-chart]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: maxstash
+      image_tag: ${{ needs.parse.outputs.version }}
+      chart_version: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  # squares web
+
+  squares-web-node:
+    needs: parse
+    if: needs.parse.outputs.component == 'squares'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      working_directory: apps/squares/web
+      artifact_suffix: -squares
+
+  squares-web-docker:
+    needs: [parse, squares-web-node]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      app_version: ${{ needs.parse.outputs.version }}
+      context: apps/squares/web
+      artifact_name: dist-squares
+      artifact_path: apps/squares/web/dist
+      push: true
+    secrets: inherit
+
+  squares-web-chart:
+    needs: parse
+    if: needs.parse.outputs.component == 'squares'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: chart
+      chart_name: squares
+      working_directory: apps/squares/web
+      push: true
+
+  squares-web-deploy:
+    needs: [parse, squares-web-docker, squares-web-chart]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: squares
+      image_tag: ${{ needs.parse.outputs.version }}
+      chart_version: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  # squares api: one module, four images, one chart, versioned together
+
+  squares-api-go:
+    needs: parse
+    if: needs.parse.outputs.component == 'squares-api'
+    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
+    with:
+      repository: ${{ github.repository }}
+      working_directory: apps/squares/api
+      swagger: true
+      build: false
+
+  squares-api-docker:
+    needs: [parse, squares-api-go]
+    strategy:
+      matrix:
+        service: [contests, games, accounts, realtime]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares-${{ matrix.service }}
+      app_version: ${{ needs.parse.outputs.version }}
+      context: apps/squares/api
+      build_args: SERVICE=${{ matrix.service }}
+      push: true
+    secrets: inherit
+
+  squares-api-chart:
+    needs: parse
+    if: needs.parse.outputs.component == 'squares-api'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: chart
+      chart_name: squares-api
+      working_directory: apps/squares/api
+      push: true
+
+  squares-api-deploy:
+    needs: [parse, squares-api-docker, squares-api-chart]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: squares-api
+      image_tag: ${{ needs.parse.outputs.version }}
+      chart_version: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  # infra charts: a chart release is the deploy
+
+  chart:
+    needs: parse
+    if: contains(fromJSON('["maxstash-gateway","cloudflare-ddns","cloudflare-cidr"]'), needs.parse.outputs.component)
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: ${{ needs.parse.outputs.component }}
+      chart_name: ${{ needs.parse.outputs.component }}
+      working_directory: charts
+      push: true
+
+  chart-deploy:
+    needs: [parse, chart]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: ${{ needs.parse.outputs.component }}
+      chart_version: ${{ needs.parse.outputs.version }}
+    secrets: inherit

@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.husky/_
+.env
+.env.*
+!.env.example
+.idea
+.DS_Store
+.vscode/*
+!.vscode/extensions.json

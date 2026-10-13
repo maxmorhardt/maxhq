@@ -60,7 +60,7 @@
 - `prealloc`, `gocritic`, and `unparam` are enabled, so give slices capacity hints and drop unused parameters.
 - Avoid comments unless the code is genuinely non-obvious. Prefer expressive names.
 - When adding a NATS subject, update the WS service consumer in the same change or the event is published into the void.
-- Do not change the Helm chart from this repo. Coordinate through the `charts` workspace.
+- The Helm chart lives in `chart/` and ships at the module's version. A change that needs a new env var, port, or route updates the chart in the same commit.
 
 ## New Endpoint Checklist
 
@@ -124,4 +124,4 @@ Example commit subjects:
 - New dependencies when the stdlib or an existing internal package is sufficient.
 - Schema changes made by editing a model without a matching migration.
 - Lowering the coverage threshold or disabling a linter to get a build green.
-- Editing the Helm chart or the Argo CD Application from this repo.
+- Editing the Argo CD Application from this repo.

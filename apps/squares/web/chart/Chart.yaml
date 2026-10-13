@@ -3,3 +3,4 @@ name: squares
 description: Chart for squares
 type: application
 version: 1.0.2
+appVersion: 2.2.1

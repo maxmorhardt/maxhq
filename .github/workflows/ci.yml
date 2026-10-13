@@ -1,0 +1,191 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      maxstash: ${{ steps.filter.outputs.maxstash == 'true' || steps.filter.outputs.workflows == 'true' }}
+      squares_web: ${{ steps.filter.outputs.squares_web == 'true' || steps.filter.outputs.workflows == 'true' }}
+      squares_api: ${{ steps.filter.outputs.squares_api == 'true' || steps.filter.outputs.workflows == 'true' }}
+      charts: ${{ steps.filter.outputs.charts == 'true' || steps.filter.outputs.workflows == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            maxstash:
+              - 'apps/maxstash/**'
+            squares_web:
+              - 'apps/squares/web/**'
+            squares_api:
+              - 'apps/squares/api/**'
+            charts:
+              - 'charts/**'
+            workflows:
+              - '.github/workflows/**'
+
+  # maxstash
+
+  maxstash-node:
+    needs: changes
+    if: needs.changes.outputs.maxstash == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      working_directory: apps/maxstash
+      artifact_suffix: -maxstash
+
+  maxstash-chart:
+    needs: changes
+    if: needs.changes.outputs.maxstash == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: chart
+      chart_name: maxstash
+      working_directory: apps/maxstash
+
+  maxstash-docker:
+    needs: maxstash-node
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxstash
+      context: apps/maxstash
+      artifact_name: dist-maxstash
+      artifact_path: apps/maxstash/dist
+    secrets: inherit
+
+  # squares web
+
+  squares-web-node:
+    needs: changes
+    if: needs.changes.outputs.squares_web == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      working_directory: apps/squares/web
+      artifact_suffix: -squares
+
+  squares-web-chart:
+    needs: changes
+    if: needs.changes.outputs.squares_web == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: chart
+      chart_name: squares
+      working_directory: apps/squares/web
+
+  squares-web-docker:
+    needs: squares-web-node
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      context: apps/squares/web
+      artifact_name: dist-squares
+      artifact_path: apps/squares/web/dist
+    secrets: inherit
+
+  # squares api
+
+  squares-api-go:
+    needs: changes
+    if: needs.changes.outputs.squares_api == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
+    with:
+      repository: ${{ github.repository }}
+      working_directory: apps/squares/api
+      swagger: true
+      build: false
+
+  squares-api-chart:
+    needs: changes
+    if: needs.changes.outputs.squares_api == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: chart
+      chart_name: squares-api
+      working_directory: apps/squares/api
+
+  squares-api-docker:
+    needs: squares-api-go
+    strategy:
+      matrix:
+        service: [contests, games, accounts, realtime]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares-${{ matrix.service }}
+      context: apps/squares/api
+      build_args: SERVICE=${{ matrix.service }}
+    secrets: inherit
+
+  # infra charts
+
+  charts:
+    needs: changes
+    if: needs.changes.outputs.charts == 'true'
+    strategy:
+      matrix:
+        chart: [maxstash-gateway, cloudflare-ddns, cloudflare-cidr]
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: ${{ matrix.chart }}
+      chart_name: ${{ matrix.chart }}
+      working_directory: charts
+
+  # single required check; skipped jobs count as passing because their paths did not change
+  ci-complete:
+    name: CI Complete
+    if: always()
+    needs:
+      - maxstash-node
+      - maxstash-chart
+      - maxstash-docker
+      - squares-web-node
+      - squares-web-chart
+      - squares-web-docker
+      - squares-api-go
+      - squares-api-chart
+      - squares-api-docker
+      - charts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify no job failed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "one or more CI jobs failed"
+              exit 1
+            fi
+          done

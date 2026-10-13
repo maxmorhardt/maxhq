@@ -3,3 +3,4 @@ name: maxstash
 description: Chart for maxstash
 type: application
 version: 1.0.2
+appVersion: 3.0.2

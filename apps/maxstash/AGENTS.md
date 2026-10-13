@@ -2,11 +2,11 @@
 
 ## Project Context
 
-- Project: Maxstash (`github.com/maxmorhardt/maxstash`)
+- Project: Maxstash site (`apps/maxstash` in `github.com/maxmorhardt/maxstash`)
 - Language: TypeScript, React 19
 - Purpose: Personal portfolio site. Vite build routed and prerendered by React Router framework mode, styled with Material UI over Emotion from a single themed token set.
 - Target environments: Fully prerendered static HTML served by NGINX in a container on Kubernetes. Public and search-indexed.
-- Related repos: `charts` (the `maxstash` and `maxstash-gateway` Helm charts), `k8s` (the Argo CD Application), `workflows` (shared CI).
+- Related: `chart/` (this app's Helm chart, released with it), `charts/maxstash-gateway` at the repo root, `k8s` (the Argo CD Application), `workflows` (shared CI).
 
 ## Repository Layout
 
@@ -60,7 +60,7 @@
 - `HeroTerminal` deliberately keeps its own hard-coded GitHub-dark palette in both color schemes. It is a terminal, not a themed surface.
 - Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
 - **Always brace control statements.** Never a one-line `if (x) return;` — write it as `if (x) {`, newline, body, newline, `}`. Enforced by the `curly` ESLint rule.
-- Do not change the Helm chart from this repo. Coordinate through the `charts` workspace.
+- The Helm chart lives in `chart/` and ships at the app's version. Follow the chart conventions in `chart/DEPENDENCIES.md` and the root `AGENTS.md`.
 
 ## New Page Checklist
 
@@ -143,4 +143,4 @@ Example commit subjects:
 - Reading `window` or `localStorage` outside an effect or guard.
 - New dependencies when MUI, React, or an existing hook is sufficient.
 - Lowering a coverage threshold or disabling a lint rule to get a build green.
-- Editing the Helm chart or the Argo CD Application from this repo.
+- Editing the Argo CD Application from this repo.

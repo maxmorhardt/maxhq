@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "tag-separator": "/",
+  "include-v-in-tag": false,
+  "include-component-in-tag": true,
+  "separate-pull-requests": true,
+  "packages": {
+    "apps/maxstash": {
+      "release-type": "node",
+      "component": "maxstash",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        { "type": "yaml", "path": "chart/Chart.yaml", "jsonpath": "$.version" },
+        { "type": "yaml", "path": "chart/Chart.yaml", "jsonpath": "$.appVersion" }
+      ]
+    },
+    "apps/squares/web": {
+      "release-type": "node",
+      "component": "squares",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        { "type": "yaml", "path": "chart/Chart.yaml", "jsonpath": "$.version" },
+        { "type": "yaml", "path": "chart/Chart.yaml", "jsonpath": "$.appVersion" }
+      ]
+    },
+    "apps/squares/api": {
+      "release-type": "go",
+      "component": "squares-api",
+      "changelog-path": "CHANGELOG.md",
+      "release-as": "3.0.0",
+      "extra-files": [
+        { "type": "yaml", "path": "chart/Chart.yaml", "jsonpath": "$.version" },
+        { "type": "yaml", "path": "chart/Chart.yaml", "jsonpath": "$.appVersion" }
+      ]
+    },
+    "charts/maxstash-gateway": { "release-type": "helm", "component": "maxstash-gateway" },
+    "charts/cloudflare-ddns": { "release-type": "helm", "component": "cloudflare-ddns" },
+    "charts/cloudflare-cidr": { "release-type": "helm", "component": "cloudflare-cidr" }
+  }
+}
