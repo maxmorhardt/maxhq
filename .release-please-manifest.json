@@ -1,4 +1,5 @@
 {
   "apps/maxstash": "3.0.3",
-  "apps/squares/web": "2.2.1"
+  "apps/squares/web": "2.2.1",
+  "apps/squares/games": "1.0.0\r"
 }
