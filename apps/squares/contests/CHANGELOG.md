@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/maxmorhardt/maxstash/compare/squares-contests/1.1.0...squares-contests/2.0.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **squares:** bulk random claims, REST methods, simpler contest filters ([#86](https://github.com/maxmorhardt/maxstash/issues/86))
+
+### Features
+
+* **squares:** bulk random claims, REST methods, simpler contest filters ([#86](https://github.com/maxmorhardt/maxstash/issues/86)) ([2561417](https://github.com/maxmorhardt/maxstash/commit/2561417aa5f646f99d8697e4bbff6a83eb09b91f))
+
 ## [1.1.0](https://github.com/maxmorhardt/maxstash/compare/squares-contests/1.0.0...squares-contests/1.1.0) (2026-10-13)
 
 
