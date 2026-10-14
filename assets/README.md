@@ -24,7 +24,7 @@ cp assets/squares/favicon/* apps/squares/web/public/
 cp assets/maxstash/*.svg apps/maxstash/public/
 ```
 
-The favicon set is generated from the logo by `scripts/favicon/gen_favicons.py` in the private `maxstash-private` repo.
+The favicon set is generated from the logo.
 
 When adding assets for a new app, create a new top-level folder named after the app and follow the existing structure (a favicon set, plus any logos/wordmarks).
 
