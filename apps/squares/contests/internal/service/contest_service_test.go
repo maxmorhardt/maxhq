@@ -980,3 +980,71 @@ func TestAutoStart_UpdateFails(t *testing.T) {
 
 	assert.ErrorIs(t, err, errs.ErrVersionConflict)
 }
+
+func claimCtx() context.Context {
+	return context.WithValue(context.Background(), api.ClaimsKey, &api.Claims{Name: "Display Name"})
+}
+
+func authorized(t *testing.T, err error) *mocks.ParticipantService {
+	pSvc := mocks.NewParticipantService(t)
+	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, "u", service.ActionClaimSquare).Return(err)
+	return pSvc
+}
+
+func TestClaimRandomSquares_ClaimsAndPublishesEach(t *testing.T) {
+	contestID := uuid.New()
+	squares := []model.Square{{ID: uuid.New(), Owner: "u"}, {ID: uuid.New(), Owner: "u"}}
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().ClaimRandomSquares(mock.Anything, contestID, 3, "AB", "u", "Display Name").Return(squares, nil)
+
+	events := &mocks.ContestEventPublisher{}
+	events.On("PublishSquareUpdate", mock.Anything, contestID, "u", mock.Anything).Return(nil).Times(2)
+
+	svc := service.NewContestService(repo, mocks.NewParticipantRepository(t), &mocks.GameProjectionRepository{}, anyUser(), passTx(), events, authorized(t, nil))
+	got, err := svc.ClaimRandomSquares(claimCtx(), contestID, 3, "u")
+
+	require.NoError(t, err)
+	assert.Equal(t, 3, got.Requested)
+	assert.Len(t, got.Squares, 2)
+	events.AssertExpectations(t)
+}
+
+func TestClaimRandomSquares_PassesThroughNotParticipant(t *testing.T) {
+	_, err := contestSvc(mocks.NewContestRepository(t), mocks.NewParticipantRepository(t), authorized(t, errs.ErrNotParticipant)).
+		ClaimRandomSquares(claimCtx(), uuid.New(), 1, "u")
+	assert.ErrorIs(t, err, errs.ErrNotParticipant)
+}
+
+func TestClaimRandomSquares_ViewerCannotClaim(t *testing.T) {
+	_, err := contestSvc(mocks.NewContestRepository(t), mocks.NewParticipantRepository(t), authorized(t, errs.ErrInsufficientRole)).
+		ClaimRandomSquares(claimCtx(), uuid.New(), 1, "u")
+	assert.ErrorIs(t, err, errs.ErrUnauthorizedSquareEdit)
+}
+
+func TestClaimRandomSquares_NeedsClaimsAndInitials(t *testing.T) {
+	_, err := contestSvc(mocks.NewContestRepository(t), mocks.NewParticipantRepository(t), authorized(t, nil)).
+		ClaimRandomSquares(context.Background(), uuid.New(), 1, "u")
+	assert.ErrorIs(t, err, errs.ErrClaimsNotFound)
+
+	userRepo := &mocks.UserProjectionRepository{}
+	userRepo.On("GetOrCreate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&model.User{Email: "u"}, nil)
+	svc := service.NewContestService(mocks.NewContestRepository(t), mocks.NewParticipantRepository(t), &mocks.GameProjectionRepository{}, userRepo, passTx(), anyEvents(), authorized(t, nil))
+	_, err = svc.ClaimRandomSquares(claimCtx(), uuid.New(), 1, "u")
+	assert.ErrorIs(t, err, errs.ErrMissingInitials)
+
+	failing := &mocks.UserProjectionRepository{}
+	failing.On("GetOrCreate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, assert.AnError)
+	svc = service.NewContestService(mocks.NewContestRepository(t), mocks.NewParticipantRepository(t), &mocks.GameProjectionRepository{}, failing, passTx(), anyEvents(), authorized(t, nil))
+	_, err = svc.ClaimRandomSquares(claimCtx(), uuid.New(), 1, "u")
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
+func TestClaimRandomSquares_ReturnsRepositoryErrors(t *testing.T) {
+	for _, want := range []error{errs.ErrSquareLimitReached, errs.ErrNoEmptySquares, assert.AnError} {
+		repo := mocks.NewContestRepository(t)
+		repo.EXPECT().ClaimRandomSquares(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, want)
+
+		_, err := contestSvc(repo, mocks.NewParticipantRepository(t), authorized(t, nil)).ClaimRandomSquares(claimCtx(), uuid.New(), 2, "u")
+		assert.ErrorIs(t, err, want)
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -607,4 +608,48 @@ func TestMain(m *testing.M) {
 	server.SetupValidators()
 	server.RegisterValidation("contestname", ValidateContestName)
 	os.Exit(m.Run())
+}
+
+func postRandomClaim(svc *mocks.ContestService, contestID, body string) int {
+	r := gin.New()
+	r.Use(authenticatedMiddleware("owner1"))
+	r.POST("/contests/:id/squares/random", NewContestHandler(svc).ClaimRandomSquares)
+
+	req, _ := http.NewRequest(http.MethodPost, "/contests/"+contestID+"/squares/random", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	return doRequest(r, req).Code
+}
+
+func TestClaimRandomSquares_Success(t *testing.T) {
+	contestID := uuid.New()
+	svc := mocks.NewContestService(t)
+	svc.EXPECT().ClaimRandomSquares(mock.Anything, contestID, 4, "owner1").
+		Return(&model.RandomClaimResponse{Squares: []model.Square{{ID: uuid.New()}}, Requested: 4}, nil)
+
+	assert.Equal(t, http.StatusOK, postRandomClaim(svc, contestID.String(), `{"count":4}`))
+}
+
+func TestClaimRandomSquares_RejectsBadInput(t *testing.T) {
+	assert.Equal(t, http.StatusBadRequest, postRandomClaim(mocks.NewContestService(t), "nope", `{"count":1}`))
+	for _, body := range []string{`{}`, `{"count":0}`, `{"count":101}`, `{`} {
+		assert.Equal(t, http.StatusBadRequest, postRandomClaim(mocks.NewContestService(t), uuid.NewString(), body), body)
+	}
+}
+
+func TestClaimRandomSquares_MapsErrors(t *testing.T) {
+	cases := map[error]int{
+		errs.ErrSquareNotEditable:      http.StatusForbidden,
+		errs.ErrUnauthorizedSquareEdit: http.StatusForbidden,
+		errs.ErrNotParticipant:         http.StatusForbidden,
+		errs.ErrMissingInitials:        http.StatusConflict,
+		errs.ErrNoEmptySquares:         http.StatusConflict,
+		errs.ErrSquareLimitReached:     http.StatusConflict,
+		errs.ErrClaimsNotFound:         http.StatusUnauthorized,
+		assert.AnError:                 http.StatusInternalServerError,
+	}
+	for err, want := range cases {
+		svc := mocks.NewContestService(t)
+		svc.EXPECT().ClaimRandomSquares(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, err)
+		assert.Equal(t, want, postRandomClaim(svc, uuid.NewString(), `{"count":1}`), err.Error())
+	}
 }

@@ -72,6 +72,69 @@ func (_c *ContestRepository_ApplyQuarterResults_Call) RunAndReturn(run func(cont
 	return _c
 }
 
+// ClaimRandomSquares provides a mock function with given fields: ctx, contestID, count, value, owner, ownerName
+func (_m *ContestRepository) ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, value string, owner string, ownerName string) ([]model.Square, error) {
+	ret := _m.Called(ctx, contestID, count, value, owner, ownerName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClaimRandomSquares")
+	}
+
+	var r0 []model.Square
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, string, string, string) ([]model.Square, error)); ok {
+		return rf(ctx, contestID, count, value, owner, ownerName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, string, string, string) []model.Square); ok {
+		r0 = rf(ctx, contestID, count, value, owner, ownerName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Square)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, int, string, string, string) error); ok {
+		r1 = rf(ctx, contestID, count, value, owner, ownerName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_ClaimRandomSquares_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClaimRandomSquares'
+type ContestRepository_ClaimRandomSquares_Call struct {
+	*mock.Call
+}
+
+// ClaimRandomSquares is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - count int
+//   - value string
+//   - owner string
+//   - ownerName string
+func (_e *ContestRepository_Expecter) ClaimRandomSquares(ctx interface{}, contestID interface{}, count interface{}, value interface{}, owner interface{}, ownerName interface{}) *ContestRepository_ClaimRandomSquares_Call {
+	return &ContestRepository_ClaimRandomSquares_Call{Call: _e.mock.On("ClaimRandomSquares", ctx, contestID, count, value, owner, ownerName)}
+}
+
+func (_c *ContestRepository_ClaimRandomSquares_Call) Run(run func(ctx context.Context, contestID uuid.UUID, count int, value string, owner string, ownerName string)) *ContestRepository_ClaimRandomSquares_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(int), args[3].(string), args[4].(string), args[5].(string))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_ClaimRandomSquares_Call) Return(_a0 []model.Square, _a1 error) *ContestRepository_ClaimRandomSquares_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_ClaimRandomSquares_Call) RunAndReturn(run func(context.Context, uuid.UUID, int, string, string, string) ([]model.Square, error)) *ContestRepository_ClaimRandomSquares_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ClaimSquare provides a mock function with given fields: ctx, square, value, owner, ownerName
 func (_m *ContestRepository) ClaimSquare(ctx context.Context, square *model.Square, value string, owner string, ownerName string) (*model.Square, error) {
 	ret := _m.Called(ctx, square, value, owner, ownerName)

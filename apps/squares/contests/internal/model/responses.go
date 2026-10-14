@@ -44,3 +44,8 @@ type InvitePreviewResponse struct {
 	Role        string    `json:"role"`
 	MaxSquares  int       `json:"maxSquares"`
 }
+
+type RandomClaimResponse struct {
+	Squares   []Square `json:"squares"`
+	Requested int      `json:"requested" example:"5"`
+}

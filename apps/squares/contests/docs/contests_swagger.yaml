@@ -383,6 +383,26 @@ definitions:
         minimum: 0
         type: integer
     type: object
+  model.RandomClaimRequest:
+    properties:
+      count:
+        example: 5
+        maximum: 100
+        minimum: 1
+        type: integer
+    required:
+    - count
+    type: object
+  model.RandomClaimResponse:
+    properties:
+      requested:
+        example: 5
+        type: integer
+      squares:
+        items:
+          $ref: '#/definitions/model.Square'
+        type: array
+    type: object
   model.Square:
     properties:
       col:
@@ -497,25 +517,17 @@ paths:
         in: query
         name: role
         type: string
-      - description: 'Comma-separated: open, live, finished'
+      - description: open, live, or finished
+        enum:
+        - open
+        - live
+        - finished
         in: query
         name: status
         type: string
       - description: Case-insensitive name filter
         in: query
         name: search
-        type: string
-      - description: RFC 3339 time; only contests updated at or after it
-        in: query
-        name: updatedSince
-        type: string
-      - default: updated
-        description: Sort by last update or creation
-        enum:
-        - updated
-        - created
-        in: query
-        name: sort
         type: string
       produces:
       - application/json
@@ -1137,6 +1149,52 @@ paths:
       security:
       - BearerAuth: []
       summary: Clear all of the caller's squares in a contest
+      tags:
+      - contests
+  /contests/{id}/squares/random:
+    post:
+      consumes:
+      - application/json
+      description: Claims up to count random empty squares for the caller in one step,
+        capped by their square limit and what is left
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: How many squares
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.RandomClaimRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RandomClaimResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Claim random empty squares
       tags:
       - contests
   /contests/{id}/start:

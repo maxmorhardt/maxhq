@@ -37,6 +37,7 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	contests.POST("/:id/quarter-result/rollback", write(h.Contest.RollbackLastQuarterResult)...)
 	contests.DELETE("/:id", write(h.Contest.DeleteContest)...)
 	contests.POST("/:id/squares/:squareId/claim", write(h.Contest.ClaimSquare)...)
+	contests.POST("/:id/squares/random", write(h.Contest.ClaimRandomSquares)...)
 	contests.POST("/:id/squares/clear-mine", write(h.Contest.ClearMySquares)...)
 	contests.POST("/:id/squares/:squareId/clear", write(h.Contest.ClearSquare)...)
 
