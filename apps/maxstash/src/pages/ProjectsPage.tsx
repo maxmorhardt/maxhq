@@ -39,7 +39,7 @@ const projects: Project[] = [
     name: 'squares',
     category: 'Frontend',
     description:
-      'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. One infinitely scrolling list of every contest you run or joined, one-tap random square fills, automated winner calculation, and Google and GitHub sign-in through Dex.',
+      'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. One infinitely scrolling list of every contest you have created or joined, one-tap random square fills, automated winner calculation, and Google and GitHub sign-in through Dex.',
     href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares/web',
     links: [{ label: 'Live site', href: 'https://squares.maxstash.io', icon: <OpenInNewIcon /> }],
     tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSG', 'OIDC', 'SSE'],

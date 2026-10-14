@@ -294,7 +294,7 @@ export default function ContestDetails({
         )}
       </Box>
 
-      <Box sx={{ mt: fillHeight ? 'auto' : 0, pt: fillHeight ? 2 : 0 }}>
+      <Box sx={{ mt: fillHeight ? 'auto' : 0, pt: fillHeight ? 2 : 0, order: fillHeight ? 1 : 0 }}>
         <ContestActionIcons isOwner={isOwner} />
       </Box>
 
