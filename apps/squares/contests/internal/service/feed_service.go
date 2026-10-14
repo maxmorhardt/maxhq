@@ -57,11 +57,7 @@ func (s *feedService) List(ctx context.Context, user string, f *model.ContestFee
 		if len(rows) > f.Limit {
 			resp.Contests = rows[:f.Limit]
 			last := resp.Contests[f.Limit-1]
-			at := last.UpdatedAt
-			if f.Sort == model.FeedSortCreated {
-				at = last.CreatedAt
-			}
-			resp.NextCursor = model.FeedCursor{At: at, ID: last.ID}.Encode()
+			resp.NextCursor = model.FeedCursor{At: last.UpdatedAt, ID: last.ID}.Encode()
 		}
 		if resp.Contests == nil {
 			resp.Contests = []model.ContestSummary{}

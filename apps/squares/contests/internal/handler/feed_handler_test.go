@@ -30,7 +30,7 @@ func getFeed(r *gin.Engine, query string) (code int, body []byte) {
 func TestGetFeed_Defaults(t *testing.T) {
 	svc := mocks.NewFeedService(t)
 	want := &model.ContestFeedResponse{Contests: []model.ContestSummary{{ID: uuid.New(), Name: "c", Role: model.ParticipantRoleOwner}}, NextCursor: "next"}
-	svc.EXPECT().List(mock.Anything, "user1", &model.ContestFeedFilter{Sort: model.FeedSortUpdated, Limit: model.DefaultFeedLimit}).Return(want, nil)
+	svc.EXPECT().List(mock.Anything, "user1", &model.ContestFeedFilter{Limit: model.DefaultFeedLimit}).Return(want, nil)
 
 	code, body := getFeed(feedRouter(svc), "")
 
@@ -43,22 +43,17 @@ func TestGetFeed_Defaults(t *testing.T) {
 
 func TestGetFeed_ParsesFilters(t *testing.T) {
 	cursor := model.FeedCursor{At: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC), ID: uuid.New()}
-	since := time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)
 
 	svc := mocks.NewFeedService(t)
 	svc.EXPECT().List(mock.Anything, "user1", mock.MatchedBy(func(f *model.ContestFeedFilter) bool {
 		return f.Role == model.FeedRoleJoined &&
-			f.Sort == model.FeedSortCreated &&
 			f.Limit == 5 &&
 			f.Search == "bowl" &&
-			f.UpdatedSince.Equal(since) &&
 			f.Cursor.ID == cursor.ID && f.Cursor.At.Equal(cursor.At) &&
-			assert.ObjectsAreEqual([]model.ContestStatus{
-				model.ContestStatusActive, model.ContestStatusFinished,
-			}, f.Statuses)
+			assert.ObjectsAreEqual([]model.ContestStatus{model.ContestStatusFinished}, f.Statuses)
 	})).Return(&model.ContestFeedResponse{}, nil)
 
-	code, _ := getFeed(feedRouter(svc), "role=joined&sort=created&limit=5&search=%20bowl%20&status=open,finished&updatedSince=2026-09-01T12:00:00Z&cursor="+cursor.Encode())
+	code, _ := getFeed(feedRouter(svc), "role=joined&limit=5&search=%20bowl%20&status=finished&cursor="+cursor.Encode())
 
 	assert.Equal(t, http.StatusOK, code)
 }
@@ -67,9 +62,8 @@ func TestGetFeed_RejectsBadParams(t *testing.T) {
 	for _, q := range []string{
 		"limit=0", "limit=51", "limit=x",
 		"cursor=abc",
-		"role=admin", "sort=name",
-		"status=open,pending",
-		"updatedSince=yesterday",
+		"role=admin",
+		"status=pending", "status=open,live",
 	} {
 		code, _ := getFeed(feedRouter(mocks.NewFeedService(t)), q)
 		assert.Equal(t, http.StatusBadRequest, code, q)

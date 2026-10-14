@@ -23,13 +23,6 @@ const (
 	FeedRoleJoined FeedRole = "joined"
 )
 
-type FeedSort string
-
-const (
-	FeedSortUpdated FeedSort = "updated"
-	FeedSortCreated FeedSort = "created"
-)
-
 var FeedStatusGroups = map[string][]ContestStatus{
 	"open":     {ContestStatusActive},
 	"live":     {ContestStatusQ1, ContestStatusQ2, ContestStatusQ3, ContestStatusQ4},
@@ -69,13 +62,11 @@ func DecodeFeedCursor(s string) (*FeedCursor, error) {
 }
 
 type ContestFeedFilter struct {
-	Role         FeedRole        `json:"role,omitempty"`
-	Statuses     []ContestStatus `json:"statuses,omitempty"`
-	Search       string          `json:"search,omitempty"`
-	UpdatedSince *time.Time      `json:"updatedSince,omitempty"`
-	Sort         FeedSort        `json:"sort"`
-	Cursor       *FeedCursor     `json:"cursor,omitempty"`
-	Limit        int             `json:"limit"`
+	Role     FeedRole        `json:"role,omitempty"`
+	Statuses []ContestStatus `json:"statuses,omitempty"`
+	Search   string          `json:"search,omitempty"`
+	Cursor   *FeedCursor     `json:"cursor,omitempty"`
+	Limit    int             `json:"limit"`
 }
 
 type ContestSummary struct {

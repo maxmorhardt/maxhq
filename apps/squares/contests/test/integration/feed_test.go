@@ -84,13 +84,9 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 		assert.Zero(t, owned.Contests[0].MySquares)
 	})
 
-	t.Run("filters by status and sort", func(t *testing.T) {
+	t.Run("filters by status", func(t *testing.T) {
 		assert.Len(t, feed(t, owner, url.Values{"status": {"open"}}).Contests, 4)
-		assert.Empty(t, feed(t, owner, url.Values{"status": {"live,finished"}}).Contests)
-
-		byCreated := feed(t, owner, url.Values{"sort": {"created"}})
-		require.Len(t, byCreated.Contests, 4)
-		assert.Equal(t, "Feed Joined", byCreated.Contests[0].Name)
+		assert.Empty(t, feed(t, owner, url.Values{"status": {"finished"}}).Contests)
 	})
 
 	t.Run("a deleted contest leaves the feed", func(t *testing.T) {

@@ -24,11 +24,6 @@ func NewFeedRepository(db *gorm.DB) FeedRepository {
 
 // owners are matched on contests.owner too, since older contests may lack an owner participant row
 func (r *feedRepository) List(ctx context.Context, user string, f *model.ContestFeedFilter) ([]model.ContestSummary, error) {
-	sortCol := "c.updated_at"
-	if f.Sort == model.FeedSortCreated {
-		sortCol = "c.created_at"
-	}
-
 	q := database.Conn(ctx, r.db).
 		Table("contests c").
 		Select(`c.id, c.name, c.home_team, c.away_team, c.status, c.visibility, c.owner, c.game_id, c.version,
@@ -55,15 +50,12 @@ func (r *feedRepository) List(ctx context.Context, user string, f *model.Contest
 	if f.Search != "" {
 		q = q.Where("c.name ILIKE ?", "%"+f.Search+"%")
 	}
-	if f.UpdatedSince != nil {
-		q = q.Where("c.updated_at >= ?", *f.UpdatedSince)
-	}
 	if f.Cursor != nil {
-		q = q.Where("("+sortCol+", c.id) < (?, ?)", f.Cursor.At, f.Cursor.ID)
+		q = q.Where("(c.updated_at, c.id) < (?, ?)", f.Cursor.At, f.Cursor.ID)
 	}
 
 	var rows []model.ContestSummary
-	err := q.Order(sortCol + " DESC").Order("c.id DESC").Limit(f.Limit).Scan(&rows).Error
+	err := q.Order("c.updated_at DESC").Order("c.id DESC").Limit(f.Limit).Scan(&rows).Error
 	return rows, err
 }
 
