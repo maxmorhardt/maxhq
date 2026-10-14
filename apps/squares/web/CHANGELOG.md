@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.0](https://github.com/maxmorhardt/maxstash/compare/squares/3.0.0...squares/3.1.0) (2026-10-14)
+
+
+### Features
+
+* **squares:** one contest feed, gateway rate limiting, package renames ([#79](https://github.com/maxmorhardt/maxstash/issues/79)) ([1005829](https://github.com/maxmorhardt/maxstash/commit/10058296d9d005314e3f10415366dd8f8df6ec54))
+* **squares:** one infinite-scrolling contest list and a what-if scoreboard ([89987d2](https://github.com/maxmorhardt/maxstash/commit/89987d25bbd12d5a25940f6446df8f7477b932eb))
+
 ## [3.0.0](https://github.com/maxmorhardt/maxstash/compare/squares/2.2.1...squares/3.0.0) (2026-10-13)
 
 
