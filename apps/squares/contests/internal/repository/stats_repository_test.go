@@ -12,16 +12,10 @@ import (
 
 func TestStatsRepository_GetStats_Success(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	repo := NewStatsRepository(gdb)
+	mock.ExpectQuery(`SELECT\s+\(SELECT COUNT\(\*\) FROM contests WHERE created_at >= CURRENT_DATE`).
+		WillReturnRows(sqlmock.NewRows([]string{"contests_created_today", "squares_claimed_today", "total_active_contests"}).AddRow(3, 12, 5))
 
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares" JOIN contests c ON c\.id = squares\.contest_id AND c\.status <> \$1`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(12))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(5))
-
-	stats, err := repo.GetStats(context.Background())
+	stats, err := NewStatsRepository(gdb).GetStats(context.Background())
 
 	require.NoError(t, err)
 	assert.Equal(t, int64(3), stats.ContestsCreatedToday)
@@ -30,50 +24,12 @@ func TestStatsRepository_GetStats_Success(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestStatsRepository_GetStats_ContestsCreatedTodayError(t *testing.T) {
+func TestStatsRepository_GetStats_Error(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	repo := NewStatsRepository(gdb)
+	mock.ExpectQuery(`SELECT`).WillReturnError(errors.New("query failed"))
 
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnError(errors.New("query failed"))
-
-	stats, err := repo.GetStats(context.Background())
+	stats, err := NewStatsRepository(gdb).GetStats(context.Background())
 
 	require.Error(t, err)
 	assert.Nil(t, stats)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestStatsRepository_GetStats_SquaresClaimedTodayError(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewStatsRepository(gdb)
-
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
-		WillReturnError(errors.New("squares query failed"))
-
-	stats, err := repo.GetStats(context.Background())
-
-	require.Error(t, err)
-	assert.Nil(t, stats)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestStatsRepository_GetStats_TotalActiveContestsError(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewStatsRepository(gdb)
-
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(12))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnError(errors.New("active contests query failed"))
-
-	stats, err := repo.GetStats(context.Background())
-
-	require.Error(t, err)
-	assert.Nil(t, stats)
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
