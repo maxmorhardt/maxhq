@@ -110,7 +110,7 @@ export default function ContestDetails({
       title="Contest Details"
       fillHeight={fillHeight}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: fillHeight ? 2.5 : 1.25 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: fillHeight ? 1.75 : 1.25 }}>
         {/* status display visible to everyone */}
         <Box>
           <Typography
