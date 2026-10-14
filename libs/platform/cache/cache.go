@@ -12,6 +12,8 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
+const loadTimeout = 10 * time.Second
+
 var loads singleflight.Group
 
 type Cache interface {
@@ -79,16 +81,19 @@ func GetOrLoad[T any](ctx context.Context, c Cache, name, k string, ttl time.Dur
 
 	metrics.IncCacheRequest(name, false)
 	// concurrent misses for the same key in this replica share one load
-	v, err, _ := loads.Do(name+":"+k, func() (any, error) {
-		// shared by every waiter, so one caller going away must not fail the rest
-		value, err := load(context.WithoutCancel(ctx))
+	ch := loads.DoChan(name+":"+k, func() (any, error) {
+		// shared by every waiter, so it outlives the caller that started it but not loadTimeout
+		loadCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), loadTimeout)
+		defer cancel()
+
+		value, err := load(loadCtx)
 		if err != nil {
 			return nil, err
 		}
 
 		if c != nil {
 			if raw, err := json.Marshal(value); err == nil {
-				if err := c.Set(ctx, k, raw, ttl); err != nil {
+				if err := c.Set(loadCtx, k, raw, ttl); err != nil {
 					metrics.IncRedisError("cache_set")
 					log.Warn("cache write failed", "cache", name, "error", err)
 				}
@@ -96,9 +101,15 @@ func GetOrLoad[T any](ctx context.Context, c Cache, name, k string, ttl time.Dur
 		}
 		return value, nil
 	})
-	if err != nil {
-		var zero T
-		return zero, err
+
+	var zero T
+	select {
+	case <-ctx.Done():
+		return zero, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			return zero, res.Err
+		}
+		return res.Val.(T), nil
 	}
-	return v.(T), nil
 }

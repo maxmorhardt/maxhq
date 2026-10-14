@@ -46,6 +46,7 @@ const initialState = {
     loading: false,
     loadingMore: false,
     requestId: null as string | null,
+    appendId: null as string | null,
   },
   currentContest: undefined as Contest | null | undefined,
   currentSquare: undefined as Square | null | undefined,
@@ -345,15 +346,31 @@ describe('contestSlice reducers', () => {
 
 describe('contestSlice extraReducers', () => {
   describe('fetchContestFeed', () => {
-    const feedAction = (type: string, payload?: unknown, append = false, cursor?: string) => ({
+    type FeedOpts = { id?: string; append?: boolean; cursor?: string; payload?: unknown };
+    const feedAction = (
+      type: string,
+      { id = 'r1', append = false, cursor, payload }: FeedOpts = {}
+    ) => ({
       type,
       payload,
-      meta: { arg: { params: cursor ? { cursor } : {}, append }, requestId: 'r1' },
+      meta: { arg: { params: cursor ? { cursor } : {}, append }, requestId: id },
     });
-    const awaiting = { ...initialState.feed, requestId: 'r1' };
+    const run = (
+      state: ReturnType<typeof contestReducer>,
+      ...actions: ReturnType<typeof feedAction>[]
+    ) => actions.reduce(contestReducer, state);
+    const page = (...ids: string[]) => ids.map((id) => ({ ...mockSummary, id }));
+    const loaded = run(
+      initialState,
+      feedAction(fetchContestFeed.pending.type, { id: 'r0' }),
+      feedAction(fetchContestFeed.fulfilled.type, {
+        id: 'r0',
+        payload: { contests: page('a1'), nextCursor: 'shared' },
+      })
+    );
 
     it('pending: a fresh load sets loading and clears the error', () => {
-      const state = contestReducer(
+      const state = run(
         { ...initialState, error: 'old' },
         feedAction(fetchContestFeed.pending.type)
       );
@@ -363,78 +380,124 @@ describe('contestSlice extraReducers', () => {
     });
 
     it('pending: a next page sets loadingMore', () => {
-      const state = contestReducer(
-        initialState,
-        feedAction(fetchContestFeed.pending.type, undefined, true)
-      );
+      const state = run(loaded, feedAction(fetchContestFeed.pending.type, { append: true }));
       expect(state.feed.loadingMore).toBe(true);
       expect(state.feed.loading).toBe(false);
     });
 
-    it('fulfilled: a fresh load replaces the list', () => {
-      const state = contestReducer(
-        { ...initialState, feed: { ...awaiting, items: [{ ...mockSummary, id: 'old' }] } },
-        feedAction(fetchContestFeed.fulfilled.type, { contests: [mockSummary], nextCursor: 'next' })
+    it('pending: a next page is ignored while a new list loads', () => {
+      const state = run(
+        loaded,
+        feedAction(fetchContestFeed.pending.type, { id: 'r2' }),
+        feedAction(fetchContestFeed.pending.type, { id: 'r3', append: true, cursor: 'shared' }),
+        feedAction(fetchContestFeed.fulfilled.type, {
+          id: 'r3',
+          append: true,
+          payload: { contests: page('x') },
+        })
       );
-      expect(state.feed.items).toEqual([mockSummary]);
-      expect(state.feed.nextCursor).toBe('next');
-      expect(state.feed.loading).toBe(false);
+      expect(state.feed.loadingMore).toBe(false);
+      expect(state.feed.loading).toBe(true);
+      expect(state.feed.items?.map((c) => c.id)).toEqual(['a1']);
+    });
+
+    it('fulfilled: a fresh load replaces the list', () => {
+      expect(loaded.feed.items?.map((c) => c.id)).toEqual(['a1']);
+      expect(loaded.feed.nextCursor).toBe('shared');
+      expect(loaded.feed.loading).toBe(false);
     });
 
     it('fulfilled: a next page appends and clears a spent cursor', () => {
-      const second = { ...mockSummary, id: 'c2' };
-      const state = contestReducer(
-        {
-          ...initialState,
-          feed: { ...awaiting, items: [mockSummary], nextCursor: 'next' },
-        },
-        feedAction(fetchContestFeed.fulfilled.type, { contests: [second] }, true, 'next')
+      const state = run(
+        loaded,
+        feedAction(fetchContestFeed.pending.type, { id: 'm1', append: true, cursor: 'shared' }),
+        feedAction(fetchContestFeed.fulfilled.type, {
+          id: 'm1',
+          append: true,
+          payload: { contests: page('a2') },
+        })
       );
-      expect(state.feed.items?.map((c) => c.id)).toEqual(['c1', 'c2']);
+      expect(state.feed.items?.map((c) => c.id)).toEqual(['a1', 'a2']);
       expect(state.feed.nextCursor).toBeNull();
-    });
-
-    it('fulfilled: drops a next page for a list that was replaced meanwhile', () => {
-      const state = contestReducer(
-        {
-          ...initialState,
-          feed: { ...awaiting, items: [mockSummary], nextCursor: 'fresh', loadingMore: true },
-        },
-        feedAction(
-          fetchContestFeed.fulfilled.type,
-          { contests: [{ ...mockSummary, id: 'x' }] },
-          true,
-          'old'
-        )
-      );
-      expect(state.feed.items?.map((c) => c.id)).toEqual(['c1']);
-      expect(state.feed.nextCursor).toBe('fresh');
       expect(state.feed.loadingMore).toBe(false);
     });
 
-    it('fulfilled: drops a replacement that a newer request superseded', () => {
-      const state = contestReducer(
-        {
-          ...initialState,
-          feed: { ...initialState.feed, items: [mockSummary], requestId: 'r2', loading: true },
-        },
-        feedAction(fetchContestFeed.fulfilled.type, { contests: [] })
+    describe('an old next page racing a new filter', () => {
+      const started = run(
+        loaded,
+        feedAction(fetchContestFeed.pending.type, { id: 'm1', append: true, cursor: 'shared' }),
+        feedAction(fetchContestFeed.pending.type, { id: 'r2' })
       );
-      expect(state.feed.items).toEqual([mockSummary]);
+      const oldPage = feedAction(fetchContestFeed.fulfilled.type, {
+        id: 'm1',
+        append: true,
+        cursor: 'shared',
+        payload: { contests: page('old'), nextCursor: 'stale' },
+      });
+      const newList = feedAction(fetchContestFeed.fulfilled.type, {
+        id: 'r2',
+        payload: { contests: page('b1'), nextCursor: 'shared' },
+      });
+
+      it('is dropped when it lands before the new list', () => {
+        const mid = run(started, oldPage);
+        expect(mid.feed.loading).toBe(true);
+        expect(mid.feed.items?.map((c) => c.id)).toEqual(['a1']);
+
+        const state = run(mid, newList);
+        expect(state.feed.items?.map((c) => c.id)).toEqual(['b1']);
+        expect(state.feed.nextCursor).toBe('shared');
+      });
+
+      it('is dropped when it lands after the new list, even with the same cursor', () => {
+        const state = run(started, newList, oldPage);
+        expect(state.feed.items?.map((c) => c.id)).toEqual(['b1']);
+        expect(state.feed.nextCursor).toBe('shared');
+        expect(state.feed.loading).toBe(false);
+      });
+
+      it('a failure is dropped too', () => {
+        const state = run(
+          started,
+          feedAction(fetchContestFeed.rejected.type, {
+            id: 'm1',
+            append: true,
+            payload: { message: 'x' },
+          })
+        );
+        expect(state.feed.loading).toBe(true);
+        expect(state.error).toBeNull();
+      });
+    });
+
+    it('fulfilled: drops a replacement that a newer request superseded', () => {
+      const state = run(
+        loaded,
+        feedAction(fetchContestFeed.pending.type, { id: 'r1' }),
+        feedAction(fetchContestFeed.pending.type, { id: 'r2' }),
+        feedAction(fetchContestFeed.fulfilled.type, { id: 'r1', payload: { contests: [] } })
+      );
+      expect(state.feed.items?.map((c) => c.id)).toEqual(['a1']);
       expect(state.feed.loading).toBe(true);
     });
 
     it('rejected: settles the list and sets the error', () => {
-      const state = contestReducer(
+      const state = run(
         initialState,
-        feedAction(fetchContestFeed.rejected.type, { message: 'fail' })
+        feedAction(fetchContestFeed.pending.type),
+        feedAction(fetchContestFeed.rejected.type, { payload: { message: 'fail' } })
       );
       expect(state.feed.items).toEqual([]);
+      expect(state.feed.loading).toBe(false);
       expect(state.error).toBe('fail');
     });
 
     it('rejected: uses default error message', () => {
-      const state = contestReducer(initialState, feedAction(fetchContestFeed.rejected.type));
+      const state = run(
+        initialState,
+        feedAction(fetchContestFeed.pending.type),
+        feedAction(fetchContestFeed.rejected.type)
+      );
       expect(state.error).toBe('Error fetching contests');
     });
   });

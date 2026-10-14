@@ -132,7 +132,35 @@ func TestGetOrLoad_ConcurrentMissesShareOneLoad(t *testing.T) {
 	assert.Equal(t, int32(1), loads.Load())
 }
 
-func TestGetOrLoad_SharedLoadOutlivesTheFirstCaller(t *testing.T) {
+func TestGetOrLoad_WaiterStopsOnItsOwnCancellation(t *testing.T) {
+	_, client := newRedis(t)
+	c := NewRedisCache(client, "test")
+
+	release := make(chan struct{})
+	defer close(release)
+	load := func(ctx context.Context) (payload, error) {
+		<-release
+		return payload{N: 1}, ctx.Err()
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := GetOrLoad(ctx, c, "test", "waiting", time.Minute, load)
+		done <- err
+	}()
+	time.Sleep(20 * time.Millisecond)
+	cancel()
+
+	select {
+	case err := <-done:
+		assert.ErrorIs(t, err, context.Canceled)
+	case <-time.After(time.Second):
+		t.Fatal("waiter stayed blocked on the shared load")
+	}
+}
+
+func TestGetOrLoad_CachesAfterTheInitiatingCallerDisconnects(t *testing.T) {
 	_, client := newRedis(t)
 	c := NewRedisCache(client, "test")
 
@@ -159,10 +187,14 @@ func TestGetOrLoad_SharedLoadOutlivesTheFirstCaller(t *testing.T) {
 	time.Sleep(20 * time.Millisecond)
 
 	cancel()
+	assert.ErrorIs(t, <-firstDone, context.Canceled)
 	close(release)
-
-	assert.NoError(t, <-firstDone)
 	assert.Equal(t, 9, (<-secondDone).N)
+
+	raw, ok, err := c.Get(context.Background(), "outlives")
+	require.NoError(t, err)
+	require.True(t, ok)
+	assert.JSONEq(t, `{"n":9}`, string(raw))
 }
 
 func TestGetOrLoad_FailsOpenWhenRedisIsDown(t *testing.T) {

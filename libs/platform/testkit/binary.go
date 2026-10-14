@@ -49,7 +49,7 @@ func StartBinary(t *testing.T, moduleDir, pkg string, env []string) *Process {
 	cmd := exec.CommandContext(context.Background(), exe) //nolint:gosec // the binary this helper just built
 	// run outside the module so a developer's .env is never picked up
 	cmd.Dir = t.TempDir()
-	cmd.Env = append(append([]string{}, env...), "SERVER_PORT="+strconv.Itoa(port), "GIN_MODE=release")
+	cmd.Env = append(append([]string{}, env...), "SERVER_HOST=127.0.0.1", "SERVER_PORT="+strconv.Itoa(port), "GIN_MODE=release")
 	cmd.Stdout = log
 	cmd.Stderr = log
 	if err := cmd.Start(); err != nil {

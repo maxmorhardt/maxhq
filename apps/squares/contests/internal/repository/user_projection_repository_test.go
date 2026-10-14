@@ -108,7 +108,7 @@ func TestUserProjection_CascadeInitials_Error(t *testing.T) {
 
 func TestUserProjection_GetStats(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`WITH live AS`).
+	mock.ExpectQuery(`AS contests_created`).
 		WillReturnRows(sqlmock.NewRows([]string{"contests_created", "contests_joined", "squares_claimed", "quarter_wins", "quarters_played"}).
 			AddRow(3, 7, 42, 5, 20))
 
@@ -120,7 +120,7 @@ func TestUserProjection_GetStats(t *testing.T) {
 
 func TestUserProjection_GetStats_Error(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`WITH live AS`).WillReturnError(errors.New("db"))
+	mock.ExpectQuery(`AS contests_created`).WillReturnError(errors.New("db"))
 
 	_, err := NewUserProjectionRepository(gdb).GetStats(context.Background(), "a@b.com")
 	require.Error(t, err)

@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -55,7 +57,7 @@ func NewEngine(cfg config.ServerConfig) *gin.Engine {
 
 func NewHTTPServer(cfg config.ServerConfig, handler http.Handler, writeTimeout time.Duration) *http.Server {
 	return &http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Addr:              net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)),
 		Handler:           handler,
 		ReadHeaderTimeout: readHeaderTimeout,
 		ReadTimeout:       readTimeout,
