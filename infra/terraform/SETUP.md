@@ -8,7 +8,7 @@ created by hand.
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](../postgres/SETUP.md) |
 | `cloudflare/` | DNS records for the `maxstash.io` zone |
-| `github/` | Repository rulesets on every default branch |
+| `github/` | Repository rulesets on every default branch: required checks and squash-only merges |
 
 ## Credentials
 

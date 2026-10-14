@@ -6,8 +6,6 @@ locals {
         "pr-title / pr-title",
         "CI Complete",
       ]
-      # merge commits stay allowed so imported histories survive the monorepo pull request
-      merge_methods = ["squash", "merge"]
     }
 
     # every helm chart, app and infra, each released on its own
@@ -45,13 +43,5 @@ module "rulesets" {
 
   repository      = each.key
   required_checks = each.value.checks
-  strict          = try(each.value.strict, false)
   bypass_actors   = try(each.value.bypass_actors, [])
-  merge_methods   = try(each.value.merge_methods, ["squash"])
-}
-
-# the repository was renamed from k8s; keep its ruleset instead of creating a second one
-moved {
-  from = module.rulesets["k8s"]
-  to   = module.rulesets["infra"]
 }
