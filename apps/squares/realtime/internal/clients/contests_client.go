@@ -2,66 +2,41 @@ package clients
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
-	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
+	"github.com/maxmorhardt/maxstash/libs/platform/httpclient"
 	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
 )
-
-const requestTimeout = 5 * time.Second
 
 type ContestAccessClient interface {
 	GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*contracts.ContestSnapshot, error)
 }
 
 type contestAccessClient struct {
-	baseURL string
-	token   string
-	http    *http.Client
+	contests *httpclient.Internal
 }
 
 func NewContestAccessClient(baseURL, token string) ContestAccessClient {
-	return &contestAccessClient{
-		baseURL: strings.TrimRight(baseURL, "/"),
-		token:   token,
-		http:    &http.Client{Timeout: requestTimeout},
-	}
+	return &contestAccessClient{contests: httpclient.NewInternal(baseURL, token)}
 }
 
 func (c *contestAccessClient) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*contracts.ContestSnapshot, error) {
-	endpoint := c.baseURL + contracts.SnapshotPath(contestID, user)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, http.NoBody)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set(middleware.HeaderInternalToken, c.token)
+	var snapshot contracts.ContestSnapshot
+	err := c.contests.GetJSON(ctx, contracts.SnapshotPath(contestID, user), &snapshot)
 
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errs.ErrDependencyFailed, err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-	case http.StatusNotFound:
+	var status *httpclient.StatusError
+	switch {
+	case err == nil:
+		return &snapshot, nil
+	case errors.As(err, &status) && status.Status == http.StatusNotFound:
 		return nil, errs.ErrContestNotFound
-	case http.StatusForbidden:
+	case errors.As(err, &status) && status.Status == http.StatusForbidden:
 		return nil, errs.ErrInsufficientRole
 	default:
-		return nil, fmt.Errorf("%w: contests snapshot returned %d", errs.ErrDependencyFailed, resp.StatusCode)
+		return nil, fmt.Errorf("%w: %w", errs.ErrDependencyFailed, err)
 	}
-
-	var snapshot contracts.ContestSnapshot
-	if err := json.NewDecoder(resp.Body).Decode(&snapshot); err != nil {
-		return nil, fmt.Errorf("%w: failed to decode snapshot: %w", errs.ErrDependencyFailed, err)
-	}
-
-	return &snapshot, nil
 }

@@ -109,10 +109,10 @@ func TestGetOrLoad_ConcurrentMissesShareOneLoad(t *testing.T) {
 
 	var loads atomic.Int32
 	release := make(chan struct{})
-	load := func(context.Context) (payload, error) {
+	load := func(ctx context.Context) (payload, error) {
 		loads.Add(1)
 		<-release
-		return payload{N: 3}, nil
+		return payload{N: 3}, ctx.Err()
 	}
 
 	var wg sync.WaitGroup
