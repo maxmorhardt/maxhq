@@ -1036,7 +1036,7 @@
       "targets": [
         {
           "expr": "sum(rate(outbox_events_published_total{job=\"squares-contests\"}[5m])) by (result)",
-          "legendFormat": "chat/s",
+          "legendFormat": "{{result}}",
           "refId": "A"
         }
       ],

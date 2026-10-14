@@ -5,7 +5,7 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 ## Required
 
 - **PostgreSQL** - 17+, primary and optional read replica. One database shared by the squares services; this service migrates only its own `accounts` schema at startup (and adopts the pre-split `users`, `deleted_accounts`, and `contact_submissions` tables from `public` on the first start after the split).
-- **Valkey** (the `valkey` namespace) - the users stream, the revocation list (written here on deletion and rebuilt from Postgres on every start), the contact rate limit, and idempotency records.
+- **Valkey** (the `valkey` namespace) - the users stream, the revocation list (written here on deletion and rebuilt from Postgres on every start), and idempotency records.
 - **squares-contests** - its `/internal` routes, at `CONTESTS_INTERNAL_URL` with `INTERNAL_API_TOKEN`.
 - **SMTP** - outbound email for the contact form.
 - **Cloudflare Turnstile** - verifies the contact form captcha.
@@ -19,7 +19,7 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | Path under `api.maxstash.io/squares` | |
 | --- | --- |
 | `/users/me` | get (creating the profile on first sign-in), update initials, delete the account |
-| `/contact` | the public contact form, behind Turnstile and a rate limit shared by every replica |
+| `/contact` | the public contact form, behind Turnstile; the gateway limits it to 10 a day per client (`route.rateLimit.rules`) |
 | `/swagger/accounts` | the API reference |
 
 ## Secrets
@@ -37,7 +37,7 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | captcha | `TURNSTILE_SECRET_KEY` |
 | http | `ALLOWED_ORIGINS` |
 
-`REDIS_URL` is `redis://squares:<password>@valkey.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
+`REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
 `SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxstash repo for each one and its default).
 
 ## Optional

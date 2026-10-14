@@ -4,7 +4,7 @@ partOf: squares
 image:
   repository: maxmorhardt/squares-contests
   tag: ''
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   revisionHistoryLimit: 2
   securityContext:
     runAsNonRoot: true

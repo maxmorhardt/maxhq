@@ -3,7 +3,7 @@ fullnameOverride: maxstash
 image:
   repository: maxmorhardt/maxstash
   tag: ''
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   revisionHistoryLimit: 2
   strategy:
     type: RollingUpdate
@@ -99,8 +99,8 @@ metrics:
   image:
     name: nginx-exporter
     repository: nginx/nginx-prometheus-exporter
-    tag: latest
-    pullPolicy: Always
+    tag: 1.5.3
+    pullPolicy: IfNotPresent
     args:
       - '--nginx.scrape-uri=http://127.0.0.1:9000/metrics'
   resources:

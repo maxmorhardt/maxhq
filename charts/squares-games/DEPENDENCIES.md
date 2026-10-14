@@ -16,7 +16,7 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 
 | Path under `api.maxstash.io/squares` | |
 | --- | --- |
-| `/games/upcoming` | the next slate of games a contest can be linked to, cached in Redis |
+| `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
 | `/swagger/games` | the API reference |
 
 ## Secrets
@@ -31,7 +31,7 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 | redis | `REDIS_URL` |
 | http | `ALLOWED_ORIGINS` |
 
-`REDIS_URL` is `redis://squares:<password>@valkey.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
+`REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
 `SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxstash repo for each one and its default).
 
 ## Optional
