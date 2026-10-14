@@ -1,0 +1,108 @@
+# mirrors production: optional Dex JWT, claims copied to X-Auth-* headers, /squares/* routed per service
+static_resources:
+  listeners:
+    - name: http
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 8080 }
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: gateway
+                route_config:
+                  virtual_hosts:
+                    - name: squares
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: /squares/swagger/contests }
+                          route: { cluster: contests, prefix_rewrite: /swagger }
+                        - match: { prefix: /squares/swagger/games }
+                          route: { cluster: games, prefix_rewrite: /swagger }
+                        - match: { prefix: /squares/swagger/accounts }
+                          route: { cluster: accounts, prefix_rewrite: /swagger }
+                        - match: { prefix: /squares/swagger/realtime }
+                          route: { cluster: realtime, prefix_rewrite: /swagger }
+                        - match: { path: /squares/users/me/stats }
+                          route: { cluster: contests, prefix_rewrite: /users/me/stats }
+                        - match: { path: /squares/users/me/active-contests }
+                          route: { cluster: contests, prefix_rewrite: /users/me/active-contests }
+                        - match: { path: /squares/users/me }
+                          route: { cluster: accounts, prefix_rewrite: /users/me }
+                        - match: { prefix: /squares/contact }
+                          route: { cluster: accounts, prefix_rewrite: /contact }
+                        - match: { prefix: /squares/contests }
+                          route: { cluster: contests, prefix_rewrite: /contests }
+                        - match: { prefix: /squares/invites }
+                          route: { cluster: contests, prefix_rewrite: /invites }
+                        - match: { prefix: /squares/leaderboard }
+                          route: { cluster: contests, prefix_rewrite: /leaderboard }
+                        - match: { prefix: /squares/stats }
+                          route: { cluster: contests, prefix_rewrite: /stats }
+                        - match: { prefix: /squares/games }
+                          route: { cluster: games, prefix_rewrite: /games }
+                        - match: { prefix: /squares/events }
+                          route: { cluster: realtime, prefix_rewrite: /events, timeout: 0s, idle_timeout: 0s }
+                http_filters:
+                  - name: envoy.filters.http.jwt_authn
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+                      providers:
+                        dex:
+                          issuer: https://login.maxstash.io
+                          audiences: [squares, squares-mobile]
+                          remote_jwks:
+                            http_uri:
+                              uri: https://login.maxstash.io/keys
+                              cluster: dex
+                              timeout: 5s
+                            cache_duration: 300s
+                          claim_to_headers:
+                            - { header_name: X-Auth-Email, claim_name: email }
+                            - { header_name: X-Auth-Name, claim_name: name }
+                            - { header_name: X-Auth-Email-Verified, claim_name: email_verified }
+                            - { header_name: X-Auth-Iat, claim_name: iat }
+                            - { header_name: X-Auth-Exp, claim_name: exp }
+                      rules:
+                        - match: { prefix: / }
+                          requires:
+                            requires_any:
+                              requirements:
+                                - provider_name: dex
+                                - allow_missing: {}
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    - name: contests
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: contests
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: contests, port_value: 8080 } } } }] }]
+    - name: games
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: games
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: games, port_value: 8080 } } } }] }]
+    - name: accounts
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: accounts
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: accounts, port_value: 8080 } } } }] }]
+    - name: realtime
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: realtime
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: realtime, port_value: 8080 } } } }] }]
+    - name: dex
+      type: LOGICAL_DNS
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: dex
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: login.maxstash.io, port_value: 443 } } } }] }]
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: login.maxstash.io
