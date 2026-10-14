@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"os"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -99,6 +101,35 @@ func TestGetOrLoad_CachesAcrossCalls(t *testing.T) {
 	assert.Equal(t, 7, first.N)
 	assert.Equal(t, first, second)
 	assert.Equal(t, 1, loads)
+}
+
+func TestGetOrLoad_ConcurrentMissesShareOneLoad(t *testing.T) {
+	_, client := newRedis(t)
+	c := NewRedisCache(client, "test")
+
+	var loads atomic.Int32
+	release := make(chan struct{})
+	load := func(context.Context) (payload, error) {
+		loads.Add(1)
+		<-release
+		return payload{N: 3}, nil
+	}
+
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			got, err := GetOrLoad(context.Background(), c, "test", "shared", time.Minute, load)
+			assert.NoError(t, err)
+			assert.Equal(t, 3, got.N)
+		}()
+	}
+	time.Sleep(50 * time.Millisecond)
+	close(release)
+	wg.Wait()
+
+	assert.Equal(t, int32(1), loads.Load())
 }
 
 func TestGetOrLoad_FailsOpenWhenRedisIsDown(t *testing.T) {
