@@ -52,21 +52,27 @@ services:
     <<: *service
     build:
       context: ../..
-      dockerfile: apps/squares/contests/Dockerfile
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: contests
     environment: *env
 
   games:
     <<: *service
     build:
       context: ../..
-      dockerfile: apps/squares/games/Dockerfile
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: games
     environment: *env
 
   accounts:
     <<: *service
     build:
       context: ../..
-      dockerfile: apps/squares/accounts/Dockerfile
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: accounts
     environment:
       <<: *env
       # nothing listens here, so contact emails fail and are logged instead of sent
@@ -82,7 +88,9 @@ services:
     <<: *service
     build:
       context: ../..
-      dockerfile: apps/squares/realtime/Dockerfile
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: realtime
     environment: *env
     depends_on:
       valkey:
