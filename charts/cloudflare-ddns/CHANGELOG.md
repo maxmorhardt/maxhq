@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/maxmorhardt/charts/compare/cloudflare-ddns/1.1.0...cloudflare-ddns/1.1.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* pin the nginx exporter, IfNotPresent pulls, cloudflare job limits, squares docs ([#56](https://github.com/maxmorhardt/charts/issues/56)) ([4dc3570](https://github.com/maxmorhardt/charts/commit/4dc3570362d631b5272eaa513fd528cb04db9d8c))
+
 ## [1.1.0](https://github.com/maxmorhardt/charts/compare/cloudflare-ddns/1.0.1...cloudflare-ddns/1.1.0) (2026-10-13)
 
 
