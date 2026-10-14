@@ -24,6 +24,7 @@ func testInfra(t *testing.T) *server.Infra {
 
 func testConfig() *model.RealtimeConfig {
 	return &model.RealtimeConfig{
+		Server:   config.ServerConfig{Host: "127.0.0.1"},
 		Internal: config.InternalConfig{Token: "internal"},
 		Contests: model.ContestsConfig{URL: "http://127.0.0.1:1"},
 		Stream:   model.StreamConfig{HeartbeatInterval: time.Second, RevocationInterval: time.Minute},

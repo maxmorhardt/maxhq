@@ -43,6 +43,7 @@ func testInfra(t *testing.T) (*server.Infra, sqlmock.Sqlmock) {
 
 func testConfig() *model.AccountsConfig {
 	return &model.AccountsConfig{
+		Server:   config.ServerConfig{Host: "127.0.0.1"},
 		Internal: config.InternalConfig{Token: "internal"},
 		Contests: model.ContestsConfig{URL: "http://127.0.0.1:1"},
 	}
