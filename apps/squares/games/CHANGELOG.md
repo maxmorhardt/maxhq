@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/maxmorhardt/maxstash/compare/squares-games/1.0.0...squares-games/1.1.0) (2026-10-14)
+
+
+### Features
+
+* **squares:** one contest feed, gateway rate limiting, package renames ([#79](https://github.com/maxmorhardt/maxstash/issues/79)) ([1005829](https://github.com/maxmorhardt/maxstash/commit/10058296d9d005314e3f10415366dd8f8df6ec54))
+
 ## 1.0.0 (2026-10-13)
 
 
