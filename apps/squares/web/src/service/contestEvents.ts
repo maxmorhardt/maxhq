@@ -8,6 +8,7 @@ import {
   updateQuarterResultFromEvent,
   updateSquareFromEvent,
 } from '../features/contests/contestSlice';
+import { API_BASE_URL } from '../axios/api';
 import type { Contest, ContestEvent, QuarterResult, Square } from '../types/contest';
 import type { HandleContestEventParams, StreamFrame } from '../types/events';
 
@@ -16,10 +17,7 @@ export function getEventsUrl(id: string | undefined) {
     return null;
   }
 
-  const baseURL = import.meta.env.PROD
-    ? 'https://api.maxstash.io/squares'
-    : 'http://localhost:8080';
-  return `${baseURL}/events/contests/${encodeURIComponent(id)}`;
+  return `${API_BASE_URL}/events/contests/${encodeURIComponent(id)}`;
 }
 
 // a non-2xx answer to the stream request; the status says whether reconnecting can help

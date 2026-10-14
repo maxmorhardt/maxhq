@@ -102,7 +102,7 @@ describe('getEventsUrl', () => {
   });
 
   it('builds the encoded stream url', () => {
-    expect(getEventsUrl('a b')).toBe('http://localhost:8080/events/contests/a%20b');
+    expect(getEventsUrl('a b')).toBe('http://localhost:8080/squares/events/contests/a%20b');
   });
 });
 

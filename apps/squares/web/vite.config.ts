@@ -7,9 +7,6 @@ export default defineConfig(({ command }) => ({
     port: 3000,
   },
   ...(command === 'build' ? { ssr: { noExternal: true } } : {}),
-  optimizeDeps: {
-    needsInterop: ['react-use-websocket'],
-  },
   build: {
     rollupOptions: {
       output: {
