@@ -28,14 +28,14 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 	for i := range 3 {
 		name := fmt.Sprintf("Feed %d", i)
 		_, resp := createContest(t, owner, name, 10)
-		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+		require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 		names = append(names, name)
 	}
 	joined, _ := createContest(t, owner, "Feed Joined", 10)
 
 	invite := call(t, testkit.As(owner), http.MethodPost, "/contests/"+joined.ID.String()+"/invites",
 		model.CreateInviteRequest{MaxSquares: 10, Role: "participant"})
-	require.Equal(t, http.StatusOK, invite.Status, string(invite.Body))
+	require.Equal(t, http.StatusCreated, invite.Status, string(invite.Body))
 	var inv model.ContestInvite
 	invite.Decode(t, &inv)
 	require.Equal(t, http.StatusCreated, call(t, testkit.As(member), http.MethodPost, "/invites/"+inv.Token+"/redeem", nil).Status)

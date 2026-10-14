@@ -95,7 +95,7 @@ const docTemplatecontests = `{
                     }
                 }
             },
-            "put": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -130,8 +130,8 @@ const docTemplatecontests = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestSwagger"
                         },
@@ -400,8 +400,8 @@ const docTemplatecontests = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestInvite"
                         }
@@ -681,7 +681,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/quarter-result": {
+        "/contests/{id}/quarter-results": {
             "post": {
                 "security": [
                     {
@@ -724,8 +724,8 @@ const docTemplatecontests = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.QuarterResult"
                         }
@@ -757,8 +757,8 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/quarter-result/rollback": {
-            "post": {
+        "/contests/{id}/quarter-results/latest": {
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -815,8 +815,8 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/squares/clear-mine": {
-            "post": {
+        "/contests/{id}/squares/claims": {
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -950,7 +950,7 @@ const docTemplatecontests = `{
             }
         },
         "/contests/{id}/squares/{squareId}/claim": {
-            "post": {
+            "put": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -1018,10 +1018,8 @@ const docTemplatecontests = `{
                         }
                     }
                 }
-            }
-        },
-        "/contests/{id}/squares/{squareId}/clear": {
-            "post": {
+            },
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []

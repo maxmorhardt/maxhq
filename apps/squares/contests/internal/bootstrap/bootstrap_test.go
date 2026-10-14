@@ -58,9 +58,9 @@ func TestNew_WiresRoutesAndGuards(t *testing.T) {
 	for _, want := range []string{
 		"GET /health/live",
 		"GET /health/ready",
-		"PUT /contests",
+		"POST /contests",
 		"PATCH /contests/:id",
-		"POST /contests/:id/squares/:squareId/claim",
+		"PUT /contests/:id/squares/:squareId/claim",
 		"POST /invites/:token/redeem",
 		"GET /leaderboard",
 		"GET /users/me/stats",
@@ -71,7 +71,7 @@ func TestNew_WiresRoutesAndGuards(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	app.Engine.ServeHTTP(w, httptest.NewRequest(http.MethodPut, "/contests", http.NoBody))
+	app.Engine.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/contests", http.NoBody))
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 
 	w = httptest.NewRecorder()

@@ -47,13 +47,13 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 // @Produce json
 // @Param contest body model.CreateContestRequest true "Contest"
 // @Param Idempotency-Key header string false "Replays the first response when a create is retried with the same key"
-// @Success 200 {object} model.ContestSwagger
-// @Header 200 {string} ETag "Contest version, for If-Match on later updates"
+// @Success 201 {object} model.ContestSwagger
+// @Header 201 {string} ETag "Contest version, for If-Match on later updates"
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests [put]
+// @Router /contests [post]
 func (h *contestHandler) CreateContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -88,7 +88,7 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 	}
 
 	util.SetETag(c, contest.Version)
-	c.JSON(http.StatusOK, contest)
+	c.JSON(http.StatusCreated, contest)
 }
 
 // @Summary Update contest
@@ -268,13 +268,13 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 // @Param id path string true "Contest ID"
 // @Param quarterResult body model.QuarterResultRequest true "Quarter result data"
 // @Param Idempotency-Key header string false "Replays the first response when a submission is retried with the same key"
-// @Success 200 {object} model.QuarterResult
+// @Success 201 {object} model.QuarterResult
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/quarter-result [post]
+// @Router /contests/{id}/quarter-results [post]
 func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -328,7 +328,7 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusCreated, result)
 }
 
 // @Summary Roll back the last quarter result
@@ -342,7 +342,7 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/quarter-result/rollback [post]
+// @Router /contests/{id}/quarter-results/latest [delete]
 func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -398,7 +398,7 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 // @Failure 409 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/squares/{squareId}/claim [post]
+// @Router /contests/{id}/squares/{squareId}/claim [put]
 func (h *contestHandler) ClaimSquare(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -514,7 +514,7 @@ func (h *contestHandler) ClaimRandomSquares(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/squares/{squareId}/clear [post]
+// @Router /contests/{id}/squares/{squareId}/claim [delete]
 func (h *contestHandler) ClearSquare(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -579,7 +579,7 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/squares/clear-mine [post]
+// @Router /contests/{id}/squares/claims [delete]
 func (h *contestHandler) ClearMySquares(c *gin.Context) {
 	log := logging.FromGin(c)
 

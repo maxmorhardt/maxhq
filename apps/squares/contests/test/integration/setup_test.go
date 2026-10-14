@@ -102,11 +102,11 @@ func call(t *testing.T, id testkit.Identity, method, path string, body any, head
 
 func createContest(t *testing.T, owner, name string, maxSquares int, headers ...string) (*model.Contest, testkit.Response) {
 	t.Helper()
-	resp := call(t, testkit.As(owner), http.MethodPut, "/contests", model.CreateContestRequest{
+	resp := call(t, testkit.As(owner), http.MethodPost, "/contests", model.CreateContestRequest{
 		Owner: owner, Name: name, HomeTeam: "Chiefs", AwayTeam: "Eagles", MaxSquares: maxSquares,
 	}, headers...)
 	var contest model.Contest
-	if resp.Status == http.StatusOK {
+	if resp.Status == http.StatusCreated {
 		resp.Decode(t, &contest)
 	}
 	return &contest, resp
@@ -125,7 +125,7 @@ func snapshot(t *testing.T, user string, contestID uuid.UUID) *model.ContestSnap
 
 func claim(t *testing.T, user string, contestID, squareID uuid.UUID) {
 	t.Helper()
-	resp := call(t, testkit.As(user), http.MethodPost, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, squareID), nil)
+	resp := call(t, testkit.As(user), http.MethodPut, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, squareID), nil)
 	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
 }
 

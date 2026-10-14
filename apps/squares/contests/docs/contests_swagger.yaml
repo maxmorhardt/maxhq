@@ -549,7 +549,7 @@ paths:
       summary: List my contests
       tags:
       - contests
-    put:
+    post:
       consumes:
       - application/json
       description: Creates a new 10x10 contest
@@ -568,8 +568,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           headers:
             ETag:
               description: Contest version, for If-Match on later updates
@@ -742,8 +742,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/model.ContestInvite'
         "400":
@@ -929,7 +929,7 @@ paths:
       summary: Update a participant's role or square limit
       tags:
       - participants
-  /contests/{id}/quarter-result:
+  /contests/{id}/quarter-results:
     post:
       consumes:
       - application/json
@@ -954,8 +954,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/model.QuarterResult'
         "400":
@@ -979,8 +979,8 @@ paths:
       summary: Record quarter result
       tags:
       - contests
-  /contests/{id}/quarter-result/rollback:
-    post:
+  /contests/{id}/quarter-results/latest:
+    delete:
       description: Deletes the most recently recorded quarter result and reverts the
         contest to the prior quarter. Only for manual (non game-linked) contests.
       parameters:
@@ -1018,7 +1018,51 @@ paths:
       tags:
       - contests
   /contests/{id}/squares/{squareId}/claim:
-    post:
+    delete:
+      consumes:
+      - application/json
+      description: Clears a square's value and owner, making it available for anyone
+        to claim
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Square ID
+        in: path
+        name: squareId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Square'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Clear square value and owner
+      tags:
+      - contests
+    put:
       description: Claims a square for the authenticated user using their profile
         default initials
       parameters:
@@ -1064,53 +1108,8 @@ paths:
       summary: Claim a single square in a contest
       tags:
       - contests
-  /contests/{id}/squares/{squareId}/clear:
-    post:
-      consumes:
-      - application/json
-      description: Clears a square's value and owner, making it available for anyone
-        to claim
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Square ID
-        in: path
-        name: squareId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Square'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Clear square value and owner
-      tags:
-      - contests
-  /contests/{id}/squares/clear-mine:
-    post:
+  /contests/{id}/squares/claims:
+    delete:
       consumes:
       - application/json
       description: Clears the value and owner of every square owned by the authenticated

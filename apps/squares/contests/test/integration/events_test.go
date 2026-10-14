@@ -18,7 +18,7 @@ import (
 
 func TestEvents_ContestChangesAreAppendedToTheContestStream(t *testing.T) {
 	contest, resp := createContest(t, ownerUser, "Stream Bowl", 100)
-	require.Equal(t, http.StatusOK, resp.Status)
+	require.Equal(t, http.StatusCreated, resp.Status)
 	square := snapshot(t, ownerUser, contest.ID).Contest.Squares[0]
 
 	claim(t, ownerUser, contest.ID, square.ID)
@@ -57,10 +57,10 @@ func TestEvents_GameKickoffAutoStartsAndScoresLinkedContests(t *testing.T) {
 
 	var contest model.Contest
 	require.Eventually(t, func() bool {
-		resp := call(t, testkit.As(ownerUser), http.MethodPut, "/contests", model.CreateContestRequest{
+		resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests", model.CreateContestRequest{
 			Owner: ownerUser, Name: "Kickoff " + game.ESPNID[3:], MaxSquares: 100, GameID: gameID.String(),
 		})
-		if resp.Status != http.StatusOK {
+		if resp.Status != http.StatusCreated {
 			return false
 		}
 		resp.Decode(t, &contest)
@@ -91,7 +91,7 @@ func TestEvents_GameKickoffAutoStartsAndScoresLinkedContests(t *testing.T) {
 func TestEvents_UserEventsCascadeInitialsAndScrubDeletedUsers(t *testing.T) {
 	user := "cascade@squares.test"
 	contest, resp := createContest(t, user, "Cascade Bowl", 10)
-	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 	square := snapshot(t, user, contest.ID).Contest.Squares[0]
 
 	claim(t, user, contest.ID, square.ID)
@@ -117,7 +117,7 @@ func TestEvents_UserEventsCascadeInitialsAndScrubDeletedUsers(t *testing.T) {
 func TestEvents_UndecodableEntriesDoNotBlockTheStream(t *testing.T) {
 	user := "after-poison@squares.test"
 	contest, resp := createContest(t, user, "Poison Bowl", 10)
-	require.Equal(t, http.StatusOK, resp.Status)
+	require.Equal(t, http.StatusCreated, resp.Status)
 	square := snapshot(t, user, contest.ID).Contest.Squares[0]
 	claim(t, user, contest.ID, square.ID)
 

@@ -34,10 +34,10 @@ func TestCreateContest_Success(t *testing.T) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.PUT("/contests", h.CreateContest)
+	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPut, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "NewContest", MaxSquares: 10}))
-	assert.Equal(t, http.StatusOK, w.Code)
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "NewContest", MaxSquares: 10}))
+	assert.Equal(t, http.StatusCreated, w.Code)
 	var resp model.Contest
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, contestID, resp.ID)
@@ -54,9 +54,9 @@ func TestCreateContest_InvalidBody(t *testing.T) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.PUT("/contests", h.CreateContest)
+	r.POST("/contests", h.CreateContest)
 
-	req, _ := http.NewRequest(http.MethodPut, "/contests", bytes.NewReader([]byte(`{invalid`)))
+	req, _ := http.NewRequest(http.MethodPost, "/contests", bytes.NewReader([]byte(`{invalid`)))
 	req.Header.Set("Content-Type", "application/json")
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -66,9 +66,9 @@ func TestCreateContest_OwnerMismatch(t *testing.T) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("user1"))
-	r.PUT("/contests", h.CreateContest)
+	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPut, "/contests", model.CreateContestRequest{Owner: "someone-else", Name: "Test", MaxSquares: 10}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "someone-else", Name: "Test", MaxSquares: 10}))
 	assert.Equal(t, http.StatusForbidden, w.Code)
 }
 
@@ -90,9 +90,9 @@ func createContestErr(t *testing.T, svcErr error, wantCode int) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.PUT("/contests", h.CreateContest)
+	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPut, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "Test", MaxSquares: 10}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "Test", MaxSquares: 10}))
 	assert.Equal(t, wantCode, w.Code)
 }
 
@@ -278,19 +278,19 @@ func TestRecordQuarterResult_Success(t *testing.T) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-result", h.RecordQuarterResult)
+	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
 
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-result", contestID), model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
-	assert.Equal(t, http.StatusOK, w.Code)
+	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-results", contestID), model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
+	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
 func TestRecordQuarterResult_InvalidID(t *testing.T) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-result", h.RecordQuarterResult)
+	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
 
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests/bad/quarter-result", model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests/bad/quarter-results", model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -298,9 +298,9 @@ func TestRecordQuarterResult_InvalidBody(t *testing.T) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-result", h.RecordQuarterResult)
+	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-result", uuid.New()), bytes.NewReader([]byte(`{bad`)))
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-results", uuid.New()), bytes.NewReader([]byte(`{bad`)))
 	req.Header.Set("Content-Type", "application/json")
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -330,9 +330,9 @@ func recordQuarterErr(t *testing.T, svcErr error, wantCode int) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-result", h.RecordQuarterResult)
+	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
 
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-result", uuid.New()), model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
+	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-results", uuid.New()), model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
 	assert.Equal(t, wantCode, w.Code)
 }
 
@@ -345,9 +345,9 @@ func TestRollbackLastQuarterResult_Success(t *testing.T) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-result/rollback", h.RollbackLastQuarterResult)
+	r.DELETE("/contests/:id/quarter-results/latest", h.RollbackLastQuarterResult)
 
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-result/rollback", contestID), nil))
+	w := doRequest(r, jsonReq(http.MethodDelete, fmt.Sprintf("/contests/%s/quarter-results/latest", contestID), nil))
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
@@ -355,9 +355,9 @@ func TestRollbackLastQuarterResult_InvalidID(t *testing.T) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-result/rollback", h.RollbackLastQuarterResult)
+	r.DELETE("/contests/:id/quarter-results/latest", h.RollbackLastQuarterResult)
 
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests/bad/quarter-result/rollback", nil))
+	w := doRequest(r, jsonReq(http.MethodDelete, "/contests/bad/quarter-results/latest", nil))
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -385,9 +385,9 @@ func rollbackQuarterErr(t *testing.T, svcErr error, wantCode int) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-result/rollback", h.RollbackLastQuarterResult)
+	r.DELETE("/contests/:id/quarter-results/latest", h.RollbackLastQuarterResult)
 
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-result/rollback", uuid.New()), nil))
+	w := doRequest(r, jsonReq(http.MethodDelete, fmt.Sprintf("/contests/%s/quarter-results/latest", uuid.New()), nil))
 	assert.Equal(t, wantCode, w.Code)
 }
 
@@ -400,9 +400,9 @@ func TestClaimSquare_Success(t *testing.T) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/squares/:squareId/claim", h.ClaimSquare)
+	r.PUT("/contests/:id/squares/:squareId/claim", h.ClaimSquare)
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, squareID), http.NoBody)
+	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, squareID), http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -412,9 +412,9 @@ func claimSquareBadID(t *testing.T, target string) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/squares/:squareId/claim", h.ClaimSquare)
+	r.PUT("/contests/:id/squares/:squareId/claim", h.ClaimSquare)
 
-	req, _ := http.NewRequest(http.MethodPost, target, http.NoBody)
+	req, _ := http.NewRequest(http.MethodPut, target, http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -459,9 +459,9 @@ func claimSquareErr(t *testing.T, user string, svcErr error, wantCode int) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware(user))
-	r.POST("/contests/:id/squares/:squareId/claim", h.ClaimSquare)
+	r.PUT("/contests/:id/squares/:squareId/claim", h.ClaimSquare)
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/squares/%s/claim", uuid.New(), uuid.New()), http.NoBody)
+	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/contests/%s/squares/%s/claim", uuid.New(), uuid.New()), http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
@@ -475,18 +475,18 @@ func TestClearSquare_Success(t *testing.T) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/squares/:squareId/clear", h.ClearSquare)
+	r.DELETE("/contests/:id/squares/:squareId/claim", h.ClearSquare)
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/squares/%s/clear", contestID, squareID), http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, squareID), http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestClearSquare_InvalidContestID(t *testing.T) {
-	clearSquareBadID(t, fmt.Sprintf("/contests/bad/squares/%s/clear", uuid.New()))
+	clearSquareBadID(t, fmt.Sprintf("/contests/bad/squares/%s/claim", uuid.New()))
 }
 func TestClearSquare_InvalidSquareID(t *testing.T) {
-	clearSquareBadID(t, fmt.Sprintf("/contests/%s/squares/bad/clear", uuid.New()))
+	clearSquareBadID(t, fmt.Sprintf("/contests/%s/squares/bad/claim", uuid.New()))
 }
 
 func clearSquareBadID(t *testing.T, target string) {
@@ -494,9 +494,9 @@ func clearSquareBadID(t *testing.T, target string) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/squares/:squareId/clear", h.ClearSquare)
+	r.DELETE("/contests/:id/squares/:squareId/claim", h.ClearSquare)
 
-	req, _ := http.NewRequest(http.MethodPost, target, http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, target, http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -525,9 +525,9 @@ func clearSquareErr(t *testing.T, user string, svcErr error, wantCode int) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware(user))
-	r.POST("/contests/:id/squares/:squareId/clear", h.ClearSquare)
+	r.DELETE("/contests/:id/squares/:squareId/claim", h.ClearSquare)
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/squares/%s/clear", uuid.New(), uuid.New()), http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/contests/%s/squares/%s/claim", uuid.New(), uuid.New()), http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
@@ -541,9 +541,9 @@ func TestClearMySquares_Success(t *testing.T) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/squares/clear-mine", h.ClearMySquares)
+	r.DELETE("/contests/:id/squares/claims", h.ClearMySquares)
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/squares/clear-mine", contestID), http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/contests/%s/squares/claims", contestID), http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp []model.Square
@@ -555,9 +555,9 @@ func TestClearMySquares_InvalidContestID(t *testing.T) {
 	h := NewContestHandler(mocks.NewContestService(t))
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/squares/clear-mine", h.ClearMySquares)
+	r.DELETE("/contests/:id/squares/claims", h.ClearMySquares)
 
-	req, _ := http.NewRequest(http.MethodPost, "/contests/bad/squares/clear-mine", http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, "/contests/bad/squares/claims", http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -583,9 +583,9 @@ func clearMySquaresErr(t *testing.T, svcErr error, wantCode int) {
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/squares/clear-mine", h.ClearMySquares)
+	r.DELETE("/contests/:id/squares/claims", h.ClearMySquares)
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/squares/clear-mine", uuid.New()), http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/contests/%s/squares/claims", uuid.New()), http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, wantCode, w.Code)
 }
@@ -721,9 +721,9 @@ func TestRecordQuarterResult_NewErrorMappings(t *testing.T) {
 		svc.EXPECT().RecordQuarterResult(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, err)
 		r := gin.New()
 		r.Use(authenticatedMiddleware("owner1"))
-		r.POST("/contests/:id/quarter-result", NewContestHandler(svc).RecordQuarterResult)
+		r.POST("/contests/:id/quarter-results", NewContestHandler(svc).RecordQuarterResult)
 
-		w := doRequest(r, jsonReq(http.MethodPost, "/contests/"+uuid.NewString()+"/quarter-result", model.QuarterResultRequest{HomeTeamScore: 7}))
+		w := doRequest(r, jsonReq(http.MethodPost, "/contests/"+uuid.NewString()+"/quarter-results", model.QuarterResultRequest{HomeTeamScore: 7}))
 
 		assert.Equal(t, want, w.Code, err.Error())
 	}

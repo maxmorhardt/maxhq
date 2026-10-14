@@ -87,7 +87,7 @@
                     }
                 }
             },
-            "put": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -122,8 +122,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestSwagger"
                         },
@@ -392,8 +392,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestInvite"
                         }
@@ -673,7 +673,7 @@
                 }
             }
         },
-        "/contests/{id}/quarter-result": {
+        "/contests/{id}/quarter-results": {
             "post": {
                 "security": [
                     {
@@ -716,8 +716,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.QuarterResult"
                         }
@@ -749,8 +749,8 @@
                 }
             }
         },
-        "/contests/{id}/quarter-result/rollback": {
-            "post": {
+        "/contests/{id}/quarter-results/latest": {
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -807,8 +807,8 @@
                 }
             }
         },
-        "/contests/{id}/squares/clear-mine": {
-            "post": {
+        "/contests/{id}/squares/claims": {
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -942,7 +942,7 @@
             }
         },
         "/contests/{id}/squares/{squareId}/claim": {
-            "post": {
+            "put": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -1010,10 +1010,8 @@
                         }
                     }
                 }
-            }
-        },
-        "/contests/{id}/squares/{squareId}/clear": {
-            "post": {
+            },
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
