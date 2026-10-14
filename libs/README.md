@@ -9,6 +9,7 @@ Shared code for the Go services in this repo. These modules are not released on 
 | | `database` | schema-scoped Postgres connections, embedded migrations, the `Transactor` |
 | | `cache` | Valkey client and key prefix, read-through cache, revocations, idempotency records |
 | | `streams` | the transactional outbox, its relay to Valkey streams, and ordered consumers that keep their position in Postgres |
+| | `httpclient` | `Internal`, the client for another service's `/internal` routes: shared token, JSON decoding, retries on network errors and 5xx |
 | | `middleware` | gateway identity, internal token, CORS, idempotency keys, logging, metrics, request size |
 | | `server` | engine, health checks, swagger page, infrastructure wiring, graceful shutdown |
 | | `logging` | the request-scoped logger carried on the context |

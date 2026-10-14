@@ -11,22 +11,22 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `games/` - ESPN schedule and live scores. Owns the `games` schema.
   - `accounts/` - profiles, account deletion, the contact form. Owns the `accounts` schema.
   - `realtime/` - server-sent events for one contest, resumable with `Last-Event-ID`. Owns no data.
-- Each service is its own Go module, image (`maxmorhardt/squares-<service>`), Argo CD Application, and release-please component. Its Helm chart is `squares-<service>` in the `charts` repo. A service never imports another service's packages; Go's `internal` rule enforces it.
+- Each service is its own Go module, image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>`), Argo CD Application, and release-please component. Its Helm chart is `squares-<service>` in the `charts` repo. A service never imports another service's packages; Go's `internal` rule enforces it.
 - Shared code lives in two library modules, consumed through `replace` directives:
-  - `libs/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), middleware, server, metrics.
+  - `libs/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
   - `libs/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
 - Everything sits behind the `maxstash` Envoy Gateway at `api.maxstash.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
 
 ## Service Boundaries
 
 - A service writes only its own schema. Data another service owns arrives as events and is kept as a local copy (contests keeps `users`, `games`, `game_scores`).
-- Every change another service cares about is written to the service's `outbox` table **in the same transaction** as the change, through `streams.Outbox`. The relay appends it to a Redis stream, deduplicated by outbox id. Never write to a stream directly.
+- Every change another service cares about is written to the service's `outbox` table **in the same transaction** as the change, through `streams.Outbox`. The relay appends it to a Valkey stream, deduplicated by outbox id. Never write to a stream directly.
 - Streams and their writers:
   - `contest:<id>` - contests. Read by realtime.
   - `games` - games. Read by contests.
   - `users` - accounts. Read by contests.
 - Consumers keep their position in their own schema (`stream_offsets`), handle entries in order, and retry a failing entry with backoff before moving on. A handler must tolerate seeing an entry again after a crash. A payload that can never decode is logged and skipped.
-- Synchronous calls between services are limited to two internal reads on contests (`/internal/contests/:id/snapshot` for realtime, `/internal/users/:email/activity` for accounts), guarded by `X-Internal-Token` and a NetworkPolicy. Keep it that way.
+- Synchronous calls between services are limited to two internal reads on contests (`/internal/contests/:id/snapshot` for realtime, `/internal/users/:email/activity` for accounts), guarded by `X-Internal-Token` and a NetworkPolicy, and made through `httpclient.Internal`, which retries network errors and 5xx. Keep it that way.
 - Changing a payload in `libs/squares` is a contract change: keep it backwards compatible (add fields, never rename or retype), and land the writer and every reader in the same PR.
 
 ## Core Principles
@@ -55,7 +55,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 ## Agent Instructions
 
 - Make the smallest safe change that solves the requested problem.
-- **Each module's Makefile is its task runner.** Run `make <target>` from that module's directory. CI runs the same targets.
+- **Each module's Makefile is its task runner.** Run `make <target>` from that module's directory. CI runs the same targets. A service's Makefile only sets `SERVICE` and includes `../service.mk` (and `../migrate.mk` when it owns a schema); change targets there, once.
 - One logical resource per file, lowercase names (`contest_service.go`, not `services.go`).
 - After changing an interface, run `make mocks`. After changing handler annotations, run `make swag`.
 - `prealloc`, `gocritic`, and `unparam` are enabled, so give slices capacity hints and drop unused parameters.
@@ -68,7 +68,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 
 - Unit tests: one `_test.go` per source file. Black-box (`package <pkg>_test`) when the test needs mockery mocks.
 - Repositories are tested with go-sqlmock. Set `mock.MatchExpectationsInOrder(false)`, since GORM preloads run in non-deterministic order.
-- `make test-integration` runs the service against real Postgres and Valkey containers (Docker required; on Windows use Docker Desktop). Other services are replaced by small fakes or by appending their events to Redis directly.
+- `make test-integration` runs the service against real Postgres and Valkey containers (Docker required; on Windows use Docker Desktop). Other services are replaced by small fakes or by appending their events to Valkey directly.
 - `make test-smoke` builds the service's real binary, starts it against Postgres and Valkey, and checks it migrates, reports ready, serves its API reference, and rejects requests without the gateway's identity. `make test-integration` runs it with the integration tests, and CI runs that.
 - Each database service's integration tests start from the pre-split monolith's tables (`test/integration/testdata/legacy_schema.sql`) and check the service adopts its own.
 - Coverage is gated at **80%** per service by `.testcoverage.yml`. Do not lower the threshold to get a build green.

@@ -13,7 +13,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 - `cmd/accounts/main.go` - loads config, connects, and runs the bootstrap.
 - `internal/bootstrap/` - composition root: `Connect` opens infrastructure, `New` wires handlers, services, and repositories, `Start` runs background work, `Run` serves.
 - `internal/handler/`, `internal/service/`, `internal/repository/`, `internal/routes/` - the usual layers, one file per resource.
-- `internal/clients/` - the contests activity client.
+- `internal/clients/` - the contests activity client, a thin wrapper over `httpclient.Internal` that maps statuses to this service's errors.
 - `internal/templates/` - the contact email template.
 - `internal/model/`, `internal/errs/` - this service's types and sentinel errors.
 - `internal/mocks/` - mockery output for `.mockery.yaml`.

@@ -13,7 +13,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 - `cmd/realtime/main.go` - loads config, connects, and runs the bootstrap.
 - `internal/bootstrap/` - composition root: `Connect` opens infrastructure, `New` wires handlers, services, and repositories, `Start` runs background work, `Run` serves.
 - `internal/handler/`, `internal/service/`, `internal/routes/` - the usual layers, one file per resource.
-- `internal/clients/` - the contests snapshot client.
+- `internal/clients/` - the contests snapshot client, a thin wrapper over `httpclient.Internal` that maps statuses to this service's errors.
 - `internal/service/hub.go` - one reader per replica that fans stream entries out to open connections.
 - `internal/service/stream_service.go` - resume or snapshot, then replay, then live.
 - `internal/model/`, `internal/errs/`, `internal/metrics/` - this service's types and sentinel errors.
