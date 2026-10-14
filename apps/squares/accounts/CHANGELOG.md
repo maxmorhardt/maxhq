@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/maxmorhardt/maxstash/compare/squares-accounts/1.0.0...squares-accounts/1.1.0) (2026-10-14)
+
+
+### Features
+
+* **squares-accounts:** leave the contact form rate limit to the gateway ([85dd458](https://github.com/maxmorhardt/maxstash/commit/85dd4583ad9db310954e2b86892b634356e250e4))
+* **squares-contests:** one cursor-paginated feed of owned and joined contests ([946b2cc](https://github.com/maxmorhardt/maxstash/commit/946b2cc72c5f0a2a1d0107e9fc447e7047594a72))
+* **squares:** one contest feed, gateway rate limiting, package renames ([#79](https://github.com/maxmorhardt/maxstash/issues/79)) ([1005829](https://github.com/maxmorhardt/maxstash/commit/10058296d9d005314e3f10415366dd8f8df6ec54))
+
 ## 1.0.0 (2026-10-13)
 
 
