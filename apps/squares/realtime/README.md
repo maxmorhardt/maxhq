@@ -21,7 +21,7 @@ Live contest updates for browsers, over server-sent events. One of the squares b
 ## Development
 
 1. Copy `.env.example` to `.env` and fill it in.
-2. Start Valkey and the contests service (or `make valkey` to port-forward the cluster's).
+2. Start Valkey and the contests service with `docker compose -f ../compose.yaml up -d valkey contests`, or the whole stack with `make up` in [..](../README.md#running-locally).
 3. `make run`. `make help` lists every task.
 4. Without the gateway, send the identity headers yourself:
    ```bash
