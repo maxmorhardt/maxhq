@@ -1,6 +1,6 @@
 {
   "apps/maxstash": "3.0.3",
-  "apps/squares/web": "3.0.0",
+  "apps/squares/web": "3.1.0\r",
   "apps/squares/games": "1.1.0",
   "apps/squares/contests": "1.1.0",
   "apps/squares/accounts": "1.1.0",
