@@ -5,11 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/maxmorhardt/maxstash/libs/squares/initials"
+
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/clients"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
 	"github.com/maxmorhardt/maxstash/libs/platform/logging"
@@ -69,7 +70,7 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	newUser := &model.User{
 		Email:           email,
 		DisplayName:     defaultDisplayName,
-		DefaultInitials: util.InitialsFromName(defaultDisplayName),
+		DefaultInitials: initials.FromName(defaultDisplayName),
 	}
 
 	if summary, activityErr := s.contests.GetUserActivity(ctx, email); activityErr != nil {
@@ -96,13 +97,13 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	return user, nil
 }
 
-func (s *userService) UpdateProfile(ctx context.Context, email, initials string) (*model.User, error) {
+func (s *userService) UpdateProfile(ctx context.Context, email, defaultInitials string) (*model.User, error) {
 	log := logging.FromContext(ctx)
 
 	var user *model.User
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		var err error
-		user, err = s.repo.UpdateInitials(ctx, email, initials)
+		user, err = s.repo.UpdateInitials(ctx, email, defaultInitials)
 		if err != nil {
 			return err
 		}

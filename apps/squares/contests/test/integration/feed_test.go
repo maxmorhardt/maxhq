@@ -28,14 +28,14 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 	for i := range 3 {
 		name := fmt.Sprintf("Feed %d", i)
 		_, resp := createContest(t, owner, name, 10)
-		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+		require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 		names = append(names, name)
 	}
 	joined, _ := createContest(t, owner, "Feed Joined", 10)
 
 	invite := call(t, testkit.As(owner), http.MethodPost, "/contests/"+joined.ID.String()+"/invites",
 		model.CreateInviteRequest{MaxSquares: 10, Role: "participant"})
-	require.Equal(t, http.StatusOK, invite.Status, string(invite.Body))
+	require.Equal(t, http.StatusCreated, invite.Status, string(invite.Body))
 	var inv model.ContestInvite
 	invite.Decode(t, &inv)
 	require.Equal(t, http.StatusCreated, call(t, testkit.As(member), http.MethodPost, "/invites/"+inv.Token+"/redeem", nil).Status)
@@ -84,13 +84,9 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 		assert.Zero(t, owned.Contests[0].MySquares)
 	})
 
-	t.Run("filters by status and sort", func(t *testing.T) {
+	t.Run("filters by status", func(t *testing.T) {
 		assert.Len(t, feed(t, owner, url.Values{"status": {"open"}}).Contests, 4)
-		assert.Empty(t, feed(t, owner, url.Values{"status": {"live,finished"}}).Contests)
-
-		byCreated := feed(t, owner, url.Values{"sort": {"created"}})
-		require.Len(t, byCreated.Contests, 4)
-		assert.Equal(t, "Feed Joined", byCreated.Contests[0].Name)
+		assert.Empty(t, feed(t, owner, url.Values{"status": {"finished"}}).Contests)
 	})
 
 	t.Run("a deleted contest leaves the feed", func(t *testing.T) {

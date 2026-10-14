@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
+
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/consumer"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/handler"
@@ -74,7 +76,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	snapshotService := service.NewSnapshotService(contestRepo, participantService)
 
 	engine := server.NewEngine(cfg.Server)
-	server.RegisterValidation("contestname", handler.ValidateContestName)
+	server.RegisterValidation("contestname", util.ValidateContestName)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
 		"database": server.DatabaseCheck(db),
 	}), Service)

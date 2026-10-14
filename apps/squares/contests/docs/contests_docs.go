@@ -57,8 +57,13 @@ const docTemplatecontests = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "open",
+                            "live",
+                            "finished"
+                        ],
                         "type": "string",
-                        "description": "Comma-separated: open, live, finished",
+                        "description": "open, live, or finished",
                         "name": "status",
                         "in": "query"
                     },
@@ -66,23 +71,6 @@ const docTemplatecontests = `{
                         "type": "string",
                         "description": "Case-insensitive name filter",
                         "name": "search",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "RFC 3339 time; only contests updated at or after it",
-                        "name": "updatedSince",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "updated",
-                            "created"
-                        ],
-                        "type": "string",
-                        "default": "updated",
-                        "description": "Sort by last update or creation",
-                        "name": "sort",
                         "in": "query"
                     }
                 ],
@@ -107,7 +95,7 @@ const docTemplatecontests = `{
                     }
                 }
             },
-            "put": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -142,8 +130,8 @@ const docTemplatecontests = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestSwagger"
                         },
@@ -412,8 +400,8 @@ const docTemplatecontests = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestInvite"
                         }
@@ -693,7 +681,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/quarter-result": {
+        "/contests/{id}/quarter-results": {
             "post": {
                 "security": [
                     {
@@ -736,8 +724,8 @@ const docTemplatecontests = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.QuarterResult"
                         }
@@ -769,8 +757,8 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/quarter-result/rollback": {
-            "post": {
+        "/contests/{id}/quarter-results/latest": {
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -827,8 +815,8 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/squares/clear-mine": {
-            "post": {
+        "/contests/{id}/squares/claims": {
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -891,8 +879,78 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/squares/{squareId}/claim": {
+        "/contests/{id}/squares/random": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Claims up to count random empty squares for the caller in one step, capped by their square limit and what is left",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contests"
+                ],
+                "summary": "Claim random empty squares",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contest ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "How many squares",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RandomClaimRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RandomClaimResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/contests/{id}/squares/{squareId}/claim": {
+            "put": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -960,10 +1018,8 @@ const docTemplatecontests = `{
                         }
                     }
                 }
-            }
-        },
-        "/contests/{id}/squares/{squareId}/clear": {
-            "post": {
+            },
+            "delete": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -2070,6 +2126,35 @@ const docTemplatecontests = `{
                     "type": "integer",
                     "maximum": 9999,
                     "minimum": 0
+                }
+            }
+        },
+        "model.RandomClaimRequest": {
+            "type": "object",
+            "required": [
+                "count"
+            ],
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1,
+                    "example": 5
+                }
+            }
+        },
+        "model.RandomClaimResponse": {
+            "type": "object",
+            "properties": {
+                "requested": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "squares": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Square"
+                    }
                 }
             }
         },

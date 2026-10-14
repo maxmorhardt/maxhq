@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
@@ -23,6 +25,7 @@ type ContestHandler interface {
 	RollbackLastQuarterResult(c *gin.Context)
 
 	ClaimSquare(c *gin.Context)
+	ClaimRandomSquares(c *gin.Context)
 	ClearSquare(c *gin.Context)
 	ClearMySquares(c *gin.Context)
 }
@@ -44,13 +47,13 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 // @Produce json
 // @Param contest body model.CreateContestRequest true "Contest"
 // @Param Idempotency-Key header string false "Replays the first response when a create is retried with the same key"
-// @Success 200 {object} model.ContestSwagger
-// @Header 200 {string} ETag "Contest version, for If-Match on later updates"
+// @Success 201 {object} model.ContestSwagger
+// @Header 201 {string} ETag "Contest version, for If-Match on later updates"
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests [put]
+// @Router /contests [post]
 func (h *contestHandler) CreateContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -84,8 +87,8 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	setETag(c, contest.Version)
-	c.JSON(http.StatusOK, contest)
+	util.SetETag(c, contest.Version)
+	c.JSON(http.StatusCreated, contest)
 }
 
 // @Summary Update contest
@@ -130,7 +133,7 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	expectedVersion, err := parseIfMatch(c.GetHeader("If-Match"))
+	expectedVersion, err := util.ParseIfMatch(c.GetHeader("If-Match"))
 	if err != nil {
 		log.Warn("invalid if-match header", "error", err)
 		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid If-Match header", c))
@@ -160,7 +163,7 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	setETag(c, updatedContest.Version)
+	util.SetETag(c, updatedContest.Version)
 	c.JSON(http.StatusOK, updatedContest)
 }
 
@@ -253,7 +256,7 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 		return
 	}
 
-	setETag(c, contest.Version)
+	util.SetETag(c, contest.Version)
 	c.JSON(http.StatusOK, contest)
 }
 
@@ -265,13 +268,13 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 // @Param id path string true "Contest ID"
 // @Param quarterResult body model.QuarterResultRequest true "Quarter result data"
 // @Param Idempotency-Key header string false "Replays the first response when a submission is retried with the same key"
-// @Success 200 {object} model.QuarterResult
+// @Success 201 {object} model.QuarterResult
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/quarter-result [post]
+// @Router /contests/{id}/quarter-results [post]
 func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -325,7 +328,7 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusCreated, result)
 }
 
 // @Summary Roll back the last quarter result
@@ -339,7 +342,7 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/quarter-result/rollback [post]
+// @Router /contests/{id}/quarter-results/latest [delete]
 func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -395,7 +398,7 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 // @Failure 409 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/squares/{squareId}/claim [post]
+// @Router /contests/{id}/squares/{squareId}/claim [put]
 func (h *contestHandler) ClaimSquare(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -453,6 +456,51 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 	c.JSON(http.StatusOK, claimedSquare)
 }
 
+// @Summary Claim random empty squares
+// @Description Claims up to count random empty squares for the caller in one step, capped by their square limit and what is left
+// @Tags contests
+// @Accept json
+// @Produce json
+// @Param id path string true "Contest ID"
+// @Param request body model.RandomClaimRequest true "How many squares"
+// @Success 200 {object} model.RandomClaimResponse
+// @Failure 400 {object} api.APIError
+// @Failure 403 {object} api.APIError
+// @Failure 409 {object} api.APIError
+// @Failure 500 {object} api.APIError
+// @Security BearerAuth
+// @Router /contests/{id}/squares/random [post]
+func (h *contestHandler) ClaimRandomSquares(c *gin.Context) {
+	contestID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
+		return
+	}
+
+	var req model.RandomClaimRequest
+	if c.ShouldBindJSON(&req) != nil {
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
+		return
+	}
+
+	resp, err := h.contestService.ClaimRandomSquares(c.Request.Context(), contestID, req.Count, c.GetString(api.UserKey))
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrSquareNotEditable), errors.Is(err, errs.ErrUnauthorizedSquareEdit), errors.Is(err, errs.ErrNotParticipant):
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
+		case errors.Is(err, errs.ErrMissingInitials), errors.Is(err, errs.ErrNoEmptySquares), errors.Is(err, errs.ErrSquareLimitReached):
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
+		case errors.Is(err, errs.ErrClaimsNotFound):
+			c.JSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, api.Message(err), c))
+		default:
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to claim squares", c))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 // @Summary Clear square value and owner
 // @Description Clears a square's value and owner, making it available for anyone to claim
 // @Tags contests
@@ -466,7 +514,7 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/squares/{squareId}/clear [post]
+// @Router /contests/{id}/squares/{squareId}/claim [delete]
 func (h *contestHandler) ClearSquare(c *gin.Context) {
 	log := logging.FromGin(c)
 
@@ -531,7 +579,7 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/squares/clear-mine [post]
+// @Router /contests/{id}/squares/claims [delete]
 func (h *contestHandler) ClearMySquares(c *gin.Context) {
 	log := logging.FromGin(c)
 

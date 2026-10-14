@@ -53,7 +53,6 @@ func NewEngine(cfg config.ServerConfig) *gin.Engine {
 	return r
 }
 
-// a zero writeTimeout leaves long-lived responses such as sse streams open
 func NewHTTPServer(cfg config.ServerConfig, handler http.Handler, writeTimeout time.Duration) *http.Server {
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),

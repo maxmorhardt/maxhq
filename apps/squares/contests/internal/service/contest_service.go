@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/maxmorhardt/maxstash/libs/squares/initials"
+
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/metrics"
@@ -30,6 +32,7 @@ type ContestService interface {
 	DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error
 
 	ClaimSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error)
+	ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, user string) (*model.RandomClaimResponse, error)
 	ClearSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error)
 	ClearUserSquares(ctx context.Context, contestID uuid.UUID, user string) ([]model.Square, error)
 }
@@ -588,7 +591,7 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 		return nil, errs.ErrClaimsNotFound
 	}
 
-	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, util.InitialsFromName(claims.Name))
+	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, initials.FromName(claims.Name))
 	if err != nil {
 		log.Error("failed to load profile for square claim", "user", user, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
@@ -630,6 +633,65 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 
 	log.Info("square claimed successfully", "square_id", square.ID, "value", profile.DefaultInitials, "owner", user)
 	return claimedSquare, nil
+}
+
+func (s *contestService) ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, user string) (*model.RandomClaimResponse, error) {
+	log := logging.FromContext(ctx).With("contest_id", contestID, "user", user)
+
+	if err := s.participantService.Authorize(ctx, contestID, user, ActionClaimSquare); err != nil {
+		if errors.Is(err, errs.ErrNotParticipant) || errors.Is(err, errs.ErrDatabaseUnavailable) {
+			return nil, err
+		}
+		log.Warn("user not authorized to claim squares")
+		return nil, errs.ErrUnauthorizedSquareEdit
+	}
+
+	claims := api.ClaimsFromContext(ctx)
+	if claims == nil {
+		log.Error("claims not found in context")
+		return nil, errs.ErrClaimsNotFound
+	}
+
+	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, initials.FromName(claims.Name))
+	if err != nil {
+		log.Error("failed to load profile for random claim", "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+	if profile.DefaultInitials == "" {
+		return nil, errs.ErrMissingInitials
+	}
+
+	var claimed []model.Square
+	err = s.tx.Do(ctx, func(ctx context.Context) error {
+		var claimErr error
+		claimed, claimErr = s.repo.ClaimRandomSquares(ctx, contestID, count, profile.DefaultInitials, user, claims.Name)
+		if claimErr != nil {
+			return claimErr
+		}
+
+		for i := range claimed {
+			if pubErr := s.events.PublishSquareUpdate(ctx, contestID, user, &claimed[i]); pubErr != nil {
+				return pubErr
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrSquareLimitReached), errors.Is(err, errs.ErrNoEmptySquares), errors.Is(err, errs.ErrSquareNotEditable):
+			log.Warn("random claim rejected", "error", err)
+		default:
+			log.Error("failed to claim random squares", "error", err)
+		}
+		return nil, err
+	}
+
+	for range claimed {
+		metrics.IncSquareClaimed()
+	}
+
+	log.Info("claimed random squares", "requested", count, "claimed", len(claimed))
+	return &model.RandomClaimResponse{Squares: claimed, Requested: count}, nil
 }
 
 func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error) {

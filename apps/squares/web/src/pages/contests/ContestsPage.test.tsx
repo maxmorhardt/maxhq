@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
 import { Provider } from 'react-redux';
@@ -171,9 +171,7 @@ describe('ContestsPage', () => {
     renderPage();
 
     await screen.findByText('First');
-    expect(getContestFeed).toHaveBeenCalledWith(
-      expect.objectContaining({ limit: 20, sort: 'updated' })
-    );
+    expect(getContestFeed).toHaveBeenCalledWith(expect.objectContaining({ limit: 20 }));
 
     scrollToBottom();
 
@@ -203,15 +201,17 @@ describe('ContestsPage', () => {
       expect(getContestFeed).toHaveBeenLastCalledWith(expect.objectContaining({ role: 'joined' }))
     );
 
-    fireEvent.click(screen.getByText('Live'));
+    fireEvent.click(screen.getByRole('button', { name: 'Live' }));
     await waitFor(() =>
       expect(getContestFeed).toHaveBeenLastCalledWith(
-        expect.objectContaining({ role: 'joined', status: ['live'] })
+        expect.objectContaining({ role: 'joined', status: 'live' })
       )
     );
     expect(await screen.findByText('No contests match these filters')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Live'));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Status' })).getByRole('button', { name: 'All' })
+    );
     await waitFor(() =>
       expect(getContestFeed).toHaveBeenLastCalledWith(
         expect.objectContaining({ status: undefined })

@@ -25,6 +25,7 @@ type ContestRepository interface {
 	RollbackQuarterResult(ctx context.Context, resultID uuid.UUID, contest *model.Contest) error
 
 	ClaimSquare(ctx context.Context, square *model.Square, value, owner, ownerName string) (*model.Square, error)
+	ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, value, owner, ownerName string) ([]model.Square, error)
 	ClearSquare(ctx context.Context, square *model.Square) (*model.Square, error)
 	GhostSquare(ctx context.Context, square *model.Square) (*model.Square, error)
 	ClearSquaresByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error)
@@ -253,6 +254,62 @@ func (r *contestRepository) ClaimSquare(ctx context.Context, square *model.Squar
 	}
 
 	return square, nil
+}
+
+// SKIP LOCKED lets concurrent fills take different squares instead of waiting on or colliding with each other
+func (r *contestRepository) ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, value, owner, ownerName string) ([]model.Square, error) {
+	var claimed []model.Square
+	err := database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
+		if err := lockActiveContest(tx, contestID); err != nil {
+			return err
+		}
+
+		var participant model.ContestParticipant
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("contest_id = ? AND user_id = ?", contestID, owner).
+			First(&participant).Error; err != nil {
+			return err
+		}
+
+		var held int64
+		if err := tx.Model(&model.Square{}).
+			Where("contest_id = ? AND owner = ? AND value != ?", contestID, owner, "").
+			Count(&held).Error; err != nil {
+			return err
+		}
+		remaining := participant.MaxSquares - int(held)
+		if remaining <= 0 {
+			return errs.ErrSquareLimitReached
+		}
+		count = min(count, remaining)
+
+		var ids []uuid.UUID
+		if err := tx.Raw(
+			`SELECT id FROM squares WHERE contest_id = ? AND owner = '' AND value = '' ORDER BY random() LIMIT ? FOR UPDATE SKIP LOCKED`,
+			contestID, count,
+		).Scan(&ids).Error; err != nil {
+			return err
+		}
+		if len(ids) == 0 {
+			return errs.ErrNoEmptySquares
+		}
+
+		if err := tx.Model(&model.Square{}).
+			Where("id IN ?", ids).
+			Updates(map[string]any{
+				"value":      value,
+				"owner":      owner,
+				"owner_name": ownerName,
+				"updated_by": owner,
+				"version":    gorm.Expr("version + 1"),
+			}).Error; err != nil {
+			return err
+		}
+
+		return tx.Where("id IN ?", ids).Order("\"row\", col").Find(&claimed).Error
+	})
+
+	return claimed, err
 }
 
 func (r *contestRepository) ClearSquare(ctx context.Context, square *model.Square) (*model.Square, error) {

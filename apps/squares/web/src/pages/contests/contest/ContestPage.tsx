@@ -13,14 +13,13 @@ import NotFoundPage from '../../error/NotFoundPage';
 import ForbiddenPage from '../../error/ForbiddenPage';
 import UnauthorizedPage from '../../error/UnauthorizedPage';
 import SignInDialog from '../../../components/auth/SignInDialog';
-import WhatIfScoreboard from '../../../components/contest/sidebar/WhatIfScoreboard';
 import WinnersBoard from '../../../components/contest/sidebar/WinnersBoard';
 import {
   selectCurrentContest,
   selectSquareErrorCode,
 } from '../../../features/contests/contestSelectors';
 import { clearSquareErrorCode } from '../../../features/contests/contestSlice';
-import { claimSquare, clearMySquares } from '../../../features/contests/contestThunks';
+import { claimRandomSquaresThunk, clearMySquares } from '../../../features/contests/contestThunks';
 import { selectDefaultInitials } from '../../../features/user/userSelectors';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { useContestEvents } from '../../../hooks/useContestEvents';
@@ -140,43 +139,22 @@ export default function ContestPage() {
       return;
     }
 
-    // shuffle a snapshot so every pick is distinct without re-reading state mid-loop
-    const shuffled = [...emptySquares];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
-    const picks = shuffled.slice(0, Math.max(1, count));
+    const requested = Math.min(Math.max(1, count), emptySquares.length);
 
     setRandomSquareLoading(true);
-    let claimed = 0;
     try {
-      for (const square of picks) {
-        await dispatch(
-          claimSquare({
-            contestId: currentContest.id,
-            squareId: square.id,
-          })
-        ).unwrap();
-        claimed++;
+      const result = await dispatch(
+        claimRandomSquaresThunk({ contestId: currentContest.id, count: requested })
+      ).unwrap();
+      if (result.squares.length < requested) {
+        showToast(`Claimed ${result.squares.length} of ${requested} squares`, 'warning');
       }
     } catch (err: unknown) {
       const apiError = err as APIError | undefined;
-
-      // only a 409 means someone claimed a pick first; anything else is a real failure
-      if (apiError?.code === 409) {
-        const message =
-          claimed > 0
-            ? `Claimed ${claimed} of ${picks.length} squares`
-            : 'Could not claim that square, someone may have taken it';
-        showToast(message, 'warning');
-      } else {
-        const reason = apiError?.message ?? 'Could not claim squares';
-        const message =
-          claimed > 0 ? `Claimed ${claimed} of ${picks.length} squares. ${reason}` : reason;
-        showToast(message, 'error');
-      }
+      showToast(
+        apiError?.message ?? 'Could not claim squares',
+        apiError?.code === 409 ? 'warning' : 'error'
+      );
     } finally {
       setRandomSquareLoading(false);
     }
@@ -296,7 +274,7 @@ export default function ContestPage() {
             display: { xs: 'none', lg: 'flex' },
             flexDirection: 'column',
             gap: 1.5,
-            flex: '0 0 280px',
+            flex: '0 0 340px',
           }}
         >
           <ContestDetails
@@ -306,7 +284,6 @@ export default function ContestPage() {
             onClearMySquares={handleClearMySquares}
             clearMySquaresLoading={clearMySquaresLoading}
           />
-          <WhatIfScoreboard />
         </Box>
       </Box>
 
@@ -332,7 +309,6 @@ export default function ContestPage() {
           clearMySquaresLoading={clearMySquaresLoading}
         />
         <WinnersBoard quarterResults={currentContest?.quarterResults} />
-        <WhatIfScoreboard />
         <ActivityFeed events={activityEvents} />
       </Box>
 

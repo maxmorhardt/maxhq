@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -34,10 +33,8 @@ func NewFeedHandler(feedService service.FeedService) FeedHandler {
 // @Param cursor query string false "nextCursor from the previous page"
 // @Param limit query int false "Page size" minimum(1) maximum(50) default(20)
 // @Param role query string false "owned or joined" Enums(owned, joined)
-// @Param status query string false "Comma-separated: open, live, finished"
+// @Param status query string false "open, live, or finished" Enums(open, live, finished)
 // @Param search query string false "Case-insensitive name filter"
-// @Param updatedSince query string false "RFC 3339 time; only contests updated at or after it"
-// @Param sort query string false "Sort by last update or creation" Enums(updated, created) default(updated)
 // @Success 200 {object} model.ContestFeedResponse
 // @Failure 400 {object} api.APIError
 // @Failure 500 {object} api.APIError
@@ -62,7 +59,6 @@ func (h *feedHandler) GetFeed(c *gin.Context) {
 func parseFeedFilter(c *gin.Context) (*model.ContestFeedFilter, error) {
 	f := &model.ContestFeedFilter{
 		Search: strings.TrimSpace(c.Query("search")),
-		Sort:   model.FeedSortUpdated,
 		Limit:  model.DefaultFeedLimit,
 	}
 
@@ -89,29 +85,12 @@ func parseFeedFilter(c *gin.Context) (*model.ContestFeedFilter, error) {
 		return nil, errs.ErrInvalidFilter
 	}
 
-	switch sort := model.FeedSort(c.DefaultQuery("sort", string(model.FeedSortUpdated))); sort {
-	case model.FeedSortUpdated, model.FeedSortCreated:
-		f.Sort = sort
-	default:
-		return nil, errs.ErrInvalidFilter
-	}
-
 	if raw := c.Query("status"); raw != "" {
-		for group := range strings.SplitSeq(raw, ",") {
-			statuses, ok := model.FeedStatusGroups[strings.TrimSpace(group)]
-			if !ok {
-				return nil, errs.ErrInvalidFilter
-			}
-			f.Statuses = append(f.Statuses, statuses...)
-		}
-	}
-
-	if raw := c.Query("updatedSince"); raw != "" {
-		since, err := time.Parse(time.RFC3339, raw)
-		if err != nil {
+		statuses, ok := model.FeedStatusGroups[raw]
+		if !ok {
 			return nil, errs.ErrInvalidFilter
 		}
-		f.UpdatedSince = &since
+		f.Statuses = statuses
 	}
 
 	return f, nil

@@ -131,14 +131,14 @@ func setupReadReplica(cfg *config.DatabaseConfig, schema string, db *gorm.DB) er
 	return nil
 }
 
-func closeDB(db *gorm.DB) {
-	if sqlDB, err := db.DB(); err == nil {
-		_ = sqlDB.Close()
-	}
-}
-
 func Close(db *gorm.DB) {
 	if db != nil {
 		closeDB(db)
+	}
+}
+
+func closeDB(db *gorm.DB) {
+	if sqlDB, err := db.DB(); err == nil {
+		_ = sqlDB.Close()
 	}
 }

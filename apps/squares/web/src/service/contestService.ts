@@ -12,6 +12,7 @@ import type {
   Participant,
   QuarterResult,
   QuarterResultRequest,
+  RandomClaimResponse,
   Square,
   UpdateContestRequest,
   UpdateParticipantRequest,
@@ -20,12 +21,7 @@ import { handleError } from './handleError';
 
 export async function getContestFeed(params: ContestFeedParams = {}): Promise<ContestFeedResponse> {
   try {
-    const res = await api.get<ContestFeedResponse>('/contests', {
-      params: {
-        ...params,
-        status: params.status?.length ? params.status.join(',') : undefined,
-      },
-    });
+    const res = await api.get<ContestFeedResponse>('/contests', { params });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -35,7 +31,7 @@ export async function getContestFeed(params: ContestFeedParams = {}): Promise<Co
 export async function createNewContest(request: CreateContestRequest) {
   try {
     const res = await idempotentRequest<Contest>({
-      method: 'PUT',
+      method: 'POST',
       url: '/contests',
       data: request,
     });
@@ -48,8 +44,24 @@ export async function createNewContest(request: CreateContestRequest) {
 export async function claimSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
     const res = await idempotentRequest<Square>({
-      method: 'POST',
+      method: 'PUT',
       url: `/contests/${contestId}/squares/${squareId}/claim`,
+    });
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function claimRandomSquares(
+  contestId: string,
+  count: number
+): Promise<RandomClaimResponse> {
+  try {
+    const res = await idempotentRequest<RandomClaimResponse>({
+      method: 'POST',
+      url: `/contests/${contestId}/squares/random`,
+      data: { count },
     });
     return res.data;
   } catch (err: unknown) {
@@ -60,8 +72,8 @@ export async function claimSquareById(contestId: string, squareId: string): Prom
 export async function clearSquareById(contestId: string, squareId: string): Promise<Square> {
   try {
     const res = await idempotentRequest<Square>({
-      method: 'POST',
-      url: `/contests/${contestId}/squares/${squareId}/clear`,
+      method: 'DELETE',
+      url: `/contests/${contestId}/squares/${squareId}/claim`,
     });
     return res.data;
   } catch (err: unknown) {
@@ -72,8 +84,8 @@ export async function clearSquareById(contestId: string, squareId: string): Prom
 export async function clearMySquaresByContest(contestId: string): Promise<Square[]> {
   try {
     const res = await idempotentRequest<Square[]>({
-      method: 'POST',
-      url: `/contests/${contestId}/squares/clear-mine`,
+      method: 'DELETE',
+      url: `/contests/${contestId}/squares/claims`,
     });
     return res.data;
   } catch (err: unknown) {
@@ -115,7 +127,7 @@ export async function recordQuarterResult(
   try {
     const res = await idempotentRequest<QuarterResult>({
       method: 'POST',
-      url: `/contests/${contestId}/quarter-result`,
+      url: `/contests/${contestId}/quarter-results`,
       data: request,
     });
     return res.data;
@@ -127,8 +139,8 @@ export async function recordQuarterResult(
 export async function rollbackQuarterResult(contestId: string): Promise<QuarterResult> {
   try {
     const res = await idempotentRequest<QuarterResult>({
-      method: 'POST',
-      url: `/contests/${contestId}/quarter-result/rollback`,
+      method: 'DELETE',
+      url: `/contests/${contestId}/quarter-results/latest`,
     });
     return res.data;
   } catch (err: unknown) {

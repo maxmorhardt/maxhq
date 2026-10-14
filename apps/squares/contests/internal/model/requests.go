@@ -12,6 +12,10 @@ type CreateContestRequest struct {
 
 type ClearSquareRequest struct{}
 
+type RandomClaimRequest struct {
+	Count int `json:"count" binding:"required,min=1,max=100" example:"5"`
+}
+
 type UpdateContestRequest struct {
 	HomeTeam   *string `json:"homeTeam,omitempty" binding:"omitempty,max=20,safestring"`
 	AwayTeam   *string `json:"awayTeam,omitempty" binding:"omitempty,max=20,safestring"`

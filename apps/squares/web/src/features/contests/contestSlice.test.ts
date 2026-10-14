@@ -15,6 +15,7 @@ import {
   fetchContestFeed,
   createContest,
   claimSquare,
+  claimRandomSquaresThunk,
   clearSquare,
   clearMySquares,
   startContestThunk,
@@ -473,6 +474,35 @@ describe('contestSlice extraReducers', () => {
       });
       expect(state.error).toBe('square error');
       expect(state.squareLoading).toBe(false);
+    });
+  });
+
+  describe('claimRandomSquaresThunk', () => {
+    it('fulfilled: applies newer claimed squares to the grid', () => {
+      const stale = { ...mockSquare, id: 'sq-a', version: 1, value: '' };
+      const other = { ...mockSquare, id: 'sq-b', version: 5, value: 'OLD' };
+      const state = contestReducer(
+        { ...initialState, currentContest: { ...mockContest, squares: [stale, other] } },
+        {
+          type: claimRandomSquaresThunk.fulfilled.type,
+          payload: {
+            squares: [
+              { ...stale, version: 2, value: 'ME' },
+              { ...other, version: 4, value: 'ME' },
+            ],
+            requested: 2,
+          },
+        }
+      );
+      expect(state.currentContest?.squares.map((s) => s.value)).toEqual(['ME', 'OLD']);
+    });
+
+    it('fulfilled: ignores a response without a current contest', () => {
+      const state = contestReducer(initialState, {
+        type: claimRandomSquaresThunk.fulfilled.type,
+        payload: { squares: [mockSquare], requested: 1 },
+      });
+      expect(state.currentContest).toBeUndefined();
     });
   });
 

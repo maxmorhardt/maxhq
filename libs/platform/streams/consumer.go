@@ -38,7 +38,6 @@ func (StreamOffset) TableName() string {
 	return "stream_offsets"
 }
 
-// handlers must tolerate seeing an entry again after a crash
 type Consumer struct {
 	db      *gorm.DB
 	rdb     redis.Cmdable

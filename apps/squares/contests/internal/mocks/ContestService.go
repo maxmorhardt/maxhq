@@ -133,6 +133,67 @@ func (_c *ContestService_AutoStart_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
+// ClaimRandomSquares provides a mock function with given fields: ctx, contestID, count, user
+func (_m *ContestService) ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, user string) (*model.RandomClaimResponse, error) {
+	ret := _m.Called(ctx, contestID, count, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClaimRandomSquares")
+	}
+
+	var r0 *model.RandomClaimResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, string) (*model.RandomClaimResponse, error)); ok {
+		return rf(ctx, contestID, count, user)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, string) *model.RandomClaimResponse); ok {
+		r0 = rf(ctx, contestID, count, user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.RandomClaimResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, int, string) error); ok {
+		r1 = rf(ctx, contestID, count, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestService_ClaimRandomSquares_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClaimRandomSquares'
+type ContestService_ClaimRandomSquares_Call struct {
+	*mock.Call
+}
+
+// ClaimRandomSquares is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - count int
+//   - user string
+func (_e *ContestService_Expecter) ClaimRandomSquares(ctx interface{}, contestID interface{}, count interface{}, user interface{}) *ContestService_ClaimRandomSquares_Call {
+	return &ContestService_ClaimRandomSquares_Call{Call: _e.mock.On("ClaimRandomSquares", ctx, contestID, count, user)}
+}
+
+func (_c *ContestService_ClaimRandomSquares_Call) Run(run func(ctx context.Context, contestID uuid.UUID, count int, user string)) *ContestService_ClaimRandomSquares_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(int), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *ContestService_ClaimRandomSquares_Call) Return(_a0 *model.RandomClaimResponse, _a1 error) *ContestService_ClaimRandomSquares_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestService_ClaimRandomSquares_Call) RunAndReturn(run func(context.Context, uuid.UUID, int, string) (*model.RandomClaimResponse, error)) *ContestService_ClaimRandomSquares_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ClaimSquare provides a mock function with given fields: ctx, contestID, squareID, user
 func (_m *ContestService) ClaimSquare(ctx context.Context, contestID uuid.UUID, squareID uuid.UUID, user string) (*model.Square, error) {
 	ret := _m.Called(ctx, contestID, squareID, user)

@@ -14,7 +14,7 @@ import (
 
 func TestContest_FullLifecycle(t *testing.T) {
 	contest, resp := createContest(t, ownerUser, "Super Bowl", 50)
-	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 	contestID := contest.ID
 	assert.Equal(t, `"1"`, resp.Header.Get("ETag"))
 
@@ -43,7 +43,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 	t.Run("owner creates an invite", func(t *testing.T) {
 		resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contestID.String()+"/invites",
 			model.CreateInviteRequest{MaxSquares: 50, Role: "participant"})
-		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+		require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 		var invite model.ContestInvite
 		resp.Decode(t, &invite)
 		inviteToken = invite.Token
@@ -80,7 +80,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 		if sq.Owner == ownerUser {
 			other = memberUser
 		}
-		resp := call(t, testkit.As(other), http.MethodPost, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, sq.ID), nil)
+		resp := call(t, testkit.As(other), http.MethodPut, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, sq.ID), nil)
 		assert.Equal(t, http.StatusForbidden, resp.Status)
 	})
 
@@ -94,15 +94,15 @@ func TestContest_FullLifecycle(t *testing.T) {
 
 	t.Run("squares cannot change once started", func(t *testing.T) {
 		sq := snapshot(t, ownerUser, contestID).Contest.Squares[1]
-		resp := call(t, testkit.As(ownerUser), http.MethodPost, fmt.Sprintf("/contests/%s/squares/%s/clear", contestID, sq.ID), nil)
+		resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, sq.ID), nil)
 		assert.Equal(t, http.StatusForbidden, resp.Status)
 	})
 
 	scores := []model.QuarterResultRequest{{HomeTeamScore: 7, AwayTeamScore: 3}, {HomeTeamScore: 14, AwayTeamScore: 10}, {HomeTeamScore: 21, AwayTeamScore: 17}, {HomeTeamScore: 28, AwayTeamScore: 24}}
 	for i, score := range scores {
 		t.Run(fmt.Sprintf("record Q%d", i+1), func(t *testing.T) {
-			resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contestID.String()+"/quarter-result", score)
-			require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+			resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contestID.String()+"/quarter-results", score)
+			require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 		})
 	}
 
@@ -131,9 +131,9 @@ func TestContest_IdempotentCreate(t *testing.T) {
 	key := uuid.NewString()
 
 	first, resp1 := createContest(t, ownerUser, "Idempotent Bowl", 10, "Idempotency-Key", key)
-	require.Equal(t, http.StatusOK, resp1.Status, string(resp1.Body))
+	require.Equal(t, http.StatusCreated, resp1.Status, string(resp1.Body))
 	second, resp2 := createContest(t, ownerUser, "Idempotent Bowl", 10, "Idempotency-Key", key)
-	require.Equal(t, http.StatusOK, resp2.Status, string(resp2.Body))
+	require.Equal(t, http.StatusCreated, resp2.Status, string(resp2.Body))
 
 	assert.Equal(t, first.ID, second.ID, "the retry returns the original contest")
 	assert.Equal(t, "true", resp2.Header.Get("Idempotent-Replayed"))
@@ -144,13 +144,13 @@ func TestContest_IdempotentCreate(t *testing.T) {
 
 func TestContest_ActiveContestCanBeDeleted(t *testing.T) {
 	contest, resp := createContest(t, ownerUser, "Cleanup Bowl", 4)
-	require.Equal(t, http.StatusOK, resp.Status)
+	require.Equal(t, http.StatusCreated, resp.Status)
 
 	assert.Equal(t, http.StatusNoContent, call(t, testkit.As(ownerUser), http.MethodDelete, "/contests/"+contest.ID.String(), nil).Status)
 }
 
 func TestContest_RequiresGatewayIdentity(t *testing.T) {
-	resp := call(t, testkit.Anonymous, http.MethodPut, "/contests", model.CreateContestRequest{Owner: ownerUser, Name: "x"})
+	resp := call(t, testkit.Anonymous, http.MethodPost, "/contests", model.CreateContestRequest{Owner: ownerUser, Name: "x"})
 	assert.Equal(t, http.StatusUnauthorized, resp.Status)
 
 	internal := call(t, testkit.Anonymous, http.MethodGet, "/internal/users/"+ownerUser+"/activity", nil)

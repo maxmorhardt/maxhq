@@ -1,4 +1,4 @@
-package util
+package initials
 
 import (
 	"strings"
@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 )
 
-func InitialsFromName(name string) string {
+func FromName(name string) string {
 	var initials strings.Builder
 	count := 0
 	for part := range strings.FieldsSeq(name) {

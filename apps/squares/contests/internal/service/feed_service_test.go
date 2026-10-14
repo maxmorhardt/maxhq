@@ -32,7 +32,7 @@ func TestFeed_ReturnsCursorWhenMoreRemain(t *testing.T) {
 	repo := mocks.NewFeedRepository(t)
 	repo.EXPECT().List(mock.Anything, "u", mock.MatchedBy(func(f *model.ContestFeedFilter) bool { return f.Limit == 3 })).Return(rows, nil)
 
-	resp, err := service.NewFeedService(repo, nil).List(context.Background(), "u", &model.ContestFeedFilter{Sort: model.FeedSortUpdated, Limit: 2})
+	resp, err := service.NewFeedService(repo, nil).List(context.Background(), "u", &model.ContestFeedFilter{Limit: 2})
 
 	require.NoError(t, err)
 	assert.Len(t, resp.Contests, 2)
@@ -40,19 +40,6 @@ func TestFeed_ReturnsCursorWhenMoreRemain(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, rows[1].ID, cursor.ID)
 	assert.True(t, rows[1].UpdatedAt.Equal(cursor.At))
-}
-
-func TestFeed_CursorFollowsCreatedSort(t *testing.T) {
-	rows := summaries(2)
-	repo := mocks.NewFeedRepository(t)
-	repo.EXPECT().List(mock.Anything, mock.Anything, mock.Anything).Return(rows, nil)
-
-	resp, err := service.NewFeedService(repo, nil).List(context.Background(), "u", &model.ContestFeedFilter{Sort: model.FeedSortCreated, Limit: 1})
-
-	require.NoError(t, err)
-	cursor, err := model.DecodeFeedCursor(resp.NextCursor)
-	require.NoError(t, err)
-	assert.True(t, rows[0].CreatedAt.Equal(cursor.At))
 }
 
 func TestFeed_LastPageHasNoCursorAndNeverNil(t *testing.T) {
@@ -78,7 +65,7 @@ func TestFeed_PropagatesRepositoryError(t *testing.T) {
 func TestFeed_CachesUntilInvalidated(t *testing.T) {
 	ctx := context.Background()
 	contestID := uuid.New()
-	filter := &model.ContestFeedFilter{Sort: model.FeedSortUpdated, Limit: 20}
+	filter := &model.ContestFeedFilter{Limit: 20}
 
 	repo := mocks.NewFeedRepository(t)
 	repo.EXPECT().List(mock.Anything, "u", mock.Anything).Return(summaries(1), nil).Times(3)

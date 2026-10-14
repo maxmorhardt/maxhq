@@ -108,20 +108,20 @@ export default function ContestDetails({
         <Box>
           <Typography
             variant="caption"
-            sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5, fontSize: '0.7rem' }}
+            sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5, fontSize: '0.8rem' }}
           >
             Contest Status
           </Typography>
           <Typography
             variant="body2"
-            sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500, fontSize: '0.8rem' }}
+            sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500, fontSize: '0.9rem' }}
           >
             {getStatusDisplay()}
           </Typography>
           {isActive && (
             <Typography
               variant="body2"
-              sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', mt: 0.5 }}
+              sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', mt: 0.5 }}
             >
               {filledSquares}/{totalSquares} squares filled
               {auth.isAuthenticated && currentParticipant && (
@@ -133,7 +133,7 @@ export default function ContestDetails({
                       squaresClaimed >= currentParticipant.maxSquares
                         ? '#43e97b'
                         : 'rgba(255,255,255,0.5)',
-                    fontSize: '0.75rem',
+                    fontSize: '0.85rem',
                   }}
                 >
                   {' · '}
@@ -159,7 +159,7 @@ export default function ContestDetails({
                       disabled={randomDisabled || randomFillCount <= 1}
                       sx={{ color: 'rgba(255,255,255,0.7)' }}
                     >
-                      <Remove sx={{ fontSize: '1rem' }} />
+                      <Remove sx={{ fontSize: '1.15rem' }} />
                     </IconButton>
 
                     <TextField
@@ -181,7 +181,7 @@ export default function ContestDetails({
                       size="small"
                       sx={{
                         flex: 1,
-                        '& input': { textAlign: 'center', py: 0.75, fontSize: '0.8rem' },
+                        '& input': { textAlign: 'center', py: 0.75, fontSize: '0.9rem' },
                         '& input[type=number]': { MozAppearance: 'textfield' },
                         '& input[type=number]::-webkit-outer-spin-button': {
                           WebkitAppearance: 'none',
@@ -201,14 +201,14 @@ export default function ContestDetails({
                       disabled={randomDisabled || randomFillCount >= maxRandomFill}
                       sx={{ color: 'rgba(255,255,255,0.7)' }}
                     >
-                      <Add sx={{ fontSize: '1rem' }} />
+                      <Add sx={{ fontSize: '1.15rem' }} />
                     </IconButton>
 
                     <Button
                       size="small"
                       onClick={() => setRandomCount(maxRandomFill)}
                       disabled={randomDisabled || randomFillCount >= maxRandomFill}
-                      sx={{ minWidth: 'auto', px: 1, fontSize: '0.7rem' }}
+                      sx={{ minWidth: 'auto', px: 1, fontSize: '0.8rem' }}
                     >
                       Max
                     </Button>
@@ -261,7 +261,7 @@ export default function ContestDetails({
             {isActive && allSquaresFilled && isGameLinked && (
               <Typography
                 variant="body2"
-                sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', mt: 0.5 }}
+                sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', mt: 0.5 }}
               >
                 The grid is full. This contest starts automatically when the linked game kicks off.
               </Typography>
@@ -277,7 +277,7 @@ export default function ContestDetails({
             {isInGame && isGameLinked && (
               <Typography
                 variant="body2"
-                sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', mt: 0.5 }}
+                sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', mt: 0.5 }}
               >
                 Scores update automatically from the linked game
                 {currentContest.game ? ` (${formatMatchup(currentContest.game)})` : ''}.
@@ -297,7 +297,7 @@ export default function ContestDetails({
             variant="body2"
             sx={{
               color: 'rgba(255,255,255,0.5)',
-              fontSize: '0.75rem',
+              fontSize: '0.85rem',
               textAlign: 'center',
               mt: 1.5,
             }}
