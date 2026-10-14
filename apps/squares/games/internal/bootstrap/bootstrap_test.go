@@ -58,7 +58,7 @@ func TestNew_BuildsWorkerWhenEnabled(t *testing.T) {
 
 func TestRun_StopsWithContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	app := New(&model.GamesConfig{}, testInfra(t))
+	app := New(&model.GamesConfig{Server: config.ServerConfig{Host: "127.0.0.1"}}, testInfra(t))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)

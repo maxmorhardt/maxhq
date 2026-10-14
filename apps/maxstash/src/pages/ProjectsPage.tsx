@@ -39,7 +39,7 @@ const projects: Project[] = [
     name: 'squares',
     category: 'Frontend',
     description:
-      'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. Includes a contest state machine, automated winner calculation, and Google and GitHub sign-in through Dex.',
+      'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. One infinitely scrolling list of every contest you have created or joined, one-tap random square fills, automated winner calculation, and Google and GitHub sign-in through Dex.',
     href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares/web',
     links: [{ label: 'Live site', href: 'https://squares.maxstash.io', icon: <OpenInNewIcon /> }],
     tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSG', 'OIDC', 'SSE'],
@@ -48,7 +48,7 @@ const projects: Project[] = [
     name: 'squares services',
     category: 'Backend',
     description:
-      'Four Go microservices behind the squares game: contests, games (live ESPN scores), accounts, and realtime. Each owns its own schema and publishes changes through a transactional outbox to Redis streams, and realtime fans them out to every viewer over server-sent events. Tokens are validated once at the gateway.',
+      'Four Go microservices behind the squares game: contests, games (live ESPN scores), accounts, and realtime. Each owns its own schema and publishes changes through a transactional outbox to Valkey streams, and realtime fans them out to every viewer over server-sent events. Envoy validates tokens and rate limits once at the gateway, and the whole stack runs locally with one Docker Compose command.',
     href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares',
     links: [
       {
@@ -57,13 +57,13 @@ const projects: Project[] = [
         icon: <MenuBookIcon />,
       },
     ],
-    tags: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'Redis', 'SSE', 'Swagger'],
+    tags: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'Valkey', 'SSE', 'Swagger'],
   },
   {
     name: 'infra',
     category: 'Infrastructure',
     description:
-      'Self-hosted k3s cluster that runs every app on this site: Argo CD keeps it in sync with this repo, Envoy Gateway fronts all traffic, and Dex federates Google and GitHub sign-in. Highly available Postgres, Valkey, Sealed Secrets, and a full metrics and logs stack back it all, with Terraform managing S3 remote state, Cloudflare DNS, and GitHub repo settings.',
+      'Self-hosted k3s cluster that runs every app on this site: Argo CD keeps it in sync with this repo, Envoy Gateway fronts all traffic, and Dex federates Google and GitHub sign-in. Highly available Postgres, Valkey with Sentinel failover, Sealed Secrets, and a full metrics and logs stack back it all, with Terraform managing S3 backups, Cloudflare DNS, and GitHub branch rulesets.',
     href: 'https://github.com/maxmorhardt/infra',
     tags: [
       'Kubernetes',
@@ -80,9 +80,9 @@ const projects: Project[] = [
     name: 'charts',
     category: 'Infrastructure',
     description:
-      'Reusable Helm charts shared across all my app deployments. Each chart bundles the standard pieces (Deployment, Service, HTTPRoute, autoscaling, monitoring) so a new app only needs a values file. Keeps every workload in the cluster consistent.',
+      'A Helm chart for every app, each versioned and released on its own. They share one shape (Deployment, Service, HTTPRoute, autoscaling, disruption budgets, network policies, gateway auth and rate limits, and Grafana dashboards), so every workload in the cluster is deployed the same way.',
     href: 'https://github.com/maxmorhardt/charts',
-    tags: ['Helm', 'Kubernetes', 'HPA', 'Gateway API', 'Prometheus'],
+    tags: ['Helm', 'Kubernetes', 'HPA', 'Gateway API', 'Envoy Gateway', 'Prometheus'],
   },
   {
     name: 'workflows',

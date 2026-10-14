@@ -40,6 +40,9 @@ jobs:
               - 'apps/squares/web/**'
             go_libs:
               - 'libs/**'
+            squares_build:
+              - 'apps/squares/Dockerfile*'
+              - 'apps/squares/*.mk'
             workflows:
               - '.github/workflows/**'
 
@@ -61,7 +64,7 @@ jobs:
         id: services
         env:
           CHANGED: ${{ steps.go.outputs.changes }}
-          ALL: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.workflows == 'true' }}
+          ALL: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.squares_build == 'true' || steps.filter.outputs.workflows == 'true' }}
         run: |
           if [ "$ALL" = "true" ]; then
             echo 'list=["contests","games","accounts","realtime"]' >> "$GITHUB_OUTPUT"
@@ -142,7 +145,8 @@ jobs:
       repository: ${{ github.repository }}
       app_name: squares-${{ matrix.service }}
       context: .
-      dockerfile: apps/squares/${{ matrix.service }}/Dockerfile
+      dockerfile: apps/squares/Dockerfile
+      build_args: SERVICE=${{ matrix.service }}
     secrets: inherit
 
   go-libs:

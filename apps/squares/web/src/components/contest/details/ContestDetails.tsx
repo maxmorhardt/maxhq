@@ -21,6 +21,7 @@ interface ContestDetailsProps {
   randomSquareLoading?: boolean;
   onClearMySquares?: () => void;
   clearMySquaresLoading?: boolean;
+  fillHeight?: boolean;
 }
 
 export default function ContestDetails({
@@ -29,6 +30,7 @@ export default function ContestDetails({
   randomSquareLoading = false,
   onClearMySquares,
   clearMySquaresLoading = false,
+  fillHeight = false,
 }: ContestDetailsProps) {
   const auth = useAuth();
   const currentContest = useAppSelector(selectCurrentContest);
@@ -102,8 +104,13 @@ export default function ContestDetails({
   };
 
   return (
-    <ContestSidebarCard icon={<Info />} iconColor="#4facfe" title="Contest Details">
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+    <ContestSidebarCard
+      icon={<Info />}
+      iconColor="#4facfe"
+      title="Contest Details"
+      fillHeight={fillHeight}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: fillHeight ? 1.75 : 1.25 }}>
         {/* status display visible to everyone */}
         <Box>
           <Typography
@@ -287,7 +294,9 @@ export default function ContestDetails({
         )}
       </Box>
 
-      <ContestActionIcons isOwner={isOwner} />
+      <Box sx={{ mt: fillHeight ? 'auto' : 0, pt: fillHeight ? 2 : 0, order: fillHeight ? 1 : 0 }}>
+        <ContestActionIcons isOwner={isOwner} />
+      </Box>
 
       {/* non-participant notice for public contests */}
       {auth.isAuthenticated && isPublicContest && !isParticipant && !isOwner && (

@@ -1,26 +1,15 @@
-import { Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
-import { popIn } from './animations';
 
 export interface StatCardProps {
   icon: ReactNode;
   value: number | undefined;
   label: string;
   caption?: string;
-  loading: boolean;
   highlight?: boolean;
-  delay: number;
 }
 
-export default function StatCard({
-  icon,
-  value,
-  label,
-  caption,
-  loading,
-  highlight,
-  delay,
-}: StatCardProps) {
+export default function StatCard({ icon, value, label, caption, highlight }: StatCardProps) {
   const theme = useTheme();
 
   return (
@@ -37,7 +26,6 @@ export default function StatCard({
         border: highlight
           ? `1px solid ${theme.palette.primary.main}66`
           : '1px solid rgba(255,255,255,0.08)',
-        animation: `${popIn} 0.5s ease-out ${delay}s both`,
       }}
     >
       <Box
@@ -51,17 +39,13 @@ export default function StatCard({
       >
         {icon}
       </Box>
-      {loading ? (
-        <Skeleton variant="text" width={60} sx={{ mx: 'auto', fontSize: '1.75rem' }} />
-      ) : (
-        <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.25 }}>
-          {value?.toLocaleString() ?? '–'}
-        </Typography>
-      )}
+      <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.25 }}>
+        {value?.toLocaleString() ?? '–'}
+      </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
         {label}
       </Typography>
-      {caption && !loading && (
+      {caption && (
         <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
           {caption}
         </Typography>

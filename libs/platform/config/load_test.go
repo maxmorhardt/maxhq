@@ -43,6 +43,7 @@ func TestLoad_AppliesDefaults(t *testing.T) {
 	assert.Equal(t, "redis://localhost:6379/0", cfg.Redis.URL)
 	assert.Equal(t, 168*time.Hour, cfg.Streams.Retention)
 	assert.Equal(t, "internal", cfg.Internal.Token)
+	assert.Empty(t, cfg.Server.Host)
 	assert.Equal(t, 8080, cfg.Server.Port)
 	assert.Equal(t, 9090, cfg.Server.MetricsPort)
 	assert.False(t, cfg.Server.MetricsEnabled)

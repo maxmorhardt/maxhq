@@ -1,5 +1,5 @@
 import { Box, Paper, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from 'react-oidc-context';
 import {
@@ -33,6 +33,10 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
   const isParticipant = !!currentParticipant;
   const isOwner = currentUsername === currentContest?.owner;
   const isReadOnly = !isParticipant && !isOwner;
+
+  // squares get one stable handler, so a live update only re-renders the squares that changed
+  const clickRef = useRef<(row: number, col: number) => void>(undefined);
+  const onSquareClick = useCallback((row: number, col: number) => clickRef.current?.(row, col), []);
 
   if (
     !currentContest ||
@@ -118,6 +122,7 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
       setOpenEditSquare(true);
     }
   };
+  clickRef.current = handleSquareClick;
 
   return (
     <>
@@ -207,7 +212,7 @@ export default function Contest({ newWinnerSquare }: ContestProps) {
                         rowIndex={rowIndex}
                         colIndex={colIndex}
                         squareData={squareData}
-                        handleSquareClick={handleSquareClick}
+                        handleSquareClick={onSquareClick}
                         xLabel={currentContest.xLabels[colIndex]}
                         yLabel={currentContest.yLabels[rowIndex]}
                         isWinner={isWinningSquare(rowIndex, colIndex)}

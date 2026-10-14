@@ -73,7 +73,7 @@ func TestServe_ShutsDownWhenContextEnds(t *testing.T) {
 	port := listener.Addr().(*net.TCPAddr).Port
 	require.NoError(t, listener.Close())
 
-	srv := NewHTTPServer(config.ServerConfig{Port: port}, http.NotFoundHandler(), 0)
+	srv := NewHTTPServer(config.ServerConfig{Host: "127.0.0.1", Port: port}, http.NotFoundHandler(), 0)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	done := make(chan error, 1)

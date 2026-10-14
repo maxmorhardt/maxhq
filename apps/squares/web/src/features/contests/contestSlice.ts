@@ -2,7 +2,6 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import type {
   Contest,
-  ContestFeedResponse,
   ContestSummary,
   ContestStatus,
   ContestVisibility,
@@ -46,6 +45,8 @@ interface ContestState {
     nextCursor: string | null;
     loading: boolean;
     loadingMore: boolean;
+    requestId: string | null;
+    appendId: string | null;
   };
   currentContest?: Contest | null;
   currentSquare?: Square | null;
@@ -60,8 +61,19 @@ interface ContestState {
   error: string | null;
 }
 
+function isCurrentFeedRequest(feed: ContestState['feed'], requestId: string, append?: boolean) {
+  return append ? feed.appendId === requestId : feed.requestId === requestId;
+}
+
 const initialState: ContestState = {
-  feed: { items: null, nextCursor: null, loading: false, loadingMore: false },
+  feed: {
+    items: null,
+    nextCursor: null,
+    loading: false,
+    loadingMore: false,
+    requestId: null,
+    appendId: null,
+  },
   participants: [],
   invites: [],
   contestLoading: false,
@@ -267,30 +279,40 @@ const contestSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchContestFeed.pending, (state, action) => {
-        if (action.meta.arg.append) {
-          state.feed.loadingMore = true;
-        } else {
+        if (!action.meta.arg.append) {
+          // a new list supersedes every request still in flight
+          state.feed.requestId = action.meta.requestId;
+          state.feed.appendId = null;
           state.feed.loading = true;
+          state.feed.loadingMore = false;
+        } else if (!state.feed.loading) {
+          state.feed.appendId = action.meta.requestId;
+          state.feed.loadingMore = true;
         }
         state.error = null;
       })
-      .addCase(
-        fetchContestFeed.fulfilled,
-        (
-          state,
-          action: PayloadAction<ContestFeedResponse, string, { arg: { append?: boolean } }>
-        ) => {
-          const page = action.payload.contests ?? [];
-          state.feed.items = action.meta.arg.append ? [...(state.feed.items ?? []), ...page] : page;
-          state.feed.nextCursor = action.payload.nextCursor ?? null;
-          state.feed.loading = false;
-          state.feed.loadingMore = false;
+      .addCase(fetchContestFeed.fulfilled, (state, action) => {
+        const { append } = action.meta.arg;
+        if (!isCurrentFeedRequest(state.feed, action.meta.requestId, append)) {
+          return;
         }
-      )
+
+        const page = action.payload.contests ?? [];
+        state.feed.items = append ? [...(state.feed.items ?? []), ...page] : page;
+        state.feed.nextCursor = action.payload.nextCursor ?? null;
+        state.feed.loading = false;
+        state.feed.loadingMore = false;
+        state.feed.appendId = null;
+      })
       .addCase(fetchContestFeed.rejected, (state, action) => {
+        if (!isCurrentFeedRequest(state.feed, action.meta.requestId, action.meta.arg.append)) {
+          return;
+        }
+
         state.feed.items = state.feed.items ?? [];
         state.feed.loading = false;
         state.feed.loadingMore = false;
+        state.feed.appendId = null;
         state.error = action.payload?.message ?? 'Error fetching contests';
       });
 

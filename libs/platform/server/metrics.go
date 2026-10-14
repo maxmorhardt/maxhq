@@ -1,9 +1,10 @@
 package server
 
 import (
-	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/maxmorhardt/maxstash/libs/platform/config"
@@ -17,7 +18,7 @@ func StartMetricsServer(cfg config.ServerConfig) *http.Server {
 	}
 
 	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.MetricsPort),
+		Addr:              net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.MetricsPort)),
 		Handler:           promhttp.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}

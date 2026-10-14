@@ -2,7 +2,7 @@
 
 ![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)
 ![Gin](https://img.shields.io/badge/gin-00ADD8?style=for-the-badge&logo=go&logoColor=white)
-![Redis](https://img.shields.io/badge/valkey-6983FF?style=for-the-badge&logo=redis&logoColor=white)
+![Valkey](https://img.shields.io/badge/valkey-6983FF?style=for-the-badge&logo=redis&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
@@ -12,9 +12,10 @@ Contests, squares, participants, invites, the leaderboard, and stats. One of the
 
 | Path (behind `api.maxstash.io/squares`) | |
 | --- | --- |
-| `/contests/**` | create, edit, start, score, and delete contests; claim and clear squares |
+| `GET /contests` | the caller's owned and joined contests, newest first, cursor paginated, filtered by `role`, `status`, and `search` |
+| `/contests/**` | create, edit, start, score, and delete contests; claim, clear, and randomly fill squares |
 | `/invites/**` | preview and redeem invite links |
-| `/leaderboard`, `/stats` | public stats, cached in Redis |
+| `/leaderboard`, `/stats` | public stats, cached in Valkey |
 | `/users/me/stats`, `/users/me/active-contests` | the signed-in user's contest activity |
 | `/internal/contests/:id/snapshot` | realtime only: the full contest, or 403/404 |
 | `/internal/users/:email/activity` | accounts only: active contests and first activity |
@@ -27,7 +28,7 @@ Contests, squares, participants, invites, the leaderboard, and stats. One of the
 ## Development
 
 1. Copy `.env.example` to `.env` and fill it in.
-2. Start PostgreSQL and Valkey (or `make valkey` to port-forward the cluster's).
+2. Start PostgreSQL and Valkey with `docker compose -f ../compose.yaml up -d postgres valkey`, or the whole stack with `make up` in [..](../README.md#running-locally).
 3. `make run`. `make help` lists every task.
 4. Without the gateway, send the identity headers yourself:
    ```bash

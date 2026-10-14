@@ -92,50 +92,23 @@ func (r *userProjectionRepository) CascadeInitials(ctx context.Context, email, i
 
 func (r *userProjectionRepository) GetStats(ctx context.Context, email string) (*model.UserStatsResponse, error) {
 	var stats model.UserStatsResponse
-	conn := database.Conn(ctx, r.db)
-
-	if err := conn.
-		Model(&model.Contest{}).
-		Where("owner = ? AND status != ?", email, model.ContestStatusDeleted).
-		Count(&stats.ContestsCreated).Error; err != nil {
+	err := database.Conn(ctx, r.db).Raw(`
+		SELECT
+			(SELECT COUNT(*) FROM contests WHERE owner = @email AND status <> @deleted) AS contests_created,
+			(SELECT COUNT(*) FROM contest_participants p JOIN contests c ON c.id = p.contest_id
+				WHERE p.user_id = @email AND c.status <> @deleted) AS contests_joined,
+			(SELECT COUNT(*) FROM squares s JOIN contests c ON c.id = s.contest_id
+				WHERE s.owner = @email AND c.status <> @deleted) AS squares_claimed,
+			(SELECT COUNT(*) FROM quarter_results q JOIN contests c ON c.id = q.contest_id
+				WHERE q.winner = @email AND c.status <> @deleted) AS quarter_wins,
+			(SELECT COUNT(*) FROM quarter_results q JOIN contests c ON c.id = q.contest_id
+				WHERE c.status <> @deleted
+				AND EXISTS (SELECT 1 FROM squares s WHERE s.contest_id = q.contest_id AND s.owner = @email)) AS quarters_played`,
+		sql.Named("deleted", model.ContestStatusDeleted), sql.Named("email", email),
+	).Scan(&stats).Error
+	if err != nil {
 		return nil, err
 	}
-
-	if err := conn.
-		Model(&model.ContestParticipant{}).
-		Joins("JOIN contests c ON c.id = contest_participants.contest_id AND c.status <> ?", model.ContestStatusDeleted).
-		Where("contest_participants.user_id = ?", email).
-		Count(&stats.ContestsJoined).Error; err != nil {
-		return nil, err
-	}
-
-	if err := conn.
-		Model(&model.Square{}).
-		Joins("JOIN contests c ON c.id = squares.contest_id AND c.status <> ?", model.ContestStatusDeleted).
-		Where("squares.owner = ?", email).
-		Count(&stats.SquaresClaimed).Error; err != nil {
-		return nil, err
-	}
-
-	if err := conn.
-		Model(&model.QuarterResult{}).
-		Joins("JOIN contests c ON c.id = quarter_results.contest_id AND c.status <> ?", model.ContestStatusDeleted).
-		Where("quarter_results.winner = ?", email).
-		Count(&stats.QuarterWins).Error; err != nil {
-		return nil, err
-	}
-
-	if err := conn.Raw(
-		`SELECT COUNT(*)
-		FROM quarter_results q
-		JOIN contests c ON c.id = q.contest_id AND c.status <> ?
-		WHERE EXISTS (
-			SELECT 1 FROM squares s WHERE s.contest_id = q.contest_id AND s.owner = ?
-		)`, model.ContestStatusDeleted, email).
-		Scan(&stats.QuartersPlayed).Error; err != nil {
-		return nil, err
-	}
-
 	return &stats, nil
 }
 

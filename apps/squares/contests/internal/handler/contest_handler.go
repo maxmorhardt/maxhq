@@ -7,7 +7,6 @@ import (
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
@@ -112,17 +111,8 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 func (h *contestHandler) UpdateContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	contestIDParam := c.Param("id")
-	if contestIDParam == "" {
-		log.Warn("contest id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Contest ID is required", c))
-		return
-	}
-
-	contestID, err := uuid.Parse(contestIDParam)
-	if err != nil {
-		log.Warn("invalid contest id", "param", contestIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -180,24 +170,13 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id} [delete]
 func (h *contestHandler) DeleteContest(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestIDParam := c.Param("id")
-	if contestIDParam == "" {
-		log.Warn("contest id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Contest ID is required", c))
-		return
-	}
-
-	contestID, err := uuid.Parse(contestIDParam)
-	if err != nil {
-		log.Warn("invalid contest id", "param", contestIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
 	user := c.GetString(api.UserKey)
-	if err = h.contestService.DeleteContest(c.Request.Context(), contestID, user); err != nil {
+	if err := h.contestService.DeleteContest(c.Request.Context(), contestID, user); err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
@@ -226,19 +205,8 @@ func (h *contestHandler) DeleteContest(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/start [post]
 func (h *contestHandler) StartContest(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestIDParam := c.Param("id")
-	if contestIDParam == "" {
-		log.Warn("contest id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Contest ID is required", c))
-		return
-	}
-
-	contestID, err := uuid.Parse(contestIDParam)
-	if err != nil {
-		log.Warn("invalid contest id", "param", contestIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -278,10 +246,8 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	contestID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		log.Warn("invalid contest id", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -346,10 +312,8 @@ func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
 func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	contestID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		log.Warn("invalid contest id", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -400,33 +364,13 @@ func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/squares/{squareId}/claim [put]
 func (h *contestHandler) ClaimSquare(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestIDParam := c.Param("id")
-	if contestIDParam == "" {
-		log.Warn("contest id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Contest ID is required", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
-	contestID, err := uuid.Parse(contestIDParam)
-	if err != nil {
-		log.Warn("invalid contest id", "param", contestIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
-		return
-	}
-
-	squareIDParam := c.Param("squareId")
-	if squareIDParam == "" {
-		log.Warn("square id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Square ID is required", c))
-		return
-	}
-
-	squareID, err := uuid.Parse(squareIDParam)
-	if err != nil {
-		log.Warn("invalid square id", "param", squareIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid square ID format", c))
+	squareID, ok := api.PathUUID(c, "squareId")
+	if !ok {
 		return
 	}
 
@@ -471,9 +415,8 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/squares/random [post]
 func (h *contestHandler) ClaimRandomSquares(c *gin.Context) {
-	contestID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -516,33 +459,13 @@ func (h *contestHandler) ClaimRandomSquares(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/squares/{squareId}/claim [delete]
 func (h *contestHandler) ClearSquare(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestIDParam := c.Param("id")
-	if contestIDParam == "" {
-		log.Warn("contest id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Contest ID is required", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
-	contestID, err := uuid.Parse(contestIDParam)
-	if err != nil {
-		log.Warn("invalid contest id", "param", contestIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
-		return
-	}
-
-	squareIDParam := c.Param("squareId")
-	if squareIDParam == "" {
-		log.Warn("square id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Square ID is required", c))
-		return
-	}
-
-	squareID, err := uuid.Parse(squareIDParam)
-	if err != nil {
-		log.Warn("invalid square id", "param", squareIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid square ID format", c))
+	squareID, ok := api.PathUUID(c, "squareId")
+	if !ok {
 		return
 	}
 
@@ -581,19 +504,8 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 // @Security BearerAuth
 // @Router /contests/{id}/squares/claims [delete]
 func (h *contestHandler) ClearMySquares(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestIDParam := c.Param("id")
-	if contestIDParam == "" {
-		log.Warn("contest id not provided")
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Contest ID is required", c))
-		return
-	}
-
-	contestID, err := uuid.Parse(contestIDParam)
-	if err != nil {
-		log.Warn("invalid contest id", "param", contestIDParam, "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID format", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 

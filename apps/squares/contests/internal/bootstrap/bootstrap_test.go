@@ -42,7 +42,7 @@ func testInfra(t *testing.T) *server.Infra {
 
 func testConfig() *model.ContestsConfig {
 	return &model.ContestsConfig{
-		Server:   config.ServerConfig{Port: 0, AllowedOrigins: []string{"http://localhost:3000"}},
+		Server:   config.ServerConfig{Host: "127.0.0.1", AllowedOrigins: []string{"http://localhost:3000"}},
 		Internal: config.InternalConfig{Token: "internal"},
 	}
 }

@@ -1,0 +1,116 @@
+name: squares
+
+x-service: &service
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    valkey:
+      condition: service_healthy
+
+x-env: &env
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USER: squares
+  DB_PASSWORD: squares
+  DB_NAME: squares
+  DB_SSL_MODE: disable
+  REDIS_URL: redis://valkey:6379/0
+  INTERNAL_API_TOKEN: local-internal-token
+  ALLOWED_ORIGINS: http://localhost:3000
+  CONTESTS_INTERNAL_URL: http://contests:8080
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: squares
+      POSTGRES_PASSWORD: squares
+      POSTGRES_DB: squares
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U squares"]
+      interval: 2s
+      retries: 30
+
+  valkey:
+    image: valkey/valkey:9.1-alpine
+    command: ["valkey-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - valkey:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+  contests:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: contests
+    environment: *env
+
+  games:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: games
+    environment: *env
+
+  accounts:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: accounts
+    environment:
+      <<: *env
+      # nothing listens here, so contact emails fail and are logged instead of sent
+      SMTP_HOST: localhost
+      SMTP_PORT: "25"
+      SMTP_USER: local
+      SMTP_PASSWORD: local
+      SUPPORT_EMAIL: support@localhost
+      # Cloudflare's test secret, which accepts every token
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+
+  realtime:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: apps/squares/Dockerfile
+      args:
+        SERVICE: realtime
+    environment: *env
+    depends_on:
+      valkey:
+        condition: service_healthy
+      contests:
+        condition: service_started
+
+  gateway:
+    image: envoyproxy/envoy:distroless-v1.39.1
+    command: ["--config-path", "/etc/envoy/envoy.yaml"]
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - contests
+      - games
+      - accounts
+      - realtime
+
+volumes:
+  postgres:
+  valkey:

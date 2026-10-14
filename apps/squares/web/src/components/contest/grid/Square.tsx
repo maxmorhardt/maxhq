@@ -1,4 +1,5 @@
 import { Box, Button, keyframes, useTheme } from '@mui/material';
+import { memo } from 'react';
 
 const winnerPulse = keyframes`
   0% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
@@ -20,7 +21,7 @@ interface SquareProps {
   isNewWinner?: boolean;
 }
 
-export default function Square({
+function Square({
   rowIndex,
   colIndex,
   squareData,
@@ -135,3 +136,5 @@ export default function Square({
     </Box>
   );
 }
+
+export default memo(Square);

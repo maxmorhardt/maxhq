@@ -108,11 +108,9 @@ func TestUserProjection_CascadeInitials_Error(t *testing.T) {
 
 func TestUserProjection_GetStats(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contest_participants"`).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "quarter_results"`).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(5))
-	mock.ExpectQuery(`SELECT COUNT\(\*\)\s+FROM quarter_results q`).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(20))
+	mock.ExpectQuery(`AS contests_created`).
+		WillReturnRows(sqlmock.NewRows([]string{"contests_created", "contests_joined", "squares_claimed", "quarter_wins", "quarters_played"}).
+			AddRow(3, 7, 42, 5, 20))
 
 	stats, err := NewUserProjectionRepository(gdb).GetStats(context.Background(), "a@b.com")
 
@@ -120,29 +118,12 @@ func TestUserProjection_GetStats(t *testing.T) {
 	assert.Equal(t, &model.UserStatsResponse{ContestsCreated: 3, ContestsJoined: 7, SquaresClaimed: 42, QuarterWins: 5, QuartersPlayed: 20}, stats)
 }
 
-func TestUserProjection_GetStats_EachQueryCanFail(t *testing.T) {
-	queries := []string{
-		`SELECT count\(\*\) FROM "contests"`,
-		`SELECT count\(\*\) FROM "contest_participants"`,
-		`SELECT count\(\*\) FROM "squares"`,
-		`SELECT count\(\*\) FROM "quarter_results"`,
-		`SELECT COUNT\(\*\)\s+FROM quarter_results q`,
-	}
+func TestUserProjection_GetStats_Error(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	mock.ExpectQuery(`AS contests_created`).WillReturnError(errors.New("db"))
 
-	for failAt := range queries {
-		gdb, mock := newMockDB(t)
-		mock.MatchExpectationsInOrder(true)
-		for i, q := range queries[:failAt+1] {
-			if i == failAt {
-				mock.ExpectQuery(q).WillReturnError(errors.New("db"))
-				continue
-			}
-			mock.ExpectQuery(q).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
-		}
-
-		_, err := NewUserProjectionRepository(gdb).GetStats(context.Background(), "a@b.com")
-		require.Error(t, err, "query %d", failAt)
-	}
+	_, err := NewUserProjectionRepository(gdb).GetStats(context.Background(), "a@b.com")
+	require.Error(t, err)
 }
 
 func TestUserProjection_GetActiveContests(t *testing.T) {

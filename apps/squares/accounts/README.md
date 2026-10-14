@@ -2,7 +2,7 @@
 
 ![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)
 ![Gin](https://img.shields.io/badge/gin-00ADD8?style=for-the-badge&logo=go&logoColor=white)
-![Redis](https://img.shields.io/badge/valkey-6983FF?style=for-the-badge&logo=redis&logoColor=white)
+![Valkey](https://img.shields.io/badge/valkey-6983FF?style=for-the-badge&logo=redis&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
@@ -13,7 +13,7 @@ Profiles, account deletion, and the contact form. One of the squares backend ser
 | Path (behind `api.maxstash.io/squares`) | |
 | --- | --- |
 | `/users/me` | get (creating the profile on first sign-in), update initials, delete the account |
-| `/contact` | the public contact form, behind Turnstile and a rate limit shared by every replica |
+| `/contact` | the public contact form, behind Turnstile; the gateway limits it to 10 a day per client |
 
 ## Events
 
@@ -23,7 +23,7 @@ Profiles, account deletion, and the contact form. One of the squares backend ser
 ## Development
 
 1. Copy `.env.example` to `.env` and fill it in.
-2. Start PostgreSQL and Valkey (or `make valkey` to port-forward the cluster's).
+2. Start PostgreSQL and Valkey with `docker compose -f ../compose.yaml up -d postgres valkey`, or the whole stack with `make up` in [..](../README.md#running-locally).
 3. `make run`. `make help` lists every task.
 4. Without the gateway, send the identity headers yourself:
    ```bash

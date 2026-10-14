@@ -6,6 +6,7 @@ interface ContestSidebarCardProps {
   iconColor?: string;
   title: string;
   children: ReactNode;
+  fillHeight?: boolean;
 }
 
 export default function ContestSidebarCard({
@@ -13,6 +14,7 @@ export default function ContestSidebarCard({
   iconColor = '#667eea',
   title,
   children,
+  fillHeight = false,
 }: ContestSidebarCardProps) {
   const theme = useTheme();
 
@@ -23,6 +25,7 @@ export default function ContestSidebarCard({
         border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 2.5,
         p: 1.5,
+        ...(fillHeight && { flex: '0 0 60%', display: 'flex', flexDirection: 'column' }),
       }}
     >
       {/* card header with icon and title */}

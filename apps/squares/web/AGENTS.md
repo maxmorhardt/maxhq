@@ -16,7 +16,7 @@
 - `src/components/` - reusable components grouped by area (`common/`, `contest/`, `header/`, `footer/`, `join/`, `landing/`, `learn/`, `contact/`, `toast/`).
 - `src/features/` - Redux Toolkit slices, thunks, and selectors, one folder per domain (`contests/`, `leaderboard/`, `stats/`, `toast/`, `user/`).
 - `src/app/store.ts` - `configureStore` composition root. Exports `RootState`, `AppDispatch`, `AppStore`.
-- `src/service/` - HTTP clients wrapping axios, `contestEvents.ts` (the fetch-based event-stream reader and the handler that applies contest events to the store), plus `handleError.ts`.
+- `src/service/` - HTTP clients wrapping axios, `contestEvents.ts` (the fetch-based event-stream reader, parsing frames with `eventsource-parser`, and the handler that applies contest events to the store), plus `handleError.ts`.
 - `src/axios/api.ts` - the shared axios instance every service uses. `src/axios/idempotency.ts` - `idempotentRequest`, which every write goes through.
 - `src/hooks/` - `reduxHooks`, `useAxiosAuth`, `useContestEvents`, `useToast`, `useScrollAnimation`.
 - `src/types/` - shared types and design tokens (`contest.ts`, `stats.ts`, `events.ts`, `error.ts`, `gradients.ts`).

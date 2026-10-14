@@ -10,9 +10,16 @@ interface Props {
   loading: boolean;
   error: boolean;
   showAction?: boolean;
+  animate?: boolean;
 }
 
-export default function LeaderboardRankCard({ rank, loading, error, showAction = true }: Props) {
+export default function LeaderboardRankCard({
+  rank,
+  loading,
+  error,
+  showAction = true,
+  animate = true,
+}: Props) {
   const theme = useTheme();
   const navigate = useNavigate();
 
@@ -34,7 +41,7 @@ export default function LeaderboardRankCard({ rank, loading, error, showAction =
         alignItems: { xs: 'flex-start', sm: 'center' },
         justifyContent: 'space-between',
         gap: 2,
-        animation: `${popIn} 0.5s ease-out 0.5s both`,
+        animation: animate ? `${popIn} 0.5s ease-out 0.5s both` : undefined,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

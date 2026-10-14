@@ -9,7 +9,12 @@ import (
 	"github.com/maxmorhardt/maxstash/libs/platform/logging"
 	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/sync/singleflight"
 )
+
+const loadTimeout = 10 * time.Second
+
+var loads singleflight.Group
 
 type Cache interface {
 	Get(ctx context.Context, key string) ([]byte, bool, error)
@@ -75,20 +80,36 @@ func GetOrLoad[T any](ctx context.Context, c Cache, name, k string, ttl time.Dur
 	}
 
 	metrics.IncCacheRequest(name, false)
-	value, err := load(ctx)
-	if err != nil {
-		var zero T
-		return zero, err
-	}
+	// concurrent misses for the same key in this replica share one load
+	ch := loads.DoChan(name+":"+k, func() (any, error) {
+		// shared by every waiter, so it outlives the caller that started it but not loadTimeout
+		loadCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), loadTimeout)
+		defer cancel()
 
-	if c != nil {
-		if raw, err := json.Marshal(value); err == nil {
-			if err := c.Set(ctx, k, raw, ttl); err != nil {
-				metrics.IncRedisError("cache_set")
-				log.Warn("cache write failed", "cache", name, "error", err)
+		value, err := load(loadCtx)
+		if err != nil {
+			return nil, err
+		}
+
+		if c != nil {
+			if raw, err := json.Marshal(value); err == nil {
+				if err := c.Set(loadCtx, k, raw, ttl); err != nil {
+					metrics.IncRedisError("cache_set")
+					log.Warn("cache write failed", "cache", name, "error", err)
+				}
 			}
 		}
-	}
+		return value, nil
+	})
 
-	return value, nil
+	var zero T
+	select {
+	case <-ctx.Done():
+		return zero, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			return zero, res.Err
+		}
+		return res.Val.(T), nil
+	}
 }

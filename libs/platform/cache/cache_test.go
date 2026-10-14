@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"os"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -99,6 +101,100 @@ func TestGetOrLoad_CachesAcrossCalls(t *testing.T) {
 	assert.Equal(t, 7, first.N)
 	assert.Equal(t, first, second)
 	assert.Equal(t, 1, loads)
+}
+
+func TestGetOrLoad_ConcurrentMissesShareOneLoad(t *testing.T) {
+	_, client := newRedis(t)
+	c := NewRedisCache(client, "test")
+
+	var loads atomic.Int32
+	release := make(chan struct{})
+	load := func(ctx context.Context) (payload, error) {
+		loads.Add(1)
+		<-release
+		return payload{N: 3}, ctx.Err()
+	}
+
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			got, err := GetOrLoad(context.Background(), c, "test", "shared", time.Minute, load)
+			assert.NoError(t, err)
+			assert.Equal(t, 3, got.N)
+		}()
+	}
+	time.Sleep(50 * time.Millisecond)
+	close(release)
+	wg.Wait()
+
+	assert.Equal(t, int32(1), loads.Load())
+}
+
+func TestGetOrLoad_WaiterStopsOnItsOwnCancellation(t *testing.T) {
+	_, client := newRedis(t)
+	c := NewRedisCache(client, "test")
+
+	release := make(chan struct{})
+	defer close(release)
+	load := func(ctx context.Context) (payload, error) {
+		<-release
+		return payload{N: 1}, ctx.Err()
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := GetOrLoad(ctx, c, "test", "waiting", time.Minute, load)
+		done <- err
+	}()
+	time.Sleep(20 * time.Millisecond)
+	cancel()
+
+	select {
+	case err := <-done:
+		assert.ErrorIs(t, err, context.Canceled)
+	case <-time.After(time.Second):
+		t.Fatal("waiter stayed blocked on the shared load")
+	}
+}
+
+func TestGetOrLoad_CachesAfterTheInitiatingCallerDisconnects(t *testing.T) {
+	_, client := newRedis(t)
+	c := NewRedisCache(client, "test")
+
+	release := make(chan struct{})
+	load := func(ctx context.Context) (payload, error) {
+		<-release
+		return payload{N: 9}, ctx.Err()
+	}
+
+	first, cancel := context.WithCancel(context.Background())
+	firstDone := make(chan error, 1)
+	go func() {
+		_, err := GetOrLoad(first, c, "test", "outlives", time.Minute, load)
+		firstDone <- err
+	}()
+	time.Sleep(20 * time.Millisecond)
+
+	secondDone := make(chan payload, 1)
+	go func() {
+		got, err := GetOrLoad(context.Background(), c, "test", "outlives", time.Minute, load)
+		assert.NoError(t, err)
+		secondDone <- got
+	}()
+	time.Sleep(20 * time.Millisecond)
+
+	cancel()
+	assert.ErrorIs(t, <-firstDone, context.Canceled)
+	close(release)
+	assert.Equal(t, 9, (<-secondDone).N)
+
+	raw, ok, err := c.Get(context.Background(), "outlives")
+	require.NoError(t, err)
+	require.True(t, ok)
+	assert.JSONEq(t, `{"n":9}`, string(raw))
 }
 
 func TestGetOrLoad_FailsOpenWhenRedisIsDown(t *testing.T) {

@@ -19,6 +19,12 @@ Helm charts live in [`maxmorhardt/charts`](https://github.com/maxmorhardt/charts
 
 [release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and commits the new `image.tag` to its Argo CD Application in `infra`.
 
+One release pull request covers every app with pending changes. Pull requests are squash merged, so the PR title is the conventional commit release-please reads, and it applies to every app the PR touches.
+
+## Running squares locally
+
+`make up` and `make web` in [`apps/squares`](apps/squares/README.md#running-locally) run every service, Postgres, Valkey, and a production-like gateway in Docker.
+
 ## CI
 
 [`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs` tests every Go service. `CI Complete` is the single required check.

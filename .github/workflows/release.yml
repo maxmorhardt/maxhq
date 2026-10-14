@@ -128,7 +128,8 @@ jobs:
       app_name: ${{ needs.parse.outputs.component }}
       app_version: ${{ needs.parse.outputs.version }}
       context: .
-      dockerfile: apps/squares/${{ needs.parse.outputs.service }}/Dockerfile
+      dockerfile: apps/squares/Dockerfile
+      build_args: SERVICE=${{ needs.parse.outputs.service }}
       push: true
     secrets: inherit
 

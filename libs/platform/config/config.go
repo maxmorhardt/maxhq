@@ -5,6 +5,7 @@ import (
 )
 
 type ServerConfig struct {
+	Host           string   `env:"SERVER_HOST"`
 	Port           int      `env:"SERVER_PORT" envDefault:"8080"`
 	MetricsEnabled bool     `env:"METRICS_ENABLED" envDefault:"false"`
 	MetricsPort    int      `env:"METRICS_PORT" envDefault:"9090"`

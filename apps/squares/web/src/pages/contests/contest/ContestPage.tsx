@@ -274,10 +274,12 @@ export default function ContestPage() {
             display: { xs: 'none', lg: 'flex' },
             flexDirection: 'column',
             gap: 1.5,
-            flex: '0 0 340px',
+            flex: '0 0 280px',
+            alignSelf: 'stretch',
           }}
         >
           <ContestDetails
+            fillHeight
             isOwner={isOwner}
             onRandomSquares={handleRandomSquares}
             randomSquareLoading={randomSquareLoading}
