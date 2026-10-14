@@ -2,7 +2,6 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import type {
   Contest,
-  ContestFeedResponse,
   ContestSummary,
   ContestStatus,
   ContestVisibility,
@@ -46,6 +45,7 @@ interface ContestState {
     nextCursor: string | null;
     loading: boolean;
     loadingMore: boolean;
+    requestId: string | null;
   };
   currentContest?: Contest | null;
   currentSquare?: Square | null;
@@ -61,7 +61,7 @@ interface ContestState {
 }
 
 const initialState: ContestState = {
-  feed: { items: null, nextCursor: null, loading: false, loadingMore: false },
+  feed: { items: null, nextCursor: null, loading: false, loadingMore: false, requestId: null },
   participants: [],
   invites: [],
   contestLoading: false,
@@ -271,22 +271,27 @@ const contestSlice = createSlice({
           state.feed.loadingMore = true;
         } else {
           state.feed.loading = true;
+          state.feed.requestId = action.meta.requestId;
         }
         state.error = null;
       })
-      .addCase(
-        fetchContestFeed.fulfilled,
-        (
-          state,
-          action: PayloadAction<ContestFeedResponse, string, { arg: { append?: boolean } }>
-        ) => {
-          const page = action.payload.contests ?? [];
-          state.feed.items = action.meta.arg.append ? [...(state.feed.items ?? []), ...page] : page;
-          state.feed.nextCursor = action.payload.nextCursor ?? null;
-          state.feed.loading = false;
-          state.feed.loadingMore = false;
+      .addCase(fetchContestFeed.fulfilled, (state, action) => {
+        const { append, params } = action.meta.arg;
+        // a page for a list that has since been replaced, or a superseded replacement, is dropped
+        const stale = append
+          ? params.cursor !== state.feed.nextCursor
+          : action.meta.requestId !== state.feed.requestId;
+        if (stale) {
+          state.feed.loadingMore = append ? false : state.feed.loadingMore;
+          return;
         }
-      )
+
+        const page = action.payload.contests ?? [];
+        state.feed.items = append ? [...(state.feed.items ?? []), ...page] : page;
+        state.feed.nextCursor = action.payload.nextCursor ?? null;
+        state.feed.loading = false;
+        state.feed.loadingMore = false;
+      })
       .addCase(fetchContestFeed.rejected, (state, action) => {
         state.feed.items = state.feed.items ?? [];
         state.feed.loading = false;

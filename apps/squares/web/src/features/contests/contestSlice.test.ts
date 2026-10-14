@@ -45,6 +45,7 @@ const initialState = {
     nextCursor: null as string | null,
     loading: false,
     loadingMore: false,
+    requestId: null as string | null,
   },
   currentContest: undefined as Contest | null | undefined,
   currentSquare: undefined as Square | null | undefined,
@@ -344,11 +345,12 @@ describe('contestSlice reducers', () => {
 
 describe('contestSlice extraReducers', () => {
   describe('fetchContestFeed', () => {
-    const feedAction = (type: string, payload?: unknown, append = false) => ({
+    const feedAction = (type: string, payload?: unknown, append = false, cursor?: string) => ({
       type,
       payload,
-      meta: { arg: { params: {}, append } },
+      meta: { arg: { params: cursor ? { cursor } : {}, append }, requestId: 'r1' },
     });
+    const awaiting = { ...initialState.feed, requestId: 'r1' };
 
     it('pending: a fresh load sets loading and clears the error', () => {
       const state = contestReducer(
@@ -371,7 +373,7 @@ describe('contestSlice extraReducers', () => {
 
     it('fulfilled: a fresh load replaces the list', () => {
       const state = contestReducer(
-        { ...initialState, feed: { ...initialState.feed, items: [{ ...mockSummary, id: 'old' }] } },
+        { ...initialState, feed: { ...awaiting, items: [{ ...mockSummary, id: 'old' }] } },
         feedAction(fetchContestFeed.fulfilled.type, { contests: [mockSummary], nextCursor: 'next' })
       );
       expect(state.feed.items).toEqual([mockSummary]);
@@ -384,12 +386,42 @@ describe('contestSlice extraReducers', () => {
       const state = contestReducer(
         {
           ...initialState,
-          feed: { ...initialState.feed, items: [mockSummary], nextCursor: 'next' },
+          feed: { ...awaiting, items: [mockSummary], nextCursor: 'next' },
         },
-        feedAction(fetchContestFeed.fulfilled.type, { contests: [second] }, true)
+        feedAction(fetchContestFeed.fulfilled.type, { contests: [second] }, true, 'next')
       );
       expect(state.feed.items?.map((c) => c.id)).toEqual(['c1', 'c2']);
       expect(state.feed.nextCursor).toBeNull();
+    });
+
+    it('fulfilled: drops a next page for a list that was replaced meanwhile', () => {
+      const state = contestReducer(
+        {
+          ...initialState,
+          feed: { ...awaiting, items: [mockSummary], nextCursor: 'fresh', loadingMore: true },
+        },
+        feedAction(
+          fetchContestFeed.fulfilled.type,
+          { contests: [{ ...mockSummary, id: 'x' }] },
+          true,
+          'old'
+        )
+      );
+      expect(state.feed.items?.map((c) => c.id)).toEqual(['c1']);
+      expect(state.feed.nextCursor).toBe('fresh');
+      expect(state.feed.loadingMore).toBe(false);
+    });
+
+    it('fulfilled: drops a replacement that a newer request superseded', () => {
+      const state = contestReducer(
+        {
+          ...initialState,
+          feed: { ...initialState.feed, items: [mockSummary], requestId: 'r2', loading: true },
+        },
+        feedAction(fetchContestFeed.fulfilled.type, { contests: [] })
+      );
+      expect(state.feed.items).toEqual([mockSummary]);
+      expect(state.feed.loading).toBe(true);
     });
 
     it('rejected: settles the list and sets the error', () => {
