@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/maxmorhardt/maxstash/compare/maxstash/3.0.3...maxstash/3.1.0) (2026-10-14)
+
+
+### Features
+
+* **squares:** local stack, shared build, faster stats, library cleanups, and fixes ([#89](https://github.com/maxmorhardt/maxstash/issues/89)) ([7b62b33](https://github.com/maxmorhardt/maxstash/commit/7b62b33e87d2eec49f5aa7addc2904ac0cc782ed))
+
 ## [3.0.3](https://github.com/maxmorhardt/maxstash/compare/maxstash/3.0.2...maxstash/3.0.3) (2026-10-13)
 
 

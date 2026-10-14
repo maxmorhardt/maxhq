@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/maxmorhardt/maxstash/compare/squares-games/1.1.0...squares-games/1.2.0) (2026-10-14)
+
+
+### Features
+
+* **squares:** local stack, shared build, faster stats, library cleanups, and fixes ([#89](https://github.com/maxmorhardt/maxstash/issues/89)) ([7b62b33](https://github.com/maxmorhardt/maxstash/commit/7b62b33e87d2eec49f5aa7addc2904ac0cc782ed))
+
 ## [1.1.0](https://github.com/maxmorhardt/maxstash/compare/squares-games/1.0.0...squares-games/1.1.0) (2026-10-14)
 
 
