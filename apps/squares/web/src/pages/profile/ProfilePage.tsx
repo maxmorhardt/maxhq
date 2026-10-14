@@ -9,7 +9,6 @@ import {
   Button,
   Container,
   Paper,
-  Skeleton,
   TextField,
   Typography,
   useTheme,
@@ -20,7 +19,7 @@ import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import LeaderboardRankCard from '../../components/leaderboard/LeaderboardRankCard';
-import { popIn } from '../../components/profile/animations';
+import ProfileSkeleton from '../../components/profile/ProfileSkeleton';
 import DeleteAccountDialog from '../../components/profile/DeleteAccountDialog';
 import StatCard from '../../components/profile/StatCard';
 import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
@@ -228,14 +227,29 @@ export default function ProfilePage() {
     ? new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
     : '';
 
-  const statsLoading = !stats && !statsError;
+  const pageLoading =
+    !loadError &&
+    (loading || (!stats && !statsError) || (myRankLoading && !myRank && !myRankError));
+
+  const head = (
+    <Helmet>
+      <title>Profile – Squares</title>
+      <meta name="robots" content="noindex, nofollow" />
+    </Helmet>
+  );
+
+  if (pageLoading) {
+    return (
+      <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
+        {head}
+        <ProfileSkeleton />
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
-      <Helmet>
-        <title>Profile – Squares</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      {head}
 
       {/* page-level load error */}
       {loadError && (
@@ -245,7 +259,7 @@ export default function ProfilePage() {
       )}
 
       {/* profile header */}
-      <Box sx={{ textAlign: 'center', mb: 2.5, animation: `${popIn} 0.5s ease-out both` }}>
+      <Box sx={{ textAlign: 'center', mb: 2.5 }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
           <Box
             sx={{
@@ -259,23 +273,19 @@ export default function ProfilePage() {
             }}
           >
             <Typography variant="h5" sx={{ fontWeight: 800, color: 'white' }}>
-              {loading ? '' : (profile?.displayName?.charAt(0) || '?').toUpperCase()}
+              {(profile?.displayName?.charAt(0) || '?').toUpperCase()}
             </Typography>
           </Box>
         </Box>
 
-        {loading ? (
-          <Skeleton variant="text" width={180} sx={{ mx: 'auto', fontSize: '1.5rem' }} />
-        ) : (
-          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-            {profile?.displayName || '–'}
-          </Typography>
-        )}
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+          {profile?.displayName || '–'}
+        </Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.25 }}>
           {profile?.email ?? auth.user?.profile?.email}
         </Typography>
-        {!loading && memberSince && (
+        {memberSince && (
           <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
             Member since {memberSince}
           </Typography>
@@ -289,7 +299,6 @@ export default function ProfilePage() {
           fontWeight: 700,
           mb: 1.25,
           textAlign: 'center',
-          animation: `${popIn} 0.5s ease-out 0.1s both`,
         }}
       >
         Your Numbers
@@ -306,39 +315,32 @@ export default function ProfilePage() {
           icon={<GridOnIcon sx={{ fontSize: 'inherit' }} />}
           value={stats?.contestsCreated}
           label="Contests Created"
-          loading={statsLoading}
-          delay={0.15}
         />
         <StatCard
           icon={<GroupsIcon sx={{ fontSize: 'inherit' }} />}
           value={stats?.contestsJoined}
           label="Contests Joined"
-          loading={statsLoading}
-          delay={0.25}
         />
         <StatCard
           icon={<GridViewIcon sx={{ fontSize: 'inherit' }} />}
           value={stats?.squaresClaimed}
           label="Squares Claimed"
-          loading={statsLoading}
-          delay={0.35}
         />
         <StatCard
           icon={<EmojiEventsIcon sx={{ fontSize: 'inherit' }} />}
           value={stats?.quarterWins}
           label="Quarter Wins"
           caption={winRate}
-          loading={statsLoading}
           highlight
-          delay={0.45}
         />
       </Box>
 
       {/* leaderboard standing */}
       <LeaderboardRankCard
         rank={myRank}
-        loading={myRankLoading && !myRank}
+        loading={false}
         error={Boolean(myRankError)}
+        animate={false}
       />
 
       {/* default initials */}
@@ -354,7 +356,6 @@ export default function ProfilePage() {
           alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'space-between',
           gap: 2,
-          animation: `${popIn} 0.5s ease-out 0.55s both`,
         }}
       >
         <Box>
@@ -393,18 +394,10 @@ export default function ProfilePage() {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexShrink: 0 }}>
-            {loading ? (
-              <Skeleton variant="text" width={48} sx={{ fontSize: '1.5rem' }} />
-            ) : (
-              <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: 1 }}>
-                {profile?.defaultInitials || '—'}
-              </Typography>
-            )}
-            <Button
-              variant="outlined"
-              onClick={startEditingInitials}
-              disabled={loading || loadError}
-            >
+            <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: 1 }}>
+              {profile?.defaultInitials || '—'}
+            </Typography>
+            <Button variant="outlined" onClick={startEditingInitials} disabled={loadError}>
               Edit
             </Button>
           </Box>
@@ -424,7 +417,6 @@ export default function ProfilePage() {
           alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'space-between',
           gap: 2,
-          animation: `${popIn} 0.5s ease-out 0.65s both`,
         }}
       >
         <Box>
@@ -441,7 +433,7 @@ export default function ProfilePage() {
           color="error"
           startIcon={<DeleteForeverIcon />}
           onClick={openDeleteDialog}
-          disabled={loading || loadError}
+          disabled={loadError}
           sx={{ flexShrink: 0 }}
         >
           Delete Account

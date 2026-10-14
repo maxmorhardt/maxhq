@@ -128,6 +128,26 @@ describe('ProfilePage', () => {
     vi.mocked(getMyActiveContests).mockResolvedValue([]);
   });
 
+  it('shows only the skeleton while the profile loads', () => {
+    userState = { profile: null, loading: true, error: null, stats: null, statsError: false };
+    renderPage();
+    expect(screen.getByTestId('profile-skeleton')).toBeInTheDocument();
+    expect(screen.queryByText('Your Numbers')).not.toBeInTheDocument();
+  });
+
+  it('keeps the skeleton until the stats and rank arrive', () => {
+    userState = { ...userState, stats: null };
+    leaderboardState = { myRank: null, myRankLoading: true, myRankError: null };
+    renderPage();
+    expect(screen.getByTestId('profile-skeleton')).toBeInTheDocument();
+  });
+
+  it('replaces the skeleton with the whole page at once', async () => {
+    renderPage();
+    expect(await screen.findByText('Your Numbers')).toBeInTheDocument();
+    expect(screen.queryByTestId('profile-skeleton')).not.toBeInTheDocument();
+  });
+
   it('renders profile info after loading', async () => {
     renderPage();
     expect(await screen.findByText('Max')).toBeInTheDocument();
