@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/maxmorhardt/maxstash/libs/squares/initials"
+
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/metrics"
@@ -589,7 +591,7 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 		return nil, errs.ErrClaimsNotFound
 	}
 
-	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, util.InitialsFromName(claims.Name))
+	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, initials.FromName(claims.Name))
 	if err != nil {
 		log.Error("failed to load profile for square claim", "user", user, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
@@ -650,7 +652,7 @@ func (s *contestService) ClaimRandomSquares(ctx context.Context, contestID uuid.
 		return nil, errs.ErrClaimsNotFound
 	}
 
-	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, util.InitialsFromName(claims.Name))
+	profile, err := s.userRepo.GetOrCreate(ctx, user, claims.Name, initials.FromName(claims.Name))
 	if err != nil {
 		log.Error("failed to load profile for random claim", "error", err)
 		return nil, errs.ErrDatabaseUnavailable

@@ -5,11 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/maxmorhardt/maxstash/libs/squares/initials"
+
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/clients"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/util"
 	"github.com/maxmorhardt/maxstash/libs/platform/cache"
 	"github.com/maxmorhardt/maxstash/libs/platform/database"
 	"github.com/maxmorhardt/maxstash/libs/platform/logging"
@@ -69,7 +70,7 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	newUser := &model.User{
 		Email:           email,
 		DisplayName:     defaultDisplayName,
-		DefaultInitials: util.InitialsFromName(defaultDisplayName),
+		DefaultInitials: initials.FromName(defaultDisplayName),
 	}
 
 	if summary, activityErr := s.contests.GetUserActivity(ctx, email); activityErr != nil {

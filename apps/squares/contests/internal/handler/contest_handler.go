@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
@@ -85,7 +87,7 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	setETag(c, contest.Version)
+	util.SetETag(c, contest.Version)
 	c.JSON(http.StatusOK, contest)
 }
 
@@ -131,7 +133,7 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	expectedVersion, err := parseIfMatch(c.GetHeader("If-Match"))
+	expectedVersion, err := util.ParseIfMatch(c.GetHeader("If-Match"))
 	if err != nil {
 		log.Warn("invalid if-match header", "error", err)
 		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid If-Match header", c))
@@ -161,7 +163,7 @@ func (h *contestHandler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	setETag(c, updatedContest.Version)
+	util.SetETag(c, updatedContest.Version)
 	c.JSON(http.StatusOK, updatedContest)
 }
 
@@ -254,7 +256,7 @@ func (h *contestHandler) StartContest(c *gin.Context) {
 		return
 	}
 
-	setETag(c, contest.Version)
+	util.SetETag(c, contest.Version)
 	c.JSON(http.StatusOK, contest)
 }
 

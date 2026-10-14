@@ -1,4 +1,4 @@
-package util
+package initials
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInitialsFromName(t *testing.T) {
+func TestFromName(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -26,7 +26,7 @@ func TestInitialsFromName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, InitialsFromName(tt.input))
+			assert.Equal(t, tt.expected, FromName(tt.input))
 		})
 	}
 }
