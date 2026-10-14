@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
@@ -49,10 +48,8 @@ func NewInviteHandler(inviteService service.InviteService) InviteHandler {
 func (h *inviteHandler) CreateInvite(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	contestID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		log.Warn("invalid contest id", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -179,10 +176,8 @@ func (h *inviteHandler) RedeemInvite(c *gin.Context) {
 func (h *inviteHandler) GetInvites(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	contestID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		log.Warn("invalid contest id", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -218,17 +213,13 @@ func (h *inviteHandler) GetInvites(c *gin.Context) {
 func (h *inviteHandler) DeleteInvite(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	contestID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		log.Warn("invalid contest id", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
-	inviteID, err := uuid.Parse(c.Param("inviteId"))
-	if err != nil {
-		log.Warn("invalid invite id", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid invite ID", c))
+	inviteID, ok := api.PathUUID(c, "inviteId")
+	if !ok {
 		return
 	}
 

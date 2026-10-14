@@ -60,10 +60,8 @@ func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdow
 func (h *eventsHandler) StreamContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	contestID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		metrics.RecordStreamResult(model.StreamResultBadRequest)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid contest ID", c))
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
 		return
 	}
 
