@@ -83,7 +83,6 @@ func claimsFromHeaders(c *gin.Context) (*api.Claims, api.AuthFailureReason) {
 	}, ""
 }
 
-// a redis outage fails open: deleted-account tokens are rare and short lived, an outage would otherwise reject everyone
 func isRevoked(c *gin.Context, revocations cache.RevocationStore, claims *api.Claims) bool {
 	if revocations == nil {
 		return false

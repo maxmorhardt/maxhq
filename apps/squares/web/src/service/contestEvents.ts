@@ -42,7 +42,6 @@ interface StreamOptions {
   onFrame: (frame: StreamFrame) => void;
 }
 
-// EventSource cannot send an Authorization header, so the stream is read through fetch instead
 export async function streamContestEvents({
   url,
   token,
