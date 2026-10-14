@@ -1,4 +1,3 @@
-# resource name is 'maxstash' - every app HTTPRoute parentRef points at it
 fullnameOverride: maxstash
 
 domain: maxstash.io
@@ -8,8 +7,6 @@ gatewayClassName: maxstash
 tls:
   secretName: maxstash.io-tls
 
-# apps behind this gateway trust these headers, so whatever a client sends is dropped first;
-# the X-Auth-* set comes back only from a SecurityPolicy jwt filter (see the squares-* charts)
 strippedRequestHeaders:
   - X-Auth-Email
   - X-Auth-Name

@@ -1,11 +1,8 @@
-# the service's name, image, secret, and every resource it owns: squares-realtime
 fullnameOverride: squares-realtime
-# shared by every squares backend chart, so dashboards and selectors can find all of them
 partOf: squares
 
 image:
   repository: maxmorhardt/squares-realtime
-  # set by argo cd for each release
   tag: ''
   pullPolicy: Always
   revisionHistoryLimit: 2
@@ -46,17 +43,13 @@ image:
     failureThreshold: 5
     successThreshold: 1
 
-# the secret every key in DEPENDENCIES.md comes from; empty means <fullname>-env
 secretName: ''
 
-# settings that are not secret; see DEPENDENCIES.md for the defaults the service applies itself
 env:
   CONTESTS_INTERNAL_URL: http://squares-contests:8080
   SSE_HEARTBEAT_INTERVAL: 25s
   SSE_REVOCATION_INTERVAL: 5m
 
-# small pods, two to three of them: memory requests equal limits so a pod is never evicted for using
-# what it asked for, and cpu can burst past the request for startup and migrations
 resources:
   limits:
     cpu: 250m
@@ -75,7 +68,6 @@ hpa:
 pdb:
   minAvailable: 1
 
-# surge first so open streams have somewhere to reconnect to with their Last-Event-ID
 strategy:
   maxSurge: 1
   maxUnavailable: 0
@@ -93,22 +85,18 @@ route:
     namespace: envoy-gateway-system
   hostnames:
     - api.maxstash.io
-  # public path prefix; the gateway strips it before forwarding
   prefix: /squares
   paths:
     prefixes:
       - /events
     exact: []
-  # the api reference is served at <prefix>/swagger/<swaggerName>
   swaggerName: realtime
-  # responses stay open until the token expires
   streaming: true
   rateLimit:
     enabled: true
     requests: 100
     unit: Second
 
-# the gateway validates dex id tokens and hands the claims to the service as headers
 auth:
   enabled: true
   issuer: https://login.maxstash.io
@@ -116,7 +104,6 @@ auth:
   audiences:
     - squares
     - squares-mobile
-  # a missing token passes through without identity headers; the service decides which routes need one
   optional: true
   claimToHeaders:
     - header: X-Auth-Email
@@ -130,12 +117,10 @@ auth:
     - header: X-Auth-Exp
       claim: exp
 
-# app traffic only from the gateway, metrics only from prometheus
 networkPolicy:
   enabled: true
   gatewayNamespace: envoy-gateway-system
   monitoringNamespace: monitoring
-  # other services that may call this one directly, by their app.kubernetes.io/name
   internalCallers: []
 
 affinity:

@@ -1,6 +1,4 @@
 {{- if and .Values.route.enabled .Values.auth.enabled }}
-# validates the dex id token once at the gateway and forwards its claims as X-Auth-* headers;
-# the maxstash gateway strips client-sent X-Auth-* headers before this filter runs
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
 metadata:

@@ -28,7 +28,6 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: {{ . }}
       {{- if $.Values.route.streaming }}
-      # responses stay open until the viewer's token expires, so the gateway must not time them out
       timeouts:
         request: 0s
       {{- end }}
@@ -51,7 +50,6 @@ spec:
         - name: {{ $backend }}
           port: {{ $.Values.service.port }}
     {{- end }}
-    # the service's own api reference
     - matches:
         - path:
             type: PathPrefix

@@ -32,7 +32,6 @@ spec:
           protocol: TCP
     {{- end }}
     {{- range .Values.networkPolicy.internalCallers }}
-    # {{ . }} calls this service's /internal routes directly
     - from:
         - podSelector:
             matchLabels:

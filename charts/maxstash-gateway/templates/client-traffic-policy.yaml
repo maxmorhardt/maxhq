@@ -14,7 +14,6 @@ spec:
       trustedCIDRs:
         {{- toYaml .Values.trustedCIDRs | nindent 8 }}
   {{- with .Values.strippedRequestHeaders }}
-  # removed before any filter runs, so only the gateway's own jwt filter can set them
   headers:
     earlyRequestHeaders:
       remove:

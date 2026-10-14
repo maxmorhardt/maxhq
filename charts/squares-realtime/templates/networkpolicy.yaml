@@ -1,5 +1,4 @@
 {{- if .Values.networkPolicy.enabled }}
-# the service trusts the gateway's X-Auth-* headers, so app traffic may only arrive through the gateway
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -32,7 +31,6 @@ spec:
           protocol: TCP
     {{- end }}
     {{- range .Values.networkPolicy.internalCallers }}
-    # {{ . }} calls this service's /internal routes directly
     - from:
         - podSelector:
             matchLabels:

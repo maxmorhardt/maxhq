@@ -7,7 +7,6 @@ image:
   revisionHistoryLimit: 2
   strategy:
     type: RollingUpdate
-    # start the new pod before stopping an old one, so both replicas keep serving through a rollout
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0
