@@ -132,6 +132,39 @@ func TestGetOrLoad_ConcurrentMissesShareOneLoad(t *testing.T) {
 	assert.Equal(t, int32(1), loads.Load())
 }
 
+func TestGetOrLoad_SharedLoadOutlivesTheFirstCaller(t *testing.T) {
+	_, client := newRedis(t)
+	c := NewRedisCache(client, "test")
+
+	release := make(chan struct{})
+	load := func(ctx context.Context) (payload, error) {
+		<-release
+		return payload{N: 9}, ctx.Err()
+	}
+
+	first, cancel := context.WithCancel(context.Background())
+	firstDone := make(chan error, 1)
+	go func() {
+		_, err := GetOrLoad(first, c, "test", "outlives", time.Minute, load)
+		firstDone <- err
+	}()
+	time.Sleep(20 * time.Millisecond)
+
+	secondDone := make(chan payload, 1)
+	go func() {
+		got, err := GetOrLoad(context.Background(), c, "test", "outlives", time.Minute, load)
+		assert.NoError(t, err)
+		secondDone <- got
+	}()
+	time.Sleep(20 * time.Millisecond)
+
+	cancel()
+	close(release)
+
+	assert.NoError(t, <-firstDone)
+	assert.Equal(t, 9, (<-secondDone).N)
+}
+
 func TestGetOrLoad_FailsOpenWhenRedisIsDown(t *testing.T) {
 	mr, client := newRedis(t)
 	mr.Close()

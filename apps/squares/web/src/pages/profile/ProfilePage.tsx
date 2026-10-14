@@ -23,11 +23,7 @@ import ProfileSkeleton from '../../components/profile/ProfileSkeleton';
 import DeleteAccountDialog from '../../components/profile/DeleteAccountDialog';
 import StatCard from '../../components/profile/StatCard';
 import { deleteContest, removeContestParticipant } from '../../features/contests/contestThunks';
-import {
-  selectMyRank,
-  selectMyRankError,
-  selectMyRankLoading,
-} from '../../features/leaderboard/leaderboardSelectors';
+import { selectMyRank, selectMyRankError } from '../../features/leaderboard/leaderboardSelectors';
 import { fetchMyRank } from '../../features/leaderboard/leaderboardThunks';
 import {
   selectUserProfile,
@@ -61,7 +57,6 @@ export default function ProfilePage() {
   const statsFetching = useAppSelector(selectUserStatsLoading);
   const statsError = useAppSelector(selectUserStatsError);
   const myRank = useAppSelector(selectMyRank);
-  const myRankLoading = useAppSelector(selectMyRankLoading);
   const myRankError = useAppSelector(selectMyRankError);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -228,8 +223,7 @@ export default function ProfilePage() {
     : '';
 
   const pageLoading =
-    !loadError &&
-    (loading || (!stats && !statsError) || (myRankLoading && !myRank && !myRankError));
+    !loadError && (loading || (!stats && !statsError) || (!myRank && !myRankError));
 
   const head = (
     <Helmet>

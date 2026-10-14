@@ -80,7 +80,8 @@ func GetOrLoad[T any](ctx context.Context, c Cache, name, k string, ttl time.Dur
 	metrics.IncCacheRequest(name, false)
 	// concurrent misses for the same key in this replica share one load
 	v, err, _ := loads.Do(name+":"+k, func() (any, error) {
-		value, err := load(ctx)
+		// shared by every waiter, so one caller going away must not fail the rest
+		value, err := load(context.WithoutCancel(ctx))
 		if err != nil {
 			return nil, err
 		}
