@@ -3,11 +3,9 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Container,
   InputAdornment,
-  MenuItem,
   Skeleton,
   TextField,
   ToggleButton,
@@ -34,31 +32,14 @@ import { fetchContestFeed } from '../../features/contests/contestThunks';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useAxiosAuth } from '../../hooks/useAxiosAuth';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
-import type { ContestFeedParams, FeedRole, FeedSort, FeedStatus } from '../../types/contest';
+import type { ContestFeedParams, FeedRole, FeedStatus } from '../../types/contest';
 import { gradients } from '../../types/gradients';
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 500;
 
 type RoleFilter = 'all' | FeedRole;
-type UpdatedFilter = 'any' | 'week' | 'month';
-
-const statusOptions: { value: FeedStatus; label: string }[] = [
-  { value: 'open', label: 'Open' },
-  { value: 'live', label: 'Live' },
-  { value: 'finished', label: 'Finished' },
-];
-
-// whole days, so the same filter keeps hitting the same cached page
-function updatedSince(filter: UpdatedFilter): string | undefined {
-  if (filter === 'any') {
-    return undefined;
-  }
-  const now = new Date();
-  const days = filter === 'week' ? 7 : 30;
-  const since = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - days);
-  return new Date(since).toISOString().replace(/\.\d{3}Z$/, 'Z');
-}
+type StatusFilter = 'all' | FeedStatus;
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
@@ -84,9 +65,7 @@ export default function ContestsPage() {
   const error = useAppSelector(selectContestError);
 
   const [role, setRole] = useState<RoleFilter>('all');
-  const [statuses, setStatuses] = useState<FeedStatus[]>([]);
-  const [updated, setUpdated] = useState<UpdatedFilter>('any');
-  const [sort, setSort] = useState<FeedSort>('updated');
+  const [status, setStatus] = useState<StatusFilter>('all');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -95,12 +74,10 @@ export default function ContestsPage() {
     () => ({
       limit: PAGE_SIZE,
       role: role === 'all' ? undefined : role,
-      status: statuses.length ? statuses : undefined,
+      status: status === 'all' ? undefined : status,
       search: search || undefined,
-      updatedSince: updatedSince(updated),
-      sort,
     }),
-    [role, statuses, search, updated, sort]
+    [role, status, search]
   );
 
   const canFetch = auth.isAuthenticated && isInterceptorReady;
@@ -139,11 +116,6 @@ export default function ContestsPage() {
     }
     debounceRef.current = setTimeout(() => setSearch(value.trim()), SEARCH_DEBOUNCE_MS);
   };
-
-  const toggleStatus = (value: FeedStatus) =>
-    setStatuses((prev) =>
-      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
-    );
 
   if (auth.isLoading && auth.activeNavigator === 'signinRedirect') {
     return (
@@ -192,45 +164,19 @@ export default function ContestsPage() {
         <ToggleButton value="owned">Created</ToggleButton>
         <ToggleButton value="joined">Joined</ToggleButton>
       </ToggleButtonGroup>
-      <Box sx={{ display: 'flex', gap: 0.75 }}>
-        {statusOptions.map((option) => (
-          <Chip
-            key={option.value}
-            label={option.label}
-            clickable
-            disabled={!auth.isAuthenticated}
-            onClick={() => toggleStatus(option.value)}
-            color={statuses.includes(option.value) ? 'primary' : 'default'}
-            variant={statuses.includes(option.value) ? 'filled' : 'outlined'}
-            size="small"
-          />
-        ))}
-      </Box>
-      <TextField
-        select
+      <ToggleButtonGroup
         size="small"
-        label="Updated"
-        value={updated}
-        onChange={(e) => setUpdated(e.target.value as UpdatedFilter)}
+        exclusive
+        value={status}
+        onChange={(_, value: StatusFilter | null) => value && setStatus(value)}
         disabled={!auth.isAuthenticated}
-        sx={{ ...fieldSx, minWidth: 140 }}
+        aria-label="Status"
       >
-        <MenuItem value="any">Any time</MenuItem>
-        <MenuItem value="week">Past week</MenuItem>
-        <MenuItem value="month">Past month</MenuItem>
-      </TextField>
-      <TextField
-        select
-        size="small"
-        label="Sort"
-        value={sort}
-        onChange={(e) => setSort(e.target.value as FeedSort)}
-        disabled={!auth.isAuthenticated}
-        sx={{ ...fieldSx, minWidth: 170 }}
-      >
-        <MenuItem value="updated">Recently updated</MenuItem>
-        <MenuItem value="created">Newest</MenuItem>
-      </TextField>
+        <ToggleButton value="all">All</ToggleButton>
+        <ToggleButton value="open">Open</ToggleButton>
+        <ToggleButton value="live">Live</ToggleButton>
+        <ToggleButton value="finished">Finished</ToggleButton>
+      </ToggleButtonGroup>
     </Box>
   );
 
@@ -329,7 +275,7 @@ export default function ContestsPage() {
               contests={auth.isAuthenticated ? contests : []}
               onLeave={reload}
               emptyTitle={
-                params.role || params.status || params.search || params.updatedSince
+                params.role || params.status || params.search
                   ? 'No contests match these filters'
                   : undefined
               }

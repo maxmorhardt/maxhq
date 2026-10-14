@@ -22,7 +22,7 @@ vi.mock('../../../service/contestService', async () => {
   const actual = await vi.importActual<typeof import('../../../service/contestService')>(
     '../../../service/contestService'
   );
-  return { ...actual, claimSquareById: vi.fn() };
+  return { ...actual, claimRandomSquares: vi.fn() };
 });
 
 vi.mock('react-helmet-async', () => ({
@@ -84,7 +84,7 @@ vi.mock('../../error/NotFoundPage', () => ({
 
 import { useAuth } from 'react-oidc-context';
 import { useContestEvents } from '../../../hooks/useContestEvents';
-import { claimSquareById } from '../../../service/contestService';
+import { claimRandomSquares } from '../../../service/contestService';
 
 const theme = createTheme({ palette: { mode: 'dark' } });
 
@@ -288,50 +288,53 @@ describe('ContestPage', () => {
     });
   }
 
-  it('claims the requested number of distinct random squares', async () => {
+  it('claims the requested number of random squares in one call', async () => {
     connected();
-    vi.mocked(claimSquareById).mockImplementation((_contestId, squareId) =>
-      Promise.resolve({ id: squareId, row: 0, col: 0, value: 'ME', owner: 'user1' } as never)
-    );
+    vi.mocked(claimRandomSquares).mockResolvedValue({ squares: [], requested: 3 } as never);
 
     renderPage(createTestStore(emptyGridContest, 'ME'));
     fireEvent.click(screen.getAllByTestId('fill-three')[0]);
 
-    await waitFor(() => expect(claimSquareById).toHaveBeenCalledTimes(3));
-    const claimedIds = vi.mocked(claimSquareById).mock.calls.map((call) => call[1]);
-    expect(new Set(claimedIds).size).toBe(3);
+    await waitFor(() => expect(claimRandomSquares).toHaveBeenCalledTimes(1));
+    expect(claimRandomSquares).toHaveBeenCalledWith(emptyGridContest.id, 3);
   });
 
-  it('stops claiming after a square is taken mid-fill', async () => {
+  it('warns when fewer squares were claimed than asked for', async () => {
     connected();
-    vi.mocked(claimSquareById)
-      .mockResolvedValueOnce({ id: 'sq-0', row: 0, col: 0, value: 'ME', owner: 'user1' } as never)
-      .mockRejectedValue({ code: 409, message: 'already claimed' });
-
-    renderPage(createTestStore(emptyGridContest, 'ME'));
-    fireEvent.click(screen.getAllByTestId('fill-three')[0]);
-
-    await waitFor(() => expect(claimSquareById).toHaveBeenCalledTimes(2));
-    expect(claimSquareById).toHaveBeenCalledTimes(2);
-  });
-
-  it('warns about a conflict when a square is taken mid-fill', async () => {
-    connected();
-    vi.mocked(claimSquareById).mockRejectedValue({ code: 409, message: 'already claimed' });
+    vi.mocked(claimRandomSquares).mockResolvedValue({
+      squares: [{ id: 'sq-0', row: 0, col: 0, value: 'ME', owner: 'user1', version: 2 }],
+      requested: 3,
+    } as never);
 
     const store = createTestStore(emptyGridContest, 'ME');
     renderPage(store);
     fireEvent.click(screen.getAllByTestId('fill-three')[0]);
 
     await waitFor(() => expect(getToasts(store)).toHaveLength(1));
-    const toast = getToasts(store)[0];
-    expect(toast.severity).toBe('warning');
-    expect(toast.message).toMatch(/someone may have taken it/i);
+    expect(getToasts(store)[0]).toMatchObject({
+      severity: 'warning',
+      message: 'Claimed 1 of 3 squares',
+    });
+  });
+
+  it('warns about a conflict such as a full allowance', async () => {
+    connected();
+    vi.mocked(claimRandomSquares).mockRejectedValue({
+      code: 409,
+      message: 'you have reached your square limit',
+    });
+
+    const store = createTestStore(emptyGridContest, 'ME');
+    renderPage(store);
+    fireEvent.click(screen.getAllByTestId('fill-three')[0]);
+
+    await waitFor(() => expect(getToasts(store)).toHaveLength(1));
+    expect(getToasts(store)[0].severity).toBe('warning');
   });
 
   it('surfaces a non-conflict claim failure as an error with the api message', async () => {
     connected();
-    vi.mocked(claimSquareById).mockRejectedValue({
+    vi.mocked(claimRandomSquares).mockRejectedValue({
       code: 0,
       message: 'Network error: Unable to reach the server',
     });
@@ -348,12 +351,12 @@ describe('ContestPage', () => {
 
   it('sends the user to their profile instead of claiming when initials are unset', async () => {
     connected();
-    vi.mocked(claimSquareById).mockResolvedValue({} as never);
+    vi.mocked(claimRandomSquares).mockResolvedValue({} as never);
 
     renderPage(createTestStore(emptyGridContest));
     fireEvent.click(screen.getAllByTestId('fill-three')[0]);
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/profile'));
-    expect(claimSquareById).not.toHaveBeenCalled();
+    expect(claimRandomSquares).not.toHaveBeenCalled();
   });
 });

@@ -12,6 +12,7 @@ import type {
   Participant,
   QuarterResult,
   QuarterResultRequest,
+  RandomClaimResponse,
   Square,
   UpdateContestRequest,
   UpdateParticipantRequest,
@@ -20,12 +21,7 @@ import { handleError } from './handleError';
 
 export async function getContestFeed(params: ContestFeedParams = {}): Promise<ContestFeedResponse> {
   try {
-    const res = await api.get<ContestFeedResponse>('/contests', {
-      params: {
-        ...params,
-        status: params.status?.length ? params.status.join(',') : undefined,
-      },
-    });
+    const res = await api.get<ContestFeedResponse>('/contests', { params });
     return res.data;
   } catch (err: unknown) {
     throw handleError(err);
@@ -50,6 +46,22 @@ export async function claimSquareById(contestId: string, squareId: string): Prom
     const res = await idempotentRequest<Square>({
       method: 'POST',
       url: `/contests/${contestId}/squares/${squareId}/claim`,
+    });
+    return res.data;
+  } catch (err: unknown) {
+    throw handleError(err);
+  }
+}
+
+export async function claimRandomSquares(
+  contestId: string,
+  count: number
+): Promise<RandomClaimResponse> {
+  try {
+    const res = await idempotentRequest<RandomClaimResponse>({
+      method: 'POST',
+      url: `/contests/${contestId}/squares/random`,
+      data: { count },
     });
     return res.data;
   } catch (err: unknown) {

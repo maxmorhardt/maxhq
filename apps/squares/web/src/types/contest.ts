@@ -27,6 +27,11 @@ export interface Contest {
   updatedBy: string;
 }
 
+export interface RandomClaimResponse {
+  squares: Square[];
+  requested: number;
+}
+
 export interface CreateContestRequest {
   name: string;
   owner: string;
@@ -76,16 +81,13 @@ export interface ContestEvent {
 
 export type FeedRole = 'owned' | 'joined';
 export type FeedStatus = 'open' | 'live' | 'finished';
-export type FeedSort = 'updated' | 'created';
 
 export interface ContestFeedParams {
   cursor?: string;
   limit?: number;
   role?: FeedRole;
-  status?: FeedStatus[];
+  status?: FeedStatus;
   search?: string;
-  updatedSince?: string;
-  sort?: FeedSort;
 }
 
 export interface ContestSummary {

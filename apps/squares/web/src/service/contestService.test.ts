@@ -4,6 +4,7 @@ import api from '../axios/api';
 import {
   getContestFeed,
   createNewContest,
+  claimRandomSquares,
   claimSquareById,
   clearSquareById,
   clearMySquaresByContest,
@@ -33,37 +34,20 @@ describe('contestService', () => {
     vi.clearAllMocks();
   });
 
-  it('should fetch the contest feed with defaults', async () => {
+  it('should fetch the contest feed', async () => {
     const mockResponse = { contests: [{ id: 'c1', name: 'Test Contest' }], nextCursor: 'next' };
     vi.mocked(api.get).mockResolvedValue({ data: mockResponse });
 
-    const result = await getContestFeed();
-
-    expect(result).toEqual(mockResponse);
-    expect(api.get).toHaveBeenCalledWith('/contests', { params: { status: undefined } });
-  });
-
-  it('should send feed filters, joining statuses with commas', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { contests: [] } });
-
-    await getContestFeed({
+    const result = await getContestFeed({
       cursor: 'abc',
       limit: 10,
       role: 'joined',
-      status: ['open', 'live'],
-      search: 'foo',
-      sort: 'created',
+      status: 'live',
     });
 
+    expect(result).toEqual(mockResponse);
     expect(api.get).toHaveBeenCalledWith('/contests', {
-      params: {
-        cursor: 'abc',
-        limit: 10,
-        role: 'joined',
-        status: 'open,live',
-        search: 'foo',
-        sort: 'created',
-      },
+      params: { cursor: 'abc', limit: 10, role: 'joined', status: 'live' },
     });
   });
 
@@ -112,6 +96,22 @@ describe('contestService', () => {
     expect(result).toEqual(mockSquare);
     expect(api.request).toHaveBeenCalledWith(
       expect.objectContaining({ method: 'POST', url: '/contests/c1/squares/sq-1/claim' })
+    );
+  });
+
+  it('should claim random squares in one request', async () => {
+    const mockResponse = { squares: [{ id: 'sq-1' }], requested: 2 };
+    vi.mocked(api.request).mockResolvedValue({ data: mockResponse });
+
+    const result = await claimRandomSquares('c1', 2);
+
+    expect(result).toEqual(mockResponse);
+    expect(api.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'POST',
+        url: '/contests/c1/squares/random',
+        data: { count: 2 },
+      })
     );
   });
 

@@ -26,6 +26,7 @@ import {
   rollbackLastQuarterResult,
   startContestThunk,
   claimSquare,
+  claimRandomSquaresThunk,
   updateContest,
   updateContestParticipant,
   updateQuarterResult,
@@ -338,6 +339,19 @@ const contestSlice = createSlice({
         state.squareErrorCode = action.payload?.code ?? null;
         state.error = action.payload?.message ?? 'Error claiming square';
       });
+
+    builder.addCase(claimRandomSquaresThunk.fulfilled, (state, action) => {
+      const squares = state.currentContest?.squares;
+      if (!squares) {
+        return;
+      }
+      for (const claimed of action.payload.squares) {
+        const index = squares.findIndex((s) => s.id === claimed.id);
+        if (index !== -1 && claimed.version >= squares[index].version) {
+          squares[index] = claimed;
+        }
+      }
+    });
 
     // clear square value and owner
     builder

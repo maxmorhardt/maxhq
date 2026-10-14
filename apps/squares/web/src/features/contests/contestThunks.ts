@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
+  claimRandomSquares,
   claimSquareById,
   clearMySquaresByContest,
   clearSquareById,
@@ -32,6 +33,7 @@ import type {
   Participant,
   QuarterResult,
   QuarterResultRequest,
+  RandomClaimResponse,
   Square,
   UpdateContestRequest,
   UpdateParticipantRequest,
@@ -71,6 +73,18 @@ export const claimSquare = createAsyncThunk<
   try {
     const square = await claimSquareById(contestId, squareId);
     return square;
+  } catch (err: unknown) {
+    return rejectWithValue(err as APIError);
+  }
+});
+
+export const claimRandomSquaresThunk = createAsyncThunk<
+  RandomClaimResponse,
+  { contestId: string; count: number },
+  { rejectValue: APIError }
+>('contests/claimRandomSquares', async ({ contestId, count }, { rejectWithValue }) => {
+  try {
+    return await claimRandomSquares(contestId, count);
   } catch (err: unknown) {
     return rejectWithValue(err as APIError);
   }

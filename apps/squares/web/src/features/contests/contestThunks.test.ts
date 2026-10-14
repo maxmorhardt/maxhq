@@ -5,6 +5,7 @@ import {
   fetchContestFeed,
   createContest,
   claimSquare,
+  claimRandomSquaresThunk,
   clearSquare,
   clearMySquares,
   startContestThunk,
@@ -27,6 +28,7 @@ vi.mock('../../service/contestService', () => ({
   getContestFeed: vi.fn(),
   createNewContest: vi.fn(),
   claimSquareById: vi.fn(),
+  claimRandomSquares: vi.fn(),
   clearSquareById: vi.fn(),
   clearMySquaresByContest: vi.fn(),
   startContest: vi.fn(),
@@ -48,6 +50,7 @@ import {
   getContestFeed,
   createNewContest,
   claimSquareById,
+  claimRandomSquares,
   clearSquareById,
   clearMySquaresByContest,
   startContest,
@@ -159,6 +162,28 @@ describe('contestThunks', () => {
       const store = createTestStore();
       await store.dispatch(createContest({ name: 'Test', owner: 'u1', maxSquares: 10 }));
       expect(store.getState().contest.error).toBe('bad');
+    });
+  });
+
+  describe('claimRandomSquaresThunk', () => {
+    it('fulfilled: returns the claimed squares', async () => {
+      vi.mocked(claimRandomSquares).mockResolvedValue({ squares: [mockSquare], requested: 1 });
+      const store = createTestStore();
+      const result = await store.dispatch(claimRandomSquaresThunk({ contestId: 'c1', count: 1 }));
+      expect(result.payload).toEqual({ squares: [mockSquare], requested: 1 });
+      expect(claimRandomSquares).toHaveBeenCalledWith('c1', 1);
+    });
+
+    it('rejected: passes the api error', async () => {
+      vi.mocked(claimRandomSquares).mockRejectedValue({
+        code: 409,
+        message: 'full',
+        timestamp: '',
+        requestId: '',
+      });
+      const store = createTestStore();
+      const result = await store.dispatch(claimRandomSquaresThunk({ contestId: 'c1', count: 1 }));
+      expect(result.payload).toMatchObject({ code: 409 });
     });
   });
 
