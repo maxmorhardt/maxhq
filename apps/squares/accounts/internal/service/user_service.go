@@ -97,13 +97,13 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	return user, nil
 }
 
-func (s *userService) UpdateProfile(ctx context.Context, email, initials string) (*model.User, error) {
+func (s *userService) UpdateProfile(ctx context.Context, email, defaultInitials string) (*model.User, error) {
 	log := logging.FromContext(ctx)
 
 	var user *model.User
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		var err error
-		user, err = s.repo.UpdateInitials(ctx, email, initials)
+		user, err = s.repo.UpdateInitials(ctx, email, defaultInitials)
 		if err != nil {
 			return err
 		}
