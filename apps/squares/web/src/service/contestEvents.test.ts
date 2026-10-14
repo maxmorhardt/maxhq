@@ -7,7 +7,6 @@ import {
   getEventsUrl,
   handleContestEvent,
   parseContestEvent,
-  parseFrames,
   StreamHTTPError,
   streamContestEvents,
 } from './contestEvents';
@@ -106,26 +105,6 @@ describe('getEventsUrl', () => {
   });
 });
 
-describe('parseFrames', () => {
-  it('parses complete frames and keeps the partial remainder', () => {
-    const { frames, rest } = parseFrames(
-      'retry: 3000\n\nid: 7\nevent: connected\ndata: {"a":1}\n\n: ping\n\nid: 8\nevent: square_update\ndata: {"b"'
-    );
-
-    expect(frames).toEqual([{ id: '7', event: 'connected', data: '{"a":1}' }]);
-    expect(rest).toBe('id: 8\nevent: square_update\ndata: {"b"');
-  });
-
-  it('handles crlf line endings, multi-line data, and frames without an id or event', () => {
-    const { frames } = parseFrames('data: one\r\ndata: two\r\n\r\nid\ndata:x\n\n');
-
-    expect(frames).toEqual([
-      { id: null, event: 'message', data: 'one\ntwo' },
-      { id: '', event: 'message', data: 'x' },
-    ]);
-  });
-});
-
 describe('parseContestEvent', () => {
   it('accepts well-formed events', () => {
     expect(parseContestEvent(JSON.stringify(event({})))?.type).toBe('square_update');
@@ -183,6 +162,25 @@ describe('streamContestEvents', () => {
     expect(headers.Accept).toBe('text/event-stream');
     expect(onOpen).toHaveBeenCalledOnce();
     expect(frames.map((f) => f.id)).toEqual(['1', '2']);
+  });
+
+  it('skips heartbeats and handles crlf, multi-line data, and frames without an id', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(bodyOf(['retry: 3000\r\n\r\n: ping\n\ndata: one\r\ndata: two\r\n\r\n']), {
+        status: 200,
+      })
+    );
+    const frames: StreamFrame[] = [];
+
+    await streamContestEvents({
+      url: 'http://x',
+      token: 'tok',
+      lastEventId: null,
+      signal: new AbortController().signal,
+      onFrame: (f) => frames.push(f),
+    });
+
+    expect(frames).toEqual([{ id: null, event: 'message', data: 'one\ntwo' }]);
   });
 
   it('omits Last-Event-ID on a fresh connection and rejects non-2xx answers', async () => {

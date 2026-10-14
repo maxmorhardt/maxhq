@@ -8,6 +8,7 @@ import {
   updateQuarterResultFromEvent,
   updateSquareFromEvent,
 } from '../features/contests/contestSlice';
+import { createParser } from 'eventsource-parser';
 import { API_BASE_URL } from '../axios/api';
 import type { Contest, ContestEvent, QuarterResult, Square } from '../types/contest';
 import type { HandleContestEventParams, StreamFrame } from '../types/events';
@@ -63,9 +64,11 @@ export async function streamContestEvents({
 
   onOpen?.();
 
+  const parser = createParser({
+    onEvent: ({ id, event, data }) => onFrame({ id: id ?? null, event: event ?? 'message', data }),
+  });
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = '';
 
   // resolves when the server ends the stream; the caller decides whether to reconnect
   for (;;) {
@@ -73,51 +76,8 @@ export async function streamContestEvents({
     if (done) {
       return;
     }
-
-    buffer += decoder.decode(value, { stream: true });
-    const { frames, rest } = parseFrames(buffer);
-    buffer = rest;
-    frames.forEach(onFrame);
+    parser.feed(decoder.decode(value, { stream: true }));
   }
-}
-
-// splits buffered text into complete server-sent event frames, keeping any partial frame for the next read
-export function parseFrames(text: string): { frames: StreamFrame[]; rest: string } {
-  const normalized = text.replace(/\r\n?/g, '\n');
-  const blocks = normalized.split('\n\n');
-  const rest = blocks.pop() ?? '';
-
-  const frames: StreamFrame[] = [];
-  for (const block of blocks) {
-    let id: string | null = null;
-    let event = 'message';
-    const data: string[] = [];
-
-    for (const line of block.split('\n')) {
-      // comment lines are heartbeats
-      if (line === '' || line.startsWith(':')) {
-        continue;
-      }
-
-      const colon = line.indexOf(':');
-      const field = colon === -1 ? line : line.slice(0, colon);
-      const value = colon === -1 ? '' : line.slice(colon + 1).replace(/^ /, '');
-
-      if (field === 'id') {
-        id = value;
-      } else if (field === 'event') {
-        event = value;
-      } else if (field === 'data') {
-        data.push(value);
-      }
-    }
-
-    if (data.length > 0) {
-      frames.push({ id, event, data: data.join('\n') });
-    }
-  }
-
-  return { frames, rest };
 }
 
 export function parseContestEvent(data: string): ContestEvent | null {
