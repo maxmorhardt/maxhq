@@ -22,7 +22,7 @@ x-env: &env
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: squares
       POSTGRES_PASSWORD: squares
