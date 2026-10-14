@@ -80,7 +80,7 @@ describe('contestService', () => {
     expect(result).toEqual(mockResponse);
     expect(api.request).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'PUT',
+        method: 'POST',
         url: '/contests',
         data: { name: 'New Contest', owner: 'user1' },
       })
@@ -95,7 +95,7 @@ describe('contestService', () => {
 
     expect(result).toEqual(mockSquare);
     expect(api.request).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'POST', url: '/contests/c1/squares/sq-1/claim' })
+      expect.objectContaining({ method: 'PUT', url: '/contests/c1/squares/sq-1/claim' })
     );
   });
 
@@ -123,7 +123,7 @@ describe('contestService', () => {
 
     expect(result).toEqual(mockSquare);
     expect(api.request).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'POST', url: '/contests/c1/squares/sq-1/clear' })
+      expect.objectContaining({ method: 'DELETE', url: '/contests/c1/squares/sq-1/claim' })
     );
   });
 
@@ -138,7 +138,7 @@ describe('contestService', () => {
 
     expect(result).toEqual(mockSquares);
     expect(api.request).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'POST', url: '/contests/c1/squares/clear-mine' })
+      expect.objectContaining({ method: 'DELETE', url: '/contests/c1/squares/claims' })
     );
   });
 
@@ -180,7 +180,7 @@ describe('contestService', () => {
     expect(api.request).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'POST',
-        url: '/contests/c1/quarter-result',
+        url: '/contests/c1/quarter-results',
         data: {
           homeTeamScore: 14,
           awayTeamScore: 7,
@@ -197,7 +197,7 @@ describe('contestService', () => {
 
     expect(result).toEqual(mockResult);
     expect(api.request).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'POST', url: '/contests/c1/quarter-result/rollback' })
+      expect.objectContaining({ method: 'DELETE', url: '/contests/c1/quarter-results/latest' })
     );
   });
 
