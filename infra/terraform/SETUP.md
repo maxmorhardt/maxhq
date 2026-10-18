@@ -33,12 +33,14 @@ State lives in its own bucket, which cannot be managed by the state it holds. Cr
 hand:
 
 ```bash
-aws s3api create-bucket --bucket maxstash-tfstate --region us-east-1
-aws s3api put-bucket-versioning --bucket maxstash-tfstate \
+aws s3api create-bucket --bucket maxhq-tf --region us-east-1
+aws s3api put-bucket-versioning --bucket maxhq-tf \
   --versioning-configuration Status=Enabled
-aws s3api put-public-access-block --bucket maxstash-tfstate \
+aws s3api put-public-access-block --bucket maxhq-tf \
   --public-access-block-configuration \
   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+aws s3api put-bucket-lifecycle-configuration --bucket maxhq-tf --lifecycle-configuration \
+  '{"Rules":[{"ID":"expire-old-state-versions","Status":"Enabled","Filter":{},"NoncurrentVersionExpiration":{"NoncurrentDays":90},"AbortIncompleteMultipartUpload":{"DaysAfterInitiation":7}}]}'
 ```
 
 CI uses an access key for a dedicated IAM user rather than the account root, since root

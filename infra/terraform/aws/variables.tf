@@ -13,19 +13,13 @@ variable "account_id" {
 variable "backup_bucket_name" {
   description = "Bucket CNPG archives Postgres WAL and base backups to"
   type        = string
-  default     = "maxstash-io-bucket"
+  default     = "maxhq-backups"
 }
 
 variable "backup_retention_days" {
   description = "Bucket-wide expiry backstop"
   type        = number
-  default     = 90
-}
-
-variable "backup_noncurrent_days" {
-  description = "How long a version lingers after expiration"
-  type        = number
-  default     = 30
+  default     = 365
 }
 
 variable "backup_user_name" {
