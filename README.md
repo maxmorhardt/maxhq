@@ -1,6 +1,6 @@
-# maxstash
+# maxhq
 
-Monorepo for everything served under `maxstash.io`.
+Monorepo for everything served under `maxstash.io`: the apps, their Helm charts, and the tooling for what runs outside the cluster.
 
 | Path | What | Image |
 | --- | --- | --- |
@@ -11,13 +11,16 @@ Monorepo for everything served under `maxstash.io`.
 | [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
 | [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
-| [`assets`](assets) | Brand assets: logos, wordmarks, favicons | - |
+| [`charts`](charts) | Helm chart for each app, the gateway, and the Cloudflare CronJobs | - |
+| [`infra/terraform`](infra/terraform/SETUP.md) | AWS backups, Cloudflare DNS, GitHub rulesets | - |
+| [`infra/k3s`](infra/k3s/SETUP.md) | Node bootstrap and the k3s runbook | - |
+| [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/SETUP.md) | Maintenance page Worker | - |
 
-Helm charts live in [`maxmorhardt/charts`](https://github.com/maxmorhardt/charts) and release on their own. Cluster state (which chart version and image tag each app runs) lives in [`maxmorhardt/infra`](https://github.com/maxmorhardt/infra). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
+Cluster state (which image tag each app runs, plus every infra component's values) lives in [`maxmorhardt/gitops`](https://github.com/maxmorhardt/gitops). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
 
 ## Releases
 
-[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and commits the new `image.tag` to its Argo CD Application in `infra`.
+[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and commits the new `image.tag` to its Argo CD Application in `gitops`.
 
 One release pull request covers every app with pending changes. Pull requests are squash merged, so the PR title is the conventional commit release-please reads, and it applies to every app the PR touches.
 
@@ -27,7 +30,7 @@ One release pull request covers every app with pending changes. Pull requests ar
 
 ## CI
 
-[`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs` tests every Go service. `CI Complete` is the single required check.
+[`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs` tests every Go service, a changed chart is linted and rendered, and a change under `infra/terraform` plans every module. `CI Complete` is the single required check. [`cd-terraform.yml`](.github/workflows/cd-terraform.yml) applies Terraform on merge.
 
 The Go modules are tied together by `replace` directives, so each builds on its own. [`go.work`](go.work) only lets editors see all of them at once.
 
@@ -39,9 +42,8 @@ The Go modules are tied together by `replace` directives, so each builds on its 
 
 | Path | License |
 | --- | --- |
-| everything not listed below (`apps/maxstash`, CI, repo config) | Apache-2.0 ([`LICENSE`](LICENSE)) |
+| everything not listed below (`apps/maxstash`, `charts`, `infra`, CI, repo config) | Apache-2.0 ([`LICENSE`](LICENSE)) |
 | `apps/squares/**` | PolyForm Noncommercial 1.0.0 (the `LICENSE` in each squares app) |
 | `libs/**` | PolyForm Noncommercial 1.0.0 ([`libs/platform/LICENSE`](libs/platform/LICENSE), [`libs/squares/LICENSE`](libs/squares/LICENSE)); both were extracted from the squares API |
-| `assets/**` | CC BY-NC-ND 4.0 ([`assets/LICENSE`](assets/LICENSE)) |
 
 A directory's own `LICENSE` overrides the root one for everything under it.

@@ -1,22 +1,14 @@
 locals {
   repositories = {
-    # monorepo for every public app; ci.yml only builds what changed
-    "maxstash" = {
+    # monorepo for every public app, its chart, and the infra tooling; ci.yml only builds what changed
+    "maxhq" = {
       checks = [
         "pr-title / pr-title",
         "CI Complete",
       ]
     }
 
-    # every helm chart, app and infra, each released on its own
-    "charts" = {
-      checks = [
-        "pr-title / pr-title",
-        "Validate Complete",
-      ]
-    }
-
-    "infra" = {
+    "gitops" = {
       checks = [
         "pr-title / pr-title",
         "Validate Complete",

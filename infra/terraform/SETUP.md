@@ -6,7 +6,7 @@ created by hand.
 
 | module | owns |
 | --- | --- |
-| `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](../postgres/SETUP.md) |
+| `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](https://github.com/maxmorhardt/gitops/blob/main/postgres/SETUP.md) |
 | `cloudflare/` | DNS records for the `maxstash.io` zone |
 | `github/` | Repository rulesets on every default branch: required checks and squash-only merges |
 
@@ -47,15 +47,15 @@ resources.
 
 ## Workflow
 
-A pull request plans every module and posts the output to the job summary; `Validate Complete`
-covers it, so no ruleset change was needed. Merging to `main` applies any module under
-`terraform/`. A scheduled run every Monday plans all three with `fail_on_diff`, which is the
-only signal that something changed outside Terraform.
+A pull request that touches `infra/terraform/` plans every module and posts the output to the
+job summary; `CI Complete` covers it. Merging to `main` applies any module under
+`infra/terraform/`. A scheduled run every Monday plans all three with `fail_on_diff`, which is
+the only signal that something changed outside Terraform.
 
 Locally, for iterating before opening a PR:
 
 ```bash
-cd terraform/aws
+cd infra/terraform/aws
 terraform init
 terraform plan
 ```

@@ -3,7 +3,7 @@
 Automates all node provisioning over SSH. See [bootstrap/README.md](bootstrap/README.md) for setup.
 
 ```bash
-cd k3s/bootstrap
+cd infra/k3s/bootstrap
 
 # Control plane
 python main.py --node-type control-plane --host 10.0.0.100

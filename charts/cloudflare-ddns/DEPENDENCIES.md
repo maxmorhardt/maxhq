@@ -11,7 +11,7 @@ CronJob that keeps a Cloudflare DNS record pointed at the cluster's current publ
 ## Secrets
 
 `cloudflare-ddns-env` in the `jobs` namespace. Sealed into `secrets/jobs/` — see
-[sealed-secrets](https://github.com/maxmorhardt/infra/blob/main/sealed-secrets/SETUP.md).
+[sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/sealed-secrets/SETUP.md).
 
 | key | purpose |
 | --- | --- |

@@ -10,3 +10,19 @@ coverage
 .vscode/*
 !.vscode/extensions.json
 go.work.sum
+
+# infra
+*.tgz
+.venv/
+__pycache__
+infra/k3s/bootstrap/bootstrap-output/
+infra/k3s/bootstrap/bootstrap-all.sh
+infra/k3s/bootstrap/node/network-watchdog.env
+.wrangler
+.terraform
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+*.auto.tfvars
+terraform.tfvars
