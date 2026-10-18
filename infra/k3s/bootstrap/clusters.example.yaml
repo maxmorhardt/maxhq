@@ -1,9 +1,11 @@
 # Copy to clusters.yaml (gitignored) and fill in real addresses.
 #
-# profile    pi: home Raspberry Pis on one LAN; vps: public cloud nodes, flannel over WireGuard
+# profile    pi: home Raspberry Pis (memory cgroup, vxlan, network watchdog); vps: cloud nodes
 # role       init: first server, creates the etcd cluster (exactly one)
 #            server: joins etcd and the control plane; agent: workloads only
-# ip         first-contact SSH address and the k3s node IP (LAN IP for pi, public IP for vps)
+# ip         first-contact SSH address (LAN IP for pi, public IP for vps); every later
+#            connection and all node-to-node traffic goes over Tailscale
+# lan_cidr   optional; trusted through the firewall
 
 dev:
   profile: pi

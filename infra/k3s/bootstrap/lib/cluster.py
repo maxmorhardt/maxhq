@@ -6,8 +6,8 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 
 from lib import kubeconfig
-from lib.inventory import Cluster, Node
-from lib.k3s_config import KUBECONFIG_PATH
+from lib.inventory import Cluster, Node, Role
+from lib.k3s_config import API_PORT, KUBECONFIG_PATH, Tailnet
 from lib.node import BootstrapError, NodeBootstrap, NodeReset, read_tailnet
 from lib.remote import Remote
 from lib.settings import ClusterSecrets
@@ -25,9 +25,15 @@ class ClusterBootstrap:
 
     def up(self, secrets: ClusterSecrets, only: str | None = None) -> Path:
         nodes = [self.cluster.node(only)] if only else self.cluster.join_order()
+        join_url = None
         for node in nodes:
             with self._connect(node) as remote:
-                NodeBootstrap(self.cluster, node, remote, secrets).run()
+                if node.role == Role.INIT:
+                    tailnet = NodeBootstrap(self.cluster, node, remote, secrets).run()
+                    join_url = tailnet.api_url
+                    continue
+                join_url = join_url or self._init_tailnet().api_url
+                NodeBootstrap(self.cluster, node, remote, secrets, join_url).run()
         return self.fetch_kubeconfig()
 
     def reset(self, name: str) -> None:
@@ -45,7 +51,15 @@ class ClusterBootstrap:
 
         path = self._output_dir / self.cluster.name / "kubeconfig"
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(kubeconfig.rewrite(raw, self.cluster.name, f"https://{tailnet.dns_name}:6443"))
+        path.write_text(kubeconfig.rewrite(raw, self.cluster.name, f"https://{tailnet.dns_name}:{API_PORT}"))
         path.chmod(0o600)
         log.info("kubeconfig for %s saved to %s", self.cluster.name, path)
         return path
+
+    def _init_tailnet(self) -> Tailnet:
+        init = self.cluster.init_node
+        with self._connect(init) as remote:
+            tailnet = read_tailnet(remote)
+        if tailnet is None:
+            raise BootstrapError(f"{init.name} is not on the tailnet yet; run `up {self.cluster.name}` first")
+        return tailnet

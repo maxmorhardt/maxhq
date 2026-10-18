@@ -7,7 +7,8 @@ Two k3s clusters, provisioned over SSH by [bootstrap/](bootstrap/README.md) from
 | `dev` | `pi` | Raspberry Pis on the home LAN | Tailscale only |
 | `prod` | `vps` | Contabo VPSes | Tailscale for admin; public traffic arrives through Cloudflare Tunnel, so no inbound ports |
 
-Both run three servers on embedded etcd, so the control plane survives losing any one node.
+Both run three servers on embedded etcd, so the control plane survives losing any one node,
+and all node-to-node traffic goes over Tailscale.
 Everything in the cluster after k3s itself is installed by Argo CD from the `gitops` repo.
 
 ## Bootstrap
@@ -47,20 +48,24 @@ SSH: `ssh dev-1` over the tailnet. On a VPS, port 22 is closed on the public int
 bootstrap has run, so the Tailscale name is the only way in; Contabo's VNC console is the
 fallback.
 
-## Firewall
+## Networking and firewall
 
-ufw denies all inbound traffic except:
+Every node joins Tailscale with its cluster's tag, and k3s runs entirely on it: the node IP is
+the Tailscale IP, flannel uses `tailscale0`, and nodes join the init node's Tailscale IP. Peers
+connect directly, so a Tailscale control-plane outage doesn't interrupt running traffic; a node
+that reboots during one rejoins once it's over.
 
-| from | pi | vps |
-| --- | --- | --- |
-| `tailscale0` | everything | everything |
-| pods `10.42.0.0/16`, services `10.43.0.0/16` | everything | everything |
-| the LAN (`lan_cidr`) | everything | — |
-| other nodes of the cluster | (LAN) | 6443, 10250, 2379–2380 tcp; 51820–51821 udp |
-| anywhere | — | 41641 udp (Tailscale direct connections) |
+ufw is identical on every node and denies all inbound traffic except:
+
+| from | |
+| --- | --- |
+| `tailscale0` | everything |
+| pods `10.42.0.0/16`, services `10.43.0.0/16` | everything |
+| anywhere | 41641 udp, so Tailscale peers connect directly instead of through a relay |
+| `lan_cidr`, if set | everything |
 
 The applied rule set is fingerprinted in `/etc/maxhq/firewall.sha256`; `up` only rewrites ufw
-when the inventory changes it.
+when it changes.
 
 ## Upgrades
 
@@ -73,8 +78,7 @@ when the inventory changes it.
 ## Adding a node
 
 1. Add it to `clusters.yaml` as `server` (control plane) or `agent` (workloads only).
-2. `python main.py up <cluster> --node <name>`.
-3. On `vps`, run `up <cluster>` afterwards so the existing nodes allow the new peer through ufw.
+2. `python main.py up <cluster> --node <name>`. The existing nodes need no changes.
 
 ## MicroSD to NVMe (Pis)
 

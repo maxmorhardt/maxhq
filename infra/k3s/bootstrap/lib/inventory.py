@@ -51,18 +51,11 @@ class Cluster:
     def init_node(self) -> Node:
         return next(node for node in self.nodes if node.role == Role.INIT)
 
-    @property
-    def server_url(self) -> str:
-        return f"https://{self.init_node.ip}:6443"
-
     def node(self, name: str) -> Node:
         for node in self.nodes:
             if node.name == name:
                 return node
         raise InventoryError(f"{self.name} has no node named {name}")
-
-    def peers(self, node: Node) -> list[Node]:
-        return [other for other in self.nodes if other.name != node.name]
 
     def join_order(self) -> list[Node]:
         # etcd members must join one at a time after the init node; agents come last
@@ -134,9 +127,7 @@ def _validate(cluster: Cluster) -> None:
         if len(values) != len(set(values)):
             raise InventoryError(f"{cluster.name} has duplicate node {field}s")
 
-    if cluster.profile == Profile.PI:
-        if not cluster.lan_cidr:
-            raise InventoryError(f"{cluster.name}.lan_cidr is required for the pi profile")
+    if cluster.lan_cidr:
         try:
             ipaddress.ip_network(cluster.lan_cidr)
         except ValueError:

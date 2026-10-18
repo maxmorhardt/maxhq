@@ -33,6 +33,7 @@ PACKAGES = ("curl", "ufw", "unattended-upgrades")
 JOURNAL_MAX = "500M"
 READY_TIMEOUT = 300
 APT = "sudo DEBIAN_FRONTEND=noninteractive apt-get -qq -y -o Dpkg::Options::=--force-confold"
+K3S_AFTER_TAILSCALE = "[Unit]\nAfter=tailscaled.service\nWants=tailscaled.service\n"
 
 WATCHDOG_FILES = (
     (NODE_DIR / "network-watchdog.sh", f"{SCRIPTS_DEST}/network-watchdog.sh", "0755"),
@@ -73,12 +74,14 @@ class NodeBootstrap:
         node: Node,
         remote: Remote,
         secrets: ClusterSecrets,
+        join_url: str | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ):
         self.cluster = cluster
         self.node = node
         self.remote = remote
         self.secrets = secrets
+        self.join_url = join_url
         self._sleep = sleep
         self.log = NodeLog(logging.getLogger(__name__), {"node": node.name})
 
@@ -175,7 +178,7 @@ class NodeBootstrap:
         return tailnet
 
     def apply_firewall(self) -> None:
-        allow = firewall.rules(self.cluster, self.node)
+        allow = firewall.rules(self.cluster)
         stamp = firewall.fingerprint(allow)
         current = self.remote.read(FIREWALL_STAMP)
         if current and current.strip() == stamp and self.remote.ok("sudo ufw status | grep -q 'Status: active'"):
@@ -189,8 +192,11 @@ class NodeBootstrap:
         self.remote.put(stamp, FIREWALL_STAMP)
 
     def install_k3s(self, tailnet: Tailnet) -> None:
-        config = k3s_config.render(self.cluster, self.node, self.secrets.k3s_token, tailnet)
+        config = k3s_config.render(self.cluster, self.node, self.secrets.k3s_token, tailnet, self.join_url)
         config_changed = self._put_if_changed(k3s_config.to_yaml(config), k3s_config.CONFIG_PATH, mode="0600")
+        # k3s binds to the Tailscale IP: start after tailscaled, and systemd retries until the IP is up
+        if self._put_if_changed(K3S_AFTER_TAILSCALE, f"{SYSTEMD_DEST}/{self._service}.service.d/tailscale.conf"):
+            self.remote.run("sudo systemctl daemon-reload")
 
         wanted = self.cluster.k3s_version
         installed = self._installed_k3s_version()
@@ -287,7 +293,8 @@ class NodeReset:
 
         self.remote.run("sudo systemctl disable --now network-watchdog.timer", check=False)
         bundled = [dest for _, dest, _ in WATCHDOG_FILES] + [WATCHDOG_ENV[1], f"{SCRIPTS_DEST}/pre-reboot.sh"]
-        self.remote.run(f"sudo rm -f {' '.join(bundled)}")
+        dropins = [f"{SYSTEMD_DEST}/{service}.service.d" for service in ("k3s", "k3s-agent")]
+        self.remote.run(f"sudo rm -rf {' '.join(bundled + dropins)}")
         self.remote.run("sudo systemctl daemon-reload")
         self.remote.run("sudo ufw --force reset", check=False)
         self.remote.run(f"sudo rm -rf {STATE_DIR}")

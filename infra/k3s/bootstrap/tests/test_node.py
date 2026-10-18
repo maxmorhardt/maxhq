@@ -21,7 +21,8 @@ TAILNET = Tailnet(ip="100.64.0.1", dns_name="dev-1.tail1234.ts.net")
 
 def bootstrap(remote: FakeRemote, profile: Profile = Profile.PI, node: str = "dev-1") -> NodeBootstrap:
     cluster = make_cluster(profile=profile)
-    return NodeBootstrap(cluster, cluster.node(node), remote, SECRETS, sleep=lambda _: None)
+    join_url = None if node == "dev-1" else TAILNET.api_url
+    return NodeBootstrap(cluster, cluster.node(node), remote, SECRETS, join_url, sleep=lambda _: None)
 
 
 def converged_remote(**overrides) -> FakeRemote:
@@ -131,11 +132,10 @@ class TestFirewall:
 
         assert remote.ran("sudo ufw --force reset")
         assert remote.ran("sudo ufw --force enable")
-        assert remote.files[FIREWALL_STAMP] == firewall.fingerprint(firewall.rules(make_cluster(), make_cluster().init_node))
+        assert remote.files[FIREWALL_STAMP] == firewall.fingerprint(firewall.rules(make_cluster()))
 
     def test_unchanged_rules_on_an_active_firewall_are_left_alone(self):
-        cluster = make_cluster()
-        stamp = firewall.fingerprint(firewall.rules(cluster, cluster.init_node))
+        stamp = firewall.fingerprint(firewall.rules(make_cluster()))
         remote = FakeRemote(files={FIREWALL_STAMP: stamp + "\n"})
 
         bootstrap(remote).apply_firewall()
@@ -152,6 +152,15 @@ class TestK3s:
         assert remote.modes[CONFIG_PATH] == "0600"
         assert yaml.safe_load(remote.files[CONFIG_PATH])["cluster-init"] is True
         assert remote.ran("INSTALL_K3S_VERSION=v1.36.5+k3s1 INSTALL_K3S_EXEC=server")
+
+    def test_k3s_starts_after_tailscale(self):
+        remote = FakeRemote()
+
+        bootstrap(remote, node="dev-3").install_k3s(TAILNET)
+
+        dropin = remote.files["/etc/systemd/system/k3s-agent.service.d/tailscale.conf"]
+        assert "After=tailscaled.service" in dropin
+        assert yaml.safe_load(remote.files[CONFIG_PATH])["server"] == "https://100.64.0.1:6443"
 
     def test_agents_install_the_agent(self):
         remote = FakeRemote()
@@ -195,4 +204,5 @@ class TestReset:
         assert not remote.ran("sudo /usr/local/bin/k3s-agent-uninstall.sh")
         assert remote.reboots == 1
         assert remote.ran("rm -rf /var/lib/rancher")
+        assert remote.ran("/etc/systemd/system/k3s.service.d")
         assert "tailscale logout" in remote.commands[-1]

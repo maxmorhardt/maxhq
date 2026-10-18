@@ -31,7 +31,7 @@ prod:
   profile: vps                 # pi | vps
   k3s_version: v1.36.5+k3s1    # what new nodes install
   ssh_user: root               # optional, overrides SSH_USER
-  lan_cidr: 10.0.0.0/24        # pi only: trusted through the firewall
+  lan_cidr: 10.0.0.0/24        # optional: trusted through the firewall
   node_port_range: 25565-32767 # optional
   nodes:
     - {name: prod-1, ip: 203.0.113.11, role: init}    # exactly one; creates etcd
@@ -39,9 +39,17 @@ prod:
     - {name: prod-4, ip: 203.0.113.14, role: agent}   # workloads only
 ```
 
-`name` becomes the hostname, k3s node name, and Tailscale name. `ip` is the first-contact SSH
-address and the k3s node IP: the LAN IP on `pi`, the public IP on `vps`. Later runs connect by
-Tailscale name first and fall back to `ip`.
+`name` becomes the hostname, k3s node name, and Tailscale name. `ip` is only the first-contact
+SSH address: the LAN IP on `pi`, the public IP on `vps`. Later runs connect by Tailscale name
+first and fall back to `ip`.
+
+## Networking
+
+All cluster traffic runs over Tailscale. Each node's k3s address is its Tailscale IP, flannel
+uses `tailscale0`, and new nodes join the init node at its Tailscale IP. The firewall is the
+same everywhere: only the tailnet, pod and service ranges, Tailscale's UDP port, and the LAN
+(if set) get in, so no cluster port is ever exposed on a public IP and adding a node never
+touches the others.
 
 ## Usage
 
@@ -61,9 +69,8 @@ python main.py reset dev dev-4         # uninstall k3s, reboot, clean up, leave 
 | journald capped at 500M | ✓ | ✓ |
 | memory cgroup on the kernel cmdline (reboots if needed), `vxlan` module | ✓ | — |
 | Tailscale joined with the cluster's tag | ✓ | ✓ |
-| ufw: deny inbound except tailnet, pods, LAN (pi) or cluster peers (vps) | ✓ | ✓ |
-| k3s config written, pinned version installed, waits for ready | ✓ | ✓ |
-| flannel `wireguard-native` between nodes | — | ✓ |
+| ufw: deny inbound except tailnet, pods, services, LAN | ✓ | ✓ |
+| k3s on the Tailscale IP, started after tailscaled; pinned version; waits for ready | ✓ | ✓ |
 | `pre-reboot.sh` for kured | ✓ | ✓ |
 | network watchdog timer | ✓ | — |
 | `k` alias for `k3s kubectl` | servers | servers |

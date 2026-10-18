@@ -23,7 +23,6 @@ def test_parses_a_valid_cluster():
 
     assert cluster.profile == Profile.PI
     assert cluster.init_node.name == "dev-1"
-    assert cluster.server_url == "https://10.0.0.1:6443"
     assert cluster.node("dev-4").role == Role.AGENT
 
 
@@ -33,19 +32,12 @@ def test_join_order_is_init_then_servers_then_agents():
     assert [node.name for node in cluster.join_order()] == ["dev-1", "dev-2", "dev-4"]
 
 
-def test_peers_exclude_the_node_itself():
-    cluster = parse_cluster("dev", spec())
-
-    assert [peer.name for peer in cluster.peers(cluster.node("dev-2"))] == ["dev-4", "dev-1"]
-
-
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [
         ({"profile": "laptop"}, "profile must be one of pi, vps"),
         ({"k3s_version": None}, "k3s_version is required"),
         ({"nodes": []}, "has no nodes"),
-        ({"lan_cidr": None}, "lan_cidr is required"),
         ({"lan_cidr": "10.0.0.0/33"}, "not a valid CIDR"),
         ({"nodes": [{"name": "dev-1", "ip": "10.0.0.1", "role": "server"}]}, "exactly one init node, found 0"),
         ({"nodes": [{"name": "Dev_1", "ip": "10.0.0.1", "role": "init"}]}, "lowercase letters"),
@@ -61,10 +53,11 @@ def test_rejects_invalid_clusters(overrides, message):
         parse_cluster("dev", spec(**overrides))
 
 
-def test_vps_does_not_need_a_lan_cidr():
+def test_lan_cidr_is_optional():
     cluster = parse_cluster("prod", spec(profile="vps", lan_cidr=None))
 
     assert cluster.profile == Profile.VPS
+    assert cluster.lan_cidr is None
 
 
 def test_unknown_node_name_is_an_error():
