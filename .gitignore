@@ -15,8 +15,9 @@ go.work.sum
 *.tgz
 .venv/
 __pycache__
+.pytest_cache
 infra/k3s/bootstrap/bootstrap-output/
-infra/k3s/bootstrap/bootstrap-all.sh
+infra/k3s/bootstrap/clusters.yaml
 infra/k3s/bootstrap/node/network-watchdog.env
 .wrangler
 .terraform

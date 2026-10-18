@@ -1,0 +1,26 @@
+# Copy to clusters.yaml (gitignored) and fill in real addresses.
+#
+# profile    pi: home Raspberry Pis on one LAN; vps: public cloud nodes, flannel over WireGuard
+# role       init: first server, creates the etcd cluster (exactly one)
+#            server: joins etcd and the control plane; agent: workloads only
+# ip         first-contact SSH address and the k3s node IP (LAN IP for pi, public IP for vps)
+
+dev:
+  profile: pi
+  k3s_version: v1.36.5+k3s1
+  lan_cidr: 10.0.0.0/24
+  node_port_range: 25565-32767
+  nodes:
+    - {name: dev-1, ip: 10.0.0.186, role: init}
+    - {name: dev-2, ip: 10.0.0.194, role: server}
+    - {name: dev-3, ip: 10.0.0.65, role: server}
+    - {name: dev-4, ip: 10.0.0.56, role: agent}
+
+prod:
+  profile: vps
+  k3s_version: v1.36.5+k3s1
+  ssh_user: root
+  nodes:
+    - {name: prod-1, ip: 203.0.113.11, role: init}
+    - {name: prod-2, ip: 203.0.113.12, role: server}
+    - {name: prod-3, ip: 203.0.113.13, role: server}
