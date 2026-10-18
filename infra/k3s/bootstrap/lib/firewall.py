@@ -14,7 +14,6 @@ def rules(cluster: Cluster) -> list[str]:
         "allow in on tailscale0",
         f"allow from {POD_CIDR}",
         f"allow from {SERVICE_CIDR}",
-        # lets nodes on public IPs reach each other directly instead of through a relay
         f"allow proto udp to any port {TAILSCALE_PORT}",
     ]
     if cluster.lan_cidr:
