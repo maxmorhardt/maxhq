@@ -32,7 +32,6 @@ prod:
   k3s_version: v1.36.5+k3s1    # what new nodes install
   ssh_user: root               # optional, overrides SSH_USER
   lan_cidr: 10.0.0.0/24        # optional: trusted through the firewall
-  node_port_range: 25565-32767 # optional
   nodes:
     - {name: prod-1, ip: 203.0.113.11, role: init}    # exactly one; creates etcd
     - {name: prod-2, ip: 203.0.113.12, role: server}  # control plane + etcd

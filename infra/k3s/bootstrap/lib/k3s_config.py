@@ -50,8 +50,6 @@ def render(cluster: Cluster, node: Node, token: str, tailnet: Tailnet, join_url:
     config["disable"] = ["traefik"]
     config["write-kubeconfig-mode"] = "0600"
     config["secrets-encryption"] = True
-    if cluster.node_port_range:
-        config["kube-apiserver-arg"] = [f"service-node-port-range={cluster.node_port_range}"]
 
     return config
 

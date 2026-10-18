@@ -13,7 +13,7 @@ def test_tailnet_api_url_uses_the_tailscale_ip():
 
 
 def test_init_node_creates_the_etcd_cluster():
-    cluster = make_cluster(node_port_range="25565-32767")
+    cluster = make_cluster()
 
     config = render(cluster, cluster.node("dev-1"), "token-123", TAILNET, None)
 
@@ -24,7 +24,7 @@ def test_init_node_creates_the_etcd_cluster():
     assert config["tls-san"] == ["dev-1", "dev-1.tail1234.ts.net", "100.64.0.1"]
     assert config["disable"] == ["traefik"]
     assert config["secrets-encryption"] is True
-    assert config["kube-apiserver-arg"] == ["service-node-port-range=25565-32767"]
+    assert "kube-apiserver-arg" not in config
 
 
 def test_nodes_talk_over_tailscale_on_every_profile():
@@ -60,12 +60,6 @@ def test_joining_without_the_init_url_is_a_bug():
 
     with pytest.raises(ValueError, match="needs the init node's URL"):
         render(cluster, cluster.node("dev-2"), "t", TAILNET, None)
-
-
-def test_node_port_range_is_optional():
-    cluster = make_cluster()
-
-    assert "kube-apiserver-arg" not in render(cluster, cluster.init_node, "t", TAILNET, None)
 
 
 def test_yaml_round_trips_in_field_order():

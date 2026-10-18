@@ -45,7 +45,6 @@ class Cluster:
     nodes: tuple[Node, ...]
     ssh_user: str | None = None
     lan_cidr: str | None = None
-    node_port_range: str | None = None
 
     @property
     def init_node(self) -> Node:
@@ -93,7 +92,6 @@ def parse_cluster(name: str, spec: dict) -> Cluster:
         nodes=nodes,
         ssh_user=spec.get("ssh_user"),
         lan_cidr=lan_cidr,
-        node_port_range=spec.get("node_port_range"),
     )
     _validate(cluster)
     return cluster
