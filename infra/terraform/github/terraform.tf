@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "maxstash-tfstate"
+    bucket       = "maxhq-tf"
     key          = "github/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
