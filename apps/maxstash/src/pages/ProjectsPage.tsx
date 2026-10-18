@@ -41,7 +41,7 @@ const projects: Project[] = [
     description:
       'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. One infinitely scrolling list of every contest you have created or joined, one-tap random square fills, automated winner calculation, and Google and GitHub sign-in through Dex.',
     href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares/web',
-    links: [{ label: 'Live site', href: 'https://squares.maxstash.io', icon: <OpenInNewIcon /> }],
+    links: [{ label: 'Live site', href: 'https://squares.maxhq.io', icon: <OpenInNewIcon /> }],
     tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSG', 'OIDC', 'SSE'],
   },
   {
@@ -53,7 +53,7 @@ const projects: Project[] = [
     links: [
       {
         label: 'Swagger',
-        href: 'https://api.maxstash.io/squares/swagger/contests',
+        href: 'https://api.maxhq.io/squares/swagger/contests',
         icon: <MenuBookIcon />,
       },
     ],
@@ -98,7 +98,7 @@ const projects: Project[] = [
     description:
       'The public monorepo for this portfolio site and squares. The site is React 19 + Vite prerendered to static HTML with React Router framework mode, styled with Material UI and Emotion, with persistent light/dark theming and scroll-driven animations. Shipped as a Docker image through the same workflows that deploy everything else.',
     href: 'https://github.com/maxmorhardt/maxstash',
-    links: [{ label: 'Live site', href: 'https://maxstash.io', icon: <OpenInNewIcon /> }],
+    links: [{ label: 'Live site', href: 'https://maxhq.io', icon: <OpenInNewIcon /> }],
     tags: ['React 19', 'TypeScript', 'Vite', 'SSG', 'Material UI', 'Emotion'],
   },
 ];
@@ -109,7 +109,7 @@ export default function ProjectsPage() {
       <PageMeta
         title="Projects – Max Morhardt"
         description="Explore Max Morhardt's projects: a real-time NFL squares app, its Go microservices, a self-hosted Kubernetes platform, reusable Helm charts, and GitHub Actions workflows."
-        canonical="https://maxstash.io/projects"
+        canonical="https://maxhq.io/projects"
       />
 
       <Container maxWidth="lg">

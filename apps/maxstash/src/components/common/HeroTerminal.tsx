@@ -52,7 +52,7 @@ const KIND_COLOR: Record<Kind, string> = {
   ok: term.ok,
 };
 
-const EMAIL = 'max@maxstash.io';
+const EMAIL = 'max@maxhq.io';
 const GITHUB = 'https://github.com/maxmorhardt';
 const LINKEDIN = 'https://www.linkedin.com/in/max-morhardt-60b9121b8/';
 
@@ -99,13 +99,13 @@ function buildBoot(stackSource: typeof STACK): ScriptLine[] {
       text: '',
       kind: 'out',
       label: 'maxstash',
-      link: { text: 'maxstash.io ↗', href: 'https://maxstash.io' },
+      link: { text: 'maxhq.io ↗', href: 'https://maxhq.io' },
     },
     {
       text: '',
       kind: 'out',
       label: 'squares',
-      link: { text: 'squares.maxstash.io ↗', href: 'https://squares.maxstash.io' },
+      link: { text: 'squares.maxhq.io ↗', href: 'https://squares.maxhq.io' },
     },
     { text: 'ls ~', kind: 'cmd' },
   ];

@@ -10,7 +10,7 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: 'Max Morhardt',
-  url: 'https://maxstash.io/',
+  url: 'https://maxhq.io/',
   jobTitle: 'Software Engineer',
   worksFor: {
     '@type': 'Organization',
@@ -34,16 +34,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Max Morhardt" />
         <meta property="og:locale" content="en_US" />
-        <meta
-          property="og:image"
-          content="https://maxstash.io/favicon/android-chrome-512x512.png"
-        />
+        <meta property="og:image" content="https://maxhq.io/favicon/android-chrome-512x512.png" />
         {/* Twitter / X Card */}
         <meta name="twitter:card" content="summary" />
-        <meta
-          name="twitter:image"
-          content="https://maxstash.io/favicon/android-chrome-512x512.png"
-        />
+        <meta name="twitter:image" content="https://maxhq.io/favicon/android-chrome-512x512.png" />
         {/* Structured data */}
         <script
           type="application/ld+json"

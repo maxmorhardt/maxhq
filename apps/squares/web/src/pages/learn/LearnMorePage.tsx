@@ -135,7 +135,7 @@ export default function LearnMorePage() {
     {
       question: 'How do I contact support?',
       answer:
-        'Use the Contact page to send us a message, or email support@maxstash.io directly. We typically respond within a week.',
+        'Use the Contact page to send us a message, or email support@maxhq.io directly. We typically respond within a week.',
     },
     {
       question: 'Is it free to use?',
@@ -152,7 +152,7 @@ export default function LearnMorePage() {
           name="description"
           content="Learn how NFL football squares pools work. Create a grid, claim squares, and win based on live game scores."
         />
-        <link rel="canonical" href="https://squares.maxstash.io/learn-more" />
+        <link rel="canonical" href="https://squares.maxhq.io/learn-more" />
         <script type="application/ld+json">
           {JSON.stringify({
             '@context': 'https://schema.org',

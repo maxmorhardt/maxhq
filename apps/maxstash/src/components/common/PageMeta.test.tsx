@@ -34,13 +34,13 @@ describe('PageMeta', () => {
 
   it('emits canonical and og:url only when a canonical url is given', async () => {
     const { unmount } = renderWithProviders(
-      <PageMeta title="T" description="D" canonical="https://maxstash.io/about" />
+      <PageMeta title="T" description="D" canonical="https://maxhq.io/about" />
     );
 
     await waitFor(() =>
-      expect(meta('link[rel="canonical"]')).toHaveAttribute('href', 'https://maxstash.io/about')
+      expect(meta('link[rel="canonical"]')).toHaveAttribute('href', 'https://maxhq.io/about')
     );
-    expect(meta('meta[property="og:url"]')).toHaveAttribute('content', 'https://maxstash.io/about');
+    expect(meta('meta[property="og:url"]')).toHaveAttribute('content', 'https://maxhq.io/about');
 
     unmount();
 

@@ -71,6 +71,8 @@ jobs:
     needs: [parse, maxstash-docker]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
+      gitops_repository: maxmorhardt/gitops
+      gitops_path: clusters/prod/apps
       app: maxstash
       image_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
@@ -104,6 +106,8 @@ jobs:
     needs: [parse, squares-web-docker]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
+      gitops_repository: maxmorhardt/gitops
+      gitops_path: clusters/prod/apps
       app: squares
       image_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
@@ -137,6 +141,8 @@ jobs:
     needs: [parse, squares-service-docker]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
+      gitops_repository: maxmorhardt/gitops
+      gitops_path: clusters/prod/apps
       app: ${{ needs.parse.outputs.component }}
       image_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit

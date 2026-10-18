@@ -59,7 +59,7 @@ route:
     name: maxstash
     namespace: envoy-gateway-system
   hostnames:
-    - squares.maxstash.io
+    - squares.maxhq.io
   rules:
     - matches:
         - path:

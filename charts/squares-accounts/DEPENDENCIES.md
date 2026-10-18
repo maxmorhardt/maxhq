@@ -10,13 +10,13 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 - **SMTP** - outbound email for the contact form.
 - **Cloudflare Turnstile** - verifies the contact form captcha.
 - **Envoy Gateway** - the `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/maxstash-gateway`), because the service trusts them.
-- **Dex** - `squares` and `squares-mobile` clients at `login.maxstash.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxstash.io/keys`.
+- **Dex** - `squares` and `squares-mobile` clients at `login.maxhq.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxhq.io/keys`.
 - **NetworkPolicy enforcement** - k3s enforces NetworkPolicy with its embedded controller. The policy admits app traffic only from `envoy-gateway-system` and metrics only from `monitoring`.
-- **TLS** and **DNS** - `api.maxstash.io` on the gateway, TLS terminated there.
+- **TLS** and **DNS** - `api.maxhq.io` on the gateway, TLS terminated there.
 
 ## Routing
 
-| Path under `api.maxstash.io/squares` | |
+| Path under `api.maxhq.io/squares` | |
 | --- | --- |
 | `/users/me` | get (creating the profile on first sign-in), update initials, delete the account |
 | `/contact` | the public contact form, behind Turnstile; the gateway limits it to 10 a day per client (`route.rateLimit.rules`) |

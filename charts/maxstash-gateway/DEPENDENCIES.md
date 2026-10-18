@@ -7,9 +7,9 @@ to, so this deploys before the apps.
 
 - **Envoy Gateway controller** — installed from the `infra` repo into `envoy-gateway-system`,
   along with the Gateway API CRDs
-- **TLS** — the `maxstash.io-tls` secret must exist in `envoy-gateway-system`; the listeners
-  reference it for both `maxstash.io` and `*.maxstash.io`
-- **DNS** — `maxstash.io` and the app subdomains pointed at the gateway external IP
+- **TLS** — the `maxhq.io-tls` secret must exist in `envoy-gateway-system`; the listeners
+  reference it for both `maxhq.io` and `*.maxhq.io`
+- **DNS** — `maxhq.io` and the app subdomains pointed at the gateway external IP
 
 ## Header stripping
 

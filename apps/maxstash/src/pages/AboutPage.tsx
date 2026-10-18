@@ -96,7 +96,7 @@ export default function AboutPage() {
       <PageMeta
         title="About – Max Morhardt"
         description="About Max Morhardt, Software Engineer at Fidelity Investments building multi-tenant cloud platforms on AWS and EKS, alongside a self-hosted Kubernetes homelab."
-        canonical="https://maxstash.io/about"
+        canonical="https://maxhq.io/about"
       />
 
       <Container maxWidth="md">
@@ -162,7 +162,7 @@ export default function AboutPage() {
 
           <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
             <MuiLink
-              href="https://squares.maxstash.io"
+              href="https://squares.maxhq.io"
               target="_blank"
               rel="noreferrer"
               sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}

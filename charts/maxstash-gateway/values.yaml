@@ -1,11 +1,11 @@
 fullnameOverride: maxstash
 
-domain: maxstash.io
+domain: maxhq.io
 
 gatewayClassName: maxstash
 
 tls:
-  secretName: maxstash.io-tls
+  secretName: maxhq.io-tls
 
 strippedRequestHeaders:
   - X-Auth-Email

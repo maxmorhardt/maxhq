@@ -8,13 +8,13 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 - **Valkey** (the `valkey` namespace) - the games stream, the upcoming-games cache, and the revocation list.
 - **ESPN** - `site.api.espn.com`, public and unauthenticated.
 - **Envoy Gateway** - the `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/maxstash-gateway`), because the service trusts them.
-- **Dex** - `squares` and `squares-mobile` clients at `login.maxstash.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxstash.io/keys`.
+- **Dex** - `squares` and `squares-mobile` clients at `login.maxhq.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxhq.io/keys`.
 - **NetworkPolicy enforcement** - k3s enforces NetworkPolicy with its embedded controller. The policy admits app traffic only from `envoy-gateway-system` and metrics only from `monitoring`.
-- **TLS** and **DNS** - `api.maxstash.io` on the gateway, TLS terminated there.
+- **TLS** and **DNS** - `api.maxhq.io` on the gateway, TLS terminated there.
 
 ## Routing
 
-| Path under `api.maxstash.io/squares` | |
+| Path under `api.maxhq.io/squares` | |
 | --- | --- |
 | `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
 | `/swagger/games` | the API reference |

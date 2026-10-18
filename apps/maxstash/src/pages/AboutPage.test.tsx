@@ -31,7 +31,7 @@ describe('AboutPage', () => {
 
     expect(screen.getByRole('link', { name: 'Live site' })).toHaveAttribute(
       'href',
-      'https://squares.maxstash.io'
+      'https://squares.maxhq.io'
     );
     expect(screen.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',

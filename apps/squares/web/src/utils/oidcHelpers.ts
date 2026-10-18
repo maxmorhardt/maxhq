@@ -2,7 +2,7 @@ import type { AuthContextProps } from 'react-oidc-context';
 
 export type OIDCProvider = 'google' | 'github';
 
-export const OIDC_AUTHORITY = 'https://login.maxstash.io';
+export const OIDC_AUTHORITY = 'https://login.maxhq.io';
 
 const WEB_CLIENT_ID = 'squares';
 const MOBILE_CLIENT_ID = 'squares-mobile';

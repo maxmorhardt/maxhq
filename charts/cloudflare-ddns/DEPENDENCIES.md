@@ -16,7 +16,7 @@ CronJob that keeps a Cloudflare DNS record pointed at the cluster's current publ
 | key | purpose |
 | --- | --- |
 | `ZONE_ID` | Cloudflare zone to update |
-| `RECORD_NAME` | the record, e.g. `maxstash.io` |
+| `RECORD_NAME` | the record, e.g. `maxhq.io` |
 | `API_TOKEN` | Cloudflare API token |
 | `DISCORD_WEBHOOK` | run notifications |
 

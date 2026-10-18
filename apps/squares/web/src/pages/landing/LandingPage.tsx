@@ -23,7 +23,7 @@ export default function LandingPage() {
           name="description"
           content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
         />
-        <link rel="canonical" href="https://squares.maxstash.io/" />
+        <link rel="canonical" href="https://squares.maxhq.io/" />
       </Helmet>
       <LandingHeroSection />
       <LandingHowItWorksSection animRef={howItWorks.ref} isVisible={howItWorks.isVisible} />

@@ -23,7 +23,7 @@ describe('ContactPage', () => {
     );
     expect(screen.getByRole('link', { name: /Email/ })).toHaveAttribute(
       'href',
-      'mailto:max@maxstash.io'
+      'mailto:max@maxhq.io'
     );
   });
 
@@ -31,6 +31,6 @@ describe('ContactPage', () => {
     renderWithProviders(<ContactPage />);
 
     expect(screen.getByText('@maxmorhardt')).toBeInTheDocument();
-    expect(screen.getByText('max@maxstash.io')).toBeInTheDocument();
+    expect(screen.getByText('max@maxhq.io')).toBeInTheDocument();
   });
 });

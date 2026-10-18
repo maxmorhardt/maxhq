@@ -40,7 +40,7 @@ const apps: AppShowcase[] = [
     description:
       "The classic Super Bowl squares pool, online. One person sets up the board, everyone claims their squares, and the app draws the numbers and calls the winner every quarter, live on everyone's phone.",
     cta: 'Play Squares',
-    href: 'https://squares.maxstash.io',
+    href: 'https://squares.maxhq.io',
     visual: 'squares-board',
     stepsTitle: 'How a game plays out',
     steps: [
@@ -90,7 +90,7 @@ export default function AppsPage() {
       <PageMeta
         title="maxstash – Apps by Max Morhardt"
         description="maxstash is home to the apps Max Morhardt builds and runs for game day and get-togethers, including Squares. Start a game, share the link, and everyone plays along live."
-        canonical="https://maxstash.io/apps"
+        canonical="https://maxhq.io/apps"
       />
 
       {/* one showcase per app: a split hero followed by its play-by-play timeline */}

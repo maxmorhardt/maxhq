@@ -17,7 +17,7 @@ const links: FooterLink[] = [
     href: 'https://www.linkedin.com/in/max-morhardt-60b9121b8/',
     icon: <LinkedInIcon />,
   },
-  { label: 'Email', href: 'mailto:max@maxstash.io', icon: <EmailIcon /> },
+  { label: 'Email', href: 'mailto:max@maxhq.io', icon: <EmailIcon /> },
 ];
 
 export default function AppFooter() {

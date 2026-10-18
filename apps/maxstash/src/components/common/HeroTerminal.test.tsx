@@ -141,7 +141,7 @@ describe('HeroTerminal', () => {
       2
     );
     expect(screen.getAllByText(/spring boot · gin · gorm · jpa/).length).toBeGreaterThan(1);
-    expect(screen.getAllByRole('link', { name: 'max@maxstash.io' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'max@maxhq.io' }).length).toBeGreaterThan(0);
     expect(
       screen.getAllByRole('link', { name: 'https://github.com/maxmorhardt' }).length
     ).toBeGreaterThan(0);

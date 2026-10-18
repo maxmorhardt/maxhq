@@ -10,7 +10,7 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'Squares',
-  url: 'https://squares.maxstash.io/',
+  url: 'https://squares.maxhq.io/',
   applicationCategory: 'GameApplication',
   operatingSystem: 'Any',
   browserRequirements: 'Requires JavaScript',
@@ -24,7 +24,7 @@ const structuredData = {
   author: {
     '@type': 'Organization',
     name: 'Squares',
-    url: 'https://squares.maxstash.io/',
+    url: 'https://squares.maxhq.io/',
   },
 };
 
@@ -41,7 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="robots" content="index, follow" />
         <meta name="theme-color" content="#121212" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://squares.maxstash.io/" />
+        <meta property="og:url" content="https://squares.maxhq.io/" />
         <meta property="og:site_name" content="Squares" />
         <meta property="og:locale" content="en_US" />
         <meta property="og:title" content="Squares – NFL Football Squares Pools" />
@@ -49,14 +49,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           property="og:description"
           content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
         />
-        <meta property="og:image" content="https://squares.maxstash.io/squares_logo.png" />
+        <meta property="og:image" content="https://squares.maxhq.io/squares_logo.png" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="Squares – NFL Football Squares Pools" />
         <meta
           name="twitter:description"
           content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
         />
-        <meta name="twitter:image" content="https://squares.maxstash.io/squares_logo.png" />
+        <meta name="twitter:image" content="https://squares.maxhq.io/squares_logo.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

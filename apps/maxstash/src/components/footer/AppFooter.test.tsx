@@ -30,7 +30,7 @@ describe('AppFooter', () => {
     );
     expect(screen.getByRole('link', { name: 'Email' })).toHaveAttribute(
       'href',
-      'mailto:max@maxstash.io'
+      'mailto:max@maxhq.io'
     );
   });
 

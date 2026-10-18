@@ -5,7 +5,7 @@ const sections: LegalSection[] = [
   {
     title: '1. Introduction',
     content:
-      'Welcome to maxstash and its hosted applications, including squares.maxstash.io and any other application hosted on maxstash.io (collectively, "we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Services.',
+      'Welcome to maxstash and its hosted applications, including squares.maxhq.io and any other application hosted on maxhq.io (collectively, "we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Services.',
   },
   {
     title: '2. Information We Collect',
@@ -73,7 +73,7 @@ const sections: LegalSection[] = [
   {
     title: '10. Contact Us',
     content:
-      'If you have any questions about this Privacy Policy, please contact us at: support@maxstash.io',
+      'If you have any questions about this Privacy Policy, please contact us at: support@maxhq.io',
   },
 ];
 
@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
       <PageMeta
         title="Privacy Policy – maxstash"
         description="Privacy policy for maxstash and its hosted applications, covering how we collect, use, and protect your information."
-        canonical="https://maxstash.io/privacy-policy"
+        canonical="https://maxhq.io/privacy-policy"
       />
 
       <LegalPage title="Privacy Policy" lastUpdated="July 12, 2026" sections={sections} />

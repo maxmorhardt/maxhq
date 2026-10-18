@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://maxstash.io/sitemap.xml
+Sitemap: https://maxhq.io/sitemap.xml

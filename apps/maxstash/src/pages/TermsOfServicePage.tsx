@@ -5,7 +5,7 @@ const sections: LegalSection[] = [
   {
     title: '1. Acceptance of Terms',
     content:
-      'By accessing and using maxstash and its hosted applications, including squares.maxstash.io and any other application hosted on maxstash.io (collectively, "the Services"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Services.',
+      'By accessing and using maxstash and its hosted applications, including squares.maxhq.io and any other application hosted on maxhq.io (collectively, "the Services"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Services.',
   },
   {
     title: '2. Description of Services',
@@ -85,7 +85,7 @@ const sections: LegalSection[] = [
   {
     title: '14. Contact Information',
     content:
-      'If you have any questions about these Terms of Service, please contact us at: support@maxstash.io',
+      'If you have any questions about these Terms of Service, please contact us at: support@maxhq.io',
   },
 ];
 
@@ -95,7 +95,7 @@ export default function TermsOfServicePage() {
       <PageMeta
         title="Terms of Service – maxstash"
         description="Terms of service for maxstash and its hosted applications."
-        canonical="https://maxstash.io/terms-of-service"
+        canonical="https://maxhq.io/terms-of-service"
       />
 
       <LegalPage title="Terms of Service" lastUpdated="July 12, 2026" sections={sections} />

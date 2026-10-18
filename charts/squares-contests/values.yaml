@@ -81,7 +81,7 @@ route:
     name: maxstash
     namespace: envoy-gateway-system
   hostnames:
-    - api.maxstash.io
+    - api.maxhq.io
   prefix: /squares
   paths:
     prefixes:
@@ -100,8 +100,8 @@ route:
 
 auth:
   enabled: true
-  issuer: https://login.maxstash.io
-  jwksURI: https://login.maxstash.io/keys
+  issuer: https://login.maxhq.io
+  jwksURI: https://login.maxhq.io/keys
   audiences:
     - squares
     - squares-mobile

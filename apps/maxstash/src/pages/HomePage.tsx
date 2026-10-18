@@ -143,7 +143,7 @@ export default function HomePage() {
       <PageMeta
         title="Max Morhardt – Software Engineer"
         description="Max Morhardt is a Software Engineer at Fidelity Investments specializing in Java, Spring Boot, Go, TypeScript, React, Angular, Kubernetes, Terraform, and AWS."
-        canonical="https://maxstash.io/"
+        canonical="https://maxhq.io/"
       />
 
       {/* hero */}

@@ -15,7 +15,7 @@ describe('AppsPage', () => {
     renderWithProviders(<AppsPage />);
 
     const cta = screen.getByRole('link', { name: /Play Squares/ });
-    expect(cta).toHaveAttribute('href', 'https://squares.maxstash.io');
+    expect(cta).toHaveAttribute('href', 'https://squares.maxhq.io');
     expect(cta).toHaveAttribute('target', '_blank');
   });
 

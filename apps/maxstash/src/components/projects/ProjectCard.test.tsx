@@ -8,7 +8,7 @@ const project: Project = {
   category: 'Frontend',
   description: 'Real-time NFL squares platform.',
   href: 'https://github.com/maxmorhardt/squares',
-  links: [{ label: 'Live site', href: 'https://squares.maxstash.io' }],
+  links: [{ label: 'Live site', href: 'https://squares.maxhq.io' }],
   tags: ['React', 'TypeScript'],
 };
 
@@ -42,7 +42,7 @@ describe('ProjectCard', () => {
     renderWithProviders(<ProjectCard project={project} />);
 
     const link = screen.getByRole('link', { name: 'Live site' });
-    expect(link).toHaveAttribute('href', 'https://squares.maxstash.io');
+    expect(link).toHaveAttribute('href', 'https://squares.maxhq.io');
     expect(link).toHaveAttribute('target', '_blank');
   });
 

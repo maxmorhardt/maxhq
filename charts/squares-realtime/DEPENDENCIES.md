@@ -7,13 +7,13 @@ The `squares-realtime` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 - **Valkey** (the `valkey` namespace) - the contest streams and the revocation list. Without Valkey no stream can open, so readiness fails.
 - **squares-contests** - its `/internal` routes, at `CONTESTS_INTERNAL_URL` with `INTERNAL_API_TOKEN`.
 - **Envoy Gateway** - the `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/maxstash-gateway`), because the service trusts them.
-- **Dex** - `squares` and `squares-mobile` clients at `login.maxstash.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxstash.io/keys`.
+- **Dex** - `squares` and `squares-mobile` clients at `login.maxhq.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxhq.io/keys`.
 - **NetworkPolicy enforcement** - k3s enforces NetworkPolicy with its embedded controller. The policy admits app traffic only from `envoy-gateway-system` and metrics only from `monitoring`.
-- **TLS** and **DNS** - `api.maxstash.io` on the gateway, TLS terminated there.
+- **TLS** and **DNS** - `api.maxhq.io` on the gateway, TLS terminated there.
 
 ## Routing
 
-| Path under `api.maxstash.io/squares` | |
+| Path under `api.maxhq.io/squares` | |
 | --- | --- |
 | `/events/contests/:id` | a server-sent event stream: a `connected` snapshot (or, with `Last-Event-ID`, only what was missed), then every change to the contest. A `revoked` event means the viewer lost access. |
 | `/swagger/realtime` | the API reference |

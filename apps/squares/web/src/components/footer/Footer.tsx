@@ -5,12 +5,12 @@ export default function Footer() {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
 
-  // legal pages are centralized on maxstash.io for all services
+  // legal pages are centralized on maxhq.io for all services
   const footerLinks = [
     { label: 'Learn More', path: '/learn-more' },
     { label: 'Contact', path: '/contact' },
-    { label: 'Privacy', href: 'https://maxstash.io/privacy-policy' },
-    { label: 'Terms', href: 'https://maxstash.io/terms-of-service' },
+    { label: 'Privacy', href: 'https://maxhq.io/privacy-policy' },
+    { label: 'Terms', href: 'https://maxhq.io/terms-of-service' },
   ];
 
   return (

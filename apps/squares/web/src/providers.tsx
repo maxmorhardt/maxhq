@@ -19,7 +19,7 @@ const oidcConfig: AuthProviderProps = {
   authority: OIDC_AUTHORITY,
   client_id: oidcClient.clientId,
   redirect_uri: import.meta.env.PROD
-    ? 'https://squares.maxstash.io/auth/callback'
+    ? 'https://squares.maxhq.io/auth/callback'
     : 'http://localhost:3000/auth/callback',
   scope: oidcClient.scope,
   userStore:

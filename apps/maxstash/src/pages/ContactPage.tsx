@@ -22,9 +22,9 @@ const channels: ContactChannel[] = [
   },
   {
     label: 'Email',
-    href: 'mailto:max@maxstash.io',
+    href: 'mailto:max@maxhq.io',
     icon: <EmailIcon />,
-    handle: 'max@maxstash.io',
+    handle: 'max@maxhq.io',
   },
 ];
 
@@ -34,7 +34,7 @@ export default function ContactPage() {
       <PageMeta
         title="Contact – Max Morhardt"
         description="Get in touch with Max Morhardt via GitHub, LinkedIn, or email."
-        canonical="https://maxstash.io/contact"
+        canonical="https://maxhq.io/contact"
       />
 
       <Container maxWidth="lg">
