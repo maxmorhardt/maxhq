@@ -1,4 +1,24 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>maxmorhardt/workflows//renovate/default.json"]
+  "extends": ["github>maxmorhardt/workflows//renovate/default.json"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "track each chart's appVersion against its app image",
+      "managerFilePatterns": ["/^charts/.+/Chart\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: image=(?<depName>\\S+)\\s+appVersion:\\s*[\"']?(?<currentValue>[^\"'\\s]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "hold the cloudflare provider below 5.26.0, which fails dns_record applies on modified_on; lift once cloudflare/terraform-provider-cloudflare#7387 is fixed",
+      "matchDatasources": ["terraform-provider"],
+      "matchPackageNames": ["/cloudflare/"],
+      "allowedVersions": "<5.26.0"
+    }
+  ]
 }

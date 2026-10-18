@@ -1,0 +1,34 @@
+# Changelog
+
+## [1.1.1](https://github.com/maxmorhardt/charts/compare/maxstash/1.1.0...maxstash/1.1.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* pin the nginx exporter, IfNotPresent pulls, cloudflare job limits, squares docs ([#56](https://github.com/maxmorhardt/charts/issues/56)) ([4dc3570](https://github.com/maxmorhardt/charts/commit/4dc3570362d631b5272eaa513fd528cb04db9d8c))
+
+## [1.1.0](https://github.com/maxmorhardt/charts/compare/maxstash/1.0.2...maxstash/1.1.0) (2026-10-13)
+
+
+### Features
+
+* a chart per squares service, gateway header stripping, smaller pods ([#51](https://github.com/maxmorhardt/charts/issues/51)) ([22c03c2](https://github.com/maxmorhardt/charts/commit/22c03c218d8c738a6d27e338bdb8504cce19f73c))
+
+## [1.0.2](https://github.com/maxmorhardt/charts/compare/maxstash/1.0.1...maxstash/1.0.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* require explicit image tags in Helm charts ([#40](https://github.com/maxmorhardt/charts/issues/40)) ([bd78108](https://github.com/maxmorhardt/charts/commit/bd78108aa32fe06fcccd8cb4cf427d0fbea3ac0e))
+
+## [1.0.1](https://github.com/maxmorhardt/charts/compare/maxstash/1.0.0...maxstash/1.0.1) (2026-07-18)
+
+
+### Bug Fixes
+
+* use chart appVersion for image tags by default ([#32](https://github.com/maxmorhardt/charts/issues/32)) ([e2aace4](https://github.com/maxmorhardt/charts/commit/e2aace43112105c47f8a3864304b8fc650bc7465))
+
+## 1.0.0 (2026-07-13)
+
+
+* reset versions with proper config ([#28](https://github.com/maxmorhardt/charts/issues/28)) ([ea40c75](https://github.com/maxmorhardt/charts/commit/ea40c75c68dcdb9b2b5fd2873dcc10c52b6a1e3d))

@@ -25,6 +25,8 @@ jobs:
       squares_web: ${{ steps.filter.outputs.squares_web == 'true' || steps.filter.outputs.workflows == 'true' }}
       squares_services: ${{ steps.services.outputs.list }}
       go_libs: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.workflows == 'true' }}
+      charts: ${{ steps.charts.outputs.list }}
+      terraform: ${{ steps.filter.outputs.terraform == 'true' || steps.filter.outputs.workflows == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -43,8 +45,34 @@ jobs:
             squares_build:
               - 'apps/squares/Dockerfile*'
               - 'apps/squares/*.mk'
+            terraform:
+              - 'infra/terraform/**'
             workflows:
               - '.github/workflows/**'
+
+      - name: Filter charts
+        id: chart_files
+        uses: dorny/paths-filter@v4
+        with:
+          list-files: json
+          filters: |
+            charts:
+              - 'charts/**'
+
+      - name: List charts to validate
+        id: charts
+        env:
+          FILES: ${{ steps.chart_files.outputs.charts_files }}
+          ALL: ${{ steps.filter.outputs.workflows == 'true' }}
+        run: |
+          if [ "$ALL" = "true" ]; then
+            names=$(find charts -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
+          else
+            names=$(echo "${FILES:-[]}" | jq -r '.[] | split("/")[1]' | sort -u)
+          fi
+          # a deleted chart still lists its files
+          list=$(for name in $names; do [ -d "charts/$name" ] && echo "$name"; done | jq -R -s -c 'split("\n") | map(select(. != ""))')
+          echo "list=${list}" >> "$GITHUB_OUTPUT"
 
       - name: Filter squares services
         id: go
@@ -162,6 +190,44 @@ jobs:
       working_directory: libs/${{ matrix.lib }}
       build: false
 
+  # charts
+
+  charts:
+    needs: changes
+    if: needs.changes.outputs.charts != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: ${{ fromJSON(needs.changes.outputs.charts) }}
+    uses: maxmorhardt/workflows/.github/workflows/validate-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart: ${{ matrix.chart }}
+      working_directory: charts
+      lint: true
+      kubeconform: true
+      set_values: image.tag=0.0.0-validate
+
+  # infra
+
+  terraform:
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [aws, cloudflare, github]
+    uses: maxmorhardt/workflows/.github/workflows/validate-terraform.yml@main
+    with:
+      repository: ${{ github.repository }}
+      working_directory: infra/terraform/${{ matrix.module }}
+    secrets:
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
+      repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
+      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || '' }}
+
   ci-complete:
     name: CI Complete
     if: always()
@@ -173,6 +239,8 @@ jobs:
       - squares-go
       - squares-docker
       - go-libs
+      - charts
+      - terraform
     runs-on: ubuntu-latest
     steps:
       - name: Verify no job failed

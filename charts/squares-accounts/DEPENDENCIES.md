@@ -1,0 +1,45 @@
+# External Dependencies
+
+The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, PrometheusRule, and Grafana dashboard.
+
+## Required
+
+- **PostgreSQL** - 17+, primary and optional read replica. One database shared by the squares services; this service migrates only its own `accounts` schema at startup (and adopts the pre-split `users`, `deleted_accounts`, and `contact_submissions` tables from `public` on the first start after the split).
+- **Valkey** (the `valkey` namespace) - the users stream, the revocation list (written here on deletion and rebuilt from Postgres on every start), and idempotency records.
+- **squares-contests** - its `/internal` routes, at `CONTESTS_INTERNAL_URL` with `INTERNAL_API_TOKEN`.
+- **SMTP** - outbound email for the contact form.
+- **Cloudflare Turnstile** - verifies the contact form captcha.
+- **Envoy Gateway** - the `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/maxstash-gateway`), because the service trusts them.
+- **Dex** - `squares` and `squares-mobile` clients at `login.maxstash.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxstash.io/keys`.
+- **NetworkPolicy enforcement** - k3s enforces NetworkPolicy with its embedded controller. The policy admits app traffic only from `envoy-gateway-system` and metrics only from `monitoring`.
+- **TLS** and **DNS** - `api.maxstash.io` on the gateway, TLS terminated there.
+
+## Routing
+
+| Path under `api.maxstash.io/squares` | |
+| --- | --- |
+| `/users/me` | get (creating the profile on first sign-in), update initials, delete the account |
+| `/contact` | the public contact form, behind Turnstile; the gateway limits it to 10 a day per client (`route.rateLimit.rules`) |
+| `/swagger/accounts` | the API reference |
+
+## Secrets
+
+`squares-accounts-env` in the `squares` namespace, read with `envFrom` (override the name with `secretName`). Sealed into
+`argocd/secrets/squares/` in the infra repo; see [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/sealed-secrets/SETUP.md).
+
+| group | keys |
+| --- | --- |
+| database | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL_MODE` |
+| read replica | the same six with a `DB_READ_` prefix (optional) |
+| redis | `REDIS_URL` |
+| service-to-service | `INTERNAL_API_TOKEN` (the same value in contests, accounts, and realtime) |
+| email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SUPPORT_EMAIL` |
+| captcha | `TURNSTILE_SECRET_KEY` |
+| http | `ALLOWED_ORIGINS` |
+
+`REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
+`SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxstash repo for each one and its default).
+
+## Optional
+
+- **Prometheus** - the ServiceMonitor, PrometheusRule, and Grafana dashboard ship with the chart.
