@@ -1,0 +1,41 @@
+fullnameOverride: cloudflare-ddns
+
+schedule: '*/15 * * * *'
+
+existingSecret: cloudflare-ddns-env
+
+image:
+  repository: python
+  pullPolicy: IfNotPresent
+  tag: ''
+  command:
+    - sh
+    - -c
+    - |
+      pip install --no-cache-dir --target=/tmp/pip -r /scripts/requirements.txt && \
+      PYTHONPATH=/tmp/pip python3 /scripts/cloudflare-ddns.py
+
+resources:
+  limits:
+    cpu: 150m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+restartPolicy: OnFailure
+concurrencyPolicy: Forbid
+successfulJobsHistoryLimit: 1
+failedJobsHistoryLimit: 1
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true

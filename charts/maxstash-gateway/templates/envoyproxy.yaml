@@ -1,0 +1,23 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: {{ include "app.fullname" . }}-proxy
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        replicas: {{ .Values.proxy.replicas }}
+        container:
+          resources:
+            {{- toYaml .Values.proxy.resources | nindent 12 }}
+        pod:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  gateway.envoyproxy.io/owning-gateway-name: {{ include "app.fullname" . }}
