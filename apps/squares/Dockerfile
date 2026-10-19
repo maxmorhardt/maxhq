@@ -12,8 +12,10 @@ WORKDIR /src
 COPY libs/platform/go.mod libs/platform/go.sum libs/platform/
 COPY libs/squares/go.mod libs/squares/go.sum libs/squares/
 COPY apps/squares/${SERVICE}/go.mod apps/squares/${SERVICE}/go.sum apps/squares/${SERVICE}/
-RUN cd apps/squares/${SERVICE} && GOWORK=off go mod download
+WORKDIR /src/apps/squares/${SERVICE}
+RUN GOWORK=off go mod download
 
+WORKDIR /src
 COPY libs libs
 COPY apps/squares/service.mk apps/squares/migrate.mk apps/squares/
 COPY apps/squares/${SERVICE} apps/squares/${SERVICE}
@@ -22,7 +24,7 @@ WORKDIR /src/apps/squares/${SERVICE}
 ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
 RUN make build OUT=bin/service BUILD_FLAGS="-a" LDFLAGS="-s -w"
 
-FROM alpine:latest
+FROM alpine:3.24
 
 ARG SERVICE
 
