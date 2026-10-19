@@ -18,14 +18,14 @@
 - `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS, and GitHub rulesets. See `infra/terraform/SETUP.md`.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
-- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `release.yml` (tag-driven build, publish, deploy), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`.
+- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `deploy-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `release.yml` (tag-driven build, publish, deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`.
 - `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
 
 ## Core Principles
 
-1. Apps ship images; charts live beside them
-   - A release builds the app's image and sets `image.tag` on its Argo CD Application in `gitops`.
-   - Charts are no longer published. The cluster runs the last versions in `ghcr.io/maxmorhardt/charts` until `gitops` points each Application at `charts/<name>` by path, so a chart change merged here does not deploy until then.
+1. Merges deploy to dev; releases deploy to prod
+   - A merge to `main` builds `sha-<commit>` images for the apps it touched and sets them in `gitops/clusters/dev/apps/` (`deploy-dev.yml`). Dev's charts follow `main`.
+   - A release tag builds the version image and sets both `image.tag` and the chart's `targetRevision` (the tag) in `gitops/clusters/prod/apps/`, after approval on the `production` environment. A chart change reaches prod only with a release of its app.
 2. Tags drive releases
    - Tags are `<component>/<version>`. Pushing one runs `release.yml` for that component only.
    - Never hand-edit `.release-please-manifest.json` or `CHANGELOG.md`.

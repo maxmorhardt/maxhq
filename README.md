@@ -20,7 +20,7 @@ Cluster state (which image tag each app runs, plus every infra component's value
 
 ## Releases
 
-[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and commits the new `image.tag` to its Argo CD Application in `gitops`.
+[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and, after approval, pins prod to it: `image.tag` and the chart's `targetRevision` in `gitops/clusters/prod/apps/`. Every merge to `main` also builds `sha-<commit>` images for the apps it touched and deploys them to dev through [`deploy-dev.yml`](.github/workflows/deploy-dev.yml), with no approval.
 
 One release pull request covers every app with pending changes. Pull requests are squash merged, so the PR title is the conventional commit release-please reads, and it applies to every app the PR touches.
 
