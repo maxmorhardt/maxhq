@@ -1,5 +1,3 @@
-// one build serves every environment: squares.<domain> talks to api.<domain> and login.<domain>,
-// where prod is maxhq.io and dev is dev.maxhq.io
 export const PRODUCTION_DOMAIN = 'maxhq.io';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);

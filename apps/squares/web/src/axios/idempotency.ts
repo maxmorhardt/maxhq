@@ -8,8 +8,6 @@ const RETRYABLE_STATUSES = [502, 503, 504];
 
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
 
-// a dropped connection or a gateway hiccup leaves the outcome unknown, so the same key is sent again;
-// a 409 with Retry-After means the first attempt is still running on the server
 function isRetryable(err: unknown): boolean {
   if (!isAxiosError(err)) {
     return false;
@@ -31,7 +29,6 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// one key per logical action: every retry replays the server's first answer instead of acting twice
 export async function idempotentRequest<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
   const key = crypto.randomUUID();
 
