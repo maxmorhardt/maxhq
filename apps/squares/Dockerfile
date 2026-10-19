@@ -1,5 +1,3 @@
-# one image per squares service, built from the repository root so the shared libs are in the context:
-#   docker build -f apps/squares/Dockerfile --build-arg SERVICE=contests .
 FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS build
 
 ARG SERVICE
