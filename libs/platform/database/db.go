@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"gorm.io/driver/postgres"
@@ -14,11 +14,7 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
-const (
-	maxOpenConns    int           = 20
-	maxIdleConns    int           = 5
-	maxConnLifetime time.Duration = time.Hour
-)
+const maxConnLifetime = time.Hour
 
 func InitDB(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (*gorm.DB, error) {
 	db, err := setupPrimary(cfg, schema, migrations)
@@ -64,8 +60,8 @@ func setupPrimary(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (
 		return nil, migErr
 	}
 
-	sqlDB.SetMaxOpenConns(maxOpenConns)
-	sqlDB.SetMaxIdleConns(maxIdleConns)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(maxConnLifetime)
 
 	if err := prometheus.Register(collectors.NewDBStatsCollector(sqlDB, cfg.Name)); err != nil {
@@ -120,8 +116,8 @@ func setupReadReplica(cfg *config.DatabaseConfig, schema string, db *gorm.DB) er
 
 	resolver.SetConnMaxIdleTime(maxConnLifetime)
 	resolver.SetConnMaxLifetime(maxConnLifetime)
-	resolver.SetMaxIdleConns(maxIdleConns)
-	resolver.SetMaxOpenConns(maxOpenConns)
+	resolver.SetMaxIdleConns(cfg.MaxIdleConns)
+	resolver.SetMaxOpenConns(cfg.MaxOpenConns)
 
 	if err := db.Use(resolver); err != nil {
 		return fmt.Errorf("failed to register read replica: %w", err)
