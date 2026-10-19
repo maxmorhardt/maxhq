@@ -17,10 +17,10 @@ strippedRequestHeaders:
 
 proxy:
   replicas: 2
-  # cloudflared reaches the gateway in-cluster, so nothing is exposed on the nodes
+  # k3s's service load balancer binds 443 on every node
   service:
     name: envoy-maxhq
-    type: ClusterIP
+    type: LoadBalancer
   resources:
     requests:
       cpu: 100m
@@ -30,7 +30,7 @@ proxy:
       memory: 512Mi
 
 trustedCIDRs:
-  # cloudflared pods are the last hop before envoy
+  # k3s's service load balancer forwards from inside the pod network
   - 10.42.0.0/16
   - 103.21.244.0/22
   - 103.22.200.0/22
