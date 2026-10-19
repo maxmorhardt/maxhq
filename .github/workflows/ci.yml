@@ -77,7 +77,6 @@ jobs:
       repository: ${{ github.repository }}
       app_name: maxhq
       working_directory: apps/maxhq
-      artifact_suffix: -maxhq
 
   maxhq-docker:
     needs: maxhq-node
@@ -100,7 +99,6 @@ jobs:
       repository: ${{ github.repository }}
       app_name: squares
       working_directory: apps/squares/web
-      artifact_suffix: -squares
 
   squares-web-docker:
     needs: squares-web-node
