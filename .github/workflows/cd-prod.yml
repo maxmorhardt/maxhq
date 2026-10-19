@@ -44,7 +44,7 @@ jobs:
           echo "version=${TAG#*/}" >> "$GITHUB_OUTPUT"
           echo "dev_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-  # app releases: the release commit's dev build is the image prod runs
+  # app releases
 
   promote:
     needs: parse
