@@ -7,6 +7,7 @@ on:
     paths:
       - 'apps/**'
       - 'libs/**'
+      - 'charts/**'
   workflow_dispatch:
 
 permissions:
@@ -19,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
+      chart_version: ${{ steps.tag.outputs.chart_version }}
+      charts: ${{ steps.charts.outputs.list }}
       maxhq: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.maxhq == 'true' }}
       squares_web: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.squares_web == 'true' }}
       squares_services: ${{ steps.services.outputs.list }}
@@ -26,15 +29,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Image tag
+      - name: Image and chart versions
         id: tag
-        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "chart_version=0.0.0-sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Filter paths
         id: filter
         uses: dorny/paths-filter@v4
         with:
           filters: .github/path-filters.yml
+          list-files: json
+
+      - name: List charts to publish
+        id: charts
+        env:
+          FILES: ${{ steps.filter.outputs.charts_files }}
+          ALL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          released=$(jq -c '[.packages | keys[] | select(startswith("charts/")) | ltrimstr("charts/")]' release-please-config.json)
+          if [ "$ALL" = "true" ]; then
+            echo "list=$released" >> "$GITHUB_OUTPUT"
+          else
+            echo "list=$(echo "${FILES:-[]}" | jq -c --argjson released "$released" '[.[] | split("/")[1]] | unique | map(select(IN($released[])))')" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: List squares services to deploy
         id: services
@@ -48,6 +67,40 @@ jobs:
           else
             echo "list=$(echo "${CHANGED:-[]}" | jq -c --argjson all "$all" 'map(select(IN($all[])))')" >> "$GITHUB_OUTPUT"
           fi
+
+  # charts
+
+  chart-publish:
+    needs: changes
+    if: needs.changes.outputs.charts != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: ${{ fromJSON(needs.changes.outputs.charts) }}
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: ${{ matrix.chart }}
+      chart_name: ${{ matrix.chart }}
+      working_directory: charts
+      version: ${{ needs.changes.outputs.chart_version }}
+      push: true
+
+  chart-deploy:
+    needs: [changes, chart-publish]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        chart: ${{ fromJSON(needs.changes.outputs.charts) }}
+    concurrency:
+      group: cd-dev-${{ matrix.chart }}
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: ${{ matrix.chart }}
+      environment: dev
+      revision: ${{ needs.changes.outputs.chart_version }}
+    secrets: inherit
 
   # maxhq
 

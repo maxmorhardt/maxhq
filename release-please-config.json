@@ -39,6 +39,41 @@
       "component": "squares-realtime",
       "changelog-path": "CHANGELOG.md",
       "initial-version": "1.0.0"
+    },
+    "charts/maxhq": {
+      "release-type": "helm",
+      "component": "maxhq-chart",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "charts/gateway": {
+      "release-type": "helm",
+      "component": "gateway-chart",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "charts/squares": {
+      "release-type": "helm",
+      "component": "squares-chart",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "charts/squares-contests": {
+      "release-type": "helm",
+      "component": "squares-contests-chart",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "charts/squares-games": {
+      "release-type": "helm",
+      "component": "squares-games-chart",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "charts/squares-accounts": {
+      "release-type": "helm",
+      "component": "squares-accounts-chart",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "charts/squares-realtime": {
+      "release-type": "helm",
+      "component": "squares-realtime-chart",
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }

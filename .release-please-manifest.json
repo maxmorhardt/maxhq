@@ -4,5 +4,12 @@
   "apps/squares/games": "2.0.0",
   "apps/squares/contests": "3.0.0",
   "apps/squares/accounts": "3.0.0",
-  "apps/squares/realtime": "2.0.0"
+  "apps/squares/realtime": "2.0.0",
+  "charts/maxhq": "1.1.1",
+  "charts/gateway": "1.1.0",
+  "charts/squares": "1.1.1",
+  "charts/squares-contests": "1.1.1",
+  "charts/squares-games": "1.1.1",
+  "charts/squares-accounts": "1.1.1",
+  "charts/squares-realtime": "1.1.1"
 }

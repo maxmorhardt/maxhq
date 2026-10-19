@@ -9,9 +9,11 @@ on:
       - 'squares-games/*'
       - 'squares-accounts/*'
       - 'squares-realtime/*'
+      - '*-chart/*'
 
 permissions:
   contents: read
+  packages: write
 
 concurrency:
   group: cd-prod-${{ github.ref }}
@@ -22,35 +24,66 @@ jobs:
     name: Parse tag
     runs-on: ubuntu-latest
     outputs:
-      component: ${{ steps.parse.outputs.component }}
+      kind: ${{ steps.parse.outputs.kind }}
+      app: ${{ steps.parse.outputs.app }}
       version: ${{ steps.parse.outputs.version }}
       dev_tag: ${{ steps.parse.outputs.dev_tag }}
     steps:
-      - name: Split tag into component and version
+      - name: Split tag into app and version
         id: parse
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          echo "component=${TAG%%/*}" >> "$GITHUB_OUTPUT"
+          component="${TAG%%/*}"
+          if [ "${component%-chart}" != "$component" ]; then
+            echo "kind=chart" >> "$GITHUB_OUTPUT"
+          else
+            echo "kind=image" >> "$GITHUB_OUTPUT"
+          fi
+          echo "app=${component%-chart}" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#*/}" >> "$GITHUB_OUTPUT"
           echo "dev_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-  # the release commit's dev build is the image prod runs
+  # app releases: the release commit's dev build is the image prod runs
+
   promote:
     needs: parse
+    if: needs.parse.outputs.kind == 'image'
     uses: maxmorhardt/workflows/.github/workflows/cd-promote.yml@main
     with:
-      app_name: ${{ needs.parse.outputs.component }}
+      app_name: ${{ needs.parse.outputs.app }}
       source_tag: ${{ needs.parse.outputs.dev_tag }}
       target_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
 
-  deploy:
+  image-deploy:
     needs: [parse, promote]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
       environment: prod
-      app: ${{ needs.parse.outputs.component }}
+      app: ${{ needs.parse.outputs.app }}
       image_tag: ${{ needs.parse.outputs.version }}
-      revision: ${{ github.ref_name }}
+    secrets: inherit
+
+  # chart releases
+
+  chart-publish:
+    needs: parse
+    if: needs.parse.outputs.kind == 'chart'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart_directory: ${{ needs.parse.outputs.app }}
+      chart_name: ${{ needs.parse.outputs.app }}
+      working_directory: charts
+      version: ${{ needs.parse.outputs.version }}
+      push: true
+
+  chart-deploy:
+    needs: [parse, chart-publish]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      environment: prod
+      app: ${{ needs.parse.outputs.app }}
+      revision: ${{ needs.parse.outputs.version }}
     secrets: inherit

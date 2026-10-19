@@ -24,11 +24,11 @@
 ## Core Principles
 
 1. Merges deploy to dev; releases deploy to prod
-   - A merge to `main` builds `sha-<commit>` images for the apps it touched and sets them in `gitops/clusters/dev/apps/` (`cd-dev.yml`). Dev's charts follow `main`.
-   - A release tag promotes the image dev built for that commit (`sha-<commit>` retagged as the version, never rebuilt) and sets both `image.tag` and the chart's `targetRevision` (the tag) in `gitops/clusters/prod/apps/`, after approval on the `production` environment. A chart change reaches prod only with a release of its app.
+   - Images and charts version and deploy separately. A merge to `main` builds `sha-<commit>` images for the apps it touched and sets dev's `image.tag`, and publishes any changed chart as `0.0.0-sha-<commit>` to `oci://ghcr.io/maxmorhardt/charts` and sets dev's `targetRevision` (`cd-dev.yml`).
+   - An app release (`<app>/<version>`) promotes the image dev built for that commit (`sha-<commit>` retagged, never rebuilt) and sets prod's `image.tag`. A chart release (`<chart>-chart/<version>`, release-please `helm` type bumping `Chart.yaml`) publishes the chart and sets prod's `targetRevision`. Both wait for approval on the `production` environment (`cd-prod.yml`).
 2. Tags drive releases
    - Tags are `<component>/<version>`. Pushing one runs `cd-prod.yml` for that component only.
-   - Never hand-edit `.release-please-manifest.json` or `CHANGELOG.md`.
+   - Never hand-edit `.release-please-manifest.json`, `CHANGELOG.md`, or a chart's `version`.
 3. Apps stay independent
    - No app imports from another app's directory. Shared Go code lives in `libs` and is consumed through `replace` directives.
 4. Git is the only source of truth for the cluster
