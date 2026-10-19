@@ -28,7 +28,7 @@ locals {
     }
 
     "workflows" = {
-      checks = ["pr-title"]
+      checks = ["pr-title", "Lint"]
     }
   }
 }
