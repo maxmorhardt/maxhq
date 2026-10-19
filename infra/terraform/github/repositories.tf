@@ -6,6 +6,10 @@ locals {
         "pr-title / pr-title",
         "CI Complete",
       ]
+      environments = {
+        development = { approval = false }
+        production  = { approval = true }
+      }
     }
 
     "gitops" = {

@@ -7,15 +7,15 @@ created by hand.
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/postgres/SETUP.md) |
-| `cloudflare/` | `maxhq.io` DNS: Zoho mail, prod hostnames proxied to the prod nodes, dev hostnames pointing at dev's Tailscale IPs |
-| `github/` | Repository rulesets on every default branch: required checks and squash-only merges |
+| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records. Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
+| `github/` | Repository rulesets on every default branch (required checks, squash-only merges) and deployment environments (`production` waits for approval) |
 
 ## Credentials
 
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`) |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, plus `terraform.tfvars` with `prod_ips` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 
 In CI, as repository secrets:
@@ -25,7 +25,7 @@ In CI, as repository secrets:
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | every module — the state backend, not just `aws/` |
 | `CLOUDFLARE_API_TOKEN` | `cloudflare/` |
 | `REPO_ADMIN_TOKEN` | `github/` — a PAT, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
-| `TF_VARS` | `cloudflare/` — `prod_ips = ["...", "...", "..."]`, written to `ci.auto.tfvars` at runtime |
+| `TF_VARS` | `cloudflare/` — `prod_ips = [...]` and `dev_ips = [...]` (dev's Tailscale IPs), written to `ci.auto.tfvars` at runtime |
 
 ## One-time setup
 
