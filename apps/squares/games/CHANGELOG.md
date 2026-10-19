@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/maxmorhardt/maxhq/compare/squares-games/1.2.0...squares-games/2.0.0) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename to maxhq, serve prod through Cloudflare and dev over Tailscale ([#95](https://github.com/maxmorhardt/maxhq/issues/95))
+
+### Features
+
+* rename to maxhq, serve prod through Cloudflare and dev over Tailscale ([#95](https://github.com/maxmorhardt/maxhq/issues/95)) ([43590af](https://github.com/maxmorhardt/maxhq/commit/43590af3ddefe12a70829f74c89072b429c88a44))
+
 ## [1.2.0](https://github.com/maxmorhardt/maxstash/compare/squares-games/1.1.0...squares-games/1.2.0) (2026-10-14)
 
 
