@@ -80,8 +80,7 @@ jobs:
     uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
     with:
       repository: ${{ github.repository }}
-      chart: ${{ matrix.chart }}
-      working_directory: charts
+      chart: charts/${{ matrix.chart }}
       version: ${{ needs.changes.outputs.chart_version }}
 
   chart-deploy:

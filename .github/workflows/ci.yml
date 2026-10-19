@@ -164,8 +164,7 @@ jobs:
     uses: maxmorhardt/workflows/.github/workflows/validate-helm.yml@main
     with:
       repository: ${{ github.repository }}
-      chart: ${{ matrix.chart }}
-      working_directory: charts
+      chart: charts/${{ matrix.chart }}
       lint: true
       set_values: image.tag=0.0.0-validate
 

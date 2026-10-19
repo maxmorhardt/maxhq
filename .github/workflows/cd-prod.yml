@@ -73,8 +73,7 @@ jobs:
     uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
     with:
       repository: ${{ github.repository }}
-      chart: ${{ needs.parse.outputs.app }}
-      working_directory: charts
+      chart: charts/${{ needs.parse.outputs.app }}
       version: ${{ needs.parse.outputs.version }}
 
   chart-deploy:
