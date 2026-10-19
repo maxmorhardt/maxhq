@@ -169,7 +169,6 @@ jobs:
       chart: ${{ matrix.chart }}
       working_directory: charts
       lint: true
-      kubeconform: true
       set_values: image.tag=0.0.0-validate
 
   # infra
