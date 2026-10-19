@@ -9,7 +9,7 @@ locals {
   dev_ips = ["100.89.41.36", "100.73.221.89", "100.87.45.127"]
 
   # "" is the apex
-  prod_hosts = ["", "squares", "api", "login", "argocd"]
+  prod_hosts = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
 
   prod_records = {
     for pair in setproduct(local.prod_hosts, range(nonsensitive(length(var.prod_ips)))) :
