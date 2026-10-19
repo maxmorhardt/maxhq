@@ -27,6 +27,11 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
+      - name: Raise go.work to the newest module go version
+        run: |
+          newest=$(find . -name go.mod -not -path '*/node_modules/*' -exec awk '$1 == "go" {print $2}' {} + | sort -V | tail -1)
+          sed -i "s/^go .*/go $newest/" go.work
+
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
