@@ -1,4 +1,4 @@
-module github.com/maxmorhardt/maxstash/libs/platform
+module github.com/maxmorhardt/maxhq/libs/platform
 
 go 1.26.1
 

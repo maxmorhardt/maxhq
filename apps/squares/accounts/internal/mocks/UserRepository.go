@@ -6,8 +6,8 @@ import (
 	context "context"
 	time "time"
 
-	model "github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
-	repository "github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
+	model "github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
+	repository "github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
 	mock "github.com/stretchr/testify/mock"
 )
 

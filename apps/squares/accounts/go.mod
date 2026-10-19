@@ -1,4 +1,4 @@
-module github.com/maxmorhardt/maxstash/apps/squares/accounts
+module github.com/maxmorhardt/maxhq/apps/squares/accounts
 
 go 1.26.1
 
@@ -137,11 +137,11 @@ require (
 )
 
 require (
-	github.com/maxmorhardt/maxstash/libs/platform v0.0.0
-	github.com/maxmorhardt/maxstash/libs/squares v0.0.0
+	github.com/maxmorhardt/maxhq/libs/platform v0.0.0
+	github.com/maxmorhardt/maxhq/libs/squares v0.0.0
 )
 
 replace (
-	github.com/maxmorhardt/maxstash/libs/platform => ../../../libs/platform
-	github.com/maxmorhardt/maxstash/libs/squares => ../../../libs/squares
+	github.com/maxmorhardt/maxhq/libs/platform => ../../../libs/platform
+	github.com/maxmorhardt/maxhq/libs/squares => ../../../libs/squares
 )

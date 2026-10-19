@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/clients"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/metrics"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/clients"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/metrics"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 	"gorm.io/gorm"
 )
 

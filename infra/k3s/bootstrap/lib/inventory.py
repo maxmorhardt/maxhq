@@ -45,6 +45,7 @@ class Cluster:
     nodes: tuple[Node, ...]
     ssh_user: str | None = None
     lan_cidr: str | None = None
+    open_ports: tuple[int, ...] = ()
 
     @property
     def init_node(self) -> Node:
@@ -92,6 +93,7 @@ def parse_cluster(name: str, spec: dict) -> Cluster:
         nodes=nodes,
         ssh_user=spec.get("ssh_user"),
         lan_cidr=lan_cidr,
+        open_ports=tuple(int(port) for port in spec.get("open_ports") or ()),
     )
     _validate(cluster)
     return cluster

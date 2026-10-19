@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
-	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/errs"
+	"github.com/maxmorhardt/maxhq/libs/platform/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

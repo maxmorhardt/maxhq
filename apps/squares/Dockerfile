@@ -28,10 +28,10 @@ FROM alpine:latest
 
 ARG SERVICE
 
-LABEL io.maxstash.image.source="https://github.com/maxmorhardt/maxstash/tree/main/apps/squares/${SERVICE}"
-LABEL io.maxstash.image.description="Squares ${SERVICE} service"
-LABEL io.maxstash.image.vendor="Max Morhardt"
-LABEL io.maxstash.image.licenses="PolyForm-Noncommercial-1.0.0"
+LABEL io.maxhq.image.source="https://github.com/maxmorhardt/maxhq/tree/main/apps/squares/${SERVICE}"
+LABEL io.maxhq.image.description="Squares ${SERVICE} service"
+LABEL io.maxhq.image.vendor="Max Morhardt"
+LABEL io.maxhq.image.licenses="PolyForm-Noncommercial-1.0.0"
 
 ENV GIN_MODE="release"
 

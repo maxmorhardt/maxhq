@@ -255,7 +255,7 @@ var SwaggerInfogames = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Squares Games API",
-	Description:      "NFL schedule and live scores for squares.maxstash.io. Polls ESPN and publishes game events to the games stream. Served under /squares behind the gateway, which validates the bearer token.",
+	Description:      "NFL schedule and live scores for squares.maxhq.io. Polls ESPN and publishes game events to the games stream. Served under /squares behind the gateway, which validates the bearer token.",
 	InfoInstanceName: "games",
 	SwaggerTemplate:  docTemplategames,
 	LeftDelim:        "{{",

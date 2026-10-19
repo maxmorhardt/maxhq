@@ -11,7 +11,7 @@ const contactMethods = [
   {
     icon: <Email sx={{ color: 'primary.dark', mr: 2 }} />,
     title: 'Email',
-    details: 'support@maxstash.io',
+    details: 'support@maxhq.io',
   },
   {
     icon: <Phone sx={{ color: 'primary.dark', mr: 2 }} />,
@@ -60,7 +60,7 @@ export default function ContactPage() {
           name="description"
           content="Get in touch with the Squares team. We’re here to help with your football squares questions."
         />
-        <link rel="canonical" href="https://squares.maxstash.io/contact" />
+        <link rel="canonical" href="https://squares.maxhq.io/contact" />
       </Helmet>
       {/* page header with title and description */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>

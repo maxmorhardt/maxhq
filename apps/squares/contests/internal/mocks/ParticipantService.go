@@ -6,8 +6,8 @@ import (
 	context "context"
 
 	uuid "github.com/google/uuid"
-	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	service "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
+	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	service "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
 	mock "github.com/stretchr/testify/mock"
 )
 

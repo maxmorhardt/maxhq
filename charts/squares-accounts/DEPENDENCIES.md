@@ -9,14 +9,14 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 - **squares-contests** - its `/internal` routes, at `CONTESTS_INTERNAL_URL` with `INTERNAL_API_TOKEN`.
 - **SMTP** - outbound email for the contact form.
 - **Cloudflare Turnstile** - verifies the contact form captcha.
-- **Envoy Gateway** - the `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/maxstash-gateway`), because the service trusts them.
-- **Dex** - `squares` and `squares-mobile` clients at `login.maxstash.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxstash.io/keys`.
+- **Envoy Gateway** - the `maxhq` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/gateway`), because the service trusts them.
+- **Dex** - `squares` and `squares-mobile` clients at `login.maxhq.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxhq.io/keys`.
 - **NetworkPolicy enforcement** - k3s enforces NetworkPolicy with its embedded controller. The policy admits app traffic only from `envoy-gateway-system` and metrics only from `monitoring`.
-- **TLS** and **DNS** - `api.maxstash.io` on the gateway, TLS terminated there.
+- **TLS** and **DNS** - `api.maxhq.io` on the gateway, TLS terminated there.
 
 ## Routing
 
-| Path under `api.maxstash.io/squares` | |
+| Path under `api.maxhq.io/squares` | |
 | --- | --- |
 | `/users/me` | get (creating the profile on first sign-in), update initials, delete the account |
 | `/contact` | the public contact form, behind Turnstile; the gateway limits it to 10 a day per client (`route.rateLimit.rules`) |
@@ -25,7 +25,7 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 ## Secrets
 
 `squares-accounts-env` in the `squares` namespace, read with `envFrom` (override the name with `secretName`). Sealed into
-`argocd/secrets/squares/` in the infra repo; see [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/sealed-secrets/SETUP.md).
+`clusters/<cluster>/secrets/squares/` in the gitops repo; see [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/SETUP.md).
 
 | group | keys |
 | --- | --- |
@@ -37,8 +37,8 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | captcha | `TURNSTILE_SECRET_KEY` |
 | http | `ALLOWED_ORIGINS` |
 
-`REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
-`SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxstash repo for each one and its default).
+`REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the gitops repo's `valkey-users` secret.
+`SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxhq repo for each one and its default).
 
 ## Optional
 

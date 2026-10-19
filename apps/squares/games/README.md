@@ -10,7 +10,7 @@
 
 The NFL schedule and live scores, polled from ESPN. One of the squares backend services; see [../README.md](../README.md) for how they fit together.
 
-| Path (behind `api.maxstash.io/squares`) | |
+| Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
 | `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
 
@@ -31,4 +31,4 @@ The NFL schedule and live scores, polled from ESPN. One of the squares backend s
      -H "X-Auth-Iat: $now" -H "X-Auth-Exp: $((now + 3600))" localhost:8080/...
    ```
 
-API reference: `/swagger` locally, `https://api.maxstash.io/squares/swagger/games` in production.
+API reference: `/swagger` locally, `https://api.maxhq.io/squares/swagger/games` in production.

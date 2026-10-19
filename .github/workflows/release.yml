@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'maxstash/*'
+      - 'maxhq/*'
       - 'squares/*'
       - 'squares-contests/*'
       - 'squares-games/*'
@@ -42,36 +42,38 @@ jobs:
           esac
           echo "Component: ${COMPONENT}, Version: ${VERSION}"
 
-  # maxstash
+  # maxhq
 
-  maxstash-node:
+  maxhq-node:
     needs: parse
-    if: needs.parse.outputs.component == 'maxstash'
+    if: needs.parse.outputs.component == 'maxhq'
     uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
     with:
       repository: ${{ github.repository }}
-      app_name: maxstash
-      working_directory: apps/maxstash
-      artifact_suffix: -maxstash
+      app_name: maxhq
+      working_directory: apps/maxhq
+      artifact_suffix: -maxhq
 
-  maxstash-docker:
-    needs: [parse, maxstash-node]
+  maxhq-docker:
+    needs: [parse, maxhq-node]
     uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
     with:
       repository: ${{ github.repository }}
-      app_name: maxstash
+      app_name: maxhq
       app_version: ${{ needs.parse.outputs.version }}
-      context: apps/maxstash
-      artifact_name: dist-maxstash
-      artifact_path: apps/maxstash/dist
+      context: apps/maxhq
+      artifact_name: dist-maxhq
+      artifact_path: apps/maxhq/dist
       push: true
     secrets: inherit
 
-  maxstash-deploy:
-    needs: [parse, maxstash-docker]
+  maxhq-deploy:
+    needs: [parse, maxhq-docker]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
-      app: maxstash
+      gitops_repository: maxmorhardt/gitops
+      gitops_path: clusters/prod/apps
+      app: maxhq
       image_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
 
@@ -104,6 +106,8 @@ jobs:
     needs: [parse, squares-web-docker]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
+      gitops_repository: maxmorhardt/gitops
+      gitops_path: clusters/prod/apps
       app: squares
       image_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
@@ -137,6 +141,8 @@ jobs:
     needs: [parse, squares-service-docker]
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
+      gitops_repository: maxmorhardt/gitops
+      gitops_path: clusters/prod/apps
       app: ${{ needs.parse.outputs.component }}
       image_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit

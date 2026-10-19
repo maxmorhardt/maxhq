@@ -6,8 +6,8 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 )
 
 func RandomizedLabels() (xLabels, yLabels []byte, err error) {

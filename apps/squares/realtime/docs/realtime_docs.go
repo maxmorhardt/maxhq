@@ -193,7 +193,7 @@ var SwaggerInforealtime = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Squares Realtime API",
-	Description:      "Server-sent contest events for squares.maxstash.io, resumable with Last-Event-ID. Served under /squares behind the gateway, which validates the bearer token.",
+	Description:      "Server-sent contest events for squares.maxhq.io, resumable with Last-Event-ID. Served under /squares behind the gateway, which validates the bearer token.",
 	InfoInstanceName: "realtime",
 	SwaggerTemplate:  docTemplaterealtime,
 	LeftDelim:        "{{",

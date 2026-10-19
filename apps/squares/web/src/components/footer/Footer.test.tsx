@@ -44,15 +44,15 @@ describe('Footer', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
   });
 
-  it('links the legal pages to maxstash.io', () => {
+  it('links the legal pages to maxhq.io', () => {
     renderFooter();
     expect(screen.getByText('Privacy').closest('a')).toHaveAttribute(
       'href',
-      'https://maxstash.io/privacy-policy'
+      'https://maxhq.io/privacy-policy'
     );
     expect(screen.getByText('Terms').closest('a')).toHaveAttribute(
       'href',
-      'https://maxstash.io/terms-of-service'
+      'https://maxhq.io/terms-of-service'
     );
   });
 });

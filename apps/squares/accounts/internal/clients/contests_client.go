@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/httpclient"
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/platform/httpclient"
+	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
 )
 
 type ContestActivityClient interface {

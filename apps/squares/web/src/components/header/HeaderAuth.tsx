@@ -92,7 +92,7 @@ export default function HeaderAuth({
             >
               By signing in, you agree to our{' '}
               <Link
-                href="https://maxstash.io/terms-of-service"
+                href="https://maxhq.io/terms-of-service"
                 target="_blank"
                 rel="noreferrer"
                 color="inherit"
@@ -102,7 +102,7 @@ export default function HeaderAuth({
               </Link>{' '}
               and{' '}
               <Link
-                href="https://maxstash.io/privacy-policy"
+                href="https://maxhq.io/privacy-policy"
                 target="_blank"
                 rel="noreferrer"
                 color="inherit"

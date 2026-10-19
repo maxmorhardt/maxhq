@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Contests, squares, participants, invites, leaderboard, and stats for squares.maxstash.io. Served under /squares behind the gateway, which validates the bearer token.",
+        "description": "Contests, squares, participants, invites, leaderboard, and stats for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.",
         "title": "Squares Contests API",
         "contact": {},
         "version": "1.0.0"

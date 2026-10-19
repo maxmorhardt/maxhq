@@ -7,13 +7,13 @@ issue-845-fix: true
 mockname: "{{.InterfaceName}}"
 filename: "{{.InterfaceName}}.go"
 packages:
-  github.com/maxmorhardt/maxstash/libs/platform/database:
+  github.com/maxmorhardt/maxhq/libs/platform/database:
     interfaces:
       Transactor:
-  github.com/maxmorhardt/maxstash/libs/platform/streams:
+  github.com/maxmorhardt/maxhq/libs/platform/streams:
     interfaces:
       Outbox:
-  github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository:
+  github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository:
     interfaces:
       ContestRepository:
       FeedRepository:
@@ -23,7 +23,7 @@ packages:
       LeaderboardRepository:
       UserProjectionRepository:
       GameProjectionRepository:
-  github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service:
+  github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service:
     interfaces:
       ContestService:
       FeedService:

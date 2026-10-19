@@ -2295,7 +2295,7 @@ var SwaggerInfocontests = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Squares Contests API",
-	Description:      "Contests, squares, participants, invites, leaderboard, and stats for squares.maxstash.io. Served under /squares behind the gateway, which validates the bearer token.",
+	Description:      "Contests, squares, participants, invites, leaderboard, and stats for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.",
 	InfoInstanceName: "contests",
 	SwaggerTemplate:  docTemplatecontests,
 	LeftDelim:        "{{",

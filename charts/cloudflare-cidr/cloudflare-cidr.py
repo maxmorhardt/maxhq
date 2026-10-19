@@ -13,7 +13,7 @@ CTP_GROUP = "gateway.envoyproxy.io"
 CTP_VERSION = "v1alpha1"
 CTP_NAMESPACE = "envoy-gateway-system"
 CTP_PLURAL = "clienttrafficpolicies"
-CTP_NAME = "maxstash"
+CTP_NAME = "maxhq"
 
 handler = logging.StreamHandler()
 formatter = jsonlogger.JsonFormatter(

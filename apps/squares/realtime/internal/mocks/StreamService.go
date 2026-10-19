@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	uuid "github.com/google/uuid"
-	service "github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
+	service "github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/service"
 	mock "github.com/stretchr/testify/mock"
 )
 

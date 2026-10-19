@@ -245,7 +245,7 @@ export default function ContestsPage() {
       <Helmet>
         <title>Contests – Squares</title>
         <meta name="description" content="Browse and manage your NFL football squares contests." />
-        <link rel="canonical" href="https://squares.maxstash.io/contests" />
+        <link rel="canonical" href="https://squares.maxhq.io/contests" />
       </Helmet>
       {hero}
 

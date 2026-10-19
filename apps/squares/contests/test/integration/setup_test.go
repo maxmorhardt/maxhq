@@ -14,11 +14,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/bootstrap"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/bootstrap"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )

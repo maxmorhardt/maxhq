@@ -4,7 +4,7 @@ set -e
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$staged" ] && exit 0
 
-for app in apps/maxstash apps/squares/web; do
+for app in apps/maxhq apps/squares/web; do
   if printf '%s\n' "$staged" | grep -q "^$app/"; then
     if [ ! -d "$app/node_modules" ]; then
       echo "pre-commit: skipping $app (run pnpm install in it to enable its checks)"

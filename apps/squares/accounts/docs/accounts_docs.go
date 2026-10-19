@@ -386,7 +386,7 @@ var SwaggerInfoaccounts = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Squares Accounts API",
-	Description:      "Profiles, account deletion, and the contact form for squares.maxstash.io. Served under /squares behind the gateway, which validates the bearer token.",
+	Description:      "Profiles, account deletion, and the contact form for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.",
 	InfoInstanceName: "accounts",
 	SwaggerTemplate:  docTemplateaccounts,
 	LeftDelim:        "{{",

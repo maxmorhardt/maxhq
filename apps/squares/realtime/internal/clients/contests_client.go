@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
-	"github.com/maxmorhardt/maxstash/libs/platform/httpclient"
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/errs"
+	"github.com/maxmorhardt/maxhq/libs/platform/httpclient"
+	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
 )
 
 type ContestAccessClient interface {

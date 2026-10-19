@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/handler"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/handler"
 )
 
 type Handlers struct {

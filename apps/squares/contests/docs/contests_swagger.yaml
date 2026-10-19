@@ -489,8 +489,8 @@ definitions:
 info:
   contact: {}
   description: Contests, squares, participants, invites, leaderboard, and stats for
-    squares.maxstash.io. Served under /squares behind the gateway, which validates
-    the bearer token.
+    squares.maxhq.io. Served under /squares behind the gateway, which validates the
+    bearer token.
   title: Squares Contests API
   version: 1.0.0
 paths:

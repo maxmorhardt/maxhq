@@ -1,10 +1,10 @@
 # Squares
 
-A real-time football squares pool at [squares.maxstash.io](https://squares.maxstash.io): a React app and four Go services, each built, versioned, and deployed on its own.
+A real-time football squares pool at [squares.maxhq.io](https://squares.maxhq.io): a React app and four Go services, each built, versioned, and deployed on its own.
 
 | App | What it does | Owns | Talks to |
 | --- | --- | --- | --- |
-| [web](web/) | The site | - | every service, through `api.maxstash.io/squares` |
+| [web](web/) | The site | - | every service, through `api.maxhq.io/squares` |
 | [contests](contests/) | Contests, squares, participants, invites, leaderboard, stats | `contests` schema | reads the `games` and `users` streams; writes one stream per contest |
 | [games](games/) | NFL schedule and live scores from ESPN | `games` schema | writes the `games` stream |
 | [accounts](accounts/) | Profiles, account deletion, contact form | `accounts` schema | writes the `users` stream; asks contests for a user's activity |

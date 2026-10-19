@@ -14,13 +14,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/bootstrap"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/platform/server"
-	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/bootstrap"
+	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/middleware"
+	"github.com/maxmorhardt/maxhq/libs/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
 	"github.com/redis/go-redis/v9"
 )
 

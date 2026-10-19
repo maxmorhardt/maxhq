@@ -1,4 +1,4 @@
-module github.com/maxmorhardt/maxstash/libs/squares
+module github.com/maxmorhardt/maxhq/libs/squares
 
 go 1.26.1
 

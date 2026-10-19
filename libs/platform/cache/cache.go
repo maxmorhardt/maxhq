@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
-	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/platform/metrics"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/singleflight"
 )

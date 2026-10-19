@@ -30,9 +30,8 @@ definitions:
     type: object
 info:
   contact: {}
-  description: Server-sent contest events for squares.maxstash.io, resumable with
-    Last-Event-ID. Served under /squares behind the gateway, which validates the bearer
-    token.
+  description: Server-sent contest events for squares.maxhq.io, resumable with Last-Event-ID.
+    Served under /squares behind the gateway, which validates the bearer token.
   title: Squares Realtime API
   version: 1.0.0
 paths:

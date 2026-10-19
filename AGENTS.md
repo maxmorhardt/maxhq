@@ -2,19 +2,19 @@
 
 ## Project Context
 
-- Project: maxhq monorepo (`github.com/maxmorhardt/maxhq`, formerly `maxstash`)
-- Purpose: Every public app under `maxstash.io`, the Helm chart for each, and the tooling for what runs outside the cluster.
+- Project: maxhq monorepo (`github.com/maxmorhardt/maxhq`, formerly `maxhq`)
+- Purpose: Every public app under `maxhq.io`, the Helm chart for each, and the tooling for what runs outside the cluster.
 - Related repos: `gitops` (Argo CD Applications and component values: what runs where, at which image tag), `workflows` (shared reusable CI).
 
 **Each app has its own `AGENTS.md`. Read the one for the directory you are changing; it overrides this file for that directory.**
 
 ## Repository Layout
 
-- `apps/maxstash/` - portfolio site (React Router, prerendered).
+- `apps/maxhq/` - portfolio site (React Router, prerendered).
 - `apps/squares/web/` - squares frontend (React Router SPA).
 - `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each is its own Go module, image, and release. `apps/squares/AGENTS.md` has the rules they share.
 - `libs/` - Go libraries the services share: `platform` (infrastructure) and `squares` (the contract between the squares services). Not released on their own.
-- `charts/<name>/` - one self-contained Helm chart per app, plus `maxstash-gateway` (Gateway API infrastructure, not an app) and the `cloudflare-cidr` / `cloudflare-ddns` CronJob charts that ship a Python script.
+- `charts/<name>/` - one self-contained Helm chart per app, plus `gateway` (Gateway API infrastructure, not an app) and the `cloudflare-cidr` / `cloudflare-ddns` CronJob charts that ship a Python script.
 - `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS, and GitHub rulesets. See `infra/terraform/SETUP.md`.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
@@ -43,7 +43,7 @@
 - `image.tag` is `''` in `values.yaml`. The real tag comes from the Argo CD Application in `gitops`.
 - Every chart defines the same `_helpers.tpl` set (`app.name`, `app.fullname`, `app.chart`, `app.labels`, `app.selectorLabels`). Dashboards and alert expressions match on `app.fullname`, so renaming a helper breaks alerting silently. Copy it verbatim into a new chart.
 - Set `fullnameOverride` so resource names do not depend on the release name.
-- Routing is `HTTPRoute` with a `parentRef` to the `maxstash` gateway in `envoy-gateway-system`; rate limiting goes in the `BackendTrafficPolicy`.
+- Routing is `HTTPRoute` with a `parentRef` to the `maxhq` gateway in `envoy-gateway-system`; rate limiting goes in the `BackendTrafficPolicy`.
 - Alert rules live in `values.yaml` under `metrics.prometheusRule.rules`, labelled `severity` (`warning` or `critical`), `component`, and `layer` (`frontend` or `backend`).
 - Gate optional resources behind an `enabled` flag, and update `DEPENDENCIES.md` when a template starts depending on something outside the chart.
 - Rendering is the test. CI runs `helm lint --strict`, `helm template`, and kubeconform on every changed chart:
@@ -59,7 +59,7 @@
 
 Conventional commits, enforced on PR titles and consumed by release-please. **Scope is the component**, so release-please can attribute the change, though the files touched are what decide which package releases.
 
-- Scopes: `maxstash`, `squares`, `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime`, a chart name for chart-only changes, `terraform`, `k3s`, `cloudflare-maintenance`, `ci`, `repo`.
+- Scopes: `maxhq`, `squares`, `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime`, a chart name for chart-only changes, `terraform`, `k3s`, `cloudflare-maintenance`, `ci`, `repo`.
 - Examples: `feat(squares-realtime): resume streams with last-event-id`, `fix(squares): reconnect after token refresh`, `chore(terraform): import the bucket policy`, `ci: test every go service on library changes`.
 
 ## Non-Goals for Routine Changes

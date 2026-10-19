@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
-	"github.com/maxmorhardt/maxstash/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/metrics"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/platform/streams"
 	"github.com/redis/go-redis/v9"
 )
 

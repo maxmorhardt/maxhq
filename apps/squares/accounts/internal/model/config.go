@@ -1,6 +1,6 @@
 package model
 
-import "github.com/maxmorhardt/maxstash/libs/platform/config"
+import "github.com/maxmorhardt/maxhq/libs/platform/config"
 
 type AccountsConfig struct {
 	Server    config.ServerConfig

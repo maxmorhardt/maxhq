@@ -9,17 +9,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/squares/events"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/metrics"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 )
 
 const (

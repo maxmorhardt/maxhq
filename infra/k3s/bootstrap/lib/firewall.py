@@ -18,6 +18,7 @@ def rules(cluster: Cluster) -> list[str]:
     ]
     if cluster.lan_cidr:
         allow.append(f"allow from {cluster.lan_cidr}")
+    allow.extend(f"allow {port}/tcp" for port in cluster.open_ports)
     return allow
 
 

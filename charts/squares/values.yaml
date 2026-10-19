@@ -56,10 +56,10 @@ service:
 route:
   enabled: true
   gateway:
-    name: maxstash
+    name: maxhq
     namespace: envoy-gateway-system
   hostnames:
-    - squares.maxstash.io
+    - squares.maxhq.io
   rules:
     - matches:
         - path:

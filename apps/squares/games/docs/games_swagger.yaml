@@ -96,9 +96,9 @@ definitions:
     - GameStatusFinal
 info:
   contact: {}
-  description: NFL schedule and live scores for squares.maxstash.io. Polls ESPN and
-    publishes game events to the games stream. Served under /squares behind the gateway,
-    which validates the bearer token.
+  description: NFL schedule and live scores for squares.maxhq.io. Polls ESPN and publishes
+    game events to the games stream. Served under /squares behind the gateway, which
+    validates the bearer token.
   title: Squares Games API
   version: 1.0.0
 paths:

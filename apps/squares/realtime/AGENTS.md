@@ -4,7 +4,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 
 ## Project Context
 
-- Service: `realtime` (`apps/squares/realtime`, module `github.com/maxmorhardt/maxstash/apps/squares/realtime`). Live contest updates for browsers, over server-sent events.
+- Service: `realtime` (`apps/squares/realtime`, module `github.com/maxmorhardt/maxhq/apps/squares/realtime`). Live contest updates for browsers, over server-sent events.
 - Image `maxmorhardt/squares-realtime`, release-please component `squares-realtime`. Chart: `squares-realtime` in the `charts` repo, whose `DEPENDENCIES.md` lists every secret key and setting.
 - Owns no data. It needs only Valkey and the contests internal API.
 

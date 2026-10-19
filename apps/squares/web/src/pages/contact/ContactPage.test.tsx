@@ -107,7 +107,7 @@ describe('ContactPage', () => {
 
   it('renders the support email address', () => {
     renderPage();
-    expect(screen.getByText('support@maxstash.io')).toBeInTheDocument();
+    expect(screen.getByText('support@maxhq.io')).toBeInTheDocument();
   });
 
   it('shows a success toast when form submission succeeds', async () => {

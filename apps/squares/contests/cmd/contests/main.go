@@ -7,16 +7,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	_ "github.com/maxmorhardt/maxstash/apps/squares/contests/docs"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/bootstrap"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/platform/server"
+	_ "github.com/maxmorhardt/maxhq/apps/squares/contests/docs"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/bootstrap"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/server"
 )
 
 // @title           Squares Contests API
 // @version         1.0.0
-// @description     Contests, squares, participants, invites, leaderboard, and stats for squares.maxstash.io. Served under /squares behind the gateway, which validates the bearer token.
+// @description     Contests, squares, participants, invites, leaderboard, and stats for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.
 // @securityDefinitions.apikey BearerAuth
 // @type apiKey
 // @in header

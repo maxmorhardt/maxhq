@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/platform/database"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )

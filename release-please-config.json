@@ -6,9 +6,9 @@
   "separate-pull-requests": false,
   "bootstrap-sha": "873adead9500f16ede27a032f7c88cd7b142e377",
   "packages": {
-    "apps/maxstash": {
+    "apps/maxhq": {
       "release-type": "node",
-      "component": "maxstash",
+      "component": "maxhq",
       "changelog-path": "CHANGELOG.md"
     },
     "apps/squares/web": {

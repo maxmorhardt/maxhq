@@ -4,4 +4,4 @@ Disallow: /auth/
 Disallow: /join/
 Disallow: /contests/create
 
-Sitemap: https://squares.maxstash.io/sitemap.xml
+Sitemap: https://squares.maxhq.io/sitemap.xml

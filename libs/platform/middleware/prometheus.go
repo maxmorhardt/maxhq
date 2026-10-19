@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
+	"github.com/maxmorhardt/maxhq/libs/platform/metrics"
 )
 
 func PrometheusMiddleware(c *gin.Context) {

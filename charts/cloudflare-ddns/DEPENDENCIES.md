@@ -11,12 +11,12 @@ CronJob that keeps a Cloudflare DNS record pointed at the cluster's current publ
 ## Secrets
 
 `cloudflare-ddns-env` in the `jobs` namespace. Sealed into `secrets/jobs/` — see
-[sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/sealed-secrets/SETUP.md).
+[sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/SETUP.md).
 
 | key | purpose |
 | --- | --- |
 | `ZONE_ID` | Cloudflare zone to update |
-| `RECORD_NAME` | the record, e.g. `maxstash.io` |
+| `RECORD_NAME` | the record, e.g. `maxhq.io` |
 | `API_TOKEN` | Cloudflare API token |
 | `DISCORD_WEBHOOK` | run notifications |
 

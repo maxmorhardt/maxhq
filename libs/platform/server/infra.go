@@ -4,9 +4,9 @@ import (
 	"io/fs"
 	"log/slog"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/database"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )

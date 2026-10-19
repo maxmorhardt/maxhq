@@ -1,7 +1,7 @@
-name = "maxstash-maintenance"
+name = "maxhq-maintenance"
 main = "worker.js"
 compatibility_date = "2026-07-01"
 routes = [
-  { pattern = "maxstash.io/*", zone_name = "maxstash.io" },
-  { pattern = "*.maxstash.io/*", zone_name = "maxstash.io" },
+  { pattern = "maxhq.io/*", zone_name = "maxhq.io" },
+  { pattern = "*.maxhq.io/*", zone_name = "maxhq.io" },
 ]

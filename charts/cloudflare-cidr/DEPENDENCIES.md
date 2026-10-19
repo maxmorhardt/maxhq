@@ -12,7 +12,7 @@ CronJob that refreshes the trusted Cloudflare IP ranges used by the gateway's
 ## Secrets
 
 `cloudflare-cidr-env` in the `jobs` namespace. Sealed into `secrets/jobs/` — see
-[sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/sealed-secrets/SETUP.md).
+[sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/SETUP.md).
 
 | key | purpose |
 | --- | --- |
@@ -20,5 +20,5 @@ CronJob that refreshes the trusted Cloudflare IP ranges used by the gateway's
 
 ## Optional
 
-- **maxstash-gateway** — the consumer of the CIDR list; without it the job still runs but
+- **gateway** — the consumer of the CIDR list; without it the job still runs but
   nothing reads the output

@@ -20,6 +20,12 @@ def test_a_lan_is_trusted_when_the_cluster_names_one():
     assert rules[-1] == "allow from 10.0.0.0/24"
 
 
+def test_open_ports_are_allowed_from_anywhere():
+    rules = firewall.rules(make_cluster(profile=Profile.VPS, lan_cidr=None, open_ports=(443,)))
+
+    assert rules[-1] == "allow 443/tcp"
+
+
 def test_cluster_ports_are_never_opened_outside_the_tailnet():
     rules = firewall.rules(make_cluster(profile=Profile.VPS, lan_cidr=None))
 

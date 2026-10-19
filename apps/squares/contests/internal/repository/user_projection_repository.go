@@ -6,9 +6,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
