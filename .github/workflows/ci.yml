@@ -126,7 +126,6 @@ jobs:
     with:
       repository: ${{ github.repository }}
       working_directory: apps/squares/${{ matrix.service }}
-      swagger: true
 
   squares-docker:
     needs: [changes, squares-go]
