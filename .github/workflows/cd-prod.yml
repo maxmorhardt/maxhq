@@ -85,5 +85,5 @@ jobs:
     with:
       environment: prod
       app: ${{ needs.parse.outputs.app }}
-      revision: ${{ needs.parse.outputs.version }}
+      chart_version: ${{ needs.parse.outputs.version }}
     secrets: inherit

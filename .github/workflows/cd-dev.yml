@@ -99,7 +99,7 @@ jobs:
     with:
       app: ${{ matrix.chart }}
       environment: dev
-      revision: ${{ needs.changes.outputs.chart_version }}
+      chart_version: ${{ needs.changes.outputs.chart_version }}
     secrets: inherit
 
   # maxhq
