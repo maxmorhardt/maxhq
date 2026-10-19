@@ -17,6 +17,10 @@ strippedRequestHeaders:
 
 proxy:
   replicas: 2
+  # cloudflared reaches the gateway in-cluster, so nothing is exposed on the nodes
+  service:
+    name: envoy-maxhq
+    type: ClusterIP
   resources:
     requests:
       cpu: 100m
@@ -26,6 +30,8 @@ proxy:
       memory: 512Mi
 
 trustedCIDRs:
+  # cloudflared pods are the last hop before envoy
+  - 10.42.0.0/16
   - 103.21.244.0/22
   - 103.22.200.0/22
   - 103.31.4.0/22

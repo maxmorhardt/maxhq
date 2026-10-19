@@ -7,7 +7,7 @@ created by hand.
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](https://github.com/maxmorhardt/gitops/blob/main/postgres/SETUP.md) |
-| `cloudflare/` | DNS records for the `maxstash.io` zone |
+| `cloudflare/` | `maxhq.io` DNS (Zoho mail, tunnel hostnames) and a Cloudflare Tunnel per cluster |
 | `github/` | Repository rulesets on every default branch: required checks and squash-only merges |
 
 ## Credentials
@@ -15,7 +15,7 @@ created by hand.
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`) |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN`, plus `terraform.tfvars` from `terraform.tfvars.example` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit and Account Cloudflare Tunnel: Edit |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 
 In CI, as repository secrets:
@@ -25,7 +25,6 @@ In CI, as repository secrets:
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | every module — the state backend, not just `aws/` |
 | `CLOUDFLARE_API_TOKEN` | `cloudflare/` |
 | `REPO_ADMIN_TOKEN` | `github/` — a PAT, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
-| `TF_VARS` | `cloudflare/` — `apex_ip = "..."`, written to `ci.auto.tfvars` at runtime |
 
 ## One-time setup
 

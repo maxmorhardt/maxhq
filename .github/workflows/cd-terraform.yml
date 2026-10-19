@@ -25,7 +25,6 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || '' }}
 
   drift:
     if: github.event_name == 'schedule'
@@ -43,4 +42,3 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || '' }}

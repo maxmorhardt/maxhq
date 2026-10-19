@@ -8,6 +8,9 @@ spec:
   provider:
     type: Kubernetes
     kubernetes:
+      envoyService:
+        name: {{ .Values.proxy.service.name }}
+        type: {{ .Values.proxy.service.type }}
       envoyDeployment:
         replicas: {{ .Values.proxy.replicas }}
         container:
