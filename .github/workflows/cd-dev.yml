@@ -125,7 +125,6 @@ jobs:
       artifact_name: dist-maxhq
       artifact_path: apps/maxhq/dist
       push: true
-      latest: false
     secrets: inherit
 
   maxhq-deploy:
@@ -162,7 +161,6 @@ jobs:
       artifact_name: dist-squares
       artifact_path: apps/squares/web/dist
       push: true
-      latest: false
     secrets: inherit
 
   squares-web-deploy:
@@ -194,7 +192,6 @@ jobs:
       dockerfile: apps/squares/Dockerfile
       build_args: SERVICE=${{ matrix.service }}
       push: true
-      latest: false
     secrets: inherit
 
   squares-service-deploy:
