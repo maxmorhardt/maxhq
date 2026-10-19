@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.1.0...squares-contests/3.0.0) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename to maxhq, serve prod through Cloudflare and dev over Tailscale ([#95](https://github.com/maxmorhardt/maxhq/issues/95))
+
+### Features
+
+* rename to maxhq, serve prod through Cloudflare and dev over Tailscale ([#95](https://github.com/maxmorhardt/maxhq/issues/95)) ([43590af](https://github.com/maxmorhardt/maxhq/commit/43590af3ddefe12a70829f74c89072b429c88a44))
+
 ## [2.1.0](https://github.com/maxmorhardt/maxstash/compare/squares-contests/2.0.0...squares-contests/2.1.0) (2026-10-14)
 
 
