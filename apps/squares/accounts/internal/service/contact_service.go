@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/errs"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository"
-	"github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/templates"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
+	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/templates"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 )
 
 var contactEmailTmpl = template.Must(template.New("contact_email").Parse(templates.ContactEmailHTML))

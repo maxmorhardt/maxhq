@@ -5,15 +5,15 @@ import (
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/clients"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/handler"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/routes"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
-	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
-	"github.com/maxmorhardt/maxstash/libs/platform/server"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/clients"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/handler"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/routes"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/platform/middleware"
+	"github.com/maxmorhardt/maxhq/libs/platform/server"
 )
 
 const (

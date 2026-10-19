@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

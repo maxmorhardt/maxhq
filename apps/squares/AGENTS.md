@@ -4,7 +4,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 
 ## Project Context
 
-- Product: a real-time football squares pool at `squares.maxstash.io`.
+- Product: a real-time football squares pool at `squares.maxhq.io`.
 - Applications under `apps/squares/`:
   - `web/` - the React frontend.
   - `contests/` - contests, squares, participants, invites, leaderboard, stats. Owns the `contests` schema plus local copies of users and games.
@@ -15,7 +15,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 - Shared code lives in two library modules, consumed through `replace` directives:
   - `libs/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
   - `libs/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
-- Everything sits behind the `maxstash` Envoy Gateway at `api.maxstash.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
+- Everything sits behind the `maxhq` Envoy Gateway at `api.maxhq.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
 
 ## Service Boundaries
 

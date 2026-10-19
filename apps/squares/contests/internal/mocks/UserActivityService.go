@@ -5,9 +5,9 @@ package mocks
 import (
 	context "context"
 
-	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	contracts "github.com/maxmorhardt/maxstash/libs/squares/contracts"
-	events "github.com/maxmorhardt/maxstash/libs/squares/events"
+	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	contracts "github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	events "github.com/maxmorhardt/maxhq/libs/squares/events"
 	mock "github.com/stretchr/testify/mock"
 )
 

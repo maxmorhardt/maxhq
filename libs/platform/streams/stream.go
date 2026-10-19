@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/platform/cache"
 	"github.com/redis/go-redis/v9"
 )
 

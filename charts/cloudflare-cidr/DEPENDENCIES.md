@@ -20,5 +20,5 @@ CronJob that refreshes the trusted Cloudflare IP ranges used by the gateway's
 
 ## Optional
 
-- **maxstash-gateway** — the consumer of the CIDR list; without it the job still runs but
+- **gateway** — the consumer of the CIDR list; without it the job still runs but
   nothing reads the output

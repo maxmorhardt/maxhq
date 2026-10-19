@@ -27,7 +27,7 @@ Each contest page opens one event stream to the realtime service. A change is se
 
 This application requires the following services to be running:
 
-- **Squares API services** (contests, games, accounts, realtime) behind the `api.maxstash.io/squares` gateway
+- **Squares API services** (contests, games, accounts, realtime) behind the `api.maxhq.io/squares` gateway
 - **OIDC Provider** (Dex, with Google and GitHub sign-in) for authentication
 - **Modern Web Browser** with `fetch` streaming (`ReadableStream`) support
 

@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

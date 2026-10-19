@@ -10,7 +10,7 @@
 
 Contests, squares, participants, invites, the leaderboard, and stats. One of the squares backend services; see [../README.md](../README.md) for how they fit together.
 
-| Path (behind `api.maxstash.io/squares`) | |
+| Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
 | `GET /contests` | the caller's owned and joined contests, newest first, cursor paginated, filtered by `role`, `status`, and `search` |
 | `/contests/**` | create, edit, start, score, and delete contests; claim, clear, and randomly fill squares |
@@ -37,4 +37,4 @@ Contests, squares, participants, invites, the leaderboard, and stats. One of the
      -H "X-Auth-Iat: $now" -H "X-Auth-Exp: $((now + 3600))" localhost:8080/...
    ```
 
-API reference: `/swagger` locally, `https://api.maxstash.io/squares/swagger/contests` in production.
+API reference: `/swagger` locally, `https://api.maxhq.io/squares/swagger/contests` in production.

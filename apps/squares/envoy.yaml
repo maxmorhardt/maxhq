@@ -49,11 +49,11 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
                       providers:
                         dex:
-                          issuer: https://login.maxstash.io
+                          issuer: https://login.maxhq.io
                           audiences: [squares, squares-mobile]
                           remote_jwks:
                             http_uri:
-                              uri: https://login.maxstash.io/keys
+                              uri: https://login.maxhq.io/keys
                               cluster: dex
                               timeout: 5s
                             cache_duration: 300s
@@ -100,15 +100,15 @@ static_resources:
       dns_lookup_family: V4_ONLY
       load_assignment:
         cluster_name: dex
-        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: login.maxstash.io, port_value: 443 } } } }] }]
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: login.maxhq.io, port_value: 443 } } } }] }]
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-          sni: login.maxstash.io
+          sni: login.maxhq.io
           common_tls_context:
             validation_context:
               trusted_ca: { filename: /etc/ssl/certs/ca-certificates.crt }
               match_typed_subject_alt_names:
                 - san_type: DNS
-                  matcher: { exact: login.maxstash.io }
+                  matcher: { exact: login.maxhq.io }

@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
-	"github.com/maxmorhardt/maxstash/libs/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/squares/events"
 )
 
 var (

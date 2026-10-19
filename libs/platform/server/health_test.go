@@ -11,7 +11,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

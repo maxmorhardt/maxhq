@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/database"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/database"
 	"gorm.io/gorm"
 )
 

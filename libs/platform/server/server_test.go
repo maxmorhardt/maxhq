@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/swaggo/swag"

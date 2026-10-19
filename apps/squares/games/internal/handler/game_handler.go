@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 )
 
 type GameHandler interface {

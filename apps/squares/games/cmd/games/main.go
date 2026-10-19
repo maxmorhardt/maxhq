@@ -7,16 +7,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	_ "github.com/maxmorhardt/maxstash/apps/squares/games/docs"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/bootstrap"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/platform/server"
+	_ "github.com/maxmorhardt/maxhq/apps/squares/games/docs"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/bootstrap"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/server"
 )
 
 // @title           Squares Games API
 // @version         1.0.0
-// @description     NFL schedule and live scores for squares.maxstash.io. Polls ESPN and publishes game events to the games stream. Served under /squares behind the gateway, which validates the bearer token.
+// @description     NFL schedule and live scores for squares.maxhq.io. Polls ESPN and publishes game events to the games stream. Served under /squares behind the gateway, which validates the bearer token.
 // @securityDefinitions.apikey BearerAuth
 // @type apiKey
 // @in header

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
+	"github.com/maxmorhardt/maxhq/libs/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 )
 
 const statsCacheTTL = 30 * time.Second

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 )
 
 func ScoreboardToGames(r *model.ScoreboardResponse) []model.ESPNGame {

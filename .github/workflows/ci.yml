@@ -21,7 +21,7 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      maxstash: ${{ steps.filter.outputs.maxstash == 'true' || steps.filter.outputs.workflows == 'true' }}
+      maxhq: ${{ steps.filter.outputs.maxhq == 'true' || steps.filter.outputs.workflows == 'true' }}
       squares_web: ${{ steps.filter.outputs.squares_web == 'true' || steps.filter.outputs.workflows == 'true' }}
       squares_services: ${{ steps.services.outputs.list }}
       go_libs: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.workflows == 'true' }}
@@ -37,8 +37,8 @@ jobs:
         uses: dorny/paths-filter@v4
         with:
           filters: |
-            maxstash:
-              - 'apps/maxstash/**'
+            maxhq:
+              - 'apps/maxhq/**'
             squares_web:
               - 'apps/squares/web/**'
             go_libs:
@@ -103,27 +103,27 @@ jobs:
             echo "list=${CHANGED:-[]}" >> "$GITHUB_OUTPUT"
           fi
 
-  # maxstash
+  # maxhq
 
-  maxstash-node:
+  maxhq-node:
     needs: changes
-    if: needs.changes.outputs.maxstash == 'true'
+    if: needs.changes.outputs.maxhq == 'true'
     uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
     with:
       repository: ${{ github.repository }}
-      app_name: maxstash
-      working_directory: apps/maxstash
-      artifact_suffix: -maxstash
+      app_name: maxhq
+      working_directory: apps/maxhq
+      artifact_suffix: -maxhq
 
-  maxstash-docker:
-    needs: maxstash-node
+  maxhq-docker:
+    needs: maxhq-node
     uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
     with:
       repository: ${{ github.repository }}
-      app_name: maxstash
-      context: apps/maxstash
-      artifact_name: dist-maxstash
-      artifact_path: apps/maxstash/dist
+      app_name: maxhq
+      context: apps/maxhq
+      artifact_name: dist-maxhq
+      artifact_path: apps/maxhq/dist
     secrets: inherit
 
   # squares web
@@ -263,8 +263,8 @@ jobs:
     name: CI Complete
     if: always()
     needs:
-      - maxstash-node
-      - maxstash-docker
+      - maxhq-node
+      - maxhq-docker
       - squares-web-node
       - squares-web-docker
       - squares-go

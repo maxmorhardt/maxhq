@@ -6,14 +6,14 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/clients"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/errs"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/metrics"
-	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
-	"github.com/maxmorhardt/maxstash/libs/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/squares/contracts"
-	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/clients"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/metrics"
+	"github.com/maxmorhardt/maxhq/libs/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/squares/events"
 	"github.com/redis/go-redis/v9"
 )
 

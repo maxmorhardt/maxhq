@@ -7,23 +7,23 @@ issue-845-fix: true
 mockname: "{{.InterfaceName}}"
 filename: "{{.InterfaceName}}.go"
 packages:
-  github.com/maxmorhardt/maxstash/libs/platform/database:
+  github.com/maxmorhardt/maxhq/libs/platform/database:
     interfaces:
       Transactor:
-  github.com/maxmorhardt/maxstash/libs/platform/streams:
+  github.com/maxmorhardt/maxhq/libs/platform/streams:
     interfaces:
       Outbox:
-  github.com/maxmorhardt/maxstash/libs/platform/cache:
+  github.com/maxmorhardt/maxhq/libs/platform/cache:
     interfaces:
       RevocationStore:
-  github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/clients:
+  github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/clients:
     interfaces:
       ContestActivityClient:
-  github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/repository:
+  github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository:
     interfaces:
       UserRepository:
       ContactRepository:
-  github.com/maxmorhardt/maxstash/apps/squares/accounts/internal/service:
+  github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service:
     interfaces:
       UserService:
       ContactService:

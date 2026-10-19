@@ -4,17 +4,17 @@ import (
 	"context"
 	"errors"
 
-	"github.com/maxmorhardt/maxstash/libs/squares/initials"
+	"github.com/maxmorhardt/maxhq/libs/squares/initials"
 
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/metrics"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/util"
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/metrics"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 	"gorm.io/gorm"
 )
 

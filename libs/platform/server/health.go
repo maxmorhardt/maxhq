@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )

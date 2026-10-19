@@ -1,9 +1,9 @@
 FROM nginx:alpine
 
-LABEL io.maxstash.image.source="https://github.com/maxmorhardt/maxstash"
-LABEL io.maxstash.image.description="Maxstash - Personal portfolio web application"
-LABEL io.maxstash.image.vendor="Max Morhardt"
-LABEL io.maxstash.image.licenses="Apache-2.0"
+LABEL io.maxhq.image.source="https://github.com/maxmorhardt/maxhq"
+LABEL io.maxhq.image.description="maxhq - Personal portfolio web application"
+LABEL io.maxhq.image.vendor="Max Morhardt"
+LABEL io.maxhq.image.licenses="Apache-2.0"
 
 RUN apk upgrade --no-cache
 

@@ -2,11 +2,11 @@
 
 ## Project Context
 
-- Project: Maxstash site (`apps/maxstash` in `github.com/maxmorhardt/maxstash`)
+- Project: maxhq site (`apps/maxhq` in `github.com/maxmorhardt/maxhq`)
 - Language: TypeScript, React 19
 - Purpose: Personal portfolio site. Vite build routed and prerendered by React Router framework mode, styled with Material UI over Emotion from a single themed token set.
 - Target environments: Fully prerendered static HTML served by NGINX in a container on Kubernetes. Public and search-indexed.
-- Related: the `maxstash` chart in the `charts` repo, `infra` (the Argo CD Application), `workflows` (shared CI).
+- Related: the `maxhq` chart in the `charts` repo, `infra` (the Argo CD Application), `workflows` (shared CI).
 
 ## Repository Layout
 
@@ -55,7 +55,7 @@
 - Breakpoints are `sm: 600, md: 960, lg: 1200, xl: 1400`, so `<Container maxWidth="lg">` is the 1200px page width and `maxWidth="xl"` is the 1400px header and footer width. Do not hand-roll `maxWidth` plus `mx: 'auto'`.
 - Use `RevealSection` for scroll reveals. `variant` picks the entrance offset (`up`, `left`, `scale`, `rise`); `delay` (0 to 4) staggers in 100ms steps.
 - `MuiCssBaseline.styleOverrides` reads through `theme.vars` deliberately. Using `theme.palette` there bakes in one scheme's literal values and the toggle stops repainting.
-- Theme preference lives in `localStorage` under `maxstash:theme`. `<InitColorSchemeScript>` in `root.tsx` applies it before first paint, and its `modeStorageKey` must stay in sync with the `ThemeProvider` in `providers.tsx` (both read `COLOR_SCHEME_STORAGE_KEY` from `theme.ts`).
+- Theme preference lives in `localStorage` under `maxhq:theme`. `<InitColorSchemeScript>` in `root.tsx` applies it before first paint, and its `modeStorageKey` must stay in sync with the `ThemeProvider` in `providers.tsx` (both read `COLOR_SCHEME_STORAGE_KEY` from `theme.ts`).
 - `AppHeader` holds the theme-toggle icon behind a `mounted` flag because `useColorScheme().mode` is undefined until the client reads storage. Keep that guard.
 - `HeroTerminal` deliberately keeps its own hard-coded GitHub-dark palette in both color schemes. It is a terminal, not a themed surface.
 - Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.

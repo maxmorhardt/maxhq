@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 )
 
 const (

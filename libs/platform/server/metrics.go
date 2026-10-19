@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 

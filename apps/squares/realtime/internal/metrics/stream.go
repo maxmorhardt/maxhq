@@ -3,7 +3,7 @@ package metrics
 import (
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/model"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

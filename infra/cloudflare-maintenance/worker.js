@@ -7,7 +7,7 @@ export default {
     const url = new URL(request.url);
 
     // APIs: JSON, not HTML, so frontends/clients don't try to parse a webpage.
-    if (url.hostname === "api.maxstash.io" || url.hostname.startsWith("api.")) {
+    if (url.hostname === "api.maxhq.io" || url.hostname.startsWith("api.")) {
       return new Response(
         JSON.stringify({
           error: "maintenance",

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
 	"github.com/redis/go-redis/v9"
 )
 

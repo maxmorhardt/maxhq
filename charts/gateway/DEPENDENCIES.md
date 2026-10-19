@@ -1,6 +1,6 @@
 # External Dependencies
 
-Provides the `maxstash` GatewayClass and Gateway that every other chart's HTTPRoute attaches
+Provides the `maxhq` GatewayClass and Gateway that every other chart's HTTPRoute attaches
 to, so this deploys before the apps.
 
 ## Required

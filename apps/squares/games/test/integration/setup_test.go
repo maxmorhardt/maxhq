@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/bootstrap"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/bootstrap"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
 	"github.com/redis/go-redis/v9"
 )
 

@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
-	"github.com/maxmorhardt/maxstash/libs/platform/metrics"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/platform/metrics"
 )
 
 const HeaderInternalToken = "X-Internal-Token"

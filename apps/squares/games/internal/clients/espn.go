@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/util"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/util"
 )
 
 const scoreboardPath = "/apis/site/v2/sports/football/nfl/scoreboard"
 
-const userAgent = "squares-games (+https://github.com/maxmorhardt/maxstash)"
+const userAgent = "squares-games (+https://github.com/maxmorhardt/maxhq)"
 
 type ESPNClient interface {
 	FetchScoreboard(ctx context.Context, dates []string) ([]model.ESPNGame, error)

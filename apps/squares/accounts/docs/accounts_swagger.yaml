@@ -87,7 +87,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: Profiles, account deletion, and the contact form for squares.maxstash.io.
+  description: Profiles, account deletion, and the contact form for squares.maxhq.io.
     Served under /squares behind the gateway, which validates the bearer token.
   title: Squares Accounts API
   version: 1.0.0

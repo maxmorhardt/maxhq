@@ -4,7 +4,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
 	"github.com/stretchr/testify/assert"
 )
 

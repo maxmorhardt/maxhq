@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/platform/testkit"
-	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/squares/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

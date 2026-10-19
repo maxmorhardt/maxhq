@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/libs/platform/middleware"
+	"github.com/maxmorhardt/maxhq/libs/platform/middleware"
 )
 
 type Identity struct {

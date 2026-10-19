@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	model "github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
+	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	mock "github.com/stretchr/testify/mock"
 )
 

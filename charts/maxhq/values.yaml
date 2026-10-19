@@ -1,7 +1,7 @@
-fullnameOverride: maxstash
+fullnameOverride: maxhq
 
 image:
-  repository: maxmorhardt/maxstash
+  repository: maxmorhardt/maxhq
   tag: ''
   pullPolicy: IfNotPresent
   revisionHistoryLimit: 2
@@ -56,7 +56,7 @@ service:
 route:
   enabled: true
   gateway:
-    name: maxstash
+    name: maxhq
     namespace: envoy-gateway-system
   hostnames:
     - maxhq.io
@@ -132,7 +132,7 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: maxstash
+          component: maxhq
           layer: frontend
         annotations:
           summary: 'High nginx request latency detected'
@@ -145,7 +145,7 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: maxstash
+          component: maxhq
           layer: frontend
         annotations:
           summary: 'High HTTP error rate'
@@ -157,7 +157,7 @@ metrics:
         for: 2m
         labels:
           severity: critical
-          component: maxstash
+          component: maxhq
           layer: frontend
         annotations:
           summary: 'Critical HTTP error rate'
@@ -170,7 +170,7 @@ metrics:
         for: 10m
         labels:
           severity: warning
-          component: maxstash
+          component: maxhq
           layer: frontend
         annotations:
           summary: 'High client error rate'
@@ -182,7 +182,7 @@ metrics:
         for: 5m
         labels:
           severity: critical
-          component: maxstash
+          component: maxhq
           layer: frontend
         annotations:
           summary: 'Critical client error rate'
@@ -195,7 +195,7 @@ metrics:
         for: 5m
         labels:
           severity: critical
-          component: maxstash
+          component: maxhq
           layer: frontend
         annotations:
           summary: 'Nginx is down'
@@ -207,7 +207,7 @@ metrics:
         for: 5m
         labels:
           severity: warning
-          component: maxstash
+          component: maxhq
           layer: frontend
         annotations:
           summary: 'High number of active connections'

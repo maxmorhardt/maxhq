@@ -1,11 +1,11 @@
 # maxhq
 
-Monorepo for everything served under `maxstash.io`: the apps, their Helm charts, and the tooling for what runs outside the cluster.
+Monorepo for everything served under `maxhq.io`: the apps, their Helm charts, and the tooling for what runs outside the cluster.
 
 | Path | What | Image |
 | --- | --- | --- |
-| [`apps/maxstash`](apps/maxstash) | Portfolio site (`maxstash.io`) | `maxmorhardt/maxstash` |
-| [`apps/squares/web`](apps/squares/web) | Squares frontend (`squares.maxstash.io`) | `maxmorhardt/squares` |
+| [`apps/maxhq`](apps/maxhq) | Portfolio site (`maxhq.io`) | `maxmorhardt/maxhq` |
+| [`apps/squares/web`](apps/squares/web) | Squares frontend (`squares.maxhq.io`) | `maxmorhardt/squares` |
 | [`apps/squares/contests`](apps/squares/contests) | Squares contests service | `maxmorhardt/squares-contests` |
 | [`apps/squares/games`](apps/squares/games) | Squares schedule and live scores | `maxmorhardt/squares-games` |
 | [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
@@ -42,7 +42,7 @@ The Go modules are tied together by `replace` directives, so each builds on its 
 
 | Path | License |
 | --- | --- |
-| everything not listed below (`apps/maxstash`, `charts`, `infra`, CI, repo config) | Apache-2.0 ([`LICENSE`](LICENSE)) |
+| everything not listed below (`apps/maxhq`, `charts`, `infra`, CI, repo config) | Apache-2.0 ([`LICENSE`](LICENSE)) |
 | `apps/squares/**` | PolyForm Noncommercial 1.0.0 (the `LICENSE` in each squares app) |
 | `libs/**` | PolyForm Noncommercial 1.0.0 ([`libs/platform/LICENSE`](libs/platform/LICENSE), [`libs/squares/LICENSE`](libs/squares/LICENSE)); both were extracted from the squares API |
 

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

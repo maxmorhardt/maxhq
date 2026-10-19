@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

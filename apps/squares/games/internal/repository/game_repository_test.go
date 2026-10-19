@@ -7,7 +7,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"

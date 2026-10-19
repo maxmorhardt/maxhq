@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/mocks"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

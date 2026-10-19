@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/errs"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/repository"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/util"
-	"github.com/maxmorhardt/maxstash/libs/platform/cache"
-	"github.com/maxmorhardt/maxstash/libs/platform/database"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
-	"github.com/maxmorhardt/maxstash/libs/platform/streams"
-	"github.com/maxmorhardt/maxstash/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/repository"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/util"
+	"github.com/maxmorhardt/maxhq/libs/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/squares/events"
 )
 
 const (

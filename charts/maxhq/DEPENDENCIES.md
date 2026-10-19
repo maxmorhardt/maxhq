@@ -2,7 +2,7 @@
 
 ## Required
 
-- **Envoy Gateway** — `maxstash` Gateway in `envoy-gateway-system` (HTTPRoute parentRef)
+- **Envoy Gateway** — `maxhq` Gateway in `envoy-gateway-system` (HTTPRoute parentRef)
 - **TLS** — terminated at the gateway (`maxhq.io-tls` in `envoy-gateway-system`)
 - **DNS** — `maxhq.io` pointed at the gateway external IP
 

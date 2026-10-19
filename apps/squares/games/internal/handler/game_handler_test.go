@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/mocks"
-	"github.com/maxmorhardt/maxstash/apps/squares/games/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/mocks"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

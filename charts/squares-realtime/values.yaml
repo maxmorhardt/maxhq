@@ -81,7 +81,7 @@ service:
 route:
   enabled: true
   gateway:
-    name: maxstash
+    name: maxhq
     namespace: envoy-gateway-system
   hostnames:
     - api.maxhq.io

@@ -10,7 +10,7 @@
 
 Profiles, account deletion, and the contact form. One of the squares backend services; see [../README.md](../README.md) for how they fit together.
 
-| Path (behind `api.maxstash.io/squares`) | |
+| Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
 | `/users/me` | get (creating the profile on first sign-in), update initials, delete the account |
 | `/contact` | the public contact form, behind Turnstile; the gateway limits it to 10 a day per client |
@@ -32,4 +32,4 @@ Profiles, account deletion, and the contact form. One of the squares backend ser
      -H "X-Auth-Iat: $now" -H "X-Auth-Exp: $((now + 3600))" localhost:8080/...
    ```
 
-API reference: `/swagger` locally, `https://api.maxstash.io/squares/swagger/accounts` in production.
+API reference: `/swagger` locally, `https://api.maxhq.io/squares/swagger/accounts` in production.

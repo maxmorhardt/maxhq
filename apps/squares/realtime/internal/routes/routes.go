@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/handler"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/handler"
 )
 
 func Register(r *gin.Engine, h handler.EventsHandler, auth gin.HandlerFunc) {

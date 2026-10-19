@@ -7,16 +7,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	_ "github.com/maxmorhardt/maxstash/apps/squares/realtime/docs"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/bootstrap"
-	"github.com/maxmorhardt/maxstash/apps/squares/realtime/internal/model"
-	"github.com/maxmorhardt/maxstash/libs/platform/config"
-	"github.com/maxmorhardt/maxstash/libs/platform/server"
+	_ "github.com/maxmorhardt/maxhq/apps/squares/realtime/docs"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/bootstrap"
+	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/platform/server"
 )
 
 // @title           Squares Realtime API
 // @version         1.0.0
-// @description     Server-sent contest events for squares.maxstash.io, resumable with Last-Event-ID. Served under /squares behind the gateway, which validates the bearer token.
+// @description     Server-sent contest events for squares.maxhq.io, resumable with Last-Event-ID. Served under /squares behind the gateway, which validates the bearer token.
 // @securityDefinitions.apikey BearerAuth
 // @type apiKey
 // @in header

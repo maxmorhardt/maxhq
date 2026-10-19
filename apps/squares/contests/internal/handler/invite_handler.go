@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/errs"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxstash/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
-	"github.com/maxmorhardt/maxstash/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 	"gorm.io/gorm"
 )
 

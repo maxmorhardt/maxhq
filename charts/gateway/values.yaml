@@ -1,8 +1,8 @@
-fullnameOverride: maxstash
+fullnameOverride: maxhq
 
 domain: maxhq.io
 
-gatewayClassName: maxstash
+gatewayClassName: maxhq
 
 tls:
   secretName: maxhq.io-tls

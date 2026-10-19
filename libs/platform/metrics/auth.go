@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/maxmorhardt/maxstash/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/platform/api"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
