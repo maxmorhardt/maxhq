@@ -34,7 +34,7 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | service-to-service | `INTERNAL_API_TOKEN` (the same value in contests, accounts, and realtime) |
 | http | `ALLOWED_ORIGINS` |
 
-`REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the infra repo's `valkey-users` secret.
+`REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the gitops repo's `valkey-users` secret.
 `SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxhq repo for each one and its default).
 
 ## Optional
