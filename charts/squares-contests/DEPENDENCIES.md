@@ -24,7 +24,7 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 ## Secrets
 
 `squares-contests-env` in the `squares` namespace, read with `envFrom` (override the name with `secretName`). Sealed into
-`argocd/secrets/squares/` in the infra repo; see [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/sealed-secrets/SETUP.md).
+`clusters/<cluster>/secrets/squares/` in the gitops repo; see [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/SETUP.md).
 
 | group | keys |
 | --- | --- |

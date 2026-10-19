@@ -6,7 +6,7 @@ created by hand.
 
 | module | owns |
 | --- | --- |
-| `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](https://github.com/maxmorhardt/gitops/blob/main/postgres/SETUP.md) |
+| `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/postgres/SETUP.md) |
 | `cloudflare/` | `maxhq.io` DNS: Zoho mail, prod hostnames proxied to the prod nodes, dev hostnames pointing at dev's Tailscale IPs |
 | `github/` | Repository rulesets on every default branch: required checks and squash-only merges |
 
