@@ -51,7 +51,7 @@ resource "cloudflare_dns_record" "zoho_verification" {
   ttl     = 1
 }
 
-# maxstash.io keeps its records until the domain expires; Terraform just stops tracking them
+# the old domain keeps its records until it expires; Terraform just stops tracking them
 removed {
   from = cloudflare_dns_record.apex
   lifecycle {
