@@ -1,0 +1,26 @@
+maxhq:
+  - 'apps/maxhq/**'
+squares_web:
+  - 'apps/squares/web/**'
+contests:
+  - 'apps/squares/contests/**'
+games:
+  - 'apps/squares/games/**'
+accounts:
+  - 'apps/squares/accounts/**'
+realtime:
+  - 'apps/squares/realtime/**'
+go_libs:
+  - 'libs/**'
+squares_build:
+  - 'apps/squares/Dockerfile*'
+  - 'apps/squares/*.mk'
+charts:
+  - 'charts/**'
+terraform:
+  - 'infra/terraform/**'
+k3s:
+  - 'infra/k3s/**'
+workflows:
+  - '.github/workflows/**'
+  - '.github/path-filters.yml'

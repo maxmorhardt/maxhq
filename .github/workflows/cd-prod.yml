@@ -1,0 +1,56 @@
+name: Prod CD
+
+on:
+  push:
+    tags:
+      - 'maxhq/*'
+      - 'squares/*'
+      - 'squares-contests/*'
+      - 'squares-games/*'
+      - 'squares-accounts/*'
+      - 'squares-realtime/*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-prod-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  parse:
+    name: Parse tag
+    runs-on: ubuntu-latest
+    outputs:
+      component: ${{ steps.parse.outputs.component }}
+      version: ${{ steps.parse.outputs.version }}
+      dev_tag: ${{ steps.parse.outputs.dev_tag }}
+    steps:
+      - name: Split tag into component and version
+        id: parse
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          echo "component=${TAG%%/*}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#*/}" >> "$GITHUB_OUTPUT"
+          echo "dev_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+  # the release commit's dev build is the image prod runs
+  promote:
+    needs: parse
+    uses: maxmorhardt/workflows/.github/workflows/cd-promote.yml@main
+    with:
+      app_name: ${{ needs.parse.outputs.component }}
+      source_tag: ${{ needs.parse.outputs.dev_tag }}
+      target_tag: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  deploy:
+    needs: [parse, promote]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      environment: prod
+      app: ${{ needs.parse.outputs.component }}
+      image_tag: ${{ needs.parse.outputs.version }}
+      revision: ${{ github.ref_name }}
+    secrets: inherit

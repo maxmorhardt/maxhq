@@ -18,16 +18,16 @@
 - `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS, and GitHub rulesets. See `infra/terraform/SETUP.md`.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
-- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `deploy-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `release.yml` (tag-driven build, publish, deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`.
+- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `cd-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `cd-prod.yml` (tag-driven promotion of dev's image and deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`. `ci.yml` and `cd-dev.yml` share their path filters from `.github/path-filters.yml`.
 - `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
 
 ## Core Principles
 
 1. Merges deploy to dev; releases deploy to prod
-   - A merge to `main` builds `sha-<commit>` images for the apps it touched and sets them in `gitops/clusters/dev/apps/` (`deploy-dev.yml`). Dev's charts follow `main`.
-   - A release tag builds the version image and sets both `image.tag` and the chart's `targetRevision` (the tag) in `gitops/clusters/prod/apps/`, after approval on the `production` environment. A chart change reaches prod only with a release of its app.
+   - A merge to `main` builds `sha-<commit>` images for the apps it touched and sets them in `gitops/clusters/dev/apps/` (`cd-dev.yml`). Dev's charts follow `main`.
+   - A release tag promotes the image dev built for that commit (`sha-<commit>` retagged as the version, never rebuilt) and sets both `image.tag` and the chart's `targetRevision` (the tag) in `gitops/clusters/prod/apps/`, after approval on the `production` environment. A chart change reaches prod only with a release of its app.
 2. Tags drive releases
-   - Tags are `<component>/<version>`. Pushing one runs `release.yml` for that component only.
+   - Tags are `<component>/<version>`. Pushing one runs `cd-prod.yml` for that component only.
    - Never hand-edit `.release-please-manifest.json` or `CHANGELOG.md`.
 3. Apps stay independent
    - No app imports from another app's directory. Shared Go code lives in `libs` and is consumed through `replace` directives.

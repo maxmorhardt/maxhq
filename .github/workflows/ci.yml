@@ -36,36 +36,13 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v4
         with:
-          filters: |
-            maxhq:
-              - 'apps/maxhq/**'
-            squares_web:
-              - 'apps/squares/web/**'
-            go_libs:
-              - 'libs/**'
-            squares_build:
-              - 'apps/squares/Dockerfile*'
-              - 'apps/squares/*.mk'
-            terraform:
-              - 'infra/terraform/**'
-            k3s:
-              - 'infra/k3s/**'
-            workflows:
-              - '.github/workflows/**'
-
-      - name: Filter charts
-        id: chart_files
-        uses: dorny/paths-filter@v4
-        with:
+          filters: .github/path-filters.yml
           list-files: json
-          filters: |
-            charts:
-              - 'charts/**'
 
       - name: List charts to validate
         id: charts
         env:
-          FILES: ${{ steps.chart_files.outputs.charts_files }}
+          FILES: ${{ steps.filter.outputs.charts_files }}
           ALL: ${{ steps.filter.outputs.workflows == 'true' }}
         run: |
           if [ "$ALL" = "true" ]; then
@@ -77,30 +54,17 @@ jobs:
           list=$(for name in $names; do [ -d "charts/$name" ] && echo "$name"; done | jq -R -s -c 'split("\n") | map(select(. != ""))')
           echo "list=${list}" >> "$GITHUB_OUTPUT"
 
-      - name: Filter squares services
-        id: go
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            contests:
-              - 'apps/squares/contests/**'
-            games:
-              - 'apps/squares/games/**'
-            accounts:
-              - 'apps/squares/accounts/**'
-            realtime:
-              - 'apps/squares/realtime/**'
-
       - name: List squares services to test
         id: services
         env:
-          CHANGED: ${{ steps.go.outputs.changes }}
+          CHANGED: ${{ steps.filter.outputs.changes }}
           ALL: ${{ steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.squares_build == 'true' || steps.filter.outputs.workflows == 'true' }}
         run: |
+          all='["contests","games","accounts","realtime"]'
           if [ "$ALL" = "true" ]; then
-            echo 'list=["contests","games","accounts","realtime"]' >> "$GITHUB_OUTPUT"
+            echo "list=$all" >> "$GITHUB_OUTPUT"
           else
-            echo "list=${CHANGED:-[]}" >> "$GITHUB_OUTPUT"
+            echo "list=$(echo "${CHANGED:-[]}" | jq -c --argjson all "$all" 'map(select(IN($all[])))')" >> "$GITHUB_OUTPUT"
           fi
 
   # maxhq
@@ -163,7 +127,6 @@ jobs:
       repository: ${{ github.repository }}
       working_directory: apps/squares/${{ matrix.service }}
       swagger: true
-      build: false
 
   squares-docker:
     needs: [changes, squares-go]
@@ -191,7 +154,6 @@ jobs:
     with:
       repository: ${{ github.repository }}
       working_directory: libs/${{ matrix.lib }}
-      build: false
 
   # charts
 

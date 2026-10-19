@@ -1,4 +1,4 @@
-name: Deploy dev
+name: Dev CD
 
 on:
   push:
@@ -12,10 +12,6 @@ on:
 permissions:
   contents: read
   packages: write
-
-concurrency:
-  group: deploy-dev
-  cancel-in-progress: false
 
 jobs:
   changes:
@@ -38,40 +34,19 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v4
         with:
-          filters: |
-            maxhq:
-              - 'apps/maxhq/**'
-            squares_web:
-              - 'apps/squares/web/**'
-            shared:
-              - 'libs/**'
-              - 'apps/squares/Dockerfile*'
-              - 'apps/squares/*.mk'
-
-      - name: Filter squares services
-        id: go
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            contests:
-              - 'apps/squares/contests/**'
-            games:
-              - 'apps/squares/games/**'
-            accounts:
-              - 'apps/squares/accounts/**'
-            realtime:
-              - 'apps/squares/realtime/**'
+          filters: .github/path-filters.yml
 
       - name: List squares services to deploy
         id: services
         env:
-          CHANGED: ${{ steps.go.outputs.changes }}
-          ALL: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.shared == 'true' }}
+          CHANGED: ${{ steps.filter.outputs.changes }}
+          ALL: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.squares_build == 'true' }}
         run: |
+          all='["contests","games","accounts","realtime"]'
           if [ "$ALL" = "true" ]; then
-            echo 'list=["contests","games","accounts","realtime"]' >> "$GITHUB_OUTPUT"
+            echo "list=$all" >> "$GITHUB_OUTPUT"
           else
-            echo "list=${CHANGED:-[]}" >> "$GITHUB_OUTPUT"
+            echo "list=$(echo "${CHANGED:-[]}" | jq -c --argjson all "$all" 'map(select(IN($all[])))')" >> "$GITHUB_OUTPUT"
           fi
 
   # maxhq
@@ -102,6 +77,8 @@ jobs:
 
   maxhq-deploy:
     needs: [changes, maxhq-docker]
+    concurrency:
+      group: cd-dev-maxhq
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
       app: maxhq
@@ -137,6 +114,8 @@ jobs:
 
   squares-web-deploy:
     needs: [changes, squares-web-docker]
+    concurrency:
+      group: cd-dev-squares
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
       app: squares
@@ -172,6 +151,8 @@ jobs:
       max-parallel: 1
       matrix:
         service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
+    concurrency:
+      group: cd-dev-squares-${{ matrix.service }}
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
       app: squares-${{ matrix.service }}
