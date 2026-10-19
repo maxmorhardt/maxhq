@@ -2,6 +2,7 @@ import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Send } from '@mui/icons-material';
 import { Box, Button, Paper, Skeleton, TextField, Typography, useTheme } from '@mui/material';
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { isProduction } from '../../utils/environment';
 import { stripDangerousChars } from '../../utils/sanitize';
 
 interface ContactFormProps {
@@ -26,7 +27,7 @@ export default function ContactForm({ onSubmit, isSubmitting }: ContactFormProps
   const turnstileRef = useRef<TurnstileInstance>(null);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
-  const siteKey = import.meta.env.PROD ? '0x4AAAAAACKD7d5JYPJqlXPI' : '1x00000000000000000000AA';
+  const siteKey = isProduction() ? '0x4AAAAAACKD7d5JYPJqlXPI' : '1x00000000000000000000AA';
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

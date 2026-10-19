@@ -11,6 +11,7 @@ import {
 import { Provider } from 'react-redux';
 import { store } from './app/store';
 import ErrorBoundary from './pages/error/ErrorBoundary';
+import { oidcRedirectUri } from './utils/environment';
 import { getOidcClient, OIDC_AUTHORITY } from './utils/oidcHelpers';
 
 const oidcClient = getOidcClient();
@@ -18,9 +19,7 @@ const oidcClient = getOidcClient();
 const oidcConfig: AuthProviderProps = {
   authority: OIDC_AUTHORITY,
   client_id: oidcClient.clientId,
-  redirect_uri: import.meta.env.PROD
-    ? 'https://squares.maxhq.io/auth/callback'
-    : 'http://localhost:3000/auth/callback',
+  redirect_uri: oidcRedirectUri(),
   scope: oidcClient.scope,
   userStore:
     typeof window !== 'undefined'

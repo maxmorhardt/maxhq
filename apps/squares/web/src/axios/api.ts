@@ -1,9 +1,8 @@
 import axios from 'axios';
 import type { User } from 'oidc-client-ts';
+import { apiBaseUrl } from '../utils/environment';
 
-export const API_BASE_URL = import.meta.env.PROD
-  ? 'https://api.maxhq.io/squares'
-  : 'http://localhost:8080/squares';
+export const API_BASE_URL = apiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,

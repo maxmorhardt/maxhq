@@ -1,8 +1,9 @@
 import type { AuthContextProps } from 'react-oidc-context';
+import { oidcAuthority } from './environment';
 
 export type OIDCProvider = 'google' | 'github';
 
-export const OIDC_AUTHORITY = 'https://login.maxhq.io';
+export const OIDC_AUTHORITY = oidcAuthority();
 
 const WEB_CLIENT_ID = 'squares';
 const MOBILE_CLIENT_ID = 'squares-mobile';
