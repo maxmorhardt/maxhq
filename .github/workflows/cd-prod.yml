@@ -35,14 +35,16 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           component="${TAG%%/*}"
+          kind=image
           if [ "${component%-chart}" != "$component" ]; then
-            echo "kind=chart" >> "$GITHUB_OUTPUT"
-          else
-            echo "kind=image" >> "$GITHUB_OUTPUT"
+            kind=chart
           fi
-          echo "app=${component%-chart}" >> "$GITHUB_OUTPUT"
-          echo "version=${TAG#*/}" >> "$GITHUB_OUTPUT"
-          echo "dev_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          {
+            echo "kind=$kind"
+            echo "app=${component%-chart}"
+            echo "version=${TAG#*/}"
+            echo "dev_tag=sha-${GITHUB_SHA::7}"
+          } >> "$GITHUB_OUTPUT"
 
   # app releases
 
