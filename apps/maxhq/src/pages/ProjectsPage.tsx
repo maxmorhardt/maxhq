@@ -40,7 +40,7 @@ const projects: Project[] = [
     category: 'Frontend',
     description:
       'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. One infinitely scrolling list of every contest you have created or joined, one-tap random square fills, automated winner calculation, and Google and GitHub sign-in through Dex.',
-    href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares/web',
+    href: 'https://github.com/maxmorhardt/maxhq/tree/main/apps/squares/web',
     links: [{ label: 'Live site', href: 'https://squares.maxhq.io', icon: <OpenInNewIcon /> }],
     tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSG', 'OIDC', 'SSE'],
   },
@@ -49,7 +49,7 @@ const projects: Project[] = [
     category: 'Backend',
     description:
       'Four Go microservices behind the squares game: contests, games (live ESPN scores), accounts, and realtime. Each owns its own schema and publishes changes through a transactional outbox to Valkey streams, and realtime fans them out to every viewer over server-sent events. Envoy validates tokens and rate limits once at the gateway, and the whole stack runs locally with one Docker Compose command.',
-    href: 'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares',
+    href: 'https://github.com/maxmorhardt/maxhq/tree/main/apps/squares',
     links: [
       {
         label: 'Swagger',
@@ -93,11 +93,11 @@ const projects: Project[] = [
     tags: ['GitHub Actions', 'Docker', 'Helm', 'Argo CD', 'Trivy', 'Renovate'],
   },
   {
-    name: 'maxstash',
+    name: 'maxhq',
     category: 'Frontend',
     description:
       'The public monorepo for this portfolio site and squares. The site is React 19 + Vite prerendered to static HTML with React Router framework mode, styled with Material UI and Emotion, with persistent light/dark theming and scroll-driven animations. Shipped as a Docker image through the same workflows that deploy everything else.',
-    href: 'https://github.com/maxmorhardt/maxstash',
+    href: 'https://github.com/maxmorhardt/maxhq',
     links: [{ label: 'Live site', href: 'https://maxhq.io', icon: <OpenInNewIcon /> }],
     tags: ['React 19', 'TypeScript', 'Vite', 'SSG', 'Material UI', 'Emotion'],
   },

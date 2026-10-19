@@ -11,7 +11,7 @@ describe('App', () => {
   it('renders the header and footer chrome around the routed content', () => {
     renderWithProviders(<App />);
 
-    expect(screen.getByRole('link', { name: 'maxstash home' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'maxhq home' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'GitHub' })).toBeInTheDocument();
   });
 

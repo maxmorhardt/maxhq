@@ -9,7 +9,7 @@ describe('AppHeader', () => {
   it('renders the brand link home', () => {
     renderWithProviders(<AppHeader />);
 
-    expect(screen.getByRole('link', { name: 'maxstash home' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'maxhq home' })).toHaveAttribute('href', '/');
   });
 
   it('renders every nav destination', () => {

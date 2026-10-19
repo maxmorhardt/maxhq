@@ -13,7 +13,7 @@ describe('AboutPage', () => {
   it('renders each labelled row', () => {
     renderWithProviders(<AboutPage />);
 
-    for (const label of ['Experience', 'Project', 'Homelab platform', 'This site', 'Education']) {
+    for (const label of ['Experience', 'Project', 'Platform', 'This site', 'Education']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });
@@ -35,7 +35,7 @@ describe('AboutPage', () => {
     );
     expect(screen.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
-      'https://github.com/maxmorhardt/maxstash/tree/main/apps/squares'
+      'https://github.com/maxmorhardt/maxhq/tree/main/apps/squares'
     );
   });
 

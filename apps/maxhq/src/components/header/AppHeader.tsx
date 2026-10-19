@@ -60,7 +60,7 @@ export default function AppHeader() {
           <Typography
             component={Link}
             to="/"
-            aria-label="maxstash home"
+            aria-label="maxhq home"
             variant="h6"
             sx={{
               mr: 2,
@@ -73,7 +73,7 @@ export default function AppHeader() {
             }}
           >
             <Box component="img" src="/logo.svg" alt="" width={28} height={28} />
-            maxstash
+            maxhq
           </Typography>
 
           {/* desktop nav links */}

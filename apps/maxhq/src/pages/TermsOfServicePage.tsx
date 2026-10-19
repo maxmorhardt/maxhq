@@ -5,7 +5,7 @@ const sections: LegalSection[] = [
   {
     title: '1. Acceptance of Terms',
     content:
-      'By accessing and using maxstash and its hosted applications, including squares.maxhq.io and any other application hosted on maxhq.io (collectively, "the Services"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Services.',
+      'By accessing and using maxhq and its hosted applications, including squares.maxhq.io and any other application hosted on maxhq.io (collectively, "the Services"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Services.',
   },
   {
     title: '2. Description of Services',
@@ -45,7 +45,7 @@ const sections: LegalSection[] = [
   {
     title: '6. Intellectual Property',
     content:
-      'The Services and their original content, features, and functionality are owned by maxstash and are protected by international copyright, trademark, and other intellectual property laws. You may not copy, modify, distribute, or reverse engineer any part of the Services without our permission.',
+      'The Services and their original content, features, and functionality are owned by maxhq and are protected by international copyright, trademark, and other intellectual property laws. You may not copy, modify, distribute, or reverse engineer any part of the Services without our permission.',
   },
   {
     title: '7. User Content',
@@ -65,7 +65,7 @@ const sections: LegalSection[] = [
   {
     title: '10. Indemnification',
     content:
-      'You agree to indemnify and hold harmless maxstash and its affiliates from any claims, damages, losses, liabilities, and expenses arising from your use of the Services or violation of these Terms.',
+      'You agree to indemnify and hold harmless maxhq and its affiliates from any claims, damages, losses, liabilities, and expenses arising from your use of the Services or violation of these Terms.',
   },
   {
     title: '11. Termination',
@@ -80,7 +80,7 @@ const sections: LegalSection[] = [
   {
     title: '13. Governing Law',
     content:
-      'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which maxstash operates, without regard to its conflict of law provisions.',
+      'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which maxhq operates, without regard to its conflict of law provisions.',
   },
   {
     title: '14. Contact Information',
@@ -93,8 +93,8 @@ export default function TermsOfServicePage() {
   return (
     <>
       <PageMeta
-        title="Terms of Service – maxstash"
-        description="Terms of service for maxstash and its hosted applications."
+        title="Terms of Service – maxhq"
+        description="Terms of service for maxhq and its hosted applications."
         canonical="https://maxhq.io/terms-of-service"
       />
 

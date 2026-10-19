@@ -77,10 +77,13 @@ const stack: { name: string; icon: ReactElement }[] = [
   { name: 'Material UI', icon: icons.palette },
   { name: 'PostgreSQL', icon: icons.database },
   { name: 'Redis', icon: icons.sync },
+  { name: 'Valkey', icon: icons.sync },
+  { name: 'CloudNativePG', icon: icons.database },
   { name: 'Server-sent events', icon: icons.bolt },
   { name: 'Docker', icon: icons.box },
   { name: 'Kubernetes', icon: icons.server },
   { name: 'k3s', icon: icons.server },
+  { name: 'etcd', icon: icons.database },
   { name: 'Helm', icon: icons.box },
   { name: 'Argo CD', icon: icons.sync },
   { name: 'Terraform', icon: icons.cog },
@@ -104,6 +107,7 @@ const stack: { name: string; icon: ReactElement }[] = [
   { name: 'Sealed Secrets', icon: icons.lock },
   { name: 'Envoy Gateway', icon: icons.gateway },
   { name: 'Cloudflare', icon: icons.cloud },
+  { name: 'Tailscale', icon: icons.lock },
   { name: 'Bash', icon: icons.code },
 ];
 
@@ -120,7 +124,7 @@ const highlights = [
   },
   {
     title: 'Real-time and self-hosted systems',
-    body: 'A production k3s cluster fronted by Envoy Gateway, with Dex federated sign-in, highly available PostgreSQL, and Redis streams fanning live updates out over server-sent events, delivered continuously through Argo CD GitOps.',
+    body: 'Dev and production k3s clusters with highly available control planes, networked over Tailscale and fronted by Envoy Gateway, with Dex federated sign-in, replicated PostgreSQL, and Valkey streams fanning live updates out over server-sent events, delivered continuously through Argo CD GitOps.',
     icon: <BoltIcon />,
   },
 ];
@@ -374,7 +378,7 @@ export default function HomePage() {
               </Typography>
 
               <Typography color="text.secondary" sx={{ mt: 2.5, fontSize: '1.1rem' }}>
-                Beyond that, I self-host every app on this site on a Kubernetes cluster I run and
+                Beyond that, I self-host every app on this site on Kubernetes clusters I run and
                 maintain myself.
               </Typography>
             </RevealSection>

@@ -33,19 +33,12 @@ describe('ProjectsPage', () => {
   it('renders a card for every repository', () => {
     renderWithProviders(<ProjectsPage />);
 
-    for (const name of [
-      'squares',
-      'squares services',
-      'infra',
-      'charts',
-      'workflows',
-      'maxstash',
-    ]) {
+    for (const name of ['squares', 'squares services', 'infra', 'charts', 'workflows', 'maxhq']) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();
     }
   });
 
-  it('lists maxstash with its react stack', () => {
+  it('lists maxhq with its react stack', () => {
     renderWithProviders(<ProjectsPage />);
 
     expect(screen.getByText('React 19')).toBeInTheDocument();

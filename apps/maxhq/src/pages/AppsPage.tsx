@@ -73,7 +73,7 @@ const perks: { icon: ReactElement; title: string; body: string }[] = [
   {
     icon: <ShieldIcon />,
     title: 'One sign-in',
-    body: 'Sign in once with Google or GitHub; the same account works across every maxstash app.',
+    body: 'Sign in once with Google or GitHub; the same account works across every maxhq app.',
   },
   {
     icon: <BoltIcon />,
@@ -88,8 +88,8 @@ export default function AppsPage() {
   return (
     <Box component="section">
       <PageMeta
-        title="maxstash – Apps by Max Morhardt"
-        description="maxstash is home to the apps Max Morhardt builds and runs for game day and get-togethers, including Squares. Start a game, share the link, and everyone plays along live."
+        title="maxhq – Apps by Max Morhardt"
+        description="maxhq is home to the apps Max Morhardt builds and runs for game day and get-togethers, including Squares. Start a game, share the link, and everyone plays along live."
         canonical="https://maxhq.io/apps"
       />
 
@@ -339,14 +339,14 @@ export default function AppsPage() {
         <RevealSection delay={1} sx={{ maxWidth: '68ch' }}>
           <Typography color="text.secondary" sx={{ mt: 1, mb: 2, lineHeight: 1.7 }}>
             When an app needs an account, you can sign in with Google or GitHub. One sign-in works
-            across every maxstash app, so you never make a separate account per game. Signing in is
-            used only to create your account and identify you while you play. maxstash requests your
+            across every maxhq app, so you never make a separate account per game. Signing in is
+            used only to create your account and identify you while you play. maxhq requests your
             basic profile and email address and does not access anything else in your Google or
             GitHub account.
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 2, lineHeight: 1.7 }}>
             You can delete your account at any time from within any app, which removes your personal
-            data from maxstash.
+            data from maxhq.
           </Typography>
         </RevealSection>
 
@@ -370,7 +370,7 @@ export default function AppsPage() {
                 Terms &amp; policies
               </Typography>
               <Typography color="text.secondary">
-                How maxstash apps may be used and how your data is handled.
+                How maxhq apps may be used and how your data is handled.
               </Typography>
             </Box>
 

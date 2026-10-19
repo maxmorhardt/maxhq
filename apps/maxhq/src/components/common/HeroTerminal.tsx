@@ -98,7 +98,7 @@ function buildBoot(stackSource: typeof STACK): ScriptLine[] {
     {
       text: '',
       kind: 'out',
-      label: 'maxstash',
+      label: 'maxhq',
       link: { text: 'maxhq.io ↗', href: 'https://maxhq.io' },
     },
     {
@@ -414,7 +414,7 @@ export default function HeroTerminal() {
           <Box key={color} sx={{ width: 11, height: 11, borderRadius: '50%', bgcolor: color }} />
         ))}
         <Box component="span" sx={{ ml: 1, fontSize: '0.78rem', color: term.out }}>
-          max@maxstash: ~
+          max@maxhq: ~
         </Box>
       </Box>
 

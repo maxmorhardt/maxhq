@@ -24,7 +24,7 @@ declare module '@mui/material/styles' {
 }
 
 // matches the key the pre-react site used, so a returning visitor keeps their choice
-export const COLOR_SCHEME_STORAGE_KEY = 'maxstash:theme';
+export const COLOR_SCHEME_STORAGE_KEY = 'maxhq:theme';
 
 const sans = "system-ui, 'Segoe UI', Roboto, sans-serif";
 const mono = 'ui-monospace, Consolas, monospace';

@@ -152,12 +152,12 @@ export default function AboutPage() {
           <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
             A full-stack real-time football squares platform: four <C>Go</C> and <C>Gin</C>{' '}
             microservices behind a <C>React</C> and <C>TypeScript</C> front end, deployed to my
-            self-hosted Kubernetes cluster through GitHub Actions and <C>Argo CD</C>. It implements
+            self-hosted Kubernetes clusters through GitHub Actions and <C>Argo CD</C>. It implements
             a contest state machine, automated winner calculation, a transactional outbox feeding{' '}
             <C>Redis</C> streams, resumable server-sent events for live updates, Google and GitHub
             sign-in validated at the gateway through <C>Dex</C>, and <C>PostgreSQL</C> persistence
-            with <C>GORM</C>, instrumented end to end with <C>Prometheus</C>, <C>Grafana</C>, and{' '}
-            <C>Loki</C>.
+            with <C>GORM</C>. One build of every service runs in both the dev and production
+            clusters, configured per environment.
           </Typography>
 
           <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
@@ -172,7 +172,7 @@ export default function AboutPage() {
             </MuiLink>
 
             <MuiLink
-              href="https://github.com/maxmorhardt/maxstash/tree/main/apps/squares"
+              href="https://github.com/maxmorhardt/maxhq/tree/main/apps/squares"
               target="_blank"
               rel="noreferrer"
               sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
@@ -183,14 +183,17 @@ export default function AboutPage() {
           </Box>
         </Row>
 
-        <Row label="Homelab platform">
+        <Row label="Platform">
           <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
-            Everything I build runs on a self-hosted <C>k3s</C> cluster: <C>Envoy Gateway</C>{' '}
-            routing every app through one front door, <C>Dex</C> federating Google and GitHub
-            sign-in, highly available <C>PostgreSQL</C>, <C>Valkey</C> for caching and event
-            streams, and a full <C>Prometheus</C>, <C>Grafana</C>, and <C>Loki</C> observability
-            stack. <C>Argo CD</C> keeps the cluster in sync with Git, so reusable Helm charts and
-            GitHub Actions workflows release every app the same way. <C>Sealed Secrets</C> lets
+            Everything I build runs on two <C>k3s</C> clusters I provision myself: dev on Raspberry
+            Pis at home and production on three cloud VPSes, each with a highly available control
+            plane on embedded <C>etcd</C>. A <C>Python</C> bootstrap tool converges every node from
+            a single inventory, and all node-to-node traffic runs over <C>Tailscale</C>.{' '}
+            <C>Envoy Gateway</C> routes every app through one front door, <C>Dex</C> federates
+            Google and GitHub sign-in, <C>CloudNativePG</C> runs replicated <C>PostgreSQL</C> with
+            continuous backups to S3, and <C>Valkey</C> with Sentinel handles caching and event
+            streams. <C>Argo CD</C> keeps both clusters in sync with Git, so reusable Helm charts
+            and GitHub Actions workflows release every app the same way. <C>Sealed Secrets</C> lets
             secrets live safely in the repo, <C>Renovate</C> keeps dependencies current, and{' '}
             <C>system-upgrade-controller</C> and <C>kured</C> handle k3s upgrades and coordinated
             rolling node reboots. The infrastructure around it is code too: <C>Terraform</C> runs
@@ -205,7 +208,7 @@ export default function AboutPage() {
             mode, so every route ships real markup and then hydrates. Styled with <C>Material UI</C>{' '}
             and <C>Emotion</C> on a themed token set with persistent light and dark modes.
             Containerized with <C>Docker</C> behind <C>NGINX</C>, packaged into a <C>Helm</C> chart,
-            and deployed to my Kubernetes cluster through the same reusable <C>GitHub Actions</C>{' '}
+            and deployed to my Kubernetes clusters through the same reusable <C>GitHub Actions</C>{' '}
             and <C>Argo CD</C> pipeline that ships every other project here.
           </Typography>
         </Row>
