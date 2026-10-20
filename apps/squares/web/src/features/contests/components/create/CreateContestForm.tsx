@@ -49,6 +49,8 @@ const optionSx = (selected: boolean) => ({
   position: 'relative',
   display: 'flex',
   textAlign: 'left',
+  // ButtonBase centers its content, which shifts a card whose text is shorter than the card
+  justifyContent: 'flex-start',
   alignItems: 'flex-start',
   gap: 1.5,
   width: '100%',
