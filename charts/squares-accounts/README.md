@@ -44,4 +44,4 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 
 ## Optional
 
-- **Prometheus** - the ServiceMonitor and PrometheusRule ship with the chart; Grafana Alloy scrapes the one and syncs the other to Grafana Cloud. The dashboard lives in gitops, `infrastructure/monitoring/dashboards/`.
+- **Prometheus** - the ServiceMonitor and PrometheusRule ship with the chart

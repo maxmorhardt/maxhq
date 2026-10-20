@@ -46,10 +46,6 @@ flowchart LR
 
 A request reaches Envoy only through Cloudflare. The squares services keep state in Postgres, which commits each change with an outbox event in the same transaction. A relay moves those events onto Valkey streams, where `realtime` fans them out to browsers over server-sent events. Dev is the same stack on four Raspberry Pis, reachable only over Tailscale.
 
-## Adding an app
-
-See [docs/new-app.md](docs/new-app.md) for every file a new app touches, from the chart to the Argo CD Application.
-
 ## Releases
 
 [release-please](https://github.com/googleapis/release-please) versions every app and every chart separately in [`release-please-config.json`](release-please-config.json), starting at 1.0.0. Images and charts deploy separately:
