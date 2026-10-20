@@ -1,14 +1,46 @@
 import { Box, Paper, Skeleton } from '@mui/material';
 import { CONTEST_STACK_MAX_WIDTH } from '../../../types/layout';
 
-export default function ContestPageSkeleton() {
-  const cardSx = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 2.5,
-    p: 1.5,
-  };
+const cardSx = {
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 2.5,
+  p: 1.5,
+};
 
+// mirrors ContestDetails: beside the grid it takes 60% of the column with the action icons at the bottom
+function DetailsSkeleton({ fillHeight = false }: { fillHeight?: boolean }) {
+  return (
+    <Paper
+      sx={{
+        ...cardSx,
+        ...(fillHeight && { flex: '0 0 60%', display: 'flex', flexDirection: 'column' }),
+      }}
+    >
+      <Skeleton variant="text" width={120} height={28} sx={{ mb: 1 }} />
+      <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: fillHeight ? 1.75 : 1.25 }}>
+        <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+        <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'center',
+          mt: fillHeight ? 'auto' : 1,
+          pt: fillHeight ? 2 : 0,
+        }}
+      >
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} variant="circular" width={30} height={30} />
+        ))}
+      </Box>
+    </Paper>
+  );
+}
+
+export default function ContestPageSkeleton() {
   return (
     <Box sx={{ textAlign: 'center', position: 'relative' }}>
       {/* title skeleton */}
@@ -188,24 +220,17 @@ export default function ContestPageSkeleton() {
           </Paper>
         </Box>
 
-        {/* right sidebar: contest details (desktop only) */}
+        {/* right sidebar: contest details, stretched to the grid's height like the real card */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
             flexDirection: 'column',
-            gap: 1.5,
             flex: '0 0 280px',
+            alignSelf: 'stretch',
           }}
         >
           {/* contest details skeleton */}
-          <Paper sx={cardSx}>
-            <Skeleton variant="text" width={120} height={28} sx={{ mb: 1 }} />
-            <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-              <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
-            </Box>
-          </Paper>
+          <DetailsSkeleton fillHeight />
         </Box>
       </Box>
 
@@ -223,15 +248,7 @@ export default function ContestPageSkeleton() {
           mt: 2,
         }}
       >
-        {/* contest details skeleton */}
-        <Paper sx={cardSx}>
-          <Skeleton variant="text" width={120} height={28} sx={{ mb: 1 }} />
-          <Skeleton variant="rectangular" height={4} sx={{ borderRadius: 1, mb: 1 }} />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-            <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
-            <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
-          </Box>
-        </Paper>
+        <DetailsSkeleton />
 
         {/* winners board skeleton */}
         <Paper sx={cardSx}>
