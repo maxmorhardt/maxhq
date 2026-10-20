@@ -156,7 +156,12 @@ func (f *fakeESPN) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"events": events})
+	// a one-week season, so every run's season sync asks for week 1 as well
+	calendar := []map[string]any{{"value": "2", "entries": []map[string]string{{"value": "1"}}}}
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"events":  events,
+		"leagues": []map[string]any{{"season": map[string]int{"year": 2026}, "calendar": calendar}},
+	})
 }
 
 func itoa(n int) string {

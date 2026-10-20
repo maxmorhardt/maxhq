@@ -22,61 +22,133 @@ func (_m *ESPNClient) EXPECT() *ESPNClient_Expecter {
 	return &ESPNClient_Expecter{mock: &_m.Mock}
 }
 
-// FetchScoreboard provides a mock function with given fields: ctx, dates
-func (_m *ESPNClient) FetchScoreboard(ctx context.Context, dates []string) ([]model.ESPNGame, error) {
-	ret := _m.Called(ctx, dates)
+// FetchCurrent provides a mock function with given fields: ctx
+func (_m *ESPNClient) FetchCurrent(ctx context.Context) ([]model.ESPNGame, model.ESPNCalendar, error) {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FetchScoreboard")
+		panic("no return value specified for FetchCurrent")
 	}
 
 	var r0 []model.ESPNGame
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []string) ([]model.ESPNGame, error)); ok {
-		return rf(ctx, dates)
+	var r1 model.ESPNCalendar
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]model.ESPNGame, model.ESPNCalendar, error)); ok {
+		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []string) []model.ESPNGame); ok {
-		r0 = rf(ctx, dates)
+	if rf, ok := ret.Get(0).(func(context.Context) []model.ESPNGame); ok {
+		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.ESPNGame)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []string) error); ok {
-		r1 = rf(ctx, dates)
+	if rf, ok := ret.Get(1).(func(context.Context) model.ESPNCalendar); ok {
+		r1 = rf(ctx)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(model.ESPNCalendar)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context) error); ok {
+		r2 = rf(ctx)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
-// ESPNClient_FetchScoreboard_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FetchScoreboard'
-type ESPNClient_FetchScoreboard_Call struct {
+// ESPNClient_FetchCurrent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FetchCurrent'
+type ESPNClient_FetchCurrent_Call struct {
 	*mock.Call
 }
 
-// FetchScoreboard is a helper method to define mock.On call
+// FetchCurrent is a helper method to define mock.On call
 //   - ctx context.Context
-//   - dates []string
-func (_e *ESPNClient_Expecter) FetchScoreboard(ctx interface{}, dates interface{}) *ESPNClient_FetchScoreboard_Call {
-	return &ESPNClient_FetchScoreboard_Call{Call: _e.mock.On("FetchScoreboard", ctx, dates)}
+func (_e *ESPNClient_Expecter) FetchCurrent(ctx interface{}) *ESPNClient_FetchCurrent_Call {
+	return &ESPNClient_FetchCurrent_Call{Call: _e.mock.On("FetchCurrent", ctx)}
 }
 
-func (_c *ESPNClient_FetchScoreboard_Call) Run(run func(ctx context.Context, dates []string)) *ESPNClient_FetchScoreboard_Call {
+func (_c *ESPNClient_FetchCurrent_Call) Run(run func(ctx context.Context)) *ESPNClient_FetchCurrent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]string))
+		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *ESPNClient_FetchScoreboard_Call) Return(_a0 []model.ESPNGame, _a1 error) *ESPNClient_FetchScoreboard_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *ESPNClient_FetchCurrent_Call) Return(_a0 []model.ESPNGame, _a1 model.ESPNCalendar, _a2 error) *ESPNClient_FetchCurrent_Call {
+	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 
-func (_c *ESPNClient_FetchScoreboard_Call) RunAndReturn(run func(context.Context, []string) ([]model.ESPNGame, error)) *ESPNClient_FetchScoreboard_Call {
+func (_c *ESPNClient_FetchCurrent_Call) RunAndReturn(run func(context.Context) ([]model.ESPNGame, model.ESPNCalendar, error)) *ESPNClient_FetchCurrent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FetchWeek provides a mock function with given fields: ctx, week
+func (_m *ESPNClient) FetchWeek(ctx context.Context, week model.Week) ([]model.ESPNGame, model.ESPNCalendar, error) {
+	ret := _m.Called(ctx, week)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FetchWeek")
+	}
+
+	var r0 []model.ESPNGame
+	var r1 model.ESPNCalendar
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, model.Week) ([]model.ESPNGame, model.ESPNCalendar, error)); ok {
+		return rf(ctx, week)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, model.Week) []model.ESPNGame); ok {
+		r0 = rf(ctx, week)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ESPNGame)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, model.Week) model.ESPNCalendar); ok {
+		r1 = rf(ctx, week)
+	} else {
+		r1 = ret.Get(1).(model.ESPNCalendar)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, model.Week) error); ok {
+		r2 = rf(ctx, week)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// ESPNClient_FetchWeek_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FetchWeek'
+type ESPNClient_FetchWeek_Call struct {
+	*mock.Call
+}
+
+// FetchWeek is a helper method to define mock.On call
+//   - ctx context.Context
+//   - week model.Week
+func (_e *ESPNClient_Expecter) FetchWeek(ctx interface{}, week interface{}) *ESPNClient_FetchWeek_Call {
+	return &ESPNClient_FetchWeek_Call{Call: _e.mock.On("FetchWeek", ctx, week)}
+}
+
+func (_c *ESPNClient_FetchWeek_Call) Run(run func(ctx context.Context, week model.Week)) *ESPNClient_FetchWeek_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(model.Week))
+	})
+	return _c
+}
+
+func (_c *ESPNClient_FetchWeek_Call) Return(_a0 []model.ESPNGame, _a1 model.ESPNCalendar, _a2 error) *ESPNClient_FetchWeek_Call {
+	_c.Call.Return(_a0, _a1, _a2)
+	return _c
+}
+
+func (_c *ESPNClient_FetchWeek_Call) RunAndReturn(run func(context.Context, model.Week) ([]model.ESPNGame, model.ESPNCalendar, error)) *ESPNClient_FetchWeek_Call {
 	_c.Call.Return(run)
 	return _c
 }

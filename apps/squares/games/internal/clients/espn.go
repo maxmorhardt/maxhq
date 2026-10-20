@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -17,7 +18,9 @@ const scoreboardPath = "/apis/site/v2/sports/football/nfl/scoreboard"
 const userAgent = "squares-games (+https://github.com/maxmorhardt/maxhq)"
 
 type ESPNClient interface {
-	FetchScoreboard(ctx context.Context, dates []string) ([]model.ESPNGame, error)
+	// the scoreboard ESPN shows right now: this week's games and the season's calendar
+	FetchCurrent(ctx context.Context) ([]model.ESPNGame, model.ESPNCalendar, error)
+	FetchWeek(ctx context.Context, week model.Week) ([]model.ESPNGame, model.ESPNCalendar, error)
 }
 
 type espnClient struct {
@@ -47,55 +50,37 @@ func NewESPNClient(baseURL string) ESPNClient {
 	}
 }
 
-func (c *espnClient) FetchScoreboard(ctx context.Context, dates []string) ([]model.ESPNGame, error) {
-	if len(dates) == 0 {
-		return c.fetchOne(ctx, "")
-	}
-
-	// a game near the day boundary comes back under both adjacent dates, so merge on espn id
-	seen := make(map[string]int, len(dates)*16)
-	merged := make([]model.ESPNGame, 0, len(dates)*16)
-	for _, date := range dates {
-		games, err := c.fetchOne(ctx, date)
-		if err != nil {
-			return nil, err
-		}
-
-		for i := range games {
-			if j, ok := seen[games[i].ESPNID]; ok {
-				merged[j] = games[i]
-				continue
-			}
-			seen[games[i].ESPNID] = len(merged)
-			merged = append(merged, games[i])
-		}
-	}
-
-	return merged, nil
+func (c *espnClient) FetchCurrent(ctx context.Context) ([]model.ESPNGame, model.ESPNCalendar, error) {
+	return c.fetch(ctx, nil)
 }
 
-func (c *espnClient) fetchOne(ctx context.Context, date string) ([]model.ESPNGame, error) {
-	req := c.client.R().
+func (c *espnClient) FetchWeek(ctx context.Context, week model.Week) ([]model.ESPNGame, model.ESPNCalendar, error) {
+	return c.fetch(ctx, map[string]string{
+		"dates":      strconv.Itoa(week.Season),
+		"seasontype": strconv.Itoa(week.SeasonType),
+		"week":       strconv.Itoa(week.Week),
+	})
+}
+
+func (c *espnClient) fetch(ctx context.Context, params map[string]string) ([]model.ESPNGame, model.ESPNCalendar, error) {
+	resp, err := c.client.R().
 		SetContext(ctx).
 		SetQueryParam("limit", "100").
+		SetQueryParams(params).
 		ForceContentType("application/json").
-		SetResult(&model.ScoreboardResponse{})
-	if date != "" {
-		req.SetQueryParam("dates", date)
-	}
-
-	resp, err := req.Get(scoreboardPath)
+		SetResult(&model.ScoreboardResponse{}).
+		Get(scoreboardPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch scoreboard: %w", err)
+		return nil, model.ESPNCalendar{}, fmt.Errorf("failed to fetch scoreboard: %w", err)
 	}
 	if resp.StatusCode() != http.StatusOK {
-		return nil, fmt.Errorf("scoreboard returned status %d for dates %q", resp.StatusCode(), date)
+		return nil, model.ESPNCalendar{}, fmt.Errorf("scoreboard returned status %d for %v", resp.StatusCode(), params)
 	}
 
 	body, ok := resp.Result().(*model.ScoreboardResponse)
 	if !ok {
-		return nil, fmt.Errorf("unexpected scoreboard response type")
+		return nil, model.ESPNCalendar{}, fmt.Errorf("unexpected scoreboard response type")
 	}
 
-	return util.ScoreboardToGames(body), nil
+	return util.ScoreboardToGames(body), util.ScoreboardCalendar(body), nil
 }

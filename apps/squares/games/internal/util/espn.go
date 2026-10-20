@@ -46,10 +46,45 @@ func ScoreboardToGames(r *model.ScoreboardResponse) []model.ESPNGame {
 			}
 		}
 
+		// postseason games are listed before their matchups are set
+		if !knownTeam(g.HomeAbbr) || !knownTeam(g.AwayAbbr) {
+			continue
+		}
+
 		games = append(games, g)
 	}
 
 	return games
+}
+
+func knownTeam(abbr string) bool {
+	return abbr != "" && abbr != "TBD"
+}
+
+// the preseason, regular season, and postseason weeks of the season the response belongs to
+func ScoreboardCalendar(r *model.ScoreboardResponse) model.ESPNCalendar {
+	if len(r.Leagues) == 0 {
+		return model.ESPNCalendar{}
+	}
+	league := r.Leagues[0]
+
+	cal := model.ESPNCalendar{Season: league.Season.Year}
+	for _, phase := range league.Calendar {
+		seasonType, err := strconv.Atoi(phase.Value)
+		if err != nil || seasonType < 1 || seasonType > 3 {
+			continue
+		}
+		for _, entry := range phase.Entries {
+			if week, err := strconv.Atoi(entry.Value); err == nil {
+				cal.Weeks = append(cal.Weeks, model.Week{Season: cal.Season, SeasonType: seasonType, Week: week})
+			}
+		}
+		if seasonType == 3 {
+			cal.End = parseESPNTime(phase.EndDate)
+		}
+	}
+
+	return cal
 }
 
 func ESPNGameToGame(e *model.ESPNGame) *model.Game {

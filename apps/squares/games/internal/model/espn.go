@@ -29,13 +29,37 @@ type QuarterScore struct {
 	Away    int
 }
 
+// the season's weeks as ESPN lists them, and when its postseason ends
+type ESPNCalendar struct {
+	Season int
+	Weeks  []Week
+	End    time.Time
+}
+
 type GameActivity struct {
 	Live        bool
 	NextKickoff time.Time
 }
 
 type ScoreboardResponse struct {
-	Events []scoreboardEvent `json:"events"`
+	Events  []scoreboardEvent  `json:"events"`
+	Leagues []scoreboardLeague `json:"leagues"`
+}
+
+type scoreboardLeague struct {
+	Season struct {
+		Year int `json:"year"`
+	} `json:"season"`
+	Calendar []scoreboardCalendar `json:"calendar"`
+}
+
+// one season phase (1 preseason, 2 regular season, 3 postseason, 4 off season) and its weeks
+type scoreboardCalendar struct {
+	Value   string `json:"value"`
+	EndDate string `json:"endDate"`
+	Entries []struct {
+		Value string `json:"value"`
+	} `json:"entries"`
 }
 
 type scoreboardEvent struct {

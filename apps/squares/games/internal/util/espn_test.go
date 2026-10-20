@@ -144,3 +144,41 @@ const scoreboardJSON = `{
     {"id": "empty", "competitions": []}
   ]
 }`
+
+func TestScoreboardToGames_SkipsGamesWithoutTeams(t *testing.T) {
+	var resp model.ScoreboardResponse
+	require.NoError(t, json.Unmarshal([]byte(`{"events": [{
+		"id": "402", "season": {"year": 2026, "type": 3}, "week": {"number": 1},
+		"competitions": [{"competitors": [
+			{"homeAway": "home", "team": {"displayName": "TBD", "abbreviation": "TBD"}},
+			{"homeAway": "away", "team": {"displayName": "TBD", "abbreviation": "TBD"}}
+		]}]
+	}]}`), &resp))
+
+	assert.Empty(t, ScoreboardToGames(&resp))
+}
+
+func TestScoreboardCalendar(t *testing.T) {
+	var resp model.ScoreboardResponse
+	require.NoError(t, json.Unmarshal([]byte(`{"leagues": [{
+		"season": {"year": 2026},
+		"calendar": [
+			{"value": "1", "entries": [{"value": "1"}]},
+			{"value": "2", "entries": [{"value": "1"}, {"value": "x"}]},
+			{"value": "3", "endDate": "2027-02-16T07:59Z", "entries": [{"value": "1"}]},
+			{"value": "4", "entries": [{"value": "1"}]},
+			{"value": "?", "entries": [{"value": "1"}]}
+		]
+	}]}`), &resp))
+
+	cal := ScoreboardCalendar(&resp)
+
+	assert.Equal(t, 2026, cal.Season)
+	assert.Equal(t, []model.Week{
+		{Season: 2026, SeasonType: 1, Week: 1},
+		{Season: 2026, SeasonType: 2, Week: 1},
+		{Season: 2026, SeasonType: 3, Week: 1},
+	}, cal.Weeks)
+	assert.Equal(t, time.Date(2027, 2, 16, 7, 59, 0, 0, time.UTC), cal.End.UTC())
+	assert.Equal(t, model.ESPNCalendar{}, ScoreboardCalendar(&model.ScoreboardResponse{}))
+}

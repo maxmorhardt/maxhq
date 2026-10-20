@@ -38,7 +38,7 @@ func mockRunner(t *testing.T, espn *mocks.ESPNClient, gameSvc *mocks.GameService
 
 func TestRunner_RunGuarded_LockAcquired(t *testing.T) {
 	espn := mocks.NewESPNClient(t)
-	espn.EXPECT().FetchScoreboard(mock.Anything, mock.Anything).Return(nil, nil)
+	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{}, nil)
 	gameSvc := mocks.NewGameService(t)
 	gameSvc.EXPECT().Ingest(mock.Anything, mock.Anything).Return(0, nil)
 
@@ -85,7 +85,7 @@ func TestRunner_Loop_StopsOnContextCancel(t *testing.T) {
 
 func TestRunner_RunGuarded_TracksConsecutiveFailures(t *testing.T) {
 	espn := mocks.NewESPNClient(t)
-	espn.EXPECT().FetchScoreboard(mock.Anything, mock.Anything).Return(nil, errors.New("boom")).Times(3)
+	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{}, errors.New("boom")).Times(3)
 
 	r, dbMock := mockRunner(t, espn, mocks.NewGameService(t))
 	for range 3 {
@@ -100,7 +100,7 @@ func TestRunner_RunGuarded_TracksConsecutiveFailures(t *testing.T) {
 
 func TestRunner_RunGuarded_ResetsFailuresOnSuccess(t *testing.T) {
 	espn := mocks.NewESPNClient(t)
-	espn.EXPECT().FetchScoreboard(mock.Anything, mock.Anything).Return(nil, nil)
+	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{}, nil)
 	gameSvc := mocks.NewGameService(t)
 	gameSvc.EXPECT().Ingest(mock.Anything, mock.Anything).Return(0, nil)
 

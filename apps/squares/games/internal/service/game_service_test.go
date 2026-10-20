@@ -282,3 +282,46 @@ func TestGameService_GetGame_Errors(t *testing.T) {
 	_, err = gameSvc(t, g, nil).GetGame(context.Background(), uuid.New())
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
+
+func TestGameService_Ingest_ChangedGameDropsItsCachedWeekAndGame(t *testing.T) {
+	gameID := uuid.New()
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
+	stored := &model.Game{ID: gameID, Season: 2026, SeasonType: 2, Week: 7, HomeScore: 7}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{{ID: gameID}}, nil).Twice()
+	g.EXPECT().GetByID(mock.Anything, gameID).Return(stored, nil)
+	g.EXPECT().Upsert(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, game *model.Game) { game.ID = gameID }).Return(true, nil).Once()
+	ob := mocks.NewOutbox(t)
+	ob.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	svc := gameSvc(t, g, ob)
+
+	_, err := svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
+	_, err = svc.GetGame(context.Background(), gameID)
+	require.NoError(t, err)
+
+	_, err = svc.Ingest(context.Background(), []model.ESPNGame{{ESPNID: "1", State: "in"}})
+	require.NoError(t, err)
+
+	_, err = svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
+	_, err = svc.GetGame(context.Background(), gameID)
+	require.NoError(t, err)
+	g.AssertNumberOfCalls(t, "GetByID", 3)
+}
+
+func TestGameService_Ingest_UnchangedGameKeepsTheCache(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil).Once()
+	g.EXPECT().Upsert(mock.Anything, mock.Anything).Return(false, nil)
+	svc := gameSvc(t, g, nil)
+
+	_, err := svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
+	_, err = svc.Ingest(context.Background(), []model.ESPNGame{{ESPNID: "1", State: "pre"}})
+	require.NoError(t, err)
+	_, err = svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
+}

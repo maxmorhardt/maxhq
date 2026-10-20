@@ -8,7 +8,7 @@
 
 ## Overview
 
-The NFL schedule and live scores, polled from ESPN. One of the squares backend services; see [../README.md](../README.md) for how they fit together.
+The NFL schedule and live scores, polled from ESPN. It follows the current scoreboard every poll and syncs the whole season (past weeks' scores and the schedule ahead) at startup and every idle interval, picking up next season's schedule once ESPN publishes it. One of the squares backend services; see [../README.md](../README.md) for how they fit together.
 
 | Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
