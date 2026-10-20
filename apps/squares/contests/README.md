@@ -22,8 +22,8 @@ Contests, squares, participants, invites, the leaderboard, and stats. One of the
 
 ## Events
 
-- **Writes:** `contest:<id>` - every change to a contest (`square.updated`, `contest.updated`, `quarter.recorded`, `game.updated` (the linked game's live score), `participant.joined`, `participant.removed`, `contest.deleted`), each a `{type, contestId, updatedBy, timestamp, data}` envelope from `libs/squares/events`.
-- **Reads:** `games` (`contests-games`): keeps the local copy of each game and auto-starts and scores linked contests. `users` (`contests-users`): keeps display names and initials, cascades new initials onto live squares, and scrubs deleted users.
+- **Writes:** `contest:<id>` - every change to a contest (`square.updated`, `contest.updated`, `quarter.recorded`, `participant.joined`, `participant.removed`, `contest.deleted`), each a `{type, contestId, updatedBy, timestamp, data}` envelope from `libs/squares/events`.
+- **Reads:** `games` (`contests-games`): keeps the local copy of each game, used only to validate new contests and to auto-start and score them; clients read games from the games service. `users` (`contests-users`): keeps display names and initials, cascades new initials onto live squares, and scrubs deleted users.
 
 ## Development
 

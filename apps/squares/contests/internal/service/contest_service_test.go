@@ -36,7 +36,6 @@ func anyEvents() *mocks.ContestEventPublisher {
 	}
 	m.On("PublishContestDeleted", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 	m.On("PublishParticipantAdded", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
-	m.On("PublishGameUpdate", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 	return m
 }
 

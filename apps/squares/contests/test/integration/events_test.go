@@ -69,17 +69,6 @@ func TestEvents_GameKickoffAutoStartsAndScoresLinkedContests(t *testing.T) {
 		return snap.Contest.Status == model.ContestStatusQ2 && len(snap.Contest.QuarterResults) == 1
 	}, eventually, 200*time.Millisecond, "kickoff with a full grid starts the contest and scores Q1")
 
-	require.Eventually(t, func() bool {
-		entries, err := streams.Range(context.Background(), rdb, events.ContestStream(contest.ID), "", 500)
-		require.NoError(t, err)
-		for _, e := range entries {
-			if e.Type == events.ContestGameUpdatedType {
-				return true
-			}
-		}
-		return false
-	}, eventually, 100*time.Millisecond, "viewers of the contest get the live score")
-
 	var offset string
 	require.NoError(t, rawDB.QueryRow(`SELECT last_id FROM contests.stream_offsets WHERE consumer = 'contests-games'`).Scan(&offset))
 	assert.True(t, streams.ValidID(offset), "the consumer saves how far it read")

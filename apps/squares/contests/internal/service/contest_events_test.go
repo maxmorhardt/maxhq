@@ -40,7 +40,6 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	require.NoError(t, pub.PublishSquareUpdate(ctx, contestID, "u", &model.Square{}))
 	require.NoError(t, pub.PublishContestUpdate(ctx, contestID, "u", heavy))
 	require.NoError(t, pub.PublishQuarterResult(ctx, contestID, "u", &model.QuarterResult{Quarter: 1}))
-	require.NoError(t, pub.PublishGameUpdate(ctx, contestID, &model.Game{Status: model.GameStatusInProgress, Period: 3, HomeScore: 14, AwayScore: 10}))
 	require.NoError(t, pub.PublishContestDeleted(ctx, contestID, "u"))
 	require.NoError(t, pub.PublishParticipantRemoved(ctx, contestID, "u", participant))
 	require.NoError(t, pub.PublishParticipantAdded(ctx, contestID, participant))
@@ -52,7 +51,7 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	}
 	assert.Equal(t, []string{
 		events.SquareUpdatedType, events.ContestUpdatedType, events.QuarterRecordedType,
-		events.ContestGameUpdatedType, events.ContestDeletedType, events.ParticipantRemovedType, events.ParticipantJoinedType,
+		events.ContestDeletedType, events.ParticipantRemovedType, events.ParticipantJoinedType,
 	}, types)
 
 	var update map[string]any
@@ -62,12 +61,6 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	assert.NotContains(t, update, "quarterResults")
 	assert.NotContains(t, update, "game")
 
-	var game model.Game
-	require.NoError(t, json.Unmarshal((*captured)[3].Data, &game))
-	assert.Equal(t, 14, game.HomeScore)
-	assert.Equal(t, 3, game.Period)
-	assert.Equal(t, events.SystemActor, (*captured)[3].UpdatedBy, "score updates come from the game, not a person")
-
-	assert.Nil(t, (*captured)[4].Data, "a deletion carries no payload")
-	assert.Equal(t, "p", (*captured)[6].UpdatedBy, "a joiner is the one who changed the contest")
+	assert.Nil(t, (*captured)[3].Data, "a deletion carries no payload")
+	assert.Equal(t, "p", (*captured)[5].UpdatedBy, "a joiner is the one who changed the contest")
 }

@@ -15,7 +15,6 @@ const (
 	ContestDeletedType     = "contest.deleted"
 	SquareUpdatedType      = "square.updated"
 	QuarterRecordedType    = "quarter.recorded"
-	ContestGameUpdatedType = "game.updated"
 	ParticipantJoinedType  = "participant.joined"
 	ParticipantRemovedType = "participant.removed"
 	AccessRevokedType      = "access.revoked"

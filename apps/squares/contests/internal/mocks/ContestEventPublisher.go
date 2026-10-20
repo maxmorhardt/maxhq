@@ -121,54 +121,6 @@ func (_c *ContestEventPublisher_PublishContestUpdate_Call) RunAndReturn(run func
 	return _c
 }
 
-// PublishGameUpdate provides a mock function with given fields: ctx, contestID, game
-func (_m *ContestEventPublisher) PublishGameUpdate(ctx context.Context, contestID uuid.UUID, game *model.Game) error {
-	ret := _m.Called(ctx, contestID, game)
-
-	if len(ret) == 0 {
-		panic("no return value specified for PublishGameUpdate")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.Game) error); ok {
-		r0 = rf(ctx, contestID, game)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ContestEventPublisher_PublishGameUpdate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishGameUpdate'
-type ContestEventPublisher_PublishGameUpdate_Call struct {
-	*mock.Call
-}
-
-// PublishGameUpdate is a helper method to define mock.On call
-//   - ctx context.Context
-//   - contestID uuid.UUID
-//   - game *model.Game
-func (_e *ContestEventPublisher_Expecter) PublishGameUpdate(ctx interface{}, contestID interface{}, game interface{}) *ContestEventPublisher_PublishGameUpdate_Call {
-	return &ContestEventPublisher_PublishGameUpdate_Call{Call: _e.mock.On("PublishGameUpdate", ctx, contestID, game)}
-}
-
-func (_c *ContestEventPublisher_PublishGameUpdate_Call) Run(run func(ctx context.Context, contestID uuid.UUID, game *model.Game)) *ContestEventPublisher_PublishGameUpdate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(*model.Game))
-	})
-	return _c
-}
-
-func (_c *ContestEventPublisher_PublishGameUpdate_Call) Return(_a0 error) *ContestEventPublisher_PublishGameUpdate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *ContestEventPublisher_PublishGameUpdate_Call) RunAndReturn(run func(context.Context, uuid.UUID, *model.Game) error) *ContestEventPublisher_PublishGameUpdate_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // PublishParticipantAdded provides a mock function with given fields: ctx, contestID, participant
 func (_m *ContestEventPublisher) PublishParticipantAdded(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error {
 	ret := _m.Called(ctx, contestID, participant)

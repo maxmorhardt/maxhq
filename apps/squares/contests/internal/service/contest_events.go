@@ -13,7 +13,6 @@ type ContestEventPublisher interface {
 	PublishSquareUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, square *model.Square) error
 	PublishContestUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, contest *model.Contest) error
 	PublishQuarterResult(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult) error
-	PublishGameUpdate(ctx context.Context, contestID uuid.UUID, game *model.Game) error
 	PublishContestDeleted(ctx context.Context, contestID uuid.UUID, updatedBy string) error
 	PublishParticipantRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error
 	PublishParticipantAdded(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error
@@ -37,10 +36,6 @@ func (p *contestEventPublisher) PublishContestUpdate(ctx context.Context, contes
 
 func (p *contestEventPublisher) PublishQuarterResult(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult) error {
 	return p.publish(ctx, events.QuarterRecordedType, contestID, updatedBy, quarterResult)
-}
-
-func (p *contestEventPublisher) PublishGameUpdate(ctx context.Context, contestID uuid.UUID, game *model.Game) error {
-	return p.publish(ctx, events.ContestGameUpdatedType, contestID, events.SystemActor, game)
 }
 
 func (p *contestEventPublisher) PublishContestDeleted(ctx context.Context, contestID uuid.UUID, updatedBy string) error {

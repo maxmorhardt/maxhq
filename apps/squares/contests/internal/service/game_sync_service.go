@@ -24,7 +24,6 @@ type gameSyncService struct {
 	contestService ContestService
 	tx             database.Transactor
 	feed           FeedService
-	events         ContestEventPublisher
 }
 
 func NewGameSyncService(
@@ -33,7 +32,6 @@ func NewGameSyncService(
 	contestService ContestService,
 	tx database.Transactor,
 	feed FeedService,
-	events ContestEventPublisher,
 ) GameSyncService {
 	return &gameSyncService{
 		gameRepo:       gameRepo,
@@ -41,7 +39,6 @@ func NewGameSyncService(
 		contestService: contestService,
 		tx:             tx,
 		feed:           feed,
-		events:         events,
 	}
 }
 
@@ -98,12 +95,7 @@ func (s *gameSyncService) reconcileContest(ctx context.Context, contestID uuid.U
 			return nil
 		}
 
-		if err := s.reconcile(ctx, contest, game); err != nil {
-			return err
-		}
-
-		// viewers watching the contest see the live score move, even between quarter results
-		return s.events.PublishGameUpdate(ctx, contest.ID, game)
+		return s.reconcile(ctx, contest, game)
 	})
 }
 
