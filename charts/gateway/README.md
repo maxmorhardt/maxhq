@@ -19,10 +19,6 @@ to, so this deploys before the apps.
 
 The `ClientTrafficPolicy` removes `strippedRequestHeaders` from every request before any filter runs. Apps (squares) trust `X-Auth-*` headers that only a `SecurityPolicy` jwt filter sets, so a client must never be able to send them. Keep this list in step with the `claimToHeaders` in the `squares-*` charts' `values.yaml`.
 
-## Origin pulls
-
-With `originPulls.enabled`, the `ClientTrafficPolicy` requires every TLS client to present a certificate signed by Cloudflare's origin-pull CA (`files/cloudflare-origin-pull-ca.pem`, valid until November 2029). Cloudflare presents it once Authenticated Origin Pulls is on for the zone (`infra/terraform/cloudflare`), so anyone who finds a node's IP and skips Cloudflare gets a TLS error. Turn the zone setting on first, then the chart value, or prod refuses Cloudflare too. Dev is DNS-only over Tailscale, so it stays off there.
-
 ## Optional
 
 - **cloudflare-cidr** — keeps the trusted CIDR list current for the `ClientTrafficPolicy`

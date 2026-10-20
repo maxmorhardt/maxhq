@@ -1,11 +1,8 @@
 locals {
   domains = {
     "maxhq.io" = {
-      prod_hosts     = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
-      dev            = true
-      origin_pulls   = true
-      api_rate_limit = 150
-      block_scanners = true
+      prod_hosts = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
+      dev        = true
       mx = {
         "mx.zoho.com"  = 10
         "mx2.zoho.com" = 20
@@ -30,10 +27,6 @@ module "domains" {
   dev_ips    = try(local.domains[each.key].dev, false) ? var.dev_ips : []
   mx         = try(local.domains[each.key].mx, {})
   txt        = try(local.domains[each.key].txt, {})
-
-  origin_pulls   = try(local.domains[each.key].origin_pulls, false)
-  api_rate_limit = try(local.domains[each.key].api_rate_limit, 0)
-  block_scanners = try(local.domains[each.key].block_scanners, false)
 }
 
 moved {

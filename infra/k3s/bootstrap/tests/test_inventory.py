@@ -1,6 +1,6 @@
 import pytest
 
-from lib.inventory import EtcdSnapshots, InventoryError, Profile, PublicFrom, Role, load_inventory, parse_cluster
+from lib.inventory import InventoryError, Profile, Role, load_inventory, parse_cluster
 
 VALID = {
     "profile": "pi",
@@ -39,8 +39,6 @@ def test_join_order_is_init_then_servers_then_agents():
         ({"k3s_version": None}, "k3s_version is required"),
         ({"nodes": []}, "has no nodes"),
         ({"lan_cidr": "10.0.0.0/33"}, "not a valid CIDR"),
-        ({"public_from": "everyone"}, "public_from must be one of anywhere, cloudflare"),
-        ({"etcd_snapshots": {"bucket": "b"}}, "etcd_snapshots needs a bucket and a region"),
         ({"nodes": [{"name": "dev-1", "ip": "10.0.0.1", "role": "server"}]}, "exactly one init node, found 0"),
         ({"nodes": [{"name": "Dev_1", "ip": "10.0.0.1", "role": "init"}]}, "lowercase letters"),
         ({"nodes": [{"name": "dev-1", "ip": "not-an-ip", "role": "init"}]}, "must be an IP address"),
@@ -93,18 +91,3 @@ def test_loads_every_cluster_from_yaml(tmp_path):
 
     assert set(clusters) == {"dev", "prod"}
     assert clusters["prod"].ssh_user == "root"
-
-
-def test_open_ports_are_public_unless_limited_to_cloudflare():
-    assert parse_cluster("prod", spec()).public_from == PublicFrom.ANYWHERE
-    assert parse_cluster("prod", spec(public_from="cloudflare")).public_from == PublicFrom.CLOUDFLARE
-
-
-def test_etcd_snapshots_default_to_a_folder_per_cluster():
-    cluster = parse_cluster("prod", spec(etcd_snapshots={"bucket": "maxhq-backups", "region": "us-east-1"}))
-
-    assert cluster.etcd_snapshots == EtcdSnapshots(bucket="maxhq-backups", region="us-east-1", folder="k3s/prod")
-
-
-def test_etcd_snapshots_are_optional():
-    assert parse_cluster("prod", spec()).etcd_snapshots is None

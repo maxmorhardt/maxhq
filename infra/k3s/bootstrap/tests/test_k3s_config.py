@@ -1,9 +1,7 @@
 import pytest
 import yaml
 
-from lib.inventory import EtcdSnapshots
 from lib.k3s_config import Tailnet, parse_version, render, to_yaml
-from lib.settings import S3Credentials
 from tests.fakes import make_cluster
 
 TAILNET = Tailnet(ip="100.64.0.1", dns_name="dev-1.tail1234.ts.net")
@@ -93,36 +91,3 @@ def test_versions_compare_numerically():
 def test_rejects_garbage_versions():
     with pytest.raises(ValueError, match="not a k3s version"):
         parse_version("latest")
-
-
-SNAPSHOTS = EtcdSnapshots(bucket="maxhq-backups", region="us-east-1", folder="k3s/dev")
-S3 = S3Credentials("AKIA123", "secret")
-
-
-def test_servers_snapshot_etcd_to_s3():
-    cluster = make_cluster(etcd_snapshots=SNAPSHOTS)
-
-    config = render(cluster, cluster.init_node, "t", TAILNET, None, S3)
-
-    assert config["etcd-s3"] is True
-    assert config["etcd-s3-bucket"] == "maxhq-backups"
-    assert config["etcd-s3-folder"] == "k3s/dev"
-    assert config["etcd-s3-region"] == "us-east-1"
-    assert (config["etcd-s3-access-key"], config["etcd-s3-secret-key"]) == ("AKIA123", "secret")
-    assert config["etcd-snapshot-schedule-cron"] == "0 */6 * * *"
-    assert config["etcd-snapshot-retention"] == 28
-
-
-def test_agents_never_get_snapshot_settings():
-    cluster = make_cluster(etcd_snapshots=SNAPSHOTS)
-
-    config = render(cluster, cluster.node("dev-3"), "t", TAILNET, JOIN_URL, S3)
-
-    assert not any(key.startswith("etcd-") for key in config)
-
-
-def test_snapshots_without_credentials_are_a_bug():
-    cluster = make_cluster(etcd_snapshots=SNAPSHOTS)
-
-    with pytest.raises(ValueError, match="no S3 credentials"):
-        render(cluster, cluster.init_node, "t", TAILNET, None)

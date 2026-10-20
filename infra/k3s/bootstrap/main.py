@@ -48,7 +48,7 @@ def up(
     """Install or converge every node of a cluster, init node first, then fetch its kubeconfig."""
     with _errors_handled():
         target = _load(inventory, cluster)
-        secrets = load_cluster_secrets(os.environ, target.name, etcd_snapshots=target.etcd_snapshots is not None)
+        secrets = load_cluster_secrets(os.environ, target.name)
         path = _bootstrapper(target).up(secrets, only=node)
         typer.echo(f"\nkubectl --kubeconfig {path} get nodes")
 

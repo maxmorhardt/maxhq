@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import yaml
 
 from lib.inventory import Cluster, Node, Role
-from lib.settings import S3Credentials
 
 CONFIG_PATH = "/etc/rancher/k3s/config.yaml"
 KUBECONFIG_PATH = "/etc/rancher/k3s/k3s.yaml"
@@ -27,14 +26,7 @@ class Tailnet:
         return f"https://{self.ip}:{API_PORT}"
 
 
-def render(
-    cluster: Cluster,
-    node: Node,
-    token: str,
-    tailnet: Tailnet,
-    join_url: str | None,
-    etcd_s3: S3Credentials | None = None,
-) -> dict:
+def render(cluster: Cluster, node: Node, token: str, tailnet: Tailnet, join_url: str | None) -> dict:
     # every node talks to every other over Tailscale, so the cluster never depends on LAN or public IPs
     config: dict = {
         "node-name": node.name,
@@ -58,24 +50,6 @@ def render(
     config["disable"] = ["traefik"]
     config["write-kubeconfig-mode"] = "0600"
     config["secrets-encryption"] = True
-
-    snapshots = cluster.etcd_snapshots
-    if snapshots:
-        if not etcd_s3:
-            raise ValueError(f"{cluster.name} snapshots etcd to S3 but has no S3 credentials")
-        # every server snapshots on the same schedule; k3s names snapshots by node, so they never collide
-        config.update(
-            {
-                "etcd-snapshot-schedule-cron": snapshots.schedule,
-                "etcd-snapshot-retention": snapshots.retention,
-                "etcd-s3": True,
-                "etcd-s3-bucket": snapshots.bucket,
-                "etcd-s3-region": snapshots.region,
-                "etcd-s3-folder": snapshots.folder,
-                "etcd-s3-access-key": etcd_s3.access_key,
-                "etcd-s3-secret-key": etcd_s3.secret_key,
-            }
-        )
 
     return config
 

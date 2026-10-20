@@ -44,7 +44,6 @@ jobs:
             echo "app=${component%-chart}"
             echo "version=${TAG#*/}"
             echo "dev_tag=sha-${GITHUB_SHA::7}"
-            echo "smoke_url=$smoke_url"
           } >> "$GITHUB_OUTPUT"
 
   # app releases
@@ -81,22 +80,9 @@ jobs:
 
   chart-deploy:
     needs: [parse, chart-publish]
-    # cloudflare-cidr runs in dev only
-    if: needs.parse.outputs.app != 'cloudflare-cidr'
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
       environment: prod
       app: ${{ needs.parse.outputs.app }}
       chart_version: ${{ needs.parse.outputs.version }}
     secrets: inherit
-
-  # after either deploy, confirm argo cd rolled it out and the site still answers
-  verify:
-    needs: [parse, image-deploy, chart-deploy]
-    if: always() && (needs.image-deploy.result == 'success' || needs.chart-deploy.result == 'success')
-    uses: maxmorhardt/workflows/.github/workflows/cd-verify.yml@main
-    with:
-      app: ${{ needs.parse.outputs.app }}
-      url: ${{ needs.parse.outputs.smoke_url }}
-    secrets:
-      argocd_auth_token: ${{ secrets.ARGOCD_AUTH_TOKEN }}

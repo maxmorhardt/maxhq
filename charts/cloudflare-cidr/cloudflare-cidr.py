@@ -1,11 +1,9 @@
 import ipaddress
 import json
 import os
-import smtplib
 import ssl
 import sys
 import urllib.request
-from email.message import EmailMessage
 
 CLOUDFLARE_URLS = ["https://www.cloudflare.com/ips-v4", "https://www.cloudflare.com/ips-v6"]
 POLICY_PATH = "/apis/gateway.envoyproxy.io/v1alpha1/namespaces/envoy-gateway-system/clienttrafficpolicies/maxhq"
@@ -42,27 +40,11 @@ def discord(subject, body):
 	fetch(os.environ["DISCORD_WEBHOOK"], {"Content-Type": "application/json"}, data=payload)
 
 
-def email(subject, body):
-	message = EmailMessage()
-	message["Subject"] = subject
-	message["From"] = os.environ["FROM_EMAIL"]
-	message["To"] = os.environ["TO_EMAILS"]
-	message.set_content(body)
-	with smtplib.SMTP(os.environ["SMTP_SERVER"], int(os.environ.get("SMTP_PORT", "587")), timeout=30) as smtp:
-		smtp.starttls(context=ssl.create_default_context())
-		smtp.login(os.environ["SMTP_USERNAME"], os.environ["SMTP_PASSWORD"])
-		smtp.send_message(message)
-
-
 def notify(subject, body):
-	failures = []
-	for send in (discord, email):
-		try:
-			send(subject, body)
-		except Exception as e:
-			failures.append(f"{send.__name__}: {e}")
-	if failures:
-		print("notification failed: " + "; ".join(failures), file=sys.stderr)
+	try:
+		discord(subject, body)
+	except Exception as e:
+		print(f"discord notification failed: {e}", file=sys.stderr)
 		return False
 	return True
 

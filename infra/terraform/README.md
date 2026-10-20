@@ -1,13 +1,13 @@
 # Terraform
 
 Terraform for the resources that live outside the cluster. Anything Argo CD reconciles stays
-in Helm and manifests; this covers the AWS, Cloudflare, and GitHub state.
+in Helm and manifests; this covers the AWS, Cloudflare, and GitHub state that was previously
+created by hand.
 
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/README.md](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/postgres/README.md) |
-| `aws/` (k3s) | The same bucket and `srv-s3` user also hold prod's etcd snapshots under `k3s/prod/` (see `infra/k3s`) |
-| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records. Per domain, optionally: Authenticated Origin Pulls (`origin_pulls`), a per-IP rate limit on `api.<domain>` (`api_rate_limit`), and a custom rule blocking scanner probes (`block_scanners`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
+| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records. Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges) and deployment environments (`production` waits for approval) |
 
 ## Credentials
@@ -15,7 +15,7 @@ in Helm and manifests; this covers the AWS, Cloudflare, and GitHub state.
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`) |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Zone WAF: Edit, Zone Settings: Edit, and SSL and Certificates: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 
 In CI, as repository secrets:
@@ -51,7 +51,7 @@ resources.
 
 A pull request that touches `infra/terraform/` plans every module and posts the output to the
 job summary; `CI Complete` covers it. Merging to `main` applies any module under
-`infra/terraform/`. A scheduled run every Monday plans every module with `fail_on_diff`, which is
+`infra/terraform/`. A scheduled run every Monday plans all three with `fail_on_diff`, which is
 the only signal that something changed outside Terraform.
 
 Locally, for iterating before opening a PR:

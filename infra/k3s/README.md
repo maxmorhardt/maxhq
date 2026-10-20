@@ -39,7 +39,6 @@ cp .env.example .env                     # gitignored
 | `SSH_IDENTITY` | private key path (or `SSH_PASSWORD`) |
 | `K3S_TOKEN_<CLUSTER>` | join token shared by every node of the cluster: `openssl rand -hex 32` |
 | `TS_AUTHKEY_<CLUSTER>` | reusable, pre-approved Tailscale auth key tagged `tag:<cluster>` |
-| `ETCD_S3_ACCESS_KEY_<CLUSTER>`, `ETCD_S3_SECRET_KEY_<CLUSTER>` | only for a cluster with `etcd_snapshots`: an access key for the `srv-s3` IAM user from `infra/terraform/aws` |
 
 The token is written into each node's `/etc/rancher/k3s/config.yaml` (mode 0600). Changing it
 on a running cluster is not supported; generate it once and keep it.
@@ -52,14 +51,7 @@ prod:
   k3s_version: v1.36.5+k3s1    # what new nodes install
   ssh_user: root               # optional, overrides SSH_USER
   lan_cidr: 10.0.0.0/24        # optional: trusted through the firewall
-  open_ports: [443]            # optional: tcp ports opened to public_from
-  public_from: cloudflare      # optional: anywhere (default) | cloudflare, only Cloudflare's published ranges
-  etcd_snapshots:              # optional: k3s snapshots etcd on every server and uploads to S3
-    bucket: maxhq-backups
-    region: us-east-1
-    folder: k3s/prod           # default k3s/<cluster>
-    schedule: '0 */6 * * *'    # default every 6 hours
-    retention: 28              # default 28 snapshots per node
+  open_ports: [443]            # optional: tcp ports open to anyone
   nodes:
     - {name: prod-1, ip: 203.0.113.11, role: init}    # exactly one; creates etcd
     - {name: prod-2, ip: 203.0.113.12, role: server}  # control plane + etcd
@@ -97,9 +89,7 @@ Every step converges, so re-running `up` is how a changed inventory or a new nod
 | `k` alias for `k3s kubectl` | servers | servers |
 
 Servers also get embedded etcd, secrets encryption at rest, Traefik disabled, and TLS SANs for
-the node and Tailscale names. With `etcd_snapshots`, each server snapshots etcd on its schedule
-and uploads to `s3://<bucket>/<folder>/`; restore with
-`k3s server --cluster-reset --cluster-reset-restore-path=<snapshot> --etcd-s3 ...` on the init node.
+the node and Tailscale names.
 
 ## Networking and firewall
 
@@ -116,14 +106,7 @@ ufw is identical on every node and denies all inbound traffic except:
 | pods `10.42.0.0/16`, services `10.43.0.0/16` | everything |
 | anywhere | 41641 udp, so Tailscale peers connect directly instead of through a relay |
 | `lan_cidr`, if set | everything |
-| anywhere, or Cloudflare's ranges with `public_from: cloudflare` | the cluster's `open_ports` over tcp; prod opens 443 to Cloudflare's proxy only |
-
-With `public_from: cloudflare`, `up` fetches `https://www.cloudflare.com/ips-v4` and `ips-v6` and
-allows each range, so the fingerprint changes whenever Cloudflare's list does; the dev
-`cloudflare-cidr` job alerts on that, and a rerun of `up` picks it up. k3s's ServiceLB forwards
-443 through iptables rules that can sit ahead of ufw's input chain, so after `up` check from
-outside Cloudflare that a node's public IP refuses 443 (`curl -k --max-time 5 https://<ip>`); the
-gateway's Authenticated Origin Pulls (`charts/gateway`, `originPulls`) refuses it either way.
+| anywhere | the cluster's `open_ports` over tcp; prod opens 443 so Cloudflare's proxy reaches the gateway |
 
 No k3s port is ever exposed on a public IP, and adding a node never touches the others. The
 applied rule set is fingerprinted in `/etc/maxhq/firewall.sha256`; `up` only rewrites ufw when it
