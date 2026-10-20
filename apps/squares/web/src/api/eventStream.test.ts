@@ -34,11 +34,13 @@ function open(overrides: Partial<EventStreamOptions> = {}) {
 }
 
 const flush = () => vi.advanceTimersByTimeAsync(0);
+let warn: ReturnType<typeof vi.spyOn>;
 
 describe('openEventStream', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
   });
@@ -108,42 +110,98 @@ describe('openEventStream', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('backs off on failures and reports failed after the last attempt', async () => {
+  it('gives up after three quick retries, about five seconds in all', async () => {
     fetchMock.mockRejectedValue(new TypeError('offline'));
-    const { stream, onStatus } = open({ maxAttempts: 2 });
+    const { stream, onStatus } = open();
 
     await flush();
-    await vi.advanceTimersByTimeAsync(backoff(1));
-    await vi.advanceTimersByTimeAsync(backoff(2));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(1500);
+    await vi.advanceTimersByTimeAsync(3000);
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(onStatus).toHaveBeenLastCalledWith('failed');
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     stream.close();
   });
 
   it('retries a failed stream when the tab comes back', async () => {
     fetchMock.mockRejectedValue(new TypeError('offline'));
-    const { stream } = open({ maxAttempts: 1 });
+    const { stream } = open();
 
     await flush();
-    await vi.advanceTimersByTimeAsync(backoff(1));
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
 
     document.dispatchEvent(new Event('visibilitychange'));
     await flush();
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
     stream.close();
   });
 
-  it('reconnects when the heartbeat goes quiet', async () => {
-    fetchMock.mockImplementation(async () => sseResponse().response);
-    const { stream } = open({ heartbeatTimeoutMs: 1000 });
+  it('only counts as live once data arrives', async () => {
+    const sse = sseResponse();
+    fetchMock.mockResolvedValue(sse.response);
+    const { stream, onStatus } = open();
+
+    await flush();
+    expect(onStatus).not.toHaveBeenCalledWith('live');
+    sse.send(': ping\n\n');
+    await flush();
+    expect(onStatus).toHaveBeenLastCalledWith('live');
+    stream.close();
+  });
+
+  it('gives up on a request that never answers', async () => {
+    fetchMock.mockImplementation(
+      (_url: string, init: RequestInit) =>
+        new Promise((_, reject) =>
+          init.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError'))
+          )
+        )
+    );
+    const { stream } = open({ connectTimeoutMs: 1000 });
 
     await flush();
     await vi.advanceTimersByTimeAsync(1000);
     await vi.advanceTimersByTimeAsync(backoff(1));
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('no response'));
+    stream.close();
+  });
+
+  it('gives up on a stream that opens but never sends anything', async () => {
+    fetchMock.mockImplementation(async () => sseResponse().response);
+    const { stream, onStatus } = open({ connectTimeoutMs: 1000 });
+
+    await flush();
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(backoff(1));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(onStatus).not.toHaveBeenCalledWith('live');
+    stream.close();
+  });
+
+  it('reconnects when the heartbeat goes quiet', async () => {
+    const first = sseResponse();
+    fetchMock
+      .mockResolvedValueOnce(first.response)
+      .mockImplementation(async () => sseResponse().response);
+    const { stream } = open({ heartbeatTimeoutMs: 1000 });
+
+    await flush();
+    first.send(': ping\n\n');
+    await flush();
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(backoff(1));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('heartbeat'));
     stream.close();
   });
 
@@ -181,11 +239,12 @@ describe('openEventStream', () => {
 });
 
 describe('backoff', () => {
-  it('doubles each attempt up to thirty seconds', () => {
+  it('waits half a second, then a second and a half, then three', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
-    expect(backoff(1)).toBe(1000);
-    expect(backoff(3)).toBe(4000);
-    expect(backoff(10)).toBe(30_000);
+    expect(backoff(1)).toBe(500);
+    expect(backoff(2)).toBe(1500);
+    expect(backoff(3)).toBe(3000);
+    expect(backoff(10)).toBe(3000);
     vi.restoreAllMocks();
   });
 });

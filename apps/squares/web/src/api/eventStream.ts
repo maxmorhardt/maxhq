@@ -15,7 +15,7 @@ export interface EventStreamOptions {
   // a status retrying cannot fix, like 403 or 404; the stream stops
   onRejected: (status: number) => void;
   heartbeatTimeoutMs?: number;
-  maxAttempts?: number;
+  connectTimeoutMs?: number;
 }
 
 export interface EventStream {
@@ -29,13 +29,17 @@ type Outcome = 'dropped' | 'failed' | 'unauthorized' | 'rejected';
 const REJECTED_STATUSES = new Set([403, 404]);
 // the server pings every 25s, so a silent minute means the connection is dead
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 60_000;
-const DEFAULT_MAX_ATTEMPTS = 5;
-const MAX_BACKOFF_MS = 30_000;
+// the server writes as soon as a stream opens, so a slow first byte means it is stuck
+const DEFAULT_CONNECT_TIMEOUT_MS = 10_000;
+// three quick retries, about five seconds in all, before asking the user
+export const RETRY_DELAYS_MS = [500, 1500, 3000];
 
 export function backoff(attempt: number): number {
-  const base = Math.min(1000 * 2 ** (attempt - 1), MAX_BACKOFF_MS);
-  return base * (0.8 + Math.random() * 0.4);
+  const base = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length) - 1];
+  return base * (0.9 + Math.random() * 0.2);
 }
+
+const warn = (reason: string) => console.warn(`event stream: ${reason}`);
 
 // a fetch-based server-sent event client: bearer auth, Last-Event-ID resume, and reconnects that survive sleeping tabs
 export function openEventStream({
@@ -45,7 +49,7 @@ export function openEventStream({
   onStatus,
   onRejected,
   heartbeatTimeoutMs = DEFAULT_HEARTBEAT_TIMEOUT_MS,
-  maxAttempts = DEFAULT_MAX_ATTEMPTS,
+  connectTimeoutMs = DEFAULT_CONNECT_TIMEOUT_MS,
 }: EventStreamOptions): EventStream {
   let closed = false;
   let lastEventId: string | null = null;
@@ -75,7 +79,27 @@ export function openEventStream({
       wake = done;
     });
 
-  const read = async (body: ReadableStream<Uint8Array>, controller: AbortController) => {
+  // a watchdog that aborts the connection unless it is reset in time
+  const startWatchdog = (controller: AbortController) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    return {
+      reset: (ms: number, reason: string) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          warn(reason);
+          controller.abort();
+        }, ms);
+      },
+      stop: () => clearTimeout(timer),
+    };
+  };
+
+  const read = async (
+    body: ReadableStream<Uint8Array>,
+    controller: AbortController,
+    watchdog: ReturnType<typeof startWatchdog>
+  ): Promise<boolean> => {
+    let received = false;
     const parser = createParser({
       onEvent: ({ id, data }) => {
         if (controller.signal.aborted) {
@@ -92,28 +116,26 @@ export function openEventStream({
     // cancel the read directly rather than trust every browser to error the body on abort
     controller.signal.addEventListener('abort', () => void reader.cancel().catch(() => {}));
 
-    let watchdog: ReturnType<typeof setTimeout> | undefined;
-    const touch = () => {
-      lastActivity = Date.now();
-      clearTimeout(watchdog);
-      watchdog = setTimeout(() => controller.abort(), heartbeatTimeoutMs);
-    };
-
-    touch();
+    watchdog.reset(connectTimeoutMs, 'no data after the stream opened, reconnecting');
     try {
       for (;;) {
         const { value, done } = await reader.read();
         if (done) {
-          return;
+          warn('the server ended the stream, reconnecting');
+          return received;
         }
-        touch();
+        // the stream counts as live once data actually arrives, not when the headers do
+        lastActivity = Date.now();
+        received = true;
+        everLive = true;
+        setStatus('live');
+        watchdog.reset(heartbeatTimeoutMs, 'heartbeat missed, reconnecting');
         parser.feed(decoder.decode(value, { stream: true }));
       }
     } catch {
       // aborted, timed out, or the network dropped; the caller reconnects
-    } finally {
-      clearTimeout(watchdog);
     }
+    return received;
   };
 
   const connect = async (forceRefresh: boolean): Promise<Outcome> => {
@@ -129,28 +151,37 @@ export function openEventStream({
       headers['Last-Event-ID'] = lastEventId;
     }
 
-    let response: Response;
+    const watchdog = startWatchdog(controller);
+    watchdog.reset(connectTimeoutMs, 'no response to the stream request, retrying');
     try {
-      response = await fetch(url, { headers, signal: controller.signal, cache: 'no-store' });
-    } catch {
-      return 'failed';
-    }
+      let response: Response;
+      try {
+        response = await fetch(url, { headers, signal: controller.signal, cache: 'no-store' });
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          warn(`request failed (${err instanceof Error ? err.message : 'network error'})`);
+        }
+        return 'failed';
+      }
 
-    if (response.status === 401) {
-      return 'unauthorized';
-    }
-    if (REJECTED_STATUSES.has(response.status)) {
-      onRejected(response.status);
-      return 'rejected';
-    }
-    if (!response.ok || !response.body) {
-      return 'failed';
-    }
+      if (response.status === 401) {
+        warn('token rejected (401), refreshing');
+        return 'unauthorized';
+      }
+      if (REJECTED_STATUSES.has(response.status)) {
+        onRejected(response.status);
+        return 'rejected';
+      }
+      if (!response.ok || !response.body) {
+        warn(`unexpected response (${response.status})`);
+        return 'failed';
+      }
 
-    everLive = true;
-    setStatus('live');
-    await read(response.body, controller);
-    return 'dropped';
+      // a stream that delivered data dropped; one that never did failed to connect
+      return (await read(response.body, controller, watchdog)) ? 'dropped' : 'failed';
+    } finally {
+      watchdog.stop();
+    }
   };
 
   const run = async () => {
@@ -177,7 +208,7 @@ export function openEventStream({
       }
 
       attempt = outcome === 'dropped' ? 1 : attempt + 1;
-      if (attempt > maxAttempts) {
+      if (attempt > RETRY_DELAYS_MS.length) {
         setStatus('failed');
         await pause(Infinity);
         attempt = 0;
