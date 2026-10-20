@@ -68,7 +68,7 @@ python main.py reset dev dev-4         # uninstall k3s, reboot, clean up, leave 
 | journald capped at 500M | ✓ | ✓ |
 | memory cgroup on the kernel cmdline (reboots if needed), `vxlan` module | ✓ | — |
 | Tailscale joined with the cluster's tag | ✓ | ✓ |
-| ufw: deny inbound except tailnet, pods, services, LAN | ✓ | ✓ |
+| ufw: deny inbound except tailnet, pods, services, LAN, and `open_ports` (prod: 443) | ✓ | ✓ |
 | k3s on the Tailscale IP, started after tailscaled; pinned version; waits for ready | ✓ | ✓ |
 | `pre-reboot.sh` for kured | ✓ | ✓ |
 | network watchdog timer | ✓ | — |

@@ -5,7 +5,7 @@ Two k3s clusters, provisioned over SSH by [bootstrap/](bootstrap/README.md) from
 | cluster | profile | nodes | reachable |
 | --- | --- | --- | --- |
 | `dev` | `pi` | Raspberry Pis on the home LAN | Tailscale only |
-| `prod` | `vps` | Contabo VPSes | Tailscale for admin; public traffic arrives through Cloudflare Tunnel, so no inbound ports |
+| `prod` | `vps` | Contabo VPSes | Tailscale for admin; public HTTPS on 443 from Cloudflare-proxied DNS records |
 
 Both run three servers on embedded etcd, so the control plane survives losing any one node,
 and all node-to-node traffic goes over Tailscale.
@@ -63,6 +63,7 @@ ufw is identical on every node and denies all inbound traffic except:
 | pods `10.42.0.0/16`, services `10.43.0.0/16` | everything |
 | anywhere | 41641 udp, so Tailscale peers connect directly instead of through a relay |
 | `lan_cidr`, if set | everything |
+| anywhere | the cluster's `open_ports` over tcp; prod opens 443 so Cloudflare's proxy reaches the gateway |
 
 The applied rule set is fingerprinted in `/etc/maxhq/firewall.sha256`; `up` only rewrites ufw
 when it changes.
