@@ -249,10 +249,3 @@ metrics:
           summary: 'Contests missed events that were trimmed from a stream'
           description: 'Consumer {{ $labels.consumer }} was behind by more than the stream retention; replay the gap from the source service'
 
-dashboard:
-  enabled: true
-  namespace: monitoring
-  file: squares-contests-dashboard.json
-  labels:
-    grafana_dashboard: '1'
-  annotations: {}

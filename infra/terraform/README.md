@@ -1,7 +1,7 @@
 # Terraform
 
 Terraform for the resources that live outside the cluster. Anything Argo CD reconciles stays
-in Helm and manifests; this covers the AWS, Cloudflare, GitHub, and Grafana Cloud state.
+in Helm and manifests; this covers the AWS, Cloudflare, and GitHub state.
 
 | module | owns |
 | --- | --- |
@@ -9,7 +9,6 @@ in Helm and manifests; this covers the AWS, Cloudflare, GitHub, and Grafana Clou
 | `aws/` (k3s) | The same bucket and `srv-s3` user also hold prod's etcd snapshots under `k3s/prod/` (see `infra/k3s`) |
 | `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records. Per domain, optionally: Authenticated Origin Pulls (`origin_pulls`), a per-IP rate limit on `api.<domain>` (`api_rate_limit`), and a custom rule blocking scanner probes (`block_scanners`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges) and deployment environments (`production` waits for approval) |
-| `grafana/` | Grafana Cloud: the Discord contact point and notification policy, the platform alert rules (nodes, crash loops, disk, certificates, 5xx, Postgres backups, Argo CD, uptime), the squares dashboards from `charts/squares-*`, and Synthetic Monitoring uptime checks on the public sites |
 
 ## Credentials
 
@@ -18,7 +17,6 @@ in Helm and manifests; this covers the AWS, Cloudflare, GitHub, and Grafana Clou
 | `aws/` | An authenticated AWS session (`aws login`) |
 | `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Zone WAF: Edit, Zone Settings: Edit, and SSL and Certificates: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
-| `grafana/` | `terraform.tfvars` with `grafana_url`, `grafana_auth` (a service account token with Admin), `sm_url`, `sm_access_token`, and `discord_webhook_url` |
 
 In CI, as repository secrets:
 
@@ -28,7 +26,6 @@ In CI, as repository secrets:
 | `CLOUDFLARE_API_TOKEN` | `cloudflare/` |
 | `REPO_ADMIN_TOKEN` | `github/` — a fine-grained PAT with Administration: Read and write on `maxhq`, `gitops`, and `workflows`, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
 | `TF_VARS` | `cloudflare/` — `prod_ips = [...]` and `dev_ips = [...]` (dev's Tailscale IPs), written to `ci.auto.tfvars` at runtime |
-| `GRAFANA_TF_VARS` | `grafana/` — the same five variables as its local `terraform.tfvars`, written to `ci.auto.tfvars` at runtime |
 
 ## One-time setup
 

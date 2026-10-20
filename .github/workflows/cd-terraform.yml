@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [aws, cloudflare, github, grafana]
+        module: [aws, cloudflare, github]
     uses: maxmorhardt/workflows/.github/workflows/cd-terraform.yml@main
     with:
       repository: ${{ github.repository }}
@@ -28,14 +28,14 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || matrix.module == 'grafana' && secrets.GRAFANA_TF_VARS || '' }}
+      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || '' }}
 
   drift:
     if: github.event_name == 'schedule'
     strategy:
       fail-fast: false
       matrix:
-        module: [aws, cloudflare, github, grafana]
+        module: [aws, cloudflare, github]
     uses: maxmorhardt/workflows/.github/workflows/validate-terraform.yml@main
     with:
       repository: ${{ github.repository }}
@@ -46,4 +46,4 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || matrix.module == 'grafana' && secrets.GRAFANA_TF_VARS || '' }}
+      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || '' }}

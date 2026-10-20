@@ -2,7 +2,7 @@
 
 Published to `oci://ghcr.io/maxmorhardt/charts/squares-accounts`, released as `squares-accounts-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
-The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, PrometheusRule, and Grafana dashboard.
+The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, and PrometheusRule.
 
 ## Required
 
@@ -44,4 +44,4 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 
 ## Optional
 
-- **Prometheus** - the ServiceMonitor, PrometheusRule, and Grafana dashboard ship with the chart.
+- **Prometheus** - the ServiceMonitor and PrometheusRule ship with the chart; Grafana Alloy scrapes the one and syncs the other to Grafana Cloud. The dashboard lives in gitops, `infrastructure/monitoring/dashboards/`.

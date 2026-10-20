@@ -220,10 +220,3 @@ metrics:
           summary: 'Events are not reaching redis'
           description: 'The oldest unrelayed outbox event is {{ $value }}s old; other services and live viewers are not seeing its changes'
 
-dashboard:
-  enabled: true
-  namespace: monitoring
-  file: squares-accounts-dashboard.json
-  labels:
-    grafana_dashboard: '1'
-  annotations: {}

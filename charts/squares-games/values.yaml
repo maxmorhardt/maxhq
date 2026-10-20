@@ -235,10 +235,3 @@ metrics:
           summary: 'Scores worker has not succeeded recently'
           description: 'Last successful scores worker run was {{ $value }}s ago; live contests are not being scored'
 
-dashboard:
-  enabled: true
-  namespace: monitoring
-  file: squares-games-dashboard.json
-  labels:
-    grafana_dashboard: '1'
-  annotations: {}
