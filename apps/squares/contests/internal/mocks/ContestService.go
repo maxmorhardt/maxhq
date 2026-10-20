@@ -532,68 +532,6 @@ func (_c *ContestService_FinalizeFromScores_Call) RunAndReturn(run func(context.
 	return _c
 }
 
-// UpdateContest provides a mock function with given fields: ctx, contestID, req, user, expectedVersion
-func (_m *ContestService) UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error) {
-	ret := _m.Called(ctx, contestID, req, user, expectedVersion)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateContest")
-	}
-
-	var r0 *model.Contest
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) (*model.Contest, error)); ok {
-		return rf(ctx, contestID, req, user, expectedVersion)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) *model.Contest); ok {
-		r0 = rf(ctx, contestID, req, user, expectedVersion)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Contest)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) error); ok {
-		r1 = rf(ctx, contestID, req, user, expectedVersion)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ContestService_UpdateContest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateContest'
-type ContestService_UpdateContest_Call struct {
-	*mock.Call
-}
-
-// UpdateContest is a helper method to define mock.On call
-//   - ctx context.Context
-//   - contestID uuid.UUID
-//   - req *model.UpdateContestRequest
-//   - user string
-//   - expectedVersion *int64
-func (_e *ContestService_Expecter) UpdateContest(ctx interface{}, contestID interface{}, req interface{}, user interface{}, expectedVersion interface{}) *ContestService_UpdateContest_Call {
-	return &ContestService_UpdateContest_Call{Call: _e.mock.On("UpdateContest", ctx, contestID, req, user, expectedVersion)}
-}
-
-func (_c *ContestService_UpdateContest_Call) Run(run func(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64)) *ContestService_UpdateContest_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(*model.UpdateContestRequest), args[3].(string), args[4].(*int64))
-	})
-	return _c
-}
-
-func (_c *ContestService_UpdateContest_Call) Return(_a0 *model.Contest, _a1 error) *ContestService_UpdateContest_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *ContestService_UpdateContest_Call) RunAndReturn(run func(context.Context, uuid.UUID, *model.UpdateContestRequest, string, *int64) (*model.Contest, error)) *ContestService_UpdateContest_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // NewContestService creates a new instance of ContestService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewContestService(t interface {

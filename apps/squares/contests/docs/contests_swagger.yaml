@@ -432,14 +432,6 @@ definitions:
         example: 12
         type: integer
     type: object
-  model.UpdateContestRequest:
-    properties:
-      visibility:
-        enum:
-        - private
-        - public
-        type: string
-    type: object
   model.UpdateParticipantRequest:
     properties:
       maxSquares:
@@ -554,10 +546,6 @@ paths:
       responses:
         "201":
           description: Created
-          headers:
-            ETag:
-              description: Contest version, for If-Match on later updates
-              type: string
           schema:
             $ref: '#/definitions/model.ContestSwagger'
         "400":
@@ -610,66 +598,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Delete contest
-      tags:
-      - contests
-    patch:
-      consumes:
-      - application/json
-      description: Updates the values of a contest
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Contest update data
-        in: body
-        name: contest
-        required: true
-        schema:
-          $ref: '#/definitions/model.UpdateContestRequest'
-      - description: Contest version the client edited; a stale version returns 412
-        in: header
-        name: If-Match
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          headers:
-            ETag:
-              description: New contest version
-              type: string
-          schema:
-            $ref: '#/definitions/model.ContestSwagger'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "409":
-          description: Changed concurrently; refresh and retry
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "412":
-          description: If-Match did not match the current version
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Update contest
       tags:
       - contests
   /contests/{id}/invites:

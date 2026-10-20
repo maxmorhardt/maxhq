@@ -59,7 +59,6 @@ func TestNew_WiresRoutesAndGuards(t *testing.T) {
 		"GET /health/live",
 		"GET /health/ready",
 		"POST /contests",
-		"PATCH /contests/:id",
 		"PUT /contests/:id/squares/:squareId/claim",
 		"POST /invites/:token/redeem",
 		"GET /leaderboard",

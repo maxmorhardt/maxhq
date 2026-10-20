@@ -128,86 +128,6 @@ func TestCreateContest_GameNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrGameNotFound)
 }
 
-func TestUpdateContest_NotFound(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{}, "u", nil)
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
-}
-
-func TestUpdateContest_GetDBError(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("boom"))
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{}, "u", nil)
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestUpdateContest_Terminal(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{}, "u", nil)
-	assert.ErrorIs(t, err, errs.ErrContestFinalized)
-}
-
-func TestUpdateContest_Unauthorized(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{}, "u", nil)
-	assert.ErrorIs(t, err, errs.ErrUnauthorizedContestEdit)
-}
-
-func TestUpdateContest_NoChanges(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Visibility: model.ContestVisibilityPrivate}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	private := "private"
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &private}, "u", nil)
-	require.NoError(t, err)
-	assert.Equal(t, model.ContestVisibilityPrivate, got.Visibility)
-}
-
-func TestUpdateContest_VisibilityChange(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Visibility: model.ContestVisibilityPublic}, nil)
-	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	private := "private"
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &private}, "u", nil)
-	require.NoError(t, err)
-	assert.Equal(t, model.ContestVisibilityPrivate, got.Visibility)
-}
-
-func TestUpdateContest_ChangesVisibility(t *testing.T) {
-	gameID := uuid.New()
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Visibility: model.ContestVisibilityPrivate, GameID: &gameID}, nil)
-	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	public := "public"
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &public}, "u", nil)
-	require.NoError(t, err)
-	assert.Equal(t, model.ContestVisibilityPublic, got.Visibility)
-}
-
 func orderedLabels(t *testing.T) []byte {
 	t.Helper()
 	b, err := json.Marshal([]int8{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
@@ -446,19 +366,6 @@ func TestCreateContest_RepoError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestUpdateContest_SaveError(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Visibility: model.ContestVisibilityPrivate}, nil)
-	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errors.New("db"))
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	public := "public"
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &public}, "u", nil)
-	assert.Error(t, err)
-}
-
 func TestApplyQuarterResult_StepsStatusAndStamps(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	contest := &model.Contest{
@@ -646,30 +553,6 @@ func TestClearSquare_Unauthorized(t *testing.T) {
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
 		ClearSquare(context.Background(), uuid.New(), squareID, "stranger")
 	assert.ErrorIs(t, err, errs.ErrUnauthorizedSquareEdit)
-}
-
-func TestUpdateContest_StaleIfMatchVersion(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Version: 5}, nil)
-
-	stale := int64(4)
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{}, "u", &stale)
-
-	assert.ErrorIs(t, err, errs.ErrVersionConflict)
-}
-
-func TestUpdateContest_ConcurrentWriteConflicts(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Version: 5}, nil)
-	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errs.ErrVersionConflict)
-
-	current := int64(5)
-	public := "public"
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &public}, "u", &current)
-
-	assert.ErrorIs(t, err, errs.ErrVersionConflict)
 }
 
 func TestAutoStart(t *testing.T) {

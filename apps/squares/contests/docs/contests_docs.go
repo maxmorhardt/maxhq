@@ -134,12 +134,6 @@ const docTemplatecontests = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestSwagger"
-                        },
-                        "headers": {
-                            "ETag": {
-                                "type": "string",
-                                "description": "Contest version, for If-Match on later updates"
-                            }
                         }
                     },
                     "400": {
@@ -205,98 +199,6 @@ const docTemplatecontests = `{
                     },
                     "404": {
                         "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates the values of a contest",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "contests"
-                ],
-                "summary": "Update contest",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Contest ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Contest update data",
-                        "name": "contest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UpdateContestRequest"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Contest version the client edited; a stale version returns 412",
-                        "name": "If-Match",
-                        "in": "header"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.ContestSwagger"
-                        },
-                        "headers": {
-                            "ETag": {
-                                "type": "string",
-                                "description": "New contest version"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "409": {
-                        "description": "Changed concurrently; refresh and retry",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "412": {
-                        "description": "If-Match did not match the current version",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -2013,18 +1915,6 @@ const docTemplatecontests = `{
                 "totalActiveContests": {
                     "type": "integer",
                     "example": 12
-                }
-            }
-        },
-        "model.UpdateContestRequest": {
-            "type": "object",
-            "properties": {
-                "visibility": {
-                    "type": "string",
-                    "enum": [
-                        "private",
-                        "public"
-                    ]
                 }
             }
         },

@@ -14,10 +14,6 @@ type RandomClaimRequest struct {
 	Count int `json:"count" binding:"required,min=1,max=100" example:"5"`
 }
 
-type UpdateContestRequest struct {
-	Visibility *string `json:"visibility,omitempty" binding:"omitempty,oneof=private public"`
-}
-
 type CreateInviteRequest struct {
 	MaxSquares int    `json:"maxSquares" binding:"min=0,max=100"`
 	Role       string `json:"role" binding:"required,oneof=participant viewer"`

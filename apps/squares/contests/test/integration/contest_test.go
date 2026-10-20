@@ -19,7 +19,6 @@ func TestContest_FullLifecycle(t *testing.T) {
 	contest, resp := createContestFor(t, &game, ownerUser, "Super Bowl", 50)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 	contestID := contest.ID
-	assert.Equal(t, `"1"`, resp.Header.Get("ETag"))
 
 	t.Run("owner lists their contests", func(t *testing.T) {
 		resp := call(t, testkit.As(ownerUser), http.MethodGet, "/contests", nil)
@@ -27,19 +26,9 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Contains(t, string(resp.Body), contestID.String())
 	})
 
-	t.Run("update with the current version bumps it", func(t *testing.T) {
-		public := "public"
-		resp := call(t, testkit.As(ownerUser), http.MethodPatch, "/contests/"+contestID.String(),
-			model.UpdateContestRequest{Visibility: &public}, "If-Match", `"1"`)
-		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
-		assert.Equal(t, `"2"`, resp.Header.Get("ETag"))
-	})
-
-	t.Run("update with a stale version is rejected", func(t *testing.T) {
-		private := "private"
-		resp := call(t, testkit.As(ownerUser), http.MethodPatch, "/contests/"+contestID.String(),
-			model.UpdateContestRequest{Visibility: &private}, "If-Match", `"1"`)
-		assert.Equal(t, http.StatusPreconditionFailed, resp.Status)
+	t.Run("contests cannot be edited after creation", func(t *testing.T) {
+		resp := call(t, testkit.As(ownerUser), http.MethodPatch, "/contests/"+contestID.String(), map[string]string{"visibility": "public"})
+		assert.Equal(t, http.StatusNotFound, resp.Status)
 	})
 
 	var inviteToken string

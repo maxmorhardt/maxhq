@@ -22,7 +22,6 @@ const systemUser = "system"
 
 type ContestService interface {
 	CreateContest(ctx context.Context, req *model.CreateContestRequest, user string) (*model.Contest, error)
-	UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error)
 	ApplyQuarterResult(ctx context.Context, contest *model.Contest, quarter, homeScore, awayScore int) (*model.QuarterResult, error)
 	FinalizeFromScores(ctx context.Context, contest *model.Contest, scores []model.GameScore) error
 	AutoStart(ctx context.Context, contest *model.Contest) error
@@ -125,70 +124,6 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 	metrics.IncParticipantJoined(string(model.ParticipantRoleOwner))
 	log.Info("created contest", "name", req.Name, "contest_id", contest.ID, "owner", req.Owner)
 	return &contest, nil
-}
-
-func (s *contestService) UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error) {
-	log := logging.FromContext(ctx)
-
-	var contest *model.Contest
-	err := s.tx.Do(ctx, func(ctx context.Context) error {
-		var err error
-		contest, err = s.repo.GetByID(ctx, contestID)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				log.Warn("contest not found for update", "contest_id", contestID)
-				return err
-			}
-
-			log.Error("failed to get contest for ownership validation", "contest_id", contestID, "error", err)
-			return errs.ErrDatabaseUnavailable
-		}
-
-		if expectedVersion != nil && *expectedVersion != contest.Version {
-			log.Warn("contest update precondition failed", "contest_id", contestID, "expected", *expectedVersion, "current", contest.Version)
-			return errs.ErrVersionConflict
-		}
-
-		util.SynthesizeFromGame(contest)
-
-		if contest.Status.IsTerminal() {
-			log.Warn("cannot update contest in terminal state", "contest_id", contestID, "status", contest.Status)
-			return errs.ErrContestFinalized
-		}
-
-		if err := s.participantService.Authorize(ctx, contestID, user, ActionEditContest); err != nil {
-			log.Warn("user is not authorized to update contest", "contest_id", contestID, "user", user)
-			return errs.ErrUnauthorizedContestEdit
-		}
-
-		if !applyContestChanges(contest, req) {
-			log.Info("no changes detected for contest update", "contest_id", contest.ID)
-			return nil
-		}
-
-		contest.UpdatedBy = user
-		if err := s.repo.Update(ctx, contest); err != nil {
-			log.Warn("failed to save updated contest", "contest_id", contest.ID, "error", err)
-			return err
-		}
-
-		return s.events.PublishContestUpdate(ctx, contest.ID, user, contest)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	log.Info("contest updated successfully", "contest_id", contest.ID, "user", user)
-	return contest, nil
-}
-
-func applyContestChanges(contest *model.Contest, req *model.UpdateContestRequest) bool {
-	if req.Visibility == nil || model.ContestVisibility(*req.Visibility) == contest.Visibility {
-		return false
-	}
-
-	contest.Visibility = model.ContestVisibility(*req.Visibility)
-	return true
 }
 
 func (s *contestService) AutoStart(ctx context.Context, contest *model.Contest) error {
