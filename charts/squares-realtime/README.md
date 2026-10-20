@@ -18,6 +18,7 @@ The `squares-realtime` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | Path under `api.maxhq.io/squares` | |
 | --- | --- |
 | `/events/contests/:id` | a server-sent event stream: a `contest.snapshot` (or, with `Last-Event-ID`, only what was missed), then every change to the contest. An `access.revoked` event means the viewer lost access. |
+| `/events/games` | a public server-sent event stream of `game.updated` events, one per change to any NFL game's status, period, or score, resumable with `Last-Event-ID` |
 | `/swagger/realtime` | the API reference |
 
 ## Secrets

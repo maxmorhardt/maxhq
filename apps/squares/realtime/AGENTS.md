@@ -25,4 +25,4 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 ## Events
 
 - Writes: nothing.
-- Reads: `contest:<id>` for every contest with an open stream on the replica, through one blocking read (see `service/hub.go`). Before opening a stream, and whenever an event could take a viewer's access away, it asks contests over `/internal/contests/:id/snapshot`.
+- Reads: `contest:<id>` for every contest with an open stream on the replica, and `games` while anyone watches the public games stream, through one blocking read (see `service/hub.go`). Before opening a stream, and whenever an event could take a viewer's access away, it asks contests over `/internal/contests/:id/snapshot`.

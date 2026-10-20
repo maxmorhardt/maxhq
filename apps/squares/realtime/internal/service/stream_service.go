@@ -37,6 +37,7 @@ type Subscription struct {
 
 type StreamService interface {
 	Subscribe(ctx context.Context, contestID uuid.UUID, user, lastEventID string) (*Subscription, error)
+	SubscribeGames(ctx context.Context, lastEventID string) (*Subscription, error)
 	CheckAccess(ctx context.Context, contestID uuid.UUID, user string) error
 	IsRevoked(ctx context.Context, user string, issuedAt int64) (bool, error)
 }
@@ -97,7 +98,7 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-	sub.Events = s.pump(ctx, stream, start, listener)
+	sub.Events = s.pump(ctx, stream, start, listener, decodeContestEvent)
 	sub.Stop = func() {
 		cancel()
 		s.hub.Unsubscribe(listener)
@@ -105,7 +106,50 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 	return sub, nil
 }
 
-func (s *streamService) pump(ctx context.Context, stream, start string, listener *Listener) <-chan Event {
+// game scores are public, so the games stream needs no snapshot or access check: it replays what was missed, then follows
+func (s *streamService) SubscribeGames(ctx context.Context, lastEventID string) (*Subscription, error) {
+	listener, err := s.hub.Subscribe(ctx, events.GamesStream)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", errs.ErrDependencyFailed, err)
+	}
+
+	first, last, err := streams.Bounds(ctx, s.rdb, events.GamesStream)
+	if err != nil {
+		s.hub.Unsubscribe(listener)
+		return nil, fmt.Errorf("%w: %w", errs.ErrDependencyFailed, err)
+	}
+
+	start := last
+	if start == "" {
+		start = "0-0"
+	}
+	if lastEventID != "" && first != "" &&
+		streams.CompareIDs(lastEventID, first) >= 0 && streams.CompareIDs(lastEventID, last) <= 0 {
+		start = lastEventID
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	return &Subscription{
+		Events: s.pump(ctx, events.GamesStream, start, listener, decodeGameEntry),
+		Stop: func() {
+			cancel()
+			s.hub.Unsubscribe(listener)
+		},
+	}, nil
+}
+
+func decodeContestEvent(entry streams.Entry) (events.ContestEvent, error) {
+	var envelope events.ContestEvent
+	err := json.Unmarshal(entry.Data, &envelope)
+	return envelope, err
+}
+
+// game entries carry their type on the stream entry, not in an envelope
+func decodeGameEntry(entry streams.Entry) (events.ContestEvent, error) {
+	return events.ContestEvent{Type: entry.Type}, nil
+}
+
+func (s *streamService) pump(ctx context.Context, stream, start string, listener *Listener, decode func(streams.Entry) (events.ContestEvent, error)) <-chan Event {
 	out := make(chan Event, eventBuffer)
 	log := logging.FromContext(ctx)
 
@@ -119,9 +163,9 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 			}
 			sent = entry.ID
 
-			var envelope events.ContestEvent
-			if err := json.Unmarshal(entry.Data, &envelope); err != nil {
-				log.Warn("skipping undecodable contest event", "id", entry.ID, "error", err)
+			envelope, err := decode(entry)
+			if err != nil {
+				log.Warn("skipping undecodable stream entry", "id", entry.ID, "error", err)
 				return true
 			}
 
@@ -136,7 +180,7 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 		for {
 			entries, err := streams.Range(ctx, s.rdb, stream, sent, replayBatch)
 			if err != nil {
-				log.Warn("failed to replay contest events", "error", err)
+				log.Warn("failed to replay stream entries", "error", err)
 				return
 			}
 			for _, entry := range entries {

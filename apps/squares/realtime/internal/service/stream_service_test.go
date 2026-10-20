@@ -238,3 +238,54 @@ func TestRequiresAccessCheck(t *testing.T) {
 		assert.Equal(t, tt.want, service.RequiresAccessCheck(&event, "v@b.com"), tt.name)
 	}
 }
+
+func publishGame(t *testing.T, client *redis.Client, home int) string {
+	t.Helper()
+	data, err := json.Marshal(events.GameUpdated{Game: events.Game{ID: uuid.New(), HomeScore: home}})
+	require.NoError(t, err)
+	id, err := client.XAdd(context.Background(), &redis.XAddArgs{
+		Stream: streams.Key(events.GamesStream),
+		Values: []string{"type", events.GameUpdatedType, "data", string(data), "event_id", uuid.NewString()},
+	}).Result()
+	require.NoError(t, err)
+	return id
+}
+
+func TestSubscribeGames_FollowsNewUpdates(t *testing.T) {
+	client, hub := newHub(t)
+	publishGame(t, client, 3)
+
+	sub, err := service.NewStreamService(client, hub, nil, nil).SubscribeGames(context.Background(), "")
+	require.NoError(t, err)
+	t.Cleanup(sub.Stop)
+
+	live := publishGame(t, client, 7)
+	e := next(t, sub)
+	assert.Equal(t, live, e.ID, "a fresh viewer starts from now; the scoreboard request has the rest")
+	assert.Equal(t, events.GameUpdatedType, e.Envelope.Type)
+	assert.Contains(t, string(e.Data), `"homeScore":7`)
+}
+
+func TestSubscribeGames_ResumeReplaysOnlyTheGap(t *testing.T) {
+	client, hub := newHub(t)
+	seen := publishGame(t, client, 3)
+	missed := publishGame(t, client, 7)
+
+	sub, err := service.NewStreamService(client, hub, nil, nil).SubscribeGames(context.Background(), seen)
+	require.NoError(t, err)
+	t.Cleanup(sub.Stop)
+
+	assert.Equal(t, missed, next(t, sub).ID)
+}
+
+func TestSubscribeGames_RedisDownIsADependencyFailure(t *testing.T) {
+	mr := miniredis.RunT(t)
+	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = client.Close() })
+	hub := service.NewHub(client)
+	mr.Close()
+
+	_, err := service.NewStreamService(client, hub, nil, nil).SubscribeGames(context.Background(), "")
+
+	assert.ErrorIs(t, err, errs.ErrDependencyFailed)
+}

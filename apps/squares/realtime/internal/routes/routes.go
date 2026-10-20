@@ -7,4 +7,5 @@ import (
 
 func Register(r *gin.Engine, h handler.EventsHandler, auth gin.HandlerFunc) {
 	r.GET("/events/contests/:id", auth, h.StreamContest)
+	r.GET("/events/games", h.StreamGames)
 }

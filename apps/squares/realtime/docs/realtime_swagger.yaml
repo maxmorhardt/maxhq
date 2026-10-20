@@ -85,6 +85,39 @@ paths:
       summary: Stream contest events
       tags:
       - events
+  /events/games:
+    get:
+      description: 'Server-sent `game.updated` events for every NFL game as its status,
+        period, or score changes. Each data line is `{"game": {...}}` in the shape
+        `/games/scoreboard` returns. Public; resumable with Last-Event-ID.'
+      parameters:
+      - description: Id of the last event the client applied
+        in: header
+        name: Last-Event-ID
+        type: string
+      - description: Same as the Last-Event-ID header, for clients that cannot set
+          headers
+        in: query
+        name: lastEventId
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: text/event-stream; each data line is a JSON game update
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.APIError'
+      summary: Stream game scores
+      tags:
+      - events
   /health/live:
     get:
       description: Returns UP if the service process is running

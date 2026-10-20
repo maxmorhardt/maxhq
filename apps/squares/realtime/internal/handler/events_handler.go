@@ -31,6 +31,7 @@ const (
 
 type EventsHandler interface {
 	StreamContest(c *gin.Context)
+	StreamGames(c *gin.Context)
 }
 
 type eventsHandler struct {
@@ -85,13 +86,7 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	defer sub.Stop()
 
 	w := c.Writer
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	// keeps proxies from buffering the stream until it ends
-	w.Header().Set("X-Accel-Buffering", "no")
-	w.WriteHeader(http.StatusOK)
+	startStream(w)
 
 	if _, err := fmt.Fprintf(w, "retry: %d\n\n", clientRetry.Milliseconds()); err != nil {
 		return
@@ -121,6 +116,78 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	reason := h.serve(ctx, w, sub, contestID, user, claims)
 	metrics.RecordStreamClose(reason)
 	log.Info("contest stream closed", "reason", reason)
+}
+
+// @Summary Stream game scores
+// @Description Server-sent `game.updated` events for every NFL game as its status, period, or score changes. Each data line is `{"game": {...}}` in the shape `/games/scoreboard` returns. Public; resumable with Last-Event-ID.
+// @Tags events
+// @Produce text/event-stream
+// @Param Last-Event-ID header string false "Id of the last event the client applied"
+// @Param lastEventId query string false "Same as the Last-Event-ID header, for clients that cannot set headers"
+// @Success 200 {string} string "text/event-stream; each data line is a JSON game update"
+// @Failure 400 {object} api.APIError
+// @Failure 503 {object} api.APIError
+// @Router /events/games [get]
+func (h *eventsHandler) StreamGames(c *gin.Context) {
+	log := logging.FromGin(c)
+
+	lastEventID, ok := parseLastEventID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid Last-Event-ID", c))
+		return
+	}
+
+	ctx := logging.NewContext(c.Request.Context(), log)
+	sub, err := h.streams.SubscribeGames(ctx, lastEventID)
+	if err != nil {
+		log.Error("failed to open games stream", "error", err)
+		c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, "Real-time updates unavailable", c))
+		return
+	}
+	defer sub.Stop()
+
+	w := c.Writer
+	startStream(w)
+	if _, err := fmt.Fprintf(w, "retry: %d\n\n", clientRetry.Milliseconds()); err != nil {
+		return
+	}
+	w.Flush()
+
+	heartbeat := time.NewTicker(h.cfg.HeartbeatInterval)
+	defer heartbeat.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-h.shutdown:
+			return
+		case <-heartbeat.C:
+			if _, err := w.WriteString(": ping\n\n"); err != nil {
+				return
+			}
+			w.Flush()
+		case event, ok := <-sub.Events:
+			if !ok {
+				return
+			}
+			if err := writeRaw(w, event.ID, event.Envelope.Type, event.Data); err != nil {
+				return
+			}
+			w.Flush()
+			metrics.IncEventSent(event.Envelope.Type)
+		}
+	}
+}
+
+func startStream(w gin.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	// keeps proxies from buffering the stream until it ends
+	w.Header().Set("X-Accel-Buffering", "no")
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *eventsHandler) rejectSubscribe(c *gin.Context, err error) {
