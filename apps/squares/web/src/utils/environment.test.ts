@@ -14,10 +14,10 @@ describe('environment', () => {
     expect(apiBaseUrl('localhost')).toBe('http://localhost:8080/squares');
   });
 
-  it('signs in against the same environment, and production when local', () => {
+  it('signs in against the same environment, and dev when local', () => {
     expect(oidcAuthority('squares.maxhq.io')).toBe('https://login.maxhq.io');
     expect(oidcAuthority('squares.dev.maxhq.io')).toBe('https://login.dev.maxhq.io');
-    expect(oidcAuthority('localhost')).toBe('https://login.maxhq.io');
+    expect(oidcAuthority('localhost')).toBe('https://login.dev.maxhq.io');
   });
 
   it('only treats the production domain as production', () => {
