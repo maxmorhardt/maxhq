@@ -1,4 +1,4 @@
-import { Email, LocationOn, Phone } from '@mui/icons-material';
+import { Email, HelpOutlined, Schedule } from '@mui/icons-material';
 import { Box, Container } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitle from '../components/PageTitle';
@@ -10,19 +10,21 @@ import type { ContactRequest } from '../types/contact';
 
 const contactMethods = [
   {
-    icon: <Email sx={{ color: 'primary.dark', mr: 2 }} />,
+    icon: <Email />,
     title: 'Email',
     details: 'support@maxhq.io',
+    href: 'mailto:support@maxhq.io',
   },
   {
-    icon: <Phone sx={{ color: 'primary.dark', mr: 2 }} />,
-    title: 'Phone',
-    details: 'Available via email only',
+    icon: <Schedule />,
+    title: 'Response time',
+    details: 'Usually within a week',
   },
   {
-    icon: <LocationOn sx={{ color: 'primary.dark', mr: 2 }} />,
-    title: 'Response Time',
-    details: 'We typically respond within a week',
+    icon: <HelpOutlined />,
+    title: 'How it works',
+    details: 'Rules, scoring, and FAQs',
+    href: '/learn-more',
   },
 ];
 
@@ -52,23 +54,32 @@ export default function ContactPage() {
       </Helmet>
 
       <PageTitle
+        align="left"
         title="Contact Us"
-        subtitle="Have a question or need help? We'd love to hear from you"
+        subtitle="Have a question or need help? We'd love to hear from you."
       />
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 4 }}>
-        <ContactForm onSubmit={handleSubmit} isSubmitting={isLoading} />
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 0.8fr) minmax(0, 1.2fr)' },
+          gap: { xs: 4, md: 6 },
+          alignItems: 'start',
+        }}
+      >
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           {contactMethods.map((method) => (
             <ContactMethodCard
               key={method.title}
               icon={method.icon}
               title={method.title}
               details={method.details}
+              href={method.href}
             />
           ))}
         </Box>
+
+        <ContactForm onSubmit={handleSubmit} isSubmitting={isLoading} />
       </Box>
     </Container>
   );

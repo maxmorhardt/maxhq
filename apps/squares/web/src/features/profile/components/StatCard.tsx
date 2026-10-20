@@ -1,5 +1,6 @@
-import { Box, Paper, Typography, useTheme } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { fonts, game as palette } from '../../../app/theme';
 
 export interface StatCardProps {
   icon: ReactNode;
@@ -9,47 +10,50 @@ export interface StatCardProps {
   highlight?: boolean;
 }
 
+// one cell of the stats strip: a label, the number in scoreboard type, and an optional note
 export default function StatCard({ icon, value, label, caption, highlight }: StatCardProps) {
-  const theme = useTheme();
-
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        textAlign: 'center',
-        px: 2,
-        py: 1.75,
-        borderRadius: 3,
-        background: highlight
-          ? `linear-gradient(135deg, ${theme.palette.primary.dark}33 0%, ${theme.palette.primary.main}22 100%)`
-          : 'rgba(255,255,255,0.04)',
-        border: highlight
-          ? `1px solid ${theme.palette.primary.main}66`
-          : '1px solid rgba(255,255,255,0.08)',
-      }}
-    >
+    <Box sx={{ px: { xs: 2, sm: 2.5 }, py: 2.25, minWidth: 0 }}>
       <Box
         sx={{
           display: 'flex',
-          justifyContent: 'center',
-          mb: 0.5,
-          color: 'primary.main',
-          fontSize: 26,
+          alignItems: 'center',
+          gap: 0.75,
+          color: highlight ? palette.gold : 'text.secondary',
+          fontSize: 18,
         }}
       >
         {icon}
+        <Typography
+          sx={{
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'inherit',
+          }}
+        >
+          {label}
+        </Typography>
       </Box>
-      <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.25 }}>
+      <Typography
+        sx={{
+          mt: 0.75,
+          fontFamily: fonts.display,
+          fontWeight: 800,
+          fontSize: { xs: '2.2rem', sm: '2.6rem' },
+          lineHeight: 1,
+          color: highlight ? palette.gold : 'text.primary',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
         {value?.toLocaleString() ?? '–'}
       </Typography>
-      <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-        {label}
-      </Typography>
       {caption && (
-        <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
+        <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
           {caption}
         </Typography>
       )}
-    </Paper>
+    </Box>
   );
 }

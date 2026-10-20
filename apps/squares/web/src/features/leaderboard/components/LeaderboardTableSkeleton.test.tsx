@@ -17,21 +17,23 @@ describe('LeaderboardTableSkeleton', () => {
   it('renders four placeholder rows', () => {
     const { container } = renderSkeleton();
 
-    expect(container.querySelectorAll('.MuiPaper-root')).toHaveLength(4);
+    expect(container.querySelectorAll('[data-testid="leaderboard-row-skeleton"]')).toHaveLength(4);
   });
 
   it('renders a placeholder for every column of a row', () => {
     const { container } = renderSkeleton();
 
-    // rank, avatar, name, wins, squares, win rate
-    const firstRow = container.querySelector('.MuiPaper-root');
+    // rank, avatar, name, wins bar, wins, win rate
+    const firstRow = container.querySelector('[data-testid="leaderboard-row-skeleton"]');
     expect(firstRow?.querySelectorAll('.MuiSkeleton-root')).toHaveLength(6);
   });
 
   it('fades each row more than the one above it', () => {
     const { container } = renderSkeleton();
 
-    const rows = Array.from(container.querySelectorAll<HTMLElement>('.MuiPaper-root'));
+    const rows = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-testid="leaderboard-row-skeleton"]')
+    );
     const opacities = rows.map((row) => Number(getComputedStyle(row).opacity));
 
     expect(opacities[0]).toBe(1);

@@ -1,10 +1,13 @@
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Send } from '@mui/icons-material';
-import { Box, Button, Paper, Skeleton, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Button, Paper, Skeleton, TextField, Typography } from '@mui/material';
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { fonts } from '../../../app/theme';
 import type { ContactRequest } from '../../../types/contact';
 import { isProduction } from '../../../utils/environment';
 import { stripDangerousChars } from '../../../utils/sanitize';
+
+const MESSAGE_MAX_LENGTH = 2000;
 
 interface Props {
   // resolves when the message is sent and rejects when it is not, so the form keeps its input
@@ -13,7 +16,6 @@ interface Props {
 }
 
 export default function ContactForm({ onSubmit, isSubmitting }: Props) {
-  const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,15 +47,28 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
   return (
     <Paper
       sx={{
-        background: theme.palette.grey[900],
-        border: `1px solid ${theme.palette.grey[800]}`,
-        borderRadius: 3,
-        p: 4,
+        bgcolor: 'background.paper',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: '20px',
+        p: { xs: 2.5, sm: 4 },
       }}
     >
       {/* form title */}
-      <Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>
+      <Typography
+        component="h2"
+        sx={{
+          fontFamily: fonts.display,
+          fontWeight: 800,
+          fontSize: '1.9rem',
+          textTransform: 'uppercase',
+          lineHeight: 1,
+        }}
+      >
         Send us a message
+      </Typography>
+      <Typography sx={{ color: 'text.secondary', mt: 1, mb: 3 }}>
+        Questions, bugs, or ideas. Every message reaches a real person.
       </Typography>
 
       {/* contact form */}
@@ -103,11 +118,15 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
           label="Message"
           name="message"
           multiline
-          rows={4}
+          rows={6}
           value={formData.message}
           onChange={handleInputChange}
           required
-          slotProps={{ htmlInput: { maxLength: 2000 } }}
+          helperText={`${formData.message.length}/${MESSAGE_MAX_LENGTH}`}
+          slotProps={{
+            htmlInput: { maxLength: MESSAGE_MAX_LENGTH },
+            formHelperText: { sx: { textAlign: 'right', mx: 0 } },
+          }}
         />
 
         {/* turnstile verification */}
@@ -132,11 +151,10 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
         <Button
           type="submit"
           variant="contained"
+          size="large"
           startIcon={<Send />}
           disabled={isSubmitting || !turnstileToken}
-          sx={{
-            alignSelf: 'flex-start',
-          }}
+          sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
         >
           Send Message
         </Button>

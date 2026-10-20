@@ -16,7 +16,7 @@ export default function Standings() {
 
   if (isError) {
     return (
-      <Alert severity="error" sx={{ mb: 3, borderRadius: 2.5 }}>
+      <Alert severity="error" sx={{ mb: 3 }}>
         We couldn't load the leaderboard. Please try again.
       </Alert>
     );
@@ -48,7 +48,12 @@ export default function Standings() {
 
       {/* the table carries the loading and empty states; it is skipped when the podium holds everyone */}
       {(isLoading || entries.length === 0 || rest.length > 0) && (
-        <LeaderboardTable entries={rest} loading={isLoading} highlightKey={highlightKey} />
+        <LeaderboardTable
+          entries={rest}
+          loading={isLoading}
+          highlightKey={highlightKey}
+          maxWins={entries[0]?.quarterWins}
+        />
       )}
     </>
   );

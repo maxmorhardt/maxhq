@@ -56,6 +56,9 @@ describe('Profile', () => {
     expect(screen.getByText('40')).toBeInTheDocument();
     expect(screen.getByText('25% win rate')).toBeInTheDocument();
     expect(screen.getByTestId('initials')).toHaveTextContent('AS');
+    expect(screen.getByRole('heading', { name: 'Your Numbers' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByText("You're #7 of 50")).toBeInTheDocument();
   });
 
   it('shows a skeleton while anything loads', () => {

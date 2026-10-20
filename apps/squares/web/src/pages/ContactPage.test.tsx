@@ -99,8 +99,11 @@ describe('ContactPage', () => {
   it('renders contact method cards', () => {
     renderPage();
     expect(screen.getByText('Email')).toBeInTheDocument();
-    expect(screen.getByText('Phone')).toBeInTheDocument();
-    expect(screen.getByText('Response Time')).toBeInTheDocument();
+    expect(screen.getByText('Response time')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Rules, scoring, and FAQs' })).toHaveAttribute(
+      'href',
+      '/learn-more'
+    );
   });
 
   it('renders the contact form', () => {
@@ -110,7 +113,10 @@ describe('ContactPage', () => {
 
   it('renders the support email address', () => {
     renderPage();
-    expect(screen.getByText('support@maxhq.io')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'support@maxhq.io' })).toHaveAttribute(
+      'href',
+      'mailto:support@maxhq.io'
+    );
   });
 
   it('shows a success toast when form submission succeeds', async () => {

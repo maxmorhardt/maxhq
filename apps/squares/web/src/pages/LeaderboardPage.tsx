@@ -1,4 +1,4 @@
-import { Container } from '@mui/material';
+import { Container, Typography } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitle from '../components/PageTitle';
 import Standings from '../features/leaderboard/components/Standings';
@@ -23,6 +23,10 @@ export default function LeaderboardPage() {
       />
 
       <Standings />
+
+      <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2.5, textAlign: 'center' }}>
+        Win rate is quarter wins over the quarters a player held a square in.
+      </Typography>
     </Container>
   );
 }
