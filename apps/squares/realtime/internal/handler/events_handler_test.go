@@ -41,11 +41,13 @@ func streamRouter(svc service.StreamService, cfg model.StreamConfig, shutdown <-
 
 func farFuture() int64 { return time.Now().Add(time.Hour).Unix() }
 
-func eventOf(t *testing.T, id string, h *events.ContestEventHeader) service.Event {
+func eventOf(t *testing.T, id, eventType string, contestID uuid.UUID, payload any) service.Event {
 	t.Helper()
-	data, err := json.Marshal(h)
+	event, err := events.NewContestEvent(eventType, contestID, "u", payload)
 	require.NoError(t, err)
-	return service.Event{ID: id, Data: data, Header: *h}
+	data, err := json.Marshal(event)
+	require.NoError(t, err)
+	return service.Event{ID: id, Data: data, Envelope: *event}
 }
 
 func serve(r *gin.Engine, path string, header http.Header) *httptest.ResponseRecorder {
@@ -61,8 +63,8 @@ func serve(r *gin.Engine, path string, header http.Header) *httptest.ResponseRec
 func TestStreamContest_SnapshotThenEventsUntilDeleted(t *testing.T) {
 	contestID := uuid.New()
 	ch := make(chan service.Event, 2)
-	ch <- eventOf(t, "8-0", &events.ContestEventHeader{Type: events.SquareUpdateType, ContestID: contestID})
-	ch <- eventOf(t, "9-0", &events.ContestEventHeader{Type: events.ContestDeletedType, ContestID: contestID})
+	ch <- eventOf(t, "8-0", events.SquareUpdatedType, contestID, map[string]any{"row": 1})
+	ch <- eventOf(t, "9-0", events.ContestDeletedType, contestID, nil)
 	stopped := false
 
 	svc := mocks.NewStreamService(t)
@@ -79,10 +81,10 @@ func TestStreamContest_SnapshotThenEventsUntilDeleted(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "text/event-stream", w.Header().Get("Content-Type"))
 	assert.True(t, strings.HasPrefix(body, "retry: 3000\n\n"))
-	assert.Contains(t, body, "id: 7-0\nevent: connected\ndata: {")
+	assert.Contains(t, body, "id: 7-0\nevent: contest.snapshot\ndata: {")
 	assert.Contains(t, body, `"contest":{"id":"`+contestID.String()+`"}`)
-	assert.Contains(t, body, "id: 8-0\nevent: square_update\n")
-	assert.Contains(t, body, "id: 9-0\nevent: contest_deleted\n")
+	assert.Contains(t, body, "id: 8-0\nevent: square.updated\n")
+	assert.Contains(t, body, "id: 9-0\nevent: contest.deleted\n")
 	assert.True(t, stopped, "the subscription is released when the stream ends")
 }
 
@@ -106,7 +108,7 @@ func TestStreamContest_ResumesFromHeaderOrQuery(t *testing.T) {
 			w := serve(streamRouter(svc, slowTimers, nil, farFuture()), "/events/contests/"+contestID.String()+tt.path, tt.header)
 
 			assert.Equal(t, http.StatusOK, w.Code)
-			assert.NotContains(t, w.Body.String(), "event: connected", "a resumed stream sends no snapshot")
+			assert.NotContains(t, w.Body.String(), "event: contest.snapshot", "a resumed stream sends no snapshot")
 		})
 	}
 }
@@ -137,29 +139,21 @@ func TestStreamContest_SubscribeErrors(t *testing.T) {
 func TestStreamContest_RevokesWhenAccessIsLost(t *testing.T) {
 	contestID := uuid.New()
 	ch := make(chan service.Event, 1)
-	ch <- eventOf(t, "3-0", &events.ContestEventHeader{
-		Type:        events.ParticipantRemovedType,
-		ContestID:   contestID,
-		Participant: &events.ParticipantRef{UserID: "v@b.com"},
-	})
+	ch <- eventOf(t, "3-0", events.ParticipantRemovedType, contestID, events.AccessFields{UserID: "v@b.com"})
 	svc := mocks.NewStreamService(t)
 	svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&service.Subscription{Events: ch, Stop: func() {}}, nil)
 	svc.EXPECT().CheckAccess(mock.Anything, contestID, "v@b.com").Return(errs.ErrInsufficientRole)
 
 	w := serve(streamRouter(svc, slowTimers, nil, farFuture()), "/events/contests/"+contestID.String(), nil)
 
-	assert.Contains(t, w.Body.String(), "id: 3-0\nevent: revoked\n")
-	assert.NotContains(t, w.Body.String(), "participant_removed")
+	assert.Contains(t, w.Body.String(), "id: 3-0\nevent: access.revoked\n")
+	assert.NotContains(t, w.Body.String(), "participant.removed")
 }
 
 func TestStreamContest_KeepsStreamingWhenAccessRecheckFails(t *testing.T) {
 	contestID := uuid.New()
 	ch := make(chan service.Event, 2)
-	ch <- eventOf(t, "3-0", &events.ContestEventHeader{
-		Type:      events.ContestUpdateType,
-		ContestID: contestID,
-		Contest:   &events.ContestVisibility{Visibility: events.ContestVisibilityPrivate},
-	})
+	ch <- eventOf(t, "3-0", events.ContestUpdatedType, contestID, events.AccessFields{Visibility: events.ContestVisibilityPrivate})
 	close(ch)
 	svc := mocks.NewStreamService(t)
 	svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&service.Subscription{Events: ch, Stop: func() {}}, nil)
@@ -167,7 +161,7 @@ func TestStreamContest_KeepsStreamingWhenAccessRecheckFails(t *testing.T) {
 
 	w := serve(streamRouter(svc, slowTimers, nil, farFuture()), "/events/contests/"+contestID.String(), nil)
 
-	assert.Contains(t, w.Body.String(), "event: contest_update")
+	assert.Contains(t, w.Body.String(), "event: contest.updated")
 }
 
 func TestStreamContest_HeartbeatsAndRevocationChecks(t *testing.T) {
@@ -228,9 +222,11 @@ func TestTokenLifetime(t *testing.T) {
 
 func TestWriteEvent(t *testing.T) {
 	w := httptest.NewRecorder()
-	require.NoError(t, writeEvent(w, "12-3", events.NewRevokedEvent(uuid.New())))
+	revoked, err := events.NewContestEvent(events.AccessRevokedType, uuid.New(), events.SystemActor, nil)
+	require.NoError(t, err)
+	require.NoError(t, writeEvent(w, "12-3", revoked))
 
-	assert.True(t, strings.HasPrefix(w.Body.String(), "id: 12-3\nevent: revoked\ndata: {"))
+	assert.True(t, strings.HasPrefix(w.Body.String(), "id: 12-3\nevent: access.revoked\ndata: {"))
 	assert.True(t, strings.HasSuffix(w.Body.String(), "}\n\n"))
 }
 

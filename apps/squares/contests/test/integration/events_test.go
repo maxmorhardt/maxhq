@@ -23,26 +23,26 @@ func TestEvents_ContestChangesAreAppendedToTheContestStream(t *testing.T) {
 
 	claim(t, ownerUser, contest.ID, square.ID)
 
-	var claimed *model.ContestEvent
+	var claimed model.Square
 	require.Eventually(t, func() bool {
 		entries, err := streams.Range(context.Background(), rdb, events.ContestStream(contest.ID), "", 100)
 		require.NoError(t, err)
 		for _, e := range entries {
-			if e.Type != events.SquareUpdateType {
+			if e.Type != events.SquareUpdatedType {
 				continue
 			}
-			var event model.ContestEvent
+			var event events.ContestEvent
 			require.NoError(t, json.Unmarshal(e.Data, &event))
-			if event.Square != nil && event.Square.ID == square.ID {
-				claimed = &event
+			require.NoError(t, json.Unmarshal(event.Data, &claimed))
+			if claimed.ID == square.ID {
 				return true
 			}
 		}
 		return false
 	}, eventually, 100*time.Millisecond, "the relay appends the outbox row to the contest's stream")
 
-	assert.Equal(t, ownerUser, claimed.Square.Owner)
-	assert.Equal(t, int64(2), claimed.Square.Version)
+	assert.Equal(t, ownerUser, claimed.Owner)
+	assert.Equal(t, int64(2), claimed.Version)
 
 	var unpublished int
 	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.outbox WHERE published_at IS NULL`).Scan(&unpublished))

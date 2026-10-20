@@ -3,105 +3,46 @@ package model
 import (
 	"time"
 
-	"github.com/maxmorhardt/maxhq/libs/squares/events"
-
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 )
 
-// contest event types; the strings are part of the contract with realtime and the frontend
-const (
-	SquareUpdateType          = events.SquareUpdateType
-	ContestUpdateType         = events.ContestUpdateType
-	QuarterResultUpdateType   = events.QuarterResultUpdateType
-	QuarterResultRollbackType = events.QuarterResultRollbackType
-	ContestDeletedType        = events.ContestDeletedType
-	ParticipantRemovedType    = events.ParticipantRemovedType
-	ParticipantAddedType      = events.ParticipantAddedType
-)
+// ContestUpdate is the contest.updated payload: the contest without its squares, results, or game
+type ContestUpdate struct {
+	Name       string            `json:"name"`
+	HomeTeam   string            `json:"homeTeam"`
+	AwayTeam   string            `json:"awayTeam"`
+	XLabels    datatypes.JSON    `json:"xLabels"`
+	YLabels    datatypes.JSON    `json:"yLabels"`
+	Visibility ContestVisibility `json:"visibility"`
+	Status     ContestStatus     `json:"status"`
+	GameID     *uuid.UUID        `json:"gameId,omitempty"`
+	Version    int64             `json:"version"`
+	UpdatedAt  time.Time         `json:"updatedAt"`
+}
 
-type ContestEvent struct {
-	Type          string               `json:"type"`
-	ContestID     uuid.UUID            `json:"contestId"`
-	UpdatedBy     string               `json:"updatedBy"`
-	Timestamp     time.Time            `json:"timestamp"`
-	Square        *Square              `json:"square,omitempty"`
-	Contest       *Contest             `json:"contest,omitempty"`
-	Participants  []ContestParticipant `json:"participants,omitempty"`
-	QuarterResult *QuarterResult       `json:"quarterResult,omitempty"`
-	Participant   *ContestParticipant  `json:"participant,omitempty"`
+func NewContestUpdate(contest *Contest) ContestUpdate {
+	return ContestUpdate{
+		Name:       contest.Name,
+		HomeTeam:   contest.HomeTeam,
+		AwayTeam:   contest.AwayTeam,
+		XLabels:    contest.XLabels,
+		YLabels:    contest.YLabels,
+		Visibility: contest.Visibility,
+		Status:     contest.Status,
+		GameID:     contest.GameID,
+		Version:    contest.Version,
+		UpdatedAt:  contest.UpdatedAt,
+	}
+}
+
+// QuarterRollback is the quarter.rolled_back payload: the quarter removed and the status the contest returned to
+type QuarterRollback struct {
+	Quarter int           `json:"quarter"`
+	Status  ContestStatus `json:"status"`
 }
 
 type ContestSnapshot struct {
 	Contest      *Contest             `json:"contest"`
 	Participants []ContestParticipant `json:"participants"`
-}
-
-func NewSquareUpdateEvent(contestID uuid.UUID, updatedBy string, square *Square) *ContestEvent {
-	return &ContestEvent{
-		Type:      SquareUpdateType,
-		ContestID: contestID,
-		UpdatedBy: updatedBy,
-		Timestamp: time.Now(),
-		Square:    square,
-	}
-}
-
-func NewQuarterResultUpdateEvent(contestID uuid.UUID, updatedBy string, quarterResult *QuarterResult) *ContestEvent {
-	return &ContestEvent{
-		Type:          QuarterResultUpdateType,
-		ContestID:     contestID,
-		UpdatedBy:     updatedBy,
-		Timestamp:     time.Now(),
-		QuarterResult: quarterResult,
-	}
-}
-
-func NewQuarterResultRollbackEvent(contestID uuid.UUID, updatedBy string, quarterResult *QuarterResult, contest *Contest) *ContestEvent {
-	return &ContestEvent{
-		Type:          QuarterResultRollbackType,
-		ContestID:     contestID,
-		UpdatedBy:     updatedBy,
-		Timestamp:     time.Now(),
-		QuarterResult: quarterResult,
-		Contest:       contest,
-	}
-}
-
-func NewContestUpdateEvent(contestID uuid.UUID, updatedBy string, contest *Contest) *ContestEvent {
-	return &ContestEvent{
-		Type:      ContestUpdateType,
-		ContestID: contestID,
-		UpdatedBy: updatedBy,
-		Timestamp: time.Now(),
-		Contest:   contest,
-	}
-}
-
-func NewContestDeletedEvent(contestID uuid.UUID, updatedBy string) *ContestEvent {
-	return &ContestEvent{
-		Type:      ContestDeletedType,
-		ContestID: contestID,
-		UpdatedBy: updatedBy,
-		Timestamp: time.Now(),
-	}
-}
-
-func NewParticipantRemovedEvent(contestID uuid.UUID, updatedBy string, participant *ContestParticipant) *ContestEvent {
-	return &ContestEvent{
-		Type:        ParticipantRemovedType,
-		ContestID:   contestID,
-		UpdatedBy:   updatedBy,
-		Participant: participant,
-		Timestamp:   time.Now(),
-	}
-}
-
-func NewParticipantAddedEvent(contestID uuid.UUID, participant *ContestParticipant) *ContestEvent {
-	return &ContestEvent{
-		Type:        ParticipantAddedType,
-		ContestID:   contestID,
-		UpdatedBy:   participant.UserID,
-		Participant: participant,
-		Timestamp:   time.Now(),
-	}
 }

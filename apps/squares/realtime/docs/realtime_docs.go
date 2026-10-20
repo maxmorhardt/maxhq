@@ -22,7 +22,7 @@ const docTemplaterealtime = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Server-sent events for one contest. The first event is a ` + "`" + `connected` + "`" + ` snapshot of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (` + "`" + `\u003cms\u003e-\u003cseq\u003e` + "`" + `) as the SSE id. A ` + "`" + `revoked` + "`" + ` event means the viewer lost access and the stream is closing.",
+                "description": "Server-sent events for one contest. The first event is a ` + "`" + `contest.snapshot` + "`" + ` of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (` + "`" + `\u003cms\u003e-\u003cseq\u003e` + "`" + `) as the SSE id. An ` + "`" + `access.revoked` + "`" + ` event means the viewer lost access and the stream is closing.",
                 "produces": [
                     "text/event-stream"
                 ],

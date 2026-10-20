@@ -15,13 +15,17 @@ A real-time collaborative grid application frontend built with React and TypeScr
 - **React 19** with TypeScript for modern frontend development
 - **OIDC Authentication** with react-oidc-context
 - **Material-UI Components** for consistent design system
-- **Redux Toolkit** for state management
-- **Real-time Collaboration** via server-sent events that resume with `Last-Event-ID` after a dropped connection
+- **Redux Toolkit and RTK Query** for server data, caching, retries, and the live contest state
+- **Real-time Collaboration** via typed server-sent events that resume with `Last-Event-ID` after a dropped connection
 - **ESLint & TypeScript** for code quality and type safety
 
 ## Architecture
 
-Each contest page opens one event stream to the realtime service. A change is sent to the contests service over HTTP, committed with an event in the same transaction, and delivered to every open stream for that contest. A client that drops and reconnects sends the id of the last event it applied and receives only what it missed.
+Each contest page opens one event stream to the realtime service. It starts with a `contest.snapshot`, then receives one typed event per change (`square.updated`, `contest.updated`, `quarter.recorded`, and so on). A change is sent to the contests service over HTTP, committed with its event in the same transaction, and delivered to every open stream for that contest. A client that drops and reconnects sends the id of the last event it applied and receives only what it missed.
+
+The stream fetches a fresh token for every connection and reconnects as soon as a sleeping tab wakes up, so an expired session never leaves the page waiting.
+
+`AGENTS.md` describes the folder layout and where pages, containers, and components draw the line.
 
 ## Dependencies
 
