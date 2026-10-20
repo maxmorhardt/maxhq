@@ -31,7 +31,7 @@ const (
 
 type EventsHandler interface {
 	StreamContest(c *gin.Context)
-	StreamGames(c *gin.Context)
+	StreamGame(c *gin.Context)
 }
 
 type eventsHandler struct {
@@ -118,18 +118,24 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	log.Info("contest stream closed", "reason", reason)
 }
 
-// @Summary Stream game scores
-// @Description Server-sent `game.updated` events for every NFL game as its status, period, or score changes. Each data line is `{"game": {...}}` in the shape `/games/scoreboard` returns. Public; resumable with Last-Event-ID.
+// @Summary Stream one game's score
+// @Description Server-sent `game.updated` events for one NFL game as its status, period, or score changes, for a contest page to follow its game live. Each data line is `{"game": {...}}` in the shape `/games/{id}` returns. Public; resumable with Last-Event-ID.
 // @Tags events
 // @Produce text/event-stream
+// @Param id path string true "Game ID"
 // @Param Last-Event-ID header string false "Id of the last event the client applied"
 // @Param lastEventId query string false "Same as the Last-Event-ID header, for clients that cannot set headers"
 // @Success 200 {string} string "text/event-stream; each data line is a JSON game update"
 // @Failure 400 {object} api.APIError
 // @Failure 503 {object} api.APIError
-// @Router /events/games [get]
-func (h *eventsHandler) StreamGames(c *gin.Context) {
+// @Router /events/games/{id} [get]
+func (h *eventsHandler) StreamGame(c *gin.Context) {
 	log := logging.FromGin(c)
+
+	gameID, ok := api.PathUUID(c, "id")
+	if !ok {
+		return
+	}
 
 	lastEventID, ok := parseLastEventID(c)
 	if !ok {
@@ -137,10 +143,11 @@ func (h *eventsHandler) StreamGames(c *gin.Context) {
 		return
 	}
 
+	log = log.With("game_id", gameID)
 	ctx := logging.NewContext(c.Request.Context(), log)
-	sub, err := h.streams.SubscribeGames(ctx, lastEventID)
+	sub, err := h.streams.SubscribeGame(ctx, gameID, lastEventID)
 	if err != nil {
-		log.Error("failed to open games stream", "error", err)
+		log.Error("failed to open game stream", "error", err)
 		c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, "Real-time updates unavailable", c))
 		return
 	}

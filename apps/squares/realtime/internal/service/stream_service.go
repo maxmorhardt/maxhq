@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -37,7 +38,7 @@ type Subscription struct {
 
 type StreamService interface {
 	Subscribe(ctx context.Context, contestID uuid.UUID, user, lastEventID string) (*Subscription, error)
-	SubscribeGames(ctx context.Context, lastEventID string) (*Subscription, error)
+	SubscribeGame(ctx context.Context, gameID uuid.UUID, lastEventID string) (*Subscription, error)
 	CheckAccess(ctx context.Context, contestID uuid.UUID, user string) error
 	IsRevoked(ctx context.Context, user string, issuedAt int64) (bool, error)
 }
@@ -106,8 +107,8 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 	return sub, nil
 }
 
-// game scores are public, so the games stream needs no snapshot or access check: it replays what was missed, then follows
-func (s *streamService) SubscribeGames(ctx context.Context, lastEventID string) (*Subscription, error) {
+// game scores are public, so a game's stream needs no snapshot or access check: it replays what was missed, then follows
+func (s *streamService) SubscribeGame(ctx context.Context, gameID uuid.UUID, lastEventID string) (*Subscription, error) {
 	listener, err := s.hub.Subscribe(ctx, events.GamesStream)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errs.ErrDependencyFailed, err)
@@ -130,7 +131,7 @@ func (s *streamService) SubscribeGames(ctx context.Context, lastEventID string) 
 
 	ctx, cancel := context.WithCancel(ctx)
 	return &Subscription{
-		Events: s.pump(ctx, events.GamesStream, start, listener, decodeGameEntry),
+		Events: s.pump(ctx, events.GamesStream, start, listener, decodeGameEntry(gameID)),
 		Stop: func() {
 			cancel()
 			s.hub.Unsubscribe(listener)
@@ -144,9 +145,21 @@ func decodeContestEvent(entry streams.Entry) (events.ContestEvent, error) {
 	return envelope, err
 }
 
+// every game shares one stream, so a viewer's stream passes on only the game they watch
+var errOtherGame = errors.New("an update for another game")
+
 // game entries carry their type on the stream entry, not in an envelope
-func decodeGameEntry(entry streams.Entry) (events.ContestEvent, error) {
-	return events.ContestEvent{Type: entry.Type}, nil
+func decodeGameEntry(gameID uuid.UUID) func(streams.Entry) (events.ContestEvent, error) {
+	return func(entry streams.Entry) (events.ContestEvent, error) {
+		var update events.GameUpdated
+		if err := json.Unmarshal(entry.Data, &update); err != nil {
+			return events.ContestEvent{}, err
+		}
+		if update.Game.ID != gameID {
+			return events.ContestEvent{}, errOtherGame
+		}
+		return events.ContestEvent{Type: entry.Type}, nil
+	}
 }
 
 func (s *streamService) pump(ctx context.Context, stream, start string, listener *Listener, decode func(streams.Entry) (events.ContestEvent, error)) <-chan Event {
@@ -164,6 +177,9 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 			sent = entry.ID
 
 			envelope, err := decode(entry)
+			if errors.Is(err, errOtherGame) {
+				return true
+			}
 			if err != nil {
 				log.Warn("skipping undecodable stream entry", "id", entry.ID, "error", err)
 				return true

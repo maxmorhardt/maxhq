@@ -239,9 +239,16 @@ func TestRequiresAccessCheck(t *testing.T) {
 	}
 }
 
+var watched = uuid.MustParse("7d1b0b2e-5a7c-4c2f-9d63-2f1e8f3a9b10")
+
 func publishGame(t *testing.T, client *redis.Client, home int) string {
 	t.Helper()
-	data, err := json.Marshal(events.GameUpdated{Game: events.Game{ID: uuid.New(), HomeScore: home}})
+	return publishGameFor(t, client, watched, home)
+}
+
+func publishGameFor(t *testing.T, client *redis.Client, gameID uuid.UUID, home int) string {
+	t.Helper()
+	data, err := json.Marshal(events.GameUpdated{Game: events.Game{ID: gameID, HomeScore: home}})
 	require.NoError(t, err)
 	id, err := client.XAdd(context.Background(), &redis.XAddArgs{
 		Stream: streams.Key(events.GamesStream),
@@ -251,11 +258,11 @@ func publishGame(t *testing.T, client *redis.Client, home int) string {
 	return id
 }
 
-func TestSubscribeGames_FollowsNewUpdates(t *testing.T) {
+func TestSubscribeGame_FollowsNewUpdates(t *testing.T) {
 	client, hub := newHub(t)
 	publishGame(t, client, 3)
 
-	sub, err := service.NewStreamService(client, hub, nil, nil).SubscribeGames(context.Background(), "")
+	sub, err := service.NewStreamService(client, hub, nil, nil).SubscribeGame(context.Background(), watched, "")
 	require.NoError(t, err)
 	t.Cleanup(sub.Stop)
 
@@ -266,26 +273,46 @@ func TestSubscribeGames_FollowsNewUpdates(t *testing.T) {
 	assert.Contains(t, string(e.Data), `"homeScore":7`)
 }
 
-func TestSubscribeGames_ResumeReplaysOnlyTheGap(t *testing.T) {
+func TestSubscribeGame_ResumeReplaysOnlyTheGap(t *testing.T) {
 	client, hub := newHub(t)
 	seen := publishGame(t, client, 3)
 	missed := publishGame(t, client, 7)
 
-	sub, err := service.NewStreamService(client, hub, nil, nil).SubscribeGames(context.Background(), seen)
+	sub, err := service.NewStreamService(client, hub, nil, nil).SubscribeGame(context.Background(), watched, seen)
 	require.NoError(t, err)
 	t.Cleanup(sub.Stop)
 
 	assert.Equal(t, missed, next(t, sub).ID)
 }
 
-func TestSubscribeGames_RedisDownIsADependencyFailure(t *testing.T) {
+func TestSubscribeGame_RedisDownIsADependencyFailure(t *testing.T) {
 	mr := miniredis.RunT(t)
 	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = client.Close() })
 	hub := service.NewHub(client)
 	mr.Close()
 
-	_, err := service.NewStreamService(client, hub, nil, nil).SubscribeGames(context.Background(), "")
+	_, err := service.NewStreamService(client, hub, nil, nil).SubscribeGame(context.Background(), watched, "")
 
 	assert.ErrorIs(t, err, errs.ErrDependencyFailed)
+}
+
+func TestSubscribeGame_PassesOnOnlyTheWatchedGame(t *testing.T) {
+	client, hub := newHub(t)
+
+	sub, err := service.NewStreamService(client, hub, nil, nil).SubscribeGame(context.Background(), watched, "")
+	require.NoError(t, err)
+	t.Cleanup(sub.Stop)
+
+	publishGameFor(t, client, uuid.New(), 21)
+	_, err = client.XAdd(context.Background(), &redis.XAddArgs{
+		Stream: streams.Key(events.GamesStream),
+		Values: []string{"type", events.GameUpdatedType, "data", "not json", "event_id", uuid.NewString()},
+	}).Result()
+	require.NoError(t, err)
+	mine := publishGame(t, client, 7)
+
+	e := next(t, sub)
+	assert.Equal(t, mine, e.ID, "other games and unreadable entries are skipped")
+	assert.Contains(t, string(e.Data), `"homeScore":7`)
 }

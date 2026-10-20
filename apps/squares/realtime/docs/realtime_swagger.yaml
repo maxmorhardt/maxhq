@@ -85,12 +85,18 @@ paths:
       summary: Stream contest events
       tags:
       - events
-  /events/games:
+  /events/games/{id}:
     get:
-      description: 'Server-sent `game.updated` events for every NFL game as its status,
-        period, or score changes. Each data line is `{"game": {...}}` in the shape
-        `/games/scoreboard` returns. Public; resumable with Last-Event-ID.'
+      description: 'Server-sent `game.updated` events for one NFL game as its status,
+        period, or score changes, for a contest page to follow its game live. Each
+        data line is `{"game": {...}}` in the shape `/games/{id}` returns. Public;
+        resumable with Last-Event-ID.'
       parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
       - description: Id of the last event the client applied
         in: header
         name: Last-Event-ID
@@ -115,7 +121,7 @@ paths:
           description: Service Unavailable
           schema:
             $ref: '#/definitions/api.APIError'
-      summary: Stream game scores
+      summary: Stream one game's score
       tags:
       - events
   /health/live:

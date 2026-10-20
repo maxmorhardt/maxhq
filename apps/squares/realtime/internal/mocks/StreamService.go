@@ -191,29 +191,29 @@ func (_c *StreamService_Subscribe_Call) RunAndReturn(run func(context.Context, u
 	return _c
 }
 
-// SubscribeGames provides a mock function with given fields: ctx, lastEventID
-func (_m *StreamService) SubscribeGames(ctx context.Context, lastEventID string) (*service.Subscription, error) {
-	ret := _m.Called(ctx, lastEventID)
+// SubscribeGame provides a mock function with given fields: ctx, gameID, lastEventID
+func (_m *StreamService) SubscribeGame(ctx context.Context, gameID uuid.UUID, lastEventID string) (*service.Subscription, error) {
+	ret := _m.Called(ctx, gameID, lastEventID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SubscribeGames")
+		panic("no return value specified for SubscribeGame")
 	}
 
 	var r0 *service.Subscription
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*service.Subscription, error)); ok {
-		return rf(ctx, lastEventID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (*service.Subscription, error)); ok {
+		return rf(ctx, gameID, lastEventID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *service.Subscription); ok {
-		r0 = rf(ctx, lastEventID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) *service.Subscription); ok {
+		r0 = rf(ctx, gameID, lastEventID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*service.Subscription)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, lastEventID)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, gameID, lastEventID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -221,31 +221,32 @@ func (_m *StreamService) SubscribeGames(ctx context.Context, lastEventID string)
 	return r0, r1
 }
 
-// StreamService_SubscribeGames_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SubscribeGames'
-type StreamService_SubscribeGames_Call struct {
+// StreamService_SubscribeGame_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SubscribeGame'
+type StreamService_SubscribeGame_Call struct {
 	*mock.Call
 }
 
-// SubscribeGames is a helper method to define mock.On call
+// SubscribeGame is a helper method to define mock.On call
 //   - ctx context.Context
+//   - gameID uuid.UUID
 //   - lastEventID string
-func (_e *StreamService_Expecter) SubscribeGames(ctx interface{}, lastEventID interface{}) *StreamService_SubscribeGames_Call {
-	return &StreamService_SubscribeGames_Call{Call: _e.mock.On("SubscribeGames", ctx, lastEventID)}
+func (_e *StreamService_Expecter) SubscribeGame(ctx interface{}, gameID interface{}, lastEventID interface{}) *StreamService_SubscribeGame_Call {
+	return &StreamService_SubscribeGame_Call{Call: _e.mock.On("SubscribeGame", ctx, gameID, lastEventID)}
 }
 
-func (_c *StreamService_SubscribeGames_Call) Run(run func(ctx context.Context, lastEventID string)) *StreamService_SubscribeGames_Call {
+func (_c *StreamService_SubscribeGame_Call) Run(run func(ctx context.Context, gameID uuid.UUID, lastEventID string)) *StreamService_SubscribeGame_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *StreamService_SubscribeGames_Call) Return(_a0 *service.Subscription, _a1 error) *StreamService_SubscribeGames_Call {
+func (_c *StreamService_SubscribeGame_Call) Return(_a0 *service.Subscription, _a1 error) *StreamService_SubscribeGame_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *StreamService_SubscribeGames_Call) RunAndReturn(run func(context.Context, string) (*service.Subscription, error)) *StreamService_SubscribeGames_Call {
+func (_c *StreamService_SubscribeGame_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (*service.Subscription, error)) *StreamService_SubscribeGame_Call {
 	_c.Call.Return(run)
 	return _c
 }
