@@ -1,9 +1,6 @@
 # shared by every squares service; each Makefile sets SERVICE and includes this
 .DEFAULT_GOAL := help
 
-# module mode everywhere, so make, CI, and the docker build resolve the libs the same way (through replace)
-export GOWORK := off
-
 BIN_DIR     ?= bin
 OUT         ?= $(BIN_DIR)/$(SERVICE)
 COVER_FILE  ?= coverage.out

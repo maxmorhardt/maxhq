@@ -32,7 +32,7 @@ One release pull request covers every app with pending changes. Pull requests ar
 
 [`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs` tests every Go service, a changed chart is linted and rendered, and a change under `infra/terraform` plans every module. `CI Complete` is the single required check. [`cd-terraform.yml`](.github/workflows/cd-terraform.yml) applies Terraform on merge.
 
-The Go modules are tied together by `replace` directives, so each builds on its own. [`go.work`](go.work) only lets editors see all of them at once.
+All Go code is one module: [`go.mod`](go.mod) at the root, so every service and library shares one set of dependency versions.
 
 ## Git hooks
 

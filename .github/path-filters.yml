@@ -11,6 +11,8 @@ accounts:
 realtime:
   - 'apps/squares/realtime/**'
 go_libs:
+  - 'go.mod'
+  - 'go.sum'
   - 'libs/**'
 squares_build:
   - 'apps/squares/Dockerfile*'

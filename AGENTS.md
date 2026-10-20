@@ -2,7 +2,7 @@
 
 ## Project Context
 
-- Project: maxhq monorepo (`github.com/maxmorhardt/maxhq`, formerly `maxhq`)
+- Project: maxhq monorepo (`github.com/maxmorhardt/maxhq`)
 - Purpose: Every public app under `maxhq.io`, the Helm chart for each, and the tooling for what runs outside the cluster.
 - Related repos: `gitops` (Argo CD Applications and component values: what runs where, at which image tag), `workflows` (shared reusable CI).
 
@@ -30,7 +30,7 @@
    - Tags are `<component>/<version>`. Pushing one runs `cd-prod.yml` for that component only.
    - Never hand-edit `.release-please-manifest.json`, `CHANGELOG.md`, or a chart's `version`.
 3. Apps stay independent
-   - No app imports from another app's directory. Shared Go code lives in `libs` and is consumed through `replace` directives.
+   - No app imports from another app's directory. All Go code is one module (`github.com/maxmorhardt/maxhq`, root `go.mod`); shared code lives in `libs`.
 4. Git is the only source of truth for the cluster
    - Nothing here runs `helm install` or `kubectl apply`. CI commits version bumps to `gitops` and Argo CD reconciles.
 5. Terraform is applied, not reconciled

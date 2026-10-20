@@ -4,7 +4,6 @@
   "include-v-in-tag": false,
   "include-component-in-tag": true,
   "separate-pull-requests": false,
-  "bootstrap-sha": "873adead9500f16ede27a032f7c88cd7b142e377",
   "packages": {
     "apps/maxhq": {
       "release-type": "node",
@@ -19,26 +18,22 @@
     "apps/squares/contests": {
       "release-type": "go",
       "component": "squares-contests",
-      "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0"
+      "changelog-path": "CHANGELOG.md"
     },
     "apps/squares/games": {
       "release-type": "go",
       "component": "squares-games",
-      "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0"
+      "changelog-path": "CHANGELOG.md"
     },
     "apps/squares/accounts": {
       "release-type": "go",
       "component": "squares-accounts",
-      "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0"
+      "changelog-path": "CHANGELOG.md"
     },
     "apps/squares/realtime": {
       "release-type": "go",
       "component": "squares-realtime",
-      "changelog-path": "CHANGELOG.md",
-      "initial-version": "1.0.0"
+      "changelog-path": "CHANGELOG.md"
     },
     "charts/maxhq": {
       "release-type": "helm",
