@@ -185,10 +185,6 @@ export interface ContestSnapshot {
   participants: Participant[];
 }
 
-export interface UpdateContestRequest {
-  visibility?: ContestVisibility;
-}
-
 export interface Participant {
   id: string;
   contestId: string;

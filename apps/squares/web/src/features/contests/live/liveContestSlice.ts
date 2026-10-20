@@ -184,11 +184,6 @@ const liveContestSlice = createSlice({
       .addMatcher(endpoints.clearMySquares.matchFulfilled, (state, action) => {
         action.payload.forEach((square) => upsertSquare(state, square));
       })
-      .addMatcher(endpoints.updateContest.matchFulfilled, (state, action) => {
-        if (action.payload.id === state.contestId) {
-          applyContestUpdate(state, action.payload);
-        }
-      })
       .addMatcher(endpoints.updateParticipant.matchFulfilled, (state, action) =>
         upsertParticipant(state, action.payload)
       )

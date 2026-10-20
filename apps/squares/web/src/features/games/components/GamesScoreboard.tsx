@@ -5,7 +5,6 @@ import { fonts } from '../../../app/theme';
 import type { Game, ScoreboardWeek } from '../../../types/contest';
 import { hasWeek, isLive, weekLabel } from '../../../utils/game';
 import { useGetScoreboardQuery } from '../api';
-import { useGamesStream } from '../useGamesStream';
 import GameCard from './GameCard';
 
 function byDay(games: Game[]): [string, Game[]][] {
@@ -27,11 +26,10 @@ const gridSx = {
   gap: 1.5,
 } as const;
 
-// one week of NFL games, live, with a way to step through the season
+// one week of NFL games with a way to step through the season; a contest page is where scores update live
 export default function GamesScoreboard() {
   const [week, setWeek] = useState<ScoreboardWeek | undefined>(undefined);
   const { data: board, isLoading, isError, refetch } = useGetScoreboardQuery(week);
-  useGamesStream(week);
 
   if (isLoading) {
     return (

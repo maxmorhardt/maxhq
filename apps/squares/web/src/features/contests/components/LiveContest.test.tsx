@@ -30,12 +30,12 @@ vi.mock('./ContestView', () => ({
     </div>
   ),
 }));
-const games = vi.hoisted(() => ({ useGetGameQuery: vi.fn(), useGamesStream: vi.fn() }));
+const games = vi.hoisted(() => ({ useGetGameQuery: vi.fn(), useGameStream: vi.fn() }));
 vi.mock('../../games/api', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   useGetGameQuery: games.useGetGameQuery,
 }));
-vi.mock('../../games/useGamesStream', () => ({ useGamesStream: games.useGamesStream }));
+vi.mock('../../games/useGameStream', () => ({ useGameStream: games.useGameStream }));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async () => ({
   ...(await vi.importActual<typeof import('react-router')>('react-router')),
@@ -101,7 +101,7 @@ describe('LiveContest', () => {
     snapshot(makeContest({ gameId: 'g-1' }));
 
     expect(games.useGetGameQuery).toHaveBeenLastCalledWith('g-1');
-    expect(games.useGamesStream).toHaveBeenLastCalledWith(undefined, true);
+    expect(games.useGameStream).toHaveBeenLastCalledWith('g-1');
     expect(screen.getByTestId('view')).toHaveAttribute('data-score', '14');
   });
 
@@ -110,7 +110,7 @@ describe('LiveContest', () => {
     const { snapshot } = renderLive();
     snapshot(makeContest({ gameId: undefined }));
 
-    expect(games.useGamesStream).toHaveBeenLastCalledWith(undefined, false);
+    expect(games.useGameStream).toHaveBeenLastCalledWith(undefined);
   });
 
   it('leaves a deleted contest', () => {

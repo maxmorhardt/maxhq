@@ -10,7 +10,6 @@ import type {
   Participant,
   RandomClaimResponse,
   Square,
-  UpdateContestRequest,
   UpdateParticipantRequest,
 } from '../../types/contest';
 
@@ -45,20 +44,6 @@ export const contestsApi = baseApi.injectEndpoints({
     createContest: build.mutation<Contest, CreateContestRequest>({
       query: (body) => ({ url: '/contests', method: 'POST', body }),
       invalidatesTags: ['ContestFeed', 'UserStats'],
-    }),
-
-    // the version guards against overwriting someone else's change; a 412 means it is stale
-    updateContest: build.mutation<
-      Contest,
-      { id: string; updates: UpdateContestRequest; version?: number }
-    >({
-      query: ({ id, updates, version }) => ({
-        url: `/contests/${id}`,
-        method: 'PATCH',
-        body: updates,
-        headers: version ? { 'If-Match': `"${version}"` } : undefined,
-      }),
-      invalidatesTags: ['ContestFeed'],
     }),
 
     deleteContest: build.mutation<void, string>({
@@ -147,7 +132,6 @@ export const contestsApi = baseApi.injectEndpoints({
 export const {
   useGetContestFeedInfiniteQuery,
   useCreateContestMutation,
-  useUpdateContestMutation,
   useDeleteContestMutation,
   useClaimSquareMutation,
   useClearSquareMutation,

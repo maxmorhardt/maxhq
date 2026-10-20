@@ -30,12 +30,6 @@ describe('contestsApi', () => {
       'POST',
       '/contests',
     ],
-    [
-      'updateContest',
-      () => endpoints.updateContest.initiate({ id: 'c', updates: {} }),
-      'PATCH',
-      '/contests/c',
-    ],
     ['deleteContest', () => endpoints.deleteContest.initiate('c'), 'DELETE', '/contests/c'],
     [
       'claimSquare',
@@ -102,11 +96,6 @@ describe('contestsApi', () => {
   it.each(cases)('%s calls the right endpoint', async (_, action, method, path) => {
     await store.dispatch(action() as never);
     expect(fetch.lastRequest()).toMatchObject({ method, path });
-  });
-
-  it('sends the contest version as If-Match on updates', async () => {
-    await store.dispatch(endpoints.updateContest.initiate({ id: 'c', updates: {}, version: 4 }));
-    expect(fetch.lastRequest().request.headers.get('If-Match')).toBe('"4"');
   });
 
   it('pages the feed with the cursor from the last page', async () => {

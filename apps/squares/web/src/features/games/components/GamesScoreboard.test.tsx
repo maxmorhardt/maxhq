@@ -6,7 +6,6 @@ import GamesScoreboard from './GamesScoreboard';
 
 const api = vi.hoisted(() => ({ useGetScoreboardQuery: vi.fn() }));
 vi.mock('../api', () => api);
-vi.mock('../useGamesStream', () => ({ useGamesStream: vi.fn() }));
 
 const game = (id: string, gameTime: string, status: Game['status'] = 'scheduled') =>
   ({

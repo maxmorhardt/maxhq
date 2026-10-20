@@ -150,19 +150,6 @@ describe('liveContestSlice write responses', () => {
     expect(state.contest?.squares[0].value).toBe('');
   });
 
-  it('applies updated contests for this contest only', () => {
-    let state = liveContestReducer(
-      live(),
-      fulfilled('updateContest', makeContest({ visibility: 'public', version: 2 }))
-    );
-    expect(state.contest?.visibility).toBe('public');
-    state = liveContestReducer(
-      state,
-      fulfilled('updateContest', makeContest({ id: 'other', name: 'X', version: 9 }))
-    );
-    expect(state.contest?.name).toBe('Test Bowl');
-  });
-
   it('applies participant edits and removals', () => {
     let state = liveContestReducer(
       live(),

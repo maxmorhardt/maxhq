@@ -1,4 +1,4 @@
-import { Delete, Edit, EmojiEvents, Logout, Visibility } from '@mui/icons-material';
+import { Delete, EmojiEvents, InfoOutlined, Logout } from '@mui/icons-material';
 import { Box, Chip, IconButton, LinearProgress, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
@@ -10,8 +10,8 @@ import { MAX_CONTEST_SQUARES, type ContestSummary } from '../../../../types/cont
 import { getStatusLabel, isInGameStatus, isTerminalStatus } from '../../../../utils/contestStatus';
 import { formatKickoff } from '../../../../utils/game';
 import LeaveContestDialog from '../LeaveContestDialog';
+import ContestInfoDialog from './ContestInfoDialog';
 import DeleteContestDialog from './DeleteContestDialog';
-import EditContestDialog from './EditContestDialog';
 
 interface Props {
   contests: ContestSummary[];
@@ -82,13 +82,13 @@ export default function ContestsTable({
   const navigate = useNavigate();
   const auth = useAuth();
 
-  const [editTarget, setEditTarget] = useState<ContestSummary | null>(null);
+  const [infoTarget, setInfoTarget] = useState<ContestSummary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ContestSummary | null>(null);
   const [leaveTarget, setLeaveTarget] = useState<ContestSummary | null>(null);
 
   const userEmail = auth.user?.profile?.email;
 
-  const canModify = (contest: ContestSummary) =>
+  const canDelete = (contest: ContestSummary) =>
     contest.role === 'owner' && !isTerminalStatus(contest.status);
   const canLeave = (contest: ContestSummary) =>
     !!userEmail && contest.role !== 'owner' && !isTerminalStatus(contest.status);
@@ -115,38 +115,25 @@ export default function ContestsTable({
 
   const actions = (contest: ContestSummary) => (
     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', flexShrink: 0 }}>
-      {canModify(contest) ? (
-        <>
-          <Tooltip title="Edit Contest">
-            <IconButton
-              aria-label="Edit contest"
-              size="small"
-              onClick={stop(() => setEditTarget(contest))}
-              sx={actionSx()}
-            >
-              <Edit fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete Contest">
-            <IconButton
-              aria-label="Delete contest"
-              size="small"
-              onClick={stop(() => setDeleteTarget(contest))}
-              sx={actionSx(true)}
-            >
-              <Delete fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </>
-      ) : (
-        <Tooltip title="View Contest">
+      <Tooltip title="Contest Details">
+        <IconButton
+          aria-label="Contest details"
+          size="small"
+          onClick={stop(() => setInfoTarget(contest))}
+          sx={actionSx()}
+        >
+          <InfoOutlined fontSize="small" />
+        </IconButton>
+      </Tooltip>
+      {canDelete(contest) && (
+        <Tooltip title="Delete Contest">
           <IconButton
-            aria-label="View contest"
+            aria-label="Delete contest"
             size="small"
-            onClick={stop(() => setEditTarget(contest))}
-            sx={actionSx()}
+            onClick={stop(() => setDeleteTarget(contest))}
+            sx={actionSx(true)}
           >
-            <Visibility fontSize="small" />
+            <Delete fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
@@ -288,7 +275,14 @@ export default function ContestsTable({
       {footer}
 
       <DeleteContestDialog contest={deleteTarget} onClose={() => setDeleteTarget(null)} />
-      <EditContestDialog contest={editTarget} onClose={() => setEditTarget(null)} />
+      <ContestInfoDialog
+        contest={infoTarget}
+        onClose={() => setInfoTarget(null)}
+        onDelete={(contest) => {
+          setInfoTarget(null);
+          setDeleteTarget(contest);
+        }}
+      />
       <LeaveContestDialog contest={leaveTarget} onClose={() => setLeaveTarget(null)} />
     </>
   );

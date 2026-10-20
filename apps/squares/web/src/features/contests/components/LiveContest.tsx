@@ -7,7 +7,7 @@ import ForbiddenError from '../../../components/errors/ForbiddenError';
 import NotFoundError from '../../../components/errors/NotFoundError';
 import type { QuarterResult } from '../../../types/contest';
 import { useGetGameQuery } from '../../games/api';
-import { useGamesStream } from '../../games/useGamesStream';
+import { useGameStream } from '../../games/useGameStream';
 import { useToast } from '../../toast/useToast';
 import type { ContestEvent } from '../live/events';
 import {
@@ -78,7 +78,7 @@ export default function LiveContest({ contestId }: Props) {
   // the score comes from the games service; the contest stream only carries the contest
   const gameId = contest?.gameId;
   const { data: game } = useGetGameQuery(gameId ?? skipToken);
-  useGamesStream(undefined, Boolean(gameId));
+  useGameStream(gameId);
 
   useEffect(() => {
     if (!winnerFlash) {

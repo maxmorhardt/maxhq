@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../api/baseQuery';
 import { openEventStream, type StreamStatus } from '../../api/eventStream';
 import { useAppDispatch } from '../../app/hooks';
-import type { Game, ScoreboardWeek } from '../../types/contest';
+import type { Game } from '../../types/contest';
 import { gamesApi } from './api';
 
-export const gamesEventsUrl = `${API_BASE_URL}/events/games`;
+export const gameEventsUrl = (gameId: string) =>
+  `${API_BASE_URL}/events/games/${encodeURIComponent(gameId)}`;
 
 // the scores are public, so the stream is opened without a token
 const noToken = async () => null;
@@ -19,37 +20,29 @@ function parseGame(data: string): Game | null {
   }
 }
 
-// patches the cached week and any cached game as games change, so scores move without a refetch
-export function useGamesStream(week?: ScoreboardWeek, enabled = true): StreamStatus {
+// follows one game live while a contest on it is open, keeping its cached copy current
+export function useGameStream(gameId: string | undefined): StreamStatus | null {
   const dispatch = useAppDispatch();
-  const [status, setStatus] = useState<StreamStatus>('connecting');
+  const [status, setStatus] = useState<StreamStatus | null>(null);
 
   useEffect(() => {
-    if (!enabled) {
+    if (!gameId) {
       return;
     }
 
     const stream = openEventStream({
-      url: gamesEventsUrl,
+      url: gameEventsUrl(gameId),
       getToken: noToken,
       onStatus: setStatus,
       onRejected: () => setStatus('failed'),
       onMessage: ({ data }) => {
         const game = parseGame(data);
-        if (!game) {
+        if (!game || game.id !== gameId) {
           return;
         }
 
         dispatch(
-          gamesApi.util.updateQueryData('getScoreboard', week, (board) => {
-            const index = board.games.findIndex((g) => g.id === game.id);
-            if (index !== -1 && game.updatedAt >= board.games[index].updatedAt) {
-              board.games[index] = game;
-            }
-          })
-        );
-        dispatch(
-          gamesApi.util.updateQueryData('getGame', game.id, (cached) =>
+          gamesApi.util.updateQueryData('getGame', gameId, (cached) =>
             game.updatedAt >= cached.updatedAt ? game : cached
           )
         );
@@ -57,7 +50,7 @@ export function useGamesStream(week?: ScoreboardWeek, enabled = true): StreamSta
     });
 
     return () => stream.close();
-  }, [dispatch, week, enabled]);
+  }, [dispatch, gameId]);
 
-  return status;
+  return gameId ? status : null;
 }
