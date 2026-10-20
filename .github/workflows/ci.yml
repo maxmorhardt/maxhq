@@ -124,6 +124,7 @@ jobs:
     with:
       repository: ${{ github.repository }}
       working_directory: apps/squares/${{ matrix.service }}
+      module_directory: .
 
   squares-docker:
     needs: [changes, squares-go]
@@ -151,6 +152,7 @@ jobs:
     with:
       repository: ${{ github.repository }}
       working_directory: libs/${{ matrix.lib }}
+      module_directory: .
 
   # charts
 
