@@ -11,7 +11,7 @@ Monorepo for everything served under `maxhq.io`: the apps, their Helm charts, an
 | [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
 | [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
-| [`charts`](charts) | Helm chart for each app, the gateway, and the `cloudflare-cidr` CronJob | - |
+| [`charts`](charts) | Helm chart for each app, the gateway, and the dev-only `cloudflare-cidr` alert | - |
 | [`infra/terraform`](infra/terraform/README.md) | AWS backups, Cloudflare DNS, GitHub rulesets and environments | - |
 | [`infra/k3s`](infra/k3s/README.md) | Node bootstrap and the k3s runbook | - |
 | [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/README.md) | Maintenance page Worker | - |

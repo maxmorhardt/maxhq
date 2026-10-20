@@ -11,6 +11,7 @@ spec:
   failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
   jobTemplate:
     spec:
+      backoffLimit: {{ .Values.backoffLimit }}
       template:
         metadata:
           labels:
@@ -32,6 +33,9 @@ spec:
             imagePullPolicy: {{ .Values.image.pullPolicy }}
             command:
             {{- toYaml .Values.image.command | nindent 12 }}
+            env:
+            - name: PYTHONDONTWRITEBYTECODE
+              value: '1'
             envFrom:
             - secretRef:
                 name: {{ .Values.existingSecret }}

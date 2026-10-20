@@ -7,5 +7,3 @@ metadata:
 data:
   cloudflare-cidr.py: |-
 {{ .Files.Get "cloudflare-cidr.py" | indent 4 }}
-  requirements.txt: |-
-{{ .Files.Get "requirements.txt" | indent 4 }}

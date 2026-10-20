@@ -80,6 +80,8 @@ jobs:
 
   chart-deploy:
     needs: [parse, chart-publish]
+    # cloudflare-cidr runs in dev only
+    if: needs.parse.outputs.app != 'cloudflare-cidr'
     uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
     with:
       environment: prod

@@ -11,5 +11,6 @@
   "charts/squares-contests": "1.0.0",
   "charts/squares-games": "1.0.0",
   "charts/squares-accounts": "1.0.0",
-  "charts/squares-realtime": "1.0.0"
+  "charts/squares-realtime": "1.0.0",
+  "charts/cloudflare-cidr": "1.0.0"
 }
