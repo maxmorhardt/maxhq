@@ -1,6 +1,5 @@
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import EmailIcon from '@mui/icons-material/Email';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import GridViewIcon from '@mui/icons-material/GridView';
 import HomeIcon from '@mui/icons-material/Home';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -120,18 +119,6 @@ export default function AppHeader() {
 
           <Box sx={{ flex: 1 }} />
 
-          <IconButton
-            component="a"
-            href="https://github.com/maxmorhardt"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="maxmorhardt on GitHub"
-            color="inherit"
-            sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}
-          >
-            <GitHubIcon fontSize="small" />
-          </IconButton>
-
           {/* theme toggle */}
           <IconButton
             onClick={() => setMode(isDark ? 'light' : 'dark')}
@@ -149,16 +136,6 @@ export default function AppHeader() {
               <Box sx={{ width: 20, height: 20 }} />
             )}
           </IconButton>
-
-          <Button
-            component={Link}
-            to="/contact"
-            variant="contained"
-            size="small"
-            sx={{ display: { xs: 'none', md: 'inline-flex' }, ml: 1, py: 0.75 }}
-          >
-            Get in touch
-          </Button>
 
           {/* mobile nav menu */}
           <IconButton

@@ -41,8 +41,8 @@ export default function ProjectCard({ project, rootMargin }: ProjectCardProps) {
         ]}
       >
         <Box sx={{ flex: 1, p: 3 }}>
-          {/* header: repo name, visibility-style category, repo link */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.25 }}>
+          {/* header: repo name and repo link */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
             <BookOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
             <Typography
               variant="h3"
@@ -56,12 +56,6 @@ export default function ProjectCard({ project, rootMargin }: ProjectCardProps) {
             >
               {project.name}
             </Typography>
-            <Chip
-              label={project.category}
-              size="small"
-              variant="outlined"
-              sx={{ height: 22, fontSize: '0.72rem', color: 'text.secondary', borderRadius: 999 }}
-            />
             <Box sx={{ flex: 1 }} />
             <IconButton
               component="a"
@@ -80,8 +74,14 @@ export default function ProjectCard({ project, rootMargin }: ProjectCardProps) {
             {project.description}
           </Typography>
 
-          {/* lead language dot, then the rest of the stack */}
+          {/* category, the lead language dot, then the rest of the stack */}
           <Box sx={{ mt: 2.5, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75 }}>
+            <Chip
+              label={project.category}
+              size="small"
+              variant="outlined"
+              sx={{ height: 22, fontSize: '0.72rem', color: 'text.secondary', borderRadius: 999 }}
+            />
             <Box
               component="span"
               sx={{
