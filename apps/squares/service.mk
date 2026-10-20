@@ -1,4 +1,3 @@
-# shared by every squares service; each Makefile sets SERVICE and includes this
 .DEFAULT_GOAL := help
 
 BIN_DIR     ?= bin

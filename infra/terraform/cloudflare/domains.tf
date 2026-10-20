@@ -1,5 +1,4 @@
 locals {
-  # every domain in the Cloudflare account; the zone itself must already exist
   domains = {
     "maxhq.io" = {
       prod_hosts = ["", "squares", "api", "login", "argocd", "olympics", "ages"]

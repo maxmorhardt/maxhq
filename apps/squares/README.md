@@ -37,10 +37,6 @@ Games and accounts publish the same way, to the `games` and `users` streams, and
 Requires Docker and pnpm.
 
 ```bash
-make up    # Postgres, Valkey, the four services, and a gateway on localhost:8080
-make web   # the site on localhost:3000, signing in through Dex like production
+make up
+make web
 ```
-
-The gateway ([envoy.yaml](envoy.yaml)) does what production's does: it validates Dex tokens, copies their claims into `X-Auth-*` headers, and routes `/squares/*` to each service. Swagger is at `localhost:8080/squares/swagger/<service>`. `make logs S=contests`, `make down`, and `make reset` (which also wipes the data) cover the rest. Contact-form emails are logged instead of sent.
-
-Rules for working across the services are in [AGENTS.md](AGENTS.md).

@@ -8,7 +8,6 @@ RUN apk add --no-cache make
 
 WORKDIR /src
 
-# module files first, so dependency downloads are cached until they change
 COPY go.mod go.sum ./
 RUN go mod download
 

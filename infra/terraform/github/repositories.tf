@@ -1,6 +1,6 @@
 locals {
   repositories = {
-    # monorepo for every public app, its chart, and the infra tooling; ci.yml only builds what changed
+    # monorepo for every public app, its chart, and infra tooling
     "maxhq" = {
       checks = [
         "pr-title / pr-title",
