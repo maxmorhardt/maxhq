@@ -2,7 +2,8 @@ import { Box, Button, Container, Typography } from '@mui/material';
 import { Link } from 'react-router';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
-import { fonts, pageSection } from '../theme';
+import StatusTerminal from '../components/common/StatusTerminal';
+import { pageSection } from '../theme';
 
 export interface ErrorPageProps {
   message?: string;
@@ -25,35 +26,50 @@ export default function ErrorPage({
         robots="noindex, follow"
       />
 
-      <Container maxWidth="sm">
-        <RevealSection variant="left">
-          <Typography variant="overline" sx={{ fontFamily: fonts.mono }}>
-            Error
-          </Typography>
-        </RevealSection>
+      <Container
+        maxWidth="lg"
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { md: 'minmax(0, 1fr) minmax(0, 1fr)' },
+          gap: { xs: 6, md: 10 },
+          alignItems: 'center',
+        }}
+      >
+        <Box>
+          <RevealSection delay={1}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Something went wrong
+            </Typography>
+          </RevealSection>
 
-        <RevealSection delay={1} variant="left">
-          <Typography variant="h4" component="h1" gutterBottom>
-            Something went wrong
-          </Typography>
-        </RevealSection>
+          <RevealSection delay={1}>
+            <Typography color="text.secondary" sx={{ mb: 4, maxWidth: '48ch' }}>
+              {message}
+            </Typography>
+          </RevealSection>
 
-        <RevealSection delay={1} variant="left">
-          <Typography color="text.secondary" sx={{ mb: 4, maxWidth: '48ch' }}>
-            {message}
-          </Typography>
-        </RevealSection>
+          <RevealSection delay={1} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Button onClick={reload} variant="outlined" color="inherit">
+              Reload
+            </Button>
+            <Button component={Link} to="/" variant="outlined" color="inherit">
+              Home
+            </Button>
+            <Button component={Link} to="/contact" variant="outlined" color="inherit">
+              Contact
+            </Button>
+          </RevealSection>
+        </Box>
 
-        <RevealSection delay={1} variant="left" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          <Button onClick={reload} color="inherit">
-            Reload
-          </Button>
-          <Button component={Link} to="/" color="inherit">
-            Home
-          </Button>
-          <Button component={Link} to="/contact" color="inherit">
-            Contact
-          </Button>
+        <RevealSection delay={2} variant="rise">
+          <StatusTerminal
+            title="Error"
+            lines={[
+              { text: 'render page', kind: 'cmd' },
+              { text: 'error: the page threw while loading', kind: 'err' },
+              { text: 'hint: reload, or head back home', kind: 'out' },
+            ]}
+          />
         </RevealSection>
       </Container>
     </Box>

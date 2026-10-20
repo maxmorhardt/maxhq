@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-import { fonts, layout, primaryTint } from '../../theme';
+import { fonts, primaryTint } from '../../theme';
 
 type Kind = 'cmd' | 'out' | 'ok';
 
@@ -36,13 +36,14 @@ interface NavItem {
 // the terminal keeps its own github-dark palette in both color schemes
 const term = {
   bg: '#0d1117',
+  frame: '#30363d',
   bar: '#161b22',
   barBorder: '#21262d',
   cmd: '#e6edf3',
   out: '#8b949e',
   ok: '#27c93f',
   link: '#58a6ff',
-  prompt: '#a855f7',
+  prompt: '#a78bfa',
   hint: '#56607a',
 };
 
@@ -384,18 +385,18 @@ export default function HeroTerminal() {
         display: 'flex',
         flexDirection: 'column',
         width: '100%',
-        maxWidth: 720,
-        maxHeight: `calc(100svh - ${layout.headerHeight.lg} - 6.5rem)`,
+        maxWidth: 880,
+        height: 460,
         overflow: 'hidden',
-        borderRadius: 1,
-        border: 1,
-        borderColor: 'primary.main',
+        textAlign: 'left',
+        borderRadius: '14px',
+        border: `1px solid ${term.frame}`,
         backgroundColor: term.bg,
         fontFamily: fonts.mono,
-        boxShadow: (theme) => `${theme.shadows[8]}, 0 0 100px -18px ${primaryTint(theme, 0.4)}`,
-        '@media (max-width: 880px)': {
-          maxHeight: `calc(100svh - ${layout.headerHeight.xs} - 3rem)`,
-        },
+        fontVariantLigatures: 'none',
+        boxShadow: (theme) =>
+          `0 40px 120px -40px ${primaryTint(theme, 0.55)}, 0 24px 48px -24px rgba(1, 4, 9, 0.7)`,
+        '@media (max-width: 880px)': { height: 420 },
       }}
     >
       {/* title bar: traffic lights + prompt */}

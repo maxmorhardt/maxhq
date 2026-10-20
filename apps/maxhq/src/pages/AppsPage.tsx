@@ -1,379 +1,287 @@
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import BoltIcon from '@mui/icons-material/Bolt';
 import DescriptionIcon from '@mui/icons-material/Description';
-import GridViewIcon from '@mui/icons-material/GridView';
-import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import GoogleIcon from '@mui/icons-material/Google';
+import NorthEastIcon from '@mui/icons-material/NorthEast';
 import ShieldIcon from '@mui/icons-material/Shield';
-import { Avatar, Box, Button, Chip, Container, Divider, Paper, Typography } from '@mui/material';
-
-import type { ReactElement } from 'react';
+import { Box, Button, Container, Typography } from '@mui/material';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import SquaresBoard from '../components/apps/SquaresBoard';
+import StepTrack, { type TrackStep } from '../components/apps/StepTrack';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import { fonts, pageSection, primaryTint } from '../theme';
 
-interface Step {
+const steps: TrackStep[] = [
+  {
+    title: 'Set up the board',
+    body: 'Create a pool for an upcoming NFL game and share the link with everyone playing.',
+  },
+  {
+    title: 'Friends claim squares',
+    body: 'Everyone joins from their own phone and grabs the squares they want on the shared board.',
+  },
+  {
+    title: 'Numbers are drawn',
+    body: 'Once the board fills up, the app randomly assigns the digits 0–9 to every row and column.',
+  },
+  {
+    title: 'Winners light up',
+    body: 'As each quarter ends, the live score picks the winning square and it lights up for everyone.',
+  },
+];
+
+const facts = [
+  { label: 'Status', value: 'Live at squares.maxhq.io' },
+  { label: 'Scores', value: 'Linked to live NFL games' },
+  { label: 'Stack', value: 'Go · React · Kubernetes' },
+  { label: 'Sign-in', value: 'Google or GitHub' },
+];
+
+const feed = [
+  { time: '7:02 PM', text: 'JD claimed home 4, away 7' },
+  { time: '8:20 PM', text: 'Numbers drawn, game on' },
+  { time: '9:41 PM', text: 'Score update: away 7, home 14' },
+  { time: '9:43 PM', text: 'JD wins the 2nd quarter' },
+];
+
+interface PanelProps {
   title: string;
   body: string;
+  children: ReactNode;
 }
 
-interface AppShowcase {
-  name: string;
-  icon: ReactElement;
-  eyebrow: string;
-  tagline: string;
-  description: string;
-  cta: string;
-  href: string;
-  visual: 'squares-board' | 'icon';
-  stepsTitle: string;
-  steps: Step[];
+// one feature, shown at work on its own stage with its caption beneath
+function Panel({ title, body, children }: PanelProps) {
+  return (
+    <RevealSection variant="rise" component="article">
+      <Box
+        sx={{
+          display: 'grid',
+          placeItems: 'center',
+          minHeight: { xs: 300, md: 380 },
+          p: { xs: 3, md: 5 },
+          borderRadius: '20px',
+          border: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          backgroundImage: (theme) =>
+            `radial-gradient(60% 70% at 50% 0%, ${primaryTint(theme, 0.12)}, transparent 70%)`,
+        }}
+      >
+        {children}
+      </Box>
+      <Box sx={{ mt: 2.5, px: 0.5 }}>
+        <Typography variant="h3" sx={{ mb: 0.75 }}>
+          {title}
+        </Typography>
+        <Typography sx={{ maxWidth: '56ch' }}>{body}</Typography>
+      </Box>
+    </RevealSection>
+  );
 }
-
-const apps: AppShowcase[] = [
-  {
-    name: 'Squares',
-    icon: <GridViewIcon />,
-    eyebrow: 'Live app',
-    tagline: 'Football squares for the whole party',
-    description:
-      "The classic Super Bowl squares pool, online. One person sets up the board, everyone claims their squares, and the app draws the numbers and calls the winner every quarter, live on everyone's phone.",
-    cta: 'Play Squares',
-    href: 'https://squares.maxhq.io',
-    visual: 'squares-board',
-    stepsTitle: 'How a game plays out',
-    steps: [
-      {
-        title: 'Set up the board',
-        body: 'Create a pool for an upcoming football game and share the link with everyone playing.',
-      },
-      {
-        title: 'Friends claim squares',
-        body: 'Everyone joins from their own phone and grabs the squares they want on the shared board.',
-      },
-      {
-        title: 'Numbers are drawn',
-        body: 'Once the board fills up, the app randomly assigns the digits 0–9 to every row and column.',
-      },
-      {
-        title: 'Winners light up',
-        body: 'As each quarter ends, the app matches the score and the winning square lights up for everyone.',
-      },
-    ],
-  },
-];
-
-const perks: { icon: ReactElement; title: string; body: string }[] = [
-  {
-    icon: <PhoneIphoneIcon />,
-    title: 'Nothing to install',
-    body: 'Everyone joins from their own phone with just a link.',
-  },
-  {
-    icon: <ShieldIcon />,
-    title: 'One sign-in',
-    body: 'Sign in once with Google or GitHub; the same account works across every maxhq app.',
-  },
-  {
-    icon: <BoltIcon />,
-    title: 'Live updates',
-    body: 'Squares, numbers, and winners update instantly for everyone as the game unfolds.',
-  },
-];
-
-const sectionHeadingSx = { mt: 6, mb: 1, fontSize: '1.4rem' } as const;
 
 export default function AppsPage() {
   return (
-    <Box component="section">
+    <Box>
       <PageMeta
         title="maxhq – Apps by Max Morhardt"
         description="maxhq is home to the apps Max Morhardt builds and runs for game day and get-togethers, including Squares. Start a game, share the link, and everyone plays along live."
         canonical="https://maxhq.io/apps"
       />
 
-      {/* one showcase per app: a split hero followed by its play-by-play timeline */}
-      {apps.map((app, ai) => {
-        const flipped = ai % 2 === 1;
-
-        return (
-          <Box key={app.name}>
-            {ai > 0 ? <Divider /> : null}
-
-            <Container
-              maxWidth="lg"
-              sx={{
-                display: 'grid',
-                alignItems: 'center',
-                gap: 6,
-                py: 8,
-                gridTemplateColumns: { md: flipped ? 'auto 1.1fr' : '1.1fr auto' },
-              }}
+      <Container
+        maxWidth="lg"
+        sx={{
+          pt: { xs: 8, md: 12 },
+          pb: pageSection.py,
+          display: 'grid',
+          gridTemplateColumns: { md: 'minmax(0, 0.85fr) minmax(0, 1.15fr)' },
+          gap: { xs: 7, md: 10 },
+          alignItems: 'start',
+        }}
+      >
+        {/* the app, pinned while its features scroll past */}
+        <Box sx={{ position: { md: 'sticky' }, top: { md: 110 } }}>
+          <RevealSection>
+            <Typography variant="h1">Squares</Typography>
+          </RevealSection>
+          <RevealSection delay={1}>
+            <Typography sx={{ mt: 2, color: 'text.primary', fontSize: '1.25rem', fontWeight: 560 }}>
+              Football squares for the whole party
+            </Typography>
+            <Typography sx={{ mt: 1.5, maxWidth: '46ch', fontSize: { md: '1.08rem' } }}>
+              The classic Super Bowl pool, online. One person sets up the board, everyone claims
+              their squares from their phone, and the live score calls the winner every quarter.
+            </Typography>
+          </RevealSection>
+          <RevealSection delay={2} sx={{ mt: 4 }}>
+            <Button
+              component="a"
+              href="https://squares.maxhq.io"
+              target="_blank"
+              rel="noreferrer"
+              variant="contained"
+              size="large"
+              endIcon={<NorthEastIcon />}
             >
-              <Box sx={{ order: { md: flipped ? 2 : 0 } }}>
-                <RevealSection>
-                  <Chip
-                    label={app.eyebrow}
-                    color="primary"
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      fontFamily: fonts.mono,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                    }}
-                  />
-                </RevealSection>
+              Play Squares
+            </Button>
+          </RevealSection>
 
-                <RevealSection delay={1}>
-                  <Typography
-                    variant="h1"
-                    component={ai === 0 ? 'h1' : 'h2'}
-                    sx={{ mt: 2.5, mb: 1.5, fontSize: 'clamp(2.75rem, 7vw, 4.25rem)' }}
-                  >
-                    {app.name}
-                  </Typography>
-                </RevealSection>
-
-                <RevealSection delay={1}>
-                  <Typography color="primary" sx={{ mb: 2, fontFamily: fonts.mono }}>
-                    {app.tagline}
-                  </Typography>
-                </RevealSection>
-
-                <RevealSection delay={2}>
-                  <Typography
-                    color="text.secondary"
-                    sx={{ maxWidth: '46ch', fontSize: '1.05rem', lineHeight: 1.7 }}
-                  >
-                    {app.description}
-                  </Typography>
-                </RevealSection>
-
-                <RevealSection delay={2} sx={{ mt: 4 }}>
-                  <Button
-                    component="a"
-                    href={app.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    variant="contained"
-                    size="large"
-                    endIcon={<ArrowForwardIcon />}
-                  >
-                    {app.cta}
-                  </Button>
-                </RevealSection>
-              </Box>
-
-              <RevealSection
-                delay={1}
+          <RevealSection
+            delay={2}
+            component="dl"
+            sx={{ mt: 5, mb: 0, borderTop: 1, borderColor: 'divider' }}
+          >
+            {facts.map((fact) => (
+              <Box
+                key={fact.label}
                 sx={{
-                  display: { xs: 'none', md: 'block' },
-                  justifySelf: flipped ? 'start' : 'end',
+                  display: 'grid',
+                  gridTemplateColumns: '7rem 1fr',
+                  gap: 2,
+                  py: 1.5,
+                  borderBottom: 1,
+                  borderColor: 'divider',
                 }}
               >
-                {app.visual === 'squares-board' ? (
-                  <SquaresBoard />
-                ) : (
-                  <Paper
-                    aria-hidden
-                    sx={{
-                      display: 'grid',
-                      placeItems: 'center',
-                      gap: 2,
-                      width: 'min(340px, 100%)',
-                      aspectRatio: '1',
-                      borderColor: 'primary.main',
-                      bgcolor: (theme) => primaryTint(theme, 0.08),
-                    }}
-                  >
-                    <Avatar
-                      variant="rounded"
-                      sx={{
-                        width: 72,
-                        height: 72,
-                        bgcolor: 'background.default',
-                        color: 'primary.main',
-                      }}
-                    >
-                      {app.icon}
-                    </Avatar>
-                    <Typography
-                      align="center"
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ maxWidth: '22ch', fontFamily: fonts.mono }}
-                    >
-                      {app.tagline}
-                    </Typography>
-                  </Paper>
-                )}
-              </RevealSection>
-            </Container>
-
-            <Divider />
-
-            {/* how it plays: a connected timeline rather than a card grid */}
-            <Container maxWidth="lg" sx={{ py: 2 }}>
-              <RevealSection>
-                <Typography variant="h3" component="h2" sx={sectionHeadingSx}>
-                  {app.stepsTitle}
+                <Typography component="dt" sx={{ fontSize: '0.88rem' }}>
+                  {fact.label}
                 </Typography>
-              </RevealSection>
-
-              <Box
-                component="ol"
-                sx={{ position: 'relative', m: 0, mt: 4, mb: 2, p: 0, listStyle: 'none' }}
-              >
-                {app.steps.map((step, i) => {
-                  const last = i === app.steps.length - 1;
-
-                  return (
-                    <RevealSection
-                      key={step.title}
-                      component="li"
-                      delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}
-                      rootMargin="0px 0px 15% 0px"
-                      sx={{
-                        position: 'relative',
-                        display: 'grid',
-                        gridTemplateColumns: 'auto 1fr',
-                        gap: 2,
-                        pb: last ? 0 : 4,
-
-                        // connector line linking the numbered nodes
-                        ...(!last && {
-                          '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: '2.4rem',
-                            bottom: '-0.2rem',
-                            left: '1.2rem',
-                            width: 2,
-                            bgcolor: 'divider',
-                          },
-                        }),
-                      }}
-                    >
-                      <Avatar
-                        sx={{
-                          zIndex: 1,
-                          width: 40,
-                          height: 40,
-                          bgcolor: (theme) => primaryTint(theme, 0.12),
-                          color: 'primary.main',
-                          fontFamily: fonts.mono,
-                          fontSize: '0.95rem',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {i + 1}
-                      </Avatar>
-
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          variant="h3"
-                          component="h3"
-                          sx={{ mb: 0.5, fontSize: '1.1rem' }}
-                        >
-                          {step.title}
-                        </Typography>
-                        <Typography color="text.secondary" sx={{ maxWidth: '52ch' }}>
-                          {step.body}
-                        </Typography>
-                      </Box>
-                    </RevealSection>
-                  );
-                })}
-              </Box>
-            </Container>
-          </Box>
-        );
-      })}
-
-      <Container maxWidth="lg" sx={{ ...pageSection, py: 2 }}>
-        {/* made for playing together: a compact divided strip, not lift cards */}
-        <RevealSection>
-          <Typography variant="h3" component="h2" sx={sectionHeadingSx}>
-            Made for playing together
-          </Typography>
-        </RevealSection>
-
-        <RevealSection delay={1}>
-          <Paper
-            sx={{
-              mt: 3,
-              display: 'grid',
-              gridTemplateColumns: { sm: 'repeat(3, 1fr)' },
-              overflow: 'hidden',
-              // the 1px gap is the divider; responsive border shorthands lose their color
-              gap: '1px',
-              bgcolor: 'divider',
-            }}
-          >
-            {perks.map((perk) => (
-              <Box key={perk.title} sx={{ p: 3, bgcolor: 'background.paper' }}>
-                <Avatar variant="rounded" sx={{ bgcolor: 'action.hover', color: 'primary.main' }}>
-                  {perk.icon}
-                </Avatar>
-
-                <Typography variant="h3" component="h3" sx={{ mt: 1.5, mb: 0.5, fontSize: '1rem' }}>
-                  {perk.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {perk.body}
+                <Typography
+                  component="dd"
+                  sx={{ m: 0, fontSize: '0.88rem', color: 'text.primary', fontWeight: 560 }}
+                >
+                  {fact.value}
                 </Typography>
               </Box>
             ))}
-          </Paper>
-        </RevealSection>
+          </RevealSection>
+        </Box>
 
-        {/* signing in: OAuth transparency about what data is used */}
-        <RevealSection>
-          <Typography variant="h3" component="h2" sx={sectionHeadingSx}>
-            Signing in
-          </Typography>
-        </RevealSection>
+        {/* the app at work, one feature per panel */}
+        <Box sx={{ display: 'grid', gap: { xs: 6, md: 8 } }}>
+          <Panel
+            title="Nothing to install"
+            body="Everyone joins from their own phone with just a link, and claims squares on one shared board."
+          >
+            <Box sx={{ zoom: { xs: 1, md: 1.25 } }}>
+              <SquaresBoard />
+            </Box>
+          </Panel>
 
-        <RevealSection delay={1} sx={{ maxWidth: '68ch' }}>
-          <Typography color="text.secondary" sx={{ mt: 1, mb: 2, lineHeight: 1.7 }}>
-            When an app needs an account, you can sign in with Google or GitHub. One sign-in works
-            across every maxhq app, so you never make a separate account per game. Signing in is
-            used only to create your account and identify you while you play. maxhq requests your
-            basic profile and email address and does not access anything else in your Google or
-            GitHub account.
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 2, lineHeight: 1.7 }}>
-            You can delete your account at any time from within any app, which removes your personal
-            data from maxhq.
-          </Typography>
-        </RevealSection>
+          <Panel
+            title="Live updates"
+            body="Squares, numbers, scores, and winners update instantly for everyone as the game unfolds."
+          >
+            <Box
+              component="ol"
+              sx={{
+                m: 0,
+                p: 0,
+                listStyle: 'none',
+                width: '100%',
+                maxWidth: 420,
+                display: 'grid',
+                gap: 1,
+              }}
+            >
+              {feed.map((line, i) => (
+                <Box
+                  key={line.text}
+                  component="li"
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    px: 2,
+                    py: 1.25,
+                    borderRadius: '12px',
+                    border: 1,
+                    borderColor: i === feed.length - 1 ? 'primary.main' : 'divider',
+                    bgcolor: 'background.default',
+                    fontFamily: fonts.mono,
+                    fontSize: '0.8rem',
+                    color: i === feed.length - 1 ? 'primary.main' : 'text.primary',
+                  }}
+                >
+                  <span>{line.text}</span>
+                  <Box component="span" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
+                    {line.time}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Panel>
 
-        {/* legal */}
-        <RevealSection>
-          <Paper
+          <Panel
+            title="One sign-in"
+            body="Sign in once with Google or GitHub; the same account works across every maxhq app. Only your basic profile and email are requested, and you can delete your account from within any app."
+          >
+            <Box sx={{ width: '100%', maxWidth: 320, display: 'grid', gap: 1.25 }}>
+              {[
+                { label: 'Continue with Google', icon: <GoogleIcon fontSize="small" /> },
+                { label: 'Continue with GitHub', icon: <GitHubIcon fontSize="small" /> },
+              ].map((provider) => (
+                <Box
+                  key={provider.label}
+                  aria-hidden
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1.25,
+                    py: 1.4,
+                    borderRadius: '12px',
+                    border: 1,
+                    borderColor: 'divider',
+                    bgcolor: 'background.default',
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    fontSize: '0.92rem',
+                  }}
+                >
+                  {provider.icon}
+                  {provider.label}
+                </Box>
+              ))}
+            </Box>
+          </Panel>
+        </Box>
+      </Container>
+
+      {/* how it plays */}
+      <Box component="section" sx={{ ...pageSection, pt: 0 }}>
+        <Container maxWidth="lg">
+          <RevealSection>
+            <Typography variant="h2" sx={{ mb: { xs: 4, md: 6 } }}>
+              How a game plays out
+            </Typography>
+          </RevealSection>
+          <RevealSection delay={1}>
+            <StepTrack steps={steps} />
+          </RevealSection>
+
+          <RevealSection
             sx={{
-              mt: 5,
-              mb: 4,
+              mt: { xs: 8, md: 12 },
+              pt: 4,
               display: 'flex',
               flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 3,
-              p: 3.5,
-              bgcolor: 'background.paper',
+              borderTop: 1,
+              borderColor: 'divider',
             }}
           >
             <Box>
-              <Typography variant="h3" component="h2" sx={{ mb: 0.5, fontSize: '1.2rem' }}>
+              <Typography variant="h3" component="h2" sx={{ mb: 0.5 }}>
                 Terms &amp; policies
               </Typography>
-              <Typography color="text.secondary">
-                How maxhq apps may be used and how your data is handled.
-              </Typography>
+              <Typography>How maxhq apps may be used and how your data is handled.</Typography>
             </Box>
-
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
               <Button
                 component={Link}
@@ -394,9 +302,9 @@ export default function AppsPage() {
                 Privacy Policy
               </Button>
             </Box>
-          </Paper>
-        </RevealSection>
-      </Container>
+          </RevealSection>
+        </Container>
+      </Box>
     </Box>
   );
 }

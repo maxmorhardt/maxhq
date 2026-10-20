@@ -17,17 +17,12 @@ describe('ProjectsPage', () => {
     expect(screen.getByRole('heading', { name: 'The repositories' })).toBeInTheDocument();
   });
 
-  it('renders every platform feature', () => {
+  it('maps how a change reaches the clusters', () => {
     renderWithProviders(<ProjectsPage />);
 
-    for (const name of [
-      'Federated single sign-on',
-      'Real-time everywhere',
-      'Self-hosted on Kubernetes',
-      'Continuous delivery',
-    ]) {
-      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
-    }
+    expect(
+      screen.getByRole('list', { name: 'How a change reaches the clusters' })
+    ).toBeInTheDocument();
   });
 
   it('renders a card for every repository', () => {

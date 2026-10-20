@@ -1,6 +1,8 @@
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import { Avatar, Box, Card, CardActionArea, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { spotlightSx, useSpotlight } from '../../hooks/useSpotlight';
+import { easing } from '../../theme';
 import RevealSection from '../common/RevealSection';
 
 export interface ContactChannel {
@@ -16,43 +18,61 @@ export interface ContactCardProps {
 }
 
 export default function ContactCard({ channel, delay }: ContactCardProps) {
+  const spotlight = useSpotlight();
+
   return (
-    <RevealSection
-      delay={delay}
-      variant="scale"
-      sx={{ minWidth: 0, maxWidth: 400, flex: '1 1 280px', display: 'flex' }}
-    >
+    <RevealSection delay={delay} variant="rise" sx={{ minWidth: 0, display: 'flex' }}>
       <Card
-        sx={{
-          flex: 1,
-          '&:hover': { transform: 'translateY(-4px)', borderColor: 'primary.main' },
-          '&:hover .contact-card__arrow': { opacity: 1, color: 'primary.main' },
-          '@media (prefers-reduced-motion: reduce)': { '&:hover': { transform: 'none' } },
-        }}
+        onPointerMove={spotlight.onPointerMove}
+        sx={[
+          (theme) => spotlightSx(theme),
+          {
+            flex: 1,
+            '&:hover .contact-card__arrow': {
+              color: 'primary.main',
+              transform: 'translate(3px, -3px)',
+            },
+          },
+        ]}
       >
         <CardActionArea
           component="a"
           href={channel.href}
           target="_blank"
           rel="noreferrer"
-          sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 3 }}
+          sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            gap: 5,
+            p: { xs: 3, md: 3.5 },
+          }}
         >
-          <Avatar variant="rounded" sx={{ bgcolor: 'action.hover', color: 'text.primary' }}>
-            {channel.icon}
-          </Avatar>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Avatar
+              variant="rounded"
+              sx={{ width: 52, height: 52, bgcolor: 'codeBg', color: 'text.primary' }}
+            >
+              {channel.icon}
+            </Avatar>
+            <NorthEastIcon
+              className="contact-card__arrow"
+              sx={{
+                color: 'text.secondary',
+                transition: `transform 300ms ${easing.reveal}, color 200ms`,
+              }}
+            />
+          </Box>
 
-          <Box sx={{ minWidth: 0, flex: 1, overflowWrap: 'anywhere' }}>
-            <Typography sx={{ fontWeight: 600, color: 'text.primary' }}>{channel.label}</Typography>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            <Typography sx={{ fontWeight: 650, fontSize: '1.3rem', color: 'text.primary' }}>
+              {channel.label}
+            </Typography>
+            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
               {channel.handle}
             </Typography>
           </Box>
-
-          <NorthEastIcon
-            className="contact-card__arrow"
-            fontSize="small"
-            sx={{ color: 'text.secondary', opacity: 0.5, transition: 'opacity 0.2s, color 0.2s' }}
-          />
         </CardActionArea>
       </Card>
     </RevealSection>

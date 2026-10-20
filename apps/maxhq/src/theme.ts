@@ -9,6 +9,12 @@ export const primaryTint = (theme: Theme, opacity: number) => {
   return tint(primary.mainChannel, opacity);
 };
 
+export const secondaryTint = (theme: Theme, opacity: number) => {
+  const secondary = (theme.vars ?? theme).palette.secondary as { mainChannel: string };
+
+  return tint(secondary.mainChannel, opacity);
+};
+
 declare module '@mui/material/styles' {
   interface Palette {
     codeBg: string;
@@ -26,29 +32,30 @@ declare module '@mui/material/styles' {
 // matches the key the pre-react site used, so a returning visitor keeps their choice
 export const COLOR_SCHEME_STORAGE_KEY = 'maxhq:theme';
 
-const sans = "system-ui, 'Segoe UI', Roboto, sans-serif";
-const mono = 'ui-monospace, Consolas, monospace';
+const sans = "'Mona Sans Variable', system-ui, 'Segoe UI', Roboto, sans-serif";
+const mono = "'JetBrains Mono Variable', ui-monospace, Consolas, monospace";
 
 export const fonts = { sans, mono };
 
 export const easing = {
-  reveal: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  reveal: 'cubic-bezier(0.16, 1, 0.3, 1)',
   spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
 };
 
 export const layout = {
   // the header is fixed height so pages can offset against it
-  headerHeight: { xs: '56px', lg: '64px' },
+  headerHeight: { xs: '60px', lg: '68px' },
   proseWidth: 760,
 };
 
 // vertical rhythm shared by every page section; widths come from <Container>
 export const pageSection = {
   width: '100%',
-  py: { xs: '3.5rem', lg: '5rem' },
+  py: { xs: '3.5rem', lg: '5.5rem' },
 } as const;
 
-const purple = { light: '#7c3aed', dark: '#a855f7' };
+const violet = { light: '#7c3aed', dark: '#a78bfa' };
+const azure = { light: '#2563eb', dark: '#60a5fa' };
 
 export const theme = createTheme({
   cssVariables: {
@@ -58,26 +65,28 @@ export const theme = createTheme({
   colorSchemes: {
     light: {
       palette: {
-        primary: { main: purple.light, contrastText: '#ffffff' },
-        secondary: { main: '#2563eb' },
-        text: { primary: '#14161f', secondary: '#4b5262' },
-        background: { default: '#f7f7fa', paper: '#ffffff' },
-        divider: '#e3e4ea',
-        codeBg: '#eeeef4',
-        heroGlow1: alpha(purple.light, 0.2),
-        heroGlow2: 'rgba(37, 99, 235, 0.16)',
+        primary: { main: violet.light, contrastText: '#ffffff' },
+        secondary: { main: azure.light },
+        success: { main: '#1a7f37' },
+        text: { primary: '#1f2328', secondary: '#59636e' },
+        background: { default: '#ffffff', paper: '#f6f8fa' },
+        divider: '#d8dee4',
+        codeBg: '#eff2f5',
+        heroGlow1: alpha(violet.light, 0.22),
+        heroGlow2: alpha(azure.light, 0.16),
       },
     },
     dark: {
       palette: {
-        primary: { main: purple.dark, contrastText: '#0c0d12' },
-        secondary: { main: '#3b82f6' },
-        text: { primary: '#f3f4f6', secondary: '#b0b6c2' },
-        background: { default: '#0c0d12', paper: '#15161f' },
-        divider: '#2a2c36',
-        codeBg: '#1f2028',
-        heroGlow1: alpha(purple.dark, 0.35),
-        heroGlow2: 'rgba(59, 130, 246, 0.3)',
+        primary: { main: violet.dark, contrastText: '#0d0820' },
+        secondary: { main: azure.dark },
+        success: { main: '#3fb950' },
+        text: { primary: '#f0f3f8', secondary: '#9ba6b8' },
+        background: { default: '#05070d', paper: '#0c1019' },
+        divider: '#1d2433',
+        codeBg: '#141a28',
+        heroGlow1: alpha('#8b5cf6', 0.5),
+        heroGlow2: alpha('#3b82f6', 0.38),
       },
     },
   },
@@ -85,38 +94,44 @@ export const theme = createTheme({
   breakpoints: {
     values: { xs: 0, sm: 600, md: 960, lg: 1200, xl: 1400 },
   },
-  shape: { borderRadius: 12 },
+  shape: { borderRadius: 14 },
   typography: {
     fontFamily: sans,
     // the root font is 18px, so mui sizes its components against that
     htmlFontSize: 18,
     h1: {
-      fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
-      lineHeight: 1.05,
-      fontWeight: 600,
-      letterSpacing: '-0.02em',
+      fontSize: 'clamp(2.6rem, 6.4vw, 5.25rem)',
+      lineHeight: 1.02,
+      fontWeight: 720,
+      letterSpacing: '-0.035em',
+      textWrap: 'balance',
     },
     h2: {
-      fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
-      fontWeight: 600,
-      letterSpacing: '-0.02em',
+      fontSize: 'clamp(2rem, 4.2vw, 3.4rem)',
+      lineHeight: 1.06,
+      fontWeight: 680,
+      letterSpacing: '-0.03em',
+      textWrap: 'balance',
     },
-    h3: { fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.02em' },
+    h3: { fontSize: '1.3rem', lineHeight: 1.25, fontWeight: 620, letterSpacing: '-0.015em' },
     // the recurring "page heading" size, so pages just use variant="h4"
     h4: {
-      fontSize: 'clamp(2.25rem, 4vw, 3rem)',
-      fontWeight: 600,
-      letterSpacing: '-0.02em',
+      fontSize: 'clamp(2.5rem, 5.5vw, 4rem)',
+      lineHeight: 1.04,
+      fontWeight: 700,
+      letterSpacing: '-0.035em',
+      textWrap: 'balance',
     },
-    // small uppercase row/section labels
+    // small uppercase row labels beside content
     overline: {
-      fontSize: '0.78rem',
-      fontWeight: 600,
-      letterSpacing: '0.1em',
+      fontSize: '0.74rem',
+      fontWeight: 620,
+      letterSpacing: '0.12em',
       lineHeight: 1.6,
     },
-    body1: { lineHeight: 1.6 },
-    button: { textTransform: 'none', fontWeight: 500 },
+    body1: { lineHeight: 1.65 },
+    body2: { lineHeight: 1.6 },
+    button: { textTransform: 'none', fontWeight: 600, letterSpacing: '-0.005em' },
   },
   components: {
     MuiCssBaseline: {
@@ -127,13 +142,18 @@ export const theme = createTheme({
         return {
           ':root': {
             font: `18px/145% ${sans}`,
-            letterSpacing: '0.18px',
             fontSynthesis: 'none',
             textRendering: 'optimizeLegibility',
             WebkitFontSmoothing: 'antialiased',
             MozOsxFontSmoothing: 'grayscale',
+            scrollbarColor: `${palette.divider} transparent`,
             '@media (max-width: 1024px)': { fontSize: '16px' },
           },
+          html: {
+            scrollBehavior: 'smooth',
+            '@media (prefers-reduced-motion: reduce)': { scrollBehavior: 'auto' },
+          },
+          '[id]': { scrollMarginTop: 96 },
           'html, body': {
             margin: 0,
             padding: 0,
@@ -141,12 +161,24 @@ export const theme = createTheme({
             backgroundColor: palette.background.default,
             color: palette.text.secondary,
           },
-          p: { margin: 0, lineHeight: 1.6 },
+          '::selection': {
+            backgroundColor: tint(palette.primary.mainChannel, 0.32),
+            color: palette.text.primary,
+          },
+          'input, textarea': { caretColor: palette.primary.main },
+          ':focus-visible': {
+            outline: `2px solid ${palette.primary.main}`,
+            outlineOffset: 3,
+            borderRadius: 6,
+          },
+          a: { textUnderlineOffset: '0.22em' },
+          p: { margin: 0, lineHeight: 1.65 },
           code: {
             fontFamily: mono,
-            fontSize: '0.9em',
+            fontVariantLigatures: 'none',
+            fontSize: '0.84em',
             padding: '0.15em 0.4em',
-            borderRadius: '4px',
+            borderRadius: '6px',
             background: palette.codeBg,
             color: palette.text.primary,
           },
@@ -161,18 +193,20 @@ export const theme = createTheme({
         h2: { color: 'var(--mui-palette-text-primary)' },
         h3: { color: 'var(--mui-palette-text-primary)' },
         h4: { color: 'var(--mui-palette-text-primary)' },
-        overline: { color: 'var(--mui-palette-primary-main)', display: 'block' },
+        overline: { color: 'var(--mui-palette-text-secondary)', display: 'block' },
       },
     },
 
-    // outlined surfaces everywhere, with the hover lift the old cards had
+    // one elevation language: a hairline border, never a border plus a soft shadow
     MuiCard: {
       defaultProps: { variant: 'outlined' },
       styleOverrides: {
         root: ({ theme }) => ({
           backgroundImage: 'none',
-          transition: theme.transitions.create(['transform', 'border-color', 'box-shadow'], {
-            duration: 200,
+          backgroundColor: (theme.vars ?? theme).palette.background.paper,
+          transition: theme.transitions.create(['transform', 'border-color', 'background-color'], {
+            duration: 220,
+            easing: easing.reveal,
           }),
         }),
       },
@@ -183,24 +217,35 @@ export const theme = createTheme({
     },
     MuiCardContent: {
       styleOverrides: {
-        root: { padding: 24, '&:last-child': { paddingBottom: 24 } },
+        root: { padding: 28, '&:last-child': { paddingBottom: 28 } },
       },
     },
 
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
-        root: { borderRadius: 999, paddingInline: '1.25rem' },
-        sizeLarge: { paddingBlock: '0.7rem', paddingInline: '1.75rem' },
+        root: ({ theme }) => ({
+          borderRadius: 10,
+          paddingInline: '1.1rem',
+          transition: theme.transitions.create(
+            ['background-color', 'border-color', 'color', 'transform'],
+            { duration: 180 }
+          ),
+          '&:active': { transform: 'translateY(1px)' },
+        }),
+        sizeLarge: { paddingBlock: '0.72rem', paddingInline: '1.5rem', fontSize: '1rem' },
+        outlined: ({ theme }) => ({
+          borderColor: (theme.vars ?? theme).palette.divider,
+          '&:hover': { borderColor: (theme.vars ?? theme).palette.text.secondary },
+        }),
       },
     },
 
     MuiChip: {
       styleOverrides: {
-        root: { fontWeight: 500 },
-        // a little more breathing room than mui's default label padding
-        label: { paddingInline: 12 },
-        icon: { marginLeft: 10 },
+        root: { fontWeight: 520, borderRadius: 8 },
+        label: { paddingInline: 10 },
+        icon: { marginLeft: 8 },
       },
     },
 
@@ -216,8 +261,8 @@ export const theme = createTheme({
           const { palette } = theme.vars ?? theme;
 
           return {
-            backgroundColor: tint(palette.background.defaultChannel, 0.72),
-            backdropFilter: 'blur(10px) saturate(180%)',
+            backgroundColor: tint(palette.background.defaultChannel, 0.74),
+            backdropFilter: 'blur(14px) saturate(160%)',
             border: 'none',
             borderBottom: `1px solid ${palette.divider}`,
             color: palette.text.primary,
@@ -230,6 +275,17 @@ export const theme = createTheme({
         root: ({ theme }) => ({
           minHeight: layout.headerHeight.xs,
           [theme.breakpoints.up('md')]: { minHeight: layout.headerHeight.lg },
+        }),
+      },
+    },
+
+    MuiMenu: {
+      styleOverrides: {
+        paper: ({ theme }) => ({
+          marginTop: 6,
+          minWidth: 200,
+          borderRadius: 12,
+          backgroundColor: (theme.vars ?? theme).palette.background.paper,
         }),
       },
     },

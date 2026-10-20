@@ -1,38 +1,12 @@
-import BoltIcon from '@mui/icons-material/Bolt';
-import DnsIcon from '@mui/icons-material/Dns';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ShieldIcon from '@mui/icons-material/Shield';
-import SyncIcon from '@mui/icons-material/Sync';
-import { Avatar, Box, Container, Typography } from '@mui/material';
-import type { ReactElement } from 'react';
+import { Box, Container, Typography } from '@mui/material';
+import PageHeader from '../components/common/PageHeader';
+import RepoMap from '../components/projects/RepoMap';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import ProjectCard, { type Project } from '../components/projects/ProjectCard';
 import { pageSection } from '../theme';
-
-const platform: { icon: ReactElement; title: string; body: string }[] = [
-  {
-    icon: <ShieldIcon />,
-    title: 'Federated single sign-on',
-    body: 'One account works across every app, with Google and GitHub sign-in federated through a self-hosted Dex identity provider.',
-  },
-  {
-    icon: <BoltIcon />,
-    title: 'Real-time everywhere',
-    body: 'Live grids, scores, and standings update instantly for everyone, streamed over server-sent events that resume from the last update after a dropped connection.',
-  },
-  {
-    icon: <DnsIcon />,
-    title: 'Self-hosted on Kubernetes',
-    body: 'Every app runs on a self-managed k3s cluster behind a single Envoy gateway, with highly available Postgres, sealed secrets, and full observability.',
-  },
-  {
-    icon: <SyncIcon />,
-    title: 'Continuous delivery',
-    body: 'Shared CI/CD pipelines and reusable Helm charts build and test every service the same way, then Argo CD syncs the cluster to match Git.',
-  },
-];
 
 const projects: Project[] = [
   {
@@ -64,7 +38,7 @@ const projects: Project[] = [
     category: 'Infrastructure',
     description:
       'Self-hosted k3s cluster that runs every app on this site: Argo CD keeps it in sync with this repo, Envoy Gateway fronts all traffic, and Dex federates Google and GitHub sign-in. Highly available Postgres, Valkey with Sentinel failover, Sealed Secrets, and a full metrics and logs stack back it all, with Terraform managing S3 backups, Cloudflare DNS, and GitHub branch rulesets.',
-    href: 'https://github.com/maxmorhardt/infra',
+    href: 'https://github.com/maxmorhardt/maxhq/tree/main/infra',
     tags: [
       'Kubernetes',
       'Argo CD',
@@ -81,7 +55,7 @@ const projects: Project[] = [
     category: 'Infrastructure',
     description:
       'A Helm chart for every app, each versioned and released on its own. They share one shape (Deployment, Service, HTTPRoute, autoscaling, disruption budgets, network policies, gateway auth and rate limits, and Grafana dashboards), so every workload in the cluster is deployed the same way.',
-    href: 'https://github.com/maxmorhardt/charts',
+    href: 'https://github.com/maxmorhardt/maxhq/tree/main/charts',
     tags: ['Helm', 'Kubernetes', 'HPA', 'Gateway API', 'Envoy Gateway', 'Prometheus'],
   },
   {
@@ -105,76 +79,33 @@ const projects: Project[] = [
 
 export default function ProjectsPage() {
   return (
-    <Box component="section" sx={pageSection}>
+    <Box>
       <PageMeta
         title="Projects – Max Morhardt"
         description="Explore Max Morhardt's projects: a real-time NFL squares app, its Go microservices, a self-hosted Kubernetes platform, reusable Helm charts, and GitHub Actions workflows."
         canonical="https://maxhq.io/projects"
       />
 
-      <Container maxWidth="lg">
-        <RevealSection>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Projects
-          </Typography>
-        </RevealSection>
+      <PageHeader
+        title="Projects"
+        lede="A connected ecosystem of frontends, APIs, and infrastructure I design, build, and self-host. The apps are the surface. Underneath, every project deploys to the same Kubernetes platform that runs this site, sharing sign-on, real-time messaging, and delivery pipelines."
+      />
 
-        <RevealSection delay={1}>
-          <Typography color="text.secondary" sx={{ mb: 5, maxWidth: '62ch' }}>
-            A connected ecosystem of frontends, APIs, and infrastructure I design, build, and
-            self-host. The apps are the surface. Underneath, every project deploys to the same
-            Kubernetes platform that runs this site, sharing sign-on, real-time messaging, and
-            delivery pipelines.
-          </Typography>
-        </RevealSection>
-
-        {/* under the hood: the shared platform, as an open media list (not cards) */}
+      <Container maxWidth="lg" sx={{ pb: pageSection.py }}>
+        {/* under the hood: how a change reaches the clusters */}
         <RevealSection>
-          <Typography variant="h3" component="h2" sx={{ mt: 6, mb: 3, fontSize: '1.4rem' }}>
+          <Typography variant="h3" component="h2" sx={{ mb: 3, fontSize: '1.4rem' }}>
             Under the hood
           </Typography>
         </RevealSection>
 
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { sm: '1fr 1fr' },
-            columnGap: 6,
-            borderBottom: 1,
-            borderColor: 'divider',
-          }}
-        >
-          {platform.map((f) => (
-            <RevealSection
-              key={f.title}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'auto 1fr',
-                gap: 2,
-                py: 3,
-                borderTop: 1,
-                borderColor: 'divider',
-              }}
-            >
-              <Avatar variant="rounded" sx={{ bgcolor: 'action.hover', color: 'primary.main' }}>
-                {f.icon}
-              </Avatar>
-
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="h3" component="h3" sx={{ mb: 0.5, fontSize: '1.05rem' }}>
-                  {f.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {f.body}
-                </Typography>
-              </Box>
-            </RevealSection>
-          ))}
-        </Box>
+        <RevealSection variant="rise" sx={{ mb: 5 }}>
+          <RepoMap />
+        </RevealSection>
 
         {/* the repositories */}
         <RevealSection>
-          <Typography variant="h3" component="h2" sx={{ mt: 6, mb: 3, fontSize: '1.4rem' }}>
+          <Typography variant="h3" component="h2" sx={{ mt: 10, mb: 3, fontSize: '1.4rem' }}>
             The repositories
           </Typography>
         </RevealSection>
@@ -182,7 +113,7 @@ export default function ProjectsPage() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))',
             gap: 2.5,
           }}
         >
