@@ -2,6 +2,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Box, Container, Divider, Link as MuiLink, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import PageHeader from '../components/common/PageHeader';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import { fonts, pageSection } from '../theme';
@@ -92,28 +93,20 @@ function RoleHead({ title, meta }: { title: string; meta: string }) {
 
 export default function AboutPage() {
   return (
-    <Box component="section" sx={pageSection}>
+    <Box>
       <PageMeta
         title="About – Max Morhardt"
         description="About Max Morhardt, Software Engineer at Fidelity Investments building multi-tenant cloud platforms on AWS and EKS, alongside a self-hosted Kubernetes homelab."
         canonical="https://maxhq.io/about"
       />
 
-      <Container maxWidth="md">
-        <RevealSection>
-          <Typography variant="h4" component="h1" gutterBottom>
-            About
-          </Typography>
-        </RevealSection>
+      <PageHeader
+        title="About"
+        width="md"
+        lede="Software Engineer at Fidelity Investments, working across platform and cloud infrastructure, from API design and Kubernetes orchestration to the front-end interfaces on top."
+      />
 
-        <RevealSection delay={1}>
-          <Typography color="text.secondary" sx={{ mb: 4, maxWidth: '60ch', fontSize: '1.15rem' }}>
-            Software Engineer at Fidelity Investments, working across platform and cloud
-            infrastructure, from API design and Kubernetes orchestration to the front-end interfaces
-            on top.
-          </Typography>
-        </RevealSection>
-
+      <Container maxWidth="md" sx={{ pb: pageSection.py }}>
         <Row label="Experience">
           {experience.map((company, ci) => (
             <Box key={company.company} sx={{ mt: ci > 0 ? 3 : 0 }}>

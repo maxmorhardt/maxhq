@@ -8,7 +8,6 @@ describe('AppsPage', () => {
     renderWithProviders(<AppsPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Squares' })).toBeInTheDocument();
-    expect(screen.getByText('Live app')).toBeInTheDocument();
   });
 
   it('links out to the live app', () => {

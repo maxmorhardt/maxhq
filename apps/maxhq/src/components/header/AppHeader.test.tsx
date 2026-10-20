@@ -69,4 +69,10 @@ describe('AppHeader', () => {
     const about = within(menu).getByRole('menuitem', { name: 'About' });
     expect(about).toHaveClass('Mui-selected');
   });
+
+  it('marks the active route when requested with a trailing slash', () => {
+    renderWithProviders(<AppHeader />, { route: '/projects/' });
+
+    expect(screen.getByRole('link', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
+  });
 });

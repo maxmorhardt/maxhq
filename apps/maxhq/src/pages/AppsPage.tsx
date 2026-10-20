@@ -4,7 +4,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import GridViewIcon from '@mui/icons-material/GridView';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import ShieldIcon from '@mui/icons-material/Shield';
-import { Avatar, Box, Button, Chip, Container, Divider, Paper, Typography } from '@mui/material';
+import { Avatar, Box, Button, Container, Divider, Paper, Typography } from '@mui/material';
 
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
@@ -21,7 +21,6 @@ interface Step {
 interface AppShowcase {
   name: string;
   icon: ReactElement;
-  eyebrow: string;
   tagline: string;
   description: string;
   cta: string;
@@ -35,7 +34,6 @@ const apps: AppShowcase[] = [
   {
     name: 'Squares',
     icon: <GridViewIcon />,
-    eyebrow: 'Live app',
     tagline: 'Football squares for the whole party',
     description:
       "The classic Super Bowl squares pool, online. One person sets up the board, everyone claims their squares, and the app draws the numbers and calls the winner every quarter, live on everyone's phone.",
@@ -107,37 +105,26 @@ export default function AppsPage() {
                 display: 'grid',
                 alignItems: 'center',
                 gap: 6,
-                py: 8,
+                pt: { xs: 8, md: 12 },
+                pb: { xs: 8, md: 10 },
                 gridTemplateColumns: { md: flipped ? 'auto 1.1fr' : '1.1fr auto' },
               }}
             >
               <Box sx={{ order: { md: flipped ? 2 : 0 } }}>
-                <RevealSection>
-                  <Chip
-                    label={app.eyebrow}
-                    color="primary"
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      fontFamily: fonts.mono,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                    }}
-                  />
-                </RevealSection>
-
                 <RevealSection delay={1}>
                   <Typography
                     variant="h1"
                     component={ai === 0 ? 'h1' : 'h2'}
-                    sx={{ mt: 2.5, mb: 1.5, fontSize: 'clamp(2.75rem, 7vw, 4.25rem)' }}
+                    sx={{ mb: 2, fontSize: 'clamp(3rem, 8vw, 5.5rem)' }}
                   >
                     {app.name}
                   </Typography>
                 </RevealSection>
 
                 <RevealSection delay={1}>
-                  <Typography color="primary" sx={{ mb: 2, fontFamily: fonts.mono }}>
+                  <Typography
+                    sx={{ mb: 2, color: 'text.primary', fontSize: '1.3rem', fontWeight: 560 }}
+                  >
                     {app.tagline}
                   </Typography>
                 </RevealSection>

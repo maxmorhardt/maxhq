@@ -1,3 +1,5 @@
+import '@fontsource-variable/jetbrains-mono/wght.css';
+import '@fontsource-variable/mona-sans/wght.css';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { isRouteErrorResponse, Links, Meta, Scripts, useRouteError } from 'react-router';
 import App from './App';
@@ -25,6 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#05070d" />
         <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />

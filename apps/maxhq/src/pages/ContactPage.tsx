@@ -1,9 +1,9 @@
 import EmailIcon from '@mui/icons-material/Email';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container } from '@mui/material';
+import PageHeader from '../components/common/PageHeader';
 import PageMeta from '../components/common/PageMeta';
-import RevealSection from '../components/common/RevealSection';
 import ContactCard, { type ContactChannel } from '../components/contact/ContactCard';
 import { pageSection } from '../theme';
 
@@ -30,27 +30,20 @@ const channels: ContactChannel[] = [
 
 export default function ContactPage() {
   return (
-    <Box component="section" sx={pageSection}>
+    <Box>
       <PageMeta
         title="Contact – Max Morhardt"
         description="Get in touch with Max Morhardt via GitHub, LinkedIn, or email."
         canonical="https://maxhq.io/contact"
       />
 
-      <Container maxWidth="lg">
-        <RevealSection variant="left">
-          <Typography variant="h4" component="h1" gutterBottom>
-            Contact
-          </Typography>
-        </RevealSection>
+      <PageHeader
+        title="Contact"
+        lede="The best ways to reach me. I read every message and usually reply within a day or two."
+      />
 
-        <RevealSection delay={1} variant="left">
-          <Typography color="text.secondary" sx={{ mb: 6, maxWidth: '60ch' }}>
-            The best ways to reach me. I read every message and usually reply within a day or two.
-          </Typography>
-        </RevealSection>
-
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2 }}>
+      <Container maxWidth="lg" sx={{ pb: pageSection.py }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           {channels.map((c, i) => (
             <ContactCard key={c.label} channel={c} delay={(i + 1) as 1 | 2 | 3} />
           ))}

@@ -1,439 +1,221 @@
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import BoltIcon from '@mui/icons-material/Bolt';
-import CloudIcon from '@mui/icons-material/Cloud';
 import CodeIcon from '@mui/icons-material/Code';
 import DnsIcon from '@mui/icons-material/Dns';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import Inventory2Icon from '@mui/icons-material/Inventory2';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import ListIcon from '@mui/icons-material/List';
-import LockIcon from '@mui/icons-material/Lock';
-import PaletteIcon from '@mui/icons-material/Palette';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import SettingsIcon from '@mui/icons-material/Settings';
-import ShieldIcon from '@mui/icons-material/Shield';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
-import StorageIcon from '@mui/icons-material/Storage';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import SyncIcon from '@mui/icons-material/Sync';
-import WidgetsIcon from '@mui/icons-material/Widgets';
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Container,
-  Divider,
-  Paper,
-  Typography,
-} from '@mui/material';
-import type { ReactElement } from 'react';
+import NorthEastIcon from '@mui/icons-material/NorthEast';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import { Box, Button, Container, Link as MuiLink, Typography } from '@mui/material';
 import { Link } from 'react-router';
-import HeroTerminal from '../components/common/HeroTerminal';
+import SquaresBoard from '../components/apps/SquaresBoard';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
-import { useScrollReveal } from '../hooks/useScrollReveal';
-import { easing, layout, pageSection } from '../theme';
+import ChapterRail, { type Chapter } from '../components/home/ChapterRail';
+import ClusterDiagram from '../components/home/ClusterDiagram';
+import CodeWindow from '../components/home/CodeWindow';
+import HomeHero from '../components/home/HomeHero';
+import ImpactList from '../components/home/ImpactList';
+import PipelineVisual from '../components/home/PipelineVisual';
+import StackMarquee from '../components/home/StackMarquee';
+import { pageSection, primaryTint } from '../theme';
 
-const icons = {
-  server: <DnsIcon fontSize="small" />,
-  code: <CodeIcon fontSize="small" />,
-  bolt: <BoltIcon fontSize="small" />,
-  database: <StorageIcon fontSize="small" />,
-  component: <WidgetsIcon fontSize="small" />,
-  palette: <PaletteIcon fontSize="small" />,
-  sync: <SyncIcon fontSize="small" />,
-  box: <Inventory2Icon fontSize="small" />,
-  cloud: <CloudIcon fontSize="small" />,
-  chartLine: <ShowChartIcon fontSize="small" />,
-  chartBar: <BarChartIcon fontSize="small" />,
-  list: <ListIcon fontSize="small" />,
-  shield: <ShieldIcon fontSize="small" />,
-  lock: <LockIcon fontSize="small" />,
-  gateway: <SwapHorizIcon fontSize="small" />,
-  cog: <SettingsIcon fontSize="small" />,
-  github: <GitHubIcon fontSize="small" />,
-  refresh: <RefreshIcon fontSize="small" />,
-};
-
-const stack: { name: string; icon: ReactElement }[] = [
-  { name: 'Java', icon: icons.server },
-  { name: 'TypeScript', icon: icons.code },
-  { name: 'Go', icon: icons.bolt },
-  { name: 'Python', icon: icons.code },
-  { name: 'SQL', icon: icons.database },
-  { name: 'Spring Boot', icon: icons.server },
-  { name: 'Gin', icon: icons.bolt },
-  { name: 'GORM', icon: icons.database },
-  { name: 'JPA', icon: icons.database },
-  { name: 'React', icon: icons.component },
-  { name: 'Angular', icon: icons.code },
-  { name: 'Vite', icon: icons.bolt },
-  { name: 'PrimeNG', icon: icons.component },
-  { name: 'Material UI', icon: icons.palette },
-  { name: 'PostgreSQL', icon: icons.database },
-  { name: 'Redis', icon: icons.sync },
-  { name: 'Valkey', icon: icons.sync },
-  { name: 'CloudNativePG', icon: icons.database },
-  { name: 'Server-sent events', icon: icons.bolt },
-  { name: 'Docker', icon: icons.box },
-  { name: 'Kubernetes', icon: icons.server },
-  { name: 'k3s', icon: icons.server },
-  { name: 'etcd', icon: icons.database },
-  { name: 'Helm', icon: icons.box },
-  { name: 'Argo CD', icon: icons.sync },
-  { name: 'Terraform', icon: icons.cog },
-  { name: 'AWS', icon: icons.cloud },
-  { name: 'EKS', icon: icons.server },
-  { name: 'EC2', icon: icons.server },
-  { name: 'S3', icon: icons.database },
-  { name: 'EFS', icon: icons.database },
-  { name: 'Lambda', icon: icons.bolt },
-  { name: 'DynamoDB', icon: icons.database },
-  { name: 'CloudWatch', icon: icons.chartLine },
-  { name: 'CloudFormation', icon: icons.cloud },
-  { name: 'Jenkins', icon: icons.cog },
-  { name: 'GitHub Actions', icon: icons.github },
-  { name: 'Renovate', icon: icons.refresh },
-  { name: 'Datadog', icon: icons.chartLine },
-  { name: 'Prometheus', icon: icons.chartLine },
-  { name: 'Grafana', icon: icons.chartBar },
-  { name: 'Loki', icon: icons.list },
-  { name: 'Dex', icon: icons.shield },
-  { name: 'Sealed Secrets', icon: icons.lock },
-  { name: 'Envoy Gateway', icon: icons.gateway },
-  { name: 'Cloudflare', icon: icons.cloud },
-  { name: 'Tailscale', icon: icons.lock },
-  { name: 'Bash', icon: icons.code },
-];
-
-const highlights = [
+const chapters: Chapter[] = [
   {
-    title: 'Full-stack engineering',
-    body: 'Java + Spring Boot and Go + Gin services behind Angular and React interfaces, designed, tested, and shipped end to end.',
-    icon: <AccountTreeIcon />,
+    id: 'build',
+    icon: <CodeIcon />,
+    title: 'Build it end to end.',
+    body: 'Java and Spring Boot or Go and Gin on the server, Angular or React in front. I design the API, write the service behind it, and build the interface on top, so the seams between them stay clean.',
+    visual: <CodeWindow />,
   },
   {
-    title: 'Cloud and Kubernetes platforms',
-    body: 'Multi-tenant developer platforms on AWS and EKS, with Spring Boot APIs orchestrating Kubernetes workloads for thousands of users, plus AI gateway work on Go and Envoy AI Gateway for multi-provider LLM routing.',
+    id: 'ship',
+    icon: <RocketLaunchIcon />,
+    title: 'Ship it on merge.',
+    body: 'A merge to main builds an image tagged with its commit, and Argo CD rolls it out to dev. A release tag promotes that same image to production, never rebuilt. Git is the only way anything reaches a cluster.',
+    visual: <PipelineVisual />,
+  },
+  {
+    id: 'run',
     icon: <DnsIcon />,
-  },
-  {
-    title: 'Real-time and self-hosted systems',
-    body: 'Dev and production k3s clusters with highly available control planes, networked over Tailscale and fronted by Envoy Gateway, with Dex federated sign-in, replicated PostgreSQL, and Valkey streams fanning live updates out over server-sent events, delivered continuously through Argo CD GitOps.',
-    icon: <BoltIcon />,
+    title: 'Run it myself.',
+    body: 'Two k3s clusters I provision and operate: dev on Raspberry Pis at home, production on three cloud VPSes, each with a highly available control plane. Envoy Gateway is the single front door, Dex federates sign-in, and CloudNativePG and Valkey hold the state.',
+    visual: <ClusterDiagram />,
   },
 ];
 
-// keeps the h1 available to screen readers and crawlers without showing it
-const visuallyHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;
+const ledeSx = { mt: 2.5, maxWidth: '56ch', fontSize: { md: '1.12rem' } } as const;
 
 export default function HomePage() {
-  const chips = useScrollReveal<HTMLDivElement>();
-
   return (
-    <Box>
+    <Box sx={{ overflowX: 'clip' }}>
       <PageMeta
         title="Max Morhardt – Software Engineer"
         description="Max Morhardt is a Software Engineer at Fidelity Investments specializing in Java, Spring Boot, Go, TypeScript, React, Angular, Kubernetes, Terraform, and AWS."
         canonical="https://maxhq.io/"
       />
 
-      {/* hero */}
-      <Box
-        component="section"
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          minHeight: `calc(100svh - ${layout.headerHeight.lg})`,
-          py: { xs: 3, md: 6 },
-        }}
-      >
-        {/* ambient background glows */}
-        <Box aria-hidden sx={{ pointerEvents: 'none', position: 'absolute', inset: 0 }}>
-          {[
-            { size: 520, bg: 'heroGlow1', pos: { top: -120, left: -120 }, speed: '12s' },
-            { size: 460, bg: 'heroGlow2', pos: { bottom: -160, right: -120 }, speed: '14s' },
-          ].map((glow) => (
-            <Box
-              key={glow.bg}
-              sx={{
-                position: 'absolute',
-                ...glow.pos,
-                width: glow.size,
-                height: glow.size,
-                borderRadius: '50%',
-                filter: 'blur(100px)',
-                opacity: 0.7,
-                bgcolor: glow.bg,
-                animation: `float ${glow.speed} ease-in-out infinite`,
-                '@keyframes float': {
-                  '0%, 100%': { transform: 'translate(0, 0)' },
-                  '50%': { transform: 'translate(40px, 30px)' },
-                },
-                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-              }}
-            />
-          ))}
-        </Box>
+      <HomeHero />
 
-        <Container
-          maxWidth="lg"
-          sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}
-        >
-          <Typography variant="h1" sx={visuallyHidden}>
-            Max Morhardt, Software Engineer
-          </Typography>
-
-          <RevealSection sx={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
-            <HeroTerminal />
-          </RevealSection>
-        </Container>
-
-        {/* scroll affordance */}
-        <Box
-          aria-hidden
-          sx={{
-            position: 'absolute',
-            bottom: 24,
-            left: '50%',
-            color: 'text.secondary',
-            opacity: 0.5,
-            display: { xs: 'none', md: 'block' },
-            animation: 'bounce 2.4s ease-in-out infinite',
-            '@keyframes bounce': {
-              '0%, 100%': { transform: 'translate(-50%, 0)' },
-              '50%': { transform: 'translate(-50%, 8px)' },
-            },
-            '@media (prefers-reduced-motion: reduce)': {
-              animation: 'none',
-              transform: 'translateX(-50%)',
-            },
-          }}
-        >
-          <KeyboardArrowDownIcon />
-        </Box>
-      </Box>
-
-      {/* highlights */}
-      <Divider />
-      <Box component="section" sx={{ ...pageSection, bgcolor: 'background.paper' }}>
+      {/* build, ship, run */}
+      <Box component="section" aria-label="How I work" sx={pageSection}>
         <Container maxWidth="lg">
-          <RevealSection>
-            <Typography variant="h2" align="center" gutterBottom>
-              What I do
-            </Typography>
-          </RevealSection>
-
-          <RevealSection delay={1}>
-            <Typography
-              align="center"
-              color="text.secondary"
-              sx={{ mx: 'auto', mb: 6, maxWidth: '56ch' }}
-            >
-              A few areas where I spend most of my engineering time.
-            </Typography>
-          </RevealSection>
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2.5 }}>
-            {highlights.map((h, i) => (
-              <RevealSection
-                key={h.title}
-                delay={(i + 1) as 1 | 2 | 3}
-                variant="rise"
-                sx={{ display: 'flex', minWidth: 0, maxWidth: 360, flex: '1 1 280px' }}
-              >
-                <Card
-                  sx={{
-                    flex: 1,
-                    bgcolor: 'background.default',
-                    '&:hover': { transform: 'translateY(-4px)', borderColor: 'primary.main' },
-                    '@media (prefers-reduced-motion: reduce)': { '&:hover': { transform: 'none' } },
-                  }}
-                >
-                  <CardContent>
-                    <Avatar
-                      variant="rounded"
-                      sx={{ mb: 2, bgcolor: 'action.hover', color: 'primary.main' }}
-                    >
-                      {h.icon}
-                    </Avatar>
-                    <Typography variant="h3" component="h3" gutterBottom>
-                      {h.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {h.body}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </RevealSection>
-            ))}
-          </Box>
+          <ChapterRail chapters={chapters} />
         </Container>
       </Box>
-      <Divider />
 
-      {/* stack chips */}
+      {/* the day job */}
       <Box component="section" sx={pageSection}>
-        <Container maxWidth="lg">
-          <RevealSection>
-            <Typography variant="h2" align="center" gutterBottom>
-              Tools of the trade
-            </Typography>
-          </RevealSection>
-
-          <RevealSection delay={1}>
-            <Typography
-              align="center"
-              color="text.secondary"
-              sx={{ mx: 'auto', mb: 6, maxWidth: '56ch' }}
-            >
-              Day-to-day languages, frameworks, and platforms.
-            </Typography>
-          </RevealSection>
-
-          <Box
-            ref={chips.ref}
-            sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}
-          >
-            {stack.map((item, i) => (
-              <Chip
-                key={item.name}
-                icon={item.icon}
-                label={item.name}
-                variant="outlined"
-                sx={{
-                  // chips stagger in once the row scrolls into view
-                  opacity: 0,
-                  ...(chips.visible && {
-                    animation: `chip-reveal 0.4s ${easing.reveal} both`,
-                    animationDelay: `${i * 45}ms`,
-                  }),
-                  '@keyframes chip-reveal': {
-                    from: { opacity: 0, transform: 'translateY(12px)' },
-                    to: { opacity: 1, transform: 'none' },
-                  },
-                  '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
-                  '@media (prefers-reduced-motion: reduce)': { opacity: 1, animation: 'none' },
-                }}
-              />
-            ))}
-          </Box>
-        </Container>
-      </Box>
-
-      {/* editorial statement: a heading/body spread, deliberately not a card grid */}
-      <Divider />
-      <Box component="section" sx={{ ...pageSection, bgcolor: 'background.paper' }}>
         <Container maxWidth="lg">
           <Box
             sx={{
               display: 'grid',
-              gap: { xs: 3, md: 6 },
-              gridTemplateColumns: { md: '13rem 1fr' },
+              gridTemplateColumns: { lg: 'minmax(0, 0.8fr) minmax(0, 1.2fr)' },
+              gap: { xs: 5, lg: 10 },
               alignItems: 'start',
             }}
           >
-            <RevealSection>
-              <Typography variant="h3" component="h2">
-                How I work
-              </Typography>
-            </RevealSection>
+            <Box sx={{ position: { lg: 'sticky' }, top: { lg: 120 } }}>
+              <RevealSection>
+                <Typography variant="h2">What the day job moved.</Typography>
+              </RevealSection>
+              <RevealSection delay={1}>
+                <Typography sx={ledeSx}>
+                  Platform engineering at Fidelity Investments since 2023, on the team that runs
+                  cloud development environments for thousands of users.
+                </Typography>
+              </RevealSection>
+              <RevealSection delay={1} sx={{ mt: 3 }}>
+                <MuiLink
+                  component={Link}
+                  to="/about"
+                  sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, fontWeight: 600 }}
+                >
+                  The full story
+                  <ArrowForwardIcon fontSize="small" />
+                </MuiLink>
+              </RevealSection>
+            </Box>
 
-            <RevealSection
-              delay={1}
-              sx={{
-                borderLeft: { md: 2 },
-                borderColor: { md: 'primary.main' },
-                pl: { md: 4 },
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 'clamp(1.3rem, 2.4vw, 1.8rem)',
-                  fontWeight: 500,
-                  lineHeight: 1.45,
-                  color: 'text.primary',
-                }}
-              >
-                At Fidelity, I build multi-tenant developer platforms end to end:{' '}
-                <Box component="em" sx={{ fontStyle: 'normal', color: 'primary.main' }}>
-                  Spring Boot services and Angular interfaces
-                </Box>
-                , built and deployed to EKS through Jenkins pipelines for thousands of engineers.
-              </Typography>
+            <ImpactList />
+          </Box>
+        </Container>
+      </Box>
 
-              <Typography color="text.secondary" sx={{ mt: 2.5, fontSize: '1.1rem' }}>
-                Beyond that, I self-host every app on this site on Kubernetes clusters I run and
-                maintain myself.
-              </Typography>
+      {/* stack */}
+      <Box component="section" sx={pageSection}>
+        <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
+          <RevealSection>
+            <Typography variant="h2">Tools of the trade</Typography>
+          </RevealSection>
+          <RevealSection delay={1}>
+            <Typography sx={{ ...ledeSx, mx: 'auto' }}>
+              The languages, frameworks, and platforms I reach for day to day.
+            </Typography>
+          </RevealSection>
+        </Container>
+
+        <RevealSection delay={2} sx={{ mt: { xs: 5, md: 7 } }}>
+          <StackMarquee />
+        </RevealSection>
+      </Box>
+
+      {/* squares */}
+      <Box component="section" sx={pageSection}>
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { md: 'minmax(0, 1.1fr) auto' },
+              alignItems: 'center',
+              gap: { xs: 6, md: 10 },
+              p: { xs: 3.5, sm: 5, md: 7 },
+              borderRadius: '20px',
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              backgroundImage: (theme) =>
+                `radial-gradient(70% 90% at 100% 50%, ${primaryTint(theme, 0.12)}, transparent 70%)`,
+            }}
+          >
+            <Box>
+              <RevealSection>
+                <Typography variant="h2">Squares, live on game day.</Typography>
+              </RevealSection>
+              <RevealSection delay={1}>
+                <Typography sx={ledeSx}>
+                  The classic football squares pool, online. One person sets up the board, friends
+                  claim their squares from their phones, and the winning square lights up for
+                  everyone the moment a quarter ends.
+                </Typography>
+              </RevealSection>
+              <RevealSection delay={2} sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                <Button
+                  component="a"
+                  href="https://squares.maxhq.io"
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="contained"
+                  size="large"
+                  endIcon={<NorthEastIcon />}
+                >
+                  Play Squares
+                </Button>
+                <Button component={Link} to="/apps" variant="outlined" color="inherit" size="large">
+                  How it plays
+                </Button>
+              </RevealSection>
+            </Box>
+
+            <RevealSection delay={1} variant="scale" sx={{ justifySelf: 'center' }}>
+              <SquaresBoard />
             </RevealSection>
           </Box>
         </Container>
       </Box>
-      <Divider />
 
-      {/* cta */}
-      <Box component="section" sx={pageSection}>
-        <Container maxWidth="lg">
-          <RevealSection variant="rise">
-            <Paper
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2,
-                textAlign: 'center',
-                py: 7,
-                px: 4,
-                bgcolor: 'background.paper',
-              }}
+      {/* closing */}
+      <Box
+        component="section"
+        sx={{ ...pageSection, position: 'relative', overflow: 'hidden', textAlign: 'center' }}
+      >
+        <Box
+          aria-hidden
+          sx={{
+            pointerEvents: 'none',
+            position: 'absolute',
+            inset: 0,
+            background: (theme) => {
+              const { palette } = theme.vars ?? theme;
+
+              return `radial-gradient(45% 60% at 50% 100%, ${palette.heroGlow1}, transparent 70%)`;
+            },
+          }}
+        />
+
+        <Container maxWidth="md" sx={{ position: 'relative' }}>
+          <RevealSection>
+            <Typography variant="h2">Building something? Let&apos;s talk.</Typography>
+          </RevealSection>
+          <RevealSection delay={1}>
+            <Typography sx={{ ...ledeSx, mx: 'auto' }}>
+              Questions about anything here, or something you&apos;re building? I read every message
+              and usually reply within a day or two.
+            </Typography>
+          </RevealSection>
+          <RevealSection
+            delay={2}
+            sx={{ mt: 4.5, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1.5 }}
+          >
+            <Button
+              component={Link}
+              to="/contact"
+              variant="contained"
+              size="large"
+              endIcon={<ArrowForwardIcon />}
             >
-              <Typography variant="h2">Get in touch</Typography>
-
-              <Typography color="text.secondary" sx={{ maxWidth: '50ch' }}>
-                Questions about anything here, or something you&apos;re building? I read every
-                message and usually reply within a day or two.
-              </Typography>
-
-              <Box
-                sx={{
-                  mt: 2,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                  gap: 1.5,
-                }}
-              >
-                <Button
-                  component={Link}
-                  to="/contact"
-                  variant="contained"
-                  size="large"
-                  endIcon={<ArrowForwardIcon />}
-                >
-                  Send a message
-                </Button>
-
-                <Button component={Link} to="/projects" variant="outlined" size="large">
-                  Browse the projects
-                </Button>
-              </Box>
-            </Paper>
+              Send a message
+            </Button>
+            <Button component={Link} to="/projects" variant="outlined" color="inherit" size="large">
+              Browse the projects
+            </Button>
           </RevealSection>
         </Container>
       </Box>

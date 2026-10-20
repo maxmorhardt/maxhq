@@ -4,42 +4,37 @@ import HomePage from './HomePage';
 import { renderWithProviders } from '../testUtils';
 
 describe('HomePage', () => {
-  it('renders the visually hidden h1 for crawlers', () => {
+  it('renders the hero heading and introduces Max by name', () => {
     renderWithProviders(<HomePage />);
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Max Morhardt, Software Engineer' })
+      screen.getByRole('heading', { level: 1, name: 'Platforms, from the API to the cluster.' })
     ).toBeInTheDocument();
+    expect(screen.getByText('Max Morhardt')).toBeInTheDocument();
   });
 
-  it('renders the section headings', () => {
+  it('renders the build, ship, and run chapters', () => {
     renderWithProviders(<HomePage />);
 
-    for (const name of ['What I do', 'Tools of the trade', 'How I work']) {
+    for (const name of ['Build it end to end.', 'Ship it on merge.', 'Run it myself.']) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();
     }
   });
 
-  it('renders every highlight card', () => {
+  it('renders the remaining section headings', () => {
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByRole('heading', { name: 'Full-stack engineering' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: 'Cloud and Kubernetes platforms' })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: 'Real-time and self-hosted systems' })
-    ).toBeInTheDocument();
+    for (const name of [
+      'What the day job moved.',
+      'Tools of the trade',
+      'Squares, live on game day.',
+      "Building something? Let's talk.",
+    ]) {
+      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+    }
   });
 
-  it('renders stack chips', () => {
-    renderWithProviders(<HomePage />);
-
-    expect(screen.getByText('Kubernetes')).toBeInTheDocument();
-    expect(screen.getByText('Spring Boot')).toBeInTheDocument();
-  });
-
-  it('links the calls to action to contact and projects', () => {
+  it('links the calls to action to contact, projects, and squares', () => {
     renderWithProviders(<HomePage />);
 
     expect(screen.getByRole('link', { name: /Send a message/ })).toHaveAttribute(
@@ -50,5 +45,10 @@ describe('HomePage', () => {
       'href',
       '/projects'
     );
+    expect(screen.getByRole('link', { name: /Play Squares/ })).toHaveAttribute(
+      'href',
+      'https://squares.maxhq.io'
+    );
+    expect(screen.getByRole('link', { name: /The full story/ })).toHaveAttribute('href', '/about');
   });
 });
