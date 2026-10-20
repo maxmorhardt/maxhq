@@ -59,6 +59,10 @@ func StartPostgres(ctx context.Context) (*Postgres, error) {
 		pg.Terminate()
 		return nil, err
 	}
+	// localhost tries IPv6 first on Windows and stalls every new connection for a second
+	if host == "localhost" {
+		host = "127.0.0.1"
+	}
 	port, err := container.MappedPort(ctx, "5432")
 	if err != nil {
 		pg.Terminate()
