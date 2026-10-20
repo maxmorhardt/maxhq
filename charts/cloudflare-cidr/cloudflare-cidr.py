@@ -1,5 +1,6 @@
 import ipaddress
 import json
+import logging
 import os
 import ssl
 import sys
@@ -9,6 +10,8 @@ CLOUDFLARE_URLS = ["https://www.cloudflare.com/ips-v4", "https://www.cloudflare.
 POLICY_PATH = "/apis/gateway.envoyproxy.io/v1alpha1/namespaces/envoy-gateway-system/clienttrafficpolicies/maxhq"
 SERVICE_ACCOUNT = "/var/run/secrets/kubernetes.io/serviceaccount"
 USER_AGENT = "maxhq-cloudflare-cidr"
+
+log = logging.getLogger("cloudflare-cidr")
 
 
 def fetch(url, headers=None, context=None, data=None):
@@ -31,6 +34,7 @@ def trusted_ranges():
 	api = f"https://{os.environ['KUBERNETES_SERVICE_HOST']}:{os.environ['KUBERNETES_SERVICE_PORT']}"
 	policy = json.loads(fetch(api + POLICY_PATH, {"Authorization": f"Bearer {token}"}, context))
 	cidrs = policy["spec"]["clientIPDetection"]["xForwardedFor"]["trustedCIDRs"]
+	
 	# the pod network is trusted too; only public ranges are cloudflare's
 	return {cidr for cidr in cidrs if not ipaddress.ip_network(cidr).is_private}
 
@@ -44,7 +48,7 @@ def notify(subject, body):
 	try:
 		discord(subject, body)
 	except Exception as e:
-		print(f"discord notification failed: {e}", file=sys.stderr)
+		log.error("discord notification failed: %s", e)
 		return False
 	return True
 
@@ -63,17 +67,19 @@ def main():
 	try:
 		latest, trusted = cloudflare_ranges(), trusted_ranges()
 	except Exception as e:
+		log.exception("cloudflare cidr check failed")
 		notify("Cloudflare CIDR check failed", str(e))
 		return 1
 
 	if latest == trusted:
-		print(f"trustedCIDRs match Cloudflare's {len(latest)} ranges")
+		log.info("trustedCIDRs match Cloudflare's %d ranges", len(latest))
 		return 0
 
 	body = report(latest, trusted)
-	print(body)
+	log.warning(body)
 	return 0 if notify("Cloudflare IP ranges changed", body) else 1
 
 
 if __name__ == "__main__":
+	logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", stream=sys.stdout)
 	sys.exit(main())
