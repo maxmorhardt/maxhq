@@ -14,6 +14,7 @@ The NFL schedule and live scores, polled from ESPN. One of the squares backend s
 | --- | --- |
 | `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
 | `/games/scoreboard` | one week of games with their scores by quarter (the current week unless `season`, `seasonType`, and `week` pick another); public |
+| `/games/{id}` | one game with its status, score, and points by quarter; public |
 
 ## Events
 

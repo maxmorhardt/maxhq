@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/stretchr/testify/assert"
@@ -89,4 +91,37 @@ func TestGetScoreboard_Error(t *testing.T) {
 	svc.EXPECT().GetScoreboard(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 
 	assert.Equal(t, http.StatusInternalServerError, getScoreboard(svc, "/games/scoreboard").Code)
+}
+
+func getGame(svc *mocks.GameService, target string) *httptest.ResponseRecorder {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/games/:id", NewGameHandler(svc).GetGame)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, target, http.NoBody))
+	return w
+}
+
+func TestGetGame(t *testing.T) {
+	id := uuid.New()
+	svc := mocks.NewGameService(t)
+	svc.EXPECT().GetGame(mock.Anything, id).Return(&model.Game{HomeTeam: "Bills", HomeScore: 14}, nil)
+
+	w := getGame(svc, "/games/"+id.String())
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"homeScore":14`)
+}
+
+func TestGetGame_BadID(t *testing.T) {
+	assert.Equal(t, http.StatusBadRequest, getGame(mocks.NewGameService(t), "/games/nope").Code)
+}
+
+func TestGetGame_Errors(t *testing.T) {
+	svc := mocks.NewGameService(t)
+	svc.EXPECT().GetGame(mock.Anything, mock.Anything).Return(nil, errs.ErrGameNotFound).Once()
+	assert.Equal(t, http.StatusNotFound, getGame(svc, "/games/"+uuid.NewString()).Code)
+
+	svc.EXPECT().GetGame(mock.Anything, mock.Anything).Return(nil, errors.New("db")).Once()
+	assert.Equal(t, http.StatusInternalServerError, getGame(svc, "/games/"+uuid.NewString()).Code)
 }

@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
@@ -14,6 +17,7 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 	"github.com/maxmorhardt/maxhq/libs/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/squares/events"
+	"gorm.io/gorm"
 )
 
 const (
@@ -23,11 +27,15 @@ const (
 
 	scoreboardCacheName = "scoreboard"
 	scoreboardCacheTTL  = 10 * time.Second
+
+	gameCacheName = "game"
+	gameCacheTTL  = 10 * time.Second
 )
 
 type GameService interface {
 	GetUpcoming(ctx context.Context) ([]model.Game, error)
 	GetScoreboard(ctx context.Context, week *model.Week) (*model.Scoreboard, error)
+	GetGame(ctx context.Context, id uuid.UUID) (*model.Game, error)
 	Ingest(ctx context.Context, games []model.ESPNGame) (newScores int, err error)
 	Activity(ctx context.Context) (model.GameActivity, error)
 }
@@ -86,6 +94,24 @@ func (s *gameService) GetScoreboard(ctx context.Context, week *model.Week) (*mod
 	}
 
 	return &model.Scoreboard{Week: *week, Games: games}, nil
+}
+
+// short-lived like the scoreboard; viewers follow the score between loads over the games stream
+func (s *gameService) GetGame(ctx context.Context, id uuid.UUID) (*model.Game, error) {
+	log := logging.FromContext(ctx)
+
+	game, err := cache.GetOrLoad(ctx, s.cache, gameCacheName, "game:"+id.String(), gameCacheTTL, func(ctx context.Context) (*model.Game, error) {
+		return s.gameRepo.GetByID(ctx, id)
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.ErrGameNotFound
+		}
+		log.Error("failed to get game", "game_id", id, "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+
+	return game, nil
 }
 
 func (s *gameService) Ingest(ctx context.Context, games []model.ESPNGame) (int, error) {

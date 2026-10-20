@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func passTx() *mocks.Transactor {
@@ -253,5 +254,31 @@ func TestGameService_GetScoreboard_Errors(t *testing.T) {
 	g = mocks.NewGameRepository(t)
 	g.EXPECT().GetWeek(mock.Anything, week).Return(nil, errors.New("db"))
 	_, err = gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
+func TestGameService_GetGame_CachesResult(t *testing.T) {
+	id := uuid.New()
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetByID(mock.Anything, id).Return(&model.Game{ESPNID: "1", HomeScore: 7}, nil).Once()
+	svc := gameSvc(t, g, nil)
+
+	first, err := svc.GetGame(context.Background(), id)
+	require.NoError(t, err)
+	second, err := svc.GetGame(context.Background(), id)
+	require.NoError(t, err)
+
+	assert.Equal(t, 7, first.HomeScore)
+	assert.Equal(t, first, second)
+}
+
+func TestGameService_GetGame_Errors(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound).Once()
+	_, err := gameSvc(t, g, nil).GetGame(context.Background(), uuid.New())
+	assert.ErrorIs(t, err, errs.ErrGameNotFound)
+
+	g.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("db")).Once()
+	_, err = gameSvc(t, g, nil).GetGame(context.Background(), uuid.New())
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
