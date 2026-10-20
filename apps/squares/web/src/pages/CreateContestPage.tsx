@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router';
 import RequireAuth from '../auth/RequireAuth';
 import CreateContestForm from '../features/contests/components/create/CreateContestForm';
-import { gradients } from '../types/gradients';
+import { fonts } from '../app/theme';
 
 export default function CreateContestPage() {
   return (
@@ -20,11 +20,11 @@ export default function CreateContestPage() {
           sx={{
             fontWeight: 700,
             mb: 1,
-            background: gradients.textGradient,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            fontSize: { xs: '1.5rem', sm: '1.85rem' },
+            fontFamily: fonts.display,
+            textTransform: 'uppercase',
+            letterSpacing: '0.01em',
+            fontSize: { xs: '2.2rem', sm: '2.8rem' },
+            lineHeight: 1,
           }}
         >
           Create New Contest

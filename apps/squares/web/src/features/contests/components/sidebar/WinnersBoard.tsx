@@ -1,4 +1,4 @@
-import { Close } from '@mui/icons-material';
+import { Close, EmojiEvents } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
@@ -8,6 +8,7 @@ import { useToast } from '../../../toast/useToast';
 import { useRollbackQuarterResultMutation } from '../../api';
 import { winnerLabel } from '../../live/activity';
 import type { ContestViewer } from '../../live/viewer';
+import { fonts } from '../../../../app/theme';
 import ContestSidebarCard from './ContestSidebarCard';
 
 const MAX_NAME_LENGTH = 20;
@@ -50,7 +51,11 @@ export default function WinnersBoard({ contest, viewer }: Props) {
   };
 
   return (
-    <ContestSidebarCard icon={<span style={{ fontSize: '1.3rem' }}>🏆</span>} title="Winners Board">
+    <ContestSidebarCard
+      icon={<EmojiEvents fontSize="small" />}
+      iconColor="#f7c948"
+      title="Winners Board"
+    >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
         {results.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 3 }}>
@@ -77,19 +82,26 @@ export default function WinnersBoard({ contest, viewer }: Props) {
               <Box
                 sx={{
                   borderRadius: 1,
-                  background: 'rgba(67, 233, 123, 0.15)',
-                  border: '1px solid rgba(67, 233, 123, 0.3)',
+                  background: 'rgba(247, 201, 72, 0.14)',
+                  border: '1px solid rgba(247, 201, 72, 0.4)',
                   mr: 1.5,
                   px: 0.8,
                   py: 0.3,
                 }}
               >
-                <Typography sx={{ color: '#43e97b', fontWeight: 'bold', fontSize: '0.7rem' }}>
+                <Typography
+                  sx={{
+                    color: '#f7c948',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    fontFamily: fonts.display,
+                  }}
+                >
                   Q{result.quarter}
                 </Typography>
               </Box>
 
-              <Box sx={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
                 <Typography sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
                   {formatWinnerName(result)}
                 </Typography>
@@ -109,7 +121,7 @@ export default function WinnersBoard({ contest, viewer }: Props) {
                       aria-label={`Roll back Q${result.quarter} result`}
                       size="small"
                       onClick={() => setConfirmOpen(true)}
-                      sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#ff5252' } }}
+                      sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#ff5d5d' } }}
                     >
                       <Close sx={{ fontSize: '1rem' }} />
                     </IconButton>

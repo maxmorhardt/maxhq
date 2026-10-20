@@ -28,7 +28,7 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
               aria-label="Invite links"
               onClick={() => setDialog('invites')}
               size="small"
-              sx={iconSx('#f093fb')}
+              sx={iconSx('#f7c948')}
             >
               <LinkIcon fontSize="small" />
             </IconButton>
@@ -39,7 +39,7 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
             aria-label="Participants"
             onClick={() => setDialog('participants')}
             size="small"
-            sx={iconSx('#43e97b')}
+            sx={iconSx('#3ddc84')}
           >
             <Groups fontSize="small" />
           </IconButton>

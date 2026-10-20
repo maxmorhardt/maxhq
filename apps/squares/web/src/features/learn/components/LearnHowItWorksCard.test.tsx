@@ -45,16 +45,16 @@ describe('LearnHowItWorksCard', () => {
     expect(screen.getByText('Based on last digit.')).toBeInTheDocument();
   });
 
-  it('renders with a custom color prop', () => {
-    const { container } = render(
+  it('renders the final step', () => {
+    render(
       <LearnHowItWorksCard
-        stepNumber={1}
-        title="Create the Grid"
-        description="Set up a 10x10 grid."
-        color="#ffa040"
+        stepNumber={3}
+        title="Determine Winners"
+        description="Last digit."
+        final
       />,
       { wrapper }
     );
-    expect(container).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Determine Winners' })).toBeInTheDocument();
   });
 });

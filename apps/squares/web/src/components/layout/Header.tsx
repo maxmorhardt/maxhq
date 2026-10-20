@@ -10,9 +10,11 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
 import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { easing, fonts, game } from '../../app/theme';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 import { HEADER_HEIGHT } from '../../types/layout';
@@ -64,68 +66,47 @@ export default function Header() {
     handleCloseUserMenu();
   };
 
+  const wordmarkSx = {
+    fontFamily: fonts.display,
+    fontWeight: 800,
+    fontSize: '1.45rem',
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+    lineHeight: 1,
+    color: 'text.primary',
+  } as const;
+
   return (
     <>
       {/* main app bar */}
-      <AppBar position="static">
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          backgroundColor: alpha(game.night, 0.78),
+          backgroundImage: 'none',
+          backdropFilter: 'blur(14px) saturate(150%)',
+          borderBottom: `1px solid ${game.line}`,
+        }}
+      >
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ minHeight: HEADER_HEIGHT, height: HEADER_HEIGHT }}>
-            {/* desktop logo and brand */}
+          <Toolbar disableGutters sx={{ minHeight: HEADER_HEIGHT, height: HEADER_HEIGHT, gap: 1 }}>
+            {/* logo and brand */}
             <Box
               component={Link}
               to="/"
               prefetch="intent"
-              sx={{ display: { xs: 'none', md: 'flex' }, mr: 2, cursor: 'pointer' }}
-            >
-              <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
-            </Box>
-
-            <Typography
-              variant="h6"
-              noWrap
-              component={Link}
-              to="/"
-              prefetch="intent"
+              aria-label="Squares home"
               sx={{
-                mr: 2,
-                display: { xs: 'none', md: 'flex' },
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                letterSpacing: '.1em',
-                color: 'inherit',
-                textDecoration: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              Squares
-            </Typography>
-
-            {/* mobile logo and brand (left) */}
-            <Box
-              component={Link}
-              to="/"
-              prefetch="intent"
-              sx={{
-                display: { xs: 'flex', md: 'none' },
+                display: 'flex',
                 alignItems: 'center',
-                gap: 1,
-                cursor: 'pointer',
-                color: 'inherit',
+                gap: 1.25,
+                mr: { md: 3 },
                 textDecoration: 'none',
               }}
             >
-              <img src="/squares_logo.png" alt="Logo" style={{ width: 35, height: 'auto' }} />
-              <Typography
-                variant="h6"
-                noWrap
-                sx={{
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  letterSpacing: '.1em',
-                  color: 'inherit',
-                  textDecoration: 'none',
-                }}
-              >
+              <Box component="img" src="/squares_logo.png" alt="" sx={{ width: 32, height: 32 }} />
+              <Typography component="span" noWrap sx={wordmarkSx}>
                 Squares
               </Typography>
             </Box>
@@ -134,12 +115,19 @@ export default function Header() {
             <Box sx={{ flexGrow: 1, display: { xs: 'block', md: 'none' } }} />
 
             {/* desktop navigation links */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+            <Box
+              component="nav"
+              sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 0.5 }}
+            >
               {pages.map((page) => {
                 // hide contests link if not authenticated
                 if (page.name === 'Contests' && !auth.isAuthenticated) {
                   return;
                 }
+
+                const active =
+                  location.pathname === page.navigate ||
+                  location.pathname.startsWith(`${page.navigate}/`);
 
                 return (
                   <Button
@@ -147,16 +135,31 @@ export default function Header() {
                     component={Link}
                     to={page.navigate}
                     prefetch="intent"
+                    aria-current={active ? 'page' : undefined}
                     onClick={handleCloseNavMenu}
                     sx={{
-                      mx: 1,
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
+                      position: 'relative',
+                      px: 1.5,
+                      color: active ? 'text.primary' : 'text.secondary',
+                      fontWeight: active ? 700 : 600,
+                      '&:hover': {
+                        color: 'text.primary',
+                        backgroundColor: alpha(game.chalk, 0.05),
+                      },
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        left: 12,
+                        right: 12,
+                        bottom: { xs: -10, sm: -14 },
+                        height: 3,
+                        borderRadius: 2,
+                        backgroundColor: 'primary.main',
+                        transform: active ? 'scaleX(1)' : 'scaleX(0)',
+                        transition: `transform 300ms ${easing.out}`,
+                      },
                     }}
                   >
-                    {page.icon}
                     {page.name}
                   </Button>
                 );

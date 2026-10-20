@@ -4,6 +4,7 @@ import type { StreamStatus } from '../../../api/eventStream';
 import type { ActivityEvent, Contest, Participant } from '../../../types/contest';
 import { CONTEST_STACK_MAX_WIDTH } from '../../../types/layout';
 import type { ContestViewer } from '../live/viewer';
+import { fonts } from '../../../app/theme';
 import ConnectionStatus from './ConnectionStatus';
 import ContestDetails from './details/ContestDetails';
 import ContestGrid, { type SquarePosition } from './grid/ContestGrid';
@@ -55,13 +56,15 @@ export default function ContestView({
       </Helmet>
 
       {/* contest name and connection state */}
-      <Box sx={{ mt: { xs: 1.5, sm: 2 }, mb: { xs: 0.5, sm: 1 }, px: 5 }}>
+      <Box sx={{ mt: { xs: 2, sm: 3 }, mb: { xs: 1, sm: 1.5 }, px: 5 }}>
         <Typography
           component="h1"
           sx={{
-            fontSize: { xs: '1rem', sm: '1.5rem', md: '1.7rem' },
+            fontFamily: fonts.display,
+            fontSize: { xs: '1.7rem', sm: '2.3rem', md: '2.7rem' },
             fontWeight: 800,
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+            lineHeight: 1,
+            textTransform: 'uppercase',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',

@@ -1,5 +1,6 @@
-import { Box, Container, Link, Stack, Typography } from '@mui/material';
+import { Box, Container, Link, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
+import { fonts } from '../../app/theme';
 
 export default function Footer() {
   const navigate = useNavigate();
@@ -14,32 +15,30 @@ export default function Footer() {
   ];
 
   return (
-    <Box
-      component="footer"
-      sx={{
-        py: { xs: 2.5, sm: 4 },
-        px: 2,
-        mt: 'auto',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-      }}
-    >
+    <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'divider' }}>
       <Container maxWidth="lg">
-        {/* responsive stack layout for footer content */}
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={{ xs: 2, sm: 3 }}
-          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: { xs: 2, sm: 3 },
+            py: { xs: 3, sm: 4 },
+          }}
         >
-          {/* logo and copyright section */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
-            <img src="/squares_logo.png" alt="Logo" style={{ width: 24, height: 'auto' }} />
+          {/* logo and copyright */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+            <Box component="img" src="/squares_logo.png" alt="" sx={{ width: 22, height: 22 }} />
             <Typography
               variant="body2"
               sx={{
-                color: 'rgba(255,255,255,0.7)',
-                fontFamily: 'monospace',
+                color: 'text.secondary',
+                fontFamily: fonts.display,
                 fontWeight: 700,
-                fontSize: '0.875rem',
+                fontSize: '0.95rem',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
               }}
             >
               © {currentYear} Squares
@@ -47,28 +46,27 @@ export default function Footer() {
           </Box>
 
           {/* footer navigation links */}
-          <Stack direction="row" spacing={{ xs: 2, sm: 3 }}>
+          <Box component="nav" sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 3 } }}>
             {footerLinks.map((link) => (
               <Link
                 key={link.label}
                 {...(link.href
                   ? { href: link.href, target: '_blank', rel: 'noreferrer' }
                   : { onClick: () => link.path && navigate(link.path) })}
+                underline="hover"
                 sx={{
-                  color: 'rgba(255,255,255,0.7)',
+                  color: 'text.secondary',
                   cursor: 'pointer',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    color: 'white',
-                  },
+                  fontSize: '0.9rem',
+                  fontWeight: 500,
+                  '&:hover': { color: 'text.primary' },
                 }}
               >
                 {link.label}
               </Link>
             ))}
-          </Stack>
-        </Stack>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

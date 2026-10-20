@@ -1,12 +1,14 @@
-import { Box, Button, keyframes, useTheme } from '@mui/material';
+import { Box, Button, keyframes } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { memo } from 'react';
+import { fonts, game } from '../../../../app/theme';
 
 const winnerPulse = keyframes`
-  0% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
-  15% { box-shadow: 0 0 18px rgba(67, 233, 123, 0.8), 0 0 35px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
-  40% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
-  55% { box-shadow: 0 0 18px rgba(67, 233, 123, 0.8), 0 0 35px rgba(67, 233, 123, 0.3); transform: scale(1.12); }
-  75%, 100% { box-shadow: 0 0 4px rgba(67, 233, 123, 0.4); transform: scale(1); }
+  0% { box-shadow: 0 0 0 0 ${alpha(game.gold, 0.7)}; transform: scale(1); }
+  20% { box-shadow: 0 0 0 8px ${alpha(game.gold, 0)}; transform: scale(1.18); }
+  45% { box-shadow: 0 0 0 0 ${alpha(game.gold, 0.6)}; transform: scale(1); }
+  65% { box-shadow: 0 0 0 8px ${alpha(game.gold, 0)}; transform: scale(1.18); }
+  100% { box-shadow: 0 4px 16px -4px ${alpha(game.gold, 0.6)}; transform: scale(1); }
 `;
 
 interface SquareProps {
@@ -21,6 +23,16 @@ interface SquareProps {
   isNewWinner?: boolean;
 }
 
+const axisSx = {
+  position: 'absolute',
+  fontFamily: fonts.display,
+  fontWeight: 800,
+  fontSize: { xs: 10, sm: 15, md: 17 },
+  lineHeight: 1,
+  fontVariantNumeric: 'tabular-nums',
+  color: game.chalk,
+} as const;
+
 function Square({
   rowIndex,
   colIndex,
@@ -32,7 +44,25 @@ function Square({
   isMine = false,
   isNewWinner = false,
 }: SquareProps) {
-  const theme = useTheme();
+  const claimed = squareData !== '';
+
+  const tone = isWinner
+    ? { bg: game.gold, border: game.gold, color: game.night, hover: '#ffd668' }
+    : isMine
+      ? {
+          bg: alpha(game.brand, 0.16),
+          border: alpha(game.brand, 0.7),
+          color: game.brand,
+          hover: alpha(game.brand, 0.26),
+        }
+      : claimed
+        ? { bg: game.raised, border: game.lineStrong, color: game.chalk, hover: '#1c2a46' }
+        : {
+            bg: 'transparent',
+            border: game.line,
+            color: game.chalk,
+            hover: alpha(game.brand, 0.08),
+          };
 
   return (
     // square cell with labels and winner highlighting
@@ -41,13 +71,11 @@ function Square({
       {rowIndex === 0 && xLabel !== undefined && (
         <Box
           sx={{
-            position: 'absolute',
-            top: { xs: -12, sm: -18, md: -20 },
+            ...axisSx,
+            top: { xs: -13, sm: -21, md: -24 },
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: { xs: 8, sm: 12, md: 14 },
-            fontWeight: 'bold',
-            color: theme.palette.text.secondary,
+            opacity: xLabel === -1 ? 0.35 : 1,
           }}
         >
           {xLabel === -1 ? '-' : xLabel}
@@ -58,13 +86,11 @@ function Square({
       {colIndex === 0 && yLabel !== undefined && (
         <Box
           sx={{
-            position: 'absolute',
-            left: { xs: -10, sm: -13, md: -16 },
+            ...axisSx,
+            left: { xs: -11, sm: -16, md: -19 },
             top: '50%',
             transform: 'translateY(-50%)',
-            fontSize: { xs: 8, sm: 12, md: 14 },
-            fontWeight: 'bold',
-            color: theme.palette.text.secondary,
+            opacity: yLabel === -1 ? 0.35 : 1,
           }}
         >
           {yLabel === -1 ? '-' : yLabel}
@@ -76,59 +102,35 @@ function Square({
         key={`${rowIndex}-${colIndex}`}
         onClick={() => handleSquareClick(rowIndex, colIndex)}
         sx={{
-          color: 'white',
-          background: isWinner
-            ? 'rgba(67, 233, 123, 0.2)'
-            : isMine
-              ? 'rgba(102, 126, 234, 0.18)'
-              : squareData
-                ? 'rgba(255,255,255,0.1)'
-                : 'rgba(255,255,255,0.03)',
-          backdropFilter: 'blur(10px)',
-          border: isWinner
-            ? '2px solid rgba(67, 233, 123, 0.6)'
-            : isMine
-              ? '1px solid rgba(102, 126, 234, 0.4)'
-              : squareData
-                ? '1px solid rgba(255,255,255,0.2)'
-                : '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 1.5,
+          color: tone.color,
+          background: tone.bg,
+          border: `1px solid ${tone.border}`,
+          borderRadius: { xs: '5px', sm: '7px' },
           padding: 0,
           margin: { xs: 0, sm: 0.3, md: 0.4 },
           minWidth: { xs: 24, sm: 42, md: 47 },
           minHeight: { xs: 24, sm: 42, md: 47 },
-          fontSize: { xs: 8, sm: 11, md: 14 },
-          fontWeight: squareData ? 600 : 400,
-          transition: 'all 0.2s ease-in-out',
+          fontFamily: fonts.display,
+          fontSize: { xs: 9, sm: 13, md: 15 },
+          fontWeight: claimed ? 700 : 500,
+          letterSpacing: '0.02em',
+          boxShadow: isWinner ? `0 4px 16px -4px ${alpha(game.gold, 0.6)}` : 'none',
+          transition: 'background-color 160ms, border-color 160ms, transform 160ms',
           cursor: 'pointer',
-          animation: isNewWinner ? `${winnerPulse} 2.2s ease-in-out` : undefined,
+          animation: isNewWinner ? `${winnerPulse} 2.2s ease-out` : undefined,
           '&:hover': {
-            background: isWinner
-              ? 'rgba(67, 233, 123, 0.3)'
-              : isMine
-                ? 'rgba(102, 126, 234, 0.25)'
-                : squareData
-                  ? 'rgba(255,255,255,0.15)'
-                  : 'rgba(255,255,255,0.08)',
+            background: tone.hover,
+            borderColor: isWinner ? game.gold : isMine || !claimed ? game.brand : game.muted,
             transform: 'translateY(-1px)',
-            boxShadow: isWinner
-              ? '0 0 4px rgba(67, 233, 123, 0.5)'
-              : isMine
-                ? '0 0 4px rgba(102, 126, 234, 0.5)'
-                : `0 0 4px ${theme.palette.primary.main}`,
-            border: isWinner
-              ? '2px solid rgba(67, 233, 123, 0.8)'
-              : isMine
-                ? '1px solid rgba(102, 126, 234, 0.6)'
-                : '1px solid rgba(255,255,255,0.3)',
           },
           '&:active': {
             transform: 'translateY(0px)',
           },
           '&.Mui-disabled': {
-            color: 'white',
+            color: tone.color,
             opacity: 0.8,
           },
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
         }}
       >
         {squareData}

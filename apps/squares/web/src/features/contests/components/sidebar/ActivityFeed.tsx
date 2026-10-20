@@ -1,4 +1,5 @@
 import {
+  EmojiEvents,
   GridOff,
   GridView,
   PersonAdd,
@@ -18,14 +19,14 @@ interface ActivityFeedProps {
 }
 
 const eventIcons: Record<ActivityEventType, ReactNode> = {
-  square_claimed: <GridView sx={{ fontSize: '0.85rem', color: '#4facfe' }} />,
-  square_cleared: <GridOff sx={{ fontSize: '0.85rem', color: '#f87171' }} />,
-  score_update: <SportsScore sx={{ fontSize: '0.85rem', color: '#43e97b' }} />,
-  quarter_winner: <span style={{ fontSize: '0.75rem' }}>🏆</span>,
-  contest_started: <PlayArrow sx={{ fontSize: '0.85rem', color: '#f5af19' }} />,
-  contest_status: <Sync sx={{ fontSize: '0.85rem', color: '#a78bfa' }} />,
-  participant_added: <PersonAdd sx={{ fontSize: '0.85rem', color: '#43e97b' }} />,
-  participant_removed: <PersonRemove sx={{ fontSize: '0.85rem', color: '#f87171' }} />,
+  square_claimed: <GridView sx={{ fontSize: '0.85rem', color: '#5aa9ff' }} />,
+  square_cleared: <GridOff sx={{ fontSize: '0.85rem', color: '#ff5d5d' }} />,
+  score_update: <SportsScore sx={{ fontSize: '0.85rem', color: '#3ddc84' }} />,
+  quarter_winner: <EmojiEvents sx={{ fontSize: '0.85rem', color: '#f7c948' }} />,
+  contest_started: <PlayArrow sx={{ fontSize: '0.85rem', color: '#ffb547' }} />,
+  contest_status: <Sync sx={{ fontSize: '0.85rem', color: '#93a0ba' }} />,
+  participant_added: <PersonAdd sx={{ fontSize: '0.85rem', color: '#3ddc84' }} />,
+  participant_removed: <PersonRemove sx={{ fontSize: '0.85rem', color: '#ff5d5d' }} />,
 };
 
 function formatTime(timestamp: string): string {

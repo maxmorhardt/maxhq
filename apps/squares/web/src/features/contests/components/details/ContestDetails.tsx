@@ -51,7 +51,7 @@ export default function ContestDetails({
   return (
     <ContestSidebarCard
       icon={<Info />}
-      iconColor="#4facfe"
+      iconColor="#5aa9ff"
       title="Contest Details"
       fillHeight={fillHeight}
     >
@@ -79,7 +79,7 @@ export default function ContestDetails({
                   variant="body2"
                   sx={{
                     ...mutedSx,
-                    color: viewer.squaresLeft === 0 ? '#43e97b' : mutedSx.color,
+                    color: viewer.squaresLeft === 0 ? '#3ddc84' : mutedSx.color,
                   }}
                 >
                   {' · '}

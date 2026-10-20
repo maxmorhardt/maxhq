@@ -60,7 +60,7 @@ export default function ScoreUpdateControls({ contest }: Props) {
     <>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
-        <SportsScore sx={{ color: '#43e97b', fontSize: '1rem' }} />
+        <SportsScore sx={{ color: '#3ddc84', fontSize: '1rem' }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>
           Update Score
         </Typography>

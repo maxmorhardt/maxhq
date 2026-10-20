@@ -102,15 +102,12 @@ export default function SquareDialog({ square, contest, viewer, onClose }: Props
                 px: 1.5,
                 py: 0.75,
                 borderRadius: 999,
-                background: 'rgba(67, 233, 123, 0.12)',
-                border: '1px solid rgba(67, 233, 123, 0.4)',
+                background: 'rgba(247, 201, 72, 0.12)',
+                border: '1px solid rgba(247, 201, 72, 0.45)',
               }}
             >
-              <EmojiEventsIcon sx={{ fontSize: 18, color: 'rgba(67, 233, 123, 0.9)' }} />
-              <Typography
-                variant="body2"
-                sx={{ color: 'rgba(67, 233, 123, 0.9)', fontWeight: 700 }}
-              >
+              <EmojiEventsIcon sx={{ fontSize: 18, color: '#f7c948' }} />
+              <Typography variant="body2" sx={{ color: '#f7c948', fontWeight: 700 }}>
                 Winner · {winningQuarters.map((q) => `Q${q}`).join(', ')}
               </Typography>
             </Box>

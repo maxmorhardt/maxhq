@@ -11,7 +11,7 @@ interface ContestSidebarCardProps {
 
 export default function ContestSidebarCard({
   icon,
-  iconColor = '#667eea',
+  iconColor = '#3d9bff',
   title,
   children,
   fillHeight = false,
@@ -21,24 +21,27 @@ export default function ContestSidebarCard({
   return (
     <Paper
       sx={{
-        background: theme.palette.grey[900],
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 2.5,
-        p: 1.5,
+        background: theme.palette.background.paper,
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: '14px',
+        p: 1.75,
+        textAlign: 'left',
         ...(fillHeight && { flex: '0 0 60%', display: 'flex', flexDirection: 'column' }),
       }}
     >
       {/* card header with icon and title */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
         <Box sx={{ color: iconColor, display: 'flex', alignItems: 'center', fontSize: '1.1rem' }}>
           {icon}
         </Box>
         <Typography
           variant="h6"
           sx={{
-            fontWeight: 'bold',
-            color: 'white',
-            fontSize: '0.9rem',
+            fontWeight: 700,
+            color: 'text.primary',
+            fontSize: '1rem',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
           }}
         >
           {title}
@@ -46,7 +49,7 @@ export default function ContestSidebarCard({
       </Box>
 
       {/* divider */}
-      <Divider sx={{ mb: 1, borderColor: 'rgba(255,255,255,0.1)' }} />
+      <Divider sx={{ mb: 1.25 }} />
 
       {/* card content */}
       {children}

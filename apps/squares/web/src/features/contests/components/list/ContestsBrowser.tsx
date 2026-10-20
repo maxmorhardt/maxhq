@@ -18,7 +18,7 @@ import { errorMessage } from '../../../../api/errors';
 import { useDebouncedValue } from '../../../../hooks/useDebouncedValue';
 import { useInfiniteScroll } from '../../../../hooks/useInfiniteScroll';
 import type { FeedRole, FeedStatus } from '../../../../types/contest';
-import { gradients } from '../../../../types/gradients';
+import { fonts } from '../../../../app/theme';
 import { useGetContestFeedInfiniteQuery } from '../../api';
 import ContestsTable from './ContestsTable';
 import ContestsTableSkeleton from './ContestsTableSkeleton';
@@ -69,12 +69,11 @@ function Hero({ action, children }: HeroProps) {
               component="h1"
               sx={{
                 fontWeight: 800,
-                fontSize: { xs: '1.75rem', sm: '2.25rem' },
-                background: gradients.textGradient,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                lineHeight: 1.2,
+                fontSize: { xs: '2.4rem', sm: '3.2rem' },
+                fontFamily: fonts.display,
+                textTransform: 'uppercase',
+                letterSpacing: '0.01em',
+                lineHeight: 1,
               }}
             >
               Contests

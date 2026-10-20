@@ -46,10 +46,12 @@ export default function HeaderAuth({
       {!auth.isAuthenticated ? (
         <Box sx={{ display: 'flex' }}>
           <Button
-            color="inherit"
+            variant="contained"
+            size="small"
             onClick={(e) => setAnchorElSignIn(e.currentTarget)}
             startIcon={<LoginIcon />}
             disabled={isAuthButtonDisabled}
+            sx={{ px: 1.75, py: 0.75, whiteSpace: 'nowrap' }}
           >
             Sign In
           </Button>
@@ -117,8 +119,20 @@ export default function HeaderAuth({
       ) : (
         <>
           <Tooltip title="Account">
-            <IconButton color="inherit" onClick={handleOpenUserMenu} aria-label="account">
-              <PersonIcon />
+            <IconButton
+              onClick={handleOpenUserMenu}
+              aria-label="account"
+              sx={{
+                ml: 0.5,
+                width: 38,
+                height: 38,
+                border: 1,
+                borderColor: 'divider',
+                color: 'primary.main',
+                '&:hover': { borderColor: 'primary.main' },
+              }}
+            >
+              <PersonIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Menu

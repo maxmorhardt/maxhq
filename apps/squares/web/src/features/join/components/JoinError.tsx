@@ -49,7 +49,7 @@ export default function JoinError({ variant, message, preview }: JoinErrorProps)
   return (
     <ErrorState
       icon={noSquares ? GridOff : LinkOff}
-      accent={noSquares ? gradients.primary : '#ff6b6b'}
+      accent={noSquares ? gradients.primary : '#ff5d5d'}
       label={noSquares ? 'Contest Full' : 'Invite Link'}
       title={noSquares ? 'No Squares Available' : 'Unable to Join'}
       description={

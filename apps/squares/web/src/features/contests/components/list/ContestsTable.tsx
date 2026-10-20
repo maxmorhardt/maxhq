@@ -113,7 +113,7 @@ export default function ContestsTable({
   const actionSx = (danger = false) => ({
     color: 'rgba(255,255,255,0.6)',
     '&:hover': {
-      color: danger ? '#ff4444' : 'white',
+      color: danger ? '#ff5d5d' : 'white',
       backgroundColor: danger ? 'rgba(255,68,68,0.1)' : 'rgba(255,255,255,0.1)',
     },
   });

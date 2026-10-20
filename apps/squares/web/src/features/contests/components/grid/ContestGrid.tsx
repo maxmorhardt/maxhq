@@ -7,6 +7,7 @@ import { useGetMyProfileQuery } from '../../../profile/api';
 import { useToast } from '../../../toast/useToast';
 import { useClaimSquareMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
+import { fonts, game } from '../../../../app/theme';
 import Square from './Square';
 import SquareDialog from './SquareDialog';
 
@@ -24,11 +25,13 @@ interface Props {
 }
 
 const teamLabelSx = {
-  color: 'rgba(255,255,255,0.7)',
-  fontWeight: 600,
-  fontSize: { xs: '0.65rem', sm: '0.8rem', md: '0.95rem' },
-  letterSpacing: '0.05em',
+  color: 'text.primary',
+  fontFamily: fonts.display,
+  fontWeight: 700,
+  fontSize: { xs: '0.8rem', sm: '1rem', md: '1.15rem' },
+  letterSpacing: '0.14em',
   textTransform: 'uppercase',
+  lineHeight: 1,
 } as const;
 
 export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: Props) {
@@ -98,18 +101,17 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
     <>
       <Paper
         sx={{
-          background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 3,
+          background: game.field,
+          border: `1px solid ${game.line}`,
+          borderRadius: { xs: '14px', sm: '18px' },
           p: { xs: 0.75, sm: 1, md: 1.5 },
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          boxShadow: '0 30px 70px -30px rgba(0, 0, 0, 0.85)',
           width: 'fit-content',
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
           {/* away team across the top */}
-          <Typography sx={{ ...teamLabelSx, mb: { xs: 1.25, sm: 2.5 } }}>
+          <Typography sx={{ ...teamLabelSx, mb: { xs: 2.25, sm: 3.75 } }}>
             {contest.awayTeam || 'Away Team'}
           </Typography>
 

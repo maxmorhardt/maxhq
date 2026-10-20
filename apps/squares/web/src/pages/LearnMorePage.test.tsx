@@ -81,9 +81,9 @@ describe('LearnMorePage', () => {
     expect(screen.getByText(/Discover everything you need to know/i)).toBeInTheDocument();
   });
 
-  it('applies visible CSS class when isVisible is true', () => {
+  it('reveals its sections once they scroll into view', () => {
     vi.mocked(useScrollAnimation).mockReturnValue({ ref: { current: null }, isVisible: true });
-    renderPage();
-    expect(screen.getByText('Learn More')).toBeInTheDocument();
+    const { container } = renderPage();
+    expect(container.querySelector('[data-visible]')).toBeInTheDocument();
   });
 });

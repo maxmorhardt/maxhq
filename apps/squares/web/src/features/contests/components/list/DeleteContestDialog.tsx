@@ -48,7 +48,7 @@ export default function DeleteContestDialog({ contest, onClose }: Props) {
           borderRadius: 2,
           background: 'rgba(255,68,68,0.1)',
           border: '1px solid rgba(255,68,68,0.3)',
-          color: '#ff6b6b',
+          color: '#ff5d5d',
           fontWeight: 500,
         }}
       >
