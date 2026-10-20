@@ -1,5 +1,7 @@
+import pytest
+
 from lib import firewall
-from lib.inventory import Profile
+from lib.inventory import Profile, PublicFrom
 from tests.fakes import make_cluster
 
 
@@ -47,3 +49,51 @@ def test_commands_reset_then_deny_by_default_then_enable():
 def test_fingerprint_changes_with_the_rules():
     assert firewall.fingerprint(["a"]) == firewall.fingerprint(["a"])
     assert firewall.fingerprint(["a"]) != firewall.fingerprint(["a", "b"])
+
+
+def test_cloudflare_only_clusters_open_ports_to_cloudflare_alone():
+    cluster = make_cluster(profile=Profile.VPS, lan_cidr=None, open_ports=(443,), public_from=PublicFrom.CLOUDFLARE)
+
+    rules = firewall.rules(cluster, ("173.245.48.0/20", "2400:cb00::/32"))
+
+    assert rules[-2:] == [
+        "allow proto tcp from 173.245.48.0/20 to any port 443",
+        "allow proto tcp from 2400:cb00::/32 to any port 443",
+    ]
+    assert "allow 443/tcp" not in rules
+
+
+def test_cloudflare_only_without_ranges_is_refused():
+    cluster = make_cluster(profile=Profile.VPS, open_ports=(443,), public_from=PublicFrom.CLOUDFLARE)
+
+    with pytest.raises(ValueError, match="no Cloudflare ranges"):
+        firewall.rules(cluster, ())
+
+
+def test_public_sources_fetch_cloudflare_only_when_asked(monkeypatch):
+    monkeypatch.setattr(firewall, "cloudflare_cidrs", lambda: ("173.245.48.0/20",))
+
+    assert firewall.public_sources(make_cluster()) == ()
+    assert firewall.public_sources(make_cluster(public_from=PublicFrom.CLOUDFLARE)) == ("173.245.48.0/20",)
+
+
+def test_cloudflare_cidrs_reads_both_lists(monkeypatch):
+    class Response:
+        def __init__(self, body):
+            self.body = body
+
+        def read(self):
+            return self.body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    bodies = {firewall.CLOUDFLARE_RANGES[0]: b"173.245.48.0/20\n\n", firewall.CLOUDFLARE_RANGES[1]: b"2400:cb00::/32\n"}
+    monkeypatch.setattr(firewall.urllib.request, "urlopen", lambda url, timeout: Response(bodies[url]))
+    firewall.cloudflare_cidrs.cache_clear()
+
+    assert firewall.cloudflare_cidrs() == ("173.245.48.0/20", "2400:cb00::/32")
+    firewall.cloudflare_cidrs.cache_clear()

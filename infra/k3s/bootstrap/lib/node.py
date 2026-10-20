@@ -178,7 +178,7 @@ class NodeBootstrap:
         return tailnet
 
     def apply_firewall(self) -> None:
-        allow = firewall.rules(self.cluster)
+        allow = firewall.rules(self.cluster, firewall.public_sources(self.cluster))
         stamp = firewall.fingerprint(allow)
         current = self.remote.read(FIREWALL_STAMP)
         if current and current.strip() == stamp and self.remote.ok("sudo ufw status | grep -q 'Status: active'"):
@@ -192,7 +192,9 @@ class NodeBootstrap:
         self.remote.put(stamp, FIREWALL_STAMP)
 
     def install_k3s(self, tailnet: Tailnet) -> None:
-        config = k3s_config.render(self.cluster, self.node, self.secrets.k3s_token, tailnet, self.join_url)
+        config = k3s_config.render(
+            self.cluster, self.node, self.secrets.k3s_token, tailnet, self.join_url, self.secrets.etcd_s3
+        )
         config_changed = self._put_if_changed(k3s_config.to_yaml(config), k3s_config.CONFIG_PATH, mode="0600")
         # k3s binds to the Tailscale IP: start after tailscaled, and systemd retries until the IP is up
         if self._put_if_changed(K3S_AFTER_TAILSCALE, f"{SYSTEMD_DEST}/{self._service}.service.d/tailscale.conf"):

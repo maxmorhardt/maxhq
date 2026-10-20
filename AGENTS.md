@@ -15,10 +15,11 @@
 - `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each has its own image, chart, and release. `apps/squares/AGENTS.md` has the rules they share.
 - `libs/` - Go libraries the services share: `platform` (infrastructure) and `squares` (the contract between the squares services). Not released on their own.
 - `charts/<name>/` - one self-contained Helm chart per app, plus `gateway` (Gateway API infrastructure, not an app) and `cloudflare-cidr`, a dev-only CronJob that alerts when Cloudflare's IP ranges drift from the gateway's `trustedCIDRs`. Each chart is its own release (`<chart>-chart`), published to `oci://ghcr.io/maxmorhardt/charts`.
-- `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS for every domain, and GitHub rulesets and deployment environments. See `infra/terraform/README.md`.
+- `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS and edge rules for every domain, GitHub rulesets and deployment environments, and Grafana Cloud alerting, dashboards, and uptime checks. See `infra/terraform/README.md`.
+- `docs/new-app.md` - every file a new app touches, in this repo and in gitops.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
-- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `cd-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `cd-prod.yml` (tag-driven promotion of dev's image and deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`. `ci.yml` and `cd-dev.yml` share their path filters from `.github/path-filters.yml`.
+- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `cd-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `cd-prod.yml` (tag-driven promotion of dev's image and deploy to prod, then `cd-verify` waits for Argo CD and smoke-tests the site), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`. `ci.yml` and `cd-dev.yml` share their path filters from `.github/path-filters.yml`.
 - `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
 
 ## Core Principles

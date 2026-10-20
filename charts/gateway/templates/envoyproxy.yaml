@@ -11,6 +11,8 @@ spec:
       envoyService:
         name: {{ .Values.proxy.service.name }}
         type: {{ .Values.proxy.service.type }}
+      envoyPDB:
+        minAvailable: {{ .Values.proxy.minAvailable }}
       envoyDeployment:
         replicas: {{ .Values.proxy.replicas }}
         container:

@@ -15,8 +15,15 @@ strippedRequestHeaders:
   - X-Auth-Exp
   - X-Internal-Token
 
+# require Cloudflare's client certificate (Authenticated Origin Pulls), so only Cloudflare can reach the origin;
+# turn it on only where every hostname is proxied by Cloudflare and the zone presents the certificate
+originPulls:
+  enabled: false
+
 proxy:
   replicas: 2
+  # keeps one proxy serving while a node drains
+  minAvailable: 1
   service:
     name: envoy-maxhq
     type: LoadBalancer

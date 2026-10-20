@@ -35,3 +35,21 @@ variable "txt" {
   }))
   default = {}
 }
+
+variable "origin_pulls" {
+  description = "Present Cloudflare's client certificate to the origin, so the gateway can refuse anything that skips Cloudflare"
+  type        = bool
+  default     = false
+}
+
+variable "api_rate_limit" {
+  description = "Requests per IP per 10 seconds api.<domain> accepts before blocking; 0 for no limit"
+  type        = number
+  default     = 0
+}
+
+variable "block_scanners" {
+  description = "Block probes for paths no app here serves (php, wp-*, dotfiles)"
+  type        = bool
+  default     = false
+}

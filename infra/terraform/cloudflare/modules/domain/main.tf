@@ -74,3 +74,53 @@ resource "cloudflare_dns_record" "txt" {
   content = "\"${each.value.content}\""
   ttl     = 1
 }
+
+resource "cloudflare_authenticated_origin_pulls_settings" "this" {
+  count = var.origin_pulls ? 1 : 0
+
+  zone_id = local.zone_id
+  enabled = true
+}
+
+# a zone has one ruleset per phase, so these own their phases outright
+resource "cloudflare_ruleset" "rate_limit" {
+  count = var.api_rate_limit > 0 ? 1 : 0
+
+  zone_id = local.zone_id
+  name    = "rate limits"
+  kind    = "zone"
+  phase   = "http_ratelimit"
+
+  rules = [
+    {
+      ref         = "api_per_ip"
+      description = "Block an IP that floods the API"
+      expression  = "(http.host eq \"api.${var.domain}\")"
+      action      = "block"
+      ratelimit = {
+        characteristics     = ["ip.src", "cf.colo.id"]
+        period              = 10
+        requests_per_period = var.api_rate_limit
+        mitigation_timeout  = 10
+      }
+    },
+  ]
+}
+
+resource "cloudflare_ruleset" "custom" {
+  count = var.block_scanners ? 1 : 0
+
+  zone_id = local.zone_id
+  name    = "custom rules"
+  kind    = "zone"
+  phase   = "http_request_firewall_custom"
+
+  rules = [
+    {
+      ref         = "block_scanners"
+      description = "Block probes for paths no app here serves"
+      expression  = "(ends_with(http.request.uri.path, \".php\")) or (http.request.uri.path contains \"/wp-\") or (http.request.uri.path contains \"/.env\") or (http.request.uri.path contains \"/.git\")"
+      action      = "block"
+    },
+  ]
+}

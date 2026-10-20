@@ -9,6 +9,14 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: {{ include "app.fullname" . }}
+  {{- if .Values.originPulls.enabled }}
+  tls:
+    clientValidation:
+      caCertificateRefs:
+        - group: ''
+          kind: ConfigMap
+          name: {{ include "app.fullname" . }}-origin-pull-ca
+  {{- end }}
   clientIPDetection:
     xForwardedFor:
       trustedCIDRs:

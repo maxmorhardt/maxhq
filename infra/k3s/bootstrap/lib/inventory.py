@@ -20,6 +20,11 @@ class Profile(StrEnum):
     VPS = "vps"
 
 
+class PublicFrom(StrEnum):
+    ANYWHERE = "anywhere"
+    CLOUDFLARE = "cloudflare"
+
+
 class Role(StrEnum):
     INIT = "init"
     SERVER = "server"
@@ -38,6 +43,15 @@ class Node:
 
 
 @dataclass(frozen=True)
+class EtcdSnapshots:
+    bucket: str
+    region: str
+    folder: str
+    schedule: str = "0 */6 * * *"
+    retention: int = 28
+
+
+@dataclass(frozen=True)
 class Cluster:
     name: str
     profile: Profile
@@ -46,6 +60,8 @@ class Cluster:
     ssh_user: str | None = None
     lan_cidr: str | None = None
     open_ports: tuple[int, ...] = ()
+    public_from: PublicFrom = PublicFrom.ANYWHERE
+    etcd_snapshots: EtcdSnapshots | None = None
 
     @property
     def init_node(self) -> Node:
@@ -94,9 +110,26 @@ def parse_cluster(name: str, spec: dict) -> Cluster:
         ssh_user=spec.get("ssh_user"),
         lan_cidr=lan_cidr,
         open_ports=tuple(int(port) for port in spec.get("open_ports") or ()),
+        public_from=_enum(PublicFrom, spec.get("public_from", "anywhere"), f"{name}.public_from"),
+        etcd_snapshots=_parse_snapshots(name, spec.get("etcd_snapshots")),
     )
     _validate(cluster)
     return cluster
+
+
+def _parse_snapshots(cluster: str, spec: object) -> EtcdSnapshots | None:
+    if spec is None:
+        return None
+    if not isinstance(spec, dict) or not spec.get("bucket") or not spec.get("region"):
+        raise InventoryError(f"{cluster}.etcd_snapshots needs a bucket and a region")
+
+    return EtcdSnapshots(
+        bucket=spec["bucket"],
+        region=spec["region"],
+        folder=spec.get("folder", f"k3s/{cluster}"),
+        schedule=spec.get("schedule", EtcdSnapshots.schedule),
+        retention=int(spec.get("retention", EtcdSnapshots.retention)),
+    )
 
 
 def _parse_node(cluster: str, entry: dict) -> Node:

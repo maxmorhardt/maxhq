@@ -13,6 +13,10 @@ prod:
   k3s_version: v1.36.5+k3s1
   ssh_user: root
   open_ports: [443]
+  public_from: cloudflare
+  etcd_snapshots:
+    bucket: maxhq-backups
+    region: us-east-1
   nodes:
     - {name: prod-1, ip: 203.0.113.11, role: init}
     - {name: prod-2, ip: 203.0.113.12, role: server}

@@ -28,6 +28,7 @@ jobs:
       app: ${{ steps.parse.outputs.app }}
       version: ${{ steps.parse.outputs.version }}
       dev_tag: ${{ steps.parse.outputs.dev_tag }}
+      smoke_url: ${{ steps.parse.outputs.smoke_url }}
     steps:
       - name: Split tag into app and version
         id: parse
@@ -39,11 +40,19 @@ jobs:
           if [ "${component%-chart}" != "$component" ]; then
             kind=chart
           fi
+          app="${component%-chart}"
+          case "$app" in
+            maxhq|gateway) smoke_url=https://maxhq.io ;;
+            squares) smoke_url=https://squares.maxhq.io ;;
+            squares-*) smoke_url=https://api.maxhq.io/squares/stats ;;
+            *) smoke_url= ;;
+          esac
           {
             echo "kind=$kind"
-            echo "app=${component%-chart}"
+            echo "app=$app"
             echo "version=${TAG#*/}"
             echo "dev_tag=sha-${GITHUB_SHA::7}"
+            echo "smoke_url=$smoke_url"
           } >> "$GITHUB_OUTPUT"
 
   # app releases
@@ -88,3 +97,14 @@ jobs:
       app: ${{ needs.parse.outputs.app }}
       chart_version: ${{ needs.parse.outputs.version }}
     secrets: inherit
+
+  # after either deploy, confirm argo cd rolled it out and the site still answers
+  verify:
+    needs: [parse, image-deploy, chart-deploy]
+    if: always() && (needs.image-deploy.result == 'success' || needs.chart-deploy.result == 'success')
+    uses: maxmorhardt/workflows/.github/workflows/cd-verify.yml@main
+    with:
+      app: ${{ needs.parse.outputs.app }}
+      url: ${{ needs.parse.outputs.smoke_url }}
+    secrets:
+      argocd_auth_token: ${{ secrets.ARGOCD_AUTH_TOKEN }}
