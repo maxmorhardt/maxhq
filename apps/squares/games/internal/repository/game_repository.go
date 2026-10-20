@@ -18,6 +18,8 @@ type GameRepository interface {
 	Upsert(ctx context.Context, game *model.Game) (changed bool, err error)
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error)
 	GetUpcoming(ctx context.Context) ([]model.Game, error)
+	CurrentWeek(ctx context.Context) (*model.Week, error)
+	GetWeek(ctx context.Context, week model.Week) ([]model.Game, error)
 
 	UpsertScore(ctx context.Context, score *model.GameScore) (created bool, err error)
 
@@ -94,6 +96,34 @@ func (r *gameRepository) GetUpcoming(ctx context.Context) ([]model.Game, error) 
 	err := conn.
 		Where("status = ? AND game_time > ? AND game_time <= ?",
 			model.GameStatusScheduled, now, nextKickoff[0].Add(upcomingWindow)).
+		Order("game_time ASC").
+		Find(&games).Error
+	return games, err
+}
+
+// the week of the game nearest to now, so the scoreboard follows the slate being played
+func (r *gameRepository) CurrentWeek(ctx context.Context) (*model.Week, error) {
+	var nearest []model.Game
+	err := database.Conn(ctx, r.db).Model(&model.Game{}).
+		Select("season", "season_type", "week").
+		Order(clause.OrderBy{Expression: clause.Expr{
+			SQL:  "ABS(EXTRACT(EPOCH FROM (game_time - ?)))",
+			Vars: []any{time.Now()},
+		}}).
+		Limit(1).
+		Find(&nearest).Error
+	if err != nil || len(nearest) == 0 {
+		return nil, err
+	}
+
+	return &model.Week{Season: nearest[0].Season, SeasonType: nearest[0].SeasonType, Week: nearest[0].Week}, nil
+}
+
+func (r *gameRepository) GetWeek(ctx context.Context, week model.Week) ([]model.Game, error) {
+	var games []model.Game
+	err := database.Conn(ctx, r.db).
+		Preload("Scores", func(db *gorm.DB) *gorm.DB { return db.Order("quarter ASC") }).
+		Where("season = ? AND season_type = ? AND week = ?", week.Season, week.SeasonType, week.Week).
 		Order("game_time ASC").
 		Find(&games).Error
 	return games, err

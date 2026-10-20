@@ -7,4 +7,5 @@ import (
 
 func Register(r *gin.Engine, h handler.GameHandler, auth gin.HandlerFunc) {
 	r.GET("/games/upcoming", auth, h.GetUpcoming)
+	r.GET("/games/scoreboard", h.GetScoreboard)
 }

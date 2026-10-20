@@ -204,3 +204,54 @@ func TestGameService_Ingest_ChangedGameRefreshesTheUpcomingList(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, after, 1, "the cached list was dropped when the game arrived")
 }
+
+func TestGameService_GetScoreboard_CurrentWeek(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().CurrentWeek(mock.Anything).Return(&week, nil)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{{ESPNID: "1"}}, nil).Once()
+	svc := gameSvc(t, g, nil)
+
+	first, err := svc.GetScoreboard(context.Background(), nil)
+	require.NoError(t, err)
+	second, err := svc.GetScoreboard(context.Background(), nil)
+	require.NoError(t, err)
+
+	assert.Equal(t, week, first.Week)
+	assert.Len(t, first.Games, 1)
+	assert.Equal(t, first, second, "the week's games are cached")
+}
+
+func TestGameService_GetScoreboard_NoGamesYet(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().CurrentWeek(mock.Anything).Return(nil, nil)
+
+	board, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), nil)
+
+	require.NoError(t, err)
+	assert.Empty(t, board.Games)
+}
+
+func TestGameService_GetScoreboard_ChosenWeek(t *testing.T) {
+	week := model.Week{Season: 2025, SeasonType: 3, Week: 4}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+
+	board, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+
+	require.NoError(t, err)
+	assert.Equal(t, week, board.Week)
+}
+
+func TestGameService_GetScoreboard_Errors(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().CurrentWeek(mock.Anything).Return(nil, errors.New("db")).Once()
+	_, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), nil)
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 1}
+	g = mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return(nil, errors.New("db"))
+	_, err = gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}

@@ -13,6 +13,7 @@ The NFL schedule and live scores, polled from ESPN. One of the squares backend s
 | Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
 | `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
+| `/games/scoreboard` | one week of games with their scores by quarter (the current week unless `season`, `seasonType`, and `week` pick another); public |
 
 ## Events
 

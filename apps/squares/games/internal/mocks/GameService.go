@@ -78,6 +78,65 @@ func (_c *GameService_Activity_Call) RunAndReturn(run func(context.Context) (mod
 	return _c
 }
 
+// GetScoreboard provides a mock function with given fields: ctx, week
+func (_m *GameService) GetScoreboard(ctx context.Context, week *model.Week) (*model.Scoreboard, error) {
+	ret := _m.Called(ctx, week)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetScoreboard")
+	}
+
+	var r0 *model.Scoreboard
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.Week) (*model.Scoreboard, error)); ok {
+		return rf(ctx, week)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *model.Week) *model.Scoreboard); ok {
+		r0 = rf(ctx, week)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Scoreboard)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *model.Week) error); ok {
+		r1 = rf(ctx, week)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GameService_GetScoreboard_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetScoreboard'
+type GameService_GetScoreboard_Call struct {
+	*mock.Call
+}
+
+// GetScoreboard is a helper method to define mock.On call
+//   - ctx context.Context
+//   - week *model.Week
+func (_e *GameService_Expecter) GetScoreboard(ctx interface{}, week interface{}) *GameService_GetScoreboard_Call {
+	return &GameService_GetScoreboard_Call{Call: _e.mock.On("GetScoreboard", ctx, week)}
+}
+
+func (_c *GameService_GetScoreboard_Call) Run(run func(ctx context.Context, week *model.Week)) *GameService_GetScoreboard_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*model.Week))
+	})
+	return _c
+}
+
+func (_c *GameService_GetScoreboard_Call) Return(_a0 *model.Scoreboard, _a1 error) *GameService_GetScoreboard_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *GameService_GetScoreboard_Call) RunAndReturn(run func(context.Context, *model.Week) (*model.Scoreboard, error)) *GameService_GetScoreboard_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetUpcoming provides a mock function with given fields: ctx
 func (_m *GameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
 	ret := _m.Called(ctx)

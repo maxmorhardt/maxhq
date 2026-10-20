@@ -26,6 +26,64 @@ func (_m *GameRepository) EXPECT() *GameRepository_Expecter {
 	return &GameRepository_Expecter{mock: &_m.Mock}
 }
 
+// CurrentWeek provides a mock function with given fields: ctx
+func (_m *GameRepository) CurrentWeek(ctx context.Context) (*model.Week, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CurrentWeek")
+	}
+
+	var r0 *model.Week
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (*model.Week, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) *model.Week); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Week)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GameRepository_CurrentWeek_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CurrentWeek'
+type GameRepository_CurrentWeek_Call struct {
+	*mock.Call
+}
+
+// CurrentWeek is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *GameRepository_Expecter) CurrentWeek(ctx interface{}) *GameRepository_CurrentWeek_Call {
+	return &GameRepository_CurrentWeek_Call{Call: _e.mock.On("CurrentWeek", ctx)}
+}
+
+func (_c *GameRepository_CurrentWeek_Call) Run(run func(ctx context.Context)) *GameRepository_CurrentWeek_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *GameRepository_CurrentWeek_Call) Return(_a0 *model.Week, _a1 error) *GameRepository_CurrentWeek_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *GameRepository_CurrentWeek_Call) RunAndReturn(run func(context.Context) (*model.Week, error)) *GameRepository_CurrentWeek_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetByID provides a mock function with given fields: ctx, id
 func (_m *GameRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error) {
 	ret := _m.Called(ctx, id)
@@ -139,6 +197,65 @@ func (_c *GameRepository_GetUpcoming_Call) Return(_a0 []model.Game, _a1 error) *
 }
 
 func (_c *GameRepository_GetUpcoming_Call) RunAndReturn(run func(context.Context) ([]model.Game, error)) *GameRepository_GetUpcoming_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetWeek provides a mock function with given fields: ctx, week
+func (_m *GameRepository) GetWeek(ctx context.Context, week model.Week) ([]model.Game, error) {
+	ret := _m.Called(ctx, week)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetWeek")
+	}
+
+	var r0 []model.Game
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, model.Week) ([]model.Game, error)); ok {
+		return rf(ctx, week)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, model.Week) []model.Game); ok {
+		r0 = rf(ctx, week)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Game)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, model.Week) error); ok {
+		r1 = rf(ctx, week)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GameRepository_GetWeek_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetWeek'
+type GameRepository_GetWeek_Call struct {
+	*mock.Call
+}
+
+// GetWeek is a helper method to define mock.On call
+//   - ctx context.Context
+//   - week model.Week
+func (_e *GameRepository_Expecter) GetWeek(ctx interface{}, week interface{}) *GameRepository_GetWeek_Call {
+	return &GameRepository_GetWeek_Call{Call: _e.mock.On("GetWeek", ctx, week)}
+}
+
+func (_c *GameRepository_GetWeek_Call) Run(run func(ctx context.Context, week model.Week)) *GameRepository_GetWeek_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(model.Week))
+	})
+	return _c
+}
+
+func (_c *GameRepository_GetWeek_Call) Return(_a0 []model.Game, _a1 error) *GameRepository_GetWeek_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *GameRepository_GetWeek_Call) RunAndReturn(run func(context.Context, model.Week) ([]model.Game, error)) *GameRepository_GetWeek_Call {
 	_c.Call.Return(run)
 	return _c
 }

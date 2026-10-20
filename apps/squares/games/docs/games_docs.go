@@ -15,6 +15,58 @@ const docTemplategames = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/games/scoreboard": {
+            "get": {
+                "description": "Returns one week of NFL games with their scores, by quarter. Without parameters it returns the week of the game nearest to now; pass season, seasonType, and week together to pick another.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Get the scoreboard",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Season year",
+                        "name": "season",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "1 preseason, 2 regular season, 3 postseason",
+                        "name": "seasonType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Week of the season phase",
+                        "name": "week",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Scoreboard"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/games/upcoming": {
             "get": {
                 "security": [
@@ -237,6 +289,26 @@ const docTemplategames = `{
                 "GameStatusInProgress",
                 "GameStatusFinal"
             ]
+        },
+        "model.Scoreboard": {
+            "type": "object",
+            "properties": {
+                "games": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Game"
+                    }
+                },
+                "season": {
+                    "type": "integer"
+                },
+                "seasonType": {
+                    "type": "integer"
+                },
+                "week": {
+                    "type": "integer"
+                }
+            }
         }
     },
     "securityDefinitions": {

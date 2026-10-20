@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/errs"
@@ -19,10 +20,14 @@ const (
 	upcomingCacheName = "upcoming_games"
 	upcomingCacheKey  = "all"
 	upcomingCacheTTL  = 60 * time.Second
+
+	scoreboardCacheName = "scoreboard"
+	scoreboardCacheTTL  = 10 * time.Second
 )
 
 type GameService interface {
 	GetUpcoming(ctx context.Context) ([]model.Game, error)
+	GetScoreboard(ctx context.Context, week *model.Week) (*model.Scoreboard, error)
 	Ingest(ctx context.Context, games []model.ESPNGame) (newScores int, err error)
 	Activity(ctx context.Context) (model.GameActivity, error)
 }
@@ -53,6 +58,34 @@ func (s *gameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
 	}
 
 	return games, nil
+}
+
+// a nil week means the current one; live scores reach the page between refreshes over the games stream
+func (s *gameService) GetScoreboard(ctx context.Context, week *model.Week) (*model.Scoreboard, error) {
+	log := logging.FromContext(ctx)
+
+	if week == nil {
+		current, err := s.gameRepo.CurrentWeek(ctx)
+		if err != nil {
+			log.Error("failed to find the current week", "error", err)
+			return nil, errs.ErrDatabaseUnavailable
+		}
+		if current == nil {
+			return &model.Scoreboard{Games: []model.Game{}}, nil
+		}
+		week = current
+	}
+
+	key := fmt.Sprintf("%d:%d:%d", week.Season, week.SeasonType, week.Week)
+	games, err := cache.GetOrLoad(ctx, s.cache, scoreboardCacheName, key, scoreboardCacheTTL, func(ctx context.Context) ([]model.Game, error) {
+		return s.gameRepo.GetWeek(ctx, *week)
+	})
+	if err != nil {
+		log.Error("failed to get scoreboard", "week", key, "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+
+	return &model.Scoreboard{Week: *week, Games: games}, nil
 }
 
 func (s *gameService) Ingest(ctx context.Context, games []model.ESPNGame) (int, error) {

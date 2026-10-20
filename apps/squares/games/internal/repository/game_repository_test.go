@@ -222,3 +222,46 @@ func TestGameRepository_UpsertScore_Duplicate(t *testing.T) {
 	assert.False(t, created)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGameRepository_CurrentWeek(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	mock.ExpectQuery(`SELECT "season","season_type","week" FROM "games" ORDER BY ABS`).
+		WillReturnRows(sqlmock.NewRows([]string{"season", "season_type", "week"}).AddRow(2026, 2, 7))
+
+	week, err := repo.CurrentWeek(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, &model.Week{Season: 2026, SeasonType: 2, Week: 7}, week)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGameRepository_CurrentWeek_NoGames(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	mock.ExpectQuery(`SELECT "season","season_type","week" FROM "games"`).
+		WillReturnRows(sqlmock.NewRows([]string{"season", "season_type", "week"}))
+
+	week, err := repo.CurrentWeek(context.Background())
+	require.NoError(t, err)
+	assert.Nil(t, week)
+}
+
+func TestGameRepository_GetWeek(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	id := uuid.New()
+	mock.ExpectQuery(`SELECT \* FROM "games" WHERE season = \$1 AND season_type = \$2 AND week = \$3 ORDER BY game_time ASC`).
+		WithArgs(2026, 2, 7).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "espn_id"}).AddRow(id, "401"))
+	mock.ExpectQuery(`SELECT \* FROM "game_scores"`).
+		WillReturnRows(sqlmock.NewRows([]string{"game_id", "quarter"}).AddRow(id, 1).AddRow(id, 2))
+
+	games, err := repo.GetWeek(context.Background(), model.Week{Season: 2026, SeasonType: 2, Week: 7})
+	require.NoError(t, err)
+	require.Len(t, games, 1)
+	assert.Len(t, games[0].Scores, 2)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
