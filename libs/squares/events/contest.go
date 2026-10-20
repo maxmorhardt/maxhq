@@ -2,66 +2,55 @@ package events
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+// contest stream event types; the strings are the contract with the web client
 const (
-	SquareUpdateType          = "square_update"
-	ContestUpdateType         = "contest_update"
-	QuarterResultUpdateType   = "quarter_result_update"
-	QuarterResultRollbackType = "quarter_result_rollback"
-	ContestDeletedType        = "contest_deleted"
-	ParticipantRemovedType    = "participant_removed"
-	ParticipantAddedType      = "participant_added"
-
-	ConnectedType = "connected"
-	RevokedType   = "revoked"
+	ContestSnapshotType    = "contest.snapshot"
+	ContestUpdatedType     = "contest.updated"
+	ContestDeletedType     = "contest.deleted"
+	SquareUpdatedType      = "square.updated"
+	QuarterRecordedType    = "quarter.recorded"
+	QuarterRolledBackType  = "quarter.rolled_back"
+	ParticipantJoinedType  = "participant.joined"
+	ParticipantRemovedType = "participant.removed"
+	AccessRevokedType      = "access.revoked"
 )
 
-const ContestVisibilityPrivate = "private"
+const (
+	SystemActor              = "system"
+	ContestVisibilityPrivate = "private"
+)
 
-type ContestEventHeader struct {
-	Type        string             `json:"type"`
-	ContestID   uuid.UUID          `json:"contestId"`
-	Contest     *ContestVisibility `json:"contest,omitempty"`
-	Participant *ParticipantRef    `json:"participant,omitempty"`
+// ContestEvent is the envelope every contest stream event shares; data holds the type's payload
+type ContestEvent struct {
+	Type      string          `json:"type"`
+	ContestID uuid.UUID       `json:"contestId"`
+	UpdatedBy string          `json:"updatedBy"`
+	Timestamp time.Time       `json:"timestamp"`
+	Data      json.RawMessage `json:"data,omitempty"`
 }
 
-type ContestVisibility struct {
+func NewContestEvent(eventType string, contestID uuid.UUID, updatedBy string, data any) (*ContestEvent, error) {
+	event := &ContestEvent{Type: eventType, ContestID: contestID, UpdatedBy: updatedBy, Timestamp: time.Now()}
+	if data == nil {
+		return event, nil
+	}
+
+	raw, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal %s data: %w", eventType, err)
+	}
+	event.Data = raw
+	return event, nil
+}
+
+// AccessFields are the payload fields that can take a viewer's access away
+type AccessFields struct {
 	Visibility string `json:"visibility"`
-}
-
-type ParticipantRef struct {
-	UserID string `json:"userId"`
-}
-
-type SystemEvent struct {
-	Type         string          `json:"type"`
-	ContestID    uuid.UUID       `json:"contestId"`
-	UpdatedBy    string          `json:"updatedBy"`
-	Timestamp    time.Time       `json:"timestamp"`
-	Contest      json.RawMessage `json:"contest,omitempty"`
-	Participants json.RawMessage `json:"participants,omitempty"`
-}
-
-func NewConnectedEvent(contestID uuid.UUID, contest, participants json.RawMessage) *SystemEvent {
-	return &SystemEvent{
-		Type:         ConnectedType,
-		ContestID:    contestID,
-		UpdatedBy:    "system",
-		Timestamp:    time.Now(),
-		Contest:      contest,
-		Participants: participants,
-	}
-}
-
-func NewRevokedEvent(contestID uuid.UUID) *SystemEvent {
-	return &SystemEvent{
-		Type:      RevokedType,
-		ContestID: contestID,
-		UpdatedBy: "system",
-		Timestamp: time.Now(),
-	}
+	UserID     string `json:"userId"`
 }

@@ -117,14 +117,15 @@ func (f *fakeContests) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func publish(t *testing.T, contestID uuid.UUID, header events.ContestEventHeader) string {
+func publish(t *testing.T, contestID uuid.UUID, eventType string, payload any) string {
 	t.Helper()
-	header.ContestID = contestID
-	data, err := json.Marshal(header)
+	event, err := events.NewContestEvent(eventType, contestID, "u", payload)
+	require.NoError(t, err)
+	data, err := json.Marshal(event)
 	require.NoError(t, err)
 	id, err := rdb.XAdd(context.Background(), &redis.XAddArgs{
 		Stream: streams.Key(events.ContestStream(contestID)),
-		Values: []string{"type", header.Type, "data", string(data), "event_id", uuid.NewString()},
+		Values: []string{"type", eventType, "data", string(data), "event_id", uuid.NewString()},
 	}).Result()
 	require.NoError(t, err)
 	return id
@@ -138,51 +139,53 @@ func open(t *testing.T, user string, contestID uuid.UUID, lastEventID string) *t
 func TestRealtime_SnapshotThenLiveEvents(t *testing.T) {
 	contestID := uuid.New()
 	contests.setMembers(contestID, "v@squares.test")
-	before := publish(t, contestID, events.ContestEventHeader{Type: events.SquareUpdateType})
+	before := publish(t, contestID, events.SquareUpdatedType, nil)
 
 	stream := open(t, "v@squares.test", contestID, "")
 	require.Equal(t, http.StatusOK, stream.Status)
 
 	connected := stream.Next(t)
-	assert.Equal(t, events.ConnectedType, connected.Kind)
+	assert.Equal(t, events.ContestSnapshotType, connected.Kind)
 	assert.Equal(t, before, connected.ID, "the snapshot covers everything already in the stream")
 	var body struct {
-		Contest struct {
-			Name string `json:"name"`
-		} `json:"contest"`
+		Data struct {
+			Contest struct {
+				Name string `json:"name"`
+			} `json:"contest"`
+		} `json:"data"`
 	}
 	connected.Decode(t, &body)
-	assert.Equal(t, "Stream Bowl", body.Contest.Name, "the snapshot is passed through from contests")
+	assert.Equal(t, "Stream Bowl", body.Data.Contest.Name, "the snapshot is passed through from contests")
 
-	live := publish(t, contestID, events.ContestEventHeader{Type: events.ContestUpdateType})
+	live := publish(t, contestID, events.ContestUpdatedType, nil)
 	update := stream.Next(t)
-	assert.Equal(t, events.ContestUpdateType, update.Kind)
+	assert.Equal(t, events.ContestUpdatedType, update.Kind)
 	assert.Equal(t, live, update.ID)
 }
 
 func TestRealtime_ResumeReplaysOnlyWhatWasMissed(t *testing.T) {
 	contestID := uuid.New()
 	contests.setMembers(contestID, "v@squares.test")
-	seen := publish(t, contestID, events.ContestEventHeader{Type: events.SquareUpdateType})
-	missed1 := publish(t, contestID, events.ContestEventHeader{Type: events.SquareUpdateType})
-	missed2 := publish(t, contestID, events.ContestEventHeader{Type: events.ParticipantAddedType})
+	seen := publish(t, contestID, events.SquareUpdatedType, nil)
+	missed1 := publish(t, contestID, events.SquareUpdatedType, nil)
+	missed2 := publish(t, contestID, events.ParticipantJoinedType, nil)
 
 	stream := open(t, "v@squares.test", contestID, seen)
 
 	assert.Equal(t, missed1, stream.Next(t).ID, "no snapshot when nothing was lost")
 	assert.Equal(t, missed2, stream.Next(t).ID)
-	live := publish(t, contestID, events.ContestEventHeader{Type: events.SquareUpdateType})
+	live := publish(t, contestID, events.SquareUpdatedType, nil)
 	assert.Equal(t, live, stream.Next(t).ID)
 }
 
 func TestRealtime_TrimmedPositionGetsASnapshot(t *testing.T) {
 	contestID := uuid.New()
 	contests.setMembers(contestID, "v@squares.test")
-	publish(t, contestID, events.ContestEventHeader{Type: events.SquareUpdateType})
+	publish(t, contestID, events.SquareUpdatedType, nil)
 
 	stream := open(t, "v@squares.test", contestID, "1-0")
 
-	assert.Equal(t, events.ConnectedType, stream.Next(t).Kind)
+	assert.Equal(t, events.ContestSnapshotType, stream.Next(t).Kind)
 }
 
 func TestRealtime_RejectsViewersWithoutAccess(t *testing.T) {
@@ -202,9 +205,9 @@ func TestRealtime_RemovedViewerIsRevoked(t *testing.T) {
 	stream.Next(t)
 
 	contests.setMembers(contestID, "owner@squares.test")
-	publish(t, contestID, events.ContestEventHeader{Type: events.ParticipantRemovedType, Participant: &events.ParticipantRef{UserID: "kicked@squares.test"}})
+	publish(t, contestID, events.ParticipantRemovedType, events.AccessFields{UserID: "kicked@squares.test"})
 
-	assert.Equal(t, events.RevokedType, stream.Next(t).Kind)
+	assert.Equal(t, events.AccessRevokedType, stream.Next(t).Kind)
 	assert.True(t, stream.Ended(5*time.Second))
 }
 
@@ -216,7 +219,7 @@ func TestRealtime_ViewersOfOneContestAllReceiveEachEvent(t *testing.T) {
 	a.Next(t)
 	b.Next(t)
 
-	id := publish(t, contestID, events.ContestEventHeader{Type: events.SquareUpdateType})
+	id := publish(t, contestID, events.SquareUpdatedType, nil)
 
 	assert.Equal(t, id, a.Next(t).ID)
 	assert.Equal(t, id, b.Next(t).ID)
@@ -228,7 +231,7 @@ func TestRealtime_DeletedContestEndsTheStream(t *testing.T) {
 	stream := open(t, "v@squares.test", contestID, "")
 	stream.Next(t)
 
-	publish(t, contestID, events.ContestEventHeader{Type: events.ContestDeletedType})
+	publish(t, contestID, events.ContestDeletedType, nil)
 
 	assert.Equal(t, events.ContestDeletedType, stream.Next(t).Kind)
 	assert.True(t, stream.Ended(5*time.Second))

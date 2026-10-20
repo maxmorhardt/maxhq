@@ -1,9 +1,9 @@
 import { Box } from '@mui/material';
 import { Links, Meta, Scripts } from 'react-router';
-import App from './App';
-import Header from './components/header/Header';
-import { ErrorFallback } from './pages/error/ErrorBoundary';
-import Providers from './providers';
+import AppLayout from './app/AppLayout';
+import Header from './components/layout/Header';
+import { ErrorFallback } from './components/feedback/ErrorBoundary';
+import Providers from './app/providers';
 import { gradients } from './types/gradients';
 
 const structuredData = {
@@ -73,7 +73,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function Root() {
-  return <App />;
+  return <AppLayout />;
 }
 
 // show the real app shell while a client-only route hydrates

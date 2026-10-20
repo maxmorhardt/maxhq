@@ -1,9 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+export type ToastSeverity = 'error' | 'warning' | 'info' | 'success';
+
 export interface ToastMessage {
   id: string;
   message: string;
-  severity: 'error' | 'warning' | 'info' | 'success';
+  severity: ToastSeverity;
   duration?: number;
 }
 

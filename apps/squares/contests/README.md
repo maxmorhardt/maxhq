@@ -22,7 +22,7 @@ Contests, squares, participants, invites, the leaderboard, and stats. One of the
 
 ## Events
 
-- **Writes:** `contest:<id>` - every change to a contest (`square_update`, `contest_update`, `quarter_result_update`, `quarter_result_rollback`, `participant_added`, `participant_removed`, `contest_deleted`).
+- **Writes:** `contest:<id>` - every change to a contest (`square.updated`, `contest.updated`, `quarter.recorded`, `quarter.rolled_back`, `participant.joined`, `participant.removed`, `contest.deleted`), each a `{type, contestId, updatedBy, timestamp, data}` envelope from `libs/squares/events`.
 - **Reads:** `games` (`contests-games`): keeps the local copy of each game and auto-starts and scores linked contests. `users` (`contests-users`): keeps display names and initials, cascades new initials onto live squares, and scrubs deleted users.
 
 ## Development

@@ -30,8 +30,6 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/refs': 'off',
       // always brace control statements, never a one-line if
       curly: ['error', 'all'],
     },

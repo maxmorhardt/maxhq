@@ -21,6 +21,7 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'src/setupTests.ts',
+        'src/test/',
         'src/types/',
         'src/vite-env.d.ts',
         'src/root.tsx',
