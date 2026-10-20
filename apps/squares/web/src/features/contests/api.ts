@@ -9,8 +9,6 @@ import type {
   Invite,
   InvitePreviewResponse,
   Participant,
-  QuarterResult,
-  QuarterResultRequest,
   RandomClaimResponse,
   Square,
   UpdateContestRequest,
@@ -69,10 +67,6 @@ export const contestsApi = baseApi.injectEndpoints({
       invalidatesTags: ['ContestFeed', 'ActiveContests', 'UserStats'],
     }),
 
-    startContest: build.mutation<Contest, string>({
-      query: (id) => ({ url: `/contests/${id}/start`, method: 'POST' }),
-    }),
-
     claimSquare: build.mutation<Square, SquareArgs>({
       query: ({ contestId, squareId }) => ({
         url: `/contests/${contestId}/squares/${squareId}/claim`,
@@ -97,24 +91,6 @@ export const contestsApi = baseApi.injectEndpoints({
 
     clearMySquares: build.mutation<Square[], string>({
       query: (contestId) => ({ url: `/contests/${contestId}/squares/claims`, method: 'DELETE' }),
-    }),
-
-    recordQuarterResult: build.mutation<
-      QuarterResult,
-      { contestId: string; request: QuarterResultRequest }
-    >({
-      query: ({ contestId, request }) => ({
-        url: `/contests/${contestId}/quarter-results`,
-        method: 'POST',
-        body: request,
-      }),
-    }),
-
-    rollbackQuarterResult: build.mutation<QuarterResult, string>({
-      query: (contestId) => ({
-        url: `/contests/${contestId}/quarter-results/latest`,
-        method: 'DELETE',
-      }),
     }),
 
     getUpcomingGames: build.query<Game[], void>({
@@ -178,13 +154,10 @@ export const {
   useCreateContestMutation,
   useUpdateContestMutation,
   useDeleteContestMutation,
-  useStartContestMutation,
   useClaimSquareMutation,
   useClearSquareMutation,
   useClaimRandomSquaresMutation,
   useClearMySquaresMutation,
-  useRecordQuarterResultMutation,
-  useRollbackQuarterResultMutation,
   useGetUpcomingGamesQuery,
   useGetInvitesQuery,
   useCreateInviteMutation,

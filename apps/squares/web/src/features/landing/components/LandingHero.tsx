@@ -9,8 +9,9 @@ import LandingCreateContestButton from './LandingCreateContestButton';
 // when each stage of the opening demo lands, in ms after mount
 const SEQUENCE: [DemoStage, number][] = [
   [1, 500],
-  [2, 2100],
-  [3, 3300],
+  [2, 1900],
+  [3, 2700],
+  [4, 3800],
 ];
 
 const prefersReducedMotion = () =>
@@ -21,7 +22,7 @@ export default function LandingHero() {
   const [stage, setStage] = useState<DemoStage>(0);
 
   useEffect(() => {
-    const sequence: [DemoStage, number][] = prefersReducedMotion() ? [[3, 0]] : SEQUENCE;
+    const sequence: [DemoStage, number][] = prefersReducedMotion() ? [[4, 0]] : SEQUENCE;
     const timers = sequence.map(([next, at]) => setTimeout(() => setStage(next), at));
     return () => timers.forEach(clearTimeout);
   }, []);

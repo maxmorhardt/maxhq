@@ -18,7 +18,7 @@ const features: Feature[] = [
   },
   {
     title: 'Real scores, called for you',
-    body: 'Link an NFL game and the score updates on its own, with each quarter’s winner worked out automatically. Or keep score by hand.',
+    body: 'Every contest follows a live NFL game: the score updates on its own, and each quarter’s winner is worked out automatically.',
   },
   {
     title: 'Your pool, your rules',

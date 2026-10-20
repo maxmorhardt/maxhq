@@ -17,15 +17,22 @@ describe('DemoBoard', () => {
     expect(screen.getAllByText('–')).toHaveLength(20);
   });
 
-  it('shows the drawn digits along both axes', () => {
+  it('fills the whole board before any digits are drawn', () => {
     renderWithProviders(<DemoBoard stage={2} />);
+
+    expect(screen.getByRole('img')).toHaveAccessibleName(/full board waiting for kickoff/i);
+    expect(screen.getAllByText('–')).toHaveLength(20);
+  });
+
+  it('shows the drawn digits along both axes', () => {
+    renderWithProviders(<DemoBoard stage={3} />);
 
     expect(screen.queryAllByText('–')).toHaveLength(0);
     expect(screen.getByText('1st · 15:00')).toBeInTheDocument();
   });
 
   it('calls the quarter with the final score', () => {
-    renderWithProviders(<DemoBoard stage={3} />);
+    renderWithProviders(<DemoBoard stage={4} />);
 
     expect(screen.getByRole('img')).toHaveAccessibleName(/away 7 and home 14/i);
     expect(screen.getByText('End Q2')).toBeInTheDocument();

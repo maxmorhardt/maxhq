@@ -13,7 +13,7 @@ interface Step {
 const steps: Step[] = [
   {
     title: 'Set up the board',
-    body: 'Name the contest, link a live NFL game or enter the teams yourself, and share the invite link. Private or public, it is your pool.',
+    body: 'Pick one of this week’s NFL games, name the contest, and share the invite link. Private or public, it is your pool.',
   },
   {
     title: 'Claim your squares',
@@ -29,8 +29,11 @@ const steps: Step[] = [
   },
 ];
 
+// the board each step shows: an empty board, a full one, the draw, and a winner
+const STEP_STAGES: DemoStage[] = [0, 2, 3, 4];
+
 export default function LandingPlaybook() {
-  const [active, setActive] = useState<DemoStage>(0);
+  const [active, setActive] = useState(0);
   const stepRefs = useRef<(HTMLElement | null)[]>([]);
 
   // the step crossing the middle of the viewport drives the pinned board
@@ -43,7 +46,7 @@ export default function LandingPlaybook() {
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            setActive(Number((entry.target as HTMLElement).dataset.step) as DemoStage);
+            setActive(Number((entry.target as HTMLElement).dataset.step));
           }
         }
       },
@@ -119,7 +122,7 @@ export default function LandingPlaybook() {
 
                 {/* on small screens every step carries its own board */}
                 <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'center', mt: 3 }}>
-                  <DemoBoard stage={i as DemoStage} />
+                  <DemoBoard stage={STEP_STAGES[i]} />
                 </Box>
               </Box>
             ))}
@@ -134,7 +137,7 @@ export default function LandingPlaybook() {
                 justifyContent: 'center',
               }}
             >
-              <DemoBoard stage={active} />
+              <DemoBoard stage={STEP_STAGES[active]} />
             </Box>
           </Box>
         </Box>

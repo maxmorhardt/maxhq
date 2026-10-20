@@ -48,17 +48,20 @@ describe('EditContestDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('saves the teams and visibility with the contest version', async () => {
-    const { onClose, store } = renderDialog();
+  it('shows the linked game', () => {
+    renderDialog();
+    expect(screen.getByText('Bears @ Lions')).toBeInTheDocument();
+  });
 
-    fireEvent.change(screen.getByLabelText('Home Team'), { target: { value: 'Packers<>' } });
+  it('saves the visibility with the contest version', async () => {
+    const { onClose, store } = renderDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Public' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(update).toHaveBeenCalledWith({
       id: 'c-1',
-      updates: { homeTeam: 'Packers', awayTeam: 'Bears', visibility: 'public' },
+      updates: { visibility: 'public' },
       version: 3,
     });
     expect(store.getState().toast.messages[0]?.message).toBe('Contest updated successfully');
@@ -74,17 +77,6 @@ describe('EditContestDialog', () => {
       expect(store.getState().toast.messages[0]?.message).toBe('Changed elsewhere')
     );
     expect(onClose).not.toHaveBeenCalled();
-  });
-
-  it('locks the teams of a linked contest', () => {
-    renderDialog({ gameId: 'g-1' });
-    expect(screen.getByLabelText('Home Team')).toBeDisabled();
-    expect(screen.getByText(/come from the linked game/)).toBeInTheDocument();
-  });
-
-  it('notes that teams can change mid-game', () => {
-    renderDialog({ status: 'Q2' });
-    expect(screen.getByText(/Game is in progress/)).toBeInTheDocument();
   });
 
   it('is read-only for anyone but the owner, or once finished', () => {

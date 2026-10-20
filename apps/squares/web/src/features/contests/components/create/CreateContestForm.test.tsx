@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockAuth, mockMutation } from '../../../../test/auth';
 import { makeContest } from '../../../../test/fixtures';
@@ -22,6 +22,8 @@ const game = {
   id: 'g-1',
   homeTeam: 'Lions',
   awayTeam: 'Bears',
+  homeAbbr: 'DET',
+  awayAbbr: 'CHI',
   gameTime: '2026-11-01T18:00:00Z',
 } as Game;
 
@@ -39,6 +41,7 @@ describe('CreateContestForm', () => {
 
   const nameField = () => screen.getByLabelText(/Contest Name/);
   const submit = () => fireEvent.click(screen.getByRole('button', { name: 'Create Contest' }));
+  const pickGame = () => fireEvent.click(screen.getByRole('radio', { name: 'Bears @ Lions' }));
 
   it('requires a name', () => {
     renderWithProviders(<CreateContestForm />);
@@ -46,51 +49,39 @@ describe('CreateContestForm', () => {
     expect(screen.getByText('Contest name is required')).toBeInTheDocument();
   });
 
-  it('requires a game in live mode', () => {
+  it('requires a game', () => {
     renderWithProviders(<CreateContestForm />);
     fireEvent.change(nameField(), { target: { value: 'Bowl' } });
-    fireEvent.submit(nameField().closest('form')!);
-    expect(screen.getByText('Select a game or switch to manual scoring')).toBeInTheDocument();
+    submit();
+    expect(screen.getByText('Pick the game this contest is played on')).toBeInTheDocument();
   });
 
-  it('creates a game-linked contest and opens it', async () => {
+  it('names the contest after the matchup until the owner types one', () => {
+    renderWithProviders(<CreateContestForm />);
+    pickGame();
+    expect(nameField()).toHaveValue('CHI @ DET');
+    expect(screen.getByRole('radio', { name: 'Bears @ Lions' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+  });
+
+  it('creates a contest on the picked game and opens it', async () => {
     renderWithProviders(<CreateContestForm />);
     fireEvent.change(nameField(), { target: { value: ' Bowl ' } });
-    fireEvent.mouseDown(screen.getByRole('combobox'));
-    fireEvent.click(within(screen.getByRole('listbox')).getByText(/Bears @ Lions/));
+    pickGame();
+    fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
     submit();
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/contests/new'));
     expect(create).toHaveBeenCalledWith({
       name: 'Bowl',
       owner: 'owner@x.com',
-      homeTeam: undefined,
-      awayTeam: undefined,
-      visibility: 'private',
+      visibility: 'public',
       maxSquares: 10,
       gameId: 'g-1',
     });
-  });
-
-  it('creates a manual public contest with its teams', async () => {
-    renderWithProviders(<CreateContestForm />);
-    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Manual' }));
-    fireEvent.change(screen.getByLabelText('Home Team'), { target: { value: 'Lions' } });
-    fireEvent.change(screen.getByLabelText('Away Team'), { target: { value: 'Bears' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Public' }));
-    submit();
-
-    await waitFor(() =>
-      expect(create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          homeTeam: 'Lions',
-          awayTeam: 'Bears',
-          visibility: 'public',
-          gameId: undefined,
-        })
-      )
-    );
+    expect(nameField()).toHaveValue(' Bowl ');
   });
 
   it('shows why creating failed', async () => {
@@ -98,16 +89,24 @@ describe('CreateContestForm', () => {
       mockMutation({ error: { status: 400, message: 'Name taken' } })
     );
     renderWithProviders(<CreateContestForm />);
-    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Manual' }));
+    pickGame();
     submit();
     expect(await screen.findByText('Name taken')).toBeInTheDocument();
   });
 
-  it('explains when there are no games to link', () => {
+  it('needs an email to create a contest', () => {
+    mockAuth({});
+    renderWithProviders(<CreateContestForm />);
+    pickGame();
+    submit();
+    expect(screen.getByText('User is missing an email')).toBeInTheDocument();
+  });
+
+  it('explains when there are no games to pick', () => {
     api.useGetUpcomingGamesQuery.mockReturnValue({ data: [], isLoading: false });
     renderWithProviders(<CreateContestForm />);
     expect(screen.getByText(/No upcoming games available/)).toBeInTheDocument();
+    expect(screen.getByText('No game picked yet')).toBeInTheDocument();
   });
 
   it('waits for games to load', () => {
@@ -120,5 +119,11 @@ describe('CreateContestForm', () => {
     renderWithProviders(<CreateContestForm />);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(navigate).toHaveBeenCalledWith('/contests');
+  });
+
+  it('sets how many squares the owner can claim', () => {
+    renderWithProviders(<CreateContestForm />);
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'Max squares' }), { key: 'ArrowRight' });
+    expect(screen.getByText('11 of 100')).toBeInTheDocument();
   });
 });

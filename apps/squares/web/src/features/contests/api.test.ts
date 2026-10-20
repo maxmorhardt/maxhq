@@ -26,7 +26,7 @@ describe('contestsApi', () => {
   const cases: [string, () => unknown, string, string][] = [
     [
       'createContest',
-      () => endpoints.createContest.initiate({ name: 'x', owner: 'o' }),
+      () => endpoints.createContest.initiate({ name: 'x', owner: 'o', gameId: 'g' }),
       'POST',
       '/contests',
     ],
@@ -37,7 +37,6 @@ describe('contestsApi', () => {
       '/contests/c',
     ],
     ['deleteContest', () => endpoints.deleteContest.initiate('c'), 'DELETE', '/contests/c'],
-    ['startContest', () => endpoints.startContest.initiate('c'), 'POST', '/contests/c/start'],
     [
       'claimSquare',
       () => endpoints.claimSquare.initiate({ contestId: 'c', squareId: 's' }),
@@ -61,22 +60,6 @@ describe('contestsApi', () => {
       () => endpoints.clearMySquares.initiate('c'),
       'DELETE',
       '/contests/c/squares/claims',
-    ],
-    [
-      'recordQuarterResult',
-      () =>
-        endpoints.recordQuarterResult.initiate({
-          contestId: 'c',
-          request: { homeTeamScore: 7, awayTeamScore: 3 },
-        }),
-      'POST',
-      '/contests/c/quarter-results',
-    ],
-    [
-      'rollbackQuarterResult',
-      () => endpoints.rollbackQuarterResult.initiate('c'),
-      'DELETE',
-      '/contests/c/quarter-results/latest',
     ],
     ['getUpcomingGames', () => endpoints.getUpcomingGames.initiate(), 'GET', '/games/upcoming'],
     ['getInvites', () => endpoints.getInvites.initiate('c'), 'GET', '/contests/c/invites'],

@@ -110,7 +110,7 @@ describe('ContestsTable', () => {
         { ...joined, id: 'c-3', homeTeam: undefined, awayTeam: undefined },
       ],
     });
-    expect(screen.getByText('Chiefs vs Eagles')).toBeInTheDocument();
+    expect(screen.getByText('Eagles @ Chiefs')).toBeInTheDocument();
     expect(screen.getByText('Chiefs')).toBeInTheDocument();
     expect(screen.getByText('–')).toBeInTheDocument();
   });
@@ -156,5 +156,16 @@ describe('ContestsTable', () => {
   it('renders the footer', () => {
     renderTable({ footer: <div data-testid="footer" /> });
     expect(screen.getByTestId('footer')).toBeInTheDocument();
+  });
+
+  it('shows the kickoff of a contest that has not started', () => {
+    renderTable({ contests: [{ ...contest, status: 'ACTIVE', gameTime: '2026-11-01T18:00:00Z' }] });
+    expect(screen.getByText(/Eagles @ Chiefs · /)).toBeInTheDocument();
+  });
+
+  it('opens a contest from the keyboard', () => {
+    renderTable({ contests: [contest] });
+    fireEvent.keyDown(screen.getByRole('listitem', { name: 'Super Bowl LX' }), { key: 'Enter' });
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1');
   });
 });

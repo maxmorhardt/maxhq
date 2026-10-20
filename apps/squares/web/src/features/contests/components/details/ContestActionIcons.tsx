@@ -1,5 +1,5 @@
 import { Groups, Link as LinkIcon, School } from '@mui/icons-material';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { Contest, Participant } from '../../../../types/contest';
@@ -13,7 +13,16 @@ interface Props {
   viewer: ContestViewer;
 }
 
-const iconSx = (hover: string) => ({ color: 'rgba(255,255,255,0.6)', '&:hover': { color: hover } });
+const actionSx = {
+  minWidth: 0,
+  px: { xs: 1, sm: 1.5 },
+  color: 'text.secondary',
+  borderColor: 'divider',
+  '& .MuiButton-startIcon': { mr: { xs: 0, sm: 0.75 }, ml: 0 },
+  '&:hover': { color: 'text.primary' },
+};
+
+const labelSx = { display: { xs: 'none', sm: 'inline' } };
 
 export default function ContestActionIcons({ contest, participants, viewer }: Props) {
   const [dialog, setDialog] = useState<'invites' | 'participants' | null>(null);
@@ -21,40 +30,46 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
 
   return (
     <>
-      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 1 }}>
+      <Box sx={{ display: 'flex', gap: 1 }}>
         {viewer.isOwner && (
-          <Tooltip title="Invite links">
-            <IconButton
-              aria-label="Invite links"
-              onClick={() => setDialog('invites')}
-              size="small"
-              sx={iconSx('#f7c948')}
-            >
-              <LinkIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <Button
+            variant="outlined"
+            size="small"
+            aria-label="Invite links"
+            onClick={() => setDialog('invites')}
+            startIcon={<LinkIcon />}
+            sx={actionSx}
+          >
+            <Box component="span" sx={labelSx}>
+              Invite
+            </Box>
+          </Button>
         )}
-        <Tooltip title="Participants">
-          <IconButton
-            aria-label="Participants"
-            onClick={() => setDialog('participants')}
-            size="small"
-            sx={iconSx('#3ddc84')}
-          >
-            <Groups fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="How to play">
-          <IconButton
-            aria-label="How to play"
-            component={Link}
-            to="/learn-more"
-            size="small"
-            sx={iconSx('white')}
-          >
-            <School fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        <Button
+          variant="outlined"
+          size="small"
+          aria-label="Participants"
+          onClick={() => setDialog('participants')}
+          startIcon={<Groups />}
+          sx={actionSx}
+        >
+          <Box component="span" sx={labelSx}>
+            Players
+          </Box>
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          aria-label="How to play"
+          component={Link}
+          to="/learn-more"
+          startIcon={<School />}
+          sx={actionSx}
+        >
+          <Box component="span" sx={labelSx}>
+            Rules
+          </Box>
+        </Button>
       </Box>
 
       {viewer.isOwner && (

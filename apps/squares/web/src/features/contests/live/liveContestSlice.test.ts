@@ -104,14 +104,13 @@ describe('liveContestSlice events', () => {
     expect(state.contest?.status).toBe('Q2');
   });
 
-  it('rolls a quarter back to the status the server sends', () => {
-    let state = receive(
-      live(makeContest({ status: 'Q1' })),
-      event('quarter.recorded', makeQuarterResult())
-    );
-    state = receive(state, event('quarter.rolled_back', { quarter: 1, status: 'Q1' }), 'e-2');
-    expect(state.contest?.quarterResults).toHaveLength(0);
-    expect(state.contest?.status).toBe('Q1');
+  it('follows the live score and ignores an older one', () => {
+    const newer = { homeScore: 14, updatedAt: '2026-01-01T02:00:00Z' };
+    const older = { homeScore: 7, updatedAt: '2026-01-01T01:00:00Z' };
+    let state = receive(live(), event('game.updated', newer));
+    expect(state.contest?.game?.homeScore).toBe(14);
+    state = receive(state, event('game.updated', older), 'e-2');
+    expect(state.contest?.game?.homeScore).toBe(14);
   });
 
   it('adds, updates, and removes participants', () => {
@@ -160,30 +159,17 @@ describe('liveContestSlice write responses', () => {
     expect(state.contest?.squares[0].value).toBe('');
   });
 
-  it('applies started and updated contests for this contest only', () => {
+  it('applies updated contests for this contest only', () => {
     let state = liveContestReducer(
       live(),
-      fulfilled('startContest', makeContest({ status: 'Q1', version: 2 }))
+      fulfilled('updateContest', makeContest({ visibility: 'public', version: 2 }))
     );
-    expect(state.contest?.status).toBe('Q1');
+    expect(state.contest?.visibility).toBe('public');
     state = liveContestReducer(
       state,
       fulfilled('updateContest', makeContest({ id: 'other', name: 'X', version: 9 }))
     );
     expect(state.contest?.name).toBe('Test Bowl');
-  });
-
-  it('applies recorded and rolled back quarters', () => {
-    let state = liveContestReducer(
-      live(makeContest({ status: 'Q2' })),
-      fulfilled('recordQuarterResult', makeQuarterResult({ quarter: 2 }))
-    );
-    expect(state.contest?.status).toBe('Q3');
-    state = liveContestReducer(
-      state,
-      fulfilled('rollbackQuarterResult', makeQuarterResult({ quarter: 2 }))
-    );
-    expect(state.contest?.status).toBe('Q2');
   });
 
   it('applies participant edits and removals', () => {

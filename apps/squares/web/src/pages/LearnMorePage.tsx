@@ -61,9 +61,9 @@ export default function LearnMorePage() {
     },
     {
       icon: <Tune />,
-      title: 'Customizable',
+      title: 'Your Pool, Your Rules',
       description:
-        'Personalize your contests with custom team names, scoring rules, and payout structures to fit your specific event needs.',
+        'Make a contest private or public, set how many squares each player can claim, and limit invite links by uses or time.',
     },
   ];
 
@@ -76,12 +76,12 @@ export default function LearnMorePage() {
     {
       question: 'How do I create a contest?',
       answer:
-        'Click "Create Contest", give it a short name, and choose a matchup by linking a live NFL game or entering the teams yourself. Then set the contest to private or public, pick how many squares you want to claim, and invite others to fill out the rest of the grid.',
+        'Click "Create Contest", pick one of the upcoming NFL games, and give it a short name. Then set the contest to private or public, pick how many squares you want to claim, and invite others to fill out the rest of the grid.',
     },
     {
-      question: "What's the difference between a live game and manual scoring?",
+      question: 'Where do the scores come from?',
       answer:
-        "When you link a live NFL game, the teams and scores update automatically as it plays out and quarter winners are calculated for you. With manual scoring you enter the team names and record the score yourself at the end of each quarter, which is handy for college, local, or other games that aren't in our schedule.",
+        'Every contest is linked to a live NFL game. The score updates on its own as the game is played, the board locks and the numbers are drawn at kickoff, and each quarter winner is calculated for you the moment the quarter ends.',
     },
     {
       question: 'How do I invite people to my contest?',
@@ -111,7 +111,7 @@ export default function LearnMorePage() {
     {
       question: 'How are winners determined?',
       answer:
-        "Winners are decided by the last digit of each team's score at the end of each quarter. For example, if the score is Home 14, Away 7, the winning square sits where row 4 meets column 7. Live games calculate this automatically, and manual contests use the scores you enter.",
+        "Winners are decided by the last digit of each team's score at the end of each quarter. For example, if the score is Home 14, Away 7, the winning square sits where row 4 meets column 7. The app calculates this automatically from the live score.",
     },
     {
       question: 'How do I leave a contest?',

@@ -4,6 +4,7 @@ import {
   LockOutlined,
   PersonOutlined,
   Public,
+  SportsFootball,
   VisibilityOutlined,
 } from '@mui/icons-material';
 import {
@@ -17,7 +18,6 @@ import {
   Divider,
   IconButton,
   Stack,
-  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -26,8 +26,7 @@ import { useState, type ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { errorMessage } from '../../../../api/errors';
 import type { ContestSummary, ContestVisibility } from '../../../../types/contest';
-import { getStatusOption, isInGameStatus, isTerminalStatus } from '../../../../utils/contestStatus';
-import { stripDangerousChars } from '../../../../utils/sanitize';
+import { getStatusOption, isTerminalStatus } from '../../../../utils/contestStatus';
 import { useToast } from '../../../toast/useToast';
 import { useUpdateContestMutation } from '../../api';
 
@@ -74,8 +73,6 @@ function EditContestForm({ contest, onClose }: { contest: ContestSummary; onClos
   const { showToast } = useToast();
   const [updateContest, { isLoading }] = useUpdateContestMutation();
 
-  const [homeTeam, setHomeTeam] = useState(contest.homeTeam ?? '');
-  const [awayTeam, setAwayTeam] = useState(contest.awayTeam ?? '');
   const [visibility, setVisibility] = useState<ContestVisibility>(contest.visibility);
 
   const status = getStatusOption(contest.status);
@@ -85,11 +82,7 @@ function EditContestForm({ contest, onClose }: { contest: ContestSummary; onClos
     try {
       await updateContest({
         id: contest.id,
-        updates: {
-          homeTeam: homeTeam.trim() || undefined,
-          awayTeam: awayTeam.trim() || undefined,
-          visibility,
-        },
+        updates: { visibility },
         version: contest.version,
       }).unwrap();
       showToast('Contest updated successfully', 'success');
@@ -141,6 +134,11 @@ function EditContestForm({ contest, onClose }: { contest: ContestSummary; onClos
             <Stack spacing={1}>
               <DetailRow icon={<Edit sx={{ fontSize: 16 }} />} label="Name" value={contest.name} />
               <DetailRow
+                icon={<SportsFootball sx={{ fontSize: 16 }} />}
+                label="Game"
+                value={`${contest.awayTeam ?? 'Away'} @ ${contest.homeTeam ?? 'Home'}`}
+              />
+              <DetailRow
                 icon={<PersonOutlined sx={{ fontSize: 16 }} />}
                 label="Owner"
                 value={contest.owner}
@@ -163,39 +161,6 @@ function EditContestForm({ contest, onClose }: { contest: ContestSummary; onClos
           {canEdit && (
             <>
               <Divider />
-
-              {contest.gameId ? (
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Team names come from the linked game and can&apos;t be edited.
-                </Typography>
-              ) : (
-                isInGameStatus(contest.status) && (
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Game is in progress. Team names can still be updated.
-                  </Typography>
-                )
-              )}
-
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  fullWidth
-                  label="Home Team"
-                  value={homeTeam}
-                  disabled={!!contest.gameId}
-                  onChange={(e) => setHomeTeam(stripDangerousChars(e.target.value))}
-                  placeholder="Enter home team"
-                  slotProps={{ htmlInput: { maxLength: 20 } }}
-                />
-                <TextField
-                  fullWidth
-                  label="Away Team"
-                  value={awayTeam}
-                  disabled={!!contest.gameId}
-                  onChange={(e) => setAwayTeam(stripDangerousChars(e.target.value))}
-                  placeholder="Enter away team"
-                  slotProps={{ htmlInput: { maxLength: 20 } }}
-                />
-              </Stack>
 
               <Box>
                 <Typography

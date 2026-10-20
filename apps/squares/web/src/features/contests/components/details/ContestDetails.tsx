@@ -1,159 +1,134 @@
-import { Info } from '@mui/icons-material';
-import { Box, Divider, Typography } from '@mui/material';
-import type { Contest, Participant } from '../../../../types/contest';
+import { GridView } from '@mui/icons-material';
+import { Box, LinearProgress, Typography } from '@mui/material';
+import { fonts } from '../../../../app/theme';
+import type { Contest } from '../../../../types/contest';
 import { isInGameStatus } from '../../../../utils/contestStatus';
-import { formatMatchup } from '../../../../utils/game';
+import { formatKickoff } from '../../../../utils/game';
 import type { ContestViewer } from '../../live/viewer';
 import ContestSidebarCard from '../sidebar/ContestSidebarCard';
-import ContestActionIcons from './ContestActionIcons';
-import ScoreUpdateControls from './ScoreUpdateControls';
 import SquareActions from './SquareActions';
-import StartGameButton from './StartGameButton';
 
 interface Props {
   contest: Contest;
-  participants: Participant[];
   viewer: ContestViewer;
-  fillHeight?: boolean;
 }
 
-const mutedSx = { color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' };
+const barSx = { height: 8, borderRadius: 4, bgcolor: 'rgba(238, 242, 250, 0.08)' };
 
-function statusLabel(contest: Contest): string {
+// what happens next to the board, in the contest's own terms
+function boardStatus(contest: Contest, allFilled: boolean): string {
+  const kickoff =
+    contest.game && contest.game.status === 'scheduled'
+      ? ` (${formatKickoff(contest.game.gameTime)})`
+      : '';
+
   if (contest.status === 'DELETED') {
-    return 'Deleted';
+    return 'This contest was deleted.';
   }
   if (contest.status === 'FINISHED') {
-    return 'Finished';
+    return 'Final. Every quarter has been called.';
   }
   if (isInGameStatus(contest.status)) {
-    return `In Progress • ${contest.status}`;
+    return 'The board is locked and the numbers are drawn. Each quarter’s winner comes from the live score.';
   }
-  return 'Active';
+  return allFilled
+    ? `The board is full. It locks and the numbers are drawn at kickoff${kickoff}.`
+    : `Fill every square before kickoff${kickoff}. The board locks once the game starts and every square is claimed.`;
 }
 
-export default function ContestDetails({
-  contest,
-  participants,
-  viewer,
-  fillHeight = false,
-}: Props) {
+export default function ContestDetails({ contest, viewer }: Props) {
   const totalSquares = contest.squares.length;
   const filledSquares = contest.squares.filter((s) => s.value.trim() !== '').length;
   const allFilled = filledSquares >= totalSquares;
-
   const isActive = contest.status === 'ACTIVE';
-  const isInGame = isInGameStatus(contest.status);
-  const isOver = contest.status === 'FINISHED' || contest.status === 'DELETED';
-  const isGameLinked = !!contest.gameId;
   const { participant } = viewer;
 
   return (
-    <ContestSidebarCard
-      icon={<Info />}
-      iconColor="#5aa9ff"
-      title="Contest Details"
-      fillHeight={fillHeight}
-    >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: fillHeight ? 1.75 : 1.25 }}>
-        {/* status, visible to everyone */}
+    <ContestSidebarCard icon={<GridView fontSize="small" />} title="The Board">
+      <Box sx={{ display: 'grid', gap: 2 }}>
         <Box>
-          <Typography
-            variant="caption"
-            sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5, fontSize: '0.8rem' }}
+          <Box
+            sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 1 }}
           >
-            Contest Status
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500, fontSize: '0.9rem' }}
-          >
-            {statusLabel(contest)}
-          </Typography>
-          {isActive && (
-            <Typography variant="body2" sx={{ ...mutedSx, mt: 0.5 }}>
-              {filledSquares}/{totalSquares} squares filled
-              {participant && (
-                <Typography
-                  component="span"
-                  variant="body2"
-                  sx={{
-                    ...mutedSx,
-                    color: viewer.squaresLeft === 0 ? '#3ddc84' : mutedSx.color,
-                  }}
-                >
-                  {' · '}
-                  {viewer.squaresClaimed}/{participant.maxSquares}
-                </Typography>
-              )}
+            <Typography
+              sx={{
+                fontFamily: fonts.display,
+                fontWeight: 800,
+                fontSize: '2rem',
+                lineHeight: 1,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {filledSquares}
+              <Box component="span" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>
+                /{totalSquares}
+              </Box>
             </Typography>
-          )}
+            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+              {allFilled ? 'Board full' : `${totalSquares - filledSquares} open`}
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            aria-label="squares claimed"
+            value={totalSquares ? (filledSquares / totalSquares) * 100 : 0}
+            sx={barSx}
+          />
+          <Typography
+            sx={{ color: 'text.secondary', fontSize: '0.85rem', mt: 1.25, lineHeight: 1.5 }}
+          >
+            {boardStatus(contest, allFilled)}
+          </Typography>
         </Box>
 
-        {isActive && viewer.isParticipant && (
-          <SquareActions
-            contest={contest}
-            viewer={viewer}
-            emptySquares={totalSquares - filledSquares}
-          />
+        {participant && (
+          <Box sx={{ pt: 2, borderTop: 1, borderColor: 'divider' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                mb: 1,
+              }}
+            >
+              <Typography sx={{ fontWeight: 600 }}>Your squares</Typography>
+              <Typography
+                sx={{
+                  fontFamily: fonts.display,
+                  fontWeight: 800,
+                  fontSize: '1.25rem',
+                  fontVariantNumeric: 'tabular-nums',
+                  color: viewer.squaresLeft === 0 ? 'primary.main' : 'text.primary',
+                }}
+              >
+                {viewer.squaresClaimed}/{participant.maxSquares}
+              </Typography>
+            </Box>
+            {isActive && (
+              <SquareActions
+                contest={contest}
+                viewer={viewer}
+                emptySquares={totalSquares - filledSquares}
+              />
+            )}
+          </Box>
         )}
 
-        {/* owner controls */}
-        {viewer.isOwner && (
-          <>
-            {isOver && (
-              <Typography variant="body2" sx={{ ...mutedSx, textAlign: 'center', py: 2 }}>
-                No actions available
-              </Typography>
-            )}
-
-            {/* manual contests are started by the owner; linked ones start at kickoff */}
-            {isActive && allFilled && !isGameLinked && <StartGameButton contestId={contest.id} />}
-
-            {isActive && allFilled && isGameLinked && (
-              <Typography variant="body2" sx={{ ...mutedSx, mt: 0.5 }}>
-                The grid is full. This contest starts automatically when the linked game kicks off.
-              </Typography>
-            )}
-
-            {isActive && !allFilled && (
-              <>
-                <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}
-                >
-                  Waiting for all squares to be filled before you can start the game.
-                </Typography>
-              </>
-            )}
-
-            {/* manual scoring stays available as a fallback for contests not linked to a game */}
-            {isInGame && !isGameLinked && <ScoreUpdateControls contest={contest} />}
-
-            {isInGame && isGameLinked && (
-              <Typography variant="body2" sx={{ ...mutedSx, mt: 0.5 }}>
-                Scores update automatically from the linked game
-                {contest.game ? ` (${formatMatchup(contest.game)})` : ''}.
-              </Typography>
-            )}
-          </>
-        )}
-      </Box>
-
-      <Box sx={{ mt: fillHeight ? 'auto' : 0, pt: fillHeight ? 2 : 0, order: fillHeight ? 1 : 0 }}>
-        <ContestActionIcons contest={contest} participants={participants} viewer={viewer} />
-      </Box>
-
-      {/* a signed-in viewer of a public contest can watch but not play */}
-      {contest.visibility === 'public' && !viewer.isParticipant && !viewer.isOwner && (
-        <>
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mt: 1.5 }} />
-          <Typography variant="body2" sx={{ ...mutedSx, textAlign: 'center', mt: 1.5 }}>
-            You're viewing this contest. Get an invite link to participate.
+        {/* a signed-in viewer of a public contest can watch but not play */}
+        {contest.visibility === 'public' && !viewer.isParticipant && !viewer.isOwner && (
+          <Typography
+            sx={{
+              pt: 2,
+              borderTop: 1,
+              borderColor: 'divider',
+              color: 'text.secondary',
+              fontSize: '0.85rem',
+            }}
+          >
+            You&apos;re watching this contest. Ask the owner for an invite link to play.
           </Typography>
-        </>
-      )}
+        )}
+      </Box>
     </ContestSidebarCard>
   );
 }

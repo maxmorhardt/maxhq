@@ -1,71 +1,134 @@
-import { Lock, Public } from '@mui/icons-material';
+import { CheckCircle, Lock, Public } from '@mui/icons-material';
 import {
   Alert,
   Box,
   Button,
+  ButtonBase,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
   Slider,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
-  useTheme,
 } from '@mui/material';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { alpha } from '@mui/material/styles';
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 import { errorMessage } from '../../../../api/errors';
+import { fonts, game as palette } from '../../../../app/theme';
+import TeamMark from '../../../../components/TeamMark';
 import type { ContestVisibility, Game } from '../../../../types/contest';
-import { formatMatchup } from '../../../../utils/game';
+import { formatKickoff, formatMatchup } from '../../../../utils/game';
 import { stripDangerousChars } from '../../../../utils/sanitize';
 import { useCreateContestMutation, useGetUpcomingGamesQuery } from '../../api';
-import FormSection, { SectionDivider } from './FormSection';
-
-// a linked game scores itself; a manual contest takes the teams and scores from the owner
-type ScoringMode = 'game' | 'manual';
+import FormSection from './FormSection';
 
 const NAME_MAX_LENGTH = 20;
 
-function gameLabel(game: Game): string {
-  const kickoff = game.gameTime
-    ? new Date(game.gameTime).toLocaleDateString(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      })
-    : '';
-  return `${formatMatchup(game)}${kickoff ? ` · ${kickoff}` : ''}`;
+const visibilityOptions: {
+  value: ContestVisibility;
+  label: string;
+  body: string;
+  icon: ReactNode;
+}[] = [
+  {
+    value: 'private',
+    label: 'Private',
+    body: 'Invite-only. Hidden from anyone who is not in it.',
+    icon: <Lock fontSize="small" />,
+  },
+  {
+    value: 'public',
+    label: 'Public',
+    body: 'Anyone with the link can watch. Only invited players claim squares.',
+    icon: <Public fontSize="small" />,
+  },
+];
+
+const optionSx = (selected: boolean) => ({
+  position: 'relative',
+  display: 'flex',
+  textAlign: 'left',
+  alignItems: 'flex-start',
+  gap: 1.5,
+  width: '100%',
+  p: 1.75,
+  borderRadius: '14px',
+  border: 1,
+  borderColor: selected ? 'primary.main' : 'divider',
+  bgcolor: selected ? alpha(palette.brand, 0.1) : 'background.default',
+  transition: 'border-color 160ms, background-color 160ms',
+  '&:hover': { borderColor: selected ? 'primary.main' : palette.lineStrong },
+});
+
+function GameOption({
+  game,
+  selected,
+  onSelect,
+}: {
+  game: Game;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <ButtonBase
+      role="radio"
+      aria-checked={selected}
+      aria-label={formatMatchup(game)}
+      onClick={onSelect}
+      sx={{ ...optionSx(selected), flexDirection: 'column', gap: 1.25 }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+        <TeamMark abbr={game.awayAbbr} name={game.awayTeam} size={34} />
+        <Typography sx={{ color: 'text.secondary', fontFamily: fonts.display, fontWeight: 700 }}>
+          @
+        </Typography>
+        <TeamMark abbr={game.homeAbbr} name={game.homeTeam} size={34} />
+        {selected && <CheckCircle color="primary" sx={{ ml: 'auto', fontSize: '1.2rem' }} />}
+      </Box>
+      <Box>
+        <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', lineHeight: 1.3 }}>
+          {formatMatchup(game)}
+        </Typography>
+        <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem', mt: 0.25 }}>
+          {formatKickoff(game.gameTime)}
+        </Typography>
+      </Box>
+    </ButtonBase>
+  );
 }
 
 export default function CreateContestForm() {
-  const theme = useTheme();
   const navigate = useNavigate();
   const email = useAuth().user?.profile?.email;
   const { data: games = [], isLoading: gamesLoading } = useGetUpcomingGamesQuery();
   const [createContest, { isLoading: creating }] = useCreateContestMutation();
 
-  const [form, setForm] = useState({ name: '', homeTeam: '', awayTeam: '' });
+  const [name, setName] = useState('');
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [maxSquares, setMaxSquares] = useState(10);
-  const [scoringMode, setScoringMode] = useState<ScoringMode>('game');
   const [gameId, setGameId] = useState('');
   const [error, setError] = useState('');
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: stripDangerousChars(value) }));
+  const selectedGame = games.find((g) => g.id === gameId);
+
+  const pickGame = (game: Game) => {
+    setGameId(game.id);
+    setError('');
+    // a matchup is a good default name until the owner types their own
+    if (!name.trim()) {
+      setName(
+        `${game.awayAbbr || game.awayTeam} @ ${game.homeAbbr || game.homeTeam}`.slice(
+          0,
+          NAME_MAX_LENGTH
+        )
+      );
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const isGameLinked = scoringMode === 'game';
-    if (!form.name.trim()) {
+    if (!name.trim()) {
       setError('Contest name is required');
       return;
     }
@@ -73,21 +136,19 @@ export default function CreateContestForm() {
       setError('User is missing an email');
       return;
     }
-    if (isGameLinked && !gameId) {
-      setError('Select a game or switch to manual scoring');
+    if (!gameId) {
+      setError('Pick the game this contest is played on');
       return;
     }
 
     setError('');
     try {
       const contest = await createContest({
-        name: form.name.trim(),
+        name: name.trim(),
         owner: email,
-        homeTeam: isGameLinked ? undefined : form.homeTeam.trim() || undefined,
-        awayTeam: isGameLinked ? undefined : form.awayTeam.trim() || undefined,
         visibility,
         maxSquares,
-        gameId: isGameLinked ? gameId : undefined,
+        gameId,
       }).unwrap();
       navigate(`/contests/${contest.id}`);
     } catch (err) {
@@ -96,222 +157,263 @@ export default function CreateContestForm() {
   };
 
   const gamePicker = gamesLoading ? (
-    <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-      <CircularProgress size={18} />
+    <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+      <CircularProgress size={22} />
     </Box>
   ) : games.length > 0 ? (
-    <FormControl fullWidth size="small" required disabled={creating}>
-      <InputLabel>Game</InputLabel>
-      <Select
-        value={gameId}
-        label="Game"
-        required
-        onChange={(e) => setGameId(e.target.value)}
-        MenuProps={{
-          slotProps: {
-            paper: {
-              sx: {
-                maxHeight: { xs: 250, sm: 300 },
-                '& .MuiMenuItem-root': {
-                  fontSize: { xs: 12, sm: 13, md: 14 },
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                },
-              },
-            },
-          },
-        }}
-      >
-        {games.map((game) => (
-          <MenuItem key={game.id} value={game.id}>
-            {gameLabel(game)}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <Box
+      role="radiogroup"
+      aria-label="Game"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+        gap: 1.25,
+        maxHeight: { sm: 360 },
+        overflowY: 'auto',
+        pr: { sm: 0.5 },
+      }}
+    >
+      {games.map((g) => (
+        <GameOption key={g.id} game={g} selected={g.id === gameId} onSelect={() => pickGame(g)} />
+      ))}
+    </Box>
   ) : (
-    <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem' }}>
-      No upcoming games available. Switch to Manual to enter the matchup yourself.
+    <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
+      No upcoming games available yet. New games appear here as the NFL schedule is published.
     </Typography>
   );
 
-  const teamField = (name: 'homeTeam' | 'awayTeam', label: string) => (
-    <TextField
-      name={name}
-      label={label}
-      value={form[name]}
-      onChange={handleInputChange}
-      fullWidth
-      size="small"
-      disabled={creating}
-      slotProps={{ htmlInput: { maxLength: NAME_MAX_LENGTH } }}
-    />
-  );
-
   return (
-    <Paper
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      noValidate
       sx={{
-        background: theme.palette.grey[900],
-        border: `1px solid ${theme.palette.grey[800]}`,
-        borderRadius: 3,
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) 300px' },
+        gap: { xs: 3, md: 4 },
+        alignItems: 'start',
       }}
     >
-      <Box sx={{ p: { xs: 2, sm: 3 } }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: { xs: 0, sm: 2 } }}>
-            {error}
-          </Alert>
-        )}
+      <Box sx={{ display: 'grid', gap: 2 }}>
+        {error && <Alert severity="error">{error}</Alert>}
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <FormSection title="Basics" description="A short, recognizable name.">
-            <TextField
-              name="name"
-              label="Contest Name"
-              value={form.name}
-              onChange={handleInputChange}
-              fullWidth
-              required
-              size="small"
-              disabled={creating}
-              slotProps={{ htmlInput: { maxLength: NAME_MAX_LENGTH } }}
-            />
-          </FormSection>
+        <FormSection
+          step={1}
+          title="Pick the game"
+          description="The contest starts at kickoff, and every quarter winner comes from the live score."
+        >
+          {gamePicker}
+        </FormSection>
 
-          <SectionDivider />
-
-          <FormSection
-            title="Matchup"
-            description={
-              scoringMode === 'game'
-                ? 'Scores update automatically from the linked NFL game.'
-                : 'Enter the matchup and record scores yourself each quarter.'
+        <FormSection step={2} title="Name it" description="Short and easy to spot in the list.">
+          <TextField
+            name="name"
+            label="Contest Name"
+            value={name}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setName(stripDangerousChars(e.target.value))
             }
-          >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <ToggleButtonGroup
-                value={scoringMode}
-                exclusive
-                onChange={(_, value: ScoringMode | null) => {
-                  if (value) {
-                    setScoringMode(value);
-                    setError('');
-                  }
-                }}
-                fullWidth
-                size="small"
-              >
-                <ToggleButton value="game">Live Game</ToggleButton>
-                <ToggleButton value="manual">Manual</ToggleButton>
-              </ToggleButtonGroup>
+            fullWidth
+            required
+            disabled={creating}
+            helperText={`${name.length}/${NAME_MAX_LENGTH}`}
+            slotProps={{ htmlInput: { maxLength: NAME_MAX_LENGTH } }}
+          />
+        </FormSection>
 
-              {scoringMode === 'game' ? (
-                gamePicker
-              ) : (
+        <FormSection step={3} title="Who can see it">
+          <Box
+            role="radiogroup"
+            aria-label="Visibility"
+            sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.25 }}
+          >
+            {visibilityOptions.map((option) => (
+              <ButtonBase
+                key={option.value}
+                role="radio"
+                aria-checked={visibility === option.value}
+                aria-label={option.label}
+                onClick={() => setVisibility(option.value)}
+                sx={optionSx(visibility === option.value)}
+              >
                 <Box
                   sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                    gap: 1.5,
+                    color: visibility === option.value ? 'primary.main' : 'text.secondary',
+                    mt: 0.25,
                   }}
                 >
-                  {teamField('homeTeam', 'Home Team')}
-                  {teamField('awayTeam', 'Away Team')}
+                  {option.icon}
                 </Box>
-              )}
-            </Box>
-          </FormSection>
-
-          <SectionDivider />
-
-          <FormSection
-            title="Visibility"
-            description={
-              visibility === 'private'
-                ? 'Invite-only. Hidden from non-participants.'
-                : 'Anyone can view. Only invited participants can claim squares.'
-            }
-          >
-            <ToggleButtonGroup
-              value={visibility}
-              exclusive
-              onChange={(_, value: ContestVisibility | null) => value && setVisibility(value)}
-              fullWidth
-              size="small"
-            >
-              <ToggleButton value="private">
-                <Lock sx={{ mr: 0.75, fontSize: '1rem' }} />
-                Private
-              </ToggleButton>
-              <ToggleButton value="public">
-                <Public sx={{ mr: 0.75, fontSize: '1rem' }} />
-                Public
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </FormSection>
-
-          <SectionDivider />
-
-          <FormSection
-            title="Your Squares"
-            description="Maximum squares you can claim. Counts toward the 100-square total."
-          >
-            <Box sx={{ px: 1 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'baseline',
-                  mb: 0.5,
-                }}
-              >
-                <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
-                  Max squares
-                </Typography>
-                <Typography sx={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}>
-                  {maxSquares}
-                </Typography>
-              </Box>
-              <Slider
-                aria-label="Max squares"
-                value={maxSquares}
-                onChange={(_, value) => setMaxSquares(value)}
-                min={0}
-                max={100}
-                step={1}
-                valueLabelDisplay="auto"
-                disabled={creating}
-              />
-            </Box>
-          </FormSection>
-
-          <Box
-            sx={{
-              mt: 3,
-              pt: 2,
-              borderTop: `1px solid ${theme.palette.grey[800]}`,
-              display: 'flex',
-              gap: 1.5,
-              justifyContent: 'flex-end',
-              flexWrap: 'wrap',
-            }}
-          >
-            <Button
-              type="button"
-              variant="text"
-              onClick={() => navigate('/contests')}
-              disabled={creating}
-              sx={{ color: 'rgba(255,255,255,0.7)' }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={creating} sx={{ minWidth: 160 }}>
-              {creating ? <CircularProgress size={18} color="inherit" /> : 'Create Contest'}
-            </Button>
+                <Box>
+                  <Typography sx={{ fontWeight: 600 }}>{option.label}</Typography>
+                  <Typography sx={{ color: 'text.secondary', fontSize: '0.82rem', mt: 0.25 }}>
+                    {option.body}
+                  </Typography>
+                </Box>
+              </ButtonBase>
+            ))}
           </Box>
-        </Box>
+        </FormSection>
+
+        <FormSection
+          step={4}
+          title="Your squares"
+          description="How many squares you can claim yourself. Invite links set everyone else's."
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, px: 1 }}>
+            <Slider
+              aria-label="Max squares"
+              value={maxSquares}
+              onChange={(_, value) => setMaxSquares(value)}
+              min={0}
+              max={100}
+              step={1}
+              disabled={creating}
+              sx={{ flex: 1 }}
+            />
+            <Typography
+              sx={{
+                minWidth: '3ch',
+                textAlign: 'right',
+                fontFamily: fonts.display,
+                fontWeight: 800,
+                fontSize: '2rem',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {maxSquares}
+            </Typography>
+          </Box>
+        </FormSection>
       </Box>
-    </Paper>
+
+      {/* the contest as it will be created, with the actions beside it */}
+      <Box
+        sx={{
+          position: { md: 'sticky' },
+          top: { md: 96 },
+          p: 2.5,
+          borderRadius: '18px',
+          border: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Typography
+          sx={{
+            fontFamily: fonts.display,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'text.secondary',
+            fontSize: '0.82rem',
+          }}
+        >
+          Your contest
+        </Typography>
+        <Typography
+          sx={{
+            mt: 1,
+            fontFamily: fonts.display,
+            fontWeight: 800,
+            fontSize: '1.8rem',
+            lineHeight: 1,
+            textTransform: 'uppercase',
+            overflowWrap: 'anywhere',
+            color: name.trim() ? 'text.primary' : 'text.secondary',
+          }}
+        >
+          {name.trim() || 'Untitled'}
+        </Typography>
+
+        <Box
+          sx={{
+            mt: 2,
+            p: 1.5,
+            borderRadius: '12px',
+            bgcolor: 'background.default',
+            border: 1,
+            borderColor: 'divider',
+          }}
+        >
+          {selectedGame ? (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <TeamMark abbr={selectedGame.awayAbbr} name={selectedGame.awayTeam} size={36} />
+                <Typography
+                  sx={{ fontFamily: fonts.display, fontWeight: 700, color: 'text.secondary' }}
+                >
+                  AT
+                </Typography>
+                <TeamMark abbr={selectedGame.homeAbbr} name={selectedGame.homeTeam} size={36} />
+              </Box>
+              <Typography
+                sx={{ mt: 1, textAlign: 'center', fontSize: '0.82rem', color: 'text.secondary' }}
+              >
+                {formatKickoff(selectedGame.gameTime)}
+              </Typography>
+            </>
+          ) : (
+            <Typography
+              sx={{ textAlign: 'center', fontSize: '0.85rem', color: 'text.secondary', py: 1 }}
+            >
+              No game picked yet
+            </Typography>
+          )}
+        </Box>
+
+        <Box
+          component="dl"
+          sx={{
+            m: 0,
+            mt: 2,
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr',
+            rowGap: 0.75,
+            columnGap: 2,
+          }}
+        >
+          <Typography component="dt" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+            Visibility
+          </Typography>
+          <Typography
+            component="dd"
+            sx={{ m: 0, textAlign: 'right', fontSize: '0.85rem', fontWeight: 600 }}
+          >
+            {visibility === 'private' ? 'Private' : 'Public'}
+          </Typography>
+          <Typography component="dt" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+            Your squares
+          </Typography>
+          <Typography
+            component="dd"
+            sx={{ m: 0, textAlign: 'right', fontSize: '0.85rem', fontWeight: 600 }}
+          >
+            {maxSquares} of 100
+          </Typography>
+        </Box>
+
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          fullWidth
+          disabled={creating}
+          sx={{ mt: 2.5 }}
+        >
+          {creating ? <CircularProgress size={20} color="inherit" /> : 'Create Contest'}
+        </Button>
+        <Button
+          type="button"
+          fullWidth
+          onClick={() => navigate('/contests')}
+          disabled={creating}
+          sx={{ mt: 1, color: 'text.secondary' }}
+        >
+          Cancel
+        </Button>
+      </Box>
+    </Box>
   );
 }

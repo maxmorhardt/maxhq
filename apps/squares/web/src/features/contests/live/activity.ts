@@ -71,8 +71,6 @@ export function describeEvent(
         `Q${qr.quarter} winner: ${winnerLabel(qr.winner, qr.winnerName)} (${qr.homeTeamScore}-${qr.awayTeamScore})`
       );
     }
-    case 'quarter.rolled_back':
-      return entry('contest_status', `Q${event.data.quarter} result was rolled back`);
     case 'contest.updated':
       return previousStatus && event.data.status !== previousStatus
         ? entry('contest_status', `Contest status changed to ${getStatusLabel(event.data.status)}`)

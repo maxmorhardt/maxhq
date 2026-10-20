@@ -2,8 +2,8 @@ import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { easing, fonts, game } from '../../../app/theme';
 
-// 0 setup, 1 squares claimed, 2 numbers drawn, 3 a quarter has a winner
-export type DemoStage = 0 | 1 | 2 | 3;
+// 0 setup, 1 squares being claimed, 2 a full board, 3 numbers drawn at kickoff, 4 a quarter has a winner
+export type DemoStage = 0 | 1 | 2 | 3 | 4;
 
 const AWAY_DIGITS = [3, 7, 1, 9, 4, 0, 6, 2, 8, 5];
 const HOME_DIGITS = [2, 8, 4, 0, 5, 6, 1, 9, 3, 7];
@@ -45,15 +45,17 @@ const cells: Cell[] = indices.flatMap((row) =>
 const descriptions: Record<DemoStage, string> = {
   0: 'An empty ten by ten squares board with one of your squares claimed.',
   1: 'The board filling up as friends claim squares.',
-  2: 'A full board with the digits zero to nine drawn along each axis.',
-  3: `End of the quarter, away ${SCORE.away} and home ${SCORE.home}: the square at home ${SCORE.home % 10}, away ${SCORE.away} wins.`,
+  2: 'A full board waiting for kickoff, its numbers not drawn yet.',
+  3: 'A full board with the digits zero to nine drawn along each axis.',
+  4: `End of the quarter, away ${SCORE.away} and home ${SCORE.home}: the square at home ${SCORE.home % 10}, away ${SCORE.away} wins.`,
 };
 
 const status: Record<DemoStage, string> = {
   0: 'Pregame',
   1: 'Pregame',
-  2: '1st · 15:00',
-  3: 'End Q2',
+  2: 'Pregame',
+  3: '1st · 15:00',
+  4: 'End Q2',
 };
 
 const digitSx = {
@@ -67,7 +69,7 @@ const digitSx = {
 } as const;
 
 function ScoreBug({ stage }: { stage: DemoStage }) {
-  const final = stage === 3;
+  const final = stage === 4;
 
   const team = (name: string, score: number) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
@@ -146,8 +148,8 @@ interface Props {
 }
 
 export default function DemoBoard({ stage }: Props) {
-  const drawn = stage >= 2;
-  const decided = stage === 3;
+  const drawn = stage >= 3;
+  const decided = stage === 4;
 
   return (
     <Box
