@@ -4,8 +4,8 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 
 ## Project Context
 
-- Service: `games` (`apps/squares/games`, module `github.com/maxmorhardt/maxhq/apps/squares/games`). The NFL schedule and live scores, polled from ESPN.
-- Image `maxmorhardt/squares-games`, release-please component `squares-games`. Chart: `squares-games` in the `charts` repo, whose `DEPENDENCIES.md` lists every secret key and setting.
+- Service: `games` (`apps/squares/games`, package `github.com/maxmorhardt/maxhq/apps/squares/games`). The NFL schedule and live scores, polled from ESPN.
+- Image `maxmorhardt/squares-games`, release-please component `squares-games`. Chart: `charts/squares-games`, whose `README.md` lists every secret key and setting.
 - Owns the `games` schema. Migrations in `internal/migrations` run at startup with `search_path=games`.
 
 ## Layout

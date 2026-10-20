@@ -2,7 +2,7 @@
 
 ## Project Context
 
-- Project: maxhq monorepo (`github.com/maxmorhardt/maxhq`, formerly `maxhq`)
+- Project: maxhq monorepo (`github.com/maxmorhardt/maxhq`)
 - Purpose: Every public app under `maxhq.io`, the Helm chart for each, and the tooling for what runs outside the cluster.
 - Related repos: `gitops` (Argo CD Applications and component values: what runs where, at which image tag), `workflows` (shared reusable CI).
 
@@ -12,25 +12,25 @@
 
 - `apps/maxhq/` - portfolio site (React Router, prerendered).
 - `apps/squares/web/` - squares frontend (React Router SPA).
-- `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each is its own Go module, image, and release. `apps/squares/AGENTS.md` has the rules they share.
+- `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each has its own image, chart, and release. `apps/squares/AGENTS.md` has the rules they share.
 - `libs/` - Go libraries the services share: `platform` (infrastructure) and `squares` (the contract between the squares services). Not released on their own.
-- `charts/<name>/` - one self-contained Helm chart per app, plus `gateway` (Gateway API infrastructure, not an app) and the `cloudflare-cidr` / `cloudflare-ddns` CronJob charts that ship a Python script.
-- `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS, and GitHub rulesets. See `infra/terraform/SETUP.md`.
+- `charts/<name>/` - one self-contained Helm chart per app, plus `gateway` (Gateway API infrastructure, not an app) and `cloudflare-cidr`, a dev-only CronJob that alerts when Cloudflare's IP ranges drift from the gateway's `trustedCIDRs`. Each chart is its own release (`<chart>-chart`), published to `oci://ghcr.io/maxmorhardt/charts`.
+- `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS for every domain, and GitHub rulesets and deployment environments. See `infra/terraform/README.md`.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
-- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `deploy-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `release.yml` (tag-driven build, publish, deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`.
+- `.github/workflows/` - `ci.yml` (path-filtered PR checks), `cd-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `cd-prod.yml` (tag-driven promotion of dev's image and deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`. `ci.yml` and `cd-dev.yml` share their path filters from `.github/path-filters.yml`.
 - `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
 
 ## Core Principles
 
 1. Merges deploy to dev; releases deploy to prod
-   - A merge to `main` builds `sha-<commit>` images for the apps it touched and sets them in `gitops/clusters/dev/apps/` (`deploy-dev.yml`). Dev's charts follow `main`.
-   - A release tag builds the version image and sets both `image.tag` and the chart's `targetRevision` (the tag) in `gitops/clusters/prod/apps/`, after approval on the `production` environment. A chart change reaches prod only with a release of its app.
+   - Images and charts version and deploy separately. A merge to `main` builds `sha-<commit>` images for the apps it touched and sets dev's `image.tag`, and publishes any changed chart as `0.0.0-sha-<commit>` to `oci://ghcr.io/maxmorhardt/charts` and sets dev's `targetRevision` (`cd-dev.yml`).
+   - An app release (`<app>/<version>`) promotes the image dev built for that commit (`sha-<commit>` retagged, never rebuilt) and sets prod's `image.tag`. A chart release (`<chart>-chart/<version>`, release-please `helm` type bumping `Chart.yaml`) publishes the chart and sets prod's `targetRevision`. Both wait for approval on the `production` environment (`cd-prod.yml`).
 2. Tags drive releases
-   - Tags are `<component>/<version>`. Pushing one runs `release.yml` for that component only.
-   - Never hand-edit `.release-please-manifest.json` or `CHANGELOG.md`.
+   - Tags are `<component>/<version>`. Pushing one runs `cd-prod.yml` for that component only.
+   - Never hand-edit `.release-please-manifest.json`, `CHANGELOG.md`, or a chart's `version`.
 3. Apps stay independent
-   - No app imports from another app's directory. Shared Go code lives in `libs` and is consumed through `replace` directives.
+   - No app imports from another app's directory. All Go code is one module (`github.com/maxmorhardt/maxhq`, root `go.mod`); shared code lives in `libs`.
 4. Git is the only source of truth for the cluster
    - Nothing here runs `helm install` or `kubectl apply`. CI commits version bumps to `gitops` and Argo CD reconciles.
 5. Terraform is applied, not reconciled
@@ -45,7 +45,7 @@
 - Set `fullnameOverride` so resource names do not depend on the release name.
 - Routing is `HTTPRoute` with a `parentRef` to the `maxhq` gateway in `envoy-gateway-system`; rate limiting goes in the `BackendTrafficPolicy`.
 - Alert rules live in `values.yaml` under `metrics.prometheusRule.rules`, labelled `severity` (`warning` or `critical`), `component`, and `layer` (`frontend` or `backend`).
-- Gate optional resources behind an `enabled` flag, and update `DEPENDENCIES.md` when a template starts depending on something outside the chart.
+- Gate optional resources behind an `enabled` flag, and update the chart's `README.md` when a template starts depending on something outside the chart.
 - Rendering is the test. CI runs `helm lint --strict`, `helm template`, and kubeconform on every changed chart:
 
   ```bash

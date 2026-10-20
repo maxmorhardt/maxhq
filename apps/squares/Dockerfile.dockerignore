@@ -1,5 +1,6 @@
-# the build context is the repository root; only the shared go libs and the squares services are sent
 *
+!go.mod
+!go.sum
 !libs/
 !apps/squares/service.mk
 !apps/squares/migrate.mk

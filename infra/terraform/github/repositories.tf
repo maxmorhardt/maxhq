@@ -1,11 +1,15 @@
 locals {
   repositories = {
-    # monorepo for every public app, its chart, and the infra tooling; ci.yml only builds what changed
+    # monorepo for every public app, its chart, and infra tooling
     "maxhq" = {
       checks = [
         "pr-title / pr-title",
         "CI Complete",
       ]
+      environments = {
+        development = { approval = false }
+        production  = { approval = true }
+      }
     }
 
     "gitops" = {
@@ -24,7 +28,7 @@ locals {
     }
 
     "workflows" = {
-      checks = ["pr-title"]
+      checks = ["pr-title", "Lint"]
     }
   }
 }

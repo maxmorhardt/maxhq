@@ -12,13 +12,5 @@
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
     }
-  ],
-  "packageRules": [
-    {
-      "description": "hold the cloudflare provider below 5.26.0, which fails dns_record applies on modified_on; lift once cloudflare/terraform-provider-cloudflare#7387 is fixed",
-      "matchDatasources": ["terraform-provider"],
-      "matchPackageNames": ["/cloudflare/"],
-      "allowedVersions": "<5.26.0"
-    }
   ]
 }

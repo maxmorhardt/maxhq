@@ -4,8 +4,8 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 
 ## Project Context
 
-- Service: `contests` (`apps/squares/contests`, module `github.com/maxmorhardt/maxhq/apps/squares/contests`). Contests, squares, participants, invites, the leaderboard, and stats.
-- Image `maxmorhardt/squares-contests`, release-please component `squares-contests`. Chart: `squares-contests` in the `charts` repo, whose `DEPENDENCIES.md` lists every secret key and setting.
+- Service: `contests` (`apps/squares/contests`, package `github.com/maxmorhardt/maxhq/apps/squares/contests`). Contests, squares, participants, invites, the leaderboard, and stats.
+- Image `maxmorhardt/squares-contests`, release-please component `squares-contests`. Chart: `charts/squares-contests`, whose `README.md` lists every secret key and setting.
 - Owns the `contests` schema. Migrations in `internal/migrations` run at startup with `search_path=contests`.
 
 ## Layout

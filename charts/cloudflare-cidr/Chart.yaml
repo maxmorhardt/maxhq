@@ -1,7 +1,7 @@
 apiVersion: v2
 name: cloudflare-cidr
-description: A Helm chart for Cloudflare CIDR updater CronJob
+description: Alerts when Cloudflare's IP ranges drift from the gateway's trustedCIDRs
 type: application
-version: 1.1.1
+version: 1.0.0
 # renovate: image=python
 appVersion: 3.14-alpine

@@ -1,0 +1,206 @@
+name: Dev CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'charts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      chart_version: ${{ steps.tag.outputs.chart_version }}
+      charts: ${{ steps.charts.outputs.list }}
+      maxhq: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.maxhq == 'true' }}
+      squares_web: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.squares_web == 'true' }}
+      squares_services: ${{ steps.services.outputs.list }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Image and chart versions
+        id: tag
+        run: |
+          echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "chart_version=0.0.0-sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: .github/path-filters.yml
+          list-files: json
+
+      - name: List charts to publish
+        id: charts
+        env:
+          FILES: ${{ steps.filter.outputs.charts_files }}
+          ALL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          released=$(jq -c '[.packages | keys[] | select(startswith("charts/")) | ltrimstr("charts/")]' release-please-config.json)
+          if [ "$ALL" = "true" ]; then
+            echo "list=$released" >> "$GITHUB_OUTPUT"
+          else
+            echo "list=$(echo "${FILES:-[]}" | jq -c --argjson released "$released" '[.[] | split("/")[1]] | unique | map(select(IN($released[])))')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: List squares services to deploy
+        id: services
+        env:
+          CHANGED: ${{ steps.filter.outputs.changes }}
+          ALL: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.squares_build == 'true' }}
+        run: |
+          all='["contests","games","accounts","realtime"]'
+          if [ "$ALL" = "true" ]; then
+            echo "list=$all" >> "$GITHUB_OUTPUT"
+          else
+            echo "list=$(echo "${CHANGED:-[]}" | jq -c --argjson all "$all" 'map(select(IN($all[])))')" >> "$GITHUB_OUTPUT"
+          fi
+
+  # charts
+
+  chart-publish:
+    needs: changes
+    if: needs.changes.outputs.charts != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: ${{ fromJSON(needs.changes.outputs.charts) }}
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart: charts/${{ matrix.chart }}
+      version: ${{ needs.changes.outputs.chart_version }}
+
+  chart-deploy:
+    needs: [changes, chart-publish]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        chart: ${{ fromJSON(needs.changes.outputs.charts) }}
+    concurrency:
+      group: cd-dev-${{ matrix.chart }}
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: ${{ matrix.chart }}
+      environment: dev
+      chart_version: ${{ needs.changes.outputs.chart_version }}
+    secrets: inherit
+
+  # maxhq
+
+  maxhq-node:
+    needs: changes
+    if: needs.changes.outputs.maxhq == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxhq
+      working_directory: apps/maxhq
+
+  maxhq-docker:
+    needs: [changes, maxhq-node]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: maxhq
+      app_version: ${{ needs.changes.outputs.tag }}
+      context: apps/maxhq
+      artifact_name: dist-maxhq
+      artifact_path: apps/maxhq/dist
+      push: true
+    secrets: inherit
+
+  maxhq-deploy:
+    needs: [changes, maxhq-docker]
+    concurrency:
+      group: cd-dev-maxhq
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: maxhq
+      environment: dev
+      image_tag: ${{ needs.changes.outputs.tag }}
+    secrets: inherit
+
+  # squares web
+
+  squares-web-node:
+    needs: changes
+    if: needs.changes.outputs.squares_web == 'true'
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      working_directory: apps/squares/web
+
+  squares-web-docker:
+    needs: [changes, squares-web-node]
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares
+      app_version: ${{ needs.changes.outputs.tag }}
+      context: apps/squares/web
+      artifact_name: dist-squares
+      artifact_path: apps/squares/web/dist
+      push: true
+    secrets: inherit
+
+  squares-web-deploy:
+    needs: [changes, squares-web-docker]
+    concurrency:
+      group: cd-dev-squares
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: squares
+      environment: dev
+      image_tag: ${{ needs.changes.outputs.tag }}
+    secrets: inherit
+
+  # squares services
+
+  squares-service-docker:
+    needs: changes
+    if: needs.changes.outputs.squares_services != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: squares-${{ matrix.service }}
+      app_version: ${{ needs.changes.outputs.tag }}
+      context: .
+      dockerfile: apps/squares/Dockerfile
+      build_args: SERVICE=${{ matrix.service }}
+      push: true
+    secrets: inherit
+
+  squares-service-deploy:
+    needs: [changes, squares-service-docker]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
+    concurrency:
+      group: cd-dev-squares-${{ matrix.service }}
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      app: squares-${{ matrix.service }}
+      environment: dev
+      image_tag: ${{ needs.changes.outputs.tag }}
+    secrets: inherit

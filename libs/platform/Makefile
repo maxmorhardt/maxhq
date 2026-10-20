@@ -1,7 +1,5 @@
 .DEFAULT_GOAL := help
 
-export GOWORK := off
-
 COVER_FILE  ?= coverage.out
 COVER_TOOL  ?= github.com/vladopajic/go-test-coverage/v2@v2.18.8
 RACE        ?=

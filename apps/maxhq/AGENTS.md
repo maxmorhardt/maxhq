@@ -6,7 +6,7 @@
 - Language: TypeScript, React 19
 - Purpose: Personal portfolio site. Vite build routed and prerendered by React Router framework mode, styled with Material UI over Emotion from a single themed token set.
 - Target environments: Fully prerendered static HTML served by NGINX in a container on Kubernetes. Public and search-indexed.
-- Related: the `maxhq` chart in the `charts` repo, `infra` (the Argo CD Application), `workflows` (shared CI).
+- Related: its chart `charts/maxhq`, `gitops` (the Argo CD Applications), `workflows` (shared CI).
 
 ## Repository Layout
 
@@ -60,7 +60,7 @@
 - `HeroTerminal` deliberately keeps its own hard-coded GitHub-dark palette in both color schemes. It is a terminal, not a themed surface.
 - Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
 - **Always brace control statements.** Never a one-line `if (x) return;` — write it as `if (x) {`, newline, body, newline, `}`. Enforced by the `curly` ESLint rule.
-- The Helm chart lives in the `charts` repo. A change that needs a chart change (env, port, route) needs a `charts` PR released first.
+- The Helm chart is `charts/maxhq` in this repo. A change that needs a chart change (env, port, route) makes it in the same PR; the chart releases as `maxhq-chart`.
 
 ## New Page Checklist
 

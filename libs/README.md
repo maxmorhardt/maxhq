@@ -1,8 +1,8 @@
 # Go libraries
 
-Shared code for the Go services in this repo. These modules are not released on their own: services consume them through `replace` directives, so a library change ships with the next release of each service that uses it.
+Shared code for the Go services in this repo. These packages are not released on their own: they're part of the repo's single Go module, so a library change ships with the next release of each service that uses it.
 
-| Module | Package | What it holds |
+| Library | Package | What it holds |
 | --- | --- | --- |
 | [platform](platform/) | `api` | request context keys, gateway claims, error and health response shapes |
 | | `config` | the shared env settings and `Load[T]` for a service's config struct |

@@ -9,21 +9,19 @@ image:
   pullPolicy: IfNotPresent
   tag: ''
   command:
-    - sh
-    - -c
-    - |
-      pip install --no-cache-dir --target=/tmp/pip -r /scripts/requirements.txt && \
-      PYTHONPATH=/tmp/pip python3 /scripts/cloudflare-cidr.py
+    - python3
+    - /scripts/cloudflare-cidr.py
 
 resources:
   limits:
-    cpu: 150m
-    memory: 256Mi
-  requests:
-    cpu: 50m
+    cpu: 100m
     memory: 64Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi
 
-restartPolicy: OnFailure
+restartPolicy: Never
+backoffLimit: 0
 concurrencyPolicy: Forbid
 successfulJobsHistoryLimit: 1
 failedJobsHistoryLimit: 1

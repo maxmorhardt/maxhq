@@ -11,28 +11,27 @@ Monorepo for everything served under `maxhq.io`: the apps, their Helm charts, an
 | [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
 | [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
-| [`charts`](charts) | Helm chart for each app, the gateway, and the Cloudflare CronJobs | - |
-| [`infra/terraform`](infra/terraform/SETUP.md) | AWS backups, Cloudflare DNS, GitHub rulesets | - |
-| [`infra/k3s`](infra/k3s/SETUP.md) | Node bootstrap and the k3s runbook | - |
-| [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/SETUP.md) | Maintenance page Worker | - |
+| [`charts`](charts) | Helm chart for each app, the gateway, and the dev-only `cloudflare-cidr` alert | - |
+| [`infra/terraform`](infra/terraform/README.md) | AWS backups, Cloudflare DNS, GitHub rulesets and environments | - |
+| [`infra/k3s`](infra/k3s/README.md) | Node bootstrap and the k3s runbook | - |
+| [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/README.md) | Maintenance page Worker | - |
 
-Cluster state (which image tag each app runs, plus every infra component's values) lives in [`maxmorhardt/gitops`](https://github.com/maxmorhardt/gitops). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
+Cluster state (which image and chart version each app runs, plus every infra component's values) lives in [`maxmorhardt/gitops`](https://github.com/maxmorhardt/gitops). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
 
 ## Releases
 
-[release-please](https://github.com/googleapis/release-please) manages every app in [`release-please-config.json`](release-please-config.json). Tags are `<component>/<version>`, for example `squares-contests/1.2.0`. A tag builds and pushes the app's image and, after approval, pins prod to it: `image.tag` and the chart's `targetRevision` in `gitops/clusters/prod/apps/`. Every merge to `main` also builds `sha-<commit>` images for the apps it touched and deploys them to dev through [`deploy-dev.yml`](.github/workflows/deploy-dev.yml), with no approval.
+[release-please](https://github.com/googleapis/release-please) versions every app and every chart separately in [`release-please-config.json`](release-please-config.json), starting at 1.0.0. Images and charts deploy separately:
+
+- **Dev**, on every merge to `main` ([`cd-dev.yml`](.github/workflows/cd-dev.yml)): changed apps build `sha-<commit>` images and set dev's `image.tag`; changed charts publish `0.0.0-sha-<commit>` to `oci://ghcr.io/maxmorhardt/charts` and set dev's chart version.
+- **Prod**, on a release tag after approval ([`cd-prod.yml`](.github/workflows/cd-prod.yml)): `<app>/<version>` retags the image dev already built for that commit (never rebuilt) and sets prod's `image.tag`; `<chart>-chart/<version>` publishes the chart and sets prod's chart version.
 
 One release pull request covers every app with pending changes. Pull requests are squash merged, so the PR title is the conventional commit release-please reads, and it applies to every app the PR touches.
-
-## Running squares locally
-
-`make up` and `make web` in [`apps/squares`](apps/squares/README.md#running-locally) run every service, Postgres, Valkey, and a production-like gateway in Docker.
 
 ## CI
 
 [`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs` tests every Go service, a changed chart is linted and rendered, and a change under `infra/terraform` plans every module. `CI Complete` is the single required check. [`cd-terraform.yml`](.github/workflows/cd-terraform.yml) applies Terraform on merge.
 
-The Go modules are tied together by `replace` directives, so each builds on its own. [`go.work`](go.work) only lets editors see all of them at once.
+All Go code is one module: [`go.mod`](go.mod) at the root, so every service and library shares one set of dependency versions.
 
 ## Git hooks
 

@@ -1,0 +1,90 @@
+name: Prod CD
+
+on:
+  push:
+    tags:
+      - 'maxhq/*'
+      - 'squares/*'
+      - 'squares-contests/*'
+      - 'squares-games/*'
+      - 'squares-accounts/*'
+      - 'squares-realtime/*'
+      - '*-chart/*'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: cd-prod-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  parse:
+    name: Parse tag
+    runs-on: ubuntu-latest
+    outputs:
+      kind: ${{ steps.parse.outputs.kind }}
+      app: ${{ steps.parse.outputs.app }}
+      version: ${{ steps.parse.outputs.version }}
+      dev_tag: ${{ steps.parse.outputs.dev_tag }}
+    steps:
+      - name: Split tag into app and version
+        id: parse
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          component="${TAG%%/*}"
+          kind=image
+          if [ "${component%-chart}" != "$component" ]; then
+            kind=chart
+          fi
+          {
+            echo "kind=$kind"
+            echo "app=${component%-chart}"
+            echo "version=${TAG#*/}"
+            echo "dev_tag=sha-${GITHUB_SHA::7}"
+          } >> "$GITHUB_OUTPUT"
+
+  # app releases
+
+  promote:
+    needs: parse
+    if: needs.parse.outputs.kind == 'image'
+    uses: maxmorhardt/workflows/.github/workflows/cd-promote.yml@main
+    with:
+      app_name: ${{ needs.parse.outputs.app }}
+      source_tag: ${{ needs.parse.outputs.dev_tag }}
+      target_tag: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  image-deploy:
+    needs: [parse, promote]
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      environment: prod
+      app: ${{ needs.parse.outputs.app }}
+      image_tag: ${{ needs.parse.outputs.version }}
+    secrets: inherit
+
+  # chart releases
+
+  chart-publish:
+    needs: parse
+    if: needs.parse.outputs.kind == 'chart'
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@main
+    with:
+      repository: ${{ github.repository }}
+      chart: charts/${{ needs.parse.outputs.app }}
+      version: ${{ needs.parse.outputs.version }}
+
+  chart-deploy:
+    needs: [parse, chart-publish]
+    # cloudflare-cidr runs in dev only
+    if: needs.parse.outputs.app != 'cloudflare-cidr'
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@main
+    with:
+      environment: prod
+      app: ${{ needs.parse.outputs.app }}
+      chart_version: ${{ needs.parse.outputs.version }}
+    secrets: inherit

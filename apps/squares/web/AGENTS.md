@@ -6,7 +6,7 @@
 - Language: TypeScript, React 19
 - Purpose: Frontend for a real-time football squares pool. Vite SPA styled with MUI v9, state in Redux Toolkit, authenticated via OIDC, kept in sync with server-sent events from the realtime service.
 - Target environments: Static bundle served by NGINX in a container on Kubernetes.
-- Related: `../contests`, `../games`, `../accounts`, `../realtime` (the backend services), the `squares` chart in the `charts` repo, `infra` (the Argo CD Application), `workflows` (shared CI).
+- Related: `../contests`, `../games`, `../accounts`, `../realtime` (the backend services), its chart `charts/squares`, `gitops` (the Argo CD Applications), `workflows` (shared CI).
 
 ## Repository Layout
 
@@ -56,7 +56,7 @@
 - Keep the SPA fallback (`try_files ... /index.html`) in `nginx.conf` intact. Removing it breaks client-side routing.
 - Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
 - **Always brace control statements.** Never a one-line `if (x) return;` — write it as `if (x) {`, newline, body, newline, `}`. Enforced by the `curly` ESLint rule.
-- The Helm chart lives in the `charts` repo. A change that needs a chart change needs a `charts` PR released first.
+- The Helm chart is `charts/squares` in this repo. A change that needs a chart change makes it in the same PR; the chart releases as `squares-chart`.
 
 ## New Page Checklist
 

@@ -1,155 +1,97 @@
+import ipaddress
+import json
 import os
+import smtplib
+import ssl
 import sys
-import logging
-from datetime import datetime
-from typing import List
+import urllib.request
+from email.message import EmailMessage
 
-import requests
-from pythonjsonlogger import jsonlogger
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+CLOUDFLARE_URLS = ["https://www.cloudflare.com/ips-v4", "https://www.cloudflare.com/ips-v6"]
+POLICY_PATH = "/apis/gateway.envoyproxy.io/v1alpha1/namespaces/envoy-gateway-system/clienttrafficpolicies/maxhq"
+SERVICE_ACCOUNT = "/var/run/secrets/kubernetes.io/serviceaccount"
+USER_AGENT = "maxhq-cloudflare-cidr"
 
-CTP_GROUP = "gateway.envoyproxy.io"
-CTP_VERSION = "v1alpha1"
-CTP_NAMESPACE = "envoy-gateway-system"
-CTP_PLURAL = "clienttrafficpolicies"
-CTP_NAME = "maxhq"
 
-handler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter(
-	'%(asctime)s %(levelname)s %(name)s %(message)s',
-	rename_fields={'levelname': 'level', 'asctime': 'timestamp'},
-	datefmt='%Y-%m-%dT%H:%M:%S%z'
-)
-handler.setFormatter(formatter)
+def fetch(url, headers=None, context=None, data=None):
+	request = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT, **(headers or {})})
+	with urllib.request.urlopen(request, timeout=15, context=context) as response:
+		return response.read().decode()
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(handler)
 
-def discord_notify(msg: str, webhook: str, success: bool = True) -> None:
-	logger.info(f"sending discord notification: {msg}")
-	color = 0x00FF00 if success else 0xFF0000
+def cloudflare_ranges():
+	ranges = set()
+	for url in CLOUDFLARE_URLS:
+		ranges |= {line.strip() for line in fetch(url).splitlines() if line.strip()}
+	return ranges
+
+
+def trusted_ranges():
+	with open(f"{SERVICE_ACCOUNT}/token") as f:
+		token = f.read()
+	context = ssl.create_default_context(cafile=f"{SERVICE_ACCOUNT}/ca.crt")
+	api = f"https://{os.environ['KUBERNETES_SERVICE_HOST']}:{os.environ['KUBERNETES_SERVICE_PORT']}"
+	policy = json.loads(fetch(api + POLICY_PATH, {"Authorization": f"Bearer {token}"}, context))
+	cidrs = policy["spec"]["clientIPDetection"]["xForwardedFor"]["trustedCIDRs"]
+	# the pod network is trusted too; only public ranges are cloudflare's
+	return {cidr for cidr in cidrs if not ipaddress.ip_network(cidr).is_private}
+
+
+def discord(subject, body):
+	payload = json.dumps({"embeds": [{"title": subject, "description": body[:4000], "color": 0xF38020}]}).encode()
+	fetch(os.environ["DISCORD_WEBHOOK"], {"Content-Type": "application/json"}, data=payload)
+
+
+def email(subject, body):
+	message = EmailMessage()
+	message["Subject"] = subject
+	message["From"] = os.environ["FROM_EMAIL"]
+	message["To"] = os.environ["TO_EMAILS"]
+	message.set_content(body)
+	with smtplib.SMTP(os.environ["SMTP_SERVER"], int(os.environ.get("SMTP_PORT", "587")), timeout=30) as smtp:
+		smtp.starttls(context=ssl.create_default_context())
+		smtp.login(os.environ["SMTP_USERNAME"], os.environ["SMTP_PASSWORD"])
+		smtp.send_message(message)
+
+
+def notify(subject, body):
+	failures = []
+	for send in (discord, email):
+		try:
+			send(subject, body)
+		except Exception as e:
+			failures.append(f"{send.__name__}: {e}")
+	if failures:
+		print("notification failed: " + "; ".join(failures), file=sys.stderr)
+		return False
+	return True
+
+
+def report(latest, trusted):
+	lines = ["Cloudflare's published IP ranges no longer match the gateway's trustedCIDRs.", ""]
+	if latest - trusted:
+		lines += ["Add:"] + [f"  {cidr}" for cidr in sorted(latest - trusted)] + [""]
+	if trusted - latest:
+		lines += ["Remove:"] + [f"  {cidr}" for cidr in sorted(trusted - latest)] + [""]
+	lines.append("Update trustedCIDRs in maxhq charts/gateway/values.yaml and release the gateway chart.")
+	return "\n".join(lines)
+
+
+def main():
 	try:
-		requests.post(
-			webhook,
-			json={
-				"embeds": [{
-					"description": msg,
-					"color": color
-				}]
-			},
-			headers={"Content-Type": "application/json"},
-			timeout=10
-		)
-	except requests.RequestException as e:
-		logger.error(f"failed to send discord notification: {e}")
+		latest, trusted = cloudflare_ranges(), trusted_ranges()
+	except Exception as e:
+		notify("Cloudflare CIDR check failed", str(e))
+		return 1
 
-def fetch_cloudflare_ranges() -> List[str]:
-	logger.info("fetching cloudflare ipv4 ranges")
-	try:
-		ipv4_response = requests.get("https://www.cloudflare.com/ips-v4", timeout=10)
-		ipv4_response.raise_for_status()
-		ipv4_ranges = ipv4_response.text.strip().split('\n')
-	except requests.RequestException as e:
-		logger.error(f"failed to fetch ipv4 ranges: {e}")
-		raise
-
-	logger.info("fetching cloudflare ipv6 ranges")
-	try:
-		ipv6_response = requests.get("https://www.cloudflare.com/ips-v6", timeout=10)
-		ipv6_response.raise_for_status()
-		ipv6_ranges = ipv6_response.text.strip().split('\n')
-	except requests.RequestException as e:
-		logger.error(f"failed to fetch ipv6 ranges: {e}")
-		raise
-
-	all_ranges = ipv4_ranges + ipv6_ranges
-	logger.info(f"all cloudflare ip ranges: {','.join(all_ranges)}")
-
-	return all_ranges
-
-def get_current_trusted_cidrs() -> List[str]:
-	logger.info("getting client traffic policy")
-	try:
-		api = client.CustomObjectsApi()
-		ctp = api.get_namespaced_custom_object(
-			group=CTP_GROUP,
-			version=CTP_VERSION,
-			namespace=CTP_NAMESPACE,
-			plural=CTP_PLURAL,
-			name=CTP_NAME
-		)
-
-		trusted_cidrs = (
-			ctp.get("spec", {})
-			.get("clientIPDetection", {})
-			.get("xForwardedFor", {})
-			.get("trustedCIDRs", [])
-		)
-		logger.info(f"trustedCIDRs: {','.join(trusted_cidrs)}")
-
-		return trusted_cidrs
-	except ApiException as e:
-		logger.error(f"failed to fetch client traffic policy: {e}")
-		raise
-
-def update_trusted_cidrs(cloudflare_ranges: List[str]) -> None:
-	logger.error("trustedCIDRs do not match current cloudflare ip ranges")
-	try:
-		api = client.CustomObjectsApi()
-		api.patch_namespaced_custom_object(
-			group=CTP_GROUP,
-			version=CTP_VERSION,
-			namespace=CTP_NAMESPACE,
-			plural=CTP_PLURAL,
-			name=CTP_NAME,
-			body={
-				"spec": {
-					"clientIPDetection": {
-						"xForwardedFor": {
-							"trustedCIDRs": cloudflare_ranges
-						}
-					}
-				}
-			}
-		)
-		logger.info("successfully patched client traffic policy")
-	except ApiException as e:
-		logger.error(f"failed to patch client traffic policy: {e}")
-		raise
-
-def main() -> int:
-	discord_webhook = os.environ.get("DISCORD_WEBHOOK")
-
-	if not discord_webhook:
-		logger.error("DISCORD_WEBHOOK environment variable is not set")
-		return 2
-
-	try:
-		config.load_incluster_config()
-		logger.info("loaded in-cluster k8s configuration")
-	except config.ConfigException:
-		config.load_kube_config()
-		logger.info("loaded k8s configuration from kubeconfig")
-
-	try:
-		cloudflare_ranges = fetch_cloudflare_ranges()
-		current_trusted_cidrs = get_current_trusted_cidrs()
-
-		if sorted(cloudflare_ranges) == sorted(current_trusted_cidrs):
-			logger.info("trustedCIDRs match current cloudflare ip ranges")
-			return 0
-
-		update_trusted_cidrs(cloudflare_ranges)
-		msg = "✓ Cloudflare CIDR job successfully updated Envoy Gateway trusted IP ranges"
-		discord_notify(msg, discord_webhook, success=True)
+	if latest == trusted:
+		print(f"trustedCIDRs match Cloudflare's {len(latest)} ranges")
 		return 0
 
-	except Exception as e:
-		msg = f"✕ Cloudflare CIDR job failed ({datetime.now()})\n\n{e}"
-		discord_notify(msg, discord_webhook, success=False)
-		return 1
+	body = report(latest, trusted)
+	print(body)
+	return 0 if notify("Cloudflare IP ranges changed", body) else 1
+
 
 if __name__ == "__main__":
 	sys.exit(main())

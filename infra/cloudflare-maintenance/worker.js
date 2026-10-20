@@ -6,7 +6,7 @@ export default {
   fetch(request) {
     const url = new URL(request.url);
 
-    // APIs: JSON, not HTML, so frontends/clients don't try to parse a webpage.
+    // json maintence response for apis
     if (url.hostname === "api.maxhq.io" || url.hostname.startsWith("api.")) {
       return new Response(
         JSON.stringify({

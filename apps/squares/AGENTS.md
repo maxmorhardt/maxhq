@@ -11,8 +11,8 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `games/` - ESPN schedule and live scores. Owns the `games` schema.
   - `accounts/` - profiles, account deletion, the contact form. Owns the `accounts` schema.
   - `realtime/` - server-sent events for one contest, resumable with `Last-Event-ID`. Owns no data.
-- Each service is its own Go module, image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>`), Argo CD Application, and release-please component. Its Helm chart is `squares-<service>` in the `charts` repo. A service never imports another service's packages; Go's `internal` rule enforces it.
-- Shared code lives in two library modules, consumed through `replace` directives:
+- Each service is a package tree in the repo's single Go module (root `go.mod`), with its own image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>`), Argo CD Application, and release-please component. Its Helm chart is `charts/squares-<service>`. A service never imports another service's packages; Go's `internal` rule enforces it.
+- Shared code lives in two library packages in the same module:
   - `libs/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
   - `libs/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
 - Everything sits behind the `maxhq` Envoy Gateway at `api.maxhq.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
@@ -55,13 +55,13 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 ## Agent Instructions
 
 - Make the smallest safe change that solves the requested problem.
-- **Each module's Makefile is its task runner.** Run `make <target>` from that module's directory. CI runs the same targets. A service's Makefile only sets `SERVICE` and includes `../service.mk` (and `../migrate.mk` when it owns a schema); change targets there, once.
+- **Each service's Makefile is its task runner.** Run `make <target>` from that service's directory. CI runs the same targets. A service's Makefile only sets `SERVICE` and includes `../service.mk` (and `../migrate.mk` when it owns a schema); change targets there, once.
 - One logical resource per file, lowercase names (`contest_service.go`, not `services.go`).
 - After changing an interface, run `make mocks`. After changing handler annotations, run `make swag`.
 - `prealloc`, `gocritic`, and `unparam` are enabled, so give slices capacity hints and drop unused parameters.
 - Avoid comments unless the code is genuinely non-obvious.
 - A new mutating route goes behind both `Auth` and `Idempotent` in that service's `routes.go`.
-- The service's chart is `squares-<service>` in the `charts` repo, with a `DEPENDENCIES.md` listing every secret key and setting. A change that needs a new env var, port, route, or secret key needs a `charts` PR, released before the service.
+- The service's chart is `charts/squares-<service>`, whose `README.md` lists every secret key and setting. A change that needs a new env var, port, route, or secret key changes the chart in the same PR; the chart releases as `squares-<service>-chart`.
 - A change to `libs/*` triggers CI for every service. Run the affected services' tests before committing.
 
 ## Testing Guidance

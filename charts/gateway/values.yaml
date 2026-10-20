@@ -17,7 +17,6 @@ strippedRequestHeaders:
 
 proxy:
   replicas: 2
-  # k3s's service load balancer binds 443 on every node
   service:
     name: envoy-maxhq
     type: LoadBalancer
@@ -30,7 +29,6 @@ proxy:
       memory: 512Mi
 
 trustedCIDRs:
-  # k3s's service load balancer forwards from inside the pod network
   - 10.42.0.0/16
   - 103.21.244.0/22
   - 103.22.200.0/22

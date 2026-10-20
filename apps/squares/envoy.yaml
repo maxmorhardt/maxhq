@@ -1,4 +1,3 @@
-# mirrors production: optional Dex JWT, claims copied to X-Auth-* headers, /squares/* routed per service
 static_resources:
   listeners:
     - name: http

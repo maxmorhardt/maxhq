@@ -1,8 +1,16 @@
 {
-  "apps/maxhq": "4.0.0",
-  "apps/squares/web": "5.0.0",
-  "apps/squares/games": "2.0.0",
-  "apps/squares/contests": "3.0.0",
-  "apps/squares/accounts": "3.0.0",
-  "apps/squares/realtime": "2.0.0"
+  "apps/maxhq": "1.0.0",
+  "apps/squares/web": "1.0.0",
+  "apps/squares/games": "1.0.0",
+  "apps/squares/contests": "1.0.0",
+  "apps/squares/accounts": "1.0.0",
+  "apps/squares/realtime": "1.0.0",
+  "charts/maxhq": "1.0.0",
+  "charts/gateway": "1.0.0",
+  "charts/squares": "1.0.0",
+  "charts/squares-contests": "1.0.0",
+  "charts/squares-games": "1.0.0",
+  "charts/squares-accounts": "1.0.0",
+  "charts/squares-realtime": "1.0.0",
+  "charts/cloudflare-cidr": "1.0.0"
 }
