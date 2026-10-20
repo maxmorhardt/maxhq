@@ -5,7 +5,6 @@ import type {
   Contest,
   ContestStatus,
   ContestUpdate,
-  Game,
   Participant,
   QuarterResult,
   Square,
@@ -100,14 +99,6 @@ function addQuarterResult(state: LiveContestState, result: QuarterResult) {
   contest.status = statusAfterQuarter[result.quarter] ?? contest.status;
 }
 
-function applyGameUpdate(state: LiveContestState, game: Game) {
-  const contest = state.contest;
-  if (!contest || (contest.game && game.updatedAt < contest.game.updatedAt)) {
-    return;
-  }
-  contest.game = game;
-}
-
 function upsertParticipant(state: LiveContestState, participant: Participant) {
   const index = state.participants.findIndex((p) => p.id === participant.id);
   if (index === -1) {
@@ -139,7 +130,6 @@ const eventHandlers: { [T in ContestEventType]: EventHandler<T> } = {
   },
   'square.updated': (state, { data }) => upsertSquare(state, data),
   'quarter.recorded': (state, { data }) => addQuarterResult(state, data),
-  'game.updated': (state, { data }) => applyGameUpdate(state, data),
   'participant.joined': (state, { data }) => upsertParticipant(state, data),
   'participant.removed': (state, { data }) => removeParticipant(state, data.userId),
   'access.revoked': (state) => {

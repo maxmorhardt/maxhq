@@ -68,10 +68,6 @@ describe('describeEvent', () => {
     );
   });
 
-  it('leaves live score updates to the scoreboard', () => {
-    expect(describeEvent(event('game.updated', { homeScore: 7 }), 'id')).toBeNull();
-  });
-
   it('describes a status change but not an edit', () => {
     const update = event('contest.updated', { status: 'Q2' });
     expect(describeEvent(update, 'id', 'Q1')?.message).toBe('Contest status changed to Quarter 2');

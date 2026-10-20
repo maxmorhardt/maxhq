@@ -19,7 +19,8 @@ import TeamMark from '../../../../components/TeamMark';
 import type { ContestVisibility, Game } from '../../../../types/contest';
 import { formatKickoff, formatMatchup } from '../../../../utils/game';
 import { stripDangerousChars } from '../../../../utils/sanitize';
-import { useCreateContestMutation, useGetUpcomingGamesQuery } from '../../api';
+import { useGetUpcomingGamesQuery } from '../../../games/api';
+import { useCreateContestMutation } from '../../api';
 import FormSection from './FormSection';
 
 const NAME_MAX_LENGTH = 20;

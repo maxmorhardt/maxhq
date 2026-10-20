@@ -65,7 +65,7 @@ describe('weeks', () => {
 describe('currentScore', () => {
   it('reads the game when there is one', () => {
     const game = { homeScore: 17, awayScore: 10 } as Game;
-    expect(currentScore(makeContest({ game }))).toEqual({ away: 10, home: 17 });
+    expect(currentScore(makeContest(), game)).toEqual({ away: 10, home: 17 });
   });
 
   it('otherwise reads the latest recorded quarter', () => {
@@ -73,7 +73,10 @@ describe('currentScore', () => {
       makeQuarterResult({ quarter: 1, homeTeamScore: 7, awayTeamScore: 3 }),
       makeQuarterResult({ id: 'qr-2', quarter: 2, homeTeamScore: 14, awayTeamScore: 10 }),
     ];
-    expect(currentScore(makeContest({ quarterResults }))).toEqual({ away: 10, home: 14 });
-    expect(currentScore(makeContest())).toBeNull();
+    expect(currentScore(makeContest({ quarterResults }), undefined)).toEqual({
+      away: 10,
+      home: 14,
+    });
+    expect(currentScore(makeContest(), undefined)).toBeNull();
   });
 });

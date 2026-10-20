@@ -61,7 +61,6 @@ describe('contestsApi', () => {
       'DELETE',
       '/contests/c/squares/claims',
     ],
-    ['getUpcomingGames', () => endpoints.getUpcomingGames.initiate(), 'GET', '/games/upcoming'],
     ['getInvites', () => endpoints.getInvites.initiate('c'), 'GET', '/contests/c/invites'],
     [
       'createInvite',

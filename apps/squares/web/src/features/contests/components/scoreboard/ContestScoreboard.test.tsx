@@ -21,10 +21,11 @@ const game = {
   updatedAt: '2026-11-01T19:30:00Z',
 } as Game;
 
-function renderBoard(contest: Contest, viewer = makeViewer()) {
+function renderBoard(contest: Contest, viewer = makeViewer(), withGame?: Game) {
   return renderWithProviders(
     <ContestScoreboard
       contest={contest}
+      game={withGame}
       participants={[]}
       viewer={viewer}
       status="live"
@@ -35,7 +36,7 @@ function renderBoard(contest: Contest, viewer = makeViewer()) {
 
 describe('ContestScoreboard', () => {
   it('shows both teams, the live score, and the quarter being played', () => {
-    renderBoard(makeContest({ status: 'Q3', game }));
+    renderBoard(makeContest({ status: 'Q3' }), makeViewer(), game);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Test Bowl' })).toBeInTheDocument();
     expect(screen.getByText('Bears')).toBeInTheDocument();

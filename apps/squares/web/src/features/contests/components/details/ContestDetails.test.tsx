@@ -16,8 +16,8 @@ const fullGrid = (overrides: Partial<Contest> = {}) =>
 
 const spectator = makeViewer({ isParticipant: false, participant: undefined, squaresLeft: 0 });
 
-function renderDetails(contest: Contest, viewer: ContestViewer = makeViewer()) {
-  return renderWithProviders(<ContestDetails contest={contest} viewer={viewer} />);
+function renderDetails(contest: Contest, viewer: ContestViewer = makeViewer(), game?: Game) {
+  return renderWithProviders(<ContestDetails contest={contest} game={game} viewer={viewer} />);
 }
 
 describe('ContestDetails', () => {
@@ -32,7 +32,7 @@ describe('ContestDetails', () => {
 
   it('names the kickoff of a scheduled game', () => {
     const game = { status: 'scheduled', gameTime: '2026-11-01T18:00:00Z' } as Game;
-    renderDetails(fullGrid({ game }));
+    renderDetails(fullGrid(), makeViewer(), game);
     expect(screen.getByText('Board full')).toBeInTheDocument();
     expect(
       screen.getByText(/It locks and the numbers are drawn at kickoff \(/)

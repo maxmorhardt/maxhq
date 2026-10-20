@@ -24,10 +24,18 @@ vi.mock('../live/useContestStream', () => ({
   },
 }));
 vi.mock('./ContestView', () => ({
-  default: ({ winnerFlash }: { winnerFlash: unknown }) => (
-    <div data-testid="view">{winnerFlash ? 'flash' : ''}</div>
+  default: ({ winnerFlash, game }: { winnerFlash: unknown; game?: { homeScore: number } }) => (
+    <div data-testid="view" data-score={game?.homeScore}>
+      {winnerFlash ? 'flash' : ''}
+    </div>
   ),
 }));
+const games = vi.hoisted(() => ({ useGetGameQuery: vi.fn(), useGamesStream: vi.fn() }));
+vi.mock('../../games/api', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useGetGameQuery: games.useGetGameQuery,
+}));
+vi.mock('../../games/useGamesStream', () => ({ useGamesStream: games.useGamesStream }));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async () => ({
   ...(await vi.importActual<typeof import('react-router')>('react-router')),
@@ -60,6 +68,7 @@ function renderLive() {
 describe('LiveContest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    games.useGetGameQuery.mockReturnValue({ data: undefined });
     mockAuth({ email: 'player@x.com' });
   });
 
@@ -84,6 +93,24 @@ describe('LiveContest', () => {
     expect(screen.getByText('Access Denied')).toBeInTheDocument();
     dispatch(streamEnded('not_found'));
     expect(screen.getByText('Page Not Found')).toBeInTheDocument();
+  });
+
+  it('reads the score from the games service and follows it live', () => {
+    games.useGetGameQuery.mockReturnValue({ data: { homeScore: 14 } });
+    const { snapshot } = renderLive();
+    snapshot(makeContest({ gameId: 'g-1' }));
+
+    expect(games.useGetGameQuery).toHaveBeenLastCalledWith('g-1');
+    expect(games.useGamesStream).toHaveBeenLastCalledWith(undefined, true);
+    expect(screen.getByTestId('view')).toHaveAttribute('data-score', '14');
+  });
+
+  it('leaves the games stream closed for a contest without a game', () => {
+    games.useGetGameQuery.mockReturnValue({ data: undefined });
+    const { snapshot } = renderLive();
+    snapshot(makeContest({ gameId: undefined }));
+
+    expect(games.useGamesStream).toHaveBeenLastCalledWith(undefined, false);
   });
 
   it('leaves a deleted contest', () => {

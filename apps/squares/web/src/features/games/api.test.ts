@@ -29,4 +29,14 @@ describe('gamesApi', () => {
     expect(fetch.lastRequest().url.searchParams.get('seasonType')).toBe('3');
     expect(fetch.lastRequest().url.searchParams.get('week')).toBe('2');
   });
+
+  it('fetches the upcoming games and a single game', async () => {
+    const fetch = stubFetch([]);
+    const store = makeStore();
+    await store.dispatch(gamesApi.endpoints.getUpcomingGames.initiate());
+    expect(fetch.lastRequest()).toMatchObject({ method: 'GET', path: '/games/upcoming' });
+
+    await store.dispatch(gamesApi.endpoints.getGame.initiate('g-1'));
+    expect(fetch.lastRequest()).toMatchObject({ method: 'GET', path: '/games/g-1' });
+  });
 });

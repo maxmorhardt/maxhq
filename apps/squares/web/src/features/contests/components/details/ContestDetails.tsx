@@ -1,7 +1,7 @@
 import { GridView } from '@mui/icons-material';
 import { Box, LinearProgress, Typography } from '@mui/material';
 import { fonts } from '../../../../app/theme';
-import type { Contest } from '../../../../types/contest';
+import type { Contest, Game } from '../../../../types/contest';
 import { isInGameStatus } from '../../../../utils/contestStatus';
 import { formatKickoff } from '../../../../utils/game';
 import type { ContestViewer } from '../../live/viewer';
@@ -10,17 +10,15 @@ import SquareActions from './SquareActions';
 
 interface Props {
   contest: Contest;
+  game?: Game;
   viewer: ContestViewer;
 }
 
 const barSx = { height: 8, borderRadius: 4, bgcolor: 'rgba(238, 242, 250, 0.08)' };
 
 // what happens next to the board, in the contest's own terms
-function boardStatus(contest: Contest, allFilled: boolean): string {
-  const kickoff =
-    contest.game && contest.game.status === 'scheduled'
-      ? ` (${formatKickoff(contest.game.gameTime)})`
-      : '';
+function boardStatus(contest: Contest, game: Game | undefined, allFilled: boolean): string {
+  const kickoff = game?.status === 'scheduled' ? ` (${formatKickoff(game.gameTime)})` : '';
 
   if (contest.status === 'DELETED') {
     return 'This contest was deleted.';
@@ -36,7 +34,7 @@ function boardStatus(contest: Contest, allFilled: boolean): string {
     : `Fill every square before kickoff${kickoff}. The board locks once the game starts and every square is claimed.`;
 }
 
-export default function ContestDetails({ contest, viewer }: Props) {
+export default function ContestDetails({ contest, game, viewer }: Props) {
   const totalSquares = contest.squares.length;
   const filledSquares = contest.squares.filter((s) => s.value.trim() !== '').length;
   const allFilled = filledSquares >= totalSquares;
@@ -77,7 +75,7 @@ export default function ContestDetails({ contest, viewer }: Props) {
           <Typography
             sx={{ color: 'text.secondary', fontSize: '0.85rem', mt: 1.25, lineHeight: 1.5 }}
           >
-            {boardStatus(contest, allFilled)}
+            {boardStatus(contest, game, allFilled)}
           </Typography>
         </Box>
 

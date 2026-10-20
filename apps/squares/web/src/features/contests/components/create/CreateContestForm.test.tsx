@@ -7,11 +7,13 @@ import type { Game } from '../../../../types/contest';
 import CreateContestForm from './CreateContestForm';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
-const api = vi.hoisted(() => ({
-  useGetUpcomingGamesQuery: vi.fn(),
-  useCreateContestMutation: vi.fn(),
-}));
+const api = vi.hoisted(() => ({ useCreateContestMutation: vi.fn() }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
+const games = vi.hoisted(() => ({ useGetUpcomingGamesQuery: vi.fn() }));
+vi.mock('../../../games/api', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  ...games,
+}));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async () => ({
   ...(await vi.importActual<typeof import('react-router')>('react-router')),
@@ -33,7 +35,7 @@ describe('CreateContestForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth({ email: 'owner@x.com' });
-    api.useGetUpcomingGamesQuery.mockReturnValue({ data: [game], isLoading: false });
+    games.useGetUpcomingGamesQuery.mockReturnValue({ data: [game], isLoading: false });
     const [trigger, state] = mockMutation(makeContest({ id: 'new' }));
     create = trigger;
     api.useCreateContestMutation.mockReturnValue([trigger, state]);
@@ -103,14 +105,14 @@ describe('CreateContestForm', () => {
   });
 
   it('explains when there are no games to pick', () => {
-    api.useGetUpcomingGamesQuery.mockReturnValue({ data: [], isLoading: false });
+    games.useGetUpcomingGamesQuery.mockReturnValue({ data: [], isLoading: false });
     renderWithProviders(<CreateContestForm />);
     expect(screen.getByText(/No upcoming games available/)).toBeInTheDocument();
     expect(screen.getByText('No game picked yet')).toBeInTheDocument();
   });
 
   it('waits for games to load', () => {
-    api.useGetUpcomingGamesQuery.mockReturnValue({ data: undefined, isLoading: true });
+    games.useGetUpcomingGamesQuery.mockReturnValue({ data: undefined, isLoading: true });
     renderWithProviders(<CreateContestForm />);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });

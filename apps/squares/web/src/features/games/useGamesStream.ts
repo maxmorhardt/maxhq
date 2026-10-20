@@ -19,12 +19,16 @@ function parseGame(data: string): Game | null {
   }
 }
 
-// patches the cached scoreboard for this week as games change, so scores move without a refetch
-export function useGamesStream(week: ScoreboardWeek | undefined): StreamStatus {
+// patches the cached week and any cached game as games change, so scores move without a refetch
+export function useGamesStream(week?: ScoreboardWeek, enabled = true): StreamStatus {
   const dispatch = useAppDispatch();
   const [status, setStatus] = useState<StreamStatus>('connecting');
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const stream = openEventStream({
       url: gamesEventsUrl,
       getToken: noToken,
@@ -44,11 +48,16 @@ export function useGamesStream(week: ScoreboardWeek | undefined): StreamStatus {
             }
           })
         );
+        dispatch(
+          gamesApi.util.updateQueryData('getGame', game.id, (cached) =>
+            game.updatedAt >= cached.updatedAt ? game : cached
+          )
+        );
       },
     });
 
     return () => stream.close();
-  }, [dispatch, week]);
+  }, [dispatch, week, enabled]);
 
   return status;
 }

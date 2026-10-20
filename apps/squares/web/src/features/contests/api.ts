@@ -5,7 +5,6 @@ import type {
   ContestFeedResponse,
   CreateContestRequest,
   CreateInviteRequest,
-  Game,
   Invite,
   InvitePreviewResponse,
   Participant,
@@ -93,10 +92,6 @@ export const contestsApi = baseApi.injectEndpoints({
       query: (contestId) => ({ url: `/contests/${contestId}/squares/claims`, method: 'DELETE' }),
     }),
 
-    getUpcomingGames: build.query<Game[], void>({
-      query: () => '/games/upcoming',
-    }),
-
     getInvites: build.query<Invite[], string>({
       query: (contestId) => `/contests/${contestId}/invites`,
       providesTags: ['Invites'],
@@ -158,7 +153,6 @@ export const {
   useClearSquareMutation,
   useClaimRandomSquaresMutation,
   useClearMySquaresMutation,
-  useGetUpcomingGamesQuery,
   useGetInvitesQuery,
   useCreateInviteMutation,
   useDeleteInviteMutation,

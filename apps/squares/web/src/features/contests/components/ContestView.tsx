@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import type { StreamStatus } from '../../../api/eventStream';
-import type { ActivityEvent, Contest, Participant } from '../../../types/contest';
+import type { ActivityEvent, Contest, Game, Participant } from '../../../types/contest';
 import type { ContestViewer } from '../live/viewer';
 import ContestDetails from './details/ContestDetails';
 import ContestGrid, { type SquarePosition } from './grid/ContestGrid';
@@ -11,6 +11,7 @@ import ActivityFeed from './sidebar/ActivityFeed';
 
 interface Props {
   contest: Contest;
+  game?: Game;
   participants: Participant[];
   activity: ActivityEvent[];
   viewer: ContestViewer;
@@ -22,6 +23,7 @@ interface Props {
 // the contest page: the broadcast header and quarter strip, then the board beside its panels
 export default function ContestView({
   contest,
+  game,
   participants,
   activity,
   viewer,
@@ -49,13 +51,14 @@ export default function ContestView({
 
       <ContestScoreboard
         contest={contest}
+        game={game}
         participants={participants}
         viewer={viewer}
         status={status}
         onRetry={onStale}
       />
 
-      <QuarterStrip contest={contest} viewer={viewer} />
+      <QuarterStrip contest={contest} game={game} viewer={viewer} />
 
       <Box
         sx={{
@@ -75,7 +78,7 @@ export default function ContestView({
         </Box>
 
         <Box sx={{ display: 'grid', gap: { xs: 2, sm: 2.5 }, minWidth: 0 }}>
-          <ContestDetails contest={contest} viewer={viewer} />
+          <ContestDetails contest={contest} game={game} viewer={viewer} />
           <ActivityFeed events={activity} />
         </Box>
       </Box>

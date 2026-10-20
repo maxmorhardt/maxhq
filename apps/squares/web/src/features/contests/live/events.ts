@@ -1,6 +1,5 @@
 import type {
   ContestSnapshot,
-  Game,
   ContestUpdate,
   Participant,
   QuarterResult,
@@ -22,7 +21,6 @@ export type ContestEvent =
   | Envelope<'contest.deleted', undefined>
   | Envelope<'square.updated', Square>
   | Envelope<'quarter.recorded', QuarterResult>
-  | Envelope<'game.updated', Game>
   | Envelope<'participant.joined', Participant>
   | Envelope<'participant.removed', Participant>
   | Envelope<'access.revoked', undefined>;
@@ -38,7 +36,6 @@ const KNOWN_TYPES: Record<ContestEventType, true> = {
   'contest.deleted': true,
   'square.updated': true,
   'quarter.recorded': true,
-  'game.updated': true,
   'participant.joined': true,
   'participant.removed': true,
   'access.revoked': true,

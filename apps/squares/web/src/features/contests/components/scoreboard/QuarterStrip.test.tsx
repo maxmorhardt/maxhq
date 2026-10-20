@@ -35,17 +35,17 @@ describe('QuarterStrip', () => {
           winner: 'player@x.com',
         }),
       ],
-      game: {
-        status: 'in_progress',
-        period: 3,
-        scores: [
-          { quarter: 1, homeScore: 7, awayScore: 3 },
-          { quarter: 2, homeScore: 14, awayScore: 10 },
-        ],
-      } as Game,
     });
+    const game = {
+      status: 'in_progress',
+      period: 3,
+      scores: [
+        { quarter: 1, homeScore: 7, awayScore: 3 },
+        { quarter: 2, homeScore: 14, awayScore: 10 },
+      ],
+    } as Game;
 
-    renderWithProviders(<QuarterStrip contest={contest} viewer={makeViewer()} />);
+    renderWithProviders(<QuarterStrip contest={contest} game={game} viewer={makeViewer()} />);
 
     const [q1, q2, q3, q4] = quarters();
     expect(q1).toHaveTextContent('3–7');
@@ -57,15 +57,13 @@ describe('QuarterStrip', () => {
   });
 
   it('notes a quarter that ended without a winner', () => {
-    const contest = makeContest({
-      game: {
-        status: 'final',
-        period: 4,
-        scores: [{ quarter: 1, homeScore: 0, awayScore: 3 }],
-      } as Game,
-    });
+    const game = {
+      status: 'final',
+      period: 4,
+      scores: [{ quarter: 1, homeScore: 0, awayScore: 3 }],
+    } as Game;
 
-    renderWithProviders(<QuarterStrip contest={contest} viewer={makeViewer()} />);
+    renderWithProviders(<QuarterStrip contest={makeContest()} game={game} viewer={makeViewer()} />);
 
     expect(quarters()[0]).toHaveTextContent('No winner');
   });

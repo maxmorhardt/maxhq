@@ -2,12 +2,13 @@ import { EmojiEvents } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { fonts, game as palette } from '../../../../app/theme';
-import type { Contest, QuarterResult } from '../../../../types/contest';
+import type { Contest, Game, QuarterResult } from '../../../../types/contest';
 import { winnerLabel } from '../../live/activity';
 import type { ContestViewer } from '../../live/viewer';
 
 interface Props {
   contest: Contest;
+  game?: Game;
   viewer: ContestViewer;
 }
 
@@ -22,11 +23,10 @@ interface Quarter {
 
 const QUARTERS = [1, 2, 3, 4];
 
-function quarters(contest: Contest): Quarter[] {
+function quarters(contest: Contest, game: Game | undefined): Quarter[] {
   const results = contest.quarterResults ?? [];
-  const scores = contest.game?.scores ?? [];
-  const inProgress = contest.game?.status === 'in_progress';
-  const playing = inProgress ? Math.min(contest.game?.period ?? 0, 4) : 0;
+  const scores = game?.scores ?? [];
+  const playing = game?.status === 'in_progress' ? Math.min(game.period, 4) : 0;
 
   return QUARTERS.map((quarter) => {
     const result = results.find((r) => r.quarter === quarter);
@@ -50,7 +50,7 @@ function quarters(contest: Contest): Quarter[] {
 }
 
 // each quarter's score at the whistle and the square that took it
-export default function QuarterStrip({ contest, viewer }: Props) {
+export default function QuarterStrip({ contest, game, viewer }: Props) {
   return (
     <Box
       component="ol"
@@ -64,7 +64,7 @@ export default function QuarterStrip({ contest, viewer }: Props) {
         gap: 1.25,
       }}
     >
-      {quarters(contest).map(({ quarter, state, result, score }) => {
+      {quarters(contest, game).map(({ quarter, state, result, score }) => {
         const mine = !!result && !!viewer.email && result.winner === viewer.email;
         const won = state === 'won';
 

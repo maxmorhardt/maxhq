@@ -18,7 +18,6 @@ export interface Contest {
   squares: Square[];
   quarterResults?: QuarterResult[];
   gameId?: string;
-  game?: Game;
   owner: string;
   version: number;
   createdAt: string;

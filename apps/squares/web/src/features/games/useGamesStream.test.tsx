@@ -33,7 +33,7 @@ async function setup() {
   const hook = renderHook(() => useGamesStream(undefined), { wrapper });
   const stream = () => streams.options.at(-1)!;
   const cached = () => gamesApi.endpoints.getScoreboard.select(undefined)(store.getState()).data;
-  return { hook, stream, cached };
+  return { hook, stream, cached, store };
 }
 
 const send = (stream: EventStreamOptions, data: string) =>
@@ -65,6 +65,27 @@ describe('useGamesStream', () => {
       JSON.stringify({ game: game({ homeScore: 3, updatedAt: '2026-10-25T17:30:00Z' }) })
     );
     expect(cached()?.games[0].homeScore).toBe(7);
+  });
+
+  it('keeps a single cached game current too', async () => {
+    const { stream, store } = await setup();
+    await store.dispatch(gamesApi.util.upsertQueryData('getGame', 'g-1', game({})));
+
+    send(
+      stream(),
+      JSON.stringify({ game: game({ homeScore: 21, updatedAt: '2026-10-25T19:00:00Z' }) })
+    );
+
+    expect(gamesApi.endpoints.getGame.select('g-1')(store.getState()).data?.homeScore).toBe(21);
+  });
+
+  it('stays closed until enabled', () => {
+    const store = makeStore();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+    renderHook(() => useGamesStream(undefined, false), { wrapper });
+    expect(streams.options).toHaveLength(0);
   });
 
   it('skips unreadable messages and games from other weeks', async () => {

@@ -4,7 +4,7 @@ import { alpha } from '@mui/material/styles';
 import type { StreamStatus } from '../../../../api/eventStream';
 import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
-import type { Contest, Participant } from '../../../../types/contest';
+import type { Contest, Game, Participant } from '../../../../types/contest';
 import { getStatusLabel } from '../../../../utils/contestStatus';
 import { currentScore, gameClock, isLive } from '../../../../utils/game';
 import type { ContestViewer } from '../../live/viewer';
@@ -13,6 +13,7 @@ import ContestActionIcons from '../details/ContestActionIcons';
 
 interface Props {
   contest: Contest;
+  game?: Game;
   participants: Participant[];
   viewer: ContestViewer;
   status: StreamStatus;
@@ -88,13 +89,13 @@ function TeamSide({
 // the contest's broadcast header: who is playing, the live score, and where the game is
 export default function ContestScoreboard({
   contest,
+  game,
   participants,
   viewer,
   status,
   onRetry,
 }: Props) {
-  const game = contest.game;
-  const score = currentScore(contest);
+  const score = currentScore(contest, game);
   const live = isLive(game);
   const clock = game ? gameClock(game) : getStatusLabel(contest.status);
   const role = viewer.isOwner ? 'Owner' : viewer.isParticipant ? 'Player' : 'Watching';

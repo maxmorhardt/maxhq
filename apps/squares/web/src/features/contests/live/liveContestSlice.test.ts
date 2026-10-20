@@ -104,15 +104,6 @@ describe('liveContestSlice events', () => {
     expect(state.contest?.status).toBe('Q2');
   });
 
-  it('follows the live score and ignores an older one', () => {
-    const newer = { homeScore: 14, updatedAt: '2026-01-01T02:00:00Z' };
-    const older = { homeScore: 7, updatedAt: '2026-01-01T01:00:00Z' };
-    let state = receive(live(), event('game.updated', newer));
-    expect(state.contest?.game?.homeScore).toBe(14);
-    state = receive(state, event('game.updated', older), 'e-2');
-    expect(state.contest?.game?.homeScore).toBe(14);
-  });
-
   it('adds, updates, and removes participants', () => {
     let state = receive(
       live(),

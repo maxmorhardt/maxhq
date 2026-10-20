@@ -53,9 +53,12 @@ export function hasWeek(seasonType: number, week: number): boolean {
 }
 
 // the score as the scoreboard should show it: the live game, else the last recorded quarter
-export function currentScore(contest: Contest): { away: number; home: number } | null {
-  if (contest.game) {
-    return { away: contest.game.awayScore, home: contest.game.homeScore };
+export function currentScore(
+  contest: Contest,
+  game: Game | undefined
+): { away: number; home: number } | null {
+  if (game) {
+    return { away: game.awayScore, home: game.homeScore };
   }
 
   const results = contest.quarterResults ?? [];
