@@ -36,7 +36,7 @@ func anyEvents() *mocks.ContestEventPublisher {
 	}
 	m.On("PublishContestDeleted", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 	m.On("PublishParticipantAdded", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
-	m.On("PublishQuarterResultRollback", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	m.On("PublishGameUpdate", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 	return m
 }
 
@@ -75,18 +75,6 @@ func TestCreateContest_ExistsCheckError(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
-func TestCreateContest_Success(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().ExistsByOwnerAndName(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-	repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", Visibility: "public", MaxSquares: 10}, "o")
-	require.NoError(t, err)
-	assert.Equal(t, model.ContestVisibilityPublic, got.Visibility)
-	assert.Equal(t, model.ContestStatusActive, got.Status)
-}
-
 func TestCreateContest_WithGame(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
@@ -98,12 +86,35 @@ func TestCreateContest_WithGame(t *testing.T) {
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(&model.Game{ID: gameID, HomeTeam: "Chiefs", AwayTeam: "Eagles"}, nil)
 
 	got, err := contestSvcWithGame(repo, mocks.NewParticipantRepository(t), gameRepo, mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
+		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", Visibility: "public", MaxSquares: 10, GameID: gameID.String()}, "o")
 	require.NoError(t, err)
+	assert.Equal(t, model.ContestVisibilityPublic, got.Visibility)
+	assert.Equal(t, model.ContestStatusActive, got.Status)
 	require.NotNil(t, got.GameID)
 	assert.Equal(t, gameID, *got.GameID)
 	assert.Equal(t, "Chiefs", got.HomeTeam)
 	assert.Equal(t, "Eagles", got.AwayTeam)
+}
+
+func TestCreateContest_InvalidGameID(t *testing.T) {
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().ExistsByOwnerAndName(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+
+	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
+		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", GameID: "nope"}, "o")
+	assert.ErrorIs(t, err, errs.ErrGameNotFound)
+}
+
+func TestCreateContest_GameLookupError(t *testing.T) {
+	gameID := uuid.New()
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().ExistsByOwnerAndName(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+	gameRepo := mocks.NewGameProjectionRepository(t)
+	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(nil, errors.New("db"))
+
+	_, err := contestSvcWithGame(repo, mocks.NewParticipantRepository(t), gameRepo, mocks.NewParticipantService(t)).
+		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", GameID: gameID.String()}, "o")
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
 func TestCreateContest_GameNotFound(t *testing.T) {
@@ -158,29 +169,15 @@ func TestUpdateContest_Unauthorized(t *testing.T) {
 
 func TestUpdateContest_NoChanges(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, HomeTeam: "A"}, nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Visibility: model.ContestVisibilityPrivate}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	homeTeam := "A"
+	private := "private"
 	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{HomeTeam: &homeTeam}, "u", nil)
+		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &private}, "u", nil)
 	require.NoError(t, err)
-	assert.Equal(t, "A", got.HomeTeam)
-}
-
-func TestUpdateContest_Success(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, HomeTeam: "A"}, nil)
-	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	homeTeam := "B"
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{HomeTeam: &homeTeam}, "u", nil)
-	require.NoError(t, err)
-	assert.Equal(t, "B", got.HomeTeam)
+	assert.Equal(t, model.ContestVisibilityPrivate, got.Visibility)
 }
 
 func TestUpdateContest_VisibilityChange(t *testing.T) {
@@ -197,7 +194,7 @@ func TestUpdateContest_VisibilityChange(t *testing.T) {
 	assert.Equal(t, model.ContestVisibilityPrivate, got.Visibility)
 }
 
-func TestUpdateContest_VisibilityEditableForGameLinked(t *testing.T) {
+func TestUpdateContest_ChangesVisibility(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Visibility: model.ContestVisibilityPrivate, GameID: &gameID}, nil)
@@ -210,113 +207,6 @@ func TestUpdateContest_VisibilityEditableForGameLinked(t *testing.T) {
 		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &public}, "u", nil)
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestVisibilityPublic, got.Visibility)
-}
-
-func TestUpdateContest_GameLinkedIgnoresTeamNames(t *testing.T) {
-	gameID := uuid.New()
-
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, HomeTeam: "A", AwayTeam: "B", GameID: &gameID}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	homeTeam, awayTeam := "X", "Y"
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{HomeTeam: &homeTeam, AwayTeam: &awayTeam}, "u", nil)
-	require.NoError(t, err)
-	assert.Equal(t, "A", got.HomeTeam)
-	assert.Equal(t, "B", got.AwayTeam)
-}
-
-func TestStartContest_NotActive(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ1}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		StartContest(context.Background(), uuid.New(), "u")
-	assert.Error(t, err)
-}
-
-func TestStartContest_UnclaimedSquares(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "alice"}, {Owner: ""}},
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		StartContest(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrContestNotReady)
-}
-
-func TestStartContest_Success(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "alice"}, {Owner: "bob"}},
-	}, nil)
-	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		StartContest(context.Background(), uuid.New(), "u")
-	require.NoError(t, err)
-	assert.Equal(t, model.ContestStatusQ1, got.Status)
-}
-
-func TestStartContest_GameLinked(t *testing.T) {
-	gameID := uuid.New()
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status: model.ContestStatusActive,
-		GameID: &gameID,
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		StartContest(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrContestIsGameLinked)
-}
-
-func TestRecordQuarterResult_InvalidStatus(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 7, 3, "u")
-	assert.Error(t, err)
-}
-
-func TestRecordQuarterResult_DuplicateQuarter(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:         model.ContestStatusQ1,
-		QuarterResults: []model.QuarterResult{{Quarter: 1}},
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 7, 3, "u")
-	assert.ErrorIs(t, err, errs.ErrQuarterResultAlreadyExists)
-}
-
-func TestRecordQuarterResult_Success(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:  model.ContestStatusQ1,
-		XLabels: orderedLabels(t),
-		YLabels: orderedLabels(t),
-		Squares: []model.Square{{Row: 3, Col: 7, Owner: "winner", OwnerName: "Win Ner"}},
-	}, nil)
-	repo.EXPECT().ApplyQuarterResults(mock.Anything, mock.MatchedBy(func(c *model.Contest) bool {
-		return c.Status == model.ContestStatusQ2
-	}), mock.MatchedBy(func(results []model.QuarterResult) bool {
-		return len(results) == 1 && results[0].Quarter == 1 && results[0].Winner == "winner"
-	})).Return(nil)
-
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 17, 23, "u")
-	require.NoError(t, err)
-	assert.Equal(t, 1, got.Quarter)
-	assert.Equal(t, "winner", got.Winner)
-	assert.Equal(t, "u", got.CreatedBy)
 }
 
 func orderedLabels(t *testing.T) []byte {
@@ -545,74 +435,28 @@ func TestClearUserSquares_Success(t *testing.T) {
 }
 
 func TestCreateContest_RepoError(t *testing.T) {
+	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().ExistsByOwnerAndName(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
 	repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
+	gameRepo := mocks.NewGameProjectionRepository(t)
+	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(&model.Game{ID: gameID}, nil)
 
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", MaxSquares: 10}, "o")
+	_, err := contestSvcWithGame(repo, mocks.NewParticipantRepository(t), gameRepo, mocks.NewParticipantService(t)).
+		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
 	assert.Error(t, err)
 }
 
 func TestUpdateContest_SaveError(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, HomeTeam: "A"}, nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Visibility: model.ContestVisibilityPrivate}, nil)
 	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errors.New("db"))
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	homeTeam := "B"
+	public := "public"
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{HomeTeam: &homeTeam}, "u", nil)
-	assert.Error(t, err)
-}
-
-func TestStartContest_UpdateError(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "alice"}},
-	}, nil)
-	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errors.New("db"))
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		StartContest(context.Background(), uuid.New(), "u")
-	assert.Error(t, err)
-}
-
-func TestRecordQuarterResult_WinnerNotFound(t *testing.T) {
-	short, _ := json.Marshal([]int8{0, 1, 2})
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status: model.ContestStatusQ1, XLabels: short, YLabels: short,
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 17, 23, "u")
-	assert.Error(t, err)
-}
-
-func TestRecordQuarterResult_BadYLabels(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status: model.ContestStatusQ1, XLabels: orderedLabels(t), YLabels: []byte("not-json"),
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 17, 23, "u")
-	assert.Error(t, err)
-}
-
-func TestRecordQuarterResult_ApplyError(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status: model.ContestStatusQ1, XLabels: orderedLabels(t), YLabels: orderedLabels(t),
-		Squares: []model.Square{{Row: 3, Col: 7, Owner: "w"}},
-	}, nil)
-	repo.EXPECT().ApplyQuarterResults(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 17, 23, "u")
+		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &public}, "u", nil)
 	assert.Error(t, err)
 }
 
@@ -767,17 +611,6 @@ func TestClaimSquare_ReEditOwnSquare(t *testing.T) {
 	assert.Equal(t, "XY", got.Value)
 }
 
-func TestRecordQuarterResult_BadLabels(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status: model.ContestStatusQ1, XLabels: []byte("not-json"), YLabels: orderedLabels(t),
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 17, 23, "u")
-	assert.Error(t, err)
-}
-
 func TestClaimSquare_OwnedByAnotherUser(t *testing.T) {
 	squareID := uuid.New()
 	repo := mocks.NewContestRepository(t)
@@ -816,125 +649,6 @@ func TestClearSquare_Unauthorized(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrUnauthorizedSquareEdit)
 }
 
-func TestRollbackLastQuarterResult_Success(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:         model.ContestStatusQ2,
-		QuarterResults: []model.QuarterResult{{ID: uuid.New(), Quarter: 1, Winner: "winner"}},
-	}, nil)
-	repo.EXPECT().RollbackQuarterResult(mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	require.NoError(t, err)
-	assert.Equal(t, 1, got.Quarter)
-}
-
-func TestRollbackLastQuarterResult_FromFinished(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:         model.ContestStatusFinished,
-		QuarterResults: []model.QuarterResult{{ID: uuid.New(), Quarter: 4}},
-	}, nil)
-	repo.EXPECT().RollbackQuarterResult(mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	got, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	require.NoError(t, err)
-	assert.Equal(t, 4, got.Quarter)
-}
-
-func TestRollbackLastQuarterResult_NothingToRollback(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ1}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrNoQuarterResultToRollback)
-}
-
-func TestRollbackLastQuarterResult_MissingResult(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ2}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrNoQuarterResultToRollback)
-}
-
-func TestRollbackLastQuarterResult_GameLinked(t *testing.T) {
-	gameID := uuid.New()
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status: model.ContestStatusQ2,
-		GameID: &gameID,
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrContestIsGameLinked)
-}
-
-func TestRollbackLastQuarterResult_GetError(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
-}
-
-func TestRollbackLastQuarterResult_RollbackError(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:         model.ContestStatusQ2,
-		QuarterResults: []model.QuarterResult{{ID: uuid.New(), Quarter: 1}},
-	}, nil)
-	repo.EXPECT().RollbackQuarterResult(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	assert.Error(t, err)
-}
-
-func TestRecordQuarterResult_Unauthorized(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ1}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		RecordQuarterResult(context.Background(), uuid.New(), 7, 3, "u")
-	assert.ErrorIs(t, err, errs.ErrUnauthorizedContestEdit)
-}
-
-func TestRecordQuarterResult_GameLinkedSkipsAuth(t *testing.T) {
-	gameID := uuid.New()
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status: model.ContestStatusQ1,
-		GameID: &gameID,
-	}, nil)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
-		RecordQuarterResult(context.Background(), uuid.New(), 7, 3, "u")
-	assert.ErrorIs(t, err, errs.ErrContestIsGameLinked)
-}
-
-func TestRollbackLastQuarterResult_Unauthorized(t *testing.T) {
-	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:         model.ContestStatusQ2,
-		QuarterResults: []model.QuarterResult{{ID: uuid.New(), Quarter: 1}},
-	}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
-
-	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
-		RollbackLastQuarterResult(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrUnauthorizedContestEdit)
-}
-
 func TestUpdateContest_StaleIfMatchVersion(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Version: 5}, nil)
@@ -952,9 +666,9 @@ func TestUpdateContest_ConcurrentWriteConflicts(t *testing.T) {
 	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errs.ErrVersionConflict)
 
 	current := int64(5)
-	away := "B"
+	public := "public"
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), okAuth(t)).
-		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{AwayTeam: &away}, "u", &current)
+		UpdateContest(context.Background(), uuid.New(), &model.UpdateContestRequest{Visibility: &public}, "u", &current)
 
 	assert.ErrorIs(t, err, errs.ErrVersionConflict)
 }

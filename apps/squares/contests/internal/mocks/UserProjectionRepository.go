@@ -5,9 +5,10 @@ package mocks
 import (
 	context "context"
 
-	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	contracts "github.com/maxmorhardt/maxhq/libs/squares/contracts"
 	mock "github.com/stretchr/testify/mock"
+
+	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 
 	time "time"
 )

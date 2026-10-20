@@ -27,7 +27,7 @@ func (r *feedRepository) List(ctx context.Context, user string, f *model.Contest
 	q := database.Conn(ctx, r.db).
 		Table("contests c").
 		Select(`c.id, c.name, c.home_team, c.away_team, c.status, c.visibility, c.owner, c.game_id, c.version,
-			c.created_at, c.updated_at, g.game_time,
+			c.created_at, c.updated_at, g.game_time, g.home_abbr, g.away_abbr,
 			CASE WHEN c.owner = ? THEN 'owner' ELSE cp.role END AS role,
 			(SELECT count(*) FROM squares s WHERE s.contest_id = c.id AND s.owner <> '') AS claimed_squares,
 			(SELECT count(*) FROM squares s WHERE s.contest_id = c.id AND s.owner = ?) AS my_squares`, user, user).

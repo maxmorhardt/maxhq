@@ -19,6 +19,7 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/platform/config"
 	"github.com/maxmorhardt/maxhq/libs/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/squares/events"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )
@@ -100,10 +101,32 @@ func call(t *testing.T, id testkit.Identity, method, path string, body any, head
 	return testkit.Call(t, contestsURL, id, method, path, body, headers...)
 }
 
-func createContest(t *testing.T, owner, name string, maxSquares int, headers ...string) (*model.Contest, testkit.Response) {
+// seedGame publishes a scheduled game and waits for contests to project it, so a contest can link to it
+func seedGame(t *testing.T) events.Game {
+	t.Helper()
+	gameID := uuid.New()
+	game := events.Game{ID: gameID, ESPNID: "it-" + gameID.String()[:8], HomeTeam: "Chiefs", AwayTeam: "Eagles",
+		GameTime: time.Now().Add(time.Hour), Status: events.GameStatusScheduled, UpdatedAt: time.Now()}
+	publish(t, events.GamesStream, events.GameUpdatedType, events.GameUpdated{Game: game})
+
+	require.Eventually(t, func() bool {
+		var found int
+		err := rawDB.QueryRow(`SELECT COUNT(*) FROM contests.games WHERE id = $1`, gameID).Scan(&found)
+		return err == nil && found == 1
+	}, eventually, 100*time.Millisecond, "the game reaches the contests projection")
+	return game
+}
+
+func createContest(t *testing.T, owner, name string, maxSquares int) (*model.Contest, testkit.Response) {
+	t.Helper()
+	game := seedGame(t)
+	return createContestFor(t, &game, owner, name, maxSquares)
+}
+
+func createContestFor(t *testing.T, game *events.Game, owner, name string, maxSquares int, headers ...string) (*model.Contest, testkit.Response) {
 	t.Helper()
 	resp := call(t, testkit.As(owner), http.MethodPost, "/contests", model.CreateContestRequest{
-		Owner: owner, Name: name, HomeTeam: "Chiefs", AwayTeam: "Eagles", MaxSquares: maxSquares,
+		Owner: owner, Name: name, MaxSquares: maxSquares, GameID: game.ID.String(),
 	}, headers...)
 	var contest model.Contest
 	if resp.Status == http.StatusCreated {

@@ -22,7 +22,6 @@ type ContestRepository interface {
 	Update(ctx context.Context, contest *model.Contest) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	ApplyQuarterResults(ctx context.Context, contest *model.Contest, results []model.QuarterResult) error
-	RollbackQuarterResult(ctx context.Context, resultID uuid.UUID, contest *model.Contest) error
 
 	ClaimSquare(ctx context.Context, square *model.Square, value, owner, ownerName string) (*model.Square, error)
 	ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, value, owner, ownerName string) ([]model.Square, error)
@@ -173,16 +172,6 @@ func (r *contestRepository) ApplyQuarterResults(ctx context.Context, contest *mo
 			Columns:   []clause.Column{{Name: "contest_id"}, {Name: "quarter"}},
 			DoNothing: true,
 		}).Create(results).Error
-	})
-}
-
-func (r *contestRepository) RollbackQuarterResult(ctx context.Context, resultID uuid.UUID, contest *model.Contest) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Delete(&model.QuarterResult{}, "id = ?", resultID).Error; err != nil {
-			return err
-		}
-
-		return saveContest(tx, contest)
 	})
 }
 

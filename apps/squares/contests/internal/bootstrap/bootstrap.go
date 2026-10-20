@@ -72,7 +72,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	statsService := service.NewStatsService(repository.NewStatsRepository(db), sharedCache)
 	userActivityService := service.NewUserActivityService(userRepo, tx, events)
 	feedService := service.NewFeedService(repository.NewFeedRepository(db), sharedCache)
-	gameSyncService := service.NewGameSyncService(gameRepo, contestRepo, contestService, tx, feedService)
+	gameSyncService := service.NewGameSyncService(gameRepo, contestRepo, contestService, tx, feedService, events)
 	snapshotService := service.NewSnapshotService(contestRepo, participantService)
 
 	engine := server.NewEngine(cfg.Server)

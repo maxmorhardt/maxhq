@@ -74,6 +74,8 @@ type ContestSummary struct {
 	Name           string            `json:"name" example:"Sunday Night Squares"`
 	HomeTeam       string            `json:"homeTeam,omitempty" example:"New York Giants"`
 	AwayTeam       string            `json:"awayTeam,omitempty" example:"Dallas Cowboys"`
+	HomeAbbr       string            `json:"homeAbbr,omitempty" example:"NYG"`
+	AwayAbbr       string            `json:"awayAbbr,omitempty" example:"DAL"`
 	Status         ContestStatus     `json:"status" example:"ACTIVE"`
 	Visibility     ContestVisibility `json:"visibility" example:"private"`
 	Owner          string            `json:"owner" example:"user@example.com"`

@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/platform/streams"
-	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/squares/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -50,23 +49,10 @@ func TestEvents_ContestChangesAreAppendedToTheContestStream(t *testing.T) {
 }
 
 func TestEvents_GameKickoffAutoStartsAndScoresLinkedContests(t *testing.T) {
-	gameID := uuid.New()
-	game := events.Game{ID: gameID, ESPNID: "it-" + gameID.String()[:8], HomeTeam: "Lions", AwayTeam: "Bears",
-		GameTime: time.Now().Add(time.Hour), Status: events.GameStatusScheduled, UpdatedAt: time.Now()}
-	publish(t, events.GamesStream, events.GameUpdatedType, events.GameUpdated{Game: game})
-
-	var contest model.Contest
-	require.Eventually(t, func() bool {
-		resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests", model.CreateContestRequest{
-			Owner: ownerUser, Name: "Kickoff " + game.ESPNID[3:], MaxSquares: 100, GameID: gameID.String(),
-		})
-		if resp.Status != http.StatusCreated {
-			return false
-		}
-		resp.Decode(t, &contest)
-		return true
-	}, eventually, 200*time.Millisecond)
-	assert.Equal(t, "Lions", contest.HomeTeam, "teams come from the game")
+	game := seedGame(t)
+	contest, resp := createContestFor(t, &game, ownerUser, "Kickoff "+game.ESPNID[3:], 100)
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	assert.Equal(t, "Chiefs", contest.HomeTeam, "teams come from the game")
 
 	for _, sq := range snapshot(t, ownerUser, contest.ID).Contest.Squares {
 		claim(t, ownerUser, contest.ID, sq.ID)
@@ -82,6 +68,17 @@ func TestEvents_GameKickoffAutoStartsAndScoresLinkedContests(t *testing.T) {
 		snap := snapshot(t, ownerUser, contest.ID)
 		return snap.Contest.Status == model.ContestStatusQ2 && len(snap.Contest.QuarterResults) == 1
 	}, eventually, 200*time.Millisecond, "kickoff with a full grid starts the contest and scores Q1")
+
+	require.Eventually(t, func() bool {
+		entries, err := streams.Range(context.Background(), rdb, events.ContestStream(contest.ID), "", 500)
+		require.NoError(t, err)
+		for _, e := range entries {
+			if e.Type == events.ContestGameUpdatedType {
+				return true
+			}
+		}
+		return false
+	}, eventually, 100*time.Millisecond, "viewers of the contest get the live score")
 
 	var offset string
 	require.NoError(t, rawDB.QueryRow(`SELECT last_id FROM contests.stream_offsets WHERE consumer = 'contests-games'`).Scan(&offset))
