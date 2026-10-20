@@ -43,7 +43,13 @@ export default function ContactPage() {
       />
 
       <Container maxWidth="lg" sx={{ pb: pageSection.py }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+            gap: 2.5,
+          }}
+        >
           {channels.map((c, i) => (
             <ContactCard key={c.label} channel={c} delay={(i + 1) as 1 | 2 | 3} />
           ))}

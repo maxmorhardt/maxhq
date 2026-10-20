@@ -14,7 +14,11 @@ describe('AboutPage', () => {
     renderWithProviders(<AboutPage />);
 
     for (const label of ['Experience', 'Project', 'Platform', 'This site', 'Education']) {
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: label })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: label })).toHaveAttribute(
+        'href',
+        expect.stringMatching(/^#/)
+      );
     }
   });
 

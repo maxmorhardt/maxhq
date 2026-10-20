@@ -149,6 +149,11 @@ export const theme = createTheme({
             scrollbarColor: `${palette.divider} transparent`,
             '@media (max-width: 1024px)': { fontSize: '16px' },
           },
+          html: {
+            scrollBehavior: 'smooth',
+            '@media (prefers-reduced-motion: reduce)': { scrollBehavior: 'auto' },
+          },
+          '[id]': { scrollMarginTop: 96 },
           'html, body': {
             margin: 0,
             padding: 0,

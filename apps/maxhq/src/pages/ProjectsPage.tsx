@@ -7,6 +7,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import { Avatar, Box, Container, Typography } from '@mui/material';
 import type { ReactElement } from 'react';
 import PageHeader from '../components/common/PageHeader';
+import ClusterDiagram from '../components/home/ClusterDiagram';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import ProjectCard, { type Project } from '../components/projects/ProjectCard';
@@ -124,6 +125,10 @@ export default function ProjectsPage() {
           <Typography variant="h3" component="h2" sx={{ mb: 3, fontSize: '1.4rem' }}>
             Under the hood
           </Typography>
+        </RevealSection>
+
+        <RevealSection variant="rise" sx={{ mb: 5 }}>
+          <ClusterDiagram />
         </RevealSection>
 
         <Box

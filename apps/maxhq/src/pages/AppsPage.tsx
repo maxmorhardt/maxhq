@@ -9,6 +9,7 @@ import { Avatar, Box, Button, Container, Divider, Paper, Typography } from '@mui
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 import SquaresBoard from '../components/apps/SquaresBoard';
+import StepTrack from '../components/apps/StepTrack';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import { fonts, pageSection, primaryTint } from '../theme';
@@ -96,12 +97,28 @@ export default function AppsPage() {
         const flipped = ai % 2 === 1;
 
         return (
-          <Box key={app.name}>
+          <Box key={app.name} sx={{ position: 'relative', overflow: 'hidden' }}>
             {ai > 0 ? <Divider /> : null}
+
+            <Box
+              aria-hidden
+              sx={{
+                pointerEvents: 'none',
+                position: 'absolute',
+                inset: 0,
+                background: (theme) => {
+                  const { palette } = theme.vars ?? theme;
+
+                  return `radial-gradient(40% 50% at 78% 22%, ${palette.heroGlow1}, transparent 70%), radial-gradient(35% 40% at 10% 0%, ${palette.heroGlow2}, transparent 70%)`;
+                },
+                opacity: 0.6,
+              }}
+            />
 
             <Container
               maxWidth="lg"
               sx={{
+                position: 'relative',
                 display: 'grid',
                 alignItems: 'center',
                 gap: 6,
@@ -158,6 +175,7 @@ export default function AppsPage() {
                 sx={{
                   display: { xs: 'none', md: 'block' },
                   justifySelf: flipped ? 'start' : 'end',
+                  zoom: { md: 1.15, lg: 1.3 },
                 }}
               >
                 {app.visual === 'squares-board' ? (
@@ -199,81 +217,17 @@ export default function AppsPage() {
               </RevealSection>
             </Container>
 
-            <Divider />
-
-            {/* how it plays: a connected timeline rather than a card grid */}
-            <Container maxWidth="lg" sx={{ py: 2 }}>
+            {/* how it plays: a track that lights up as you read it */}
+            <Container maxWidth="lg" sx={{ py: { xs: 6, md: 9 } }}>
               <RevealSection>
-                <Typography variant="h3" component="h2" sx={sectionHeadingSx}>
+                <Typography variant="h2" sx={{ mb: { xs: 4, md: 6 } }}>
                   {app.stepsTitle}
                 </Typography>
               </RevealSection>
 
-              <Box
-                component="ol"
-                sx={{ position: 'relative', m: 0, mt: 4, mb: 2, p: 0, listStyle: 'none' }}
-              >
-                {app.steps.map((step, i) => {
-                  const last = i === app.steps.length - 1;
-
-                  return (
-                    <RevealSection
-                      key={step.title}
-                      component="li"
-                      delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}
-                      rootMargin="0px 0px 15% 0px"
-                      sx={{
-                        position: 'relative',
-                        display: 'grid',
-                        gridTemplateColumns: 'auto 1fr',
-                        gap: 2,
-                        pb: last ? 0 : 4,
-
-                        // connector line linking the numbered nodes
-                        ...(!last && {
-                          '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: '2.4rem',
-                            bottom: '-0.2rem',
-                            left: '1.2rem',
-                            width: 2,
-                            bgcolor: 'divider',
-                          },
-                        }),
-                      }}
-                    >
-                      <Avatar
-                        sx={{
-                          zIndex: 1,
-                          width: 40,
-                          height: 40,
-                          bgcolor: (theme) => primaryTint(theme, 0.12),
-                          color: 'primary.main',
-                          fontFamily: fonts.mono,
-                          fontSize: '0.95rem',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {i + 1}
-                      </Avatar>
-
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          variant="h3"
-                          component="h3"
-                          sx={{ mb: 0.5, fontSize: '1.1rem' }}
-                        >
-                          {step.title}
-                        </Typography>
-                        <Typography color="text.secondary" sx={{ maxWidth: '52ch' }}>
-                          {step.body}
-                        </Typography>
-                      </Box>
-                    </RevealSection>
-                  );
-                })}
-              </Box>
+              <RevealSection delay={1}>
+                <StepTrack steps={app.steps} />
+              </RevealSection>
             </Container>
           </Box>
         );
