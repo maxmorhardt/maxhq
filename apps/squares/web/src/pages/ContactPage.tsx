@@ -53,12 +53,7 @@ export default function ContactPage() {
         <link rel="canonical" href="https://squares.maxhq.io/contact" />
       </Helmet>
 
-      <PageTitle
-        align="left"
-        title="Contact Us"
-        subtitle="Have a question or need help? We'd love to hear from you."
-      />
-
+      {/* the form starts at the top beside the heading, so it is in view without scrolling */}
       <Box
         sx={{
           display: 'grid',
@@ -67,16 +62,23 @@ export default function ContactPage() {
           alignItems: 'start',
         }}
       >
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          {contactMethods.map((method) => (
-            <ContactMethodCard
-              key={method.title}
-              icon={method.icon}
-              title={method.title}
-              details={method.details}
-              href={method.href}
-            />
-          ))}
+        <Box>
+          <PageTitle
+            align="left"
+            title="Contact Us"
+            subtitle="Have a question or need help? We'd love to hear from you."
+          />
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            {contactMethods.map((method) => (
+              <ContactMethodCard
+                key={method.title}
+                icon={method.icon}
+                title={method.title}
+                details={method.details}
+                href={method.href}
+              />
+            ))}
+          </Box>
         </Box>
 
         <ContactForm onSubmit={handleSubmit} isSubmitting={isLoading} />

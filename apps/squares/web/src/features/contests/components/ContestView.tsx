@@ -63,12 +63,11 @@ export default function ContestView({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'auto minmax(0, 1fr)' },
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1.25fr) minmax(0, 1fr)' },
           gap: { xs: 2, sm: 2.5 },
-          alignItems: 'start',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'center', minWidth: 0 }}>
+        <Box sx={{ minWidth: 0 }}>
           <ContestGrid
             contest={contest}
             viewer={viewer}
@@ -77,9 +76,20 @@ export default function ContestView({
           />
         </Box>
 
-        <Box sx={{ display: 'grid', gap: { xs: 2, sm: 2.5 }, minWidth: 0 }}>
-          <ContestDetails contest={contest} game={game} viewer={viewer} />
-          <ActivityFeed events={activity} />
+        {/* on wide screens the board sets the row height and this column fills it */}
+        <Box sx={{ position: 'relative', minWidth: 0 }}>
+          <Box
+            sx={{
+              position: { lg: 'absolute' },
+              inset: { lg: 0 },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: { xs: 2, sm: 2.5 },
+            }}
+          >
+            <ContestDetails contest={contest} game={game} viewer={viewer} />
+            <ActivityFeed events={activity} />
+          </Box>
         </Box>
       </Box>
     </Box>

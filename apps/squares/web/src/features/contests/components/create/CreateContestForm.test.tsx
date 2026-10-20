@@ -45,23 +45,35 @@ describe('CreateContestForm', () => {
   const submit = () => fireEvent.click(screen.getByRole('button', { name: 'Create Contest' }));
   const pickGame = () => fireEvent.click(screen.getByRole('radio', { name: 'Bears @ Lions' }));
 
-  it('requires a name', () => {
+  it('marks every missing field and focuses the first one', () => {
     renderWithProviders(<CreateContestForm />);
-    fireEvent.submit(nameField().closest('form')!);
-    expect(screen.getByText('Contest name is required')).toBeInTheDocument();
-  });
-
-  it('requires a game', () => {
-    renderWithProviders(<CreateContestForm />);
-    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
     submit();
     expect(screen.getByText('Pick the game this contest is played on')).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Game' })).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    expect(screen.getByRole('radio', { name: 'Bears @ Lions' })).toHaveFocus();
+    expect(nameField()).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('Contest name is required')).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
   });
 
-  it('names the contest after the matchup until the owner types one', () => {
+  it('focuses the name once a game is picked', () => {
     renderWithProviders(<CreateContestForm />);
     pickGame();
-    expect(nameField()).toHaveValue('CHI @ DET');
+    submit();
+    expect(screen.queryByText('Pick the game this contest is played on')).not.toBeInTheDocument();
+    expect(nameField()).toHaveFocus();
+
+    fireEvent.change(nameField(), { target: { value: 'B' } });
+    expect(screen.queryByText('Contest name is required')).not.toBeInTheDocument();
+  });
+
+  it('leaves the name for the owner to type', () => {
+    renderWithProviders(<CreateContestForm />);
+    pickGame();
+    expect(nameField()).toHaveValue('');
     expect(screen.getByRole('radio', { name: 'Bears @ Lions' })).toHaveAttribute(
       'aria-checked',
       'true'
@@ -92,6 +104,7 @@ describe('CreateContestForm', () => {
     );
     renderWithProviders(<CreateContestForm />);
     pickGame();
+    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
     submit();
     expect(await screen.findByText('Name taken')).toBeInTheDocument();
   });
@@ -100,6 +113,7 @@ describe('CreateContestForm', () => {
     mockAuth({});
     renderWithProviders(<CreateContestForm />);
     pickGame();
+    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
     submit();
     expect(screen.getByText('User is missing an email')).toBeInTheDocument();
   });

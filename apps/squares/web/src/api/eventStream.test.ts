@@ -99,7 +99,7 @@ describe('openEventStream', () => {
     stream.close();
   });
 
-  it('stops for good on a 403 or 404', async () => {
+  it('stops for good on a 400, 403, or 404', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 404 }));
     const { onRejected } = open();
 
@@ -110,14 +110,12 @@ describe('openEventStream', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('gives up after three quick retries, about five seconds in all', async () => {
+  it('gives up after three quick retries, under two seconds in all', async () => {
     fetchMock.mockRejectedValue(new TypeError('offline'));
     const { stream, onStatus } = open();
 
     await flush();
-    await vi.advanceTimersByTimeAsync(500);
-    await vi.advanceTimersByTimeAsync(1500);
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(1900);
 
     expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(onStatus).toHaveBeenLastCalledWith('failed');
@@ -239,12 +237,12 @@ describe('openEventStream', () => {
 });
 
 describe('backoff', () => {
-  it('waits half a second, then a second and a half, then three', () => {
+  it('waits a quarter second, then half a second, then one', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
-    expect(backoff(1)).toBe(500);
-    expect(backoff(2)).toBe(1500);
-    expect(backoff(3)).toBe(3000);
-    expect(backoff(10)).toBe(3000);
+    expect(backoff(1)).toBe(250);
+    expect(backoff(2)).toBe(500);
+    expect(backoff(3)).toBe(1000);
+    expect(backoff(10)).toBe(1000);
     vi.restoreAllMocks();
   });
 });

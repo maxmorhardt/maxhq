@@ -27,7 +27,7 @@ const axisSx = {
   position: 'absolute',
   fontFamily: fonts.display,
   fontWeight: 800,
-  fontSize: { xs: 10, sm: 15, md: 17 },
+  fontSize: 'clamp(10px, 2.5cqw, 18px)',
   lineHeight: 1,
   fontVariantNumeric: 'tabular-nums',
   color: game.chalk,
@@ -66,13 +66,13 @@ function Square({
 
   return (
     // square cell with labels and winner highlighting
-    <Box sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative', flex: '1 1 0', minWidth: 0 }}>
       {/* top label for x-axis */}
       {rowIndex === 0 && xLabel !== undefined && (
         <Box
           sx={{
             ...axisSx,
-            top: { xs: -13, sm: -21, md: -24 },
+            top: 'calc(-1em - 0.9cqw - 2px)',
             left: '50%',
             transform: 'translateX(-50%)',
             opacity: xLabel === -1 ? 0.35 : 1,
@@ -87,7 +87,7 @@ function Square({
         <Box
           sx={{
             ...axisSx,
-            left: { xs: -11, sm: -16, md: -19 },
+            left: 'calc(-0.9em - 0.9cqw - 2px)',
             top: '50%',
             transform: 'translateY(-50%)',
             opacity: yLabel === -1 ? 0.35 : 1,
@@ -107,11 +107,12 @@ function Square({
           border: `1px solid ${tone.border}`,
           borderRadius: { xs: '5px', sm: '7px' },
           padding: 0,
-          margin: { xs: 0, sm: 0.3, md: 0.4 },
-          minWidth: { xs: 24, sm: 42, md: 47 },
-          minHeight: { xs: 24, sm: 42, md: 47 },
+          width: '100%',
+          aspectRatio: '1',
+          minWidth: 0,
+          minHeight: 0,
           fontFamily: fonts.display,
-          fontSize: { xs: 9, sm: 13, md: 15 },
+          fontSize: 'clamp(8px, 2.3cqw, 16px)',
           fontWeight: claimed ? 700 : 500,
           letterSpacing: '0.02em',
           boxShadow: isWinner ? `0 4px 16px -4px ${alpha(game.gold, 0.6)}` : 'none',

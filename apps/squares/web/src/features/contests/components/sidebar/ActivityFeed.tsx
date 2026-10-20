@@ -47,7 +47,7 @@ export default function ActivityFeed({ events }: ActivityFeedProps) {
   }, [events.length]);
 
   return (
-    <ContestSidebarCard icon={<Sync fontSize="small" />} title="Activity Feed">
+    <ContestSidebarCard icon={<Sync fontSize="small" />} title="Activity Feed" fillHeight>
       {events.length === 0 ? (
         <Typography
           sx={{ color: 'text.secondary', fontSize: '0.85rem', textAlign: 'center', py: 2 }}
@@ -62,7 +62,9 @@ export default function ActivityFeed({ events }: ActivityFeedProps) {
             m: 0,
             p: 0,
             listStyle: 'none',
-            maxHeight: 320,
+            maxHeight: { xs: 320, lg: 'none' },
+            flex: { lg: 1 },
+            minHeight: 0,
             overflowY: 'auto',
             pr: 0.5,
           }}

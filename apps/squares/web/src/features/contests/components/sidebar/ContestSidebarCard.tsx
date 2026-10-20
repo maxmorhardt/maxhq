@@ -26,7 +26,13 @@ export default function ContestSidebarCard({
         borderRadius: '14px',
         p: 1.75,
         textAlign: 'left',
-        ...(fillHeight && { flex: '0 0 60%', display: 'flex', flexDirection: 'column' }),
+        // fills what its column has left on wide screens, so the column matches the board
+        ...(fillHeight && {
+          flex: { lg: 1 },
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }),
       }}
     >
       {/* card header with icon and title */}

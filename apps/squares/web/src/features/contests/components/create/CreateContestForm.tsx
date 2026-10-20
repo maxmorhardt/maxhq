@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 import { errorMessage } from '../../../../api/errors';
@@ -108,37 +108,49 @@ export default function CreateContestForm() {
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [maxSquares, setMaxSquares] = useState(10);
   const [gameId, setGameId] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ game?: string; name?: string }>({});
   const [error, setError] = useState('');
+
+  const gameSection = useRef<HTMLElement>(null);
+  const nameSection = useRef<HTMLElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
 
   const selectedGame = games.find((g) => g.id === gameId);
 
   const pickGame = (game: Game) => {
     setGameId(game.id);
-    setError('');
-    // a matchup is a good default name until the owner types their own
-    if (!name.trim()) {
-      setName(
-        `${game.awayAbbr || game.awayTeam} @ ${game.homeAbbr || game.homeTeam}`.slice(
-          0,
-          NAME_MAX_LENGTH
-        )
-      );
+    setFieldErrors((errors) => ({ ...errors, game: undefined }));
+  };
+
+  // every problem shows on its own step; the first one is brought into view and focused
+  const validate = () => {
+    const errors = {
+      game: gameId ? undefined : 'Pick the game this contest is played on',
+      name: name.trim() ? undefined : 'Contest name is required',
+    };
+    setFieldErrors(errors);
+
+    const first = errors.game ? gameSection.current : errors.name ? nameSection.current : null;
+    if (!first) {
+      return true;
     }
+    first.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    if (errors.game) {
+      first.querySelector<HTMLElement>('[role="radio"]')?.focus({ preventScroll: true });
+    } else {
+      nameInput.current?.focus({ preventScroll: true });
+    }
+    return false;
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
-      setError('Contest name is required');
+    if (!validate()) {
       return;
     }
     if (!email) {
       setError('User is missing an email');
-      return;
-    }
-    if (!gameId) {
-      setError('Pick the game this contest is played on');
       return;
     }
 
@@ -165,6 +177,7 @@ export default function CreateContestForm() {
     <Box
       role="radiogroup"
       aria-label="Game"
+      aria-invalid={Boolean(fieldErrors.game)}
       sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
@@ -200,25 +213,35 @@ export default function CreateContestForm() {
         {error && <Alert severity="error">{error}</Alert>}
 
         <FormSection
+          ref={gameSection}
           step={1}
+          error={fieldErrors.game}
           title="Pick the game"
           description="The contest starts at kickoff, and every quarter winner comes from the live score."
         >
           {gamePicker}
         </FormSection>
 
-        <FormSection step={2} title="Name it" description="Short and easy to spot in the list.">
+        <FormSection
+          ref={nameSection}
+          step={2}
+          title="Name it"
+          description="Short and easy to spot in the list."
+        >
           <TextField
             name="name"
             label="Contest Name"
             value={name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setName(stripDangerousChars(e.target.value))
-            }
+            inputRef={nameInput}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setName(stripDangerousChars(e.target.value));
+              setFieldErrors((errors) => ({ ...errors, name: undefined }));
+            }}
             fullWidth
             required
             disabled={creating}
-            helperText={`${name.length}/${NAME_MAX_LENGTH}`}
+            error={Boolean(fieldErrors.name)}
+            helperText={fieldErrors.name ?? `${name.length}/${NAME_MAX_LENGTH}`}
             slotProps={{ htmlInput: { maxLength: NAME_MAX_LENGTH } }}
           />
         </FormSection>
