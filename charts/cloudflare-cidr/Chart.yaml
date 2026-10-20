@@ -4,4 +4,4 @@ description: Alerts when Cloudflare's IP ranges drift from the gateway's trusted
 type: application
 version: 1.0.0
 # renovate: image=python
-appVersion: 3.14-alpine
+appVersion: 3.15-alpine
