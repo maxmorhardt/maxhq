@@ -17,7 +17,6 @@ strippedRequestHeaders:
 
 proxy:
   replicas: 2
-  # keeps one proxy serving while a node drains
   minAvailable: 1
   service:
     name: envoy-maxhq
