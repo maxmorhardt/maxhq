@@ -1,4 +1,6 @@
-# External Dependencies
+# squares-accounts
+
+Published to `oci://ghcr.io/maxmorhardt/charts/squares-accounts`, released as `squares-accounts-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
 The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, PrometheusRule, and Grafana dashboard.
 

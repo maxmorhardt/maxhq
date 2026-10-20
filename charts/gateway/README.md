@@ -1,15 +1,19 @@
-# External Dependencies
+# gateway
+
+Published to `oci://ghcr.io/maxmorhardt/charts/gateway`, released as `gateway-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
 Provides the `maxhq` GatewayClass and Gateway that every other chart's HTTPRoute attaches
 to, so this deploys before the apps.
 
 ## Required
 
-- **Envoy Gateway controller** — installed from the `infra` repo into `envoy-gateway-system`,
+- **Envoy Gateway controller** — installed from the `gitops` repo into `envoy-gateway-system`,
   along with the Gateway API CRDs
-- **TLS** — the `maxhq.io-tls` secret must exist in `envoy-gateway-system`; the listeners
-  reference it for both `maxhq.io` and `*.maxhq.io`
-- **DNS** — `maxhq.io` and the app subdomains pointed at the gateway external IP
+- **TLS** — the secret named by `tls.secretName` in `envoy-gateway-system`, covering `<domain>` and
+  `*.<domain>`: the Cloudflare origin certificate `maxhq.io-tls` in prod, cert-manager's
+  `dev.maxhq.io-tls` in dev
+- **DNS** — from `infra/terraform/cloudflare`: prod hosts are Cloudflare-proxied records to the prod
+  nodes (443 open), dev hosts are DNS-only records to dev's Tailscale IPs
 
 ## Header stripping
 

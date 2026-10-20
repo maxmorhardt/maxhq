@@ -1,10 +1,12 @@
-# External Dependencies
+# maxhq
+
+Published to `oci://ghcr.io/maxmorhardt/charts/maxhq`, released as `maxhq-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
 ## Required
 
 - **Envoy Gateway** — `maxhq` Gateway in `envoy-gateway-system` (HTTPRoute parentRef)
 - **TLS** — terminated at the gateway (`maxhq.io-tls` in `envoy-gateway-system`)
-- **DNS** — `maxhq.io` pointed at the gateway external IP
+- **DNS** — `maxhq.io` (and `dev.maxhq.io`) to the gateway, from `infra/terraform/cloudflare`
 
 ## Optional
 

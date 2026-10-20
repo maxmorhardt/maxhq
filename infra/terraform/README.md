@@ -1,4 +1,4 @@
-## Overview
+# Terraform
 
 Terraform for the resources that live outside the cluster. Anything Argo CD reconciles stays
 in Helm and manifests; this covers the AWS, Cloudflare, and GitHub state that was previously
@@ -24,7 +24,7 @@ In CI, as repository secrets:
 | --- | --- |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | every module — the state backend, not just `aws/` |
 | `CLOUDFLARE_API_TOKEN` | `cloudflare/` |
-| `REPO_ADMIN_TOKEN` | `github/` — a PAT, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
+| `REPO_ADMIN_TOKEN` | `github/` — a fine-grained PAT with Administration: Read and write on `maxhq`, `gitops`, and `workflows`, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
 | `TF_VARS` | `cloudflare/` — `prod_ips = [...]` and `dev_ips = [...]` (dev's Tailscale IPs), written to `ci.auto.tfvars` at runtime |
 
 ## One-time setup

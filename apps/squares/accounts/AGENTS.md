@@ -4,7 +4,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 
 ## Project Context
 
-- Service: `accounts` (`apps/squares/accounts`, module `github.com/maxmorhardt/maxhq/apps/squares/accounts`). Profiles, account deletion, and the contact form.
+- Service: `accounts` (`apps/squares/accounts`, package `github.com/maxmorhardt/maxhq/apps/squares/accounts`). Profiles, account deletion, and the contact form.
 - Image `maxmorhardt/squares-accounts`, release-please component `squares-accounts`. Chart: `charts/squares-accounts`, whose `README.md` lists every secret key and setting.
 - Owns the `accounts` schema. Migrations in `internal/migrations` run at startup with `search_path=accounts`.
 

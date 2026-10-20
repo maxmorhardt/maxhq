@@ -1,4 +1,6 @@
-# External Dependencies
+# squares-contests
+
+Published to `oci://ghcr.io/maxmorhardt/charts/squares-contests`, released as `squares-contests-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
 The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, PrometheusRule, and Grafana dashboard.
 

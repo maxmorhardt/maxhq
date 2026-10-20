@@ -1,4 +1,6 @@
-# External Dependencies
+# cloudflare-cidr
+
+Not released or deployed: the `gateway` chart lists Cloudflare's ranges in `trustedCIDRs` directly.
 
 CronJob that refreshes the trusted Cloudflare IP ranges used by the gateway's
 `ClientTrafficPolicy`, so real client IPs resolve correctly behind Cloudflare.
@@ -11,7 +13,7 @@ CronJob that refreshes the trusted Cloudflare IP ranges used by the gateway's
 
 ## Secrets
 
-`cloudflare-cidr-env` in the `jobs` namespace. Sealed into `secrets/jobs/` — see
+`cloudflare-cidr-env` in the release namespace, sealed into `clusters/<cluster>/secrets/<namespace>/` in the gitops repo — see
 [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/README.md).
 
 | key | purpose |

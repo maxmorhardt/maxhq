@@ -1,4 +1,6 @@
-# External Dependencies
+# squares-games
+
+Published to `oci://ghcr.io/maxmorhardt/charts/squares-games`, released as `squares-games-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
 The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, PrometheusRule, and Grafana dashboard.
 
