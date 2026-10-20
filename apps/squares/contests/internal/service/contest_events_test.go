@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/google/uuid"
@@ -14,13 +15,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func captureOutbox(t *testing.T, contestID uuid.UUID) (*mocks.Outbox, *[]*model.ContestEvent) {
+func captureOutbox(t *testing.T, contestID uuid.UUID) (*mocks.Outbox, *[]*events.ContestEvent) {
 	t.Helper()
-	captured := []*model.ContestEvent{}
+	captured := []*events.ContestEvent{}
 	ob := mocks.NewOutbox(t)
 	ob.EXPECT().Add(mock.Anything, events.ContestStream(contestID), mock.Anything, mock.Anything).
 		Run(func(_ context.Context, _, eventType string, payload any) {
-			event := payload.(*model.ContestEvent)
+			event := payload.(*events.ContestEvent)
 			assert.Equal(t, event.Type, eventType, "the entry type matches the payload type")
 			captured = append(captured, event)
 		}).Return(nil)
@@ -33,7 +34,7 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	ob, captured := captureOutbox(t, contestID)
 	pub := service.NewContestEventPublisher(ob)
 
-	heavy := &model.Contest{ID: contestID, Squares: []model.Square{{}}, QuarterResults: []model.QuarterResult{{}}, Game: &model.Game{}}
+	heavy := &model.Contest{ID: contestID, Name: "Bowl", Status: model.ContestStatusQ2, Squares: []model.Square{{}}, QuarterResults: []model.QuarterResult{{}}, Game: &model.Game{}}
 	participant := &model.ContestParticipant{UserID: "p"}
 
 	require.NoError(t, pub.PublishSquareUpdate(ctx, contestID, "u", &model.Square{}))
@@ -50,14 +51,21 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 		assert.Equal(t, contestID, e.ContestID)
 	}
 	assert.Equal(t, []string{
-		model.SquareUpdateType, model.ContestUpdateType, model.QuarterResultUpdateType,
-		model.QuarterResultRollbackType, model.ContestDeletedType, model.ParticipantRemovedType, model.ParticipantAddedType,
+		events.SquareUpdatedType, events.ContestUpdatedType, events.QuarterRecordedType,
+		events.QuarterRolledBackType, events.ContestDeletedType, events.ParticipantRemovedType, events.ParticipantJoinedType,
 	}, types)
 
-	update := (*captured)[1].Contest
-	assert.Nil(t, update.Squares)
-	assert.Nil(t, update.QuarterResults)
-	assert.Nil(t, update.Game)
-	assert.Len(t, heavy.Squares, 1, "the caller's contest is not modified")
-	assert.Nil(t, (*captured)[4].Contest)
+	var update map[string]any
+	require.NoError(t, json.Unmarshal((*captured)[1].Data, &update))
+	assert.Equal(t, "Bowl", update["name"])
+	assert.NotContains(t, update, "squares", "updates leave the grid to square events")
+	assert.NotContains(t, update, "quarterResults")
+	assert.NotContains(t, update, "game")
+
+	var rollback model.QuarterRollback
+	require.NoError(t, json.Unmarshal((*captured)[3].Data, &rollback))
+	assert.Equal(t, model.QuarterRollback{Quarter: 1, Status: model.ContestStatusQ2}, rollback)
+
+	assert.Nil(t, (*captured)[4].Data, "a deletion carries no payload")
+	assert.Equal(t, "p", (*captured)[6].UpdatedBy, "a joiner is the one who changed the contest")
 }

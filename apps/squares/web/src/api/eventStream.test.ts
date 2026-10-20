@@ -1,0 +1,191 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { backoff, openEventStream, type EventStreamOptions } from './eventStream';
+
+// a response body the test writes server-sent frames into
+function sseResponse() {
+  const encoder = new TextEncoder();
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const body = new ReadableStream<Uint8Array>({
+    start(c) {
+      controller = c;
+    },
+  });
+  return {
+    response: new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } }),
+    send: (text: string) => controller.enqueue(encoder.encode(text)),
+    end: () => controller.close(),
+  };
+}
+
+const fetchMock = vi.fn();
+const sentHeaders = (call: number) =>
+  (fetchMock.mock.calls[call][1] as RequestInit).headers as Record<string, string>;
+
+function open(overrides: Partial<EventStreamOptions> = {}) {
+  const options = {
+    url: 'http://api/events',
+    getToken: vi.fn().mockResolvedValue('tok'),
+    onMessage: vi.fn(),
+    onStatus: vi.fn(),
+    onRejected: vi.fn(),
+    ...overrides,
+  };
+  return { stream: openEventStream(options), ...options };
+}
+
+const flush = () => vi.advanceTimersByTimeAsync(0);
+
+describe('openEventStream', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('connects with the token and delivers each event', async () => {
+    const sse = sseResponse();
+    fetchMock.mockResolvedValue(sse.response);
+    const { stream, onMessage, onStatus } = open();
+
+    await flush();
+    sse.send('id: 1-0\nevent: x\ndata: {"a":1}\n\n: ping\n\n');
+    await flush();
+
+    expect(sentHeaders(0).Authorization).toBe('Bearer tok');
+    expect(onStatus).toHaveBeenCalledWith('connecting');
+    expect(onStatus).toHaveBeenCalledWith('live');
+    expect(onMessage).toHaveBeenCalledWith({ id: '1-0', data: '{"a":1}' });
+    stream.close();
+  });
+
+  it('resumes from the last event id after the server ends the stream', async () => {
+    const first = sseResponse();
+    const second = sseResponse();
+    fetchMock.mockResolvedValueOnce(first.response).mockResolvedValueOnce(second.response);
+    const { stream, onStatus } = open();
+
+    await flush();
+    first.send('id: 7-0\ndata: {}\n\n');
+    first.end();
+    await flush();
+    expect(onStatus).toHaveBeenLastCalledWith('reconnecting');
+
+    await vi.advanceTimersByTimeAsync(backoff(1));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sentHeaders(1)['Last-Event-ID']).toBe('7-0');
+    stream.close();
+  });
+
+  it('refreshes the token straight away after a 401', async () => {
+    const sse = sseResponse();
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(sse.response);
+    const { stream, getToken } = open();
+
+    await flush();
+    await flush();
+
+    expect(getToken).toHaveBeenLastCalledWith({ forceRefresh: true });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    stream.close();
+  });
+
+  it('stops for good on a 403 or 404', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 404 }));
+    const { onRejected } = open();
+
+    await flush();
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(onRejected).toHaveBeenCalledWith(404);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('backs off on failures and reports failed after the last attempt', async () => {
+    fetchMock.mockRejectedValue(new TypeError('offline'));
+    const { stream, onStatus } = open({ maxAttempts: 2 });
+
+    await flush();
+    await vi.advanceTimersByTimeAsync(backoff(1));
+    await vi.advanceTimersByTimeAsync(backoff(2));
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(onStatus).toHaveBeenLastCalledWith('failed');
+    stream.close();
+  });
+
+  it('retries a failed stream when the tab comes back', async () => {
+    fetchMock.mockRejectedValue(new TypeError('offline'));
+    const { stream } = open({ maxAttempts: 1 });
+
+    await flush();
+    await vi.advanceTimersByTimeAsync(backoff(1));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    document.dispatchEvent(new Event('visibilitychange'));
+    await flush();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    stream.close();
+  });
+
+  it('reconnects when the heartbeat goes quiet', async () => {
+    fetchMock.mockImplementation(async () => sseResponse().response);
+    const { stream } = open({ heartbeatTimeoutMs: 1000 });
+
+    await flush();
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(backoff(1));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    stream.close();
+  });
+
+  it('resyncs without a resume point and without waiting', async () => {
+    const first = sseResponse();
+    fetchMock
+      .mockResolvedValueOnce(first.response)
+      .mockImplementation(async () => sseResponse().response);
+    const { stream } = open();
+
+    await flush();
+    first.send('id: 3-0\ndata: {}\n\n');
+    await flush();
+    stream.reconnect({ resync: true });
+    await flush();
+    await flush();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sentHeaders(1)['Last-Event-ID']).toBeUndefined();
+    stream.close();
+  });
+
+  it('ignores events after it is closed', async () => {
+    const sse = sseResponse();
+    fetchMock.mockResolvedValue(sse.response);
+    const { stream, onMessage } = open();
+
+    await flush();
+    stream.close();
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(onMessage).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('backoff', () => {
+  it('doubles each attempt up to thirty seconds', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    expect(backoff(1)).toBe(1000);
+    expect(backoff(3)).toBe(4000);
+    expect(backoff(10)).toBe(30_000);
+    vi.restoreAllMocks();
+  });
+});

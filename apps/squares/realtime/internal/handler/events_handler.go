@@ -44,7 +44,7 @@ func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdow
 }
 
 // @Summary Stream contest events
-// @Description Server-sent events for one contest. The first event is a `connected` snapshot of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (`<ms>-<seq>`) as the SSE id. A `revoked` event means the viewer lost access and the stream is closing.
+// @Description Server-sent events for one contest. The first event is a `contest.snapshot` of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (`<ms>-<seq>`) as the SSE id. An `access.revoked` event means the viewer lost access and the stream is closing.
 // @Tags events
 // @Produce text/event-stream
 // @Param id path string true "Contest ID"
@@ -88,6 +88,7 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	// keeps proxies from buffering the stream until it ends
 	w.Header().Set("X-Accel-Buffering", "no")
 	w.WriteHeader(http.StatusOK)
@@ -97,8 +98,12 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	}
 
 	if sub.Snapshot != nil {
-		connected := events.NewConnectedEvent(contestID, sub.Snapshot.Contest, sub.Snapshot.Participants)
-		if err := writeEvent(w, sub.SnapshotID, connected); err != nil {
+		snapshot, err := events.NewContestEvent(events.ContestSnapshotType, contestID, events.SystemActor, sub.Snapshot)
+		if err != nil {
+			log.Error("failed to build the contest snapshot", "error", err)
+			return
+		}
+		if err := writeEvent(w, sub.SnapshotID, snapshot); err != nil {
 			log.Info("client went away before the snapshot was written", "error", err)
 			return
 		}
@@ -175,19 +180,20 @@ func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *se
 				return model.StreamCloseFellBehind
 			}
 
-			if service.RequiresAccessCheck(&event.Header, user) && !h.stillAllowed(ctx, contestID, user) {
-				_ = writeEvent(w, event.ID, events.NewRevokedEvent(contestID))
+			if service.RequiresAccessCheck(&event.Envelope, user) && !h.stillAllowed(ctx, contestID, user) {
+				revoked, _ := events.NewContestEvent(events.AccessRevokedType, contestID, events.SystemActor, nil)
+				_ = writeEvent(w, event.ID, revoked)
 				w.Flush()
 				return model.StreamCloseAccessRevoked
 			}
 
-			if err := writeRaw(w, event.ID, event.Header.Type, event.Data); err != nil {
+			if err := writeRaw(w, event.ID, event.Envelope.Type, event.Data); err != nil {
 				return model.StreamCloseClient
 			}
 			w.Flush()
-			metrics.IncEventSent(event.Header.Type)
+			metrics.IncEventSent(event.Envelope.Type)
 
-			if event.Header.Type == events.ContestDeletedType {
+			if event.Envelope.Type == events.ContestDeletedType {
 				return model.StreamCloseContestDeleted
 			}
 		}
@@ -230,7 +236,7 @@ func parseLastEventID(c *gin.Context) (string, bool) {
 	return raw, streams.ValidID(raw)
 }
 
-func writeEvent(w io.Writer, id string, event *events.SystemEvent) error {
+func writeEvent(w io.Writer, id string, event *events.ContestEvent) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err

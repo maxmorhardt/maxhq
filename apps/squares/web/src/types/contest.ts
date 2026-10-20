@@ -57,28 +57,6 @@ export interface Square {
   updatedBy: string;
 }
 
-// one server-sent event on a contest stream; connected carries the snapshot, revoked ends the stream
-export interface ContestEvent {
-  type:
-    | 'square_update'
-    | 'contest_update'
-    | 'quarter_result_update'
-    | 'quarter_result_rollback'
-    | 'connected'
-    | 'revoked'
-    | 'contest_deleted'
-    | 'participant_removed'
-    | 'participant_added';
-  contestId: string;
-  updatedBy: string;
-  timestamp: string;
-  square?: Square;
-  contest?: Contest;
-  quarterResult?: QuarterResult;
-  participant?: Participant;
-  participants?: Participant[];
-}
-
 export type FeedRole = 'owned' | 'joined';
 export type FeedStatus = 'open' | 'live' | 'finished';
 
@@ -183,21 +161,35 @@ export interface ActivityEvent {
   timestamp: string;
 }
 
+// contest.updated carries the contest without its squares, results, or game
+export type ContestUpdate = Pick<
+  Contest,
+  | 'name'
+  | 'homeTeam'
+  | 'awayTeam'
+  | 'xLabels'
+  | 'yLabels'
+  | 'visibility'
+  | 'status'
+  | 'gameId'
+  | 'version'
+  | 'updatedAt'
+>;
+
+export interface QuarterRollback {
+  quarter: number;
+  status: ContestStatus;
+}
+
+export interface ContestSnapshot {
+  contest: Contest;
+  participants: Participant[];
+}
+
 export interface UpdateContestRequest {
   homeTeam?: string;
   awayTeam?: string;
   visibility?: ContestVisibility;
-}
-
-export interface ContactRequest {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
-
-export interface ContactResponse {
-  message: string;
 }
 
 export interface Participant {

@@ -23,9 +23,9 @@ const (
 )
 
 type Event struct {
-	ID     string
-	Data   []byte
-	Header events.ContestEventHeader
+	ID       string
+	Data     []byte
+	Envelope events.ContestEvent
 }
 
 type Subscription struct {
@@ -119,14 +119,14 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 			}
 			sent = entry.ID
 
-			var header events.ContestEventHeader
-			if err := json.Unmarshal(entry.Data, &header); err != nil {
+			var envelope events.ContestEvent
+			if err := json.Unmarshal(entry.Data, &envelope); err != nil {
 				log.Warn("skipping undecodable contest event", "id", entry.ID, "error", err)
 				return true
 			}
 
 			select {
-			case out <- Event{ID: entry.ID, Data: entry.Data, Header: header}:
+			case out <- Event{ID: entry.ID, Data: entry.Data, Envelope: envelope}:
 				return true
 			case <-ctx.Done():
 				return false
@@ -176,13 +176,19 @@ func (s *streamService) IsRevoked(ctx context.Context, user string, issuedAt int
 	return s.revocations.IsRevoked(ctx, user, issuedAt)
 }
 
-func RequiresAccessCheck(header *events.ContestEventHeader, user string) bool {
-	switch header.Type {
-	case events.ContestUpdateType:
-		return header.Contest != nil && header.Contest.Visibility == events.ContestVisibilityPrivate
-	case events.ParticipantRemovedType:
-		return header.Participant != nil && header.Participant.UserID == user
-	default:
+func RequiresAccessCheck(event *events.ContestEvent, user string) bool {
+	if event.Type != events.ContestUpdatedType && event.Type != events.ParticipantRemovedType {
 		return false
 	}
+
+	var fields events.AccessFields
+	if err := json.Unmarshal(event.Data, &fields); err != nil {
+		// an unreadable payload is checked rather than trusted
+		return true
+	}
+
+	if event.Type == events.ContestUpdatedType {
+		return fields.Visibility == events.ContestVisibilityPrivate
+	}
+	return fields.UserID == user
 }

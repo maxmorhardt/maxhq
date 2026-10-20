@@ -1,22 +1,15 @@
-import { describe, it, expect } from 'vitest';
-import { store } from './store';
+import { describe, expect, it } from 'vitest';
+import { makeStore, store } from './store';
 
 describe('store', () => {
-  it('should have contest reducer', () => {
-    expect(store.getState()).toHaveProperty('contest');
+  it('holds the api cache, the live contest, and toasts', () => {
+    expect(Object.keys(store.getState()).sort()).toEqual(['api', 'liveContest', 'toast']);
   });
 
-  it('should have stats reducer', () => {
-    expect(store.getState()).toHaveProperty('stats');
-  });
-
-  it('should have toast reducer', () => {
-    expect(store.getState()).toHaveProperty('toast');
-  });
-
-  it('should initialize with default state', () => {
-    const state = store.getState();
-    expect(state.toast.messages).toEqual([]);
-    expect(state.stats.stats).toBeNull();
+  it('starts from preloaded state', () => {
+    const preloaded = makeStore({
+      toast: { messages: [{ id: 't', message: 'hi', severity: 'info' }] },
+    });
+    expect(preloaded.getState().toast.messages).toHaveLength(1);
   });
 });

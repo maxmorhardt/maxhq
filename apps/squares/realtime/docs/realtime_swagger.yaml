@@ -37,12 +37,11 @@ info:
 paths:
   /events/contests/{id}:
     get:
-      description: Server-sent events for one contest. The first event is a `connected`
-        snapshot of the contest and its participants, unless the client resumes with
-        Last-Event-ID and the gap is still retained, in which case only the missed
-        events are replayed. Every event carries its stream entry id (`<ms>-<seq>`)
-        as the SSE id. A `revoked` event means the viewer lost access and the stream
-        is closing.
+      description: Server-sent events for one contest. The first event is a `contest.snapshot`
+        of the contest and its participants, unless the client resumes with Last-Event-ID
+        and the gap is still retained, in which case only the missed events are replayed.
+        Every event carries its stream entry id (`<ms>-<seq>`) as the SSE id. An `access.revoked`
+        event means the viewer lost access and the stream is closing.
       parameters:
       - description: Contest ID
         in: path

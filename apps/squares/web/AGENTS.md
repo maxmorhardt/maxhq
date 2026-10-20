@@ -4,126 +4,106 @@
 
 - Project: Squares UI (`apps/squares/web` in `github.com/maxmorhardt/maxhq`)
 - Language: TypeScript, React 19
-- Purpose: Frontend for a real-time football squares pool. Vite SPA styled with MUI v9, state in Redux Toolkit, authenticated via OIDC, kept in sync with server-sent events from the realtime service.
+- Purpose: Frontend for a real-time football squares pool. React Router (framework mode, SPA with a few prerendered pages), MUI v9, Redux Toolkit with RTK Query, OIDC sign-in, and server-sent events from the realtime service.
 - Target environments: Static bundle served by NGINX in a container on Kubernetes.
-- Related: `../contests`, `../games`, `../accounts`, `../realtime` (the backend services), its chart `charts/squares`, `gitops` (the Argo CD Applications), `workflows` (shared CI).
+- Related: `../contests`, `../games`, `../accounts`, `../realtime` (the backend services), the chart `charts/squares`, `gitops` (the Argo CD Applications), `workflows` (shared CI).
 
 ## Repository Layout
 
-- `src/main.tsx` - entrypoint. Configures `AuthProvider` (oidc-client-ts), `createBrowserRouter` routes, MUI `ThemeProvider`, and the Redux `Provider`.
-- `src/App.tsx` - app shell. Mounts `Header`, `Footer`, `<Outlet />`, the toast provider, and the silent OIDC sign-in effect.
-- `src/pages/` - route-level views grouped by feature (`contests/`, `contests/contest/`, `contests/create/`, `auth/`, `landing/`, `learn/`, `join/`, `contact/`, `privacy/`, `terms/`, `error/`).
-- `src/components/` - reusable components grouped by area (`common/`, `contest/`, `header/`, `footer/`, `join/`, `landing/`, `learn/`, `contact/`, `toast/`).
-- `src/features/` - Redux Toolkit slices, thunks, and selectors, one folder per domain (`contests/`, `leaderboard/`, `stats/`, `toast/`, `user/`).
-- `src/app/store.ts` - `configureStore` composition root. Exports `RootState`, `AppDispatch`, `AppStore`.
-- `src/service/` - HTTP clients wrapping axios, `contestEvents.ts` (the fetch-based event-stream reader, parsing frames with `eventsource-parser`, and the handler that applies contest events to the store), plus `handleError.ts`.
-- `src/axios/api.ts` - the shared axios instance every service uses. `src/axios/idempotency.ts` - `idempotentRequest`, which every write goes through.
-- `src/hooks/` - `reduxHooks`, `useAxiosAuth`, `useContestEvents`, `useToast`, `useScrollAnimation`.
-- `src/types/` - shared types and design tokens (`contest.ts`, `stats.ts`, `events.ts`, `error.ts`, `gradients.ts`).
-- `src/utils/` - pure helpers (`contestStatus`, `oidcHelpers`, `sanitize`).
-- `Dockerfile`, `nginx.conf` - production container serving the built SPA with SPA fallback.
+- `src/root.tsx`, `src/routes.ts` - the document shell and the route table. Every route module lives in `src/pages/`.
+- `src/app/` - app wiring: `AppLayout` (header, footer, outlet, toasts, session upkeep), `providers.tsx`, `store.ts` (`makeStore`, `RootState`, `AppDispatch`), `hooks.ts` (typed `useAppDispatch`/`useAppSelector`), `theme.ts`, `global.css`.
+- `src/api/` - talking to the backend:
+  - `baseApi.ts` - the one RTK Query `createApi`; features add endpoints with `injectEndpoints`.
+  - `baseQuery.ts` - bearer token, an `Idempotency-Key` on every write, retries for network errors and 502/503/504 (and 409 with `Retry-After`) under the same key, one session refresh on a 401.
+  - `errors.ts` - every failure becomes an `ApiError { status, message }`; use `errorMessage`/`errorStatus` to read one.
+  - `eventStream.ts` - the generic server-sent event client (fetch + `eventsource-parser`): fresh token per connection, `Last-Event-ID` resume, backoff, a heartbeat watchdog, and an immediate retry when the tab becomes visible or the network returns.
+- `src/auth/` - `userManager.ts` (the single oidc-client-ts `UserManager`), `token.ts` (`getIdToken` refreshes a token that is expiring or stale; concurrent callers share one refresh), `useAuthSession.ts`, `RequireAuth.tsx`, `oidc.ts`, `SignInDialog.tsx`.
+- `src/features/<domain>/` - one folder per domain (`contests`, `profile`, `leaderboard`, `landing`, `learn`, `join`, `contact`, `toast`). Each holds its `api.ts` (endpoints and generated hooks) and `components/`.
+- `src/features/contests/live/` - the live contest: `events.ts` (the event union and parser), `liveContestSlice.ts` (snapshot plus one handler per event type, and write responses applied ahead of their events), `activity.ts` (the activity feed), `useContestStream.ts`, `selectors.ts`, `viewer.ts`.
+- `src/components/` - shared, domain-free UI: `layout/` (header, footer), `feedback/` (`ErrorState`, `LoadingScreen`, `ConfirmDialog`, `ErrorBoundary`), `errors/` (401/403/404 views), `inputs.ts`, `animations.ts`.
+- `src/hooks/` - generic hooks (`useDebouncedValue`, `useInfiniteScroll`, `useScrollAnimation`).
+- `src/types/` - the API contract types. `src/utils/` - pure helpers.
+- `src/test/` - `renderWithProviders`, `mockAuth`, `mockMutation`, `stubFetch`, and fixtures.
 
-## Core Principles
+## Where Things Go
 
-1. One-directional data flow
-   - Page or component to hook to service to backend, with Redux as the cache.
-   - Thunks call functions in `src/service/`, never axios directly.
-   - Selectors are the only way components read slice state.
-2. Typed everything
-   - Never type with `any`. Use `unknown` when the type is genuinely unknown.
-   - Always use the typed `useAppDispatch` and `useAppSelector` from `src/hooks/reduxHooks.ts`, never the raw `react-redux` hooks.
-3. Theme over ad-hoc CSS
-   - Prefer the `sx` prop and theme tokens to hand-rolled styles. Gradients live in `src/types/gradients.ts`.
-   - Use MUI v9 primitives rather than rebuilding them.
-4. Safety at the DOM boundary
-   - Sanitize any user-controlled string that reaches the DOM via `src/utils/sanitize.ts`.
-5. Centralized user feedback
-   - Errors surface through `handleError` and the toast system, not ad-hoc snackbars or `alert`.
-6. Predictable auth
-   - `useAxiosAuth` is mounted exactly once, in `App.tsx`. Do not mount a second copy or set tokens on axios elsewhere.
+- **Pages are thin.** A page reads route params, sets the `<Helmet>` title, gates on auth, and renders one feature container. No data fetching or business rules in `src/pages/`.
+- **Feature containers own data.** A container (`LiveContest`, `ContestsBrowser`, `Profile`, `Standings`, `JoinInvite`) calls RTK Query hooks or live selectors and handles its loading, error, and empty states.
+- **Everything below a container takes props.** Pass the domain objects (`contest`, `participants`, `viewer`) down. Presentational components never read the store; a component only calls a mutation hook for the action it owns (a button that starts the game calls `useStartContestMutation`).
+- **Read the store with selectors, never by drilling through more than one container.** Server data comes from RTK Query hooks; the only hand-written slices are `liveContest` (stream-fed state) and `toast` (UI state). Do not add a slice for data an endpoint can cache.
+- **Derived data is computed, not stored.** `getContestViewer` works out who the user is in a contest once; pass the result down rather than recomputing it in children.
+- **Logic-heavy flows go in a hook next to the feature** (`useAccountDeletion`), keeping the component a view.
+
+## Render Order
+
+Every page resolves its states in the same order, so the conditional rendering never gets tangled:
+
+1. Auth, through `RequireAuth`: redirecting, then restoring the session (the page passes its skeleton as `fallback`), then signed out (`UnauthorizedError`, or a custom `unauthenticated` view), then the page.
+2. Data, inside the container: terminal errors (403/404), then loading (skeleton), then errors with a retry, then empty, then content.
+
+## Live Contest Stream
+
+- The realtime service sends a `contest.snapshot` on connect (or only the missed events on resume), then one typed event per change. Every event is `{ type, contestId, updatedBy, timestamp, data }`.
+- To add an event type: add it to the backend in `libs/squares/events`, then add it to the `ContestEvent` union and `KNOWN_TYPES` in `live/events.ts`, and add its handler in `eventHandlers` in `liveContestSlice.ts`. The types make a missing handler a compile error. Add a feed line in `activity.ts` if it should show in the activity feed.
+- Handlers must be idempotent: the same change can arrive as a write's response and again as its event, and a resume can replay events. Squares and contests carry a `version`; never apply an older one.
+- Side effects (toasts, navigation, the winner dialog) go in the `onEvent` callback a container passes to `useContestStream`, never in a reducer.
+- Unknown event types are skipped so the server can ship a new event first. A garbled event resyncs from a fresh snapshot. A 409 on a claim calls `resync`.
 
 ## Agent Instructions
 
 - Make the smallest safe change that solves the requested problem, and keep it inside existing feature boundaries.
-- Function components in `.tsx`. Page files `export default`; shared components use named exports.
-- Props go in a local `interface Props { ... }` with `({ ... }: Props)` destructuring. Do not export `Props` unless it is reused.
-- Hooks live in `src/hooks/` and are named `useXxx`.
-- Register new slice reducers in `src/app/store.ts`.
-- When the backend adds a contest event type, add it to `ContestEvent['type']` in `src/types/contest.ts` and handle it in `handleContestEvent` (`src/service/contestEvents.ts`). Reducers that apply events must be idempotent: a reconnect can replay events the snapshot already contains, and square updates carry a `version` so older ones are ignored.
-- `useContestEvents` owns the stream: it resumes with `Last-Event-ID` after drops and token refreshes, treats 403/404 and a `revoked` event as final, and gives up after repeated failures. Components never read the stream directly.
-- Every write goes through `idempotentRequest`, which sends one `Idempotency-Key` per action and retries network errors and 502/503/504 with the same key. Contest edits send the contest `version` as `If-Match`; a 412 means someone else changed it, and the stream delivers their change.
-- Use `showToast(message, severity)` via `useToast` rather than rendering snackbars directly.
-- Keep the SPA fallback (`try_files ... /index.html`) in `nginx.conf` intact. Removing it breaks client-side routing.
-- Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
-- **Always brace control statements.** Never a one-line `if (x) return;` — write it as `if (x) {`, newline, body, newline, `}`. Enforced by the `curly` ESLint rule.
+- Function components in `.tsx`. Route modules and components `export default`; hooks and helpers use named exports.
+- Props go in a local `interface Props { ... }`. Do not export `Props` unless it is reused.
+- Never type with `any`; use `unknown` when the type is genuinely unknown.
+- Every server call is an RTK Query endpoint. Never call `fetch` from a component; the event stream is the only other network path.
+- Handle a mutation's failure where it was triggered: `await mutate(args).unwrap()` in a `try`, then `showToast(errorMessage(err, 'fallback'), 'error')` or render `error` inline in a dialog.
+- Sanitize user-entered text that reaches the DOM or the API with `src/utils/sanitize.ts`.
+- Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining why**. In JSX use section markers the same way (`{/* hero section */}`). No multi-line blocks, and no header comment that restates a name.
+- **Always brace control statements.** Enforced by the `curly` ESLint rule. The React hooks rules run in full; do not disable them.
+- Keep the SPA fallback (`try_files ... /index.html`) in `nginx.conf` intact.
 - The Helm chart is `charts/squares` in this repo. A change that needs a chart change makes it in the same PR; the chart releases as `squares-chart`.
 
 ## New Page Checklist
 
-1. Add `XxxPage.tsx` under `src/pages/<area>/`.
-2. Add the child route in `src/main.tsx` under the `App` layout.
-3. Add a slice, thunks, and selectors under `src/features/<domain>/` if the page owns new state, and register the reducer in `src/app/store.ts`.
-4. Add a service function in `src/service/` if it calls the backend. Never call axios from a component.
-5. Add colocated tests.
-6. Run `pnpm lint`, `pnpm type-check`, and `pnpm test:coverage`.
+1. Add the route module `src/pages/XxxPage.tsx` and register it in `src/routes.ts`.
+2. Put the UI in `src/features/<domain>/components/`, with a container that owns the data.
+3. Add endpoints to `src/features/<domain>/api.ts` with `baseApi.injectEndpoints`, and add a tag to `baseApi.ts` if the data needs invalidating.
+4. Wrap signed-in pages in `RequireAuth` with a skeleton `fallback`.
+5. Add colocated tests, then run `pnpm lint`, `pnpm type-check`, and `pnpm test:coverage`.
 
 ## Testing Guidance
 
-- Tests are colocated as `Foo.test.ts` / `Foo.test.tsx` and run under Vitest in jsdom with globals enabled.
-- Use `@testing-library/react` and `@testing-library/jest-dom` matchers, set up in `src/setupTests.ts`.
-- Redux-dependent component tests wrap in a real store via `Provider`, or a per-test `configureStore` with the relevant reducer. Exercise the reducer rather than mocking the slice.
-- Service tests mock the axios instance from `src/axios/api.ts`, not `axios` itself.
-- Hook tests use `renderHook`. For OIDC-dependent hooks, mock `useAuth` from `react-oidc-context`.
-- When stubbing browser APIs (`IntersectionObserver`, `fetch`, `matchMedia`), restore the original in `afterEach`.
-- Favor deterministic tests over timing-sensitive behavior.
-- Coverage is gated at **80%** for lines, branches, functions, and statements in `vitest.config.ts`. Do not lower a threshold to get a build green.
-- Always run `pnpm lint`, `pnpm type-check`, and `pnpm test` before committing.
+- Tests are colocated as `Foo.test.ts(x)`, one per source file, and run under Vitest in jsdom.
+- Render with `renderWithProviders` from `src/test/render.tsx`; it gives a fresh real store, router, theme, and helmet, and returns the `store` so a test can assert on toasts.
+- Mock `react-oidc-context` with `vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }))` and set the user with `mockAuth({ email })`.
+- Mock a feature's hooks while keeping its real exports: `vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }))`, with `mockMutation(result)` for mutation tuples.
+- Endpoint and base query tests use `stubFetch` and dispatch `endpoint.initiate(...)` on `makeStore()`.
+- Coverage is gated at **80%** for lines, branches, functions, and statements. Do not lower a threshold to get a build green.
 
 ## Dependency Checklist
 
-Before adding a new dependency, verify:
-
-- Can this be done with React, MUI, or an existing helper in `src/utils/`?
-- Does it duplicate something already in the tree (another icon set, another date library, another HTTP client)?
-- What is the bundle size impact on the shipped SPA?
-- Is it compatible with pnpm's strict resolution? Only direct dependencies may be imported.
-- `pnpm-workspace.yaml` sets `minimumReleaseAge: 1440`, so a version published in the last 24 hours will be refused. That is deliberate.
-- Is the trade-off recorded in the commit rationale?
+- Can React, MUI, Redux Toolkit, or an existing helper do it?
+- Does it duplicate something already in the tree?
+- What does it add to the shipped bundle?
+- Only direct dependencies may be imported (pnpm strict resolution). `pnpm-workspace.yaml` sets `minimumReleaseAge: 1440`, so a version published in the last 24 hours is refused.
 
 ## Tooling
 
-- Package manager is **pnpm**, pinned by the `packageManager` field. `npm` and `yarn` are blocked by an `only-allow pnpm` preinstall hook. Enable with `corepack enable`.
-- `pnpm dev`, `pnpm build` (runs `tsc -b` then `vite build`), `pnpm preview`.
-- `pnpm lint` (ESLint flat config with typescript-eslint and React hooks plugins), `pnpm type-check` (`tsc --noEmit`), `pnpm format` (Prettier).
-- Prettier and ESLint run on commit through lint-staged, from the repo's `.githooks/pre-commit` (enabled by `pnpm install`).
+- Package manager is **pnpm**, pinned by `packageManager`. `npm` and `yarn` are blocked. Enable with `corepack enable`.
+- `pnpm dev`, `pnpm build`, `pnpm preview`, `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm test:coverage`, `pnpm format`.
+- Prettier and ESLint run on commit through lint-staged, from the repo's `.githooks/pre-commit`.
 
 ## Commit Tags
 
-Conventional commits, enforced on PR titles and consumed by release-please. The type determines the release, so it is a functional choice, not a stylistic one.
+Conventional commits, enforced on PR titles and consumed by release-please. Scope is `squares`.
 
-- `feat`: New user-facing capability. Cuts a minor release.
-- `fix`: Corrects wrong behavior, a regression, or a security issue. Cuts a patch release.
-- `refactor`: Restructuring with no behavior change.
-- `chore`: Maintenance that is not user-facing, including routine dependency bumps.
-- `ci`: Workflow, build, or release automation changes.
-- `docs`: Documentation only.
-- `test`: Test-only additions or maintenance.
-- `style`: Formatting only.
-
-Scope is `squares` so release-please attributes the change.
-
-Example commit subjects:
-
-- `feat(squares): add search input to ContestsPage`
-- `fix(squares): apply square events after a stream resume`
-- `refactor(squares): move contest selectors out of the slice file`
-- `chore(squares): bump vite to 7.2`
+- `feat`: new user-facing capability (minor release). `fix`: wrong behavior or a regression (patch release).
+- `refactor`, `chore`, `ci`, `docs`, `test`, `style`: no release on their own.
 
 ## Non-Goals for Routine Changes
 
 - Large refactors without a clear user-facing benefit.
-- Calling axios from a component, or reading the event stream outside `useContestEvents`.
-- New dependencies when MUI, React, or an existing helper is sufficient.
-- Rebuilding an MUI primitive with raw `sx`.
+- A hand-written slice or thunk for server data.
+- Reading the event stream outside `useContestStream`.
 - Lowering a coverage threshold or disabling a lint rule to get a build green.
 - Editing the Argo CD Application from this repo.

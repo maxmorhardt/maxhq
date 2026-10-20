@@ -11,7 +11,7 @@ Live contest updates for browsers, over server-sent events. One of the squares b
 
 | Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
-| `/events/contests/:id` | a server-sent event stream: a `connected` snapshot (or, with `Last-Event-ID`, only what was missed), then every change to the contest. A `revoked` event means the viewer lost access. |
+| `/events/contests/:id` | a server-sent event stream: a `contest.snapshot` (or, with `Last-Event-ID`, only what was missed), then every change to the contest. An `access.revoked` event means the viewer lost access. |
 
 ## Events
 
