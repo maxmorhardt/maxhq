@@ -1,40 +1,12 @@
-import BoltIcon from '@mui/icons-material/Bolt';
-import DnsIcon from '@mui/icons-material/Dns';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ShieldIcon from '@mui/icons-material/Shield';
-import SyncIcon from '@mui/icons-material/Sync';
-import { Avatar, Box, Container, Typography } from '@mui/material';
-import type { ReactElement } from 'react';
+import { Box, Container, Typography } from '@mui/material';
 import PageHeader from '../components/common/PageHeader';
 import RepoMap from '../components/projects/RepoMap';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import ProjectCard, { type Project } from '../components/projects/ProjectCard';
 import { pageSection } from '../theme';
-
-const platform: { icon: ReactElement; title: string; body: string }[] = [
-  {
-    icon: <ShieldIcon />,
-    title: 'Federated single sign-on',
-    body: 'One account works across every app, with Google and GitHub sign-in federated through a self-hosted Dex identity provider.',
-  },
-  {
-    icon: <BoltIcon />,
-    title: 'Real-time everywhere',
-    body: 'Live grids, scores, and standings update instantly for everyone, streamed over server-sent events that resume from the last update after a dropped connection.',
-  },
-  {
-    icon: <DnsIcon />,
-    title: 'Self-hosted on Kubernetes',
-    body: 'Every app runs on a self-managed k3s cluster behind a single Envoy gateway, with highly available Postgres, sealed secrets, and full observability.',
-  },
-  {
-    icon: <SyncIcon />,
-    title: 'Continuous delivery',
-    body: 'Shared CI/CD pipelines and reusable Helm charts build and test every service the same way, then Argo CD syncs the cluster to match Git.',
-  },
-];
 
 const projects: Project[] = [
   {
@@ -120,7 +92,7 @@ export default function ProjectsPage() {
       />
 
       <Container maxWidth="lg" sx={{ pb: pageSection.py }}>
-        {/* under the hood: the shared platform, as an open media list (not cards) */}
+        {/* under the hood: how a change reaches the clusters */}
         <RevealSection>
           <Typography variant="h3" component="h2" sx={{ mb: 3, fontSize: '1.4rem' }}>
             Under the hood
@@ -130,43 +102,6 @@ export default function ProjectsPage() {
         <RevealSection variant="rise" sx={{ mb: 5 }}>
           <RepoMap />
         </RevealSection>
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { sm: '1fr 1fr' },
-            columnGap: 6,
-            borderBottom: 1,
-            borderColor: 'divider',
-          }}
-        >
-          {platform.map((f) => (
-            <RevealSection
-              key={f.title}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'auto 1fr',
-                gap: 2,
-                py: 3,
-                borderTop: 1,
-                borderColor: 'divider',
-              }}
-            >
-              <Avatar variant="rounded" sx={{ bgcolor: 'action.hover', color: 'primary.main' }}>
-                {f.icon}
-              </Avatar>
-
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="h3" component="h3" sx={{ mb: 0.5, fontSize: '1.05rem' }}>
-                  {f.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {f.body}
-                </Typography>
-              </Box>
-            </RevealSection>
-          ))}
-        </Box>
 
         {/* the repositories */}
         <RevealSection>
