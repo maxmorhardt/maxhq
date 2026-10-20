@@ -12,7 +12,7 @@ CronJob that refreshes the trusted Cloudflare IP ranges used by the gateway's
 ## Secrets
 
 `cloudflare-cidr-env` in the `jobs` namespace. Sealed into `secrets/jobs/` — see
-[sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/SETUP.md).
+[sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/README.md).
 
 | key | purpose |
 | --- | --- |

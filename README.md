@@ -12,9 +12,9 @@ Monorepo for everything served under `maxhq.io`: the apps, their Helm charts, an
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
 | [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
 | [`charts`](charts) | Helm chart for each app, the gateway, and the Cloudflare CronJobs | - |
-| [`infra/terraform`](infra/terraform/SETUP.md) | AWS backups, Cloudflare DNS, GitHub rulesets | - |
-| [`infra/k3s`](infra/k3s/SETUP.md) | Node bootstrap and the k3s runbook | - |
-| [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/SETUP.md) | Maintenance page Worker | - |
+| [`infra/terraform`](infra/terraform/README.md) | AWS backups, Cloudflare DNS, GitHub rulesets | - |
+| [`infra/k3s`](infra/k3s/README.md) | Node bootstrap and the k3s runbook | - |
+| [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/README.md) | Maintenance page Worker | - |
 
 Cluster state (which image tag each app runs, plus every infra component's values) lives in [`maxmorhardt/gitops`](https://github.com/maxmorhardt/gitops). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
 

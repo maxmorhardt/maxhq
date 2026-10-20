@@ -6,7 +6,7 @@ created by hand.
 
 | module | owns |
 | --- | --- |
-| `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/SETUP.md](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/postgres/SETUP.md) |
+| `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/README.md](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/postgres/README.md) |
 | `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records. Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges) and deployment environments (`production` waits for approval) |
 

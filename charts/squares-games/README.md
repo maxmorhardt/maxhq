@@ -22,7 +22,7 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 ## Secrets
 
 `squares-games-env` in the `squares` namespace, read with `envFrom` (override the name with `secretName`). Sealed into
-`clusters/<cluster>/secrets/squares/` in the gitops repo; see [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/SETUP.md).
+`clusters/<cluster>/secrets/squares/` in the gitops repo; see [sealed-secrets](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/sealed-secrets/README.md).
 
 | group | keys |
 | --- | --- |

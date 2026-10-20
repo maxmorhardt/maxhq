@@ -61,7 +61,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 - `prealloc`, `gocritic`, and `unparam` are enabled, so give slices capacity hints and drop unused parameters.
 - Avoid comments unless the code is genuinely non-obvious.
 - A new mutating route goes behind both `Auth` and `Idempotent` in that service's `routes.go`.
-- The service's chart is `squares-<service>` in the `charts` repo, with a `DEPENDENCIES.md` listing every secret key and setting. A change that needs a new env var, port, route, or secret key needs a `charts` PR, released before the service.
+- The service's chart is `charts/squares-<service>`, whose `README.md` lists every secret key and setting. A change that needs a new env var, port, route, or secret key changes the chart in the same PR; the chart releases as `squares-<service>-chart`.
 - A change to `libs/*` triggers CI for every service. Run the affected services' tests before committing.
 
 ## Testing Guidance

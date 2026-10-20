@@ -15,7 +15,7 @@
 - `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each is its own Go module, image, and release. `apps/squares/AGENTS.md` has the rules they share.
 - `libs/` - Go libraries the services share: `platform` (infrastructure) and `squares` (the contract between the squares services). Not released on their own.
 - `charts/<name>/` - one self-contained Helm chart per app, plus `gateway` (Gateway API infrastructure, not an app) and the `cloudflare-cidr` / `cloudflare-ddns` CronJob charts that ship a Python script.
-- `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS, and GitHub rulesets. See `infra/terraform/SETUP.md`.
+- `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS, and GitHub rulesets. See `infra/terraform/README.md`.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
 - `.github/workflows/` - `ci.yml` (path-filtered PR checks), `cd-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `cd-prod.yml` (tag-driven promotion of dev's image and deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`. `ci.yml` and `cd-dev.yml` share their path filters from `.github/path-filters.yml`.
@@ -45,7 +45,7 @@
 - Set `fullnameOverride` so resource names do not depend on the release name.
 - Routing is `HTTPRoute` with a `parentRef` to the `maxhq` gateway in `envoy-gateway-system`; rate limiting goes in the `BackendTrafficPolicy`.
 - Alert rules live in `values.yaml` under `metrics.prometheusRule.rules`, labelled `severity` (`warning` or `critical`), `component`, and `layer` (`frontend` or `backend`).
-- Gate optional resources behind an `enabled` flag, and update `DEPENDENCIES.md` when a template starts depending on something outside the chart.
+- Gate optional resources behind an `enabled` flag, and update the chart's `README.md` when a template starts depending on something outside the chart.
 - Rendering is the test. CI runs `helm lint --strict`, `helm template`, and kubeconform on every changed chart:
 
   ```bash
