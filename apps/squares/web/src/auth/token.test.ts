@@ -45,6 +45,22 @@ describe('getIdToken', () => {
     expect(await getIdToken()).toBeNull();
   });
 
+  it('stops waiting on a refresh that hangs', async () => {
+    vi.useFakeTimers();
+    manager.getUser.mockResolvedValue(user(30));
+    let release: (value: null) => void = () => {};
+    manager.signinSilent.mockReturnValue(new Promise((resolve) => (release = resolve)));
+
+    const token = getIdToken();
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(await token).toBe('old');
+    // let the shared refresh finish so later callers start their own
+    release(null);
+    await vi.runAllTimersAsync();
+    vi.useRealTimers();
+  });
+
   it('refreshes on demand even with time left', async () => {
     manager.getUser.mockResolvedValue(user(600));
     manager.signinSilent.mockResolvedValue(user(3600, 'new'));
