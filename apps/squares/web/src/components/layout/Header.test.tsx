@@ -8,6 +8,8 @@ const mockRemoveUser = vi.fn();
 const mockSigninRedirect = vi.fn();
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+const session = vi.hoisted(() => ({ notifySession: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../../auth/session', () => session);
 
 import { useAuth } from 'react-oidc-context';
 
@@ -140,13 +142,14 @@ describe('Header', () => {
       activeNavigator: undefined,
       removeUser: mockRemoveUser,
       signinRedirect: mockSigninRedirect,
-      user: { profile: { name: 'Alice' } },
+      user: { profile: { name: 'Alice' }, id_token: 'tok' },
       settings: { client_id: 'squares', redirect_uri: 'r', scope: 'openid' },
     } as unknown as ReturnType<typeof useAuth>);
     renderHeader();
     fireEvent.click(screen.getByRole('button', { name: /account/i }));
     fireEvent.click(screen.getByRole('menuitem', { name: /logout/i }));
     await waitFor(() => expect(mockRemoveUser).toHaveBeenCalled());
+    expect(session.notifySession).toHaveBeenCalledWith('sign-out', 'tok');
   });
 
   it('opens the hamburger menu and links out from a menu item', () => {

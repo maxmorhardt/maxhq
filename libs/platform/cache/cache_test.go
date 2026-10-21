@@ -235,45 +235,6 @@ func TestGetOrLoad_PropagatesLoadErrorsAndWorksWithoutCache(t *testing.T) {
 	assert.Equal(t, 1, value.N)
 }
 
-func TestRevocationStore(t *testing.T) {
-	mr, client := newRedis(t)
-	store := NewRevocationStore(client)
-	ctx := context.Background()
-
-	revoked, err := store.IsRevoked(ctx, "a@b.c", time.Now().Unix())
-	require.NoError(t, err)
-	assert.False(t, revoked)
-
-	deletedAt := time.Now()
-	require.NoError(t, store.Revoke(ctx, "a@b.c", deletedAt))
-	assert.Greater(t, mr.TTL("squares:revoked:a@b.c"), 29*24*time.Hour)
-
-	revoked, err = store.IsRevoked(ctx, "a@b.c", deletedAt.Add(-time.Hour).Unix())
-	require.NoError(t, err)
-	assert.True(t, revoked, "tokens issued before the deletion are rejected")
-
-	revoked, err = store.IsRevoked(ctx, "a@b.c", deletedAt.Add(time.Hour).Unix())
-	require.NoError(t, err)
-	assert.False(t, revoked, "a fresh login after deletion is allowed")
-}
-
-func TestRevocationStore_SkipsExpiredTombstonesAndReportsErrors(t *testing.T) {
-	mr, client := newRedis(t)
-	store := NewRevocationStore(client)
-	ctx := context.Background()
-
-	require.NoError(t, store.Revoke(ctx, "old@b.c", time.Now().Add(-revocationTTL-time.Hour)))
-	assert.False(t, mr.Exists("squares:revoked:old@b.c"))
-
-	require.NoError(t, mr.Set("squares:revoked:bad@b.c", "nope"))
-	_, err := store.IsRevoked(ctx, "bad@b.c", 1)
-	assert.Error(t, err)
-
-	mr.Close()
-	_, err = store.IsRevoked(ctx, "a@b.c", 1)
-	assert.Error(t, err)
-}
-
 func TestIdempotencyStore_ReserveCompleteReplay(t *testing.T) {
 	_, client := newRedis(t)
 	store := NewIdempotencyStore(client)

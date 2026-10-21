@@ -20,13 +20,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// tombstones older than this can no longer match a live token, so they need not be in redis
-const revocationWindow = 30 * 24 * time.Hour
+// matches how long a deletion blocks the account in redis: longer than any refresh token lives
+const revocationWindow = 91 * 24 * time.Hour
 
 type UserService interface {
 	GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, error)
 	UpdateProfile(ctx context.Context, email, initials string) (*model.User, error)
 	DeleteAccount(ctx context.Context, email string) error
+	SignOut(ctx context.Context, email string, issuedAt, expiresAt int64) error
+	RestoreAccount(ctx context.Context, email string, issuedAt int64) error
 	SyncRevocations(ctx context.Context) error
 }
 
@@ -156,6 +158,49 @@ func (s *userService) DeleteAccount(ctx context.Context, email string) error {
 	}
 
 	log.Info("account deleted")
+	return nil
+}
+
+// the signed-out token stops working everywhere it was copied; the account's other devices keep theirs
+func (s *userService) SignOut(ctx context.Context, email string, issuedAt, expiresAt int64) error {
+	log := logging.FromContext(ctx)
+
+	if err := s.revocations.RevokeSession(ctx, email, issuedAt, expiresAt); err != nil {
+		metrics.IncRedisError("revoke_session")
+		log.Error("failed to revoke the signed-out token", "error", err)
+		return errs.ErrDependencyFailed
+	}
+
+	log.Info("signed out")
+	return nil
+}
+
+// a deletion blocks even refreshed tokens, so a deleted account's other devices are signed out;
+// the web calls this only after an interactive sign-in, which lifts the block for a returning user
+func (s *userService) RestoreAccount(ctx context.Context, email string, issuedAt int64) error {
+	log := logging.FromContext(ctx)
+
+	restored, err := s.revocations.Restore(ctx, email, issuedAt)
+	if err != nil {
+		if errors.Is(err, cache.ErrRestoreTooOld) {
+			log.Warn("refusing to restore an account with a token from before its deletion")
+			return errs.ErrRestoreTooOld
+		}
+		metrics.IncRedisError("restore")
+		log.Error("failed to lift the deletion block", "error", err)
+		return errs.ErrDependencyFailed
+	}
+	if !restored {
+		return nil
+	}
+
+	// without the tombstone, a restart cannot put the block back
+	if err := s.repo.DeleteTombstone(ctx, email); err != nil {
+		log.Error("failed to clear the tombstone of a restored account", "error", err)
+		return errs.ErrDatabaseUnavailable
+	}
+
+	log.Info("restored a deleted account after a new sign-in")
 	return nil
 }
 

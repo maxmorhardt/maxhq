@@ -11,6 +11,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/platform/cache"
 	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
 	"github.com/maxmorhardt/maxhq/libs/squares/events"
 	"github.com/stretchr/testify/assert"
@@ -184,4 +185,41 @@ func TestSyncRevocations_Errors(t *testing.T) {
 	d.repo.EXPECT().TombstonesSince(mock.Anything, mock.Anything).Return([]repository.Tombstone{{Email: "a@b.com"}}, nil)
 	d.revocations.EXPECT().Revoke(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("redis"))
 	assert.Error(t, d.svc().SyncRevocations(context.Background()))
+}
+
+func TestSignOut_RevokesThatToken(t *testing.T) {
+	d := newUserDeps(t)
+	d.revocations.EXPECT().RevokeSession(mock.Anything, "a@b.com", int64(100), int64(200)).Return(nil).Once()
+	require.NoError(t, d.svc().SignOut(context.Background(), "a@b.com", 100, 200))
+
+	d.revocations.EXPECT().RevokeSession(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("redis"))
+	assert.ErrorIs(t, d.svc().SignOut(context.Background(), "a@b.com", 100, 200), errs.ErrDependencyFailed)
+}
+
+func TestRestoreAccount_LiftsTheBlockAndItsTombstone(t *testing.T) {
+	d := newUserDeps(t)
+	d.revocations.EXPECT().Restore(mock.Anything, "a@b.com", int64(500)).Return(true, nil)
+	d.repo.EXPECT().DeleteTombstone(mock.Anything, "a@b.com").Return(nil)
+
+	require.NoError(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 500))
+}
+
+func TestRestoreAccount_NothingToRestore(t *testing.T) {
+	d := newUserDeps(t)
+	d.revocations.EXPECT().Restore(mock.Anything, "a@b.com", int64(500)).Return(false, nil)
+
+	require.NoError(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 500))
+}
+
+func TestRestoreAccount_Errors(t *testing.T) {
+	d := newUserDeps(t)
+	d.revocations.EXPECT().Restore(mock.Anything, mock.Anything, mock.Anything).Return(false, cache.ErrRestoreTooOld).Once()
+	assert.ErrorIs(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 1), errs.ErrRestoreTooOld)
+
+	d.revocations.EXPECT().Restore(mock.Anything, mock.Anything, mock.Anything).Return(false, errors.New("redis")).Once()
+	assert.ErrorIs(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 1), errs.ErrDependencyFailed)
+
+	d.revocations.EXPECT().Restore(mock.Anything, mock.Anything, mock.Anything).Return(true, nil).Once()
+	d.repo.EXPECT().DeleteTombstone(mock.Anything, mock.Anything).Return(errors.New("db"))
+	assert.ErrorIs(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 1), errs.ErrDatabaseUnavailable)
 }

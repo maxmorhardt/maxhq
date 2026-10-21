@@ -19,6 +19,7 @@ import { easing, fonts, game } from '../../app/theme';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 import { HEADER_HEIGHT } from '../../types/layout';
+import { notifySession } from '../../auth/session';
 
 const pages = [
   { name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' },
@@ -56,7 +57,9 @@ export default function Header() {
     if (setting === 'Profile') {
       navigate('/profile');
     } else if (setting === 'Logout') {
-      void auth.removeUser();
+      // revoke the token on the server first, so a copy of it stops working too
+      const token = auth.user?.id_token;
+      void notifySession('sign-out', token).then(() => auth.removeUser());
 
       // only leave pages that require auth
       const path = location.pathname;

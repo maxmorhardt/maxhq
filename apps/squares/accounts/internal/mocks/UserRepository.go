@@ -85,6 +85,53 @@ func (_c *UserRepository_CreateIfMissing_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
+// DeleteTombstone provides a mock function with given fields: ctx, email
+func (_m *UserRepository) DeleteTombstone(ctx context.Context, email string) error {
+	ret := _m.Called(ctx, email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteTombstone")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, email)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UserRepository_DeleteTombstone_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteTombstone'
+type UserRepository_DeleteTombstone_Call struct {
+	*mock.Call
+}
+
+// DeleteTombstone is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+func (_e *UserRepository_Expecter) DeleteTombstone(ctx interface{}, email interface{}) *UserRepository_DeleteTombstone_Call {
+	return &UserRepository_DeleteTombstone_Call{Call: _e.mock.On("DeleteTombstone", ctx, email)}
+}
+
+func (_c *UserRepository_DeleteTombstone_Call) Run(run func(ctx context.Context, email string)) *UserRepository_DeleteTombstone_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *UserRepository_DeleteTombstone_Call) Return(_a0 error) *UserRepository_DeleteTombstone_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *UserRepository_DeleteTombstone_Call) RunAndReturn(run func(context.Context, string) error) *UserRepository_DeleteTombstone_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteWithTombstone provides a mock function with given fields: ctx, email, deletedAt
 func (_m *UserRepository) DeleteWithTombstone(ctx context.Context, email string, deletedAt time.Time) error {
 	ret := _m.Called(ctx, email, deletedAt)
