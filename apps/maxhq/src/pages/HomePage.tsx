@@ -182,10 +182,14 @@ export default function HomePage() {
             pointerEvents: 'none',
             position: 'absolute',
             inset: 0,
+            // the glow sits behind the message and is gone before the edge, which then blends into the footer
             background: (theme) => {
               const { palette } = theme.vars ?? theme;
 
-              return `radial-gradient(45% 60% at 50% 100%, ${palette.heroGlow1}, transparent 70%)`;
+              return [
+                `radial-gradient(42% 46% at 50% 48%, ${palette.heroGlow1}, transparent 72%)`,
+                `linear-gradient(to bottom, transparent 62%, ${palette.background.paper})`,
+              ].join(', ');
             },
           }}
         />
