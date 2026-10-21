@@ -6,7 +6,7 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import ShieldIcon from '@mui/icons-material/Shield';
 import { Box, Button, Container, Link as MuiLink, Typography } from '@mui/material';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import AppShowcase, { type AppEntry, UpNextTile } from '../components/apps/AppShowcase';
 import SquaresBoard from '../components/apps/SquaresBoard';
@@ -79,7 +79,18 @@ const apps: AppEntry[] = [
   },
 ];
 
-// what Google shares when someone signs in, and what each piece is for
+// the accounts people can sign in with, and where each one lists the apps it has shared with
+const providers = [
+  { name: 'Google', access: 'https://myaccount.google.com/connections' },
+  { name: 'GitHub', access: 'https://github.com/settings/applications' },
+];
+
+// "Google or GitHub", "Google, GitHub, or Apple"
+const providerNames = new Intl.ListFormat('en', { type: 'disjunction' }).format(
+  providers.map((provider) => provider.name)
+);
+
+// what a provider shares when someone signs in, and what each piece is for
 const shared = [
   {
     icon: <BadgeIcon />,
@@ -99,8 +110,8 @@ const shared = [
 ];
 
 const never = [
-  'We never see or store your Google password.',
-  'We don’t read your Gmail, Drive, Contacts, Calendar, or any other Google data.',
+  'We never see or store the password to your sign-in account.',
+  'We don’t read your email, files, contacts, repositories, or anything else in that account.',
   'We don’t sell your information or use it for advertising.',
   'We only share it with the services that run maxhq, as the Privacy Policy describes.',
 ];
@@ -130,7 +141,7 @@ export default function AppsPage() {
     <Box>
       <PageMeta
         title="maxhq – Apps by Max Morhardt"
-        description="maxhq is home to the apps Max Morhardt builds and runs, including Squares. See what each app does, how signing in with Google works, and what happens to your data."
+        description="maxhq is home to the apps Max Morhardt builds and runs, including Squares. See what each app does, how signing in works, and what happens to your data."
         canonical="https://maxhq.io/apps"
       />
 
@@ -164,8 +175,8 @@ export default function AppsPage() {
               sx={{ mt: 2.5, maxWidth: '58ch', fontSize: { md: '1.15rem' }, color: 'text.primary' }}
             >
               maxhq is the home of the web apps Max Morhardt builds and runs. Every one is free,
-              runs in your browser, and uses the same maxhq account, so you sign in once with Google
-              or GitHub and you’re in.
+              runs in your browser, and uses the same maxhq account, so you sign in once with{' '}
+              {providerNames} and you’re in.
             </Typography>
           </RevealSection>
 
@@ -240,7 +251,7 @@ export default function AppsPage() {
         <UpNextTile />
       </Container>
 
-      {/* what signing in shares and what we do with it, kept here for Google's sign-in review */}
+      {/* what signing in shares and what we do with it, kept here for the sign-in providers' app reviews */}
       <Box
         component="section"
         id="your-data"
@@ -263,10 +274,10 @@ export default function AppsPage() {
               Your account and your data
             </Typography>
             <Typography sx={{ mt: 2 }}>
-              Signing in to any maxhq app goes through one shared maxhq sign-in. When you choose{' '}
-              <strong>Continue with Google</strong>, Google asks whether to share your name, email
-              address, and basic profile with maxhq. That’s all we ask for, and here’s exactly what
-              it’s used for.
+              Every maxhq app signs you in through one shared maxhq sign-in, using an account you
+              already have with {providerNames}. Whichever you pick asks whether to share your name,
+              email address, and basic profile with maxhq. That’s all we ask for, and here’s exactly
+              what it’s used for.
             </Typography>
           </RevealSection>
 
@@ -279,7 +290,7 @@ export default function AppsPage() {
               alignItems: 'start',
             }}
           >
-            <DataCard title="What Google shares with us">
+            <DataCard title="What your sign-in shares with us">
               <Box component="dl" sx={{ m: 0, display: 'grid', gap: 2.5 }}>
                 {shared.map((item) => (
                   <Box key={item.label} sx={{ display: 'flex', gap: 1.75 }}>
@@ -333,14 +344,15 @@ export default function AppsPage() {
                   <Typography variant="body2">
                     Delete your account anytime from your profile in any app, or email{' '}
                     <MuiLink href="mailto:support@maxhq.io">support@maxhq.io</MuiLink> and we’ll do
-                    it for you. You can also remove maxhq’s access from your{' '}
-                    <MuiLink
-                      href="https://myaccount.google.com/connections"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Google account settings
-                    </MuiLink>
+                    it for you. You can also remove maxhq’s access in your account settings with{' '}
+                    {providers.map((provider, i) => (
+                      <Fragment key={provider.name}>
+                        {i > 0 && (i === providers.length - 1 ? ' or ' : ', ')}
+                        <MuiLink href={provider.access} target="_blank" rel="noreferrer">
+                          {provider.name}
+                        </MuiLink>
+                      </Fragment>
+                    ))}
                     .
                   </Typography>
                 </Box>
