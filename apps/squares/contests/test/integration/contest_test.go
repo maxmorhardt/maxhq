@@ -168,7 +168,7 @@ func TestContest_IdempotentCreate(t *testing.T) {
 	assert.Equal(t, "true", resp2.Header.Get("Idempotent-Replayed"))
 
 	_, resp3 := createContestFor(t, &game, ownerUser, "Idempotent Bowl", 10)
-	assert.Equal(t, http.StatusBadRequest, resp3.Status)
+	assert.Equal(t, http.StatusConflict, resp3.Status, "a new create with the same name is a conflict")
 }
 
 func TestContest_ActiveContestCanBeDeleted(t *testing.T) {
