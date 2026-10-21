@@ -7,12 +7,12 @@ import { layout, primaryTint, secondaryTint } from '../../theme';
 import HeroTerminal from '../common/HeroTerminal';
 
 // the scene is this many viewports tall; the extra beyond one is the scroll that plays the hand-off
-const SCENE_VH = 220;
+const SCENE_VH = 160;
 
 // 0 when the terminal is the whole first screen, 1 once it has settled beside the headline
 const t = `min(var(--progress, 0) * ${SCENE_VH / (SCENE_VH - 100)}, 1)`;
-// the text arrives over the second half of the hand-off
-const textIn = `max(min((${t} - 0.4) / 0.5, 1), 0)`;
+// the text arrives over the back half of the hand-off
+const textIn = `max(min((${t} - 0.3) / 0.55, 1), 0)`;
 
 const pinned = (sx: object) => ({
   '@media (min-width: 900px) and (prefers-reduced-motion: no-preference)': sx,

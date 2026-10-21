@@ -1,44 +1,46 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import AppsPage from './AppsPage';
 import { renderWithProviders } from '../testUtils';
 
 describe('AppsPage', () => {
-  it('renders the app as the page heading', () => {
+  it('renders the page heading and an index of the apps', () => {
     renderWithProviders(<AppsPage />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Squares' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Apps' })).toBeInTheDocument();
+    const index = screen.getByRole('navigation', { name: 'Apps on maxhq' });
+    expect(within(index).getByRole('link', { name: /Squares/ })).toHaveAttribute(
+      'href',
+      '#squares'
+    );
   });
 
-  it('links out to the live app', () => {
+  it('presents squares with a link out to the live app', () => {
     renderWithProviders(<AppsPage />);
 
-    const cta = screen.getByRole('link', { name: /Play Squares/ });
-    expect(cta).toHaveAttribute('href', 'https://squares.maxhq.io');
-    expect(cta).toHaveAttribute('target', '_blank');
+    const squares = screen.getByRole('article', { name: 'Squares' });
+    expect(within(squares).getByRole('link', { name: /Play Squares/ })).toHaveAttribute(
+      'href',
+      'https://squares.maxhq.io'
+    );
+    expect(
+      within(squares).getByRole('heading', { name: 'How a game plays out' })
+    ).toBeInTheDocument();
+    expect(within(squares).getByRole('heading', { name: 'Winners light up' })).toBeInTheDocument();
   });
 
-  it('renders the numbered play-by-play steps', () => {
+  it('explains what signing in with Google shares and what it is used for', () => {
     renderWithProviders(<AppsPage />);
 
-    expect(screen.getByRole('heading', { name: 'How a game plays out' })).toBeInTheDocument();
-
-    for (const name of [
-      'Set up the board',
-      'Friends claim squares',
-      'Numbers are drawn',
-      'Winners light up',
-    ]) {
-      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+    const data = screen.getByRole('region', { name: 'Your account and your data' });
+    for (const term of ['Your name', 'Your email address', 'Your account ID']) {
+      expect(within(data).getByText(term)).toBeInTheDocument();
     }
-  });
-
-  it('renders the perks strip', () => {
-    renderWithProviders(<AppsPage />);
-
-    expect(screen.getByRole('heading', { name: 'Nothing to install' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'One sign-in' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Live updates' })).toBeInTheDocument();
+    expect(within(data).getByText(/don’t sell your information/)).toBeInTheDocument();
+    expect(within(data).getByRole('link', { name: 'support@maxhq.io' })).toHaveAttribute(
+      'href',
+      'mailto:support@maxhq.io'
+    );
   });
 
   it('links to the legal pages', () => {

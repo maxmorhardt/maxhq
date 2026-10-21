@@ -27,14 +27,13 @@ describe('HomePage', () => {
     for (const name of [
       'What the day job moved.',
       'Tools of the trade',
-      'Squares, live on game day.',
       "Building something? Let's talk.",
     ]) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();
     }
   });
 
-  it('links the calls to action to contact, projects, and squares', () => {
+  it('links the calls to action to contact, projects, and about', () => {
     renderWithProviders(<HomePage />);
 
     expect(screen.getByRole('link', { name: /Send a message/ })).toHaveAttribute(
@@ -44,10 +43,6 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: /Browse the projects/ })).toHaveAttribute(
       'href',
       '/projects'
-    );
-    expect(screen.getByRole('link', { name: /Play Squares/ })).toHaveAttribute(
-      'href',
-      'https://squares.maxhq.io'
     );
     expect(screen.getByRole('link', { name: /The full story/ })).toHaveAttribute('href', '/about');
   });
