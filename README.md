@@ -11,12 +11,39 @@ Monorepo for everything served under `maxhq.io`: the apps, their Helm charts, an
 | [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
 | [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
-| [`charts`](charts) | Helm chart for each app, the gateway, and the dev-only `cloudflare-cidr` alert | - |
+| [`charts`](charts) | Helm chart for each app, the gateway, and the `cloudflare-cidr` alert | - |
 | [`infra/terraform`](infra/terraform/README.md) | AWS backups, Cloudflare DNS, GitHub rulesets and environments | - |
 | [`infra/k3s`](infra/k3s/README.md) | Node bootstrap and the k3s runbook | - |
 | [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/README.md) | Maintenance page Worker | - |
 
 Cluster state (which image and chart version each app runs, plus every infra component's values) lives in [`maxmorhardt/gitops`](https://github.com/maxmorhardt/gitops). Shared CI lives in [`maxmorhardt/workflows`](https://github.com/maxmorhardt/workflows).
+
+## Architecture
+
+```mermaid
+flowchart LR
+  user([Browser]) -->|HTTPS| cf[Cloudflare proxy]
+  cf --> gw
+
+  subgraph prod[prod k3s: 3 Contabo VPSes]
+    gw[Envoy Gateway] --> web[maxhq, squares web]
+    gw --> api[squares contests, games,<br/>accounts, realtime]
+    gw --> dex[Dex login]
+    api --> pg[(CloudNativePG)]
+    api --> vk[(Valkey streams)]
+    alloy[Grafana Alloy]
+  end
+
+  pg -->|WAL + base backups| s3[(S3)]
+  alloy -->|metrics, logs| grafana[Grafana Cloud<br/>alerts to Discord]
+
+  gh[GitHub Actions] -->|images| hub[(Docker Hub)]
+  gh -->|charts| ghcr[(GHCR)]
+  gh -->|bump versions| gitops[gitops repo]
+  gitops --> argo[Argo CD] --> prod
+```
+
+Prod traffic comes in through Cloudflare's proxy. The squares services keep state in Postgres, which commits each change with an outbox event in the same transaction. A relay moves those events onto Valkey streams, where `realtime` fans them out to browsers over server-sent events. Dev is the same stack on four Raspberry Pis, reachable only over Tailscale.
 
 ## Releases
 

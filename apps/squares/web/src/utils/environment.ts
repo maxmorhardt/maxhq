@@ -16,9 +16,9 @@ export const apiBaseUrl = (hostname?: string): string => {
   return domain ? `https://api.${domain}/squares` : 'http://localhost:8080/squares';
 };
 
-// local development signs in against production
+// local development signs in against dev
 export const oidcAuthority = (hostname?: string): string =>
-  `https://login.${appDomain(hostname) ?? PRODUCTION_DOMAIN}`;
+  `https://login.${appDomain(hostname) ?? `dev.${PRODUCTION_DOMAIN}`}`;
 
 export const oidcRedirectUri = (): string => {
   const origin =

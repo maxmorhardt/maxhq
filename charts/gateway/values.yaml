@@ -17,6 +17,7 @@ strippedRequestHeaders:
 
 proxy:
   replicas: 2
+  minAvailable: 1
   service:
     name: envoy-maxhq
     type: LoadBalancer

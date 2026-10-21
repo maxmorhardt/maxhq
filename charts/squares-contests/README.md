@@ -2,7 +2,7 @@
 
 Published to `oci://ghcr.io/maxmorhardt/charts/squares-contests`, released as `squares-contests-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
-The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, PrometheusRule, and Grafana dashboard.
+The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, and PrometheusRule.
 
 ## Required
 
@@ -41,4 +41,4 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 
 ## Optional
 
-- **Prometheus** - the ServiceMonitor, PrometheusRule, and Grafana dashboard ship with the chart.
+- **Prometheus** - the ServiceMonitor and PrometheusRule ship with the chart

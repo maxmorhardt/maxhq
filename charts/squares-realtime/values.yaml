@@ -207,10 +207,3 @@ metrics:
           summary: 'Realtime cannot read the contest streams'
           description: 'Open streams are not receiving events; check redis'
 
-dashboard:
-  enabled: true
-  namespace: monitoring
-  file: squares-realtime-dashboard.json
-  labels:
-    grafana_dashboard: '1'
-  annotations: {}
