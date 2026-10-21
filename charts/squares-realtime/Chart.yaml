@@ -2,4 +2,4 @@ apiVersion: v2
 name: squares-realtime
 description: Live contest updates over server-sent events for squares.maxhq.io
 type: application
-version: 1.0.0
+version: 2.0.0
