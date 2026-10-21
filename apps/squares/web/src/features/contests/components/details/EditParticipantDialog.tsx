@@ -1,5 +1,6 @@
 import { Close, ErrorOutlineOutlined } from '@mui/icons-material';
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -19,6 +20,8 @@ import type {
   ParticipantRole,
   UpdateParticipantRequest,
 } from '../../../../types/contest';
+import { errorMessage } from '../../../../api/errors';
+import { participantName } from '../../../../utils/publicName';
 import { useToast } from '../../../toast/useToast';
 import { useUpdateParticipantMutation } from '../../api';
 
@@ -58,7 +61,7 @@ function EditParticipantForm({
   onClose,
 }: Props & { participant: Participant }) {
   const { showToast } = useToast();
-  const [updateParticipant, { isLoading, isError }] = useUpdateParticipantMutation();
+  const [updateParticipant, { isLoading, isError, error }] = useUpdateParticipantMutation();
   const [role, setRole] = useState<ParticipantRole>(participant.role);
   const [maxSquares, setMaxSquares] = useState(participant.maxSquares);
 
@@ -91,6 +94,7 @@ function EditParticipantForm({
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
+        <Typography sx={{ fontWeight: 600 }}>{participantName(participant)}</Typography>
         <Typography
           variant="body2"
           sx={{ mb: 2, color: 'rgba(255,255,255,0.7)', overflowWrap: 'anywhere' }}
@@ -133,6 +137,12 @@ function EditParticipantForm({
               size="small"
             />
           </>
+        )}
+
+        {isError && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {errorMessage(error, 'Failed to update participant')}
+          </Alert>
         )}
       </DialogContent>
       <DialogActions>

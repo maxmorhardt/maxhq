@@ -148,6 +148,12 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "409": {
+                        "description": "You already have a contest with this name",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -1433,6 +1439,10 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "createdAt": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "description": "read from the user projection, so other players can be shown a name instead of an email",
                     "type": "string"
                 },
                 "id": {

@@ -13,7 +13,7 @@ import { alpha } from '@mui/material/styles';
 import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
-import { errorMessage } from '../../../../api/errors';
+import { errorMessage, errorStatus } from '../../../../api/errors';
 import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
 import type { ContestVisibility, Game } from '../../../../types/contest';
@@ -124,6 +124,16 @@ export default function CreateContestForm() {
     setFieldErrors((errors) => ({ ...errors, game: undefined }));
   };
 
+  const focusField = (field: 'game' | 'name') => {
+    const section = field === 'game' ? gameSection.current : nameSection.current;
+    section?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    if (field === 'game') {
+      section?.querySelector<HTMLElement>('[role="radio"]')?.focus({ preventScroll: true });
+    } else {
+      nameInput.current?.focus({ preventScroll: true });
+    }
+  };
+
   // every problem shows on its own step; the first one is brought into view and focused
   const validate = () => {
     const errors = {
@@ -132,17 +142,11 @@ export default function CreateContestForm() {
     };
     setFieldErrors(errors);
 
-    const first = errors.game ? gameSection.current : errors.name ? nameSection.current : null;
-    if (!first) {
-      return true;
+    if (errors.game || errors.name) {
+      focusField(errors.game ? 'game' : 'name');
+      return false;
     }
-    first.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-    if (errors.game) {
-      first.querySelector<HTMLElement>('[role="radio"]')?.focus({ preventScroll: true });
-    } else {
-      nameInput.current?.focus({ preventScroll: true });
-    }
-    return false;
+    return true;
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -167,6 +171,12 @@ export default function CreateContestForm() {
       }).unwrap();
       navigate(`/contests/${contest.id}`);
     } catch (err) {
+      // a taken name belongs on the name field, not the top of the form
+      if (errorStatus(err) === 409) {
+        setFieldErrors({ name: errorMessage(err, 'You already have a contest with this name') });
+        focusField('name');
+        return;
+      }
       setError(errorMessage(err, 'Error creating contest'));
     }
   };

@@ -73,7 +73,7 @@ func TestCreateContest_OwnerMismatch(t *testing.T) {
 }
 
 func TestCreateContest_AlreadyExists(t *testing.T) {
-	createContestErr(t, errs.ErrContestAlreadyExists, http.StatusBadRequest)
+	createContestErr(t, errs.ErrContestAlreadyExists, http.StatusConflict)
 }
 func TestCreateContest_DatabaseUnavailable(t *testing.T) {
 	createContestErr(t, errs.ErrDatabaseUnavailable, http.StatusInternalServerError)

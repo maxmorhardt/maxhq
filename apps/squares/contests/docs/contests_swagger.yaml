@@ -92,6 +92,10 @@ definitions:
         type: string
       createdAt:
         type: string
+      displayName:
+        description: read from the user projection, so other players can be shown
+          a name instead of an email
+        type: string
       id:
         type: string
       inviteId:
@@ -574,6 +578,10 @@ paths:
             $ref: '#/definitions/api.APIError'
         "403":
           description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "409":
+          description: You already have a contest with this name
           schema:
             $ref: '#/definitions/api.APIError'
         "500":

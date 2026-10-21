@@ -96,19 +96,10 @@ export default function Profile() {
             overflow: 'hidden',
           }}
         >
-          <Box
-            aria-hidden
-            sx={{
-              height: 84,
-              // a few yard lines across the band
-              backgroundImage: `repeating-linear-gradient(90deg, ${alpha(palette.chalk, 0.18)} 0 2px, transparent 2px 48px), linear-gradient(120deg, ${palette.brandDeep}, ${palette.brand} 60%, ${alpha(palette.gold, 0.7)})`,
-            }}
-          />
-          <Box sx={{ px: { xs: 2.5, sm: 3 }, pb: 3 }}>
+          <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
             <Box
               aria-hidden
               sx={{
-                mt: '-44px',
                 display: 'grid',
                 placeItems: 'center',
                 width: 88,
@@ -119,8 +110,6 @@ export default function Profile() {
                 fontSize: '3rem',
                 color: '#fff',
                 bgcolor: palette.night,
-                border: 4,
-                borderColor: palette.field,
                 boxShadow: `inset 0 0 0 2px ${alpha(palette.brand, 0.6)}`,
               }}
             >
