@@ -1,9 +1,8 @@
 import GitHubIcon from '@mui/icons-material/GitHub';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Link as MuiLink, Typography } from '@mui/material';
 import PageHeader from '../components/common/PageHeader';
-import RepoMap from '../components/projects/RepoMap';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import ProjectRow, { type Project } from '../components/projects/ProjectRow';
@@ -102,7 +101,7 @@ export default function ProjectsPage() {
             key={group.title}
             component="section"
             aria-labelledby={`group-${group.title}`}
-            sx={{ mb: { xs: 7, md: 10 } }}
+            sx={{ mb: { xs: 7, md: 10 }, '&:last-of-type': { mb: { xs: 4, md: 5 } } }}
           >
             <RevealSection
               sx={{
@@ -125,20 +124,31 @@ export default function ProjectsPage() {
           </Box>
         ))}
 
-        {/* under the hood: how a change reaches the clusters */}
-        <Box component="section" aria-labelledby="under-the-hood">
-          <RevealSection>
-            <Typography id="under-the-hood" variant="h3" component="h2" sx={{ mb: 1 }}>
-              Under the hood
-            </Typography>
-            <Typography sx={{ mb: 4, maxWidth: '60ch' }}>
-              How a change in any of these repositories reaches the clusters.
-            </Typography>
-          </RevealSection>
-          <RevealSection variant="rise">
-            <RepoMap />
-          </RevealSection>
-        </Box>
+        <RevealSection
+          sx={{
+            pt: 4,
+            borderTop: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+          }}
+        >
+          <Typography>
+            Every repository here is public, from the apps down to the pipelines.
+          </Typography>
+          <MuiLink
+            href="https://github.com/maxmorhardt"
+            target="_blank"
+            rel="noreferrer"
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, fontWeight: 600 }}
+          >
+            <GitHubIcon fontSize="small" />
+            Browse them on GitHub
+          </MuiLink>
+        </RevealSection>
       </Container>
     </Box>
   );

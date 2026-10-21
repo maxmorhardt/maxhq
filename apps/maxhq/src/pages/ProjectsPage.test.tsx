@@ -13,17 +13,18 @@ describe('ProjectsPage', () => {
   it('renders the section headings', () => {
     renderWithProviders(<ProjectsPage />);
 
-    for (const name of ['Apps', 'Platform', 'Under the hood']) {
+    for (const name of ['Apps', 'Platform']) {
       expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
     }
   });
 
-  it('maps how a change reaches the clusters', () => {
+  it('ends on a link to every repository on GitHub', () => {
     renderWithProviders(<ProjectsPage />);
 
-    expect(
-      screen.getByRole('list', { name: 'How a change reaches the clusters' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Browse them on GitHub/ })).toHaveAttribute(
+      'href',
+      'https://github.com/maxmorhardt'
+    );
   });
 
   it('lists every repository in order', () => {
