@@ -41,6 +41,7 @@ func TestRunner_RunGuarded_LockAcquired(t *testing.T) {
 	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{}, nil)
 	gameSvc := mocks.NewGameService(t)
 	gameSvc.EXPECT().Ingest(mock.Anything, mock.Anything).Return(0, nil)
+	gameSvc.EXPECT().SaveCalendar(mock.Anything, mock.Anything).Return(nil)
 
 	r, dbMock := mockRunner(t, espn, gameSvc)
 	dbMock.ExpectQuery(`pg_try_advisory_lock`).WillReturnRows(sqlmock.NewRows([]string{"locked"}).AddRow(true))
@@ -103,6 +104,7 @@ func TestRunner_RunGuarded_ResetsFailuresOnSuccess(t *testing.T) {
 	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{}, nil)
 	gameSvc := mocks.NewGameService(t)
 	gameSvc.EXPECT().Ingest(mock.Anything, mock.Anything).Return(0, nil)
+	gameSvc.EXPECT().SaveCalendar(mock.Anything, mock.Anything).Return(nil)
 
 	r, dbMock := mockRunner(t, espn, gameSvc)
 	r.consecutiveFailures = failureLogThreshold

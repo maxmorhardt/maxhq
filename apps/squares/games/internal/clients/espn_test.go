@@ -69,11 +69,15 @@ func TestESPNClient_FetchCurrent(t *testing.T) {
 	assert.Equal(t, 2, g.Period)
 
 	assert.Equal(t, 2025, cal.Season)
+	weeks := make([]model.Week, 0, len(cal.Weeks))
+	for i := range cal.Weeks {
+		weeks = append(weeks, cal.Weeks[i].Week)
+	}
 	assert.Equal(t, []model.Week{
 		{Season: 2025, SeasonType: 2, Week: 1},
 		{Season: 2025, SeasonType: 2, Week: 2},
 		{Season: 2025, SeasonType: 3, Week: 1},
-	}, cal.Weeks)
+	}, weeks)
 	assert.Equal(t, 2026, cal.End.Year())
 	assert.Equal(t, 2, int(cal.End.Month()))
 }

@@ -211,6 +211,7 @@ func TestGameService_GetScoreboard_CurrentWeek(t *testing.T) {
 	g := mocks.NewGameRepository(t)
 	g.EXPECT().CurrentWeek(mock.Anything).Return(&week, nil)
 	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{{ESPNID: "1"}}, nil).Once()
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
 	svc := gameSvc(t, g, nil)
 
 	first, err := svc.GetScoreboard(context.Background(), nil)
@@ -237,6 +238,7 @@ func TestGameService_GetScoreboard_ChosenWeek(t *testing.T) {
 	week := model.Week{Season: 2025, SeasonType: 3, Week: 4}
 	g := mocks.NewGameRepository(t)
 	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
 
 	board, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
 
@@ -289,6 +291,7 @@ func TestGameService_Ingest_ChangedGameDropsItsCachedWeekAndGame(t *testing.T) {
 	stored := &model.Game{ID: gameID, Season: 2026, SeasonType: 2, Week: 7, HomeScore: 7}
 	g := mocks.NewGameRepository(t)
 	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{{ID: gameID}}, nil).Twice()
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
 	g.EXPECT().GetByID(mock.Anything, gameID).Return(stored, nil)
 	g.EXPECT().Upsert(mock.Anything, mock.Anything).
 		Run(func(_ context.Context, game *model.Game) { game.ID = gameID }).Return(true, nil).Once()
@@ -315,6 +318,7 @@ func TestGameService_Ingest_UnchangedGameKeepsTheCache(t *testing.T) {
 	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
 	g := mocks.NewGameRepository(t)
 	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil).Once()
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
 	g.EXPECT().Upsert(mock.Anything, mock.Anything).Return(false, nil)
 	svc := gameSvc(t, g, nil)
 
@@ -324,4 +328,61 @@ func TestGameService_Ingest_UnchangedGameKeepsTheCache(t *testing.T) {
 	require.NoError(t, err)
 	_, err = svc.GetScoreboard(context.Background(), &week)
 	require.NoError(t, err)
+}
+
+func TestGameService_GetScoreboard_NamesAndPlacesAListedWeek(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 18}
+	listed := &model.SeasonWeek{Week: week, Label: "Week 18", StartsAt: time.Date(2027, 1, 6, 8, 0, 0, 0, time.UTC)}
+	before := model.Week{Season: 2026, SeasonType: 2, Week: 17}
+	after := model.Week{Season: 2026, SeasonType: 3, Week: 1}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(listed, nil)
+	g.EXPECT().NeighborWeeks(mock.Anything, listed).Return(&before, &after, nil)
+
+	board, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+
+	require.NoError(t, err)
+	assert.Equal(t, "Week 18", board.Label)
+	assert.Equal(t, &before, board.Previous)
+	assert.Equal(t, &after, board.Next, "the regular season steps into the playoffs")
+}
+
+func TestGameService_GetScoreboard_UnlistedWeekGetsADefaultName(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 3, Week: 2}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil)
+
+	board, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+
+	require.NoError(t, err)
+	assert.Equal(t, "Postseason Week 2", board.Label)
+	assert.Nil(t, board.Previous)
+	assert.Nil(t, board.Next)
+}
+
+func TestGameService_GetScoreboard_CalendarErrors(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 3}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, errors.New("db")).Once()
+	_, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+
+	listed := &model.SeasonWeek{Week: week, Label: "Week 3"}
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(listed, nil).Once()
+	g.EXPECT().NeighborWeeks(mock.Anything, listed).Return(nil, nil, errors.New("db"))
+	_, err = gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
+func TestGameService_SaveCalendar(t *testing.T) {
+	weeks := []model.SeasonWeek{{Week: model.Week{Season: 2026, SeasonType: 2, Week: 1}, Label: "Week 1"}}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().SaveCalendar(mock.Anything, weeks).Return(nil).Once()
+	require.NoError(t, gameSvc(t, g, nil).SaveCalendar(context.Background(), weeks))
+
+	g.EXPECT().SaveCalendar(mock.Anything, weeks).Return(errors.New("db"))
+	assert.ErrorIs(t, gameSvc(t, g, nil).SaveCalendar(context.Background(), weeks), errs.ErrDatabaseUnavailable)
 }

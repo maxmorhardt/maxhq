@@ -19,7 +19,7 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 | Path under `api.maxhq.io/squares` | |
 | --- | --- |
 | `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
-| `/games/scoreboard` | one week of games with their scores by quarter (the current week unless `season`, `seasonType`, and `week` pick another); public |
+| `/games/scoreboard` | one week of games with their scores by quarter, the week's name from ESPN's calendar, and the calendar weeks before and after it (the current week unless `season`, `seasonType`, and `week` pick another); public |
 | `/games/{id}` | one game with its status, score, and points by quarter; public |
 | `/swagger/games` | the API reference |
 

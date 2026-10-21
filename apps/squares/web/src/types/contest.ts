@@ -145,6 +145,11 @@ export interface ScoreboardWeek {
 }
 
 export interface Scoreboard extends ScoreboardWeek {
+  // ESPN's name for the week, like "Week 7" or "Wild Card"
+  label: string;
+  // the calendar weeks either side, across playoff rounds and seasons; absent at the ends
+  previous?: ScoreboardWeek;
+  next?: ScoreboardWeek;
   games: Game[];
 }
 

@@ -223,12 +223,14 @@ func TestGameRepository_UpsertScore_Duplicate(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGameRepository_CurrentWeek(t *testing.T) {
+var weekColumns = []string{"season", "season_type", "week", "label", "starts_at", "ends_at"}
+
+func TestGameRepository_CurrentWeek_TheCalendarWeekRunningNow(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewGameRepository(gdb)
 
-	mock.ExpectQuery(`SELECT "season","season_type","week" FROM "games" ORDER BY ABS`).
-		WillReturnRows(sqlmock.NewRows([]string{"season", "season_type", "week"}).AddRow(2026, 2, 7))
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at <= \$1 AND ends_at > \$2 ORDER BY starts_at DESC`).
+		WillReturnRows(sqlmock.NewRows(weekColumns).AddRow(2026, 2, 7, "Week 7", time.Now(), time.Now()))
 
 	week, err := repo.CurrentWeek(context.Background())
 	require.NoError(t, err)
@@ -236,16 +238,131 @@ func TestGameRepository_CurrentWeek(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestGameRepository_CurrentWeek_OffseasonKeepsTheLastWeekThatEnded(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at <= \$1 AND ends_at > \$2`).
+		WillReturnRows(sqlmock.NewRows(weekColumns))
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE ends_at <= \$1 ORDER BY ends_at DESC`).
+		WillReturnRows(sqlmock.NewRows(weekColumns).AddRow(2026, 3, 4, "Super Bowl", time.Now(), time.Now()))
+
+	week, err := repo.CurrentWeek(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, &model.Week{Season: 2026, SeasonType: 3, Week: 4}, week)
+}
+
+func TestGameRepository_CurrentWeek_WithoutACalendarUsesTheNearestGame(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at`).WillReturnRows(sqlmock.NewRows(weekColumns))
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE ends_at`).WillReturnRows(sqlmock.NewRows(weekColumns))
+	mock.ExpectQuery(`SELECT "season","season_type","week" FROM "games" ORDER BY ABS`).
+		WillReturnRows(sqlmock.NewRows([]string{"season", "season_type", "week"}).AddRow(2026, 2, 7))
+
+	week, err := repo.CurrentWeek(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, &model.Week{Season: 2026, SeasonType: 2, Week: 7}, week)
+}
+
 func TestGameRepository_CurrentWeek_NoGames(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewGameRepository(gdb)
 
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at`).WillReturnRows(sqlmock.NewRows(weekColumns))
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE ends_at`).WillReturnRows(sqlmock.NewRows(weekColumns))
 	mock.ExpectQuery(`SELECT "season","season_type","week" FROM "games"`).
 		WillReturnRows(sqlmock.NewRows([]string{"season", "season_type", "week"}))
 
 	week, err := repo.CurrentWeek(context.Background())
 	require.NoError(t, err)
 	assert.Nil(t, week)
+}
+
+func TestGameRepository_CurrentWeek_Errors(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at`).WillReturnError(assert.AnError)
+	_, err := NewGameRepository(gdb).CurrentWeek(context.Background())
+	assert.Error(t, err)
+
+	gdb, mock = newMockDB(t)
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at`).WillReturnRows(sqlmock.NewRows(weekColumns))
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE ends_at`).WillReturnError(assert.AnError)
+	_, err = NewGameRepository(gdb).CurrentWeek(context.Background())
+	assert.Error(t, err)
+}
+
+func TestGameRepository_SaveCalendar(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	require.NoError(t, repo.SaveCalendar(context.Background(), nil), "nothing to save is not a query")
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`INSERT INTO "season_weeks" .* ON CONFLICT \("season","season_type","week"\) DO UPDATE SET "label"="excluded"."label","starts_at"="excluded"."starts_at","ends_at"="excluded"."ends_at"`).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	err := repo.SaveCalendar(context.Background(), []model.SeasonWeek{{Week: model.Week{Season: 2026, SeasonType: 2, Week: 1}, Label: "Week 1"}})
+	require.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGameRepository_GetSeasonWeek(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+	week := model.Week{Season: 2026, SeasonType: 3, Week: 4}
+
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE season = \$1 AND season_type = \$2 AND week = \$3`).
+		WithArgs(2026, 3, 4, 1).
+		WillReturnRows(sqlmock.NewRows(weekColumns).AddRow(2026, 3, 4, "Super Bowl", time.Now(), time.Now()))
+	found, err := repo.GetSeasonWeek(context.Background(), week)
+	require.NoError(t, err)
+	assert.Equal(t, "Super Bowl", found.Label)
+
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks"`).WillReturnRows(sqlmock.NewRows(weekColumns))
+	missing, err := repo.GetSeasonWeek(context.Background(), week)
+	require.NoError(t, err)
+	assert.Nil(t, missing)
+}
+
+func TestGameRepository_NeighborWeeks(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+	week18 := &model.SeasonWeek{Week: model.Week{Season: 2026, SeasonType: 2, Week: 18}, StartsAt: time.Now()}
+
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at < \$1 ORDER BY starts_at DESC`).
+		WillReturnRows(sqlmock.NewRows(weekColumns).AddRow(2026, 2, 17, "Week 17", time.Now(), time.Now()))
+	mock.ExpectQuery(`SELECT \* FROM "season_weeks" WHERE starts_at > \$1 ORDER BY starts_at ASC`).
+		WillReturnRows(sqlmock.NewRows(weekColumns).AddRow(2026, 3, 1, "Wild Card", time.Now(), time.Now()))
+
+	previous, next, err := repo.NeighborWeeks(context.Background(), week18)
+	require.NoError(t, err)
+	assert.Equal(t, &model.Week{Season: 2026, SeasonType: 2, Week: 17}, previous)
+	assert.Equal(t, &model.Week{Season: 2026, SeasonType: 3, Week: 1}, next)
+}
+
+func TestGameRepository_NeighborWeeks_AtTheEndsAndOnErrors(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+	only := &model.SeasonWeek{StartsAt: time.Now()}
+
+	mock.ExpectQuery(`starts_at < `).WillReturnRows(sqlmock.NewRows(weekColumns))
+	mock.ExpectQuery(`starts_at > `).WillReturnRows(sqlmock.NewRows(weekColumns))
+	previous, next, err := repo.NeighborWeeks(context.Background(), only)
+	require.NoError(t, err)
+	assert.Nil(t, previous)
+	assert.Nil(t, next)
+
+	mock.ExpectQuery(`starts_at < `).WillReturnError(assert.AnError)
+	_, _, err = repo.NeighborWeeks(context.Background(), only)
+	assert.Error(t, err)
+
+	mock.ExpectQuery(`starts_at < `).WillReturnRows(sqlmock.NewRows(weekColumns))
+	mock.ExpectQuery(`starts_at > `).WillReturnError(assert.AnError)
+	_, _, err = repo.NeighborWeeks(context.Background(), only)
+	assert.Error(t, err)
 }
 
 func TestGameRepository_GetWeek(t *testing.T) {

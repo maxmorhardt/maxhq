@@ -157,7 +157,12 @@ func (f *fakeESPN) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	// a one-week season, so every run's season sync asks for week 1 as well
-	calendar := []map[string]any{{"value": "2", "entries": []map[string]string{{"value": "1"}}}}
+	week := map[string]string{
+		"value": "1", "label": "Week 1",
+		"startDate": time.Now().Add(-72 * time.Hour).UTC().Format("2006-01-02T15:04Z"),
+		"endDate":   time.Now().Add(96 * time.Hour).UTC().Format("2006-01-02T15:04Z"),
+	}
+	calendar := []map[string]any{{"value": "2", "entries": []map[string]string{week}}}
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"events":  events,
 		"leagues": []map[string]any{{"season": map[string]int{"year": 2026}, "calendar": calendar}},

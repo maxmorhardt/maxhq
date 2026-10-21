@@ -31,27 +31,6 @@ export function gameClock(game: Pick<Game, 'status' | 'period' | 'gameTime'>): s
 
 export const isLive = (game?: Pick<Game, 'status'>) => game?.status === 'in_progress';
 
-// the regular season has 18 weeks and the postseason 5, so stepping stays within real weeks
-const lastWeek: Record<number, number> = { 1: 4, 2: 18, 3: 5 };
-
-export function weekLabel(seasonType: number, week: number): string {
-  if (seasonType === 1) {
-    return `Preseason Week ${week}`;
-  }
-  if (seasonType === 3) {
-    return (
-      ['Wild Card', 'Divisional Round', 'Conference Championships', 'Pro Bowl', 'Super Bowl'][
-        week - 1
-      ] ?? `Postseason Week ${week}`
-    );
-  }
-  return `Week ${week}`;
-}
-
-export function hasWeek(seasonType: number, week: number): boolean {
-  return week >= 1 && week <= (lastWeek[seasonType] ?? 18);
-}
-
 // the score as the scoreboard should show it: the live game, else the last recorded quarter
 export function currentScore(
   contest: Contest,

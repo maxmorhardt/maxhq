@@ -100,6 +100,24 @@ definitions:
         items:
           $ref: '#/definitions/model.Game'
         type: array
+      label:
+        type: string
+      next:
+        $ref: '#/definitions/model.Week'
+      previous:
+        allOf:
+        - $ref: '#/definitions/model.Week'
+        description: the calendar weeks either side, across season phases and seasons;
+          absent at the ends
+      season:
+        type: integer
+      seasonType:
+        type: integer
+      week:
+        type: integer
+    type: object
+  model.Week:
+    properties:
       season:
         type: integer
       seasonType:

@@ -163,7 +163,7 @@ func TestScoreboardCalendar(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(`{"leagues": [{
 		"season": {"year": 2026},
 		"calendar": [
-			{"value": "1", "entries": [{"value": "1"}]},
+			{"value": "1", "entries": [{"value": "1", "label": "Hall of Fame Weekend", "startDate": "2026-08-06T07:00Z", "endDate": "2026-08-13T06:59Z"}]},
 			{"value": "2", "entries": [{"value": "1"}, {"value": "x"}]},
 			{"value": "3", "endDate": "2027-02-16T07:59Z", "entries": [{"value": "1"}]},
 			{"value": "4", "entries": [{"value": "1"}]},
@@ -174,11 +174,15 @@ func TestScoreboardCalendar(t *testing.T) {
 	cal := ScoreboardCalendar(&resp)
 
 	assert.Equal(t, 2026, cal.Season)
-	assert.Equal(t, []model.Week{
-		{Season: 2026, SeasonType: 1, Week: 1},
-		{Season: 2026, SeasonType: 2, Week: 1},
-		{Season: 2026, SeasonType: 3, Week: 1},
-	}, cal.Weeks)
+	require.Len(t, cal.Weeks, 3)
+	assert.Equal(t, model.SeasonWeek{
+		Week:     model.Week{Season: 2026, SeasonType: 1, Week: 1},
+		Label:    "Hall of Fame Weekend",
+		StartsAt: time.Date(2026, 8, 6, 7, 0, 0, 0, time.UTC),
+		EndsAt:   time.Date(2026, 8, 13, 6, 59, 0, 0, time.UTC),
+	}, cal.Weeks[0])
+	assert.Equal(t, "Week 1", cal.Weeks[1].Label, "a week ESPN does not name gets a default name")
+	assert.Equal(t, model.Week{Season: 2026, SeasonType: 3, Week: 1}, cal.Weeks[2].Week)
 	assert.Equal(t, time.Date(2027, 2, 16, 7, 59, 0, 0, time.UTC), cal.End.UTC())
 	assert.Equal(t, model.ESPNCalendar{}, ScoreboardCalendar(&model.ScoreboardResponse{}))
 }

@@ -313,6 +313,53 @@ func (_c *GameService_Ingest_Call) RunAndReturn(run func(context.Context, []mode
 	return _c
 }
 
+// SaveCalendar provides a mock function with given fields: ctx, weeks
+func (_m *GameService) SaveCalendar(ctx context.Context, weeks []model.SeasonWeek) error {
+	ret := _m.Called(ctx, weeks)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveCalendar")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []model.SeasonWeek) error); ok {
+		r0 = rf(ctx, weeks)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GameService_SaveCalendar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SaveCalendar'
+type GameService_SaveCalendar_Call struct {
+	*mock.Call
+}
+
+// SaveCalendar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - weeks []model.SeasonWeek
+func (_e *GameService_Expecter) SaveCalendar(ctx interface{}, weeks interface{}) *GameService_SaveCalendar_Call {
+	return &GameService_SaveCalendar_Call{Call: _e.mock.On("SaveCalendar", ctx, weeks)}
+}
+
+func (_c *GameService_SaveCalendar_Call) Run(run func(ctx context.Context, weeks []model.SeasonWeek)) *GameService_SaveCalendar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]model.SeasonWeek))
+	})
+	return _c
+}
+
+func (_c *GameService_SaveCalendar_Call) Return(_a0 error) *GameService_SaveCalendar_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *GameService_SaveCalendar_Call) RunAndReturn(run func(context.Context, []model.SeasonWeek) error) *GameService_SaveCalendar_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewGameService creates a new instance of GameService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewGameService(t interface {

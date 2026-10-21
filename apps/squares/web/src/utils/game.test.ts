@@ -1,15 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeContest, makeQuarterResult } from '../test/fixtures';
 import type { Game } from '../types/contest';
-import {
-  currentScore,
-  formatKickoff,
-  formatMatchup,
-  gameClock,
-  hasWeek,
-  isLive,
-  weekLabel,
-} from './game';
+import { currentScore, formatKickoff, formatMatchup, gameClock, isLive } from './game';
 
 describe('formatMatchup', () => {
   it('should format as "away @ home"', () => {
@@ -43,22 +35,6 @@ describe('isLive', () => {
     expect(isLive({ status: 'in_progress' })).toBe(true);
     expect(isLive({ status: 'final' })).toBe(false);
     expect(isLive(undefined)).toBe(false);
-  });
-});
-
-describe('weeks', () => {
-  it('names regular, preseason, and postseason weeks', () => {
-    expect(weekLabel(2, 7)).toBe('Week 7');
-    expect(weekLabel(1, 2)).toBe('Preseason Week 2');
-    expect(weekLabel(3, 5)).toBe('Super Bowl');
-    expect(weekLabel(3, 9)).toBe('Postseason Week 9');
-  });
-
-  it('knows which weeks exist', () => {
-    expect(hasWeek(2, 18)).toBe(true);
-    expect(hasWeek(2, 19)).toBe(false);
-    expect(hasWeek(3, 0)).toBe(false);
-    expect(hasWeek(9, 3)).toBe(true);
   });
 });
 
