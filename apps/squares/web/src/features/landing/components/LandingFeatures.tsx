@@ -1,10 +1,9 @@
-import { GridView, PersonAdd, PlayArrow, SportsScore } from '@mui/icons-material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { Box, Container, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import type { ReactNode } from 'react';
-import { fonts, game } from '../../../app/theme';
 import Reveal from '../../../components/Reveal';
+import type { ActivityEvent } from '../../../types/contest';
+import { describeEvent, type Before } from '../../contests/live/activity';
+import type { ContestEvent } from '../../contests/live/events';
+import ActivityFeed from '../../contests/components/sidebar/ActivityFeed';
 
 interface Feature {
   title: string;
@@ -30,46 +29,39 @@ const features: Feature[] = [
   },
 ];
 
-interface FeedLine {
-  icon: ReactNode;
-  text: ReactNode;
-  time: string;
+// a game night as the real feed tells it: built by the same code from the events a contest receives
+const at = (hour: number, minute: number) => new Date(2026, 9, 25, hour, minute).toISOString();
+
+function sample(type: ContestEvent['type'], data: object, timestamp: string, before?: Before) {
+  const event = { type, contestId: 'demo', updatedBy: 'demo', timestamp, data } as ContestEvent;
+  return describeEvent(event, `${type}-${timestamp}`, before);
 }
 
-const iconSx = { fontSize: '1rem' } as const;
-
-// an illustrative feed in the shape of the real contest activity panel
-const feed: FeedLine[] = [
-  {
-    icon: <PersonAdd sx={{ ...iconSx, color: 'primary.main' }} />,
-    text: 'Jordan joined the contest',
-    time: '6:58 PM',
-  },
-  {
-    icon: <GridView sx={{ ...iconSx, color: 'info.main' }} />,
-    text: 'JD claimed home 4, away 7',
-    time: '7:02 PM',
-  },
-  {
-    icon: <PlayArrow sx={{ ...iconSx, color: 'warning.main' }} />,
-    text: 'Numbers drawn. Game on.',
-    time: '8:20 PM',
-  },
-  {
-    icon: <SportsScore sx={{ ...iconSx, color: 'primary.main' }} />,
-    text: 'Score update: away 7, home 14',
-    time: '9:41 PM',
-  },
-  {
-    icon: <EmojiEventsIcon sx={{ ...iconSx, color: 'secondary.main' }} />,
-    text: (
-      <>
-        <b>JD</b> wins the 2nd quarter
-      </>
-    ),
-    time: '9:43 PM',
-  },
-];
+const sampleActivity = [
+  sample('participant.joined', { userId: 'jordan@gmail.com' }, at(18, 58)),
+  sample(
+    'square.updated',
+    { row: 4, col: 7, value: 'JD', owner: 'jordan@gmail.com', ownerName: 'Jordan' },
+    at(19, 2)
+  ),
+  sample('contest.updated', { status: 'Q1' }, at(20, 20), { status: 'ACTIVE' }),
+  sample(
+    'quarter.recorded',
+    { quarter: 1, homeTeamScore: 7, awayTeamScore: 3, winner: 'sam@gmail.com', winnerName: 'Sam' },
+    at(20, 58)
+  ),
+  sample(
+    'quarter.recorded',
+    {
+      quarter: 2,
+      homeTeamScore: 14,
+      awayTeamScore: 7,
+      winner: 'jordan@gmail.com',
+      winnerName: 'Jordan',
+    },
+    at(21, 43)
+  ),
+].filter((entry): entry is ActivityEvent => entry !== null);
 
 export default function LandingFeatures() {
   return (
@@ -119,89 +111,9 @@ export default function LandingFeatures() {
           <Box
             role="figure"
             aria-label="Example contest activity"
-            sx={{
-              p: 2.5,
-              borderRadius: '18px',
-              bgcolor: 'background.paper',
-              border: 1,
-              borderColor: 'divider',
-              boxShadow: '0 40px 90px -40px rgba(0, 0, 0, 0.9)',
-            }}
+            sx={{ boxShadow: '0 40px 90px -40px rgba(0, 0, 0, 0.9)', borderRadius: '14px' }}
           >
-            <Box
-              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: fonts.display,
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Activity
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.75,
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  color: 'primary.main',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: 'primary.main',
-                    animation: 'live-pulse 2s ease-in-out infinite',
-                    '@keyframes live-pulse': {
-                      '0%, 100%': { boxShadow: `0 0 0 0 ${alpha(game.brand, 0.5)}` },
-                      '50%': { boxShadow: `0 0 0 6px ${alpha(game.brand, 0)}` },
-                    },
-                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-                  }}
-                />
-                Live
-              </Box>
-            </Box>
-
-            <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gap: 1 }}>
-              {feed.map((line, i) => (
-                <Box
-                  key={i}
-                  component="li"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: 1.5,
-                    py: 1.25,
-                    borderRadius: '10px',
-                    bgcolor: i === feed.length - 1 ? alpha(game.gold, 0.1) : game.stand,
-                    border: 1,
-                    borderColor: i === feed.length - 1 ? alpha(game.gold, 0.4) : 'transparent',
-                  }}
-                >
-                  {line.icon}
-                  <Typography sx={{ flex: 1, fontSize: '0.92rem', '& b': { fontWeight: 700 } }}>
-                    {line.text}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: '0.78rem',
-                      color: 'text.secondary',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    {line.time}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
+            <ActivityFeed events={sampleActivity} />
           </Box>
         </Reveal>
       </Container>
