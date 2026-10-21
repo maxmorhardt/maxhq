@@ -21,6 +21,14 @@ describe('PlatformStack', () => {
     }
   });
 
+  it('lists the skills on each layer', () => {
+    renderWithProviders(<PlatformStack />);
+
+    for (const skill of ['React', 'Angular', 'Spring Boot', 'Go', 'Kubernetes', 'Grafana']) {
+      expect(screen.getByText(skill)).toBeInTheDocument();
+    }
+  });
+
   it('stays still under reduced motion', () => {
     renderWithProviders(<PlatformStack />);
     const scene = screen.getByRole('img').firstElementChild as HTMLElement;

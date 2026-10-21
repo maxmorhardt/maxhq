@@ -16,78 +16,190 @@ const plane = (theme: Theme) =>
 
 const mono = { fontFamily: fonts.mono, fontSize: 12, lineHeight: 1 } as const;
 
-function Monitoring() {
-  const bars = [38, 52, 44, 61, 47, 72, 58, 40, 55, 66, 49, 35];
+// each layer's picture is drawn in a 240 × 72 box, in the theme's colors
+const pictureSx = {
+  display: 'block',
+  width: '100%',
+  height: 60,
+  color: 'primary.main',
+  '& .muted': { stroke: 'var(--mui-palette-divider)' },
+  '& .fill': { fill: 'var(--mui-palette-background-default)' },
+  '& .ok': { fill: 'var(--mui-palette-success-main)' },
+  '& .accent': { fill: 'currentColor' },
+} as const;
 
+// a browser window with a sidebar and a page of content
+function InterfacePicture() {
   return (
-    <Box sx={{ display: 'grid', gap: 1.25, flex: 1, gridTemplateRows: 'auto 1fr' }}>
-      <Box sx={{ ...mono, display: 'flex', gap: 2, color: 'text.secondary' }}>
-        <span>latency</span>
-        <span>errors</span>
-        <Box component="span" sx={{ ml: 'auto', color: 'success.main' }}>
-          ● healthy
-        </Box>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 0.75,
-          px: 1,
-          pb: 1,
-          borderRadius: '8px',
-          border: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.default',
-        }}
-      >
-        {bars.map((height, i) => (
-          <Box
-            key={i}
-            sx={{
-              flex: 1,
-              height: `${height}%`,
-              borderRadius: '3px 3px 0 0',
-              bgcolor: i === 5 ? 'primary.main' : (theme) => secondaryTint(theme, 0.45),
-            }}
-          />
-        ))}
-      </Box>
+    <Box component="svg" viewBox="0 0 240 72" sx={pictureSx}>
+      <rect className="fill muted" x="1" y="1" width="238" height="70" rx="8" strokeWidth="1.5" />
+      <line className="muted" x1="1" y1="14" x2="239" y2="14" strokeWidth="1.5" />
+      <circle cx="10" cy="8" r="2.2" fill="#ff5f57" />
+      <circle cx="18" cy="8" r="2.2" fill="#febc2e" />
+      <circle cx="26" cy="8" r="2.2" fill="#28c840" />
+      <rect
+        className="muted"
+        x="8"
+        y="21"
+        width="44"
+        height="43"
+        rx="4"
+        fill="none"
+        strokeWidth="1.5"
+      />
+      <rect className="accent" x="60" y="21" width="74" height="7" rx="3.5" />
+      <rect
+        className="muted"
+        x="60"
+        y="34"
+        width="172"
+        height="12"
+        rx="4"
+        fill="none"
+        strokeWidth="1.5"
+      />
+      <rect
+        className="muted"
+        x="60"
+        y="52"
+        width="80"
+        height="12"
+        rx="4"
+        fill="none"
+        strokeWidth="1.5"
+      />
+      <rect className="accent" x="146" y="52" width="40" height="12" rx="6" opacity="0.85" />
     </Box>
   );
 }
 
-function Infra() {
-  const services = ['eks', 'ec2', 'efs', 's3', 'lambda', 'dynamodb'];
+// a request going out and a response coming back
+function ApiPicture() {
+  return (
+    <Box component="svg" viewBox="0 0 240 72" sx={pictureSx}>
+      <rect className="fill muted" x="1" y="10" width="84" height="52" rx="8" strokeWidth="1.5" />
+      <text
+        x="12"
+        y="31"
+        fontFamily={fonts.mono}
+        fontSize="10"
+        fontWeight="700"
+        fill="currentColor"
+      >
+        GET
+      </text>
+      <text
+        x="12"
+        y="48"
+        fontFamily={fonts.mono}
+        fontSize="9"
+        fill="var(--mui-palette-text-secondary)"
+      >
+        /api/v1
+      </text>
+      <path d="M92 28 H146" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3" />
+      <path d="M141 23 L147 28 L141 33" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <path d="M146 46 H92" className="muted" strokeWidth="1.5" strokeDasharray="4 3" />
+      <path d="M97 41 L91 46 L97 51" className="muted" strokeWidth="1.5" fill="none" />
+      <rect className="fill muted" x="155" y="10" width="84" height="52" rx="8" strokeWidth="1.5" />
+      <text
+        x="166"
+        y="31"
+        fontFamily={fonts.mono}
+        fontSize="10"
+        fontWeight="700"
+        fill="var(--mui-palette-success-main)"
+      >
+        200
+      </text>
+      <text
+        x="166"
+        y="48"
+        fontFamily={fonts.mono}
+        fontSize="9"
+        fill="var(--mui-palette-text-secondary)"
+      >
+        {'{ "ok": true }'}
+      </text>
+    </Box>
+  );
+}
+
+// three server racks, each with its lights on
+function InfraPicture() {
+  return (
+    <Box component="svg" viewBox="0 0 240 72" sx={pictureSx}>
+      {[0, 1, 2].map((rack) => (
+        <g key={rack} transform={`translate(${rack * 82 + 1} 1)`}>
+          <rect className="fill muted" width="74" height="70" rx="8" strokeWidth="1.5" />
+          {[0, 1, 2].map((unit) => (
+            <g key={unit} transform={`translate(8 ${10 + unit * 19})`}>
+              <rect className="muted" width="58" height="13" rx="3" fill="none" strokeWidth="1.5" />
+              <circle
+                className={unit === 2 && rack === 1 ? 'accent' : 'ok'}
+                cx="50"
+                cy="6.5"
+                r="2.4"
+              />
+              <line className="muted" x1="7" y1="6.5" x2="30" y2="6.5" strokeWidth="1.5" />
+            </g>
+          ))}
+        </g>
+      ))}
+    </Box>
+  );
+}
+
+// a metric over time, with the latest reading marked
+function MonitoringPicture() {
+  const line = 'M4 52 L28 44 L52 48 L76 30 L100 36 L124 22 L148 28 L172 14 L196 24 L220 18 L236 20';
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25, flex: 1 }}>
-      {services.map((name, i) => (
+    <Box component="svg" viewBox="0 0 240 72" sx={pictureSx}>
+      <defs>
+        <linearGradient id="stack-metric" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="currentColor" stopOpacity="0.35" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <rect className="fill muted" x="1" y="1" width="238" height="70" rx="8" strokeWidth="1.5" />
+      {[24, 42, 60].map((y) => (
+        <line
+          key={y}
+          className="muted"
+          x1="1"
+          y1={y}
+          x2="239"
+          y2={y}
+          strokeWidth="1"
+          strokeDasharray="3 4"
+        />
+      ))}
+      <path d={`${line} L236 70 L4 70 Z`} fill="url(#stack-metric)" />
+      <path d={line} stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <circle className="accent" cx="172" cy="14" r="3.5" />
+    </Box>
+  );
+}
+
+function Skills({ names }: { names: string[] }) {
+  return (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+      {names.map((name) => (
         <Box
           key={name}
           sx={{
             ...mono,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            p: 1,
-            borderRadius: '8px',
+            px: 1,
+            py: 0.8,
+            borderRadius: 999,
             border: 1,
-            borderColor: i === 0 ? (theme) => primaryTint(theme, 0.5) : 'divider',
+            borderColor: 'divider',
             bgcolor: 'background.default',
             color: 'text.primary',
+            whiteSpace: 'nowrap',
           }}
         >
-          <Box
-            sx={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              bgcolor: 'success.main',
-              boxShadow: '0 0 10px currentColor',
-              color: 'success.main',
-            }}
-          />
           {name}
         </Box>
       ))}
@@ -95,110 +207,34 @@ function Infra() {
   );
 }
 
-function Routes() {
-  const routes = [
-    { method: 'POST', path: '/workspaces' },
-    { method: 'GET', path: '/workspaces/{id}' },
-    { method: 'PATCH', path: '/workspaces/{id}' },
-    { method: 'DELETE', path: '/workspaces/{id}' },
-  ];
-
-  return (
-    <Box sx={{ display: 'grid', gap: 1.25, flex: 1, alignContent: 'center' }}>
-      {routes.map((route) => (
-        <Box
-          key={route.method}
-          sx={{ ...mono, display: 'flex', gap: 1.25, color: 'text.secondary', py: 0.5 }}
-        >
-          <Box
-            component="span"
-            sx={{
-              width: 50,
-              fontWeight: 700,
-              color: route.method === 'GET' ? 'secondary.main' : 'primary.main',
-            }}
-          >
-            {route.method}
-          </Box>
-          <Box component="span" sx={{ color: 'text.primary' }}>
-            {route.path}
-          </Box>
-        </Box>
-      ))}
-    </Box>
-  );
-}
-
-function Interface() {
-  const workspaces = [
-    { name: 'vs code', status: 'running' },
-    { name: 'jupyterlab', status: 'running' },
-    { name: 'rstudio', status: 'starting' },
-  ];
-
-  return (
-    <Box sx={{ display: 'grid', gap: 1, flex: 1, alignContent: 'center' }}>
-      {workspaces.map((workspace, i) => (
-        <Box
-          key={workspace.name}
-          sx={{
-            ...mono,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 1.5,
-            py: 1.1,
-            borderRadius: '8px',
-            border: 1,
-            borderColor: i === 0 ? 'primary.main' : 'divider',
-            bgcolor: i === 0 ? (theme) => primaryTint(theme, 0.14) : 'background.default',
-            color: 'text.primary',
-          }}
-        >
-          {workspace.name}
-          <Box
-            component="span"
-            sx={{
-              ml: 'auto',
-              px: 0.75,
-              py: 0.4,
-              borderRadius: 999,
-              fontSize: 10,
-              color: workspace.status === 'running' ? 'success.main' : 'warning.main',
-              border: 1,
-              borderColor: 'currentColor',
-            }}
-          >
-            {workspace.status}
-          </Box>
-        </Box>
-      ))}
-      <Box
-        sx={{
-          height: 8,
-          mt: 0.5,
-          width: '46%',
-          borderRadius: 4,
-          bgcolor: 'primary.main',
-          opacity: 0.8,
-        }}
-      />
-    </Box>
-  );
-}
-
 interface Layer {
   name: string;
-  detail: string;
-  content: ReactNode;
+  picture: ReactNode;
+  skills: string[];
 }
 
 // bottom to top, the way a request lands
 const layers: Layer[] = [
-  { name: 'monitoring', detail: 'datadog · grafana', content: <Monitoring /> },
-  { name: 'infra', detail: 'aws · eks · terraform', content: <Infra /> },
-  { name: 'api', detail: 'spring boot · openapi', content: <Routes /> },
-  { name: 'interface', detail: 'angular · primeng', content: <Interface /> },
+  {
+    name: 'monitoring',
+    picture: <MonitoringPicture />,
+    skills: ['Prometheus', 'Grafana', 'Loki', 'Datadog', 'Alerting', 'Dashboards'],
+  },
+  {
+    name: 'infra',
+    picture: <InfraPicture />,
+    skills: ['AWS', 'Kubernetes', 'Terraform', 'Docker', 'Helm', 'Argo CD'],
+  },
+  {
+    name: 'api',
+    picture: <ApiPicture />,
+    skills: ['Java', 'Spring Boot', 'Go', 'Gin', 'PostgreSQL', 'Valkey'],
+  },
+  {
+    name: 'interface',
+    picture: <InterfacePicture />,
+    skills: ['React', 'Angular', 'TypeScript', 'PrimeNG', 'Material UI', 'Vite'],
+  },
 ];
 
 const top = layers.length - 1;
@@ -253,8 +289,8 @@ export default function PlatformStack() {
       aria-label="A platform as a stack of layers: interface, API, infrastructure, and monitoring"
       sx={{
         // the gap between layers widens with the hero's scroll progress
-        '--gap': 'calc(132px + var(--progress, 0) * 70px)',
-        [`@media (prefers-reduced-motion: reduce)`]: { '--gap': '132px' },
+        '--gap': 'calc(150px + var(--progress, 0) * 60px)',
+        [`@media (prefers-reduced-motion: reduce)`]: { '--gap': '150px' },
         position: 'relative',
         width: 480,
         height: 660,
@@ -327,15 +363,14 @@ export default function PlatformStack() {
                 },
               }}
             >
-              <Box sx={{ ...mono, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
-                  {String(layers.length - i).padStart(2, '0')} {layer.name}
-                </Box>
-                <Box component="span" sx={{ color: 'text.secondary' }}>
-                  {layer.detail}
-                </Box>
+              <Box component="span" sx={{ ...mono, color: 'primary.main', fontWeight: 700 }}>
+                {String(layers.length - i).padStart(2, '0')} {layer.name}
               </Box>
-              {layer.content}
+              {/* the front of the layer, which the one above doesn't cover */}
+              <Box sx={{ mt: 'auto', display: 'grid', gap: 1.5 }}>
+                {layer.picture}
+                <Skills names={layer.skills} />
+              </Box>
 
               {/* the layer lights as the request passes through it */}
               <Box
