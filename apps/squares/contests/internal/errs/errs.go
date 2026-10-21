@@ -3,7 +3,6 @@ package errs
 import "errors"
 
 var (
-	ErrUnauthorizedContestEdit   = errors.New("only the contest owner can update this contest")
 	ErrUnauthorizedContestDelete = errors.New("only the contest owner can delete this contest")
 	ErrUnauthorizedSquareEdit    = errors.New("only the square owner can update this square")
 	ErrMissingInitials           = errors.New("set your default initials in your profile before claiming a square")
@@ -14,16 +13,13 @@ var (
 )
 
 var (
-	ErrContestNotEditable         = errors.New("contest is not in an editable state")
-	ErrContestFinalized           = errors.New("contest is finished or deleted and cannot be modified")
-	ErrContestNotReady            = errors.New("all squares must be claimed before the contest can be started")
-	ErrSquareNotEditable          = errors.New("squares can only be edited when contest is active")
-	ErrSquareTaken                = errors.New("that square was just claimed by someone else")
-	ErrNoEmptySquares             = errors.New("there are no empty squares left")
-	ErrContestAlreadyExists       = errors.New("contest already exists with this name")
-	ErrQuarterResultAlreadyExists = errors.New("result of this quarter has already been recorded")
-	ErrNoQuarterResultToRollback  = errors.New("there is no recorded quarter result to roll back")
-	ErrVersionConflict            = errors.New("this contest was changed by someone else, refresh and try again")
+	ErrContestNotEditable   = errors.New("contest is not in an editable state")
+	ErrContestFinalized     = errors.New("contest is finished or deleted and cannot be modified")
+	ErrSquareNotEditable    = errors.New("squares can only be edited when contest is active")
+	ErrSquareTaken          = errors.New("that square was just claimed by someone else")
+	ErrNoEmptySquares       = errors.New("there are no empty squares left")
+	ErrContestAlreadyExists = errors.New("contest already exists with this name")
+	ErrVersionConflict      = errors.New("this contest was changed by someone else, refresh and try again")
 )
 
 var (
@@ -45,7 +41,6 @@ var (
 
 var (
 	ErrGameNotFound            = errors.New("game not found")
-	ErrContestIsGameLinked     = errors.New("this contest is linked to a live game and scores are updated automatically")
 	ErrInviteNotFound          = errors.New("invite not found")
 	ErrInviteExpired           = errors.New("invite link has expired")
 	ErrInviteMaxUsesReached    = errors.New("invite link has reached its usage limit")

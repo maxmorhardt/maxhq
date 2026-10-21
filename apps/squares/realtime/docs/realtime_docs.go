@@ -85,6 +85,59 @@ const docTemplaterealtime = `{
                 }
             }
         },
+        "/events/games/{id}": {
+            "get": {
+                "description": "Server-sent ` + "`" + `game.updated` + "`" + ` events for one NFL game as its status, period, or score changes, for a contest page to follow its game live. Each data line is ` + "`" + `{\"game\": {...}}` + "`" + ` in the shape ` + "`" + `/games/{id}` + "`" + ` returns. Public; resumable with Last-Event-ID.",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Stream one game's score",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Game ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Id of the last event the client applied",
+                        "name": "Last-Event-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Same as the Last-Event-ID header, for clients that cannot set headers",
+                        "name": "lastEventId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "text/event-stream; each data line is a JSON game update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/health/live": {
             "get": {
                 "description": "Returns UP if the service process is running",

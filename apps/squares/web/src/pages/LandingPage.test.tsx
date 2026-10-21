@@ -17,7 +17,7 @@ vi.mock('../hooks/useScrollAnimation', () => ({
   useScrollAnimation: () => ({ ref: { current: null }, isVisible: false }),
 }));
 
-vi.mock('../features/landing/components/LandingStatsSection', () => ({
+vi.mock('../features/landing/components/LandingScoreboard', () => ({
   default: () => <div data-testid="stats-section" />,
 }));
 
@@ -63,19 +63,19 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { name: /squares/i, level: 1 })).toBeInTheDocument();
   });
 
-  it('renders the How It Works section', () => {
+  it('renders the how-it-works story', () => {
     renderPage();
-    expect(screen.getByText('How It Works')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'How a pool plays out' })).toBeInTheDocument();
   });
 
-  it('renders the Features section', () => {
+  it('renders the features section', () => {
     renderPage();
-    expect(screen.getByText('Why Choose Our Platform?')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Built for game day' })).toBeInTheDocument();
   });
 
-  it('renders the CTA section', () => {
+  it('renders the closing call to action', () => {
     renderPage();
-    expect(screen.getByText('Ready to Get Started?')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /kickoff is coming/i })).toBeInTheDocument();
   });
 
   it('renders the stats section', () => {

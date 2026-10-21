@@ -40,7 +40,6 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	require.NoError(t, pub.PublishSquareUpdate(ctx, contestID, "u", &model.Square{}))
 	require.NoError(t, pub.PublishContestUpdate(ctx, contestID, "u", heavy))
 	require.NoError(t, pub.PublishQuarterResult(ctx, contestID, "u", &model.QuarterResult{Quarter: 1}))
-	require.NoError(t, pub.PublishQuarterResultRollback(ctx, contestID, "u", &model.QuarterResult{Quarter: 1}, heavy))
 	require.NoError(t, pub.PublishContestDeleted(ctx, contestID, "u"))
 	require.NoError(t, pub.PublishParticipantRemoved(ctx, contestID, "u", participant))
 	require.NoError(t, pub.PublishParticipantAdded(ctx, contestID, participant))
@@ -52,7 +51,7 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	}
 	assert.Equal(t, []string{
 		events.SquareUpdatedType, events.ContestUpdatedType, events.QuarterRecordedType,
-		events.QuarterRolledBackType, events.ContestDeletedType, events.ParticipantRemovedType, events.ParticipantJoinedType,
+		events.ContestDeletedType, events.ParticipantRemovedType, events.ParticipantJoinedType,
 	}, types)
 
 	var update map[string]any
@@ -62,10 +61,6 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	assert.NotContains(t, update, "quarterResults")
 	assert.NotContains(t, update, "game")
 
-	var rollback model.QuarterRollback
-	require.NoError(t, json.Unmarshal((*captured)[3].Data, &rollback))
-	assert.Equal(t, model.QuarterRollback{Quarter: 1, Status: model.ContestStatusQ2}, rollback)
-
-	assert.Nil(t, (*captured)[4].Data, "a deletion carries no payload")
-	assert.Equal(t, "p", (*captured)[6].UpdatedBy, "a joiner is the one who changed the contest")
+	assert.Nil(t, (*captured)[3].Data, "a deletion carries no payload")
+	assert.Equal(t, "p", (*captured)[5].UpdatedBy, "a joiner is the one who changed the contest")
 }

@@ -34,14 +34,13 @@ const initialState: LiveContestState = {
   ended: null,
 };
 
-// recording a quarter moves the game on; rolling it back returns to that quarter
+// recording a quarter moves the contest on to the next one
 const statusAfterQuarter: Record<number, ContestStatus> = {
   1: 'Q2',
   2: 'Q3',
   3: 'Q4',
   4: 'FINISHED',
 };
-const statusOfQuarter: Record<number, ContestStatus> = { 1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4' };
 
 // the same change can arrive twice (a write's response, then its event) or out of order on replay,
 // so every update below is idempotent and ignores anything older than what is held
@@ -100,16 +99,6 @@ function addQuarterResult(state: LiveContestState, result: QuarterResult) {
   contest.status = statusAfterQuarter[result.quarter] ?? contest.status;
 }
 
-function removeQuarterResult(state: LiveContestState, quarter: number, status?: ContestStatus) {
-  const contest = state.contest;
-  if (!contest?.quarterResults) {
-    return;
-  }
-
-  contest.quarterResults = contest.quarterResults.filter((qr) => qr.quarter !== quarter);
-  contest.status = status ?? statusOfQuarter[quarter] ?? contest.status;
-}
-
 function upsertParticipant(state: LiveContestState, participant: Participant) {
   const index = state.participants.findIndex((p) => p.id === participant.id);
   if (index === -1) {
@@ -141,7 +130,6 @@ const eventHandlers: { [T in ContestEventType]: EventHandler<T> } = {
   },
   'square.updated': (state, { data }) => upsertSquare(state, data),
   'quarter.recorded': (state, { data }) => addQuarterResult(state, data),
-  'quarter.rolled_back': (state, { data }) => removeQuarterResult(state, data.quarter, data.status),
   'participant.joined': (state, { data }) => upsertParticipant(state, data),
   'participant.removed': (state, { data }) => removeParticipant(state, data.userId),
   'access.revoked': (state) => {
@@ -195,24 +183,6 @@ const liveContestSlice = createSlice({
       })
       .addMatcher(endpoints.clearMySquares.matchFulfilled, (state, action) => {
         action.payload.forEach((square) => upsertSquare(state, square));
-      })
-      .addMatcher(
-        isAnyOf(endpoints.startContest.matchFulfilled, endpoints.updateContest.matchFulfilled),
-        (state, action) => {
-          if (action.payload.id === state.contestId) {
-            applyContestUpdate(state, action.payload);
-          }
-        }
-      )
-      .addMatcher(endpoints.recordQuarterResult.matchFulfilled, (state, action) => {
-        if (action.payload.contestId === state.contestId) {
-          addQuarterResult(state, action.payload);
-        }
-      })
-      .addMatcher(endpoints.rollbackQuarterResult.matchFulfilled, (state, action) => {
-        if (action.payload.contestId === state.contestId) {
-          removeQuarterResult(state, action.payload.quarter);
-        }
       })
       .addMatcher(endpoints.updateParticipant.matchFulfilled, (state, action) =>
         upsertParticipant(state, action.payload)

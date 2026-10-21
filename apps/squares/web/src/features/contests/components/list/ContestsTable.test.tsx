@@ -19,9 +19,9 @@ vi.mock('./DeleteContestDialog', () => ({
   default: ({ contest }: { contest: ContestSummary | null }) =>
     contest ? <div data-testid="delete-dialog">{contest.name}</div> : null,
 }));
-vi.mock('./EditContestDialog', () => ({
+vi.mock('./ContestInfoDialog', () => ({
   default: ({ contest }: { contest: ContestSummary | null }) =>
-    contest ? <div data-testid="edit-dialog">{contest.name}</div> : null,
+    contest ? <div data-testid="info-dialog">{contest.name}</div> : null,
 }));
 vi.mock('../LeaveContestDialog', () => ({
   default: ({ contest }: { contest: ContestSummary | null }) =>
@@ -110,15 +110,15 @@ describe('ContestsTable', () => {
         { ...joined, id: 'c-3', homeTeam: undefined, awayTeam: undefined },
       ],
     });
-    expect(screen.getByText('Chiefs vs Eagles')).toBeInTheDocument();
+    expect(screen.getByText('Eagles @ Chiefs')).toBeInTheDocument();
     expect(screen.getByText('Chiefs')).toBeInTheDocument();
     expect(screen.getByText('–')).toBeInTheDocument();
   });
 
-  it('opens the edit and delete dialogs with the clicked contest', () => {
+  it('opens the details and delete dialogs with the clicked contest', () => {
     renderTable();
-    fireEvent.click(screen.getByRole('button', { name: /edit contest/i }));
-    expect(screen.getByTestId('edit-dialog')).toHaveTextContent('Super Bowl LX');
+    fireEvent.click(screen.getAllByRole('button', { name: /contest details/i })[0]);
+    expect(screen.getByTestId('info-dialog')).toHaveTextContent('Super Bowl LX');
     fireEvent.click(screen.getByRole('button', { name: /delete contest/i }));
     expect(screen.getByTestId('delete-dialog')).toHaveTextContent('Super Bowl LX');
   });
@@ -129,10 +129,10 @@ describe('ContestsTable', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1');
   });
 
-  it('only offers view and leave on joined contests', () => {
+  it('only offers details and leave on joined contests', () => {
     renderTable({ contests: [joined] });
-    expect(screen.getByRole('button', { name: /view contest/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /edit contest/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /contest details/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete contest/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /leave contest/i }));
     expect(screen.getByTestId('leave-dialog')).toHaveTextContent('Office Pool');
   });
@@ -146,15 +146,26 @@ describe('ContestsTable', () => {
     expect(screen.queryByRole('button', { name: /leave contest/i })).not.toBeInTheDocument();
   });
 
-  it('only offers view on a finished contest the user owns', () => {
+  it('only offers details on a finished contest the user owns', () => {
     renderTable({ contests: [{ ...contest, status: 'FINISHED' }] });
-    fireEvent.click(screen.getByRole('button', { name: /view contest/i }));
-    expect(screen.getByTestId('edit-dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /contest details/i }));
+    expect(screen.getByTestId('info-dialog')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete contest/i })).not.toBeInTheDocument();
   });
 
   it('renders the footer', () => {
     renderTable({ footer: <div data-testid="footer" /> });
     expect(screen.getByTestId('footer')).toBeInTheDocument();
+  });
+
+  it('shows the kickoff of a contest that has not started', () => {
+    renderTable({ contests: [{ ...contest, status: 'ACTIVE', gameTime: '2026-11-01T18:00:00Z' }] });
+    expect(screen.getByText(/Eagles @ Chiefs · /)).toBeInTheDocument();
+  });
+
+  it('opens a contest from the keyboard', () => {
+    renderTable({ contests: [contest] });
+    fireEvent.keyDown(screen.getByRole('listitem', { name: 'Super Bowl LX' }), { key: 'Enter' });
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1');
   });
 });

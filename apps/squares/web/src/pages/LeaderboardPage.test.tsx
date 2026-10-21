@@ -11,7 +11,8 @@ describe('LeaderboardPage', () => {
   it('introduces the standings', () => {
     renderWithProviders(<LeaderboardPage />);
     expect(screen.getByRole('heading', { name: 'Leaderboard' })).toBeInTheDocument();
-    expect(screen.getByText('All-Time Top 10')).toBeInTheDocument();
+    expect(screen.getByText(/all-time top 10/i)).toBeInTheDocument();
     expect(screen.getByTestId('standings')).toBeInTheDocument();
+    expect(screen.getByText(/Win rate is quarter wins/)).toBeInTheDocument();
   });
 });

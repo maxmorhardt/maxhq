@@ -10,7 +10,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `contests/` - contests, squares, participants, invites, leaderboard, stats. Owns the `contests` schema plus local copies of users and games.
   - `games/` - ESPN schedule and live scores. Owns the `games` schema.
   - `accounts/` - profiles, account deletion, the contact form. Owns the `accounts` schema.
-  - `realtime/` - server-sent events for one contest, resumable with `Last-Event-ID`. Owns no data.
+  - `realtime/` - server-sent events for one contest, and a public stream of live game scores, both resumable with `Last-Event-ID`. Owns no data.
 - Each service is a package tree in the repo's single Go module (root `go.mod`), with its own image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>`), Argo CD Application, and release-please component. Its Helm chart is `charts/squares-<service>`. A service never imports another service's packages; Go's `internal` rule enforces it.
 - Shared code lives in two library packages in the same module:
   - `libs/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
@@ -22,8 +22,8 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 - A service writes only its own schema. Data another service owns arrives as events and is kept as a local copy (contests keeps `users`, `games`, `game_scores`).
 - Every change another service cares about is written to the service's `outbox` table **in the same transaction** as the change, through `streams.Outbox`. The relay appends it to a Valkey stream, deduplicated by outbox id. Never write to a stream directly.
 - Streams and their writers:
-  - `contest:<id>` - contests. Read by realtime.
-  - `games` - games. Read by contests.
+  - `contest:<id>` - contests, including the linked game's live score. Read by realtime.
+  - `games` - games. Read by contests, and relayed to the public games stream by realtime.
   - `users` - accounts. Read by contests.
 - Consumers keep their position in their own schema (`stream_offsets`), handle entries in order, and retry a failing entry with backoff before moving on. A handler must tolerate seeing an entry again after a crash. A payload that can never decode is logged and skipped.
 - Synchronous calls between services are limited to two internal reads on contests (`/internal/contests/:id/snapshot` for realtime, `/internal/users/:email/activity` for accounts), guarded by `X-Internal-Token` and a NetworkPolicy, and made through `httpclient.Internal`, which retries network errors and 5xx. Keep it that way.

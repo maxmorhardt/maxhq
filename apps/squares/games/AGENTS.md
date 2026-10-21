@@ -14,7 +14,8 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 - `internal/bootstrap/` - composition root: `Connect` opens infrastructure, `New` wires handlers, services, and repositories, `Start` runs background work, `Run` serves.
 - `internal/handler/`, `internal/service/`, `internal/repository/`, `internal/routes/` - the usual layers, one file per resource.
 - `internal/clients/` - the ESPN scoreboard client.
-- `internal/worker/` - the polling loop; one replica holds a Postgres advisory lock and polls.
+- `internal/worker/` - the polling loop; one replica holds a Postgres advisory lock and polls. Every run reads ESPN's current scoreboard; at startup and every `SCORES_IDLE_INTERVAL` it also syncs every week of the season from ESPN's calendar, which backfills past scores and loads the schedule ahead. After the postseason it checks for the next season each sync and loads it once ESPN publishes it. Games whose teams are still TBD are skipped.
+- Caching: `/games/scoreboard` weeks and `/games/{id}` are cached in Valkey for 5 minutes; ingest drops the entries for every game it changes, so reads see a write at once.
 - `internal/util/espn.go` - turns ESPN's scoreboard into games and quarter scores.
 - `internal/model/`, `internal/errs/`, `internal/metrics/` - this service's types and sentinel errors.
 - `internal/mocks/` - mockery output for `.mockery.yaml`.

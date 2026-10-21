@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func passTx() *mocks.Transactor {
@@ -203,4 +204,124 @@ func TestGameService_Ingest_ChangedGameRefreshesTheUpcomingList(t *testing.T) {
 	after, err := svc.GetUpcoming(context.Background())
 	require.NoError(t, err)
 	assert.Len(t, after, 1, "the cached list was dropped when the game arrived")
+}
+
+func TestGameService_GetScoreboard_CurrentWeek(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().CurrentWeek(mock.Anything).Return(&week, nil)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{{ESPNID: "1"}}, nil).Once()
+	svc := gameSvc(t, g, nil)
+
+	first, err := svc.GetScoreboard(context.Background(), nil)
+	require.NoError(t, err)
+	second, err := svc.GetScoreboard(context.Background(), nil)
+	require.NoError(t, err)
+
+	assert.Equal(t, week, first.Week)
+	assert.Len(t, first.Games, 1)
+	assert.Equal(t, first, second, "the week's games are cached")
+}
+
+func TestGameService_GetScoreboard_NoGamesYet(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().CurrentWeek(mock.Anything).Return(nil, nil)
+
+	board, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), nil)
+
+	require.NoError(t, err)
+	assert.Empty(t, board.Games)
+}
+
+func TestGameService_GetScoreboard_ChosenWeek(t *testing.T) {
+	week := model.Week{Season: 2025, SeasonType: 3, Week: 4}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+
+	board, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+
+	require.NoError(t, err)
+	assert.Equal(t, week, board.Week)
+}
+
+func TestGameService_GetScoreboard_Errors(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().CurrentWeek(mock.Anything).Return(nil, errors.New("db")).Once()
+	_, err := gameSvc(t, g, nil).GetScoreboard(context.Background(), nil)
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 1}
+	g = mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return(nil, errors.New("db"))
+	_, err = gameSvc(t, g, nil).GetScoreboard(context.Background(), &week)
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
+func TestGameService_GetGame_CachesResult(t *testing.T) {
+	id := uuid.New()
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetByID(mock.Anything, id).Return(&model.Game{ESPNID: "1", HomeScore: 7}, nil).Once()
+	svc := gameSvc(t, g, nil)
+
+	first, err := svc.GetGame(context.Background(), id)
+	require.NoError(t, err)
+	second, err := svc.GetGame(context.Background(), id)
+	require.NoError(t, err)
+
+	assert.Equal(t, 7, first.HomeScore)
+	assert.Equal(t, first, second)
+}
+
+func TestGameService_GetGame_Errors(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound).Once()
+	_, err := gameSvc(t, g, nil).GetGame(context.Background(), uuid.New())
+	assert.ErrorIs(t, err, errs.ErrGameNotFound)
+
+	g.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("db")).Once()
+	_, err = gameSvc(t, g, nil).GetGame(context.Background(), uuid.New())
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
+func TestGameService_Ingest_ChangedGameDropsItsCachedWeekAndGame(t *testing.T) {
+	gameID := uuid.New()
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
+	stored := &model.Game{ID: gameID, Season: 2026, SeasonType: 2, Week: 7, HomeScore: 7}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{{ID: gameID}}, nil).Twice()
+	g.EXPECT().GetByID(mock.Anything, gameID).Return(stored, nil)
+	g.EXPECT().Upsert(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, game *model.Game) { game.ID = gameID }).Return(true, nil).Once()
+	ob := mocks.NewOutbox(t)
+	ob.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	svc := gameSvc(t, g, ob)
+
+	_, err := svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
+	_, err = svc.GetGame(context.Background(), gameID)
+	require.NoError(t, err)
+
+	_, err = svc.Ingest(context.Background(), []model.ESPNGame{{ESPNID: "1", State: "in"}})
+	require.NoError(t, err)
+
+	_, err = svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
+	_, err = svc.GetGame(context.Background(), gameID)
+	require.NoError(t, err)
+	g.AssertNumberOfCalls(t, "GetByID", 3)
+}
+
+func TestGameService_Ingest_UnchangedGameKeepsTheCache(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil).Once()
+	g.EXPECT().Upsert(mock.Anything, mock.Anything).Return(false, nil)
+	svc := gameSvc(t, g, nil)
+
+	_, err := svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
+	_, err = svc.Ingest(context.Background(), []model.ESPNGame{{ESPNID: "1", State: "pre"}})
+	require.NoError(t, err)
+	_, err = svc.GetScoreboard(context.Background(), &week)
+	require.NoError(t, err)
 }

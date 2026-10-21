@@ -49,7 +49,7 @@ export default function ConfirmDialog({
           <Close />
         </IconButton>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Warning sx={{ color: '#ff4444', fontSize: '2rem' }} />
+          <Warning sx={{ color: '#ff5d5d', fontSize: '2rem' }} />
           <Typography
             component="h2"
             sx={{ color: 'white', fontWeight: 600, fontSize: { xs: '1.25rem', md: '1.5rem' } }}

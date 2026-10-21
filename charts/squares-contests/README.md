@@ -17,7 +17,7 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 
 | Path under `api.maxhq.io/squares` | |
 | --- | --- |
-| `/contests/**` | create, edit, start, score, and delete contests; claim and clear squares |
+| `/contests/**` | create, edit, and delete contests; claim and clear squares |
 | `/invites/**` | preview and redeem invite links |
 | `/leaderboard`, `/stats` | public stats, cached in Valkey |
 | `/users/me/stats`, `/users/me/active-contests` | the signed-in user's contest activity |

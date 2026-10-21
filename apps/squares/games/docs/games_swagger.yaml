@@ -94,6 +94,19 @@ definitions:
     - GameStatusScheduled
     - GameStatusInProgress
     - GameStatusFinal
+  model.Scoreboard:
+    properties:
+      games:
+        items:
+          $ref: '#/definitions/model.Game'
+        type: array
+      season:
+        type: integer
+      seasonType:
+        type: integer
+      week:
+        type: integer
+    type: object
 info:
   contact: {}
   description: NFL schedule and live scores for squares.maxhq.io. Polls ESPN and publishes
@@ -102,6 +115,73 @@ info:
   title: Squares Games API
   version: 1.0.0
 paths:
+  /games/{id}:
+    get:
+      description: Returns one NFL game with its status, score, and points by quarter
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Game'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      summary: Get a game
+      tags:
+      - games
+  /games/scoreboard:
+    get:
+      description: Returns one week of NFL games with their scores, by quarter. Without
+        parameters it returns the week of the game nearest to now; pass season, seasonType,
+        and week together to pick another.
+      parameters:
+      - description: Season year
+        in: query
+        name: season
+        type: integer
+      - description: 1 preseason, 2 regular season, 3 postseason
+        in: query
+        name: seasonType
+        type: integer
+      - description: Week of the season phase
+        in: query
+        name: week
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Scoreboard'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      summary: Get the scoreboard
+      tags:
+      - games
   /games/upcoming:
     get:
       description: Returns NFL games available to link a contest to when creating

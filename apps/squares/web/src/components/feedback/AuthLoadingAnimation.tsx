@@ -21,8 +21,8 @@ const shimmer = keyframes`
 `;
 
 const pulseGlow = keyframes`
-  0%, 100% { box-shadow: 0 0 8px rgba(144, 202, 249, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(144, 202, 249, 0.6); }
+  0%, 100% { box-shadow: 0 0 8px rgba(61, 155, 255, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(61, 155, 255, 0.6); }
 `;
 
 const fadeInUp = keyframes`

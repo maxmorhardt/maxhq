@@ -1,20 +1,12 @@
 import { Box } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import LandingCTASection from '../features/landing/components/LandingCTASection';
-import LandingFeaturesSection from '../features/landing/components/LandingFeaturesSection';
-import LandingHeroSection from '../features/landing/components/LandingHeroSection';
-import LandingHowItWorksSection from '../features/landing/components/LandingHowItWorksSection';
-import LandingSeeItInActionSection from '../features/landing/components/LandingSeeItInActionSection';
-import LandingStatsSection from '../features/landing/components/LandingStatsSection';
-import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import '../features/landing/landing.css';
+import LandingCallToAction from '../features/landing/components/LandingCallToAction';
+import LandingFeatures from '../features/landing/components/LandingFeatures';
+import LandingHero from '../features/landing/components/LandingHero';
+import LandingPlaybook from '../features/landing/components/LandingPlaybook';
+import LandingScoreboard from '../features/landing/components/LandingScoreboard';
 
 export default function LandingPage() {
-  const howItWorks = useScrollAnimation();
-  const seeItInAction = useScrollAnimation();
-  const features = useScrollAnimation();
-  const cta = useScrollAnimation();
-
   return (
     <Box sx={{ overflowX: 'clip' }}>
       <Helmet>
@@ -25,15 +17,11 @@ export default function LandingPage() {
         />
         <link rel="canonical" href="https://squares.maxhq.io/" />
       </Helmet>
-      <LandingHeroSection />
-      <LandingHowItWorksSection animRef={howItWorks.ref} isVisible={howItWorks.isVisible} />
-      <LandingSeeItInActionSection
-        animRef={seeItInAction.ref}
-        isVisible={seeItInAction.isVisible}
-      />
-      <LandingFeaturesSection animRef={features.ref} isVisible={features.isVisible} />
-      <LandingStatsSection />
-      <LandingCTASection animRef={cta.ref} isVisible={cta.isVisible} />
+      <LandingHero />
+      <LandingPlaybook />
+      <LandingScoreboard />
+      <LandingFeatures />
+      <LandingCallToAction />
     </Box>
   );
 }

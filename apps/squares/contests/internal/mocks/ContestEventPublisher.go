@@ -267,56 +267,6 @@ func (_c *ContestEventPublisher_PublishQuarterResult_Call) RunAndReturn(run func
 	return _c
 }
 
-// PublishQuarterResultRollback provides a mock function with given fields: ctx, contestID, updatedBy, quarterResult, contest
-func (_m *ContestEventPublisher) PublishQuarterResultRollback(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult, contest *model.Contest) error {
-	ret := _m.Called(ctx, contestID, updatedBy, quarterResult, contest)
-
-	if len(ret) == 0 {
-		panic("no return value specified for PublishQuarterResultRollback")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, *model.QuarterResult, *model.Contest) error); ok {
-		r0 = rf(ctx, contestID, updatedBy, quarterResult, contest)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ContestEventPublisher_PublishQuarterResultRollback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishQuarterResultRollback'
-type ContestEventPublisher_PublishQuarterResultRollback_Call struct {
-	*mock.Call
-}
-
-// PublishQuarterResultRollback is a helper method to define mock.On call
-//   - ctx context.Context
-//   - contestID uuid.UUID
-//   - updatedBy string
-//   - quarterResult *model.QuarterResult
-//   - contest *model.Contest
-func (_e *ContestEventPublisher_Expecter) PublishQuarterResultRollback(ctx interface{}, contestID interface{}, updatedBy interface{}, quarterResult interface{}, contest interface{}) *ContestEventPublisher_PublishQuarterResultRollback_Call {
-	return &ContestEventPublisher_PublishQuarterResultRollback_Call{Call: _e.mock.On("PublishQuarterResultRollback", ctx, contestID, updatedBy, quarterResult, contest)}
-}
-
-func (_c *ContestEventPublisher_PublishQuarterResultRollback_Call) Run(run func(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult, contest *model.Contest)) *ContestEventPublisher_PublishQuarterResultRollback_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(*model.QuarterResult), args[4].(*model.Contest))
-	})
-	return _c
-}
-
-func (_c *ContestEventPublisher_PublishQuarterResultRollback_Call) Return(_a0 error) *ContestEventPublisher_PublishQuarterResultRollback_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *ContestEventPublisher_PublishQuarterResultRollback_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, *model.QuarterResult, *model.Contest) error) *ContestEventPublisher_PublishQuarterResultRollback_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // PublishSquareUpdate provides a mock function with given fields: ctx, contestID, updatedBy, square
 func (_m *ContestEventPublisher) PublishSquareUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, square *model.Square) error {
 	ret := _m.Called(ctx, contestID, updatedBy, square)

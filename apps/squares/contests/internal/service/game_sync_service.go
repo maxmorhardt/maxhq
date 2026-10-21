@@ -91,6 +91,10 @@ func (s *gameSyncService) reconcileContest(ctx context.Context, contestID uuid.U
 			return err
 		}
 
+		if contest.Status == model.ContestStatusDeleted {
+			return nil
+		}
+
 		return s.reconcile(ctx, contest, game)
 	})
 }

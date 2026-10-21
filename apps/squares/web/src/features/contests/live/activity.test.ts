@@ -62,13 +62,10 @@ describe('describeEvent', () => {
     expect(describeEvent(cleared, 'id')?.message).toBe('Square (1, 2) was cleared');
   });
 
-  it('describes quarter results and rollbacks', () => {
+  it('describes quarter results', () => {
     expect(describeEvent(event('quarter.recorded', makeQuarterResult()), 'id')?.message).toBe(
       'Q1 winner: Player (7-3)'
     );
-    expect(
-      describeEvent(event('quarter.rolled_back', { quarter: 2, status: 'Q2' }), 'id')?.message
-    ).toBe('Q2 result was rolled back');
   });
 
   it('describes a status change but not an edit', () => {

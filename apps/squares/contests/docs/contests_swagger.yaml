@@ -136,6 +136,9 @@ definitions:
     - ContestStatusDeleted
   model.ContestSummary:
     properties:
+      awayAbbr:
+        example: DAL
+        type: string
       awayTeam:
         example: Dallas Cowboys
         type: string
@@ -147,6 +150,9 @@ definitions:
       gameId:
         type: string
       gameTime:
+        type: string
+      homeAbbr:
+        example: NYG
         type: string
       homeTeam:
         example: New York Giants
@@ -231,13 +237,7 @@ definitions:
     - ContestVisibilityPublic
   model.CreateContestRequest:
     properties:
-      awayTeam:
-        maxLength: 20
-        type: string
       gameId:
-        type: string
-      homeTeam:
-        maxLength: 20
         type: string
       maxSquares:
         maximum: 100
@@ -256,6 +256,7 @@ definitions:
         - public
         type: string
     required:
+    - gameId
     - name
     - owner
     type: object
@@ -372,17 +373,6 @@ definitions:
       winnerRow:
         type: integer
     type: object
-  model.QuarterResultRequest:
-    properties:
-      awayTeamScore:
-        maximum: 9999
-        minimum: 0
-        type: integer
-      homeTeamScore:
-        maximum: 9999
-        minimum: 0
-        type: integer
-    type: object
   model.RandomClaimRequest:
     properties:
       count:
@@ -441,20 +431,6 @@ definitions:
       totalActiveContests:
         example: 12
         type: integer
-    type: object
-  model.UpdateContestRequest:
-    properties:
-      awayTeam:
-        maxLength: 20
-        type: string
-      homeTeam:
-        maxLength: 20
-        type: string
-      visibility:
-        enum:
-        - private
-        - public
-        type: string
     type: object
   model.UpdateParticipantRequest:
     properties:
@@ -570,10 +546,6 @@ paths:
       responses:
         "201":
           description: Created
-          headers:
-            ETag:
-              description: Contest version, for If-Match on later updates
-              type: string
           schema:
             $ref: '#/definitions/model.ContestSwagger'
         "400":
@@ -626,66 +598,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Delete contest
-      tags:
-      - contests
-    patch:
-      consumes:
-      - application/json
-      description: Updates the values of a contest
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Contest update data
-        in: body
-        name: contest
-        required: true
-        schema:
-          $ref: '#/definitions/model.UpdateContestRequest'
-      - description: Contest version the client edited; a stale version returns 412
-        in: header
-        name: If-Match
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          headers:
-            ETag:
-              description: New contest version
-              type: string
-          schema:
-            $ref: '#/definitions/model.ContestSwagger'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "409":
-          description: Changed concurrently; refresh and retry
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "412":
-          description: If-Match did not match the current version
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Update contest
       tags:
       - contests
   /contests/{id}/invites:
@@ -929,94 +841,6 @@ paths:
       summary: Update a participant's role or square limit
       tags:
       - participants
-  /contests/{id}/quarter-results:
-    post:
-      consumes:
-      - application/json
-      description: Records the score and winner for a specific quarter
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Quarter result data
-        in: body
-        name: quarterResult
-        required: true
-        schema:
-          $ref: '#/definitions/model.QuarterResultRequest'
-      - description: Replays the first response when a submission is retried with
-          the same key
-        in: header
-        name: Idempotency-Key
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/model.QuarterResult'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Record quarter result
-      tags:
-      - contests
-  /contests/{id}/quarter-results/latest:
-    delete:
-      description: Deletes the most recently recorded quarter result and reverts the
-        contest to the prior quarter. Only for manual (non game-linked) contests.
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.QuarterResult'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Roll back the last quarter result
-      tags:
-      - contests
   /contests/{id}/squares/{squareId}/claim:
     delete:
       consumes:
@@ -1194,40 +1018,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Claim random empty squares
-      tags:
-      - contests
-  /contests/{id}/start:
-    post:
-      description: Starts the contest, transitioning from ACTIVE to Q1 and randomizing
-        labels
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.ContestSwagger'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Start contest
       tags:
       - contests
   /health/live:

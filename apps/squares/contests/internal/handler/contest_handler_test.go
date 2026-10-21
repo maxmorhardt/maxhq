@@ -36,7 +36,7 @@ func TestCreateContest_Success(t *testing.T) {
 	r.Use(authenticatedMiddleware("owner1"))
 	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "NewContest", MaxSquares: 10}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "NewContest", MaxSquares: 10, GameID: uuid.NewString()}))
 	assert.Equal(t, http.StatusCreated, w.Code)
 	var resp model.Contest
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
@@ -68,7 +68,7 @@ func TestCreateContest_OwnerMismatch(t *testing.T) {
 	r.Use(authenticatedMiddleware("user1"))
 	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "someone-else", Name: "Test", MaxSquares: 10}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "someone-else", Name: "Test", MaxSquares: 10, GameID: uuid.NewString()}))
 	assert.Equal(t, http.StatusForbidden, w.Code)
 }
 
@@ -92,78 +92,7 @@ func createContestErr(t *testing.T, svcErr error, wantCode int) {
 	r.Use(authenticatedMiddleware("owner1"))
 	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "Test", MaxSquares: 10}))
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestUpdateContest_Success(t *testing.T) {
-	contestID := uuid.New()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().UpdateContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(&model.Contest{ID: contestID, Name: "Updated", Status: model.ContestStatusActive}, nil)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.PATCH("/contests/:id", h.UpdateContest)
-
-	home := "Eagles"
-	w := doRequest(r, jsonReq(http.MethodPatch, fmt.Sprintf("/contests/%s", contestID), model.UpdateContestRequest{HomeTeam: &home}))
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestUpdateContest_InvalidID(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.PATCH("/contests/:id", h.UpdateContest)
-
-	req, _ := http.NewRequest(http.MethodPatch, "/contests/not-a-uuid", bytes.NewReader([]byte(`{}`)))
-	req.Header.Set("Content-Type", "application/json")
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestUpdateContest_InvalidBody(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.PATCH("/contests/:id", h.UpdateContest)
-
-	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/contests/%s", uuid.New()), bytes.NewReader([]byte(`{bad`)))
-	req.Header.Set("Content-Type", "application/json")
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestUpdateContest_NotFound(t *testing.T) {
-	updateContestErr(t, "owner1", gorm.ErrRecordNotFound, http.StatusNotFound)
-}
-func TestUpdateContest_Finalized(t *testing.T) {
-	updateContestErr(t, "owner1", errs.ErrContestFinalized, http.StatusForbidden)
-}
-func TestUpdateContest_Forbidden(t *testing.T) {
-	updateContestErr(t, "stranger", errs.ErrUnauthorizedContestEdit, http.StatusForbidden)
-}
-func TestUpdateContest_DatabaseUnavailable(t *testing.T) {
-	updateContestErr(t, "owner1", errs.ErrDatabaseUnavailable, http.StatusInternalServerError)
-}
-func TestUpdateContest_OtherError(t *testing.T) {
-	updateContestErr(t, "owner1", errs.ErrContestNotEditable, http.StatusBadRequest)
-}
-
-func updateContestErr(t *testing.T, user string, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().UpdateContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware(user))
-	r.PATCH("/contests/:id", h.UpdateContest)
-
-	home := "Eagles"
-	w := doRequest(r, jsonReq(http.MethodPatch, fmt.Sprintf("/contests/%s", uuid.New()), model.UpdateContestRequest{HomeTeam: &home}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "Test", MaxSquares: 10, GameID: uuid.NewString()}))
 	assert.Equal(t, wantCode, w.Code)
 }
 
@@ -217,177 +146,6 @@ func deleteContestErr(t *testing.T, user string, svcErr error, wantCode int) {
 
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/contests/%s", uuid.New()), http.NoBody)
 	w := doRequest(r, req)
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestStartContest_Success(t *testing.T) {
-	contestID := uuid.New()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().StartContest(mock.Anything, mock.Anything, mock.Anything).
-		Return(&model.Contest{ID: contestID, Status: model.ContestStatusQ1}, nil)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/start", h.StartContest)
-
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/start", contestID), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestStartContest_InvalidID(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/start", h.StartContest)
-
-	req, _ := http.NewRequest(http.MethodPost, "/contests/not-valid/start", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestStartContest_NotFound(t *testing.T) {
-	startContestErr(t, gorm.ErrRecordNotFound, http.StatusNotFound)
-}
-func TestStartContest_OtherError(t *testing.T) {
-	startContestErr(t, errs.ErrContestNotEditable, http.StatusBadRequest)
-}
-
-func startContestErr(t *testing.T, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().StartContest(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/start", h.StartContest)
-
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/start", uuid.New()), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestRecordQuarterResult_Success(t *testing.T) {
-	contestID := uuid.New()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().RecordQuarterResult(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(&model.QuarterResult{ContestID: contestID, Quarter: 1, HomeTeamScore: 7, AwayTeamScore: 3}, nil)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
-
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-results", contestID), model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
-	assert.Equal(t, http.StatusCreated, w.Code)
-}
-
-func TestRecordQuarterResult_InvalidID(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
-
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests/bad/quarter-results", model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestRecordQuarterResult_InvalidBody(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
-
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-results", uuid.New()), bytes.NewReader([]byte(`{bad`)))
-	req.Header.Set("Content-Type", "application/json")
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestRecordQuarterResult_AlreadyExists(t *testing.T) {
-	recordQuarterErr(t, errs.ErrQuarterResultAlreadyExists, http.StatusBadRequest)
-}
-func TestRecordQuarterResult_Unauthorized(t *testing.T) {
-	recordQuarterErr(t, errs.ErrUnauthorizedContestEdit, http.StatusForbidden)
-}
-func TestRecordQuarterResult_NotFound(t *testing.T) {
-	recordQuarterErr(t, gorm.ErrRecordNotFound, http.StatusNotFound)
-}
-func TestRecordQuarterResult_InvalidData(t *testing.T) {
-	recordQuarterErr(t, gorm.ErrInvalidData, http.StatusBadRequest)
-}
-func TestRecordQuarterResult_InternalError(t *testing.T) {
-	recordQuarterErr(t, assert.AnError, http.StatusInternalServerError)
-}
-
-func recordQuarterErr(t *testing.T, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().RecordQuarterResult(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/quarter-results", h.RecordQuarterResult)
-
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/quarter-results", uuid.New()), model.QuarterResultRequest{HomeTeamScore: 7, AwayTeamScore: 3}))
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestRollbackLastQuarterResult_Success(t *testing.T) {
-	contestID := uuid.New()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().RollbackLastQuarterResult(mock.Anything, mock.Anything, mock.Anything).
-		Return(&model.QuarterResult{ContestID: contestID, Quarter: 1}, nil)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.DELETE("/contests/:id/quarter-results/latest", h.RollbackLastQuarterResult)
-
-	w := doRequest(r, jsonReq(http.MethodDelete, fmt.Sprintf("/contests/%s/quarter-results/latest", contestID), nil))
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestRollbackLastQuarterResult_InvalidID(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.DELETE("/contests/:id/quarter-results/latest", h.RollbackLastQuarterResult)
-
-	w := doRequest(r, jsonReq(http.MethodDelete, "/contests/bad/quarter-results/latest", nil))
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestRollbackLastQuarterResult_NotFound(t *testing.T) {
-	rollbackQuarterErr(t, gorm.ErrRecordNotFound, http.StatusNotFound)
-}
-func TestRollbackLastQuarterResult_GameLinked(t *testing.T) {
-	rollbackQuarterErr(t, errs.ErrContestIsGameLinked, http.StatusBadRequest)
-}
-func TestRollbackLastQuarterResult_NothingToRollback(t *testing.T) {
-	rollbackQuarterErr(t, errs.ErrNoQuarterResultToRollback, http.StatusBadRequest)
-}
-func TestRollbackLastQuarterResult_Unauthorized(t *testing.T) {
-	rollbackQuarterErr(t, errs.ErrUnauthorizedContestEdit, http.StatusForbidden)
-}
-func TestRollbackLastQuarterResult_InternalError(t *testing.T) {
-	rollbackQuarterErr(t, assert.AnError, http.StatusInternalServerError)
-}
-
-func rollbackQuarterErr(t *testing.T, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().RollbackLastQuarterResult(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewContestHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.DELETE("/contests/:id/quarter-results/latest", h.RollbackLastQuarterResult)
-
-	w := doRequest(r, jsonReq(http.MethodDelete, fmt.Sprintf("/contests/%s/quarter-results/latest", uuid.New()), nil))
 	assert.Equal(t, wantCode, w.Code)
 }
 
@@ -653,78 +411,5 @@ func TestClaimRandomSquares_MapsErrors(t *testing.T) {
 		svc := mocks.NewContestService(t)
 		svc.EXPECT().ClaimRandomSquares(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, err)
 		assert.Equal(t, want, postRandomClaim(svc, uuid.NewString(), `{"count":1}`), err.Error())
-	}
-}
-
-func patchContest(t *testing.T, svc *mocks.ContestService, ifMatch string) *http.Response {
-	t.Helper()
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.PATCH("/contests/:id", NewContestHandler(svc).UpdateContest)
-
-	away := "B"
-	req := jsonReq(http.MethodPatch, "/contests/"+uuid.NewString(), model.UpdateContestRequest{AwayTeam: &away})
-	if ifMatch != "" {
-		req.Header.Set("If-Match", ifMatch)
-	}
-	return doRequest(r, req).Result()
-}
-
-func TestUpdateContest_ReturnsETagAndPassesIfMatch(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().UpdateContest(mock.Anything, mock.Anything, mock.Anything, "owner1", mock.MatchedBy(func(v *int64) bool {
-		return v != nil && *v == 3
-	})).Return(&model.Contest{Version: 4}, nil)
-
-	resp := patchContest(t, svc, `"3"`)
-
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, `"4"`, resp.Header.Get("ETag"))
-}
-
-func TestUpdateContest_StaleIfMatchIsPreconditionFailed(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().UpdateContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errs.ErrVersionConflict)
-
-	assert.Equal(t, http.StatusPreconditionFailed, patchContest(t, svc, `"3"`).StatusCode)
-}
-
-func TestUpdateContest_ConflictWithoutIfMatch(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().UpdateContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything, (*int64)(nil)).Return(nil, errs.ErrVersionConflict)
-
-	assert.Equal(t, http.StatusConflict, patchContest(t, svc, "").StatusCode)
-}
-
-func TestUpdateContest_MalformedIfMatch(t *testing.T) {
-	assert.Equal(t, http.StatusBadRequest, patchContest(t, mocks.NewContestService(t), `"nope"`).StatusCode)
-}
-
-func TestStartContest_VersionConflict(t *testing.T) {
-	svc := mocks.NewContestService(t)
-	svc.EXPECT().StartContest(mock.Anything, mock.Anything, mock.Anything).Return(nil, errs.ErrVersionConflict)
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/start", NewContestHandler(svc).StartContest)
-
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests/"+uuid.NewString()+"/start", nil))
-
-	assert.Equal(t, http.StatusConflict, w.Code)
-}
-
-func TestRecordQuarterResult_NewErrorMappings(t *testing.T) {
-	for err, want := range map[error]int{
-		errs.ErrContestNotEditable: http.StatusBadRequest,
-		errs.ErrVersionConflict:    http.StatusConflict,
-	} {
-		svc := mocks.NewContestService(t)
-		svc.EXPECT().RecordQuarterResult(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, err)
-		r := gin.New()
-		r.Use(authenticatedMiddleware("owner1"))
-		r.POST("/contests/:id/quarter-results", NewContestHandler(svc).RecordQuarterResult)
-
-		w := doRequest(r, jsonReq(http.MethodPost, "/contests/"+uuid.NewString()+"/quarter-results", model.QuarterResultRequest{HomeTeamScore: 7}))
-
-		assert.Equal(t, want, w.Code, err.Error())
 	}
 }

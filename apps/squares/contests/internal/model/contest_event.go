@@ -36,12 +36,6 @@ func NewContestUpdate(contest *Contest) ContestUpdate {
 	}
 }
 
-// QuarterRollback is the quarter.rolled_back payload: the quarter removed and the status the contest returned to
-type QuarterRollback struct {
-	Quarter int           `json:"quarter"`
-	Status  ContestStatus `json:"status"`
-}
-
 type ContestSnapshot struct {
 	Contest      *Contest             `json:"contest"`
 	Participants []ContestParticipant `json:"participants"`

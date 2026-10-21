@@ -1,68 +1,79 @@
-import { Box, Paper, Skeleton, useTheme } from '@mui/material';
+import { Box, Skeleton } from '@mui/material';
 
-const cardSx = { p: 2, borderRadius: 3, border: '1px solid rgba(255,255,255,0.08)' };
+const cardSx = { borderRadius: '18px', border: 1, borderColor: 'divider' } as const;
 
-function SettingRowSkeleton({ danger = false }: { danger?: boolean }) {
-  const theme = useTheme();
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        ...cardSx,
-        mb: danger ? 0 : 2.5,
-        borderColor: danger ? `${theme.palette.error.main}55` : undefined,
-        display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' },
-        alignItems: { xs: 'flex-start', sm: 'center' },
-        justifyContent: 'space-between',
-        gap: 2,
-      }}
-    >
-      <Box sx={{ flex: 1, width: '100%' }}>
-        <Skeleton variant="text" width={140} sx={{ fontSize: '1.1rem' }} />
-        <Skeleton variant="text" width="85%" />
-      </Box>
-      <Skeleton variant="rounded" width={danger ? 150 : 72} height={36} />
-    </Paper>
-  );
-}
-
+// mirrors the profile: the player card, the stats strip, the standing, and the settings rows
 export default function ProfileSkeleton() {
   return (
     <Box data-testid="profile-skeleton">
-      <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-        <Skeleton variant="circular" width={60} height={60} sx={{ mx: 'auto', mb: 1 }} />
-        <Skeleton variant="text" width={180} sx={{ mx: 'auto', fontSize: '1.5rem' }} />
-        <Skeleton variant="text" width={220} sx={{ mx: 'auto' }} />
-        <Skeleton variant="text" width={140} sx={{ mx: 'auto' }} />
-      </Box>
-
-      <Skeleton variant="text" width={130} sx={{ mx: 'auto', mb: 1.25, fontSize: '1.1rem' }} />
       <Box
         sx={{
+          ...cardSx,
+          borderRadius: '22px',
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 2, sm: 3 },
+          p: { xs: 2.5, sm: 3.5 },
+          mb: 3.5,
+        }}
+      >
+        <Skeleton variant="rounded" width={96} height={96} sx={{ borderRadius: '20px' }} />
+        <Box sx={{ flex: 1, width: '100%' }}>
+          <Skeleton variant="text" width="55%" sx={{ fontSize: '2.6rem' }} />
+          <Skeleton variant="text" width="40%" />
+          <Skeleton variant="rounded" width={170} height={26} sx={{ mt: 1.25 }} />
+        </Box>
+      </Box>
+
+      <Skeleton variant="text" width={110} sx={{ mb: 1.25 }} />
+      <Box
+        sx={{
+          ...cardSx,
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' },
-          gap: 1.5,
-          mb: 2.5,
+          gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+          mb: 3.5,
         }}
       >
         {Array.from({ length: 4 }, (_, i) => (
-          <Paper key={i} elevation={0} sx={{ ...cardSx, py: 1.75, textAlign: 'center' }}>
-            <Skeleton variant="circular" width={26} height={26} sx={{ mx: 'auto', mb: 0.5 }} />
-            <Skeleton variant="text" width={60} sx={{ mx: 'auto', fontSize: '1.75rem' }} />
-            <Skeleton variant="text" width={110} sx={{ mx: 'auto' }} />
-          </Paper>
+          <Box key={i} data-testid="stat-skeleton" sx={{ px: 2.5, py: 2.25 }}>
+            <Skeleton variant="text" width={110} />
+            <Skeleton variant="text" width={56} sx={{ fontSize: '2.4rem' }} />
+          </Box>
         ))}
       </Box>
 
-      <Paper elevation={0} sx={{ ...cardSx, mb: 2.5 }}>
-        <Skeleton variant="text" width={160} sx={{ fontSize: '1.5rem' }} />
-        <Skeleton variant="text" width="60%" />
-      </Paper>
+      <Box sx={{ ...cardSx, display: 'flex', alignItems: 'center', gap: 2, p: 2.25, mb: 3 }}>
+        <Skeleton variant="rounded" width={64} height={64} sx={{ borderRadius: '14px' }} />
+        <Box sx={{ flex: 1 }}>
+          <Skeleton variant="text" width={90} />
+          <Skeleton variant="text" width="45%" sx={{ fontSize: '1.3rem' }} />
+        </Box>
+      </Box>
 
-      <SettingRowSkeleton />
-      <SettingRowSkeleton danger />
+      <Skeleton variant="text" width={80} sx={{ mb: 1.25 }} />
+      <Box sx={cardSx}>
+        {[0, 1].map((row) => (
+          <Box
+            key={row}
+            data-testid="setting-skeleton"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              p: 2.5,
+              borderTop: row ? 1 : 0,
+              borderColor: 'divider',
+            }}
+          >
+            <Box sx={{ flex: 1 }}>
+              <Skeleton variant="text" width={140} sx={{ fontSize: '1.1rem' }} />
+              <Skeleton variant="text" width="80%" />
+            </Box>
+            <Skeleton variant="rounded" width={row ? 150 : 72} height={36} />
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 }

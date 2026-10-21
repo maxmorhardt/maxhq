@@ -1,27 +1,27 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders } from '../../../../test/render';
-import FormSection, { SectionDivider } from './FormSection';
+import FormSection from './FormSection';
 
 describe('FormSection', () => {
-  it('labels its field', () => {
+  it('numbers and labels its step', () => {
     renderWithProviders(
-      <FormSection title="Basics" description="A short name.">
+      <FormSection step={2} title="Name it" description="A short name.">
         <input aria-label="name" />
       </FormSection>
     );
-    expect(screen.getByText('Basics')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Name it' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Name it' })).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('A short name.')).toBeInTheDocument();
-    expect(screen.getByLabelText('name')).toBeInTheDocument();
   });
 
-  it('works without help text, and the divider renders', () => {
+  it('works without help text', () => {
     const { container } = renderWithProviders(
-      <>
-        <FormSection title="Basics">field</FormSection>
-        <SectionDivider />
-      </>
+      <FormSection step={1} title="Basics">
+        field
+      </FormSection>
     );
-    expect(container).toHaveTextContent('Basicsfield');
+    expect(container).toHaveTextContent('1Basicsfield');
   });
 });

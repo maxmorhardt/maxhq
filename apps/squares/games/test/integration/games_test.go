@@ -65,6 +65,13 @@ func TestGames_LiveScoresArePublishedOncePerChange(t *testing.T) {
 	assert.Equal(t, 7, g.Scores[0].HomeScore)
 	assert.Equal(t, 3, g.Scores[0].AwayScore)
 
+	byID := testkit.Call(t, gamesURL, testkit.Anonymous, http.MethodGet, "/games/"+g.ID.String(), nil)
+	require.Equal(t, http.StatusOK, byID.Status, "anyone can read a game")
+	var served events.Game
+	byID.Decode(t, &served)
+	assert.Equal(t, g.ID, served.ID)
+	assert.Len(t, served.Scores, 1)
+
 	countFor := func() int {
 		entries, err := streams.Range(context.Background(), rdb, events.GamesStream, "", 1000)
 		require.NoError(t, err)

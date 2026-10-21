@@ -1,5 +1,7 @@
-import { Box, Button, Paper, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Button, TextField, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useState } from 'react';
+import { fonts, game as palette } from '../../../app/theme';
 import { useToast } from '../../toast/useToast';
 import { useUpdateMyProfileMutation } from '../api';
 
@@ -18,7 +20,6 @@ interface Props {
 }
 
 export default function InitialsCard({ initials, disabled }: Props) {
-  const theme = useTheme();
   const { showToast } = useToast();
   const [updateProfile, { isLoading: saving }] = useUpdateMyProfileMutation();
   const [draft, setDraft] = useState<string | null>(null);
@@ -37,25 +38,43 @@ export default function InitialsCard({ initials, disabled }: Props) {
     }
   };
 
+  const shown = draft ?? initials;
+
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        p: 2,
-        mb: 2.5,
-        borderRadius: 3,
-        border: `1px solid ${theme.palette.divider}`,
         display: 'flex',
         flexDirection: { xs: 'column', sm: 'row' },
         alignItems: { xs: 'flex-start', sm: 'center' },
-        justifyContent: 'space-between',
-        gap: 2,
+        gap: { xs: 2, sm: 2.5 },
+        p: { xs: 2, sm: 2.5 },
       }}
     >
-      <Box>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          Default Initials
-        </Typography>
+      {/* a preview of how a claimed square reads on the board */}
+      <Box
+        sx={{
+          flexShrink: 0,
+          display: 'grid',
+          placeItems: 'center',
+          width: 60,
+          height: 60,
+          borderRadius: '10px',
+          fontFamily: fonts.display,
+          fontWeight: 800,
+          fontSize: '1.4rem',
+          letterSpacing: '0.04em',
+          color: shown ? palette.chalk : 'text.secondary',
+          bgcolor: shown ? alpha(palette.brand, 0.28) : alpha(palette.chalk, 0.04),
+          border: 1,
+          borderColor: shown ? alpha(palette.brand, 0.6) : 'divider',
+          borderStyle: shown ? 'solid' : 'dashed',
+        }}
+      >
+        {shown || '—'}
+      </Box>
+
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography sx={{ fontWeight: 700 }}>Default Initials</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           Shown on every square you claim. Changing them updates your squares in active contests.
         </Typography>
@@ -79,15 +98,15 @@ export default function InitialsCard({ initials, disabled }: Props) {
           </Button>
         </Box>
       ) : (
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexShrink: 0 }}>
-          <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: 1 }}>
-            {initials || '—'}
-          </Typography>
-          <Button variant="outlined" onClick={() => setDraft(initials ?? '')} disabled={disabled}>
-            Edit
-          </Button>
-        </Box>
+        <Button
+          variant="outlined"
+          onClick={() => setDraft(initials ?? '')}
+          disabled={disabled}
+          sx={{ flexShrink: 0 }}
+        >
+          Edit
+        </Button>
       )}
-    </Paper>
+    </Box>
   );
 }

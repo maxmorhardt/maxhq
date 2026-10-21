@@ -7,6 +7,7 @@ export default [
   route('contests/create', 'pages/CreateContestPage.tsx'),
   route('contests/:id', 'pages/ContestPage.tsx'),
   route('join/:token', 'pages/JoinPage.tsx'),
+  route('games', 'pages/GamesPage.tsx'),
   route('leaderboard', 'pages/LeaderboardPage.tsx'),
   route('profile', 'pages/ProfilePage.tsx'),
   route('contact', 'pages/ContactPage.tsx'),

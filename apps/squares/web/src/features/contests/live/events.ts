@@ -3,7 +3,6 @@ import type {
   ContestUpdate,
   Participant,
   QuarterResult,
-  QuarterRollback,
   Square,
 } from '../../../types/contest';
 
@@ -22,7 +21,6 @@ export type ContestEvent =
   | Envelope<'contest.deleted', undefined>
   | Envelope<'square.updated', Square>
   | Envelope<'quarter.recorded', QuarterResult>
-  | Envelope<'quarter.rolled_back', QuarterRollback>
   | Envelope<'participant.joined', Participant>
   | Envelope<'participant.removed', Participant>
   | Envelope<'access.revoked', undefined>;
@@ -38,7 +36,6 @@ const KNOWN_TYPES: Record<ContestEventType, true> = {
   'contest.deleted': true,
   'square.updated': true,
   'quarter.recorded': true,
-  'quarter.rolled_back': true,
   'participant.joined': true,
   'participant.removed': true,
   'access.revoked': true,

@@ -101,6 +101,14 @@ describe('LeaderboardTable', () => {
     expect(screen.getByText('Win Rate')).toBeInTheDocument();
   });
 
+  it('lays the standings out as a table', () => {
+    renderTable();
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getAllByRole('row')).toHaveLength(entries.length + 1);
+    expect(screen.getByRole('columnheader', { name: 'Wins' })).toBeInTheDocument();
+  });
+
   it('marks the current user', () => {
     renderTable({ highlightKey: '5:Jordan K.' });
 

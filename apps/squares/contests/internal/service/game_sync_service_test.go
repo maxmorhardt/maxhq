@@ -223,3 +223,11 @@ func quietFeed(t *testing.T) *mocks.FeedService {
 	f.EXPECT().InvalidateContest(mock.Anything, mock.Anything).Maybe()
 	return f
 }
+
+func TestGameSync_LeavesDeletedContestsAlone(t *testing.T) {
+	game := liveGame(uuid.New(), model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3})
+	contest := fullContest(model.ContestStatusDeleted, game.ID)
+	g, c, cs := syncFixture(t, game, contest)
+
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
+}

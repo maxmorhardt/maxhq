@@ -35,7 +35,8 @@ export function useContestStream(
       url: contestEventsUrl(contestId),
       getToken: getIdToken,
       onStatus: (status) => dispatch(streamStatusChanged(status)),
-      onRejected: (status) => dispatch(streamEnded(status === 404 ? 'not_found' : 'forbidden')),
+      // a malformed id is a contest that does not exist
+      onRejected: (status) => dispatch(streamEnded(status === 403 ? 'forbidden' : 'not_found')),
       onMessage: ({ id, data }) => {
         const parsed = parseContestEvent(data, contestId);
         if (parsed.kind === 'unknown') {

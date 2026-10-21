@@ -1,5 +1,5 @@
-import { ExpandMore } from '@mui/icons-material';
-import { Accordion, AccordionDetails, AccordionSummary, Typography, useTheme } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/material';
 
 interface LearnFAQsProps {
   question: string;
@@ -7,35 +7,31 @@ interface LearnFAQsProps {
 }
 
 export default function LearnFAQs({ question, answer }: LearnFAQsProps) {
-  const theme = useTheme();
-
   return (
     <Accordion
       disableGutters
+      elevation={0}
       slotProps={{ transition: { timeout: 200 } }}
       sx={{
-        background: theme.palette.grey[900],
-        border: `1px solid ${theme.palette.grey[800]}`,
-        borderRadius: '12px !important',
-        mb: 2,
+        bgcolor: 'transparent',
+        borderBottom: 1,
+        borderColor: 'divider',
+        borderRadius: '0 !important',
+        '&:first-of-type': { borderTop: 1, borderColor: 'divider' },
+        '& .MuiAccordionSummary-expandIconWrapper': { color: 'primary.main' },
+        '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': { transform: 'rotate(45deg)' },
       }}
     >
-      {/* question header with expand icon */}
       <AccordionSummary
-        expandIcon={<ExpandMore sx={{ color: 'white' }} />}
-        sx={{
-          '& .MuiAccordionSummary-content': {
-            margin: '16px 0',
-          },
-        }}
+        expandIcon={<Add />}
+        sx={{ px: 0, '& .MuiAccordionSummary-content': { margin: '20px 0' } }}
       >
-        <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
-          {question}
-        </Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: '1.08rem', pr: 2 }}>{question}</Typography>
       </AccordionSummary>
-      {/* answer text content */}
-      <AccordionDetails>
-        <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.7 }}>{answer}</Typography>
+      <AccordionDetails sx={{ px: 0, pt: 0, pb: 3 }}>
+        <Typography sx={{ color: 'text.secondary', lineHeight: 1.7, maxWidth: '66ch' }}>
+          {answer}
+        </Typography>
       </AccordionDetails>
     </Accordion>
   );

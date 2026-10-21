@@ -8,7 +8,7 @@ const rise = keyframes`
 `;
 
 const HINT_TILE_SIZE = 34;
-const DEFAULT_ACCENT = '#ff6b6b';
+const DEFAULT_ACCENT = '#ff5d5d';
 
 // alpha() throws on values it cannot parse (gradients, theme paths like primary.main)
 function accentAlpha(accent: string, opacity: number) {

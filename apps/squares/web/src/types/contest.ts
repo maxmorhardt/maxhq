@@ -18,7 +18,6 @@ export interface Contest {
   squares: Square[];
   quarterResults?: QuarterResult[];
   gameId?: string;
-  game?: Game;
   owner: string;
   version: number;
   createdAt: string;
@@ -35,11 +34,9 @@ export interface RandomClaimResponse {
 export interface CreateContestRequest {
   name: string;
   owner: string;
-  homeTeam?: string;
-  awayTeam?: string;
   visibility?: ContestVisibility;
   maxSquares?: number;
-  gameId?: string;
+  gameId: string;
 }
 
 export interface Square {
@@ -73,6 +70,8 @@ export interface ContestSummary {
   name: string;
   homeTeam?: string;
   awayTeam?: string;
+  homeAbbr?: string;
+  awayAbbr?: string;
   status: ContestStatus;
   visibility: ContestVisibility;
   owner: string;
@@ -107,11 +106,6 @@ export interface QuarterResult {
   updatedBy: string;
 }
 
-export interface QuarterResultRequest {
-  homeTeamScore: number;
-  awayTeamScore: number;
-}
-
 export type GameStatus = 'scheduled' | 'in_progress' | 'final';
 
 export interface GameScore {
@@ -142,6 +136,16 @@ export interface Game {
   scores?: GameScore[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ScoreboardWeek {
+  season: number;
+  seasonType: number;
+  week: number;
+}
+
+export interface Scoreboard extends ScoreboardWeek {
+  games: Game[];
 }
 
 export type ActivityEventType =
@@ -176,20 +180,9 @@ export type ContestUpdate = Pick<
   | 'updatedAt'
 >;
 
-export interface QuarterRollback {
-  quarter: number;
-  status: ContestStatus;
-}
-
 export interface ContestSnapshot {
   contest: Contest;
   participants: Participant[];
-}
-
-export interface UpdateContestRequest {
-  homeTeam?: string;
-  awayTeam?: string;
-  visibility?: ContestVisibility;
 }
 
 export interface Participant {

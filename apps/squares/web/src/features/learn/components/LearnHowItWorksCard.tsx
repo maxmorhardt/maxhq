@@ -1,62 +1,50 @@
-import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import { fonts } from '../../../app/theme';
 
 interface LearnHowItWorksCardProps {
-  color?: string;
   stepNumber: number;
   title: string;
   description: string;
+  final?: boolean;
 }
 
 export default function LearnHowItWorksCard({
-  color,
   stepNumber,
   title,
   description,
+  final = false,
 }: LearnHowItWorksCardProps) {
-  const theme = useTheme();
-
   return (
-    <Card
+    <Box
       sx={{
-        background: theme.palette.grey[900],
-        border: `1px solid ${theme.palette.grey[800]}`,
-        borderRadius: 3,
         height: '100%',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
-        '&:hover': {
-          transform: 'translateY(-6px)',
-          borderColor: color ?? theme.palette.grey[700],
-          boxShadow: `0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px ${color ?? theme.palette.grey[700]}22`,
-        },
+        p: { xs: 3, md: 3.5 },
+        borderRadius: '16px',
+        border: 1,
+        borderColor: final ? 'secondary.main' : 'divider',
+        bgcolor: 'background.default',
       }}
     >
-      <CardContent sx={{ p: { xs: 4, md: 3, lg: 4 }, textAlign: 'center' }}>
-        {/* circular step number badge */}
-        <Box
-          sx={{
-            width: { xs: 80, md: 64, lg: 80 },
-            height: { xs: 80, md: 64, lg: 80 },
-            borderRadius: '50%',
-            background: color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: { xs: 3, md: 2, lg: 3 },
-          }}
-        >
-          <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-            {stepNumber}
-          </Typography>
-        </Box>
-        {/* step title and description */}
-        <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>
-          {title}
-        </Typography>
-        <Typography sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
-          {description}
-        </Typography>
-      </CardContent>
-    </Card>
+      <Typography
+        component="span"
+        sx={{
+          display: 'block',
+          fontFamily: fonts.display,
+          fontWeight: 800,
+          fontSize: '4rem',
+          lineHeight: 0.85,
+          color: final ? 'secondary.main' : 'primary.main',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {stepNumber}
+      </Typography>
+      <Typography variant="h3" component="h3" sx={{ mt: 2.5, fontSize: '1.7rem' }}>
+        {title}
+      </Typography>
+      <Typography sx={{ mt: 1.25, color: 'text.secondary', lineHeight: 1.65 }}>
+        {description}
+      </Typography>
+    </Box>
   );
 }

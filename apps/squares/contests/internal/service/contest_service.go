@@ -22,13 +22,9 @@ const systemUser = "system"
 
 type ContestService interface {
 	CreateContest(ctx context.Context, req *model.CreateContestRequest, user string) (*model.Contest, error)
-	UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error)
-	StartContest(ctx context.Context, contestID uuid.UUID, user string) (*model.Contest, error)
-	RecordQuarterResult(ctx context.Context, contestID uuid.UUID, homeScore, awayScore int, user string) (*model.QuarterResult, error)
 	ApplyQuarterResult(ctx context.Context, contest *model.Contest, quarter, homeScore, awayScore int) (*model.QuarterResult, error)
 	FinalizeFromScores(ctx context.Context, contest *model.Contest, scores []model.GameScore) error
 	AutoStart(ctx context.Context, contest *model.Contest) error
-	RollbackLastQuarterResult(ctx context.Context, contestID uuid.UUID, user string) (*model.QuarterResult, error)
 	DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error
 
 	ClaimSquare(ctx context.Context, contestID, squareID uuid.UUID, user string) (*model.Square, error)
@@ -87,35 +83,31 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 		visibility = model.ContestVisibilityPublic
 	}
 
+	gameID, err := uuid.Parse(req.GameID)
+	if err != nil {
+		return nil, errs.ErrGameNotFound
+	}
+
+	game, err := s.gameRepo.GetByID(ctx, gameID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.ErrGameNotFound
+		}
+
+		log.Error("failed to get game for contest link", "game_id", gameID, "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+
 	contest := model.Contest{
 		Name:       req.Name,
 		XLabels:    xLabelsJSON,
 		YLabels:    yLabelsJSON,
-		HomeTeam:   req.HomeTeam,
-		AwayTeam:   req.AwayTeam,
+		HomeTeam:   game.HomeTeam,
+		AwayTeam:   game.AwayTeam,
+		GameID:     &game.ID,
 		Owner:      req.Owner,
 		Visibility: visibility,
 		Status:     model.ContestStatusActive,
-	}
-
-	if req.GameID != "" {
-		gameID, parseErr := uuid.Parse(req.GameID)
-		if parseErr != nil {
-			return nil, errs.ErrGameNotFound
-		}
-		game, gameErr := s.gameRepo.GetByID(ctx, gameID)
-		if gameErr != nil {
-			if errors.Is(gameErr, gorm.ErrRecordNotFound) {
-				return nil, errs.ErrGameNotFound
-			}
-
-			log.Error("failed to get game for contest link", "game_id", gameID, "error", gameErr)
-			return nil, errs.ErrDatabaseUnavailable
-		}
-
-		contest.GameID = &game.ID
-		contest.HomeTeam = game.HomeTeam
-		contest.AwayTeam = game.AwayTeam
 	}
 
 	ownerParticipant := &model.ContestParticipant{
@@ -132,121 +124,6 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 	metrics.IncParticipantJoined(string(model.ParticipantRoleOwner))
 	log.Info("created contest", "name", req.Name, "contest_id", contest.ID, "owner", req.Owner)
 	return &contest, nil
-}
-
-func (s *contestService) UpdateContest(ctx context.Context, contestID uuid.UUID, req *model.UpdateContestRequest, user string, expectedVersion *int64) (*model.Contest, error) {
-	log := logging.FromContext(ctx)
-
-	var contest *model.Contest
-	err := s.tx.Do(ctx, func(ctx context.Context) error {
-		var err error
-		contest, err = s.repo.GetByID(ctx, contestID)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				log.Warn("contest not found for update", "contest_id", contestID)
-				return err
-			}
-
-			log.Error("failed to get contest for ownership validation", "contest_id", contestID, "error", err)
-			return errs.ErrDatabaseUnavailable
-		}
-
-		if expectedVersion != nil && *expectedVersion != contest.Version {
-			log.Warn("contest update precondition failed", "contest_id", contestID, "expected", *expectedVersion, "current", contest.Version)
-			return errs.ErrVersionConflict
-		}
-
-		util.SynthesizeFromGame(contest)
-
-		if contest.Status.IsTerminal() {
-			log.Warn("cannot update contest in terminal state", "contest_id", contestID, "status", contest.Status)
-			return errs.ErrContestFinalized
-		}
-
-		if err := s.participantService.Authorize(ctx, contestID, user, ActionEditContest); err != nil {
-			log.Warn("user is not authorized to update contest", "contest_id", contestID, "user", user)
-			return errs.ErrUnauthorizedContestEdit
-		}
-
-		if !applyContestChanges(contest, req) {
-			log.Info("no changes detected for contest update", "contest_id", contest.ID)
-			return nil
-		}
-
-		contest.UpdatedBy = user
-		if err := s.repo.Update(ctx, contest); err != nil {
-			log.Warn("failed to save updated contest", "contest_id", contest.ID, "error", err)
-			return err
-		}
-
-		return s.events.PublishContestUpdate(ctx, contest.ID, user, contest)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	log.Info("contest updated successfully", "contest_id", contest.ID, "user", user)
-	return contest, nil
-}
-
-func applyContestChanges(contest *model.Contest, req *model.UpdateContestRequest) bool {
-	canEditTeams := contest.GameID == nil
-
-	changed := false
-	if canEditTeams && req.HomeTeam != nil && *req.HomeTeam != contest.HomeTeam {
-		contest.HomeTeam = *req.HomeTeam
-		changed = true
-	}
-
-	if canEditTeams && req.AwayTeam != nil && *req.AwayTeam != contest.AwayTeam {
-		contest.AwayTeam = *req.AwayTeam
-		changed = true
-	}
-
-	if req.Visibility != nil && model.ContestVisibility(*req.Visibility) != contest.Visibility {
-		contest.Visibility = model.ContestVisibility(*req.Visibility)
-		changed = true
-	}
-
-	return changed
-}
-
-func (s *contestService) StartContest(ctx context.Context, contestID uuid.UUID, user string) (*model.Contest, error) {
-	log := logging.FromContext(ctx)
-
-	var contest *model.Contest
-	err := s.tx.Do(ctx, func(ctx context.Context) error {
-		var err error
-		contest, err = s.repo.GetByIDForUpdate(ctx, contestID)
-		if err != nil {
-			log.Error("failed to get contest", "contest_id", contestID, "error", err)
-			return err
-		}
-
-		if contest.GameID != nil {
-			log.Warn("cannot manually start a game-linked contest", "contest_id", contestID)
-			return errs.ErrContestIsGameLinked
-		}
-
-		if contest.Status != model.ContestStatusActive {
-			log.Warn("cannot start contest, not in ACTIVE status", "contest_id", contestID, "current_status", contest.Status)
-			return errs.ErrContestNotEditable
-		}
-
-		if !util.AllSquaresClaimed(contest) {
-			log.Warn("cannot start contest - unclaimed squares remain", "contest_id", contestID)
-			return errs.ErrContestNotReady
-		}
-
-		return s.transitionToQ1(ctx, contest, user)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	metrics.IncContestStarted()
-	log.Info("contest started successfully", "contest_id", contestID)
-	return contest, nil
 }
 
 func (s *contestService) AutoStart(ctx context.Context, contest *model.Contest) error {
@@ -284,68 +161,6 @@ func (s *contestService) transitionToQ1(ctx context.Context, contest *model.Cont
 
 	log.Info("transitioned to Q1, labels randomized, squares now immutable", "contest_id", contest.ID)
 	return nil
-}
-
-func (s *contestService) RecordQuarterResult(ctx context.Context, contestID uuid.UUID, homeScore, awayScore int, user string) (*model.QuarterResult, error) {
-	log := logging.FromContext(ctx)
-
-	var recorded *model.QuarterResult
-	err := s.tx.Do(ctx, func(ctx context.Context) error {
-		contest, err := s.repo.GetByIDForUpdate(ctx, contestID)
-		if err != nil {
-			log.Error("failed to get contest", "contest_id", contestID, "error", err)
-			return err
-		}
-
-		if contest.GameID != nil {
-			log.Warn("cannot manually record quarter result for a game-linked contest", "contest_id", contestID)
-			return errs.ErrContestIsGameLinked
-		}
-
-		if err = s.participantService.Authorize(ctx, contestID, user, ActionEditContest); err != nil {
-			log.Warn("user is not authorized to record quarter result", "contest_id", contestID, "user", user)
-			return errs.ErrUnauthorizedContestEdit
-		}
-
-		quarter, ok := contest.Status.Quarter()
-		if !ok {
-			log.Warn("invalid contest status for recording quarter result", "contest_id", contestID, "status", contest.Status)
-			return errs.ErrContestNotEditable
-		}
-		nextStatus, _ := model.StatusAfterQuarter(quarter)
-
-		for i := range contest.QuarterResults {
-			if contest.QuarterResults[i].Quarter == quarter {
-				log.Warn("quarter result already exists for given quarter", "quarter", quarter)
-				return errs.ErrQuarterResultAlreadyExists
-			}
-		}
-
-		result, err := util.QuarterResultFor(contest, quarter, homeScore, awayScore)
-		if err != nil {
-			log.Error("failed to compute quarter result", "contest_id", contestID, "error", err)
-			return err
-		}
-
-		result.CreatedBy = user
-		result.UpdatedBy = user
-
-		contest.Status = nextStatus
-		results := []model.QuarterResult{*result}
-		if err := s.applyQuarterResults(ctx, contest, results, user); err != nil {
-			log.Error("failed to record quarter result", "contest_id", contestID, "quarter", quarter, "error", err)
-			return err
-		}
-
-		recorded = &results[0]
-		log.Info("quarter result recorded and status transitioned", "contest_id", contestID, "quarter", quarter, "winner", result.Winner, "new_status", nextStatus)
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return recorded, nil
 }
 
 func (s *contestService) ApplyQuarterResult(ctx context.Context, contest *model.Contest, quarter, homeScore, awayScore int) (*model.QuarterResult, error) {
@@ -426,65 +241,6 @@ func (s *contestService) applyQuarterResults(ctx context.Context, contest *model
 	}
 
 	return nil
-}
-
-func (s *contestService) RollbackLastQuarterResult(ctx context.Context, contestID uuid.UUID, user string) (*model.QuarterResult, error) {
-	log := logging.FromContext(ctx)
-
-	var rolledBack *model.QuarterResult
-	var quarter int
-	err := s.tx.Do(ctx, func(ctx context.Context) error {
-		contest, err := s.repo.GetByIDForUpdate(ctx, contestID)
-		if err != nil {
-			log.Error("failed to get contest", "contest_id", contestID, "error", err)
-			return err
-		}
-
-		if contest.GameID != nil {
-			log.Warn("cannot roll back quarter result for a game-linked contest", "contest_id", contestID)
-			return errs.ErrContestIsGameLinked
-		}
-
-		if err = s.participantService.Authorize(ctx, contestID, user, ActionEditContest); err != nil {
-			log.Warn("user is not authorized to roll back quarter result", "contest_id", contestID, "user", user)
-			return errs.ErrUnauthorizedContestEdit
-		}
-
-		var revertStatus model.ContestStatus
-		var ok bool
-		revertStatus, quarter, ok = model.PreviousQuarterStatus(contest.Status)
-		if !ok {
-			log.Warn("no quarter result to roll back for current status", "contest_id", contestID, "status", contest.Status)
-			return errs.ErrNoQuarterResultToRollback
-		}
-
-		for i := range contest.QuarterResults {
-			if contest.QuarterResults[i].Quarter == quarter {
-				rolledBack = &contest.QuarterResults[i]
-				break
-			}
-		}
-		if rolledBack == nil {
-			log.Warn("quarter result missing for rollback", "contest_id", contestID, "quarter", quarter)
-			return errs.ErrNoQuarterResultToRollback
-		}
-
-		contest.Status = revertStatus
-		contest.UpdatedBy = user
-		if err := s.repo.RollbackQuarterResult(ctx, rolledBack.ID, contest); err != nil {
-			log.Error("failed to roll back quarter result", "contest_id", contestID, "quarter", quarter, "error", err)
-			return err
-		}
-
-		return s.events.PublishQuarterResultRollback(ctx, contest.ID, user, rolledBack, contest)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	metrics.IncQuarterResultRolledBack(quarter)
-	log.Info("quarter result rolled back and status reverted", "contest_id", contestID, "quarter", quarter)
-	return rolledBack, nil
 }
 
 func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error {

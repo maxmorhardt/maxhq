@@ -20,10 +20,16 @@
 - `src/auth/` - `userManager.ts` (the single oidc-client-ts `UserManager`), `token.ts` (`getIdToken` refreshes a token that is expiring or stale; concurrent callers share one refresh), `useAuthSession.ts`, `RequireAuth.tsx`, `oidc.ts`, `SignInDialog.tsx`.
 - `src/features/<domain>/` - one folder per domain (`contests`, `profile`, `leaderboard`, `landing`, `learn`, `join`, `contact`, `toast`). Each holds its `api.ts` (endpoints and generated hooks) and `components/`.
 - `src/features/contests/live/` - the live contest: `events.ts` (the event union and parser), `liveContestSlice.ts` (snapshot plus one handler per event type, and write responses applied ahead of their events), `activity.ts` (the activity feed), `useContestStream.ts`, `selectors.ts`, `viewer.ts`.
-- `src/components/` - shared, domain-free UI: `layout/` (header, footer), `feedback/` (`ErrorState`, `LoadingScreen`, `ConfirmDialog`, `ErrorBoundary`), `errors/` (401/403/404 views), `inputs.ts`, `animations.ts`.
+- `src/components/` - shared, domain-free UI: `layout/` (header, footer), `feedback/` (`ErrorState`, `LoadingScreen`, `ConfirmDialog`, `ErrorBoundary`), `errors/` (401/403/404 views), `PageTitle` (the condensed headline each top-level page opens with), `Reveal` (fade up on first scroll into view), `inputs.ts`, `animations.ts`.
 - `src/hooks/` - generic hooks (`useDebouncedValue`, `useInfiniteScroll`, `useScrollAnimation`).
 - `src/types/` - the API contract types. `src/utils/` - pure helpers.
 - `src/test/` - `renderWithProviders`, `mockAuth`, `mockMutation`, `stubFetch`, and fixtures.
+
+## Look and Feel
+
+- `src/app/theme.ts` owns the game-night palette as `game` (midnight field, the squares blue as `brand`, `gold` for winners only, `go` green for success) and the type pair in `fonts`: Barlow for body, Barlow Condensed for headlines, team names, and every scoreboard digit (`fontVariantNumeric: 'tabular-nums'`). Fonts are self-hosted from `@fontsource` and imported in `root.tsx`.
+- Read colors from the theme or `game`, not new hex values. On the board: open squares are outlined, others' squares are raised, yours are `brand`, winners are `gold`.
+- Every animation has a `prefers-reduced-motion` escape.
 
 ## Where Things Go
 

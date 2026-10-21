@@ -104,16 +104,6 @@ describe('liveContestSlice events', () => {
     expect(state.contest?.status).toBe('Q2');
   });
 
-  it('rolls a quarter back to the status the server sends', () => {
-    let state = receive(
-      live(makeContest({ status: 'Q1' })),
-      event('quarter.recorded', makeQuarterResult())
-    );
-    state = receive(state, event('quarter.rolled_back', { quarter: 1, status: 'Q1' }), 'e-2');
-    expect(state.contest?.quarterResults).toHaveLength(0);
-    expect(state.contest?.status).toBe('Q1');
-  });
-
   it('adds, updates, and removes participants', () => {
     let state = receive(
       live(),
@@ -158,32 +148,6 @@ describe('liveContestSlice write responses', () => {
     expect(state.contest?.squares[1].value).toBe('AB');
     state = liveContestReducer(state, fulfilled('clearMySquares', [makeSquare({ version: 3 })]));
     expect(state.contest?.squares[0].value).toBe('');
-  });
-
-  it('applies started and updated contests for this contest only', () => {
-    let state = liveContestReducer(
-      live(),
-      fulfilled('startContest', makeContest({ status: 'Q1', version: 2 }))
-    );
-    expect(state.contest?.status).toBe('Q1');
-    state = liveContestReducer(
-      state,
-      fulfilled('updateContest', makeContest({ id: 'other', name: 'X', version: 9 }))
-    );
-    expect(state.contest?.name).toBe('Test Bowl');
-  });
-
-  it('applies recorded and rolled back quarters', () => {
-    let state = liveContestReducer(
-      live(makeContest({ status: 'Q2' })),
-      fulfilled('recordQuarterResult', makeQuarterResult({ quarter: 2 }))
-    );
-    expect(state.contest?.status).toBe('Q3');
-    state = liveContestReducer(
-      state,
-      fulfilled('rollbackQuarterResult', makeQuarterResult({ quarter: 2 }))
-    );
-    expect(state.contest?.status).toBe('Q2');
   });
 
   it('applies participant edits and removals', () => {

@@ -7,6 +7,7 @@ import { useGetMyProfileQuery } from '../../../profile/api';
 import { useToast } from '../../../toast/useToast';
 import { useClaimSquareMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
+import { fonts, game } from '../../../../app/theme';
 import Square from './Square';
 import SquareDialog from './SquareDialog';
 
@@ -24,12 +25,16 @@ interface Props {
 }
 
 const teamLabelSx = {
-  color: 'rgba(255,255,255,0.7)',
-  fontWeight: 600,
-  fontSize: { xs: '0.65rem', sm: '0.8rem', md: '0.95rem' },
-  letterSpacing: '0.05em',
+  color: 'text.primary',
+  fontFamily: fonts.display,
+  fontWeight: 700,
+  fontSize: 'clamp(0.75rem, 2.3cqw, 1.15rem)',
+  letterSpacing: '0.14em',
   textTransform: 'uppercase',
+  lineHeight: 1,
 } as const;
+
+const squareGap = 'clamp(2px, 0.9cqw, 8px)';
 
 export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: Props) {
   const navigate = useNavigate();
@@ -98,39 +103,54 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
     <>
       <Paper
         sx={{
-          background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 3,
+          background: game.field,
+          border: `1px solid ${game.line}`,
+          borderRadius: { xs: '14px', sm: '18px' },
           p: { xs: 0.75, sm: 1, md: 1.5 },
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          width: 'fit-content',
+          boxShadow: '0 30px 70px -30px rgba(0, 0, 0, 0.85)',
+          width: '100%',
+          // squares, labels, and gaps scale with the board's width
+          containerType: 'inline-size',
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
           {/* away team across the top */}
-          <Typography sx={{ ...teamLabelSx, mb: { xs: 1.25, sm: 2.5 } }}>
+          <Typography sx={{ ...teamLabelSx, mb: 'clamp(16px, 4.5cqw, 34px)' }}>
             {contest.awayTeam || 'Away Team'}
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', pb: { xs: 1.5, sm: 3.5 } }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              pb: 'clamp(10px, 3cqw, 28px)',
+            }}
+          >
             {/* home team down the side */}
             <Typography
               sx={{
                 ...teamLabelSx,
                 writingMode: 'vertical-rl',
                 transform: 'rotate(180deg)',
-                mr: { xs: 2, sm: 3.5 },
+                mr: 'clamp(24px, 5.5cqw, 36px)',
               }}
             >
               {contest.homeTeam || 'Home Team'}
             </Typography>
 
             <Box
-              sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pr: { xs: 3.5, sm: 5 } }}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: squareGap,
+                pr: 'clamp(24px, 6cqw, 44px)',
+              }}
             >
               {contest.yLabels.map((yLabel, row) => (
-                <Box key={row} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box key={row} sx={{ display: 'flex', alignItems: 'center', gap: squareGap }}>
                   {contest.xLabels.map((xLabel, col) => {
                     const square = byPosition.get(`${row}-${col}`);
                     return (

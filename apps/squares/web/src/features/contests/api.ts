@@ -5,15 +5,11 @@ import type {
   ContestFeedResponse,
   CreateContestRequest,
   CreateInviteRequest,
-  Game,
   Invite,
   InvitePreviewResponse,
   Participant,
-  QuarterResult,
-  QuarterResultRequest,
   RandomClaimResponse,
   Square,
-  UpdateContestRequest,
   UpdateParticipantRequest,
 } from '../../types/contest';
 
@@ -50,27 +46,9 @@ export const contestsApi = baseApi.injectEndpoints({
       invalidatesTags: ['ContestFeed', 'UserStats'],
     }),
 
-    // the version guards against overwriting someone else's change; a 412 means it is stale
-    updateContest: build.mutation<
-      Contest,
-      { id: string; updates: UpdateContestRequest; version?: number }
-    >({
-      query: ({ id, updates, version }) => ({
-        url: `/contests/${id}`,
-        method: 'PATCH',
-        body: updates,
-        headers: version ? { 'If-Match': `"${version}"` } : undefined,
-      }),
-      invalidatesTags: ['ContestFeed'],
-    }),
-
     deleteContest: build.mutation<void, string>({
       query: (id) => ({ url: `/contests/${id}`, method: 'DELETE' }),
       invalidatesTags: ['ContestFeed', 'ActiveContests', 'UserStats'],
-    }),
-
-    startContest: build.mutation<Contest, string>({
-      query: (id) => ({ url: `/contests/${id}/start`, method: 'POST' }),
     }),
 
     claimSquare: build.mutation<Square, SquareArgs>({
@@ -97,28 +75,6 @@ export const contestsApi = baseApi.injectEndpoints({
 
     clearMySquares: build.mutation<Square[], string>({
       query: (contestId) => ({ url: `/contests/${contestId}/squares/claims`, method: 'DELETE' }),
-    }),
-
-    recordQuarterResult: build.mutation<
-      QuarterResult,
-      { contestId: string; request: QuarterResultRequest }
-    >({
-      query: ({ contestId, request }) => ({
-        url: `/contests/${contestId}/quarter-results`,
-        method: 'POST',
-        body: request,
-      }),
-    }),
-
-    rollbackQuarterResult: build.mutation<QuarterResult, string>({
-      query: (contestId) => ({
-        url: `/contests/${contestId}/quarter-results/latest`,
-        method: 'DELETE',
-      }),
-    }),
-
-    getUpcomingGames: build.query<Game[], void>({
-      query: () => '/games/upcoming',
     }),
 
     getInvites: build.query<Invite[], string>({
@@ -176,16 +132,11 @@ export const contestsApi = baseApi.injectEndpoints({
 export const {
   useGetContestFeedInfiniteQuery,
   useCreateContestMutation,
-  useUpdateContestMutation,
   useDeleteContestMutation,
-  useStartContestMutation,
   useClaimSquareMutation,
   useClearSquareMutation,
   useClaimRandomSquaresMutation,
   useClearMySquaresMutation,
-  useRecordQuarterResultMutation,
-  useRollbackQuarterResultMutation,
-  useGetUpcomingGamesQuery,
   useGetInvitesQuery,
   useCreateInviteMutation,
   useDeleteInviteMutation,

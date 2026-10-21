@@ -4,8 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
-
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
@@ -17,11 +15,7 @@ import (
 
 type ContestHandler interface {
 	CreateContest(c *gin.Context)
-	UpdateContest(c *gin.Context)
 	DeleteContest(c *gin.Context)
-	StartContest(c *gin.Context)
-	RecordQuarterResult(c *gin.Context)
-	RollbackLastQuarterResult(c *gin.Context)
 
 	ClaimSquare(c *gin.Context)
 	ClaimRandomSquares(c *gin.Context)
@@ -47,7 +41,6 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 // @Param contest body model.CreateContestRequest true "Contest"
 // @Param Idempotency-Key header string false "Replays the first response when a create is retried with the same key"
 // @Success 201 {object} model.ContestSwagger
-// @Header 201 {string} ETag "Contest version, for If-Match on later updates"
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 500 {object} api.APIError
@@ -86,75 +79,7 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	util.SetETag(c, contest.Version)
 	c.JSON(http.StatusCreated, contest)
-}
-
-// @Summary Update contest
-// @Description Updates the values of a contest
-// @Tags contests
-// @Accept json
-// @Produce json
-// @Param id path string true "Contest ID"
-// @Param contest body model.UpdateContestRequest true "Contest update data"
-// @Param If-Match header string false "Contest version the client edited; a stale version returns 412"
-// @Success 200 {object} model.ContestSwagger
-// @Header 200 {string} ETag "New contest version"
-// @Failure 400 {object} api.APIError
-// @Failure 403 {object} api.APIError
-// @Failure 404 {object} api.APIError
-// @Failure 409 {object} api.APIError "Changed concurrently; refresh and retry"
-// @Failure 412 {object} api.APIError "If-Match did not match the current version"
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/{id} [patch]
-func (h *contestHandler) UpdateContest(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestID, ok := api.PathUUID(c, "id")
-	if !ok {
-		return
-	}
-
-	var req model.UpdateContestRequest
-	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
-		log.Warn("invalid request body", "error", bindErr)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
-		return
-	}
-
-	expectedVersion, err := util.ParseIfMatch(c.GetHeader("If-Match"))
-	if err != nil {
-		log.Warn("invalid if-match header", "error", err)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid If-Match header", c))
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-
-	updatedContest, err := h.contestService.UpdateContest(c.Request.Context(), contestID, &req, user, expectedVersion)
-	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrVersionConflict) && expectedVersion != nil:
-			c.JSON(http.StatusPreconditionFailed, api.NewAPIError(http.StatusPreconditionFailed, api.Message(err), c))
-		case errors.Is(err, errs.ErrVersionConflict):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
-		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrUnauthorizedContestEdit):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrDatabaseUnavailable):
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
-		default:
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		}
-		return
-	}
-
-	util.SetETag(c, updatedContest.Version)
-	c.JSON(http.StatusOK, updatedContest)
 }
 
 // @Summary Delete contest
@@ -191,162 +116,6 @@ func (h *contestHandler) DeleteContest(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
-}
-
-// @Summary Start contest
-// @Description Starts the contest, transitioning from ACTIVE to Q1 and randomizing labels
-// @Tags contests
-// @Produce json
-// @Param id path string true "Contest ID"
-// @Success 200 {object} model.ContestSwagger
-// @Failure 400 {object} api.APIError
-// @Failure 404 {object} api.APIError
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/{id}/start [post]
-func (h *contestHandler) StartContest(c *gin.Context) {
-	contestID, ok := api.PathUUID(c, "id")
-	if !ok {
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-	contest, err := h.contestService.StartContest(c.Request.Context(), contestID, user)
-	if err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
-		case errors.Is(err, errs.ErrVersionConflict):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
-		default:
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		}
-		return
-	}
-
-	util.SetETag(c, contest.Version)
-	c.JSON(http.StatusOK, contest)
-}
-
-// @Summary Record quarter result
-// @Description Records the score and winner for a specific quarter
-// @Tags contests
-// @Accept json
-// @Produce json
-// @Param id path string true "Contest ID"
-// @Param quarterResult body model.QuarterResultRequest true "Quarter result data"
-// @Param Idempotency-Key header string false "Replays the first response when a submission is retried with the same key"
-// @Success 201 {object} model.QuarterResult
-// @Failure 400 {object} api.APIError
-// @Failure 403 {object} api.APIError
-// @Failure 404 {object} api.APIError
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/{id}/quarter-results [post]
-func (h *contestHandler) RecordQuarterResult(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestID, ok := api.PathUUID(c, "id")
-	if !ok {
-		return
-	}
-
-	var req model.QuarterResultRequest
-	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
-		log.Warn("failed to bind request", "error", bindErr)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-	if user == "" {
-		log.Error("user not found in context")
-		c.JSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, "Unauthorized", c))
-		return
-	}
-
-	result, err := h.contestService.RecordQuarterResult(c.Request.Context(), contestID, req.HomeTeamScore, req.AwayTeamScore, user)
-	if err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			log.Warn("contest not found", "contest_id", contestID)
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
-		case errors.Is(err, gorm.ErrInvalidData), errors.Is(err, errs.ErrWinnerNotDeterminable):
-			log.Warn("invalid quarter data", "error", err)
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid quarter data", c))
-		case errors.Is(err, errs.ErrContestIsGameLinked):
-			log.Warn("manual scoring blocked for game-linked contest", "contest_id", contestID)
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		case errors.Is(err, errs.ErrUnauthorizedContestEdit):
-			log.Warn("unauthorized quarter result record", "contest_id", contestID, "user", user)
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrQuarterResultAlreadyExists):
-			log.Warn("quarter results already exists for given quarter")
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrQuarterResultAlreadyExists), c))
-		case errors.Is(err, errs.ErrContestNotEditable):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		case errors.Is(err, errs.ErrVersionConflict):
-			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
-		default:
-			log.Error("failed to record quarter result", "error", err)
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to record quarter result", c))
-		}
-		return
-	}
-
-	c.JSON(http.StatusCreated, result)
-}
-
-// @Summary Roll back the last quarter result
-// @Description Deletes the most recently recorded quarter result and reverts the contest to the prior quarter. Only for manual (non game-linked) contests.
-// @Tags contests
-// @Produce json
-// @Param id path string true "Contest ID"
-// @Success 200 {object} model.QuarterResult
-// @Failure 400 {object} api.APIError
-// @Failure 403 {object} api.APIError
-// @Failure 404 {object} api.APIError
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/{id}/quarter-results/latest [delete]
-func (h *contestHandler) RollbackLastQuarterResult(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestID, ok := api.PathUUID(c, "id")
-	if !ok {
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-	if user == "" {
-		log.Error("user not found in context")
-		c.JSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, "Unauthorized", c))
-		return
-	}
-
-	result, err := h.contestService.RollbackLastQuarterResult(c.Request.Context(), contestID, user)
-	if err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			log.Warn("contest not found", "contest_id", contestID)
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
-		case errors.Is(err, errs.ErrContestIsGameLinked):
-			log.Warn("rollback blocked for game-linked contest", "contest_id", contestID)
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		case errors.Is(err, errs.ErrUnauthorizedContestEdit):
-			log.Warn("unauthorized quarter result rollback", "contest_id", contestID, "user", user)
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrNoQuarterResultToRollback):
-			log.Warn("no quarter result to roll back", "contest_id", contestID)
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		default:
-			log.Error("failed to roll back quarter result", "error", err)
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to roll back quarter result", c))
-		}
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
 }
 
 // @Summary Claim a single square in a contest

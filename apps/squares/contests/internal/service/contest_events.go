@@ -13,7 +13,6 @@ type ContestEventPublisher interface {
 	PublishSquareUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, square *model.Square) error
 	PublishContestUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, contest *model.Contest) error
 	PublishQuarterResult(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult) error
-	PublishQuarterResultRollback(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult, contest *model.Contest) error
 	PublishContestDeleted(ctx context.Context, contestID uuid.UUID, updatedBy string) error
 	PublishParticipantRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error
 	PublishParticipantAdded(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error
@@ -37,11 +36,6 @@ func (p *contestEventPublisher) PublishContestUpdate(ctx context.Context, contes
 
 func (p *contestEventPublisher) PublishQuarterResult(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult) error {
 	return p.publish(ctx, events.QuarterRecordedType, contestID, updatedBy, quarterResult)
-}
-
-func (p *contestEventPublisher) PublishQuarterResultRollback(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult, contest *model.Contest) error {
-	rollback := model.QuarterRollback{Quarter: quarterResult.Quarter, Status: contest.Status}
-	return p.publish(ctx, events.QuarterRolledBackType, contestID, updatedBy, rollback)
 }
 
 func (p *contestEventPublisher) PublishContestDeleted(ctx context.Context, contestID uuid.UUID, updatedBy string) error {

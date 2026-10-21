@@ -1,6 +1,7 @@
-import { Email, LocationOn, Phone } from '@mui/icons-material';
-import { Box, Container, Typography } from '@mui/material';
+import { Email, HelpOutlined, Schedule } from '@mui/icons-material';
+import { Box, Container } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
+import PageTitle from '../components/PageTitle';
 import { useSubmitContactMutation } from '../features/contact/api';
 import ContactForm from '../features/contact/components/ContactForm';
 import ContactMethodCard from '../features/contact/components/ContactMethodCard';
@@ -9,19 +10,21 @@ import type { ContactRequest } from '../types/contact';
 
 const contactMethods = [
   {
-    icon: <Email sx={{ color: 'primary.dark', mr: 2 }} />,
+    icon: <Email />,
     title: 'Email',
     details: 'support@maxhq.io',
+    href: 'mailto:support@maxhq.io',
   },
   {
-    icon: <Phone sx={{ color: 'primary.dark', mr: 2 }} />,
-    title: 'Phone',
-    details: 'Available via email only',
+    icon: <Schedule />,
+    title: 'Response time',
+    details: 'Usually within a week',
   },
   {
-    icon: <LocationOn sx={{ color: 'primary.dark', mr: 2 }} />,
-    title: 'Response Time',
-    details: 'We typically respond within a week',
+    icon: <HelpOutlined />,
+    title: 'How it works',
+    details: 'Rules, scoring, and FAQs',
+    href: '/learn-more',
   },
 ];
 
@@ -40,7 +43,7 @@ export default function ContactPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3, mb: { xs: 4, sm: 4, md: 2 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 }, mb: { xs: 4, sm: 4, md: 2 } }}>
       <Helmet>
         <title>Contact Us – Squares</title>
         <meta
@@ -50,31 +53,35 @@ export default function ContactPage() {
         <link rel="canonical" href="https://squares.maxhq.io/contact" />
       </Helmet>
 
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography component="h1" variant="h2" sx={{ fontWeight: 700, mb: 2, fontSize: '2.5rem' }}>
-          Contact Us
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{ opacity: 0.8, maxWidth: 600, mx: 'auto', fontWeight: 400 }}
-        >
-          Have a question or need help? We'd love to hear from you
-        </Typography>
-      </Box>
-
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 4 }}>
-        <ContactForm onSubmit={handleSubmit} isSubmitting={isLoading} />
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {contactMethods.map((method) => (
-            <ContactMethodCard
-              key={method.title}
-              icon={method.icon}
-              title={method.title}
-              details={method.details}
-            />
-          ))}
+      {/* the form starts at the top beside the heading, so it is in view without scrolling */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 0.8fr) minmax(0, 1.2fr)' },
+          gap: { xs: 4, md: 6 },
+          alignItems: 'start',
+        }}
+      >
+        <Box>
+          <PageTitle
+            align="left"
+            title="Contact Us"
+            subtitle="Have a question or need help? We'd love to hear from you."
+          />
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            {contactMethods.map((method) => (
+              <ContactMethodCard
+                key={method.title}
+                icon={method.icon}
+                title={method.title}
+                details={method.details}
+                href={method.href}
+              />
+            ))}
+          </Box>
         </Box>
+
+        <ContactForm onSubmit={handleSubmit} isSubmitting={isLoading} />
       </Box>
     </Container>
   );

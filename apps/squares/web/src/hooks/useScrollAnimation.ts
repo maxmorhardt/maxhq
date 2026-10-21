@@ -31,6 +31,11 @@ export function useScrollAnimation({
     if (!element) {
       return;
     }
+    // without IntersectionObserver there is nothing to wait for
+    if (typeof IntersectionObserver === 'undefined') {
+      const id = setTimeout(() => setIsVisible(true), 0);
+      return () => clearTimeout(id);
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {

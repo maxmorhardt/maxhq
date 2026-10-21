@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query';
 import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
@@ -5,6 +6,8 @@ import { useAppSelector } from '../../../app/hooks';
 import ForbiddenError from '../../../components/errors/ForbiddenError';
 import NotFoundError from '../../../components/errors/NotFoundError';
 import type { QuarterResult } from '../../../types/contest';
+import { useGetGameQuery } from '../../games/api';
+import { useGameStream } from '../../games/useGameStream';
 import { useToast } from '../../toast/useToast';
 import type { ContestEvent } from '../live/events';
 import {
@@ -72,6 +75,11 @@ export default function LiveContest({ contestId }: Props) {
 
   const { resync } = useContestStream(contestId, onEvent);
 
+  // the score comes from the games service; the contest stream only carries the contest
+  const gameId = contest?.gameId;
+  const { data: game } = useGetGameQuery(gameId ?? skipToken);
+  useGameStream(gameId);
+
   useEffect(() => {
     if (!winnerFlash) {
       return;
@@ -96,6 +104,7 @@ export default function LiveContest({ contestId }: Props) {
     <>
       <ContestView
         contest={contest}
+        game={game}
         participants={participants}
         activity={activity}
         viewer={getContestViewer(email, contest, participants)}

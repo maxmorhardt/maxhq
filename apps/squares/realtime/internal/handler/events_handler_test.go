@@ -240,3 +240,54 @@ func TestStreamContest_EndsWhenTheViewerFallsBehind(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code, "the client reconnects with its Last-Event-ID")
 }
+
+func gamesRouter(svc service.StreamService, cfg model.StreamConfig, shutdown <-chan struct{}) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/events/games/:id", NewEventsHandler(svc, cfg, shutdown).StreamGame)
+	return r
+}
+
+var (
+	gameID   = uuid.MustParse("7d1b0b2e-5a7c-4c2f-9d63-2f1e8f3a9b10")
+	gamePath = "/events/games/" + gameID.String()
+)
+
+func TestStreamGame_RelaysGameUpdates(t *testing.T) {
+	ch := make(chan service.Event, 1)
+	ch <- service.Event{ID: "5-0", Data: []byte(`{"game":{"homeScore":14}}`), Envelope: events.ContestEvent{Type: events.GameUpdatedType}}
+	close(ch)
+	stopped := false
+	svc := mocks.NewStreamService(t)
+	svc.EXPECT().SubscribeGame(mock.Anything, gameID, "4-0").Return(&service.Subscription{Events: ch, Stop: func() { stopped = true }}, nil)
+
+	w := serve(gamesRouter(svc, slowTimers, nil), gamePath, http.Header{"Last-Event-Id": {"4-0"}})
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "text/event-stream", w.Header().Get("Content-Type"))
+	assert.Contains(t, w.Body.String(), "id: 5-0\nevent: game.updated\ndata: {\"game\":{\"homeScore\":14}}\n\n")
+	assert.True(t, stopped)
+}
+
+func TestStreamGame_RejectsBadInputAndOutages(t *testing.T) {
+	assert.Equal(t, http.StatusBadRequest,
+		serve(gamesRouter(mocks.NewStreamService(t), slowTimers, nil), "/events/games/nope", nil).Code)
+
+	assert.Equal(t, http.StatusBadRequest,
+		serve(gamesRouter(mocks.NewStreamService(t), slowTimers, nil), gamePath+"?lastEventId=nope", nil).Code)
+
+	svc := mocks.NewStreamService(t)
+	svc.EXPECT().SubscribeGame(mock.Anything, gameID, "").Return(nil, errs.ErrDependencyFailed)
+	assert.Equal(t, http.StatusServiceUnavailable, serve(gamesRouter(svc, slowTimers, nil), gamePath, nil).Code)
+}
+
+func TestStreamGame_HeartbeatsUntilShutdown(t *testing.T) {
+	svc := mocks.NewStreamService(t)
+	svc.EXPECT().SubscribeGame(mock.Anything, gameID, "").Return(&service.Subscription{Events: make(chan service.Event), Stop: func() {}}, nil)
+	shutdown := make(chan struct{})
+	time.AfterFunc(40*time.Millisecond, func() { close(shutdown) })
+
+	w := serve(gamesRouter(svc, model.StreamConfig{HeartbeatInterval: 5 * time.Millisecond, RevocationInterval: time.Hour}, shutdown), gamePath, nil)
+
+	assert.Contains(t, w.Body.String(), ": ping\n\n")
+}

@@ -134,12 +134,6 @@ const docTemplatecontests = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/model.ContestSwagger"
-                        },
-                        "headers": {
-                            "ETag": {
-                                "type": "string",
-                                "description": "Contest version, for If-Match on later updates"
-                            }
                         }
                     },
                     "400": {
@@ -205,98 +199,6 @@ const docTemplatecontests = `{
                     },
                     "404": {
                         "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates the values of a contest",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "contests"
-                ],
-                "summary": "Update contest",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Contest ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Contest update data",
-                        "name": "contest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UpdateContestRequest"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Contest version the client edited; a stale version returns 412",
-                        "name": "If-Match",
-                        "in": "header"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.ContestSwagger"
-                        },
-                        "headers": {
-                            "ETag": {
-                                "type": "string",
-                                "description": "New contest version"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "409": {
-                        "description": "Changed concurrently; refresh and retry",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "412": {
-                        "description": "If-Match did not match the current version",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -681,140 +583,6 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/quarter-results": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Records the score and winner for a specific quarter",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "contests"
-                ],
-                "summary": "Record quarter result",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Contest ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Quarter result data",
-                        "name": "quarterResult",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.QuarterResultRequest"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Replays the first response when a submission is retried with the same key",
-                        "name": "Idempotency-Key",
-                        "in": "header"
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/model.QuarterResult"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/contests/{id}/quarter-results/latest": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Deletes the most recently recorded quarter result and reverts the contest to the prior quarter. Only for manual (non game-linked) contests.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "contests"
-                ],
-                "summary": "Roll back the last quarter result",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Contest ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.QuarterResult"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
         "/contests/{id}/squares/claims": {
             "delete": {
                 "security": [
@@ -1067,58 +835,6 @@ const docTemplatecontests = `{
                     },
                     "403": {
                         "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/contests/{id}/start": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Starts the contest, transitioning from ACTIVE to Q1 and randomizing labels",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "contests"
-                ],
-                "summary": "Start contest",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Contest ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.ContestSwagger"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -1768,6 +1484,10 @@ const docTemplatecontests = `{
         "model.ContestSummary": {
             "type": "object",
             "properties": {
+                "awayAbbr": {
+                    "type": "string",
+                    "example": "DAL"
+                },
                 "awayTeam": {
                     "type": "string",
                     "example": "Dallas Cowboys"
@@ -1784,6 +1504,10 @@ const docTemplatecontests = `{
                 },
                 "gameTime": {
                     "type": "string"
+                },
+                "homeAbbr": {
+                    "type": "string",
+                    "example": "NYG"
                 },
                 "homeTeam": {
                     "type": "string",
@@ -1913,20 +1637,13 @@ const docTemplatecontests = `{
         "model.CreateContestRequest": {
             "type": "object",
             "required": [
+                "gameId",
                 "name",
                 "owner"
             ],
             "properties": {
-                "awayTeam": {
-                    "type": "string",
-                    "maxLength": 20
-                },
                 "gameId": {
                     "type": "string"
-                },
-                "homeTeam": {
-                    "type": "string",
-                    "maxLength": 20
                 },
                 "maxSquares": {
                     "type": "integer",
@@ -2114,21 +1831,6 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "model.QuarterResultRequest": {
-            "type": "object",
-            "properties": {
-                "awayTeamScore": {
-                    "type": "integer",
-                    "maximum": 9999,
-                    "minimum": 0
-                },
-                "homeTeamScore": {
-                    "type": "integer",
-                    "maximum": 9999,
-                    "minimum": 0
-                }
-            }
-        },
         "model.RandomClaimRequest": {
             "type": "object",
             "required": [
@@ -2213,26 +1915,6 @@ const docTemplatecontests = `{
                 "totalActiveContests": {
                     "type": "integer",
                     "example": 12
-                }
-            }
-        },
-        "model.UpdateContestRequest": {
-            "type": "object",
-            "properties": {
-                "awayTeam": {
-                    "type": "string",
-                    "maxLength": 20
-                },
-                "homeTeam": {
-                    "type": "string",
-                    "maxLength": 20
-                },
-                "visibility": {
-                    "type": "string",
-                    "enum": [
-                        "private",
-                        "public"
-                    ]
                 }
             }
         },

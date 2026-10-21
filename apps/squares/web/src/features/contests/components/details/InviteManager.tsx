@@ -228,7 +228,7 @@ export default function InviteManager({ open, onClose, contest }: Props) {
                       key={invite.id}
                       sx={{
                         ...rowSx,
-                        border: failed ? '1px solid #ff4444' : '1px solid rgba(255,255,255,0.08)',
+                        border: failed ? '1px solid #ff5d5d' : '1px solid rgba(255,255,255,0.08)',
                       }}
                     >
                       <Box sx={{ minWidth: 0 }}>
@@ -260,8 +260,8 @@ export default function InviteManager({ open, onClose, contest }: Props) {
                               size="small"
                               onClick={() => handleDelete(invite.id)}
                               sx={{
-                                color: failed ? '#ff4444' : 'rgba(255,255,255,0.6)',
-                                '&:hover': { color: '#ff4444' },
+                                color: failed ? '#ff5d5d' : 'rgba(255,255,255,0.6)',
+                                '&:hover': { color: '#ff5d5d' },
                               }}
                             >
                               {failed ? (

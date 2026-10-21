@@ -141,4 +141,13 @@ describe('useScrollAnimation', () => {
     expect(getByTestId('target').dataset.visible).toBe('true');
     vi.useRealTimers();
   });
+
+  it('reveals right away when IntersectionObserver is unavailable', async () => {
+    vi.stubGlobal('IntersectionObserver', undefined);
+    const { findByTestId } = render(createElement(TestComponent));
+
+    await vi.waitFor(async () =>
+      expect(await findByTestId('target')).toHaveAttribute('data-visible', 'true')
+    );
+  });
 });

@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/squares/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestContest_FullLifecycle(t *testing.T) {
-	contest, resp := createContest(t, ownerUser, "Super Bowl", 50)
+	game := seedGame(t)
+	contest, resp := createContestFor(t, &game, ownerUser, "Super Bowl", 50)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 	contestID := contest.ID
-	assert.Equal(t, `"1"`, resp.Header.Get("ETag"))
 
 	t.Run("owner lists their contests", func(t *testing.T) {
 		resp := call(t, testkit.As(ownerUser), http.MethodGet, "/contests", nil)
@@ -24,19 +26,9 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Contains(t, string(resp.Body), contestID.String())
 	})
 
-	t.Run("update with the current version bumps it", func(t *testing.T) {
-		away := "49ers"
-		resp := call(t, testkit.As(ownerUser), http.MethodPatch, "/contests/"+contestID.String(),
-			model.UpdateContestRequest{AwayTeam: &away}, "If-Match", `"1"`)
-		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
-		assert.Equal(t, `"2"`, resp.Header.Get("ETag"))
-	})
-
-	t.Run("update with a stale version is rejected", func(t *testing.T) {
-		home := "Bills"
-		resp := call(t, testkit.As(ownerUser), http.MethodPatch, "/contests/"+contestID.String(),
-			model.UpdateContestRequest{HomeTeam: &home}, "If-Match", `"1"`)
-		assert.Equal(t, http.StatusPreconditionFailed, resp.Status)
+	t.Run("contests cannot be edited after creation", func(t *testing.T) {
+		resp := call(t, testkit.As(ownerUser), http.MethodPatch, "/contests/"+contestID.String(), map[string]string{"visibility": "public"})
+		assert.Equal(t, http.StatusNotFound, resp.Status)
 	})
 
 	var inviteToken string
@@ -84,12 +76,15 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, resp.Status)
 	})
 
-	t.Run("start locks the grid", func(t *testing.T) {
-		resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contestID.String()+"/start", nil)
-		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
-		var started model.Contest
-		resp.Decode(t, &started)
-		assert.Equal(t, model.ContestStatusQ1, started.Status)
+	t.Run("kickoff locks the grid", func(t *testing.T) {
+		game.Status = events.GameStatusInProgress
+		game.Period = 1
+		game.UpdatedAt = time.Now()
+		publish(t, events.GamesStream, events.GameUpdatedType, events.GameUpdated{Game: game})
+
+		require.Eventually(t, func() bool {
+			return snapshot(t, ownerUser, contestID).Contest.Status == model.ContestStatusQ1
+		}, eventually, 200*time.Millisecond)
 	})
 
 	t.Run("squares cannot change once started", func(t *testing.T) {
@@ -98,11 +93,26 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, resp.Status)
 	})
 
-	scores := []model.QuarterResultRequest{{HomeTeamScore: 7, AwayTeamScore: 3}, {HomeTeamScore: 14, AwayTeamScore: 10}, {HomeTeamScore: 21, AwayTeamScore: 17}, {HomeTeamScore: 28, AwayTeamScore: 24}}
-	for i, score := range scores {
-		t.Run(fmt.Sprintf("record Q%d", i+1), func(t *testing.T) {
-			resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contestID.String()+"/quarter-results", score)
-			require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	scores := []events.GameScore{
+		{ID: uuid.New(), Quarter: 1, HomeScore: 7, AwayScore: 3},
+		{ID: uuid.New(), Quarter: 2, HomeScore: 14, AwayScore: 10},
+		{ID: uuid.New(), Quarter: 3, HomeScore: 21, AwayScore: 17},
+		{ID: uuid.New(), Quarter: 4, HomeScore: 28, AwayScore: 24},
+	}
+	for i := range scores {
+		t.Run(fmt.Sprintf("the game scores Q%d", i+1), func(t *testing.T) {
+			game.Scores = scores[:i+1]
+			game.Period = i + 2
+			game.HomeScore, game.AwayScore = scores[i].HomeScore, scores[i].AwayScore
+			if i == len(scores)-1 {
+				game.Status = events.GameStatusFinal
+			}
+			game.UpdatedAt = time.Now()
+			publish(t, events.GamesStream, events.GameUpdatedType, events.GameUpdated{Game: game})
+
+			require.Eventually(t, func() bool {
+				return len(snapshot(t, ownerUser, contestID).Contest.QuarterResults) == i+1
+			}, eventually, 200*time.Millisecond)
 		})
 	}
 
@@ -129,16 +139,17 @@ func TestContest_FullLifecycle(t *testing.T) {
 
 func TestContest_IdempotentCreate(t *testing.T) {
 	key := uuid.NewString()
+	game := seedGame(t)
 
-	first, resp1 := createContest(t, ownerUser, "Idempotent Bowl", 10, "Idempotency-Key", key)
+	first, resp1 := createContestFor(t, &game, ownerUser, "Idempotent Bowl", 10, "Idempotency-Key", key)
 	require.Equal(t, http.StatusCreated, resp1.Status, string(resp1.Body))
-	second, resp2 := createContest(t, ownerUser, "Idempotent Bowl", 10, "Idempotency-Key", key)
+	second, resp2 := createContestFor(t, &game, ownerUser, "Idempotent Bowl", 10, "Idempotency-Key", key)
 	require.Equal(t, http.StatusCreated, resp2.Status, string(resp2.Body))
 
 	assert.Equal(t, first.ID, second.ID, "the retry returns the original contest")
 	assert.Equal(t, "true", resp2.Header.Get("Idempotent-Replayed"))
 
-	_, resp3 := createContest(t, ownerUser, "Idempotent Bowl", 10)
+	_, resp3 := createContestFor(t, &game, ownerUser, "Idempotent Bowl", 10)
 	assert.Equal(t, http.StatusBadRequest, resp3.Status)
 }
 

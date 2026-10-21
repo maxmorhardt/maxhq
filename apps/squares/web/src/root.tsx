@@ -1,3 +1,10 @@
+import '@fontsource/barlow-condensed/latin-600.css';
+import '@fontsource/barlow-condensed/latin-700.css';
+import '@fontsource/barlow-condensed/latin-800.css';
+import '@fontsource/barlow/latin-400.css';
+import '@fontsource/barlow/latin-500.css';
+import '@fontsource/barlow/latin-600.css';
+import '@fontsource/barlow/latin-700.css';
 import { Box } from '@mui/material';
 import { Links, Meta, Scripts } from 'react-router';
 import AppLayout from './app/AppLayout';
@@ -39,7 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="robots" content="index, follow" />
-        <meta name="theme-color" content="#121212" />
+        <meta name="theme-color" content="#060a14" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://squares.maxhq.io/" />
         <meta property="og:site_name" content="Squares" />

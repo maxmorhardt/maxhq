@@ -29,12 +29,12 @@ interface Props {
 }
 
 const roleColor: Record<ParticipantRole, string> = {
-  owner: '#ffd700',
-  participant: '#4facfe',
+  owner: '#f7c948',
+  participant: '#5aa9ff',
   viewer: 'rgba(255,255,255,0.4)',
 };
 
-const actionSx = { color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#ff4444' } };
+const actionSx = { color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#ff5d5d' } };
 
 export default function ParticipantsManager({
   open,

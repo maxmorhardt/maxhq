@@ -18,7 +18,7 @@ import { errorMessage } from '../../../../api/errors';
 import { useDebouncedValue } from '../../../../hooks/useDebouncedValue';
 import { useInfiniteScroll } from '../../../../hooks/useInfiniteScroll';
 import type { FeedRole, FeedStatus } from '../../../../types/contest';
-import { gradients } from '../../../../types/gradients';
+import { fonts } from '../../../../app/theme';
 import { useGetContestFeedInfiniteQuery } from '../../api';
 import ContestsTable from './ContestsTable';
 import ContestsTableSkeleton from './ContestsTableSkeleton';
@@ -28,16 +28,6 @@ const SEARCH_DEBOUNCE_MS = 500;
 type RoleFilter = 'all' | FeedRole;
 type StatusFilter = 'all' | FeedStatus;
 
-const fieldSx = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.22)' },
-    '&.Mui-focused fieldset': { borderColor: 'primary.main' },
-  },
-  '& .MuiInputBase-input': { color: 'rgba(255,255,255,0.85)' },
-};
-
 interface HeroProps {
   action: ReactNode;
   children: ReactNode;
@@ -45,53 +35,42 @@ interface HeroProps {
 
 function Hero({ action, children }: HeroProps) {
   return (
-    <Box
-      sx={{
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        py: { xs: 3, sm: 4 },
-        px: { xs: 2, sm: 3 },
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
-      }}
-    >
-      <Container maxWidth="lg" disableGutters>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            mb: 2.5,
-            flexWrap: 'wrap',
-            gap: 2,
-          }}
-        >
-          <Box>
-            <Typography
-              component="h1"
-              sx={{
-                fontWeight: 800,
-                fontSize: { xs: '1.75rem', sm: '2.25rem' },
-                background: gradients.textGradient,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                lineHeight: 1.2,
-              }}
-            >
-              Contests
-            </Typography>
-            <Typography sx={{ color: 'rgba(255,255,255,0.45)', mt: 0.5, fontSize: '0.9rem' }}>
-              Everything you created or joined, in one place
-            </Typography>
-          </Box>
-          {action}
+    <Container maxWidth="lg" sx={{ pt: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography
+            component="h1"
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '2.6rem', sm: '3.6rem' },
+              fontFamily: fonts.display,
+              textTransform: 'uppercase',
+              lineHeight: 0.95,
+            }}
+          >
+            Contests
+          </Typography>
+          <Typography sx={{ color: 'text.secondary', mt: 1, fontSize: '1rem' }}>
+            Everything you created or joined, in one place
+          </Typography>
         </Box>
-        {children}
-      </Container>
-    </Box>
+        {action}
+      </Box>
+      {children}
+    </Container>
   );
 }
 
-const pageSx = { py: 3, px: { xs: 2, sm: 3 } };
+const pageSx = { pt: 2.5, pb: 5, px: { xs: 2, sm: 3 } };
 
 export function ContestsBrowserSkeleton() {
   return (
@@ -102,7 +81,7 @@ export function ContestsBrowserSkeleton() {
         <Skeleton variant="rectangular" height={40} sx={{ maxWidth: 640, borderRadius: 1 }} />
       </Hero>
       <Container maxWidth="lg" sx={pageSx}>
-        <ContestsTableSkeleton title="" rowCount={4} />
+        <ContestsTableSkeleton rowCount={4} />
       </Container>
     </Box>
   );
@@ -158,21 +137,17 @@ export default function ContestsBrowser() {
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }} />
+                    <Search sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
                   </InputAdornment>
                 ),
                 endAdornment: refreshing ? (
                   <InputAdornment position="end">
-                    <CircularProgress
-                      size={16}
-                      thickness={5}
-                      sx={{ color: 'rgba(255,255,255,0.5)' }}
-                    />
+                    <CircularProgress size={16} thickness={5} sx={{ color: 'text.secondary' }} />
                   </InputAdornment>
                 ) : undefined,
               },
             }}
-            sx={{ ...fieldSx, width: { xs: '100%', sm: 300 } }}
+            sx={{ width: { xs: '100%', sm: 320 } }}
           />
           <ToggleButtonGroup
             size="small"

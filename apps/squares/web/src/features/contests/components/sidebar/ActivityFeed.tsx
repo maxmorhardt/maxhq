@@ -1,4 +1,5 @@
 import {
+  EmojiEvents,
   GridOff,
   GridView,
   PersonAdd,
@@ -17,26 +18,28 @@ interface ActivityFeedProps {
   events: ActivityEvent[];
 }
 
-const eventIcons: Record<ActivityEventType, ReactNode> = {
-  square_claimed: <GridView sx={{ fontSize: '0.85rem', color: '#4facfe' }} />,
-  square_cleared: <GridOff sx={{ fontSize: '0.85rem', color: '#f87171' }} />,
-  score_update: <SportsScore sx={{ fontSize: '0.85rem', color: '#43e97b' }} />,
-  quarter_winner: <span style={{ fontSize: '0.75rem' }}>🏆</span>,
-  contest_started: <PlayArrow sx={{ fontSize: '0.85rem', color: '#f5af19' }} />,
-  contest_status: <Sync sx={{ fontSize: '0.85rem', color: '#a78bfa' }} />,
-  participant_added: <PersonAdd sx={{ fontSize: '0.85rem', color: '#43e97b' }} />,
-  participant_removed: <PersonRemove sx={{ fontSize: '0.85rem', color: '#f87171' }} />,
+const iconSx = { fontSize: '0.95rem' };
+
+const eventIcons: Record<ActivityEventType, { icon: ReactNode; color: string }> = {
+  square_claimed: { icon: <GridView sx={iconSx} />, color: 'primary.main' },
+  square_cleared: { icon: <GridOff sx={iconSx} />, color: 'text.secondary' },
+  score_update: { icon: <SportsScore sx={iconSx} />, color: 'success.main' },
+  quarter_winner: { icon: <EmojiEvents sx={iconSx} />, color: 'secondary.main' },
+  contest_started: { icon: <PlayArrow sx={iconSx} />, color: 'warning.main' },
+  contest_status: { icon: <Sync sx={iconSx} />, color: 'text.secondary' },
+  participant_added: { icon: <PersonAdd sx={iconSx} />, color: 'success.main' },
+  participant_removed: { icon: <PersonRemove sx={iconSx} />, color: 'error.main' },
 };
 
 function formatTime(timestamp: string): string {
   const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
 export default function ActivityFeed({ events }: ActivityFeedProps) {
-  const feedRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLOListElement>(null);
 
-  // auto-scroll to bottom on new events
+  // keep the newest entry in view as the feed grows
   useEffect(() => {
     if (feedRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
@@ -44,76 +47,86 @@ export default function ActivityFeed({ events }: ActivityFeedProps) {
   }, [events.length]);
 
   return (
-    <ContestSidebarCard icon={<Sync sx={{ fontSize: '1.1rem' }} />} title="Activity Feed">
-      <Box
-        ref={feedRef}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0.5,
-          maxHeight: 240,
-          overflowY: 'auto',
-          pr: 1,
-          '&::-webkit-scrollbar': { width: 4 },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(255,255,255,0.15)',
-            borderRadius: 2,
-          },
-        }}
-      >
-        {events.length === 0 ? (
-          <Typography
-            sx={{
-              color: 'rgba(255,255,255,0.4)',
-              fontSize: '0.8rem',
-              textAlign: 'center',
-              py: 1.5,
-            }}
-          >
-            No activity yet
-          </Typography>
-        ) : (
-          events.map((event) => (
-            <Box
-              key={event.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 0.75,
-                p: 0.6,
-                background: 'rgba(255,255,255,0.03)',
-                borderRadius: 1,
-                border: '1px solid rgba(255,255,255,0.05)',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.1, flexShrink: 0 }}>
-                {eventIcons[event.type]}
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography
+    <ContestSidebarCard icon={<Sync fontSize="small" />} title="Activity Feed" fillHeight>
+      {events.length === 0 ? (
+        <Typography
+          sx={{ color: 'text.secondary', fontSize: '0.85rem', textAlign: 'center', py: 2 }}
+        >
+          No activity yet
+        </Typography>
+      ) : (
+        <Box
+          component="ol"
+          ref={feedRef}
+          sx={{
+            m: 0,
+            p: 0,
+            listStyle: 'none',
+            maxHeight: { xs: 320, lg: 'none' },
+            flex: { lg: 1 },
+            minHeight: 0,
+            overflowY: 'auto',
+            pr: 0.5,
+          }}
+        >
+          {events.map((event, i) => {
+            const { icon, color } = eventIcons[event.type];
+            const last = i === events.length - 1;
+
+            return (
+              <Box
+                key={event.id}
+                component="li"
+                sx={{
+                  position: 'relative',
+                  display: 'grid',
+                  gridTemplateColumns: '28px minmax(0, 1fr)',
+                  gap: 1.25,
+                  pb: last ? 0 : 1.5,
+                  // the timeline rule that joins one entry's dot to the next
+                  ...(!last && {
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      left: 13,
+                      top: 28,
+                      bottom: 0,
+                      width: 2,
+                      bgcolor: 'divider',
+                    },
+                  }),
+                }}
+              >
+                <Box
                   sx={{
-                    color: 'rgba(255,255,255,0.85)',
-                    fontSize: '0.75rem',
-                    lineHeight: 1.3,
-                    wordBreak: 'break-word',
+                    display: 'grid',
+                    placeItems: 'center',
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    border: 1,
+                    borderColor: 'divider',
+                    bgcolor: 'background.default',
+                    color,
                   }}
                 >
-                  {event.message}
-                </Typography>
-                <Typography
-                  sx={{
-                    color: 'rgba(255,255,255,0.35)',
-                    fontSize: '0.7rem',
-                    mt: 0.2,
-                  }}
-                >
-                  {formatTime(event.timestamp)}
-                </Typography>
+                  {icon}
+                </Box>
+                <Box sx={{ minWidth: 0, pt: 0.25 }}>
+                  <Typography
+                    sx={{ fontSize: '0.85rem', lineHeight: 1.35, overflowWrap: 'anywhere' }}
+                  >
+                    {event.message}
+                  </Typography>
+                  <Typography sx={{ color: 'text.secondary', fontSize: '0.74rem', mt: 0.25 }}>
+                    {formatTime(event.timestamp)}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          ))
-        )}
-      </Box>
+            );
+          })}
+        </Box>
+      )}
     </ContestSidebarCard>
   );
 }
