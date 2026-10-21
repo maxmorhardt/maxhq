@@ -1,11 +1,9 @@
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CodeIcon from '@mui/icons-material/Code';
 import DnsIcon from '@mui/icons-material/Dns';
-import NorthEastIcon from '@mui/icons-material/NorthEast';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { Box, Button, Container, Link as MuiLink, Typography } from '@mui/material';
 import { Link } from 'react-router';
-import SquaresBoard from '../components/apps/SquaresBoard';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import ChapterRail, { type Chapter } from '../components/home/ChapterRail';
@@ -15,7 +13,7 @@ import HomeHero from '../components/home/HomeHero';
 import ImpactList from '../components/home/ImpactList';
 import PipelineVisual from '../components/home/PipelineVisual';
 import StackMarquee from '../components/home/StackMarquee';
-import { pageSection, primaryTint } from '../theme';
+import { pageSection } from '../theme';
 
 const chapters: Chapter[] = [
   {
@@ -117,60 +115,6 @@ export default function HomePage() {
         </RevealSection>
       </Box>
 
-      {/* squares */}
-      <Box component="section" sx={pageSection}>
-        <Container maxWidth="lg">
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { md: 'minmax(0, 1.1fr) auto' },
-              alignItems: 'center',
-              gap: { xs: 6, md: 10 },
-              p: { xs: 3.5, sm: 5, md: 7 },
-              borderRadius: '20px',
-              border: 1,
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              backgroundImage: (theme) =>
-                `radial-gradient(70% 90% at 100% 50%, ${primaryTint(theme, 0.12)}, transparent 70%)`,
-            }}
-          >
-            <Box>
-              <RevealSection>
-                <Typography variant="h2">Squares, live on game day.</Typography>
-              </RevealSection>
-              <RevealSection delay={1}>
-                <Typography sx={ledeSx}>
-                  The classic football squares pool, online. One person sets up the board, friends
-                  claim their squares from their phones, and the winning square lights up for
-                  everyone the moment a quarter ends.
-                </Typography>
-              </RevealSection>
-              <RevealSection delay={2} sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-                <Button
-                  component="a"
-                  href="https://squares.maxhq.io"
-                  target="_blank"
-                  rel="noreferrer"
-                  variant="contained"
-                  size="large"
-                  endIcon={<NorthEastIcon />}
-                >
-                  Play Squares
-                </Button>
-                <Button component={Link} to="/apps" variant="outlined" color="inherit" size="large">
-                  How it plays
-                </Button>
-              </RevealSection>
-            </Box>
-
-            <RevealSection delay={1} variant="scale" sx={{ justifySelf: 'center' }}>
-              <SquaresBoard />
-            </RevealSection>
-          </Box>
-        </Container>
-      </Box>
-
       {/* closing */}
       <Box
         component="section"
@@ -182,10 +126,12 @@ export default function HomePage() {
             pointerEvents: 'none',
             position: 'absolute',
             inset: 0,
+            // a low purple glow rising from the footer edge, softer than the hero's
+            opacity: 0.6,
             background: (theme) => {
               const { palette } = theme.vars ?? theme;
 
-              return `radial-gradient(45% 60% at 50% 100%, ${palette.heroGlow1}, transparent 70%)`;
+              return `radial-gradient(34% 46% at 50% 100%, ${palette.heroGlow1}, transparent 72%)`;
             },
           }}
         />

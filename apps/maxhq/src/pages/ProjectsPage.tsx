@@ -1,3 +1,4 @@
+import GitHubIcon from '@mui/icons-material/GitHub';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Box, Container, Typography } from '@mui/material';
@@ -8,21 +9,22 @@ import RevealSection from '../components/common/RevealSection';
 import ProjectCard, { type Project } from '../components/projects/ProjectCard';
 import { pageSection } from '../theme';
 
+// two rows of three: the apps, then the platform that builds, versions, and runs them
 const projects: Project[] = [
   {
     name: 'squares',
-    category: 'Frontend',
+    category: 'App',
     description:
-      'Real-time NFL squares platform built around a live grid that updates instantly as numbers are drawn and quarters end. One infinitely scrolling list of every contest you have created or joined, one-tap random square fills, automated winner calculation, and Google and GitHub sign-in through Dex.',
+      'Real-time NFL squares: a live board that fills in for every player at once, numbers drawn at kickoff, and quarter winners called from the live score. Every game of the season with scores by quarter, a leaderboard, invite links, and Google and GitHub sign-in.',
     href: 'https://github.com/maxmorhardt/maxhq/tree/main/apps/squares/web',
     links: [{ label: 'Live site', href: 'https://squares.maxhq.io', icon: <OpenInNewIcon /> }],
-    tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSG', 'OIDC', 'SSE'],
+    tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSE', 'OIDC'],
   },
   {
     name: 'squares services',
     category: 'Backend',
     description:
-      'Four Go microservices behind the squares game: contests, games (live ESPN scores), accounts, and realtime. Each owns its own schema and publishes changes through a transactional outbox to Valkey streams, and realtime fans them out to every viewer over server-sent events. Envoy validates tokens and rate limits once at the gateway, and the whole stack runs locally with one Docker Compose command.',
+      'Four Go services behind the game: contests, games (the season schedule and live scores from ESPN), accounts, and realtime. Each owns its schema and publishes changes through a transactional outbox to Valkey streams, which realtime fans out to viewers over server-sent events.',
     href: 'https://github.com/maxmorhardt/maxhq/tree/main/apps/squares',
     links: [
       {
@@ -31,49 +33,47 @@ const projects: Project[] = [
         icon: <MenuBookIcon />,
       },
     ],
-    tags: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'Valkey', 'SSE', 'Swagger'],
+    tags: ['Go', 'Gin', 'GORM', 'PostgreSQL', 'Valkey', 'SSE'],
   },
   {
-    name: 'infra',
-    category: 'Infrastructure',
+    name: 'maxhq.io',
+    category: 'App',
     description:
-      'Self-hosted k3s cluster that runs every app on this site: Argo CD keeps it in sync with this repo, Envoy Gateway fronts all traffic, and Dex federates Google and GitHub sign-in. Highly available Postgres, Valkey with Sentinel failover, Sealed Secrets, and a full metrics and logs stack back it all, with Terraform managing S3 backups, Cloudflare DNS, and GitHub branch rulesets.',
-    href: 'https://github.com/maxmorhardt/maxhq/tree/main/infra',
-    tags: [
-      'Kubernetes',
-      'Argo CD',
-      'Terraform',
-      'Envoy Gateway',
-      'Dex',
-      'Sealed Secrets',
-      'PostgreSQL',
-      'Valkey',
-    ],
+      'This site: React 19 prerendered to static HTML with React Router framework mode, Material UI and Emotion, light and dark themes, and scroll-driven animation. It lives in the maxhq monorepo beside squares, and ships through the same pipeline as everything else.',
+    href: 'https://github.com/maxmorhardt/maxhq/tree/main/apps/maxhq',
+    links: [{ label: 'Live site', href: 'https://maxhq.io', icon: <OpenInNewIcon /> }],
+    tags: ['React 19', 'TypeScript', 'Vite', 'SSG', 'Material UI'],
   },
   {
     name: 'charts',
+    category: 'Packaging',
+    description:
+      'A Helm chart for every app, versioned and released on its own to the GitHub container registry. They share one shape (Deployment, HTTPRoute, autoscaling, disruption budgets, network policies, and gateway auth and rate limits), so every workload deploys the same way.',
+    href: 'https://github.com/maxmorhardt/maxhq/tree/main/charts',
+    tags: ['Helm', 'Kubernetes', 'Gateway API', 'Envoy Gateway', 'GHCR'],
+  },
+  {
+    name: 'gitops',
     category: 'Infrastructure',
     description:
-      'A Helm chart for every app, each versioned and released on its own. They share one shape (Deployment, Service, HTTPRoute, autoscaling, disruption budgets, network policies, gateway auth and rate limits, and Grafana dashboards), so every workload in the cluster is deployed the same way.',
-    href: 'https://github.com/maxmorhardt/maxhq/tree/main/charts',
-    tags: ['Helm', 'Kubernetes', 'HPA', 'Gateway API', 'Envoy Gateway', 'Prometheus'],
+      'The desired state of the dev and prod k3s clusters. Argo CD on each reconciles its own directory: the gateway, sign-in, Postgres, Valkey, monitoring, and the pinned chart and image of every app. A merge is the deploy, and no CI job holds a kubeconfig. Terraform and the k3s bootstrap live in maxhq.',
+    href: 'https://github.com/maxmorhardt/gitops',
+    links: [
+      {
+        label: 'Terraform & bootstrap',
+        href: 'https://github.com/maxmorhardt/maxhq/tree/main/infra',
+        icon: <GitHubIcon />,
+      },
+    ],
+    tags: ['Argo CD', 'Kubernetes', 'Sealed Secrets', 'CloudNativePG', 'Dex', 'Terraform'],
   },
   {
     name: 'workflows',
     category: 'CI/CD',
     description:
-      'Reusable GitHub Actions workflows that build, test, and release every other repo. Covers Node, Go, Docker image publishing, and Helm releases, plus security scanning with Trivy and automated dependency updates with Renovate. Deploys are GitOps: a workflow bumps the Argo CD Application manifest and the cluster reconciles itself.',
+      'Reusable GitHub Actions that build, test, scan, and release every repo: Go, Node, Docker images, Helm charts, Terraform, and release-please. Deploy jobs commit the new image or chart version to gitops: dev on every merge, prod on each release after approval.',
     href: 'https://github.com/maxmorhardt/workflows',
-    tags: ['GitHub Actions', 'Docker', 'Helm', 'Argo CD', 'Trivy', 'Renovate'],
-  },
-  {
-    name: 'maxhq',
-    category: 'Frontend',
-    description:
-      'The public monorepo for this portfolio site and squares. The site is React 19 + Vite prerendered to static HTML with React Router framework mode, styled with Material UI and Emotion, with persistent light/dark theming and scroll-driven animations. Shipped as a Docker image through the same workflows that deploy everything else.',
-    href: 'https://github.com/maxmorhardt/maxhq',
-    links: [{ label: 'Live site', href: 'https://maxhq.io', icon: <OpenInNewIcon /> }],
-    tags: ['React 19', 'TypeScript', 'Vite', 'SSG', 'Material UI', 'Emotion'],
+    tags: ['GitHub Actions', 'Docker', 'Helm', 'Trivy', 'release-please', 'Renovate'],
   },
 ];
 
@@ -82,7 +82,7 @@ export default function ProjectsPage() {
     <Box>
       <PageMeta
         title="Projects – Max Morhardt"
-        description="Explore Max Morhardt's projects: a real-time NFL squares app, its Go microservices, a self-hosted Kubernetes platform, reusable Helm charts, and GitHub Actions workflows."
+        description="Explore Max Morhardt's projects: a real-time NFL squares app and its Go services, this site, Helm charts for every app, the GitOps state of two self-hosted Kubernetes clusters, and reusable GitHub Actions workflows."
         canonical="https://maxhq.io/projects"
       />
 
@@ -113,7 +113,12 @@ export default function ProjectsPage() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))',
+            // fixed columns that divide the six cards evenly at every width
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              lg: 'repeat(3, minmax(0, 1fr))',
+            },
             gap: 2.5,
           }}
         >
