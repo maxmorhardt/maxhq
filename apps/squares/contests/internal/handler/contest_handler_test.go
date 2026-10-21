@@ -73,7 +73,7 @@ func TestCreateContest_OwnerMismatch(t *testing.T) {
 }
 
 func TestCreateContest_AlreadyExists(t *testing.T) {
-	createContestErr(t, errs.ErrContestAlreadyExists, http.StatusBadRequest)
+	createContestErr(t, errs.ErrContestAlreadyExists, http.StatusConflict)
 }
 func TestCreateContest_DatabaseUnavailable(t *testing.T) {
 	createContestErr(t, errs.ErrDatabaseUnavailable, http.StatusInternalServerError)
@@ -265,6 +265,10 @@ func TestClearSquare_NotFound(t *testing.T) {
 func TestClearSquare_Forbidden(t *testing.T) {
 	clearSquareErr(t, "stranger", errs.ErrUnauthorizedSquareEdit, http.StatusForbidden)
 }
+func TestClearSquare_BoardLocked(t *testing.T) {
+	clearSquareErr(t, "owner1", errs.ErrBoardLocked, http.StatusConflict)
+}
+
 func TestClearSquare_SquareNotEditable(t *testing.T) {
 	clearSquareErr(t, "owner1", errs.ErrSquareNotEditable, http.StatusForbidden)
 }
@@ -318,6 +322,10 @@ func TestClearMySquares_InvalidContestID(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodDelete, "/contests/bad/squares/claims", http.NoBody)
 	w := doRequest(r, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestClearMySquares_BoardLocked(t *testing.T) {
+	clearMySquaresErr(t, errs.ErrBoardLocked, http.StatusConflict)
 }
 
 func TestClearMySquares_NotFound(t *testing.T) {

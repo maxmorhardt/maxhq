@@ -92,6 +92,10 @@ definitions:
         type: string
       createdAt:
         type: string
+      displayName:
+        description: read from the user projection, so other players can be shown
+          a name instead of an email
+        type: string
       id:
         type: string
       inviteId:
@@ -283,9 +287,21 @@ definitions:
     type: object
   model.InvitePreviewResponse:
     properties:
+      awayAbbr:
+        type: string
+      awayTeam:
+        type: string
+      claimedSquares:
+        type: integer
       contestId:
         type: string
       contestName:
+        type: string
+      gameTime:
+        type: string
+      homeAbbr:
+        type: string
+      homeTeam:
         type: string
       maxSquares:
         type: integer
@@ -293,6 +309,10 @@ definitions:
         type: string
       role:
         type: string
+      status:
+        $ref: '#/definitions/model.ContestStatus'
+      totalSquares:
+        type: integer
     type: object
   model.LeaderboardEntry:
     properties:
@@ -395,6 +415,10 @@ definitions:
     type: object
   model.Square:
     properties:
+      claimedAt:
+        description: set on claim and cleared on release; updated_at also moves when
+          initials cascade
+        type: string
       col:
         type: integer
       contestId:
@@ -554,6 +578,10 @@ paths:
             $ref: '#/definitions/api.APIError'
         "403":
           description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "409":
+          description: You already have a contest with this name
           schema:
             $ref: '#/definitions/api.APIError'
         "500":
@@ -877,6 +905,10 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/api.APIError'
+        "409":
+          description: The board is full and locked
+          schema:
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal Server Error
           schema:
@@ -963,6 +995,10 @@ paths:
             $ref: '#/definitions/api.APIError'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "409":
+          description: The board is full and locked
           schema:
             $ref: '#/definitions/api.APIError'
         "500":

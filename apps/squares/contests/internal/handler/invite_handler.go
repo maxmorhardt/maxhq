@@ -139,7 +139,12 @@ func (h *inviteHandler) RedeemInvite(c *gin.Context) {
 	}
 
 	user := c.GetString(api.UserKey)
-	participant, err := h.inviteService.RedeemInvite(c.Request.Context(), token, user)
+	// the name goes out with the join, so the feed can say who arrived without showing an email
+	name := ""
+	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil && claims.Name != user {
+		name = claims.Name
+	}
+	participant, err := h.inviteService.RedeemInvite(c.Request.Context(), token, user, name)
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):

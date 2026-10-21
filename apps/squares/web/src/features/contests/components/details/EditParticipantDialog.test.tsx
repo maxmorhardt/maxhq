@@ -82,12 +82,24 @@ describe('EditParticipantDialog', () => {
     );
   });
 
-  it('offers a retry after a failed save', async () => {
+  it('shows why a save failed and offers a retry', async () => {
+    const error = { status: 409, message: 'Max squares is below the squares they hold' };
     api.useUpdateParticipantMutation.mockReturnValue(
-      mockMutation({ error: { status: 500, message: 'x' } }, { isError: true })
+      mockMutation({ error }, { isError: true, error })
     );
     const { onClose } = renderDialog(makeParticipant());
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Max squares is below the squares they hold'
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Failed, Retry' }));
     await waitFor(() => expect(onClose).not.toHaveBeenCalled());
+  });
+
+  it('falls back to a generic message when the error has none', () => {
+    api.useUpdateParticipantMutation.mockReturnValue(
+      mockMutation({ error: 'boom' }, { isError: true, error: 'boom' })
+    );
+    renderDialog(makeParticipant());
+    expect(screen.getByRole('alert')).toHaveTextContent('Failed to update participant');
   });
 });

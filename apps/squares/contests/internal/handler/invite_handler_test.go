@@ -127,7 +127,7 @@ func getInvitePreviewErr(t *testing.T, svcErr error, wantCode int) {
 
 func TestRedeemInvite_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
-	svc.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything).
+	svc.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(&model.ContestParticipant{ID: uuid.New(), UserID: "user1", Role: model.ParticipantRoleParticipant}, nil)
 	h := NewInviteHandler(svc)
 
@@ -162,7 +162,7 @@ func TestRedeemInvite_InternalError(t *testing.T) {
 func redeemInviteErr(t *testing.T, svcErr error, wantCode int) {
 	t.Helper()
 	svc := mocks.NewInviteService(t)
-	svc.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
+	svc.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
 	h := NewInviteHandler(svc)
 
 	r := gin.New()

@@ -237,6 +237,68 @@
                     }
                 }
             }
+        },
+        "/users/me/restore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deleting an account blocks every token for it, refreshed ones included, until the user signs in again. The web calls this right after an interactive sign-in to lift that block; a token issued before the deletion is refused.",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Restore an account after a new sign-in",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/sign-out": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revokes the token this request was made with until it expires, so a copy of it stops working. The account's other devices keep their own tokens.",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Sign out the current token",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

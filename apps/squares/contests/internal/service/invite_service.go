@@ -18,7 +18,7 @@ import (
 type InviteService interface {
 	CreateInvite(ctx context.Context, contestID uuid.UUID, req *model.CreateInviteRequest, user string) (*model.ContestInvite, error)
 	GetInvitePreview(ctx context.Context, token string) (*model.InvitePreviewResponse, error)
-	RedeemInvite(ctx context.Context, token, user string) (*model.ContestParticipant, error)
+	RedeemInvite(ctx context.Context, token, user, displayName string) (*model.ContestParticipant, error)
 	GetInvitesByContestID(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestInvite, error)
 	DeleteInvite(ctx context.Context, contestID, inviteID uuid.UUID, user string) error
 }
@@ -128,16 +128,36 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 	}
 
 	log.Info("retrieved invite preview", "contest_id", contest.ID)
-	return &model.InvitePreviewResponse{
-		ContestID:   contest.ID,
-		ContestName: contest.Name,
-		Owner:       contest.Owner,
-		Role:        string(invite.Role),
-		MaxSquares:  invite.MaxSquares,
-	}, nil
+	return invitePreview(contest, invite), nil
 }
 
-func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*model.ContestParticipant, error) {
+func invitePreview(contest *model.Contest, invite *model.ContestInvite) *model.InvitePreviewResponse {
+	preview := &model.InvitePreviewResponse{
+		ContestID:    contest.ID,
+		ContestName:  contest.Name,
+		Owner:        contest.Owner,
+		Role:         string(invite.Role),
+		MaxSquares:   invite.MaxSquares,
+		Status:       contest.Status,
+		TotalSquares: len(contest.Squares),
+		HomeTeam:     contest.HomeTeam,
+		AwayTeam:     contest.AwayTeam,
+	}
+	for i := range contest.Squares {
+		if contest.Squares[i].Owner != "" {
+			preview.ClaimedSquares++
+		}
+	}
+	if contest.Game != nil {
+		preview.HomeAbbr = contest.Game.HomeAbbr
+		preview.AwayAbbr = contest.Game.AwayAbbr
+		kickoff := contest.Game.GameTime
+		preview.GameTime = &kickoff
+	}
+	return preview
+}
+
+func (s *inviteService) RedeemInvite(ctx context.Context, token, user, displayName string) (*model.ContestParticipant, error) {
 	log := logging.FromContext(ctx)
 
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
@@ -192,11 +212,12 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 	}
 
 	participant := &model.ContestParticipant{
-		ContestID:  invite.ContestID,
-		UserID:     user,
-		Role:       invite.Role,
-		MaxSquares: invite.MaxSquares,
-		InviteID:   &invite.ID,
+		ContestID:   invite.ContestID,
+		UserID:      user,
+		DisplayName: displayName,
+		Role:        invite.Role,
+		MaxSquares:  invite.MaxSquares,
+		InviteID:    &invite.ID,
 	}
 
 	// the repository re-checks the pool, uses, and duplicate joins atomically, so it is the authority

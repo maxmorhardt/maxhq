@@ -346,6 +346,34 @@ const docTemplategames = `{
                         "$ref": "#/definitions/model.Game"
                     }
                 },
+                "label": {
+                    "type": "string"
+                },
+                "next": {
+                    "$ref": "#/definitions/model.Week"
+                },
+                "previous": {
+                    "description": "the calendar weeks either side, across season phases and seasons; absent at the ends",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Week"
+                        }
+                    ]
+                },
+                "season": {
+                    "type": "integer"
+                },
+                "seasonType": {
+                    "type": "integer"
+                },
+                "week": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Week": {
+            "type": "object",
+            "properties": {
                 "season": {
                     "type": "integer"
                 },

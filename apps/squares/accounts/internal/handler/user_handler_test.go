@@ -26,6 +26,8 @@ func newUserRouter(t *testing.T) (*mocks.UserService, *gin.Engine) {
 	r.GET("/users/me", h.GetMe)
 	r.PATCH("/users/me", h.UpdateMe)
 	r.DELETE("/users/me", h.DeleteMe)
+	r.POST("/users/me/sign-out", h.SignOutMe)
+	r.POST("/users/me/restore", h.RestoreMe)
 
 	return svc, r
 }
@@ -138,7 +140,7 @@ func TestDeleteMe_ContestsUnavailable(t *testing.T) {
 
 func authenticatedMiddleware(userID string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims := &api.Claims{Email: userID, EmailVerified: true, Name: "Test", Expire: 9999999999}
+		claims := &api.Claims{Email: userID, EmailVerified: true, Name: "Test", IssuedAt: 1000, Expire: 9999999999}
 		api.SetContextValue(c, api.UserKey, userID)
 		api.SetContextValue(c, api.ClaimsKey, claims)
 		c.Next()
@@ -150,4 +152,33 @@ func patchMe(v any) *http.Request {
 	req, _ := http.NewRequest(http.MethodPatch, "/users/me", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	return req
+}
+
+func post(r *gin.Engine, path string) int {
+	req, _ := http.NewRequest(http.MethodPost, path, http.NoBody)
+	return doRequest(r, req).Code
+}
+
+func TestSignOutMe(t *testing.T) {
+	svc, r := newUserRouter(t)
+	svc.EXPECT().SignOut(mock.Anything, "a@b.com", int64(1000), int64(9999999999)).Return(nil).Once()
+	assert.Equal(t, http.StatusNoContent, post(r, "/users/me/sign-out"))
+
+	svc.EXPECT().SignOut(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrDependencyFailed)
+	assert.Equal(t, http.StatusServiceUnavailable, post(r, "/users/me/sign-out"))
+}
+
+func TestRestoreMe(t *testing.T) {
+	svc, r := newUserRouter(t)
+	svc.EXPECT().RestoreAccount(mock.Anything, "a@b.com", int64(1000)).Return(nil).Once()
+	assert.Equal(t, http.StatusNoContent, post(r, "/users/me/restore"))
+
+	for err, code := range map[error]int{
+		errs.ErrRestoreTooOld:       http.StatusForbidden,
+		errs.ErrDependencyFailed:    http.StatusServiceUnavailable,
+		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
+	} {
+		svc.EXPECT().RestoreAccount(mock.Anything, mock.Anything, mock.Anything).Return(err).Once()
+		assert.Equal(t, code, post(r, "/users/me/restore"), err.Error())
+	}
 }

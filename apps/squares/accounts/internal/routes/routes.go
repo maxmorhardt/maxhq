@@ -11,7 +11,9 @@ type Handlers struct {
 }
 
 type Guards struct {
-	Auth       gin.HandlerFunc
+	Auth gin.HandlerFunc
+	// lets a fresh sign-in through a deleted account's block, for the one request that lifts it
+	Restore    gin.HandlerFunc
 	Idempotent gin.HandlerFunc
 }
 
@@ -20,6 +22,9 @@ func Register(r *gin.Engine, h Handlers, g Guards) {
 	me.GET("", h.User.GetMe)
 	me.PATCH("", g.Idempotent, h.User.UpdateMe)
 	me.DELETE("", g.Idempotent, h.User.DeleteMe)
+	me.POST("/sign-out", h.User.SignOutMe)
+
+	r.POST("/users/me/restore", g.Restore, h.User.RestoreMe)
 
 	r.POST("/contact", g.Idempotent, h.Contact.SubmitContact)
 }

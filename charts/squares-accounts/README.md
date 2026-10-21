@@ -21,6 +21,8 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | Path under `api.maxhq.io/squares` | |
 | --- | --- |
 | `/users/me` | get (creating the profile on first sign-in), update initials, delete the account |
+| `/users/me/sign-out` | revoke the calling token until it expires, so a copy of it stops working |
+| `/users/me/restore` | after a fresh sign-in, lift the block a deleted account leaves on every token, refreshed ones included |
 | `/contact` | the public contact form, behind Turnstile; the gateway limits it to 10 a day per client (`route.rateLimit.rules`) |
 | `/swagger/accounts` | the API reference |
 

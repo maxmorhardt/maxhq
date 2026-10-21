@@ -41,6 +41,19 @@ export function backoff(attempt: number): number {
 
 const warn = (reason: string) => console.warn(`event stream: ${reason}`);
 
+// settles with the promise, or rejects as soon as the signal aborts
+function abortable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error('aborted'));
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
+}
+
 // a fetch-based server-sent event client: bearer auth, Last-Event-ID resume, and reconnects that survive sleeping tabs
 export function openEventStream({
   url,
@@ -142,7 +155,18 @@ export function openEventStream({
     const controller = new AbortController();
     connection = controller;
 
-    const token = await getToken({ forceRefresh });
+    // started before the token so a hung refresh costs one quick retry, not the whole page
+    const watchdog = startWatchdog(controller);
+    watchdog.reset(connectTimeoutMs, 'no response to the stream request, retrying');
+
+    let token: string | null;
+    try {
+      token = await abortable(getToken({ forceRefresh }), controller.signal);
+    } catch {
+      watchdog.stop();
+      return 'failed';
+    }
+
     const headers: Record<string, string> = { Accept: 'text/event-stream' };
     if (token) {
       headers.Authorization = `Bearer ${token}`;
@@ -151,8 +175,6 @@ export function openEventStream({
       headers['Last-Event-ID'] = lastEventId;
     }
 
-    const watchdog = startWatchdog(controller);
-    watchdog.reset(connectTimeoutMs, 'no response to the stream request, retrying');
     try {
       let response: Response;
       try {

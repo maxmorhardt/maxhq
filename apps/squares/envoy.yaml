@@ -26,6 +26,10 @@ static_resources:
                           route: { cluster: contests, prefix_rewrite: /users/me/stats }
                         - match: { path: /squares/users/me/active-contests }
                           route: { cluster: contests, prefix_rewrite: /users/me/active-contests }
+                        - match: { path: /squares/users/me/sign-out }
+                          route: { cluster: accounts, prefix_rewrite: /users/me/sign-out }
+                        - match: { path: /squares/users/me/restore }
+                          route: { cluster: accounts, prefix_rewrite: /users/me/restore }
                         - match: { path: /squares/users/me }
                           route: { cluster: accounts, prefix_rewrite: /users/me }
                         - match: { prefix: /squares/contact }

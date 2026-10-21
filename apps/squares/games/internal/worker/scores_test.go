@@ -28,15 +28,30 @@ func game(id string, w model.Week, state string) model.ESPNGame {
 	return model.ESPNGame{ESPNID: id, Season: w.Season, SeasonType: w.SeasonType, Week: w.Week, State: state}
 }
 
+func listed(weeks ...model.Week) []model.SeasonWeek {
+	out := make([]model.SeasonWeek, 0, len(weeks))
+	for _, w := range weeks {
+		out = append(out, model.SeasonWeek{Week: w, Label: w.DefaultLabel()})
+	}
+	return out
+}
+
 // a 2026 season with two regular season weeks
 func calendar(end time.Time) model.ESPNCalendar {
-	return model.ESPNCalendar{Season: 2026, Weeks: []model.Week{week(2026, 2, 1), week(2026, 2, 2)}, End: end}
+	return model.ESPNCalendar{Season: 2026, Weeks: listed(week(2026, 2, 1), week(2026, 2, 2)), End: end}
 }
 
 func ingested(gameSvc *mocks.GameService) *[]model.ESPNGame {
 	var got []model.ESPNGame
 	gameSvc.EXPECT().Ingest(mock.Anything, mock.Anything).
 		Run(func(_ context.Context, games []model.ESPNGame) { got = games }).Return(0, nil)
+	return &got
+}
+
+func savedCalendar(gameSvc *mocks.GameService) *[]model.SeasonWeek {
+	var got []model.SeasonWeek
+	gameSvc.EXPECT().SaveCalendar(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, weeks []model.SeasonWeek) { got = weeks }).Return(nil).Maybe()
 	return &got
 }
 
@@ -58,11 +73,13 @@ func TestScoresWorker_FirstRunSyncsTheWholeSeason(t *testing.T) {
 		Return([]model.ESPNGame{game("w2-live", week(2026, 2, 2), "pre"), game("w2-later", week(2026, 2, 2), "pre")}, model.ESPNCalendar{}, nil)
 	gameSvc := mocks.NewGameService(t)
 	got := ingested(gameSvc)
+	saved := savedCalendar(gameSvc)
 
 	w := newWorker(t, espn, gameSvc)
 	require.NoError(t, w.run(context.Background()))
 
 	assert.Equal(t, []string{"w1-final", "w2-live", "w2-later"}, ids(*got), "past weeks are backfilled and the schedule ahead loaded")
+	assert.Equal(t, calendar(time.Time{}).Weeks, *saved, "the calendar is kept for naming and stepping through weeks")
 	assert.Equal(t, "in", (*got)[1].State, "the current scoreboard wins over the slower sync")
 	assert.False(t, w.lastSeasonSync.IsZero())
 }
@@ -96,11 +113,12 @@ func TestScoresWorker_FailedSyncStillRecordsCurrentScores(t *testing.T) {
 
 func TestScoresWorker_DropsGamesOutsideTheRequestedWeek(t *testing.T) {
 	espn := mocks.NewESPNClient(t)
-	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{Season: 2026, Weeks: []model.Week{week(2026, 2, 1)}}, nil)
+	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{Season: 2026, Weeks: listed(week(2026, 2, 1))}, nil)
 	espn.EXPECT().FetchWeek(mock.Anything, week(2026, 2, 1)).
 		Return([]model.ESPNGame{game("right", week(2026, 2, 1), "post"), game("stray", week(2026, 2, 7), "pre")}, model.ESPNCalendar{}, nil)
 	gameSvc := mocks.NewGameService(t)
 	got := ingested(gameSvc)
+	savedCalendar(gameSvc)
 
 	require.NoError(t, newWorker(t, espn, gameSvc).run(context.Background()))
 	assert.Equal(t, []string{"right"}, ids(*got))
@@ -108,7 +126,7 @@ func TestScoresWorker_DropsGamesOutsideTheRequestedWeek(t *testing.T) {
 
 func TestScoresWorker_AfterThePostseasonLoadsNextSeasonOncePublished(t *testing.T) {
 	over := model.ESPNCalendar{Season: 2026, End: time.Now().Add(-24 * time.Hour)}
-	next := model.ESPNCalendar{Season: 2027, Weeks: []model.Week{week(2027, 1, 1), week(2027, 2, 1)}}
+	next := model.ESPNCalendar{Season: 2027, Weeks: listed(week(2027, 1, 1), week(2027, 2, 1))}
 	espn := mocks.NewESPNClient(t)
 	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, over, nil)
 	espn.EXPECT().FetchWeek(mock.Anything, week(2027, 2, 1)).
@@ -117,9 +135,11 @@ func TestScoresWorker_AfterThePostseasonLoadsNextSeasonOncePublished(t *testing.
 		Return([]model.ESPNGame{game("hof", week(2027, 1, 1), "pre")}, next, nil)
 	gameSvc := mocks.NewGameService(t)
 	got := ingested(gameSvc)
+	saved := savedCalendar(gameSvc)
 
 	require.NoError(t, newWorker(t, espn, gameSvc).run(context.Background()))
 	assert.Equal(t, []string{"hof", "opener"}, ids(*got))
+	assert.Equal(t, next.Weeks, *saved, "next season's calendar is kept once ESPN publishes it")
 }
 
 func TestScoresWorker_NextSeasonWithoutACalendarAssumesTheRegularSeason(t *testing.T) {
@@ -132,9 +152,11 @@ func TestScoresWorker_NextSeasonWithoutACalendarAssumesTheRegularSeason(t *testi
 		})
 	gameSvc := mocks.NewGameService(t)
 	got := ingested(gameSvc)
+	saved := savedCalendar(gameSvc)
 
 	require.NoError(t, newWorker(t, espn, gameSvc).run(context.Background()))
 	assert.Len(t, *got, nextSeasonWeeks)
+	assert.Empty(t, *saved, "a calendar from the old season is not kept for the new one")
 	espn.AssertNumberOfCalls(t, "FetchWeek", 1+nextSeasonWeeks)
 }
 
@@ -147,6 +169,7 @@ func TestScoresWorker_WaitsForNextSeasonToBePublished(t *testing.T) {
 		Return([]model.ESPNGame{game("old", week(2026, 2, 1), "post")}, over, nil)
 	gameSvc := mocks.NewGameService(t)
 	got := ingested(gameSvc)
+	savedCalendar(gameSvc)
 
 	w := newWorker(t, espn, gameSvc)
 	require.NoError(t, w.run(context.Background()))
@@ -189,8 +212,21 @@ func TestScoresWorker_RecordsNewScores(t *testing.T) {
 	espn.EXPECT().FetchCurrent(mock.Anything).Return([]model.ESPNGame{{ESPNID: "1"}}, model.ESPNCalendar{}, nil)
 	gameSvc := mocks.NewGameService(t)
 	gameSvc.EXPECT().Ingest(mock.Anything, mock.Anything).Return(2, nil)
+	savedCalendar(gameSvc)
 
 	require.NoError(t, newWorker(t, espn, gameSvc).run(context.Background()))
+}
+
+func TestScoresWorker_CalendarSaveFailureRetriesTheSync(t *testing.T) {
+	espn := mocks.NewESPNClient(t)
+	espn.EXPECT().FetchCurrent(mock.Anything).Return(nil, model.ESPNCalendar{}, nil)
+	gameSvc := mocks.NewGameService(t)
+	ingested(gameSvc)
+	gameSvc.EXPECT().SaveCalendar(mock.Anything, mock.Anything).Return(errors.New("db"))
+
+	w := newWorker(t, espn, gameSvc)
+	require.Error(t, w.run(context.Background()))
+	assert.True(t, w.lastSeasonSync.IsZero())
 }
 
 func TestScoresWorker_PausesBetweenWeeksAndStopsOnCancel(t *testing.T) {

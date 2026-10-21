@@ -43,6 +43,13 @@ describe('SquareDialog', () => {
     expect(clear).toHaveBeenCalledWith({ contestId: 'c-1', squareId: 'sq-0-0' });
   });
 
+  it('locks a full board so nothing can be cleared', () => {
+    const full = makeContest({ squares: [mine, makeSquare({ id: 'sq-0-1', value: 'AB' })] });
+    renderDialog(mine, full);
+    expect(screen.getByText('Your Square')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear Square' })).not.toBeInTheDocument();
+  });
+
   it('shows who claimed someone else’s square', () => {
     renderDialog(makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: 'Ann' }));
     expect(screen.getByText('Square Details')).toBeInTheDocument();

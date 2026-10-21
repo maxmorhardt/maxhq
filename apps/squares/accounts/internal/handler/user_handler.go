@@ -17,6 +17,8 @@ type UserHandler interface {
 	GetMe(c *gin.Context)
 	UpdateMe(c *gin.Context)
 	DeleteMe(c *gin.Context)
+	SignOutMe(c *gin.Context)
+	RestoreMe(c *gin.Context)
 }
 
 type userHandler struct {
@@ -118,6 +120,53 @@ func (h *userHandler) DeleteMe(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrAccountActiveContests):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
+		case errors.Is(err, errs.ErrDependencyFailed):
+			c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, api.Message(err), c))
+		default:
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+// SignOutMe godoc
+// @Summary Sign out the current token
+// @Description Revokes the token this request was made with until it expires, so a copy of it stops working. The account's other devices keep their own tokens.
+// @Tags users
+// @Success 204
+// @Failure 503 {object} api.APIError
+// @Security BearerAuth
+// @Router /users/me/sign-out [post]
+func (h *userHandler) SignOutMe(c *gin.Context) {
+	claims := api.ClaimsFromContext(c.Request.Context())
+
+	if err := h.userService.SignOut(c.Request.Context(), claims.Email, claims.IssuedAt, claims.Expire); err != nil {
+		c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, api.Message(err), c))
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+// RestoreMe godoc
+// @Summary Restore an account after a new sign-in
+// @Description Deleting an account blocks every token for it, refreshed ones included, until the user signs in again. The web calls this right after an interactive sign-in to lift that block; a token issued before the deletion is refused.
+// @Tags users
+// @Success 204
+// @Failure 403 {object} api.APIError
+// @Failure 500 {object} api.APIError
+// @Failure 503 {object} api.APIError
+// @Security BearerAuth
+// @Router /users/me/restore [post]
+func (h *userHandler) RestoreMe(c *gin.Context) {
+	claims := api.ClaimsFromContext(c.Request.Context())
+
+	if err := h.userService.RestoreAccount(c.Request.Context(), claims.Email, claims.IssuedAt); err != nil {
+		switch {
+		case errors.Is(err, errs.ErrRestoreTooOld):
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrDependencyFailed):
 			c.JSON(http.StatusServiceUnavailable, api.NewAPIError(http.StatusServiceUnavailable, api.Message(err), c))
 		default:

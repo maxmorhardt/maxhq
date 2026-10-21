@@ -91,9 +91,29 @@ func TestAccounts_DeletionIsBlockedByActiveContestsThenRevokesTheToken(t *testin
 		return len(evs) > 0 && evs[len(evs)-1].Type == events.UserDeletedType
 	}, eventually, 100*time.Millisecond, "contests learns about the deletion from the users stream")
 
+	// a token refreshed on another device after the deletion is refused too
 	fresh := testkit.Identity{Email: user, IssuedAt: time.Now().Add(time.Second)}
 	time.Sleep(time.Until(fresh.IssuedAt))
+	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaB, fresh, http.MethodGet, "/users/me", nil).Status)
+
+	// only a sign-in after the deletion can restore it, and then the account works again
+	assert.Equal(t, http.StatusForbidden, testkit.Call(t, replicaA, signedIn, http.MethodPost, "/users/me/restore", nil).Status)
+	require.Equal(t, http.StatusNoContent, testkit.Call(t, replicaA, fresh, http.MethodPost, "/users/me/restore", nil).Status)
 	assert.Equal(t, http.StatusOK, testkit.Call(t, replicaB, fresh, http.MethodGet, "/users/me", nil).Status)
+}
+
+func TestAccounts_SignOutRevokesOnlyThatToken(t *testing.T) {
+	user := "signing-out@squares.test"
+	laptop := testkit.As(user)
+	phone := testkit.Identity{Email: user, IssuedAt: laptop.IssuedAt.Add(-time.Minute)}
+	require.Equal(t, http.StatusOK, testkit.Call(t, replicaA, laptop, http.MethodGet, "/users/me", nil).Status)
+
+	require.Equal(t, http.StatusNoContent, testkit.Call(t, replicaA, laptop, http.MethodPost, "/users/me/sign-out", nil).Status)
+
+	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaB, laptop, http.MethodGet, "/users/me", nil).Status)
+	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaB, laptop, http.MethodPost, "/users/me/restore", nil).Status,
+		"a signed-out token cannot be used to restore either")
+	assert.Equal(t, http.StatusOK, testkit.Call(t, replicaB, phone, http.MethodGet, "/users/me", nil).Status)
 }
 
 func TestAccounts_StartupRestoresRevocationsFromTombstones(t *testing.T) {

@@ -253,9 +253,9 @@ func (_c *InviteService_GetInvitesByContestID_Call) RunAndReturn(run func(contex
 	return _c
 }
 
-// RedeemInvite provides a mock function with given fields: ctx, token, user
-func (_m *InviteService) RedeemInvite(ctx context.Context, token string, user string) (*model.ContestParticipant, error) {
-	ret := _m.Called(ctx, token, user)
+// RedeemInvite provides a mock function with given fields: ctx, token, user, displayName
+func (_m *InviteService) RedeemInvite(ctx context.Context, token string, user string, displayName string) (*model.ContestParticipant, error) {
+	ret := _m.Called(ctx, token, user, displayName)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RedeemInvite")
@@ -263,19 +263,19 @@ func (_m *InviteService) RedeemInvite(ctx context.Context, token string, user st
 
 	var r0 *model.ContestParticipant
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*model.ContestParticipant, error)); ok {
-		return rf(ctx, token, user)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*model.ContestParticipant, error)); ok {
+		return rf(ctx, token, user, displayName)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) *model.ContestParticipant); ok {
-		r0 = rf(ctx, token, user)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *model.ContestParticipant); ok {
+		r0 = rf(ctx, token, user, displayName)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ContestParticipant)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, token, user)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, token, user, displayName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -292,13 +292,14 @@ type InviteService_RedeemInvite_Call struct {
 //   - ctx context.Context
 //   - token string
 //   - user string
-func (_e *InviteService_Expecter) RedeemInvite(ctx interface{}, token interface{}, user interface{}) *InviteService_RedeemInvite_Call {
-	return &InviteService_RedeemInvite_Call{Call: _e.mock.On("RedeemInvite", ctx, token, user)}
+//   - displayName string
+func (_e *InviteService_Expecter) RedeemInvite(ctx interface{}, token interface{}, user interface{}, displayName interface{}) *InviteService_RedeemInvite_Call {
+	return &InviteService_RedeemInvite_Call{Call: _e.mock.On("RedeemInvite", ctx, token, user, displayName)}
 }
 
-func (_c *InviteService_RedeemInvite_Call) Run(run func(ctx context.Context, token string, user string)) *InviteService_RedeemInvite_Call {
+func (_c *InviteService_RedeemInvite_Call) Run(run func(ctx context.Context, token string, user string, displayName string)) *InviteService_RedeemInvite_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -308,7 +309,7 @@ func (_c *InviteService_RedeemInvite_Call) Return(_a0 *model.ContestParticipant,
 	return _c
 }
 
-func (_c *InviteService_RedeemInvite_Call) RunAndReturn(run func(context.Context, string, string) (*model.ContestParticipant, error)) *InviteService_RedeemInvite_Call {
+func (_c *InviteService_RedeemInvite_Call) RunAndReturn(run func(context.Context, string, string, string) (*model.ContestParticipant, error)) *InviteService_RedeemInvite_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -2,77 +2,75 @@ import { Box, Skeleton } from '@mui/material';
 
 const cardSx = { borderRadius: '18px', border: 1, borderColor: 'divider' } as const;
 
-// mirrors the profile: the player card, the stats strip, the standing, and the settings rows
+// mirrors the profile: the ID card beside the career tiles, the standing, and the account row
 export default function ProfileSkeleton() {
   return (
-    <Box data-testid="profile-skeleton">
-      <Box
-        sx={{
-          ...cardSx,
-          borderRadius: '22px',
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          gap: { xs: 2, sm: 3 },
-          p: { xs: 2.5, sm: 3.5 },
-          mb: 3.5,
-        }}
-      >
-        <Skeleton variant="rounded" width={96} height={96} sx={{ borderRadius: '20px' }} />
-        <Box sx={{ flex: 1, width: '100%' }}>
-          <Skeleton variant="text" width="55%" sx={{ fontSize: '2.6rem' }} />
-          <Skeleton variant="text" width="40%" />
-          <Skeleton variant="rounded" width={170} height={26} sx={{ mt: 1.25 }} />
-        </Box>
-      </Box>
-
-      <Skeleton variant="text" width={110} sx={{ mb: 1.25 }} />
-      <Box
-        sx={{
-          ...cardSx,
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
-          mb: 3.5,
-        }}
-      >
-        {Array.from({ length: 4 }, (_, i) => (
-          <Box key={i} data-testid="stat-skeleton" sx={{ px: 2.5, py: 2.25 }}>
-            <Skeleton variant="text" width={110} />
-            <Skeleton variant="text" width={56} sx={{ fontSize: '2.4rem' }} />
-          </Box>
-        ))}
-      </Box>
-
-      <Box sx={{ ...cardSx, display: 'flex', alignItems: 'center', gap: 2, p: 2.25, mb: 3 }}>
-        <Skeleton variant="rounded" width={64} height={64} sx={{ borderRadius: '14px' }} />
-        <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width={90} />
-          <Skeleton variant="text" width="45%" sx={{ fontSize: '1.3rem' }} />
-        </Box>
-      </Box>
-
-      <Skeleton variant="text" width={80} sx={{ mb: 1.25 }} />
-      <Box sx={cardSx}>
-        {[0, 1].map((row) => (
+    <Box
+      data-testid="profile-skeleton"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 340px) minmax(0, 1fr)' },
+        gap: { xs: 3, md: 4 },
+        alignItems: 'start',
+      }}
+    >
+      <Box sx={{ ...cardSx, borderRadius: '22px', overflow: 'hidden' }}>
+        <Skeleton variant="rectangular" height={84} />
+        <Box sx={{ px: 3, pb: 3 }}>
+          <Skeleton
+            variant="rounded"
+            width={88}
+            height={88}
+            sx={{ mt: '-44px', borderRadius: '22px' }}
+          />
+          <Skeleton variant="text" width="70%" sx={{ mt: 2, fontSize: '2.2rem' }} />
+          <Skeleton variant="text" width="60%" />
           <Box
-            key={row}
             data-testid="setting-skeleton"
+            sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}
+          >
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Skeleton variant="rounded" width={64} height={64} sx={{ borderRadius: '12px' }} />
+              <Box sx={{ flex: 1 }}>
+                <Skeleton variant="text" width="60%" />
+                <Skeleton variant="text" width="90%" />
+              </Box>
+            </Box>
+            <Skeleton variant="rounded" height={36} sx={{ mt: 2 }} />
+          </Box>
+        </Box>
+      </Box>
+
+      <Box sx={{ display: 'grid', gap: 3.5 }}>
+        <Box>
+          <Skeleton variant="text" width={80} sx={{ mb: 1.25 }} />
+          <Box
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              p: 2.5,
-              borderTop: row ? 1 : 0,
-              borderColor: 'divider',
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr 1fr', lg: 'repeat(4, minmax(0, 1fr))' },
+              gap: 1.5,
             }}
           >
-            <Box sx={{ flex: 1 }}>
-              <Skeleton variant="text" width={140} sx={{ fontSize: '1.1rem' }} />
-              <Skeleton variant="text" width="80%" />
-            </Box>
-            <Skeleton variant="rounded" width={row ? 150 : 72} height={36} />
+            {Array.from({ length: 4 }, (_, i) => (
+              <Box key={i} data-testid="stat-skeleton" sx={{ ...cardSx, p: 2.5 }}>
+                <Skeleton variant="circular" width={44} height={44} />
+                <Skeleton variant="text" width={56} sx={{ mt: 1.5, fontSize: '2.6rem' }} />
+                <Skeleton variant="text" width={110} />
+              </Box>
+            ))}
           </Box>
-        ))}
+        </Box>
+        <Skeleton variant="rounded" height={104} sx={{ borderRadius: '16px' }} />
+        <Box
+          data-testid="setting-skeleton"
+          sx={{ ...cardSx, p: 2.5, display: 'flex', gap: 2, alignItems: 'center' }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width={140} />
+            <Skeleton variant="text" width="85%" />
+          </Box>
+          <Skeleton variant="rounded" width={150} height={36} />
+        </Box>
       </Box>
     </Box>
   );

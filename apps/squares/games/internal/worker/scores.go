@@ -48,15 +48,17 @@ func (w *scoresWorker) run(ctx context.Context) error {
 	}
 
 	games := current
+	var calendar []model.SeasonWeek
 	synced := false
 	if now.Sub(w.lastSeasonSync) >= w.idleInterval {
-		season, syncErr := w.seasonGames(ctx, cal, now)
+		season, weeks, syncErr := w.seasonGames(ctx, cal, now)
 		if syncErr != nil {
 			// the current scores still go in; the season sync tries again next run
 			log.Warn("season sync failed", "season", cal.Season, "error", syncErr)
 		} else {
 			// the current scoreboard is the freshest view of this week, so it wins over the sync
 			games = merge(season, current)
+			calendar = weeks
 			synced = true
 		}
 	}
@@ -67,6 +69,9 @@ func (w *scoresWorker) run(ctx context.Context) error {
 	}
 
 	if synced {
+		if err := w.gameService.SaveCalendar(ctx, calendar); err != nil {
+			return err
+		}
 		w.lastSeasonSync = now
 		log.Info("synced the season", "season", cal.Season, "games", len(games))
 	}
@@ -79,43 +84,61 @@ func (w *scoresWorker) run(ctx context.Context) error {
 	return nil
 }
 
-func (w *scoresWorker) seasonGames(ctx context.Context, cal model.ESPNCalendar, now time.Time) ([]model.ESPNGame, error) {
-	games, err := w.fetchWeeks(ctx, cal.Weeks)
+// the season's games and calendar, plus the next season's once the postseason is over and ESPN has published it
+func (w *scoresWorker) seasonGames(ctx context.Context, cal model.ESPNCalendar, now time.Time) ([]model.ESPNGame, []model.SeasonWeek, error) {
+	games, err := w.fetchWeeks(ctx, weeksOf(cal.Weeks))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	calendar := cal.Weeks
 
-	// once the postseason is over, the next season's games show up when ESPN publishes them
 	if !cal.End.IsZero() && now.After(cal.End) {
-		next, err := w.nextSeasonGames(ctx, cal.Season+1)
+		next, nextCalendar, err := w.nextSeasonGames(ctx, cal.Season+1)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		games = append(games, next...)
+		calendar = append(calendar, nextCalendar...)
 	}
 
-	return games, nil
+	return games, calendar, nil
 }
 
-func (w *scoresWorker) nextSeasonGames(ctx context.Context, season int) ([]model.ESPNGame, error) {
+func (w *scoresWorker) nextSeasonGames(ctx context.Context, season int) ([]model.ESPNGame, []model.SeasonWeek, error) {
 	first := model.Week{Season: season, SeasonType: 2, Week: 1}
 	opener, cal, err := w.espn.FetchWeek(ctx, first)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if len(inWeek(opener, first)) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 
-	weeks := cal.Weeks
-	if cal.Season != season || len(weeks) == 0 {
-		weeks = make([]model.Week, 0, nextSeasonWeeks)
+	// a calendar is only kept when ESPN answered with the new season's own
+	var calendar []model.SeasonWeek
+	weeks := make([]model.Week, 0, nextSeasonWeeks)
+	if cal.Season == season && len(cal.Weeks) > 0 {
+		calendar = cal.Weeks
+		weeks = weeksOf(cal.Weeks)
+	} else {
 		for week := 1; week <= nextSeasonWeeks; week++ {
 			weeks = append(weeks, model.Week{Season: season, SeasonType: 2, Week: week})
 		}
 	}
 
-	return w.fetchWeeks(ctx, weeks)
+	games, err := w.fetchWeeks(ctx, weeks)
+	if err != nil {
+		return nil, nil, err
+	}
+	return games, calendar, nil
+}
+
+func weeksOf(calendar []model.SeasonWeek) []model.Week {
+	weeks := make([]model.Week, 0, len(calendar))
+	for i := range calendar {
+		weeks = append(weeks, calendar[i].Week)
+	}
+	return weeks
 }
 
 func (w *scoresWorker) fetchWeeks(ctx context.Context, weeks []model.Week) ([]model.ESPNGame, error) {

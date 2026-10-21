@@ -14,16 +14,26 @@ import (
 )
 
 type fakeRevocations struct {
-	revoked bool
-	err     error
-	calls   int
+	revoked        bool
+	sessionRevoked bool
+	err            error
+	calls          int
 }
 
 func (f *fakeRevocations) Revoke(context.Context, string, time.Time) error { return nil }
 
+func (f *fakeRevocations) Restore(context.Context, string, int64) (bool, error) { return false, nil }
+
+func (f *fakeRevocations) RevokeSession(context.Context, string, int64, int64) error { return nil }
+
 func (f *fakeRevocations) IsRevoked(context.Context, string, int64) (bool, error) {
 	f.calls++
-	return f.revoked, f.err
+	return f.revoked || f.sessionRevoked, f.err
+}
+
+func (f *fakeRevocations) IsSessionRevoked(context.Context, string, int64) (bool, error) {
+	f.calls++
+	return f.sessionRevoked, f.err
 }
 
 func buildRouter(mw gin.HandlerFunc) (router *gin.Engine, reached *bool) {
@@ -121,4 +131,28 @@ func TestAuthenticate_FailsOpenWhenRevocationStoreErrors(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.True(t, *reached)
+}
+
+func TestAuthenticateRestore_LetsABlockedAccountThroughButNotASignedOutToken(t *testing.T) {
+	r, reached := buildRouter(AuthenticateRestore(&fakeRevocations{revoked: true}))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, gatewayRequest(nil))
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.True(t, *reached)
+
+	r, reached = buildRouter(AuthenticateRestore(&fakeRevocations{sessionRevoked: true}))
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, gatewayRequest(nil))
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.False(t, *reached)
+}
+
+func TestAuthenticate_WithoutAStoreSkipsRevocation(t *testing.T) {
+	for _, mw := range []gin.HandlerFunc{Authenticate(nil), AuthenticateRestore(nil)} {
+		r, reached := buildRouter(mw)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, gatewayRequest(nil))
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.True(t, *reached)
+	}
 }

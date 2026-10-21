@@ -51,6 +51,24 @@ describe('useContestStream', () => {
     vi.clearAllMocks();
   });
 
+  it('asks for the snapshot again when a live stream never sends one', () => {
+    vi.useFakeTimers();
+    const { stream } = setup();
+    act(() => stream().onStatus('live'));
+
+    act(() => vi.advanceTimersByTime(4_000));
+    expect(streams.handle.reconnect).toHaveBeenCalledWith({ resync: true });
+
+    // once the contest is in, nothing more is asked for
+    streams.handle.reconnect.mockClear();
+    act(() =>
+      stream().onMessage(message('contest.snapshot', { contest: makeContest(), participants: [] }))
+    );
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(streams.handle.reconnect).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
   it('does nothing without a contest', () => {
     setup('');
     expect(streams.options).toHaveLength(0);

@@ -48,6 +48,8 @@ export interface Square {
   owner: string;
   ownerName: string;
   version: number;
+  // when the square was claimed; updatedAt also moves when the owner changes their initials
+  claimedAt?: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -145,6 +147,11 @@ export interface ScoreboardWeek {
 }
 
 export interface Scoreboard extends ScoreboardWeek {
+  // ESPN's name for the week, like "Week 7" or "Wild Card"
+  label: string;
+  // the calendar weeks either side, across playoff rounds and seasons; absent at the ends
+  previous?: ScoreboardWeek;
+  next?: ScoreboardWeek;
   games: Game[];
 }
 
@@ -189,6 +196,8 @@ export interface Participant {
   id: string;
   contestId: string;
   userId: string;
+  // the name other players see; emails are shown only to the contest owner
+  displayName?: string;
   inviteId: string;
   role: ParticipantRole;
   maxSquares: number;
@@ -229,4 +238,12 @@ export interface InvitePreviewResponse {
   maxSquares: number;
   owner: string;
   role: string;
+  status: ContestStatus;
+  claimedSquares: number;
+  totalSquares: number;
+  homeTeam?: string;
+  awayTeam?: string;
+  homeAbbr?: string;
+  awayAbbr?: string;
+  gameTime?: string;
 }

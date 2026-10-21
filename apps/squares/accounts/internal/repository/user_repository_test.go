@@ -134,3 +134,11 @@ func TestUserRepository_TombstonesSince(t *testing.T) {
 	require.Len(t, tombstones, 1)
 	assert.Equal(t, "a@b.com", tombstones[0].Email)
 }
+
+func TestUserRepository_DeleteTombstone(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	mock.ExpectExec(`DELETE FROM deleted_accounts WHERE email = \$1`).WithArgs("a@b.com").WillReturnResult(sqlmock.NewResult(0, 1))
+
+	require.NoError(t, NewUserRepository(gdb).DeleteTombstone(context.Background(), "a@b.com"))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

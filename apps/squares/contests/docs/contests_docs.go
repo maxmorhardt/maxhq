@@ -148,6 +148,12 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "409": {
+                        "description": "You already have a contest with this name",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -638,6 +644,12 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "409": {
+                        "description": "The board is full and locked",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -841,6 +853,12 @@ const docTemplatecontests = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "The board is full and locked",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -1423,6 +1441,10 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "displayName": {
+                    "description": "read from the user projection, so other players can be shown a name instead of an email",
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1700,10 +1722,28 @@ const docTemplatecontests = `{
         "model.InvitePreviewResponse": {
             "type": "object",
             "properties": {
+                "awayAbbr": {
+                    "type": "string"
+                },
+                "awayTeam": {
+                    "type": "string"
+                },
+                "claimedSquares": {
+                    "type": "integer"
+                },
                 "contestId": {
                     "type": "string"
                 },
                 "contestName": {
+                    "type": "string"
+                },
+                "gameTime": {
+                    "type": "string"
+                },
+                "homeAbbr": {
+                    "type": "string"
+                },
+                "homeTeam": {
                     "type": "string"
                 },
                 "maxSquares": {
@@ -1714,6 +1754,12 @@ const docTemplatecontests = `{
                 },
                 "role": {
                     "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/model.ContestStatus"
+                },
+                "totalSquares": {
+                    "type": "integer"
                 }
             }
         },
@@ -1863,6 +1909,10 @@ const docTemplatecontests = `{
         "model.Square": {
             "type": "object",
             "properties": {
+                "claimedAt": {
+                    "description": "set on claim and cleared on release; updated_at also moves when initials cascade",
+                    "type": "string"
+                },
                 "col": {
                     "type": "integer"
                 },

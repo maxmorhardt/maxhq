@@ -17,7 +17,7 @@ const steps: Step[] = [
   },
   {
     title: 'Claim your squares',
-    body: 'Everyone signs in and taps the squares they want. Each one shows its owner’s initials, and the board fills in for everyone at once.',
+    body: 'Everyone signs in and taps the squares they want. Each one shows its owner’s initials, the board fills in for everyone at once, and it locks when all 100 are taken.',
   },
   {
     title: 'Numbers are drawn',

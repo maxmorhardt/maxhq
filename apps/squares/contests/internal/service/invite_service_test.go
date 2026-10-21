@@ -166,7 +166,13 @@ func TestGetInvitePreview_Success(t *testing.T) {
 	inv := mocks.NewInviteRepository(t)
 	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, Role: model.ParticipantRoleParticipant, MaxSquares: 5}, nil)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{ID: contestID, Name: "Pool", Owner: "owner"}, nil)
+	kickoff := time.Date(2026, 10, 25, 17, 0, 0, 0, time.UTC)
+	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{
+		ID: contestID, Name: "Pool", Owner: "owner", Status: model.ContestStatusActive,
+		HomeTeam: "Lions", AwayTeam: "Bears",
+		Squares: []model.Square{{Owner: "a"}, {Owner: "b"}, {}},
+		Game:    &model.Game{HomeAbbr: "DET", AwayAbbr: "CHI", GameTime: kickoff},
+	}, nil)
 
 	got, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
 		GetInvitePreview(context.Background(), "tok")
@@ -174,6 +180,12 @@ func TestGetInvitePreview_Success(t *testing.T) {
 	assert.Equal(t, contestID, got.ContestID)
 	assert.Equal(t, "Pool", got.ContestName)
 	assert.Equal(t, "owner", got.Owner)
+	assert.Equal(t, model.ContestStatusActive, got.Status)
+	assert.Equal(t, 2, got.ClaimedSquares)
+	assert.Equal(t, 3, got.TotalSquares)
+	assert.Equal(t, "Bears", got.AwayTeam)
+	assert.Equal(t, "DET", got.HomeAbbr)
+	assert.Equal(t, &kickoff, got.GameTime)
 }
 
 func TestRedeemInvite_DBError(t *testing.T) {
@@ -181,7 +193,7 @@ func TestRedeemInvite_DBError(t *testing.T) {
 	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u")
+		RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
@@ -191,7 +203,7 @@ func TestRedeemInvite_Expired(t *testing.T) {
 	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ExpiresAt: &past}, nil)
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u")
+		RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrInviteExpired)
 }
 
@@ -200,7 +212,7 @@ func TestRedeemInvite_MaxUsesReached(t *testing.T) {
 	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{MaxUses: 2, Uses: 2}, nil)
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u")
+		RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrInviteMaxUsesReached)
 }
 
@@ -212,7 +224,7 @@ func TestRedeemInvite_ContestTerminal(t *testing.T) {
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u")
+		RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrContestFinalized)
 }
 
@@ -225,7 +237,7 @@ func TestRedeemInvite_AlreadyParticipant(t *testing.T) {
 	p := mocks.NewParticipantRepository(t)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(&model.ContestParticipant{}, nil)
 
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u")
+	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrAlreadyParticipant)
 }
 
@@ -239,7 +251,7 @@ func TestRedeemInvite_ParticipantCheckDBError(t *testing.T) {
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u")
+		RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
@@ -254,7 +266,7 @@ func TestRedeemInvite_GetTotalAllocatedSquaresError(t *testing.T) {
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, errors.New("db error"))
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u")
+		RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
@@ -268,7 +280,7 @@ func TestRedeemInvite_NotEnoughSquares(t *testing.T) {
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(60, nil)
 
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u")
+	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, errs.ErrNotEnoughSquares)
 }
 
@@ -284,7 +296,7 @@ func TestRedeemInvite_RepoFails(t *testing.T) {
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u")
+		RedeemInvite(context.Background(), "tok", "u", "")
 	require.Error(t, err)
 }
 
@@ -300,7 +312,7 @@ func redeemConflict(t *testing.T, repoErr, want error) {
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
 
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u")
+	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
 	assert.ErrorIs(t, err, want)
 }
 
@@ -327,7 +339,7 @@ func TestRedeemInvite_Success(t *testing.T) {
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
 
-	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u")
+	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
 	require.NoError(t, err)
 	assert.Equal(t, "u", got.UserID)
 	assert.Equal(t, 10, got.MaxSquares)

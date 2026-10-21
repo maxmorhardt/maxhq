@@ -1,0 +1,1 @@
+ALTER TABLE squares DROP COLUMN IF EXISTS claimed_at;

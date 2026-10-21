@@ -6,9 +6,8 @@ import {
   formatKickoff,
   formatMatchup,
   gameClock,
-  hasWeek,
   isLive,
-  weekLabel,
+  kickoffParts,
 } from './game';
 
 describe('formatMatchup', () => {
@@ -46,22 +45,6 @@ describe('isLive', () => {
   });
 });
 
-describe('weeks', () => {
-  it('names regular, preseason, and postseason weeks', () => {
-    expect(weekLabel(2, 7)).toBe('Week 7');
-    expect(weekLabel(1, 2)).toBe('Preseason Week 2');
-    expect(weekLabel(3, 5)).toBe('Super Bowl');
-    expect(weekLabel(3, 9)).toBe('Postseason Week 9');
-  });
-
-  it('knows which weeks exist', () => {
-    expect(hasWeek(2, 18)).toBe(true);
-    expect(hasWeek(2, 19)).toBe(false);
-    expect(hasWeek(3, 0)).toBe(false);
-    expect(hasWeek(9, 3)).toBe(true);
-  });
-});
-
 describe('currentScore', () => {
   it('reads the game when there is one', () => {
     const game = { homeScore: 17, awayScore: 10 } as Game;
@@ -78,5 +61,14 @@ describe('currentScore', () => {
       home: 14,
     });
     expect(currentScore(makeContest(), undefined)).toBeNull();
+  });
+});
+
+describe('kickoffParts', () => {
+  it('splits the kickoff into the day and the time', () => {
+    const { day, time } = kickoffParts('2026-10-25T17:00:00Z');
+    expect(formatKickoff('2026-10-25T17:00:00Z')).toBe(`${day} · ${time}`);
+    expect(day).not.toContain(':');
+    expect(time).toMatch(/\d:\d\d/);
   });
 });

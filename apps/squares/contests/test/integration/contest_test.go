@@ -76,6 +76,24 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, resp.Status)
 	})
 
+	t.Run("a full board is locked before kickoff", func(t *testing.T) {
+		snap := snapshot(t, memberUser, contestID)
+		assert.Equal(t, model.ContestStatusActive, snap.Contest.Status)
+		var mine model.Square
+		for _, sq := range snap.Contest.Squares {
+			if sq.Owner == memberUser {
+				mine = sq
+				break
+			}
+		}
+		require.NotNil(t, mine.ClaimedAt, "a claim records when it was made")
+
+		resp := call(t, testkit.As(memberUser), http.MethodDelete, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, mine.ID), nil)
+		assert.Equal(t, http.StatusConflict, resp.Status, string(resp.Body))
+		resp = call(t, testkit.As(memberUser), http.MethodDelete, fmt.Sprintf("/contests/%s/squares/claims", contestID), nil)
+		assert.Equal(t, http.StatusConflict, resp.Status, string(resp.Body))
+	})
+
 	t.Run("kickoff locks the grid", func(t *testing.T) {
 		game.Status = events.GameStatusInProgress
 		game.Period = 1
@@ -150,7 +168,7 @@ func TestContest_IdempotentCreate(t *testing.T) {
 	assert.Equal(t, "true", resp2.Header.Get("Idempotent-Replayed"))
 
 	_, resp3 := createContestFor(t, &game, ownerUser, "Idempotent Bowl", 10)
-	assert.Equal(t, http.StatusBadRequest, resp3.Status)
+	assert.Equal(t, http.StatusConflict, resp3.Status, "a new create with the same name is a conflict")
 }
 
 func TestContest_ActiveContestCanBeDeleted(t *testing.T) {

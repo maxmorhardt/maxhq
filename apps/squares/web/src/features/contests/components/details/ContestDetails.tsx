@@ -30,7 +30,7 @@ function boardStatus(contest: Contest, game: Game | undefined, allFilled: boolea
     return 'The board is locked and the numbers are drawn. Each quarter’s winner comes from the live score.';
   }
   return allFilled
-    ? `The board is full. It locks and the numbers are drawn at kickoff${kickoff}.`
+    ? `The board is full and locked. The numbers are drawn at kickoff${kickoff}.`
     : `Fill every square before kickoff${kickoff}. The board locks once the game starts and every square is claimed.`;
 }
 
@@ -102,7 +102,8 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
                 {viewer.squaresClaimed}/{participant.maxSquares}
               </Typography>
             </Box>
-            {isActive && (
+            {/* a full board is locked, so there is nothing left to claim or clear */}
+            {isActive && !allFilled && (
               <SquareActions
                 contest={contest}
                 viewer={viewer}

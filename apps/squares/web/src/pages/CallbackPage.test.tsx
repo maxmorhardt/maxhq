@@ -13,6 +13,8 @@ vi.mock('react-router', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
+const session = vi.hoisted(() => ({ notifySession: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../auth/session', () => session);
 vi.mock('react-oidc-context', () => ({
   useAuth: vi.fn(),
 }));
@@ -68,7 +70,7 @@ describe('CallbackPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
   });
 
-  it('navigates to redirect path when auth completes (deferred until intro finishes)', () => {
+  it('navigates to redirect path when auth completes (deferred until intro finishes)', async () => {
     sessionStorage.setItem('auth_redirect_path', '/contests/c-1');
     vi.mocked(useAuth).mockReturnValue({
       isLoading: false,
@@ -77,6 +79,8 @@ describe('CallbackPage', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage('?code=abc&state=xyz');
+    // the restore call settles before the redirect is queued
+    await act(async () => {});
 
     // navigation must not fire synchronously on render
     expect(mockNavigate).not.toHaveBeenCalled();
@@ -88,9 +92,10 @@ describe('CallbackPage', () => {
     act(() => {}); // flush any remaining effects
 
     expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1', { replace: true });
+    expect(session.notifySession).toHaveBeenCalledWith('restore', undefined);
   });
 
-  it('falls back to /contests when no redirect path is stored', () => {
+  it('falls back to /contests when no redirect path is stored', async () => {
     sessionStorage.removeItem('auth_redirect_path');
     vi.mocked(useAuth).mockReturnValue({
       isLoading: false,
@@ -99,6 +104,8 @@ describe('CallbackPage', () => {
     } as unknown as ReturnType<typeof useAuth>);
 
     renderPage('?code=abc&state=xyz');
+    // the restore call settles before the redirect is queued
+    await act(async () => {});
 
     act(() => vi.advanceTimersByTime(1600));
     act(() => {});

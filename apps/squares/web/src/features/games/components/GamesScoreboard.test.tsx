@@ -23,7 +23,10 @@ const game = (id: string, gameTime: string, status: Game['status'] = 'scheduled'
 const board = {
   season: 2026,
   seasonType: 2,
-  week: 7,
+  week: 18,
+  label: 'Week 18',
+  previous: { season: 2026, seasonType: 2, week: 17 },
+  next: { season: 2026, seasonType: 3, week: 1 },
   games: [
     game('a', '2026-10-22T00:15:00Z', 'in_progress'),
     game('b', '2026-10-25T17:00:00Z'),
@@ -44,7 +47,7 @@ describe('GamesScoreboard', () => {
   it('names the week and counts live games', () => {
     renderWithProviders(<GamesScoreboard />);
 
-    expect(screen.getByRole('heading', { name: 'Week 7' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Week 18' })).toBeInTheDocument();
     expect(screen.getByText('2026 season')).toBeInTheDocument();
     expect(screen.getByText('1 live')).toBeInTheDocument();
   });
@@ -56,46 +59,48 @@ describe('GamesScoreboard', () => {
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBeGreaterThanOrEqual(2);
   });
 
-  it('steps to the next and previous week', () => {
+  it('steps to the weeks the calendar lists either side, into the playoffs', () => {
     renderWithProviders(<GamesScoreboard />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
     expect(api.useGetScoreboardQuery).toHaveBeenLastCalledWith({
       season: 2026,
-      seasonType: 2,
-      week: 8,
+      seasonType: 3,
+      week: 1,
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
     expect(api.useGetScoreboardQuery).toHaveBeenLastCalledWith({
       season: 2026,
       seasonType: 2,
-      week: 6,
+      week: 17,
     });
   });
 
-  it('stops at the edges of the season', () => {
+  it('stops where the calendar ends', () => {
     api.useGetScoreboardQuery.mockReturnValue({
-      data: { ...board, week: 18 },
+      data: { ...board, label: 'Super Bowl', previous: undefined, next: undefined },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
     });
     renderWithProviders(<GamesScoreboard />);
 
+    expect(screen.getByRole('heading', { name: 'Super Bowl' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next week' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous week' })).toBeDisabled();
   });
 
   it('says when there are no games', () => {
     api.useGetScoreboardQuery.mockReturnValue({
-      data: { season: 0, seasonType: 0, week: 0, games: [] },
+      data: { season: 0, seasonType: 0, week: 0, label: '', games: [] },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
     });
     renderWithProviders(<GamesScoreboard />);
 
-    expect(screen.getByText('No games this week.')).toBeInTheDocument();
+    expect(screen.getByText(/No games scheduled yet/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'This Week' })).toBeInTheDocument();
   });
 

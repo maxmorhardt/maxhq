@@ -3,6 +3,8 @@ import { getUserManager } from './userManager';
 
 // refresh a little early so a token never expires mid-request
 const REFRESH_MARGIN_SECONDS = 60;
+// how long a caller waits on a refresh before carrying on with what it has
+export const REFRESH_WAIT_MS = 5_000;
 
 let refreshing: Promise<User | null> | null = null;
 
@@ -33,7 +35,10 @@ export async function getIdToken({ forceRefresh = false } = {}): Promise<string 
     return user.id_token ?? null;
   }
 
-  const refreshed = await refreshSession();
+  const refreshed = await Promise.race([
+    refreshSession(),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), REFRESH_WAIT_MS)),
+  ]);
   if (refreshed?.id_token) {
     return refreshed.id_token;
   }

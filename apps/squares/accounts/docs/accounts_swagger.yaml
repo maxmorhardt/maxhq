@@ -246,6 +246,48 @@ paths:
       summary: Update the current user's profile
       tags:
       - users
+  /users/me/restore:
+    post:
+      description: Deleting an account blocks every token for it, refreshed ones included,
+        until the user signs in again. The web calls this right after an interactive
+        sign-in to lift that block; a token issued before the deletion is refused.
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Restore an account after a new sign-in
+      tags:
+      - users
+  /users/me/sign-out:
+    post:
+      description: Revokes the token this request was made with until it expires,
+        so a copy of it stops working. The account's other devices keep their own
+        tokens.
+      responses:
+        "204":
+          description: No Content
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Sign out the current token
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     in: header

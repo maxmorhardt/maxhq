@@ -71,6 +71,7 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		Contact: handler.NewContactHandler(contactService),
 	}, routes.Guards{
 		Auth:       middleware.Authenticate(revocations),
+		Restore:    middleware.AuthenticateRestore(revocations),
 		Idempotent: middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
 	})
 

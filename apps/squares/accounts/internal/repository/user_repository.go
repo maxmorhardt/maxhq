@@ -21,6 +21,7 @@ type UserRepository interface {
 	UpdateInitials(ctx context.Context, email, initials string) (*model.User, error)
 	DeleteWithTombstone(ctx context.Context, email string, deletedAt time.Time) error
 	TombstonesSince(ctx context.Context, since time.Time) ([]Tombstone, error)
+	DeleteTombstone(ctx context.Context, email string) error
 }
 
 type userRepository struct {
@@ -100,4 +101,8 @@ func (r *userRepository) TombstonesSince(ctx context.Context, since time.Time) (
 		Where("deleted_at >= ?", since).
 		Scan(&tombstones).Error
 	return tombstones, err
+}
+
+func (r *userRepository) DeleteTombstone(ctx context.Context, email string) error {
+	return database.Conn(ctx, r.db).Exec(`DELETE FROM deleted_accounts WHERE email = ?`, email).Error
 }

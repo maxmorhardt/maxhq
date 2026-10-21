@@ -80,6 +80,122 @@ func (_c *RevocationStore_IsRevoked_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
+// IsSessionRevoked provides a mock function with given fields: ctx, email, issuedAt
+func (_m *RevocationStore) IsSessionRevoked(ctx context.Context, email string, issuedAt int64) (bool, error) {
+	ret := _m.Called(ctx, email, issuedAt)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsSessionRevoked")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) (bool, error)); ok {
+		return rf(ctx, email, issuedAt)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) bool); ok {
+		r0 = rf(ctx, email, issuedAt)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64) error); ok {
+		r1 = rf(ctx, email, issuedAt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RevocationStore_IsSessionRevoked_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsSessionRevoked'
+type RevocationStore_IsSessionRevoked_Call struct {
+	*mock.Call
+}
+
+// IsSessionRevoked is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+//   - issuedAt int64
+func (_e *RevocationStore_Expecter) IsSessionRevoked(ctx interface{}, email interface{}, issuedAt interface{}) *RevocationStore_IsSessionRevoked_Call {
+	return &RevocationStore_IsSessionRevoked_Call{Call: _e.mock.On("IsSessionRevoked", ctx, email, issuedAt)}
+}
+
+func (_c *RevocationStore_IsSessionRevoked_Call) Run(run func(ctx context.Context, email string, issuedAt int64)) *RevocationStore_IsSessionRevoked_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(int64))
+	})
+	return _c
+}
+
+func (_c *RevocationStore_IsSessionRevoked_Call) Return(_a0 bool, _a1 error) *RevocationStore_IsSessionRevoked_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *RevocationStore_IsSessionRevoked_Call) RunAndReturn(run func(context.Context, string, int64) (bool, error)) *RevocationStore_IsSessionRevoked_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Restore provides a mock function with given fields: ctx, email, issuedAt
+func (_m *RevocationStore) Restore(ctx context.Context, email string, issuedAt int64) (bool, error) {
+	ret := _m.Called(ctx, email, issuedAt)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Restore")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) (bool, error)); ok {
+		return rf(ctx, email, issuedAt)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) bool); ok {
+		r0 = rf(ctx, email, issuedAt)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64) error); ok {
+		r1 = rf(ctx, email, issuedAt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RevocationStore_Restore_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Restore'
+type RevocationStore_Restore_Call struct {
+	*mock.Call
+}
+
+// Restore is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+//   - issuedAt int64
+func (_e *RevocationStore_Expecter) Restore(ctx interface{}, email interface{}, issuedAt interface{}) *RevocationStore_Restore_Call {
+	return &RevocationStore_Restore_Call{Call: _e.mock.On("Restore", ctx, email, issuedAt)}
+}
+
+func (_c *RevocationStore_Restore_Call) Run(run func(ctx context.Context, email string, issuedAt int64)) *RevocationStore_Restore_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(int64))
+	})
+	return _c
+}
+
+func (_c *RevocationStore_Restore_Call) Return(_a0 bool, _a1 error) *RevocationStore_Restore_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *RevocationStore_Restore_Call) RunAndReturn(run func(context.Context, string, int64) (bool, error)) *RevocationStore_Restore_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Revoke provides a mock function with given fields: ctx, email, at
 func (_m *RevocationStore) Revoke(ctx context.Context, email string, at time.Time) error {
 	ret := _m.Called(ctx, email, at)
@@ -124,6 +240,55 @@ func (_c *RevocationStore_Revoke_Call) Return(_a0 error) *RevocationStore_Revoke
 }
 
 func (_c *RevocationStore_Revoke_Call) RunAndReturn(run func(context.Context, string, time.Time) error) *RevocationStore_Revoke_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RevokeSession provides a mock function with given fields: ctx, email, issuedAt, expiresAt
+func (_m *RevocationStore) RevokeSession(ctx context.Context, email string, issuedAt int64, expiresAt int64) error {
+	ret := _m.Called(ctx, email, issuedAt, expiresAt)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RevokeSession")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64) error); ok {
+		r0 = rf(ctx, email, issuedAt, expiresAt)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RevocationStore_RevokeSession_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RevokeSession'
+type RevocationStore_RevokeSession_Call struct {
+	*mock.Call
+}
+
+// RevokeSession is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+//   - issuedAt int64
+//   - expiresAt int64
+func (_e *RevocationStore_Expecter) RevokeSession(ctx interface{}, email interface{}, issuedAt interface{}, expiresAt interface{}) *RevocationStore_RevokeSession_Call {
+	return &RevocationStore_RevokeSession_Call{Call: _e.mock.On("RevokeSession", ctx, email, issuedAt, expiresAt)}
+}
+
+func (_c *RevocationStore_RevokeSession_Call) Run(run func(ctx context.Context, email string, issuedAt int64, expiresAt int64)) *RevocationStore_RevokeSession_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(int64), args[3].(int64))
+	})
+	return _c
+}
+
+func (_c *RevocationStore_RevokeSession_Call) Return(_a0 error) *RevocationStore_RevokeSession_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *RevocationStore_RevokeSession_Call) RunAndReturn(run func(context.Context, string, int64, int64) error) *RevocationStore_RevokeSession_Call {
 	_c.Call.Return(run)
 	return _c
 }

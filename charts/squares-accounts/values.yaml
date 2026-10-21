@@ -89,6 +89,8 @@ route:
       - /contact
     exact:
       - /users/me
+      - /users/me/sign-out
+      - /users/me/restore
   swaggerName: accounts
   rateLimit:
     enabled: true

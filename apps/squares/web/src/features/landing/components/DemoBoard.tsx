@@ -1,6 +1,8 @@
 import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { easing, fonts, game } from '../../../app/theme';
+import type { Game } from '../../../types/contest';
+import { gameClock, isLive } from '../../../utils/game';
 
 // 0 setup, 1 squares being claimed, 2 a full board, 3 numbers drawn at kickoff, 4 a quarter has a winner
 export type DemoStage = 0 | 1 | 2 | 3 | 4;
@@ -50,12 +52,16 @@ const descriptions: Record<DemoStage, string> = {
   4: `End of the quarter, away ${SCORE.away} and home ${SCORE.home}: the square at home ${SCORE.home % 10}, away ${SCORE.away} wins.`,
 };
 
-const status: Record<DemoStage, string> = {
-  0: 'Pregame',
-  1: 'Pregame',
-  2: 'Pregame',
-  3: '1st · 15:00',
-  4: 'End Q2',
+// the game behind each stage, so the scorebug reads exactly as a real contest's does
+const kickoff = new Date(2026, 9, 25, 20, 20).toISOString();
+const scheduled = { status: 'scheduled', period: 0, gameTime: kickoff } as const;
+const games: Record<DemoStage, Pick<Game, 'status' | 'period' | 'gameTime'>> = {
+  0: scheduled,
+  1: scheduled,
+  2: scheduled,
+  3: { status: 'in_progress', period: 1, gameTime: kickoff },
+  // the second quarter has just been called, so the game is into the third
+  4: { status: 'in_progress', period: 3, gameTime: kickoff },
 };
 
 const digitSx = {
@@ -136,7 +142,22 @@ function ScoreBug({ stage }: { stage: DemoStage }) {
           transition: `background-color 400ms ${easing.out}, color 400ms ${easing.out}`,
         }}
       >
-        {status[stage]}
+        {isLive(games[stage]) && (
+          <Box
+            component="span"
+            aria-hidden
+            sx={{
+              display: 'inline-block',
+              width: 6,
+              height: 6,
+              mr: 0.75,
+              borderRadius: '50%',
+              verticalAlign: 'middle',
+              bgcolor: final ? game.night : game.flag,
+            }}
+          />
+        )}
+        {gameClock(games[stage])}
       </Typography>
       {team('HOME', SCORE.home)}
     </Box>

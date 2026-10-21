@@ -8,7 +8,7 @@ const TOP_COUNT = 10;
 
 export default function LeaderboardPage() {
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}>
       <Helmet>
         <title>Leaderboard – Squares</title>
         <meta
@@ -17,12 +17,15 @@ export default function LeaderboardPage() {
         />
       </Helmet>
 
-      <PageTitle
-        title="Leaderboard"
-        subtitle={`All-time top ${TOP_COUNT}: the best players across every contest, ranked by quarter wins.`}
+      <Standings
+        header={
+          <PageTitle
+            align="left"
+            title="Leaderboard"
+            subtitle={`All-time top ${TOP_COUNT}: the best players across every contest, ranked by quarter wins.`}
+          />
+        }
       />
-
-      <Standings />
 
       <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2.5, textAlign: 'center' }}>
         Win rate is quarter wins over the quarters a player held a square in.

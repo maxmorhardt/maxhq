@@ -2,6 +2,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useSearchParams } from 'react-router';
+import { notifySession } from '../auth/session';
 import AuthLoadingAnimation from '../components/feedback/AuthLoadingAnimation';
 import { useToast } from '../features/toast/useToast';
 
@@ -45,7 +46,10 @@ export default function CallbackPage() {
     try {
       if (auth.isAuthenticated) {
         sessionStorage.removeItem('auth_redirect_path');
-        setPendingPath(savedRedirectPath.current);
+        // a fresh sign-in lifts the block a deleted account leaves, before the app makes its first call
+        void notifySession('restore', auth.user?.id_token).then(() =>
+          setPendingPath(savedRedirectPath.current)
+        );
         return;
       }
 

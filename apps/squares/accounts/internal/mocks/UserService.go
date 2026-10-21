@@ -129,6 +129,103 @@ func (_c *UserService_GetProfile_Call) RunAndReturn(run func(context.Context, st
 	return _c
 }
 
+// RestoreAccount provides a mock function with given fields: ctx, email, issuedAt
+func (_m *UserService) RestoreAccount(ctx context.Context, email string, issuedAt int64) error {
+	ret := _m.Called(ctx, email, issuedAt)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RestoreAccount")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) error); ok {
+		r0 = rf(ctx, email, issuedAt)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UserService_RestoreAccount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RestoreAccount'
+type UserService_RestoreAccount_Call struct {
+	*mock.Call
+}
+
+// RestoreAccount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+//   - issuedAt int64
+func (_e *UserService_Expecter) RestoreAccount(ctx interface{}, email interface{}, issuedAt interface{}) *UserService_RestoreAccount_Call {
+	return &UserService_RestoreAccount_Call{Call: _e.mock.On("RestoreAccount", ctx, email, issuedAt)}
+}
+
+func (_c *UserService_RestoreAccount_Call) Run(run func(ctx context.Context, email string, issuedAt int64)) *UserService_RestoreAccount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(int64))
+	})
+	return _c
+}
+
+func (_c *UserService_RestoreAccount_Call) Return(_a0 error) *UserService_RestoreAccount_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *UserService_RestoreAccount_Call) RunAndReturn(run func(context.Context, string, int64) error) *UserService_RestoreAccount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SignOut provides a mock function with given fields: ctx, email, issuedAt, expiresAt
+func (_m *UserService) SignOut(ctx context.Context, email string, issuedAt int64, expiresAt int64) error {
+	ret := _m.Called(ctx, email, issuedAt, expiresAt)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SignOut")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64) error); ok {
+		r0 = rf(ctx, email, issuedAt, expiresAt)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UserService_SignOut_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SignOut'
+type UserService_SignOut_Call struct {
+	*mock.Call
+}
+
+// SignOut is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+//   - issuedAt int64
+//   - expiresAt int64
+func (_e *UserService_Expecter) SignOut(ctx interface{}, email interface{}, issuedAt interface{}, expiresAt interface{}) *UserService_SignOut_Call {
+	return &UserService_SignOut_Call{Call: _e.mock.On("SignOut", ctx, email, issuedAt, expiresAt)}
+}
+
+func (_c *UserService_SignOut_Call) Run(run func(ctx context.Context, email string, issuedAt int64, expiresAt int64)) *UserService_SignOut_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(int64), args[3].(int64))
+	})
+	return _c
+}
+
+func (_c *UserService_SignOut_Call) Return(_a0 error) *UserService_SignOut_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *UserService_SignOut_Call) RunAndReturn(run func(context.Context, string, int64, int64) error) *UserService_SignOut_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SyncRevocations provides a mock function with given fields: ctx
 func (_m *UserService) SyncRevocations(ctx context.Context) error {
 	ret := _m.Called(ctx)

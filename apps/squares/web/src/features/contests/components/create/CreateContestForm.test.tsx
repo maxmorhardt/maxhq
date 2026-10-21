@@ -100,13 +100,31 @@ describe('CreateContestForm', () => {
 
   it('shows why creating failed', async () => {
     api.useCreateContestMutation.mockReturnValue(
-      mockMutation({ error: { status: 400, message: 'Name taken' } })
+      mockMutation({ error: { status: 500, message: 'Database unavailable' } })
     );
     renderWithProviders(<CreateContestForm />);
     pickGame();
     fireEvent.change(nameField(), { target: { value: 'Bowl' } });
     submit();
-    expect(await screen.findByText('Name taken')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Database unavailable');
+    expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('marks the name field when the name is already taken', async () => {
+    api.useCreateContestMutation.mockReturnValue(
+      mockMutation({ error: { status: 409, message: 'contest already exists with this name' } })
+    );
+    renderWithProviders(<CreateContestForm />);
+    pickGame();
+    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
+    submit();
+    await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
+    expect(nameField()).toHaveFocus();
+    expect(screen.getByText('contest already exists with this name')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.change(nameField(), { target: { value: 'Bowl 2' } });
+    expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
   });
 
   it('needs an email to create a contest', () => {

@@ -6,7 +6,7 @@ import ProfileSkeleton from '../features/profile/components/ProfileSkeleton';
 
 export default function ProfilePage() {
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2.5, md: 4 }, px: { xs: 2, sm: 3 } }}>
       <Helmet>
         <title>Profile – Squares</title>
         <meta name="robots" content="noindex, nofollow" />

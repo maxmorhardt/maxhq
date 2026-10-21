@@ -9,6 +9,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/metrics"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxhq/libs/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 	"gorm.io/gorm"
@@ -257,8 +258,8 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 	}
 
 	err = s.tx.Do(ctx, func(ctx context.Context) error {
-		// pre-kickoff squares are freed for others; in-progress squares are ghosted to keep scoring
-		ghost := contest.Status != model.ContestStatusActive
+		// an open board frees the squares for others; a full or in-progress board ghosts them so it stays whole
+		ghost := contest.Status != model.ContestStatusActive || util.AllSquaresClaimed(contest)
 		if releaseErr := s.releaseParticipantSquares(ctx, contest, targetUserID, ghost); releaseErr != nil {
 			log.Error("failed to release participant squares", "contest_id", contestID, "user_id", targetUserID, "ghost", ghost, "error", releaseErr)
 			return releaseErr

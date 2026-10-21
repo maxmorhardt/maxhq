@@ -29,15 +29,16 @@ func TestParticipantRepository_GetAllByContestID(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewParticipantRepository(gdb)
 
-	mock.ExpectQuery(`SELECT .* FROM "contest_participants"`).
-		WillReturnRows(sqlmock.NewRows([]string{"user_id", "role"}).
-			AddRow("u1", "owner").
-			AddRow("u2", "participant"))
+	mock.ExpectQuery(`SELECT contest_participants\.\*, COALESCE\(users\.display_name, ''\) AS display_name FROM "contest_participants" LEFT JOIN users ON users\.email = contest_participants\.user_id`).
+		WillReturnRows(sqlmock.NewRows([]string{"user_id", "role", "display_name"}).
+			AddRow("u1", "owner", "Ann Smith").
+			AddRow("u2", "participant", ""))
 
 	ps, err := repo.GetAllByContestID(context.Background(), uuid.New())
 
 	require.NoError(t, err)
 	assert.Len(t, ps, 2)
+	assert.Equal(t, "Ann Smith", ps[0].DisplayName, "each participant carries the name other players see")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

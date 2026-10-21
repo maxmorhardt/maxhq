@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -24,6 +25,26 @@ const (
 const authErrorMessage = "Authentication required. Please log in to continue"
 
 func Authenticate(revocations cache.RevocationStore) gin.HandlerFunc {
+	var check revocationCheck
+	if revocations != nil {
+		check = revocations.IsRevoked
+	}
+	return authenticate(check)
+}
+
+// AuthenticateRestore lets a fresh sign-in through a deleted account's block so it can lift it;
+// a token that was itself signed out is still refused
+func AuthenticateRestore(revocations cache.RevocationStore) gin.HandlerFunc {
+	var check revocationCheck
+	if revocations != nil {
+		check = revocations.IsSessionRevoked
+	}
+	return authenticate(check)
+}
+
+type revocationCheck func(ctx context.Context, email string, issuedAt int64) (bool, error)
+
+func authenticate(revocations revocationCheck) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, reason := claimsFromHeaders(c)
 		if claims == nil {
@@ -83,12 +104,12 @@ func claimsFromHeaders(c *gin.Context) (*api.Claims, api.AuthFailureReason) {
 	}, ""
 }
 
-func isRevoked(c *gin.Context, revocations cache.RevocationStore, claims *api.Claims) bool {
+func isRevoked(c *gin.Context, revocations revocationCheck, claims *api.Claims) bool {
 	if revocations == nil {
 		return false
 	}
 
-	revoked, err := revocations.IsRevoked(c.Request.Context(), claims.Email, claims.IssuedAt)
+	revoked, err := revocations(c.Request.Context(), claims.Email, claims.IssuedAt)
 	if err != nil {
 		metrics.IncRedisError("revocation_check")
 		logging.FromGin(c).Warn("revocation check failed, allowing request", "error", err)
@@ -96,7 +117,7 @@ func isRevoked(c *gin.Context, revocations cache.RevocationStore, claims *api.Cl
 	}
 
 	if revoked {
-		logging.FromGin(c).Warn("rejecting token issued before account deletion", "user", claims.Email)
+		logging.FromGin(c).Warn("rejecting a token from a deleted account or a signed-out session", "user", claims.Email)
 	}
 
 	return revoked

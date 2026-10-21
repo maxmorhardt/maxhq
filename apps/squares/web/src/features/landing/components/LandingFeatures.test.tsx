@@ -17,10 +17,14 @@ describe('LandingFeatures', () => {
     }
   });
 
-  it('shows an example activity feed ending in a winner', () => {
+  it('shows an example feed in the words the real contest feed uses', () => {
     renderWithProviders(<LandingFeatures />);
 
     const feed = screen.getByRole('figure', { name: 'Example contest activity' });
-    expect(feed).toHaveTextContent('wins the 2nd quarter');
+    expect(feed).toHaveTextContent('Jordan D. joined the contest');
+    expect(feed).not.toHaveTextContent('@');
+    expect(feed).toHaveTextContent('Jordan claimed square (4, 7)');
+    expect(feed).toHaveTextContent('Contest status changed to Quarter 1');
+    expect(feed).toHaveTextContent('Q2 winner: Jordan (14-7)');
   });
 });

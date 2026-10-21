@@ -4,7 +4,9 @@ import { renderWithProviders } from '../test/render';
 import LeaderboardPage from './LeaderboardPage';
 
 vi.mock('../features/leaderboard/components/Standings', () => ({
-  default: () => <div data-testid="standings" />,
+  default: ({ header }: { header?: React.ReactNode }) => (
+    <div data-testid="standings">{header}</div>
+  ),
 }));
 
 describe('LeaderboardPage', () => {

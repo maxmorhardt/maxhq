@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -37,12 +39,21 @@ type UserStatsResponse struct {
 	QuartersPlayed  int64 `json:"quartersPlayed" example:"20"`
 }
 
+// what someone opening an invite link sees before signing in
 type InvitePreviewResponse struct {
-	ContestID   uuid.UUID `json:"contestId"`
-	ContestName string    `json:"contestName"`
-	Owner       string    `json:"owner"`
-	Role        string    `json:"role"`
-	MaxSquares  int       `json:"maxSquares"`
+	ContestID      uuid.UUID     `json:"contestId"`
+	ContestName    string        `json:"contestName"`
+	Owner          string        `json:"owner"`
+	Role           string        `json:"role"`
+	MaxSquares     int           `json:"maxSquares"`
+	Status         ContestStatus `json:"status"`
+	ClaimedSquares int           `json:"claimedSquares"`
+	TotalSquares   int           `json:"totalSquares"`
+	HomeTeam       string        `json:"homeTeam,omitempty"`
+	AwayTeam       string        `json:"awayTeam,omitempty"`
+	HomeAbbr       string        `json:"homeAbbr,omitempty"`
+	AwayAbbr       string        `json:"awayAbbr,omitempty"`
+	GameTime       *time.Time    `json:"gameTime,omitempty"`
 }
 
 type RandomClaimResponse struct {

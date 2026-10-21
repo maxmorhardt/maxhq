@@ -75,9 +75,20 @@ func ScoreboardCalendar(r *model.ScoreboardResponse) model.ESPNCalendar {
 			continue
 		}
 		for _, entry := range phase.Entries {
-			if week, err := strconv.Atoi(entry.Value); err == nil {
-				cal.Weeks = append(cal.Weeks, model.Week{Season: cal.Season, SeasonType: seasonType, Week: week})
+			week, err := strconv.Atoi(entry.Value)
+			if err != nil {
+				continue
 			}
+			w := model.SeasonWeek{
+				Week:     model.Week{Season: cal.Season, SeasonType: seasonType, Week: week},
+				Label:    entry.Label,
+				StartsAt: parseESPNTime(entry.StartDate),
+				EndsAt:   parseESPNTime(entry.EndDate),
+			}
+			if w.Label == "" {
+				w.Label = w.DefaultLabel()
+			}
+			cal.Weeks = append(cal.Weeks, w)
 		}
 		if seasonType == 3 {
 			cal.End = parseESPNTime(phase.EndDate)

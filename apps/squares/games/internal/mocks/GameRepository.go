@@ -143,6 +143,65 @@ func (_c *GameRepository_GetByID_Call) RunAndReturn(run func(context.Context, uu
 	return _c
 }
 
+// GetSeasonWeek provides a mock function with given fields: ctx, week
+func (_m *GameRepository) GetSeasonWeek(ctx context.Context, week model.Week) (*model.SeasonWeek, error) {
+	ret := _m.Called(ctx, week)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSeasonWeek")
+	}
+
+	var r0 *model.SeasonWeek
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, model.Week) (*model.SeasonWeek, error)); ok {
+		return rf(ctx, week)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, model.Week) *model.SeasonWeek); ok {
+		r0 = rf(ctx, week)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.SeasonWeek)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, model.Week) error); ok {
+		r1 = rf(ctx, week)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GameRepository_GetSeasonWeek_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSeasonWeek'
+type GameRepository_GetSeasonWeek_Call struct {
+	*mock.Call
+}
+
+// GetSeasonWeek is a helper method to define mock.On call
+//   - ctx context.Context
+//   - week model.Week
+func (_e *GameRepository_Expecter) GetSeasonWeek(ctx interface{}, week interface{}) *GameRepository_GetSeasonWeek_Call {
+	return &GameRepository_GetSeasonWeek_Call{Call: _e.mock.On("GetSeasonWeek", ctx, week)}
+}
+
+func (_c *GameRepository_GetSeasonWeek_Call) Run(run func(ctx context.Context, week model.Week)) *GameRepository_GetSeasonWeek_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(model.Week))
+	})
+	return _c
+}
+
+func (_c *GameRepository_GetSeasonWeek_Call) Return(_a0 *model.SeasonWeek, _a1 error) *GameRepository_GetSeasonWeek_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *GameRepository_GetSeasonWeek_Call) RunAndReturn(run func(context.Context, model.Week) (*model.SeasonWeek, error)) *GameRepository_GetSeasonWeek_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetUpcoming provides a mock function with given fields: ctx
 func (_m *GameRepository) GetUpcoming(ctx context.Context) ([]model.Game, error) {
 	ret := _m.Called(ctx)
@@ -316,6 +375,74 @@ func (_c *GameRepository_HasLiveGame_Call) RunAndReturn(run func(context.Context
 	return _c
 }
 
+// NeighborWeeks provides a mock function with given fields: ctx, week
+func (_m *GameRepository) NeighborWeeks(ctx context.Context, week *model.SeasonWeek) (*model.Week, *model.Week, error) {
+	ret := _m.Called(ctx, week)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NeighborWeeks")
+	}
+
+	var r0 *model.Week
+	var r1 *model.Week
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.SeasonWeek) (*model.Week, *model.Week, error)); ok {
+		return rf(ctx, week)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *model.SeasonWeek) *model.Week); ok {
+		r0 = rf(ctx, week)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Week)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *model.SeasonWeek) *model.Week); ok {
+		r1 = rf(ctx, week)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*model.Week)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, *model.SeasonWeek) error); ok {
+		r2 = rf(ctx, week)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GameRepository_NeighborWeeks_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NeighborWeeks'
+type GameRepository_NeighborWeeks_Call struct {
+	*mock.Call
+}
+
+// NeighborWeeks is a helper method to define mock.On call
+//   - ctx context.Context
+//   - week *model.SeasonWeek
+func (_e *GameRepository_Expecter) NeighborWeeks(ctx interface{}, week interface{}) *GameRepository_NeighborWeeks_Call {
+	return &GameRepository_NeighborWeeks_Call{Call: _e.mock.On("NeighborWeeks", ctx, week)}
+}
+
+func (_c *GameRepository_NeighborWeeks_Call) Run(run func(ctx context.Context, week *model.SeasonWeek)) *GameRepository_NeighborWeeks_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*model.SeasonWeek))
+	})
+	return _c
+}
+
+func (_c *GameRepository_NeighborWeeks_Call) Return(previous *model.Week, next *model.Week, err error) *GameRepository_NeighborWeeks_Call {
+	_c.Call.Return(previous, next, err)
+	return _c
+}
+
+func (_c *GameRepository_NeighborWeeks_Call) RunAndReturn(run func(context.Context, *model.SeasonWeek) (*model.Week, *model.Week, error)) *GameRepository_NeighborWeeks_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NextKickoff provides a mock function with given fields: ctx
 func (_m *GameRepository) NextKickoff(ctx context.Context) (time.Time, error) {
 	ret := _m.Called(ctx)
@@ -368,6 +495,53 @@ func (_c *GameRepository_NextKickoff_Call) Return(_a0 time.Time, _a1 error) *Gam
 }
 
 func (_c *GameRepository_NextKickoff_Call) RunAndReturn(run func(context.Context) (time.Time, error)) *GameRepository_NextKickoff_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SaveCalendar provides a mock function with given fields: ctx, weeks
+func (_m *GameRepository) SaveCalendar(ctx context.Context, weeks []model.SeasonWeek) error {
+	ret := _m.Called(ctx, weeks)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveCalendar")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []model.SeasonWeek) error); ok {
+		r0 = rf(ctx, weeks)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GameRepository_SaveCalendar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SaveCalendar'
+type GameRepository_SaveCalendar_Call struct {
+	*mock.Call
+}
+
+// SaveCalendar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - weeks []model.SeasonWeek
+func (_e *GameRepository_Expecter) SaveCalendar(ctx interface{}, weeks interface{}) *GameRepository_SaveCalendar_Call {
+	return &GameRepository_SaveCalendar_Call{Call: _e.mock.On("SaveCalendar", ctx, weeks)}
+}
+
+func (_c *GameRepository_SaveCalendar_Call) Run(run func(ctx context.Context, weeks []model.SeasonWeek)) *GameRepository_SaveCalendar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]model.SeasonWeek))
+	})
+	return _c
+}
+
+func (_c *GameRepository_SaveCalendar_Call) Return(_a0 error) *GameRepository_SaveCalendar_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *GameRepository_SaveCalendar_Call) RunAndReturn(run func(context.Context, []model.SeasonWeek) error) *GameRepository_SaveCalendar_Call {
 	_c.Call.Return(run)
 	return _c
 }

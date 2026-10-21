@@ -19,6 +19,7 @@ import { useRemoveParticipantMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
 import LeaveContestDialog from '../LeaveContestDialog';
 import EditParticipantDialog from './EditParticipantDialog';
+import { participantName } from '../../../../utils/publicName';
 
 interface Props {
   open: boolean;
@@ -112,7 +113,7 @@ export default function ParticipantsManager({
                       noWrap
                       sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}
                     >
-                      {participant.userId}
+                      {participant.userId === viewer.email ? 'You' : participantName(participant)}
                     </Typography>
                     <Chip
                       label={participant.role}
@@ -127,6 +128,16 @@ export default function ParticipantsManager({
                       }}
                     />
                   </Box>
+                  {/* the owner invites and removes people, so only they see who each player is */}
+                  {viewer.isOwner && (
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{ display: 'block', color: 'rgba(255,255,255,0.5)' }}
+                    >
+                      {participant.userId}
+                    </Typography>
+                  )}
                   {/* viewers never hold squares, so there is no count to show */}
                   {participant.role !== 'viewer' && (
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -207,8 +218,8 @@ export default function ParticipantsManager({
         loading={removal.isLoading}
         error={removal.error ? errorMessage(removal.error, 'Failed to remove participant') : null}
       >
-        Are you sure you want to remove <strong>{removing?.userId}</strong>? They'll be removed from
-        the contest and will need a new invite to rejoin.
+        Are you sure you want to remove <strong>{removing ? participantName(removing) : ''}</strong>
+        ? They'll be removed from the contest and will need a new invite to rejoin.
       </ConfirmDialog>
 
       {/* leaving closes the whole manager */}

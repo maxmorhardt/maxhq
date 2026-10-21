@@ -32,7 +32,7 @@ type QuarterScore struct {
 // the season's weeks as ESPN lists them, and when its postseason ends
 type ESPNCalendar struct {
 	Season int
-	Weeks  []Week
+	Weeks  []SeasonWeek
 	End    time.Time
 }
 
@@ -58,7 +58,10 @@ type scoreboardCalendar struct {
 	Value   string `json:"value"`
 	EndDate string `json:"endDate"`
 	Entries []struct {
-		Value string `json:"value"`
+		Value     string `json:"value"`
+		Label     string `json:"label"`
+		StartDate string `json:"startDate"`
+		EndDate   string `json:"endDate"`
 	} `json:"entries"`
 }
 

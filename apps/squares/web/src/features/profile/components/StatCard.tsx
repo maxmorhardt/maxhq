@@ -1,4 +1,5 @@
-import { Box, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { fonts, game as palette } from '../../../app/theme';
 
@@ -8,52 +9,83 @@ export interface StatCardProps {
   label: string;
   caption?: string;
   highlight?: boolean;
+  // a share from 0 to 100, drawn as a ring around the icon
+  progress?: number;
 }
 
-// one cell of the stats strip: a label, the number in scoreboard type, and an optional note
-export default function StatCard({ icon, value, label, caption, highlight }: StatCardProps) {
+// one career number: its icon, the figure in scoreboard type, and what it counts
+export default function StatCard({
+  icon,
+  value,
+  label,
+  caption,
+  highlight,
+  progress,
+}: StatCardProps) {
+  const color = highlight ? palette.gold : palette.brand;
+
   return (
-    <Box sx={{ px: { xs: 2, sm: 2.5 }, py: 2.25, minWidth: 0 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.75,
-          color: highlight ? palette.gold : 'text.secondary',
-          fontSize: 18,
-        }}
-      >
-        {icon}
-        <Typography
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: '18px',
+        border: 1,
+        borderColor: highlight ? alpha(palette.gold, 0.4) : 'divider',
+        background: highlight
+          ? `linear-gradient(150deg, ${alpha(palette.gold, 0.12)}, ${palette.field} 60%)`
+          : palette.field,
+        display: 'grid',
+        gap: 1.5,
+        minWidth: 0,
+      }}
+    >
+      <Box sx={{ position: 'relative', width: 44, height: 44 }}>
+        {progress !== undefined && (
+          <CircularProgress
+            variant="determinate"
+            value={progress}
+            size={44}
+            thickness={3}
+            aria-hidden
+            sx={{ position: 'absolute', inset: 0, color }}
+          />
+        )}
+        <Box
           sx={{
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'inherit',
+            position: 'absolute',
+            inset: progress !== undefined ? 5 : 0,
+            display: 'grid',
+            placeItems: 'center',
+            borderRadius: '50%',
+            color,
+            bgcolor: alpha(color, 0.12),
+            fontSize: 20,
           }}
         >
-          {label}
-        </Typography>
+          {icon}
+        </Box>
       </Box>
-      <Typography
-        sx={{
-          mt: 0.75,
-          fontFamily: fonts.display,
-          fontWeight: 800,
-          fontSize: { xs: '2.2rem', sm: '2.6rem' },
-          lineHeight: 1,
-          color: highlight ? palette.gold : 'text.primary',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {value?.toLocaleString() ?? '–'}
-      </Typography>
-      {caption && (
-        <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
-          {caption}
+
+      <Box>
+        <Typography
+          sx={{
+            fontFamily: fonts.display,
+            fontWeight: 800,
+            fontSize: { xs: '2.4rem', sm: '2.8rem' },
+            lineHeight: 1,
+            color: highlight ? palette.gold : 'text.primary',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {value?.toLocaleString() ?? '–'}
         </Typography>
-      )}
+        <Typography sx={{ mt: 0.75, fontWeight: 600 }}>{label}</Typography>
+        {caption && (
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {caption}
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useEffectEvent, useRef } from 'react';
 import { API_BASE_URL } from '../../../api/baseQuery';
 import { openEventStream, type EventStream } from '../../../api/eventStream';
-import { useAppDispatch } from '../../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { getIdToken } from '../../../auth/token';
 import { parseContestEvent, type ContestEvent } from './events';
 import {
@@ -11,6 +11,8 @@ import {
   streamOpened,
   streamStatusChanged,
 } from './liveContestSlice';
+
+export const SNAPSHOT_TIMEOUT_MS = 4_000;
 
 export const contestEventsUrl = (contestId: string) =>
   `${API_BASE_URL}/events/contests/${encodeURIComponent(contestId)}`;
@@ -67,6 +69,17 @@ export function useContestStream(
 
   // drops local state and starts over from a fresh snapshot, for when a write proves it stale
   const resync = useCallback(() => streamRef.current?.reconnect({ resync: true }), []);
+
+  // data is flowing but the snapshot that opens every stream has not come: ask for it again
+  const live = useAppSelector((state) => state.liveContest.status === 'live');
+  const loaded = useAppSelector((state) => state.liveContest.contest !== null);
+  useEffect(() => {
+    if (!contestId || !live || loaded) {
+      return;
+    }
+    const timer = setTimeout(resync, SNAPSHOT_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [contestId, live, loaded, resync]);
 
   return { resync };
 }

@@ -3,7 +3,7 @@ import { Box, Button, Chip, IconButton, Skeleton, Typography } from '@mui/materi
 import { useState } from 'react';
 import { fonts } from '../../../app/theme';
 import type { Game, ScoreboardWeek } from '../../../types/contest';
-import { hasWeek, isLive, weekLabel } from '../../../utils/game';
+import { isLive } from '../../../utils/game';
 import { useGetScoreboardQuery } from '../api';
 import GameCard from './GameCard';
 
@@ -52,9 +52,6 @@ export default function GamesScoreboard() {
     );
   }
 
-  const step = (delta: number) => {
-    setWeek({ season: board.season, seasonType: board.seasonType, week: board.week + delta });
-  };
   const live = board.games.filter((g) => isLive(g)).length;
 
   return (
@@ -75,8 +72,8 @@ export default function GamesScoreboard() {
       >
         <IconButton
           aria-label="Previous week"
-          onClick={() => step(-1)}
-          disabled={!board.week || !hasWeek(board.seasonType, board.week - 1)}
+          onClick={() => setWeek(board.previous)}
+          disabled={!board.previous}
         >
           <ChevronLeft />
         </IconButton>
@@ -91,7 +88,7 @@ export default function GamesScoreboard() {
               lineHeight: 1,
             }}
           >
-            {board.week ? weekLabel(board.seasonType, board.week) : 'This Week'}
+            {board.label || 'This Week'}
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mt: 0.75 }}>
             {board.season ? (
@@ -106,8 +103,8 @@ export default function GamesScoreboard() {
         </Box>
         <IconButton
           aria-label="Next week"
-          onClick={() => step(1)}
-          disabled={!board.week || !hasWeek(board.seasonType, board.week + 1)}
+          onClick={() => setWeek(board.next)}
+          disabled={!board.next}
         >
           <ChevronRight />
         </IconButton>
@@ -115,7 +112,7 @@ export default function GamesScoreboard() {
 
       {board.games.length === 0 ? (
         <Typography sx={{ color: 'text.secondary', textAlign: 'center', py: 6 }}>
-          No games this week.
+          No games scheduled yet. Playoff matchups show up once they are set.
         </Typography>
       ) : (
         <Box sx={{ display: 'grid', gap: 3.5 }}>

@@ -19,7 +19,12 @@ vi.mock('../LeaveContestDialog', () => ({
 
 const participants = [
   makeParticipant({ id: 'o', userId: 'owner@x.com', role: 'owner', maxSquares: 10 }),
-  makeParticipant({ id: 'p', userId: 'player@x.com', maxSquares: 5 }),
+  makeParticipant({
+    id: 'p',
+    userId: 'player@x.com',
+    displayName: 'Pat Player',
+    maxSquares: 5,
+  }),
   makeParticipant({ id: 'v', userId: 'viewer@x.com', role: 'viewer', maxSquares: 0 }),
 ];
 
@@ -47,6 +52,18 @@ describe('ParticipantsManager', () => {
     expect(screen.getByText('player@x.com')).toBeInTheDocument();
     expect(screen.getByText('max 5 squares')).toBeInTheDocument();
     expect(screen.getAllByText(/max \d+ squares/)).toHaveLength(2);
+  });
+
+  it('shows other players by name and keeps emails for the owner', () => {
+    const { unmount } = renderManager();
+    expect(screen.getByText('Pat P.')).toBeInTheDocument();
+    expect(screen.getByText('player@x.com')).toBeInTheDocument();
+    unmount();
+
+    renderManager(makeViewer({ email: 'viewer@x.com', isOwner: false }));
+    expect(screen.getByText('Pat P.')).toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
+    expect(screen.queryByText(/@x\.com/)).not.toBeInTheDocument();
   });
 
   it('says when nobody has joined', () => {

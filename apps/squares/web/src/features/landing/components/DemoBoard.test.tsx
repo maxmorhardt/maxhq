@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders } from '../../../test/render';
+import { formatKickoff } from '../../../utils/game';
 import DemoBoard from './DemoBoard';
 
 describe('DemoBoard', () => {
@@ -8,7 +9,10 @@ describe('DemoBoard', () => {
     renderWithProviders(<DemoBoard stage={0} />);
 
     expect(screen.getByRole('img')).toHaveAccessibleName(/empty ten by ten squares board/i);
-    expect(screen.getByText('Pregame')).toBeInTheDocument();
+    // before kickoff the scorebug shows the kickoff, as a real contest's does
+    expect(
+      screen.getByText(formatKickoff(new Date(2026, 9, 25, 20, 20).toISOString()))
+    ).toBeInTheDocument();
   });
 
   it('hides the digits until they are drawn', () => {
@@ -28,14 +32,14 @@ describe('DemoBoard', () => {
     renderWithProviders(<DemoBoard stage={3} />);
 
     expect(screen.queryAllByText('–')).toHaveLength(0);
-    expect(screen.getByText('1st · 15:00')).toBeInTheDocument();
+    expect(screen.getByText('Q1')).toBeInTheDocument();
   });
 
   it('calls the quarter with the final score', () => {
     renderWithProviders(<DemoBoard stage={4} />);
 
     expect(screen.getByRole('img')).toHaveAccessibleName(/away 7 and home 14/i);
-    expect(screen.getByText('End Q2')).toBeInTheDocument();
+    expect(screen.getByText('Q3')).toBeInTheDocument();
     expect(screen.getByText('14')).toBeInTheDocument();
   });
 });

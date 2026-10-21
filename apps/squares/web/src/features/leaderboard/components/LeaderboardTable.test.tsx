@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import LeaderboardTable from './LeaderboardTable';
 import type { LeaderboardEntry } from '../../../types/leaderboard';
@@ -94,19 +94,20 @@ describe('LeaderboardTable', () => {
     expect(screen.getByText('No winners yet')).toBeInTheDocument();
   });
 
-  it('renders column headers when there are entries', () => {
+  it('labels the columns when there are entries', () => {
     renderTable();
 
-    expect(screen.getByText('Player')).toBeInTheDocument();
+    expect(screen.getByText('Player · Wins')).toBeInTheDocument();
     expect(screen.getByText('Win Rate')).toBeInTheDocument();
   });
 
-  it('lays the standings out as a table', () => {
+  it('lists the standings in order, each row named for its player and wins', () => {
     renderTable();
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('row')).toHaveLength(entries.length + 1);
-    expect(screen.getByRole('columnheader', { name: 'Wins' })).toBeInTheDocument();
+    const rows = within(screen.getByRole('list', { name: 'Standings' })).getAllByRole('listitem');
+    expect(rows).toHaveLength(entries.length);
+    expect(rows[0]).toHaveAccessibleName('4. Max M., 12 wins');
+    expect(rows[2]).toHaveAccessibleName('6. Sam R., 0 wins');
   });
 
   it('marks the current user', () => {

@@ -50,6 +50,28 @@ describe('openEventStream', () => {
     vi.restoreAllMocks();
   });
 
+  it('retries instead of waiting forever on a token that never comes', async () => {
+    const sse = sseResponse();
+    fetchMock.mockResolvedValue(sse.response);
+    const getToken = vi
+      .fn()
+      .mockReturnValueOnce(new Promise(() => {}))
+      .mockResolvedValue('tok');
+    const { stream, onStatus } = open({ getToken, connectTimeoutMs: 1000 });
+
+    await flush();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // the connect timeout covers the token, then the retry connects
+    await vi.advanceTimersByTimeAsync(1000 + 300);
+    expect(getToken).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    sse.send(': ok\n\n');
+    await flush();
+    expect(onStatus).toHaveBeenLastCalledWith('live');
+    stream.close();
+  });
+
   it('connects with the token and delivers each event', async () => {
     const sse = sseResponse();
     fetchMock.mockResolvedValue(sse.response);

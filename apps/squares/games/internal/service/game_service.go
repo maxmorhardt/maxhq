@@ -45,6 +45,7 @@ type GameService interface {
 	GetUpcoming(ctx context.Context) ([]model.Game, error)
 	GetScoreboard(ctx context.Context, week *model.Week) (*model.Scoreboard, error)
 	GetGame(ctx context.Context, id uuid.UUID) (*model.Game, error)
+	SaveCalendar(ctx context.Context, weeks []model.SeasonWeek) error
 	Ingest(ctx context.Context, games []model.ESPNGame) (newScores int, err error)
 	Activity(ctx context.Context) (model.GameActivity, error)
 }
@@ -94,15 +95,45 @@ func (s *gameService) GetScoreboard(ctx context.Context, week *model.Week) (*mod
 	}
 
 	key := scoreboardKey(*week)
-	games, err := cache.GetOrLoad(ctx, s.cache, scoreboardCacheName, key, scoreboardCacheTTL, func(ctx context.Context) ([]model.Game, error) {
-		return s.gameRepo.GetWeek(ctx, *week)
+	board, err := cache.GetOrLoad(ctx, s.cache, scoreboardCacheName, key, scoreboardCacheTTL, func(ctx context.Context) (*model.Scoreboard, error) {
+		return s.loadScoreboard(ctx, *week)
 	})
 	if err != nil {
 		log.Error("failed to get scoreboard", "week", key, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	return &model.Scoreboard{Week: *week, Games: games}, nil
+	return board, nil
+}
+
+// a week's games, named and placed by ESPN's calendar when it lists the week
+func (s *gameService) loadScoreboard(ctx context.Context, week model.Week) (*model.Scoreboard, error) {
+	games, err := s.gameRepo.GetWeek(ctx, week)
+	if err != nil {
+		return nil, err
+	}
+	board := &model.Scoreboard{Week: week, Label: week.DefaultLabel(), Games: games}
+
+	listed, err := s.gameRepo.GetSeasonWeek(ctx, week)
+	if err != nil {
+		return nil, err
+	}
+	if listed != nil {
+		board.Label = listed.Label
+		if board.Previous, board.Next, err = s.gameRepo.NeighborWeeks(ctx, listed); err != nil {
+			return nil, err
+		}
+	}
+
+	return board, nil
+}
+
+func (s *gameService) SaveCalendar(ctx context.Context, weeks []model.SeasonWeek) error {
+	if err := s.gameRepo.SaveCalendar(ctx, weeks); err != nil {
+		logging.FromContext(ctx).Error("failed to save the season calendar", "weeks", len(weeks), "error", err)
+		return errs.ErrDatabaseUnavailable
+	}
+	return nil
 }
 
 // a contest page follows the score between loads over the game's stream
