@@ -1,4 +1,5 @@
-import { Alert } from '@mui/material';
+import { Alert, Box } from '@mui/material';
+import type { ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { leaderboardKey, toPublicName } from '../../../utils/publicName';
 import { useGetMyProfileQuery } from '../../profile/api';
@@ -7,8 +8,13 @@ import LeaderboardPodium, { PODIUM_SIZE } from './LeaderboardPodium';
 import LeaderboardRankCard from './LeaderboardRankCard';
 import LeaderboardTable from './LeaderboardTable';
 
+interface Props {
+  // the page heading, set beside the signed-in player's standing
+  header?: ReactNode;
+}
+
 // the leaderboard is public; the signed-in user also sees where they stand
-export default function Standings() {
+export default function Standings({ header }: Props) {
   const signedIn = useAuth().isAuthenticated;
   const { data: entries = [], isLoading, isError } = useGetLeaderboardQuery();
   const myRank = useGetMyRankQuery(undefined, { skip: !signedIn });
@@ -35,14 +41,27 @@ export default function Standings() {
 
   return (
     <>
-      {signedIn && (
-        <LeaderboardRankCard
-          rank={myRank.data ?? null}
-          loading={myRank.isLoading}
-          error={myRank.isError}
-          showAction={false}
-        />
-      )}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 400px)' },
+          alignItems: 'end',
+          gap: { xs: 2, md: 4 },
+          mb: { xs: 4, md: 5 },
+          // the heading's own bottom margin would push the pair apart
+          '& > *': { mb: 0 },
+        }}
+      >
+        {header}
+        {signedIn && (
+          <LeaderboardRankCard
+            rank={myRank.data ?? null}
+            loading={myRank.isLoading}
+            error={myRank.isError}
+            showAction={false}
+          />
+        )}
+      </Box>
 
       {!isLoading && <LeaderboardPodium entries={podium} highlightKey={highlightKey} />}
 

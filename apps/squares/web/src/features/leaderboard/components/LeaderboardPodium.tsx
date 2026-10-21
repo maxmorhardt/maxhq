@@ -1,3 +1,4 @@
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { popIn } from '../../../components/animations';
@@ -8,20 +9,24 @@ import { stripDangerousChars } from '../../../utils/sanitize';
 
 export const PODIUM_SIZE = 3;
 
-const PLACES: Record<number, { color: string; step: number; delay: number }> = {
-  1: { color: palette.gold, step: 132, delay: 0.1 },
-  2: { color: '#c9d3e6', step: 96, delay: 0 },
-  3: { color: '#e0915a', step: 72, delay: 0.2 },
+const MEDALS: Record<number, { color: string; place: string }> = {
+  1: { color: palette.gold, place: '1st' },
+  2: { color: '#c9d3e6', place: '2nd' },
+  3: { color: '#e0915a', place: '3rd' },
 };
 
-// the winner stands in the middle on desktop, but stays first when the podium stacks
-const DESKTOP_ORDER: Record<number, number> = { 1: 2, 2: 1, 3: 3 };
+function winRate(entry: LeaderboardEntry) {
+  return entry.quartersPlayed > 0
+    ? `${Math.round((entry.quarterWins / entry.quartersPlayed) * 100)}%`
+    : '–';
+}
 
 interface Props {
   entries: LeaderboardEntry[];
   highlightKey?: string;
 }
 
+// the top three as trading cards: the place, the player, and their line of stats
 export default function LeaderboardPodium({ entries, highlightKey }: Props) {
   if (entries.length === 0) {
     return null;
@@ -34,149 +39,171 @@ export default function LeaderboardPodium({ entries, highlightKey }: Props) {
       sx={{
         listStyle: 'none',
         m: 0,
-        mb: { xs: 3, sm: 5 },
+        mb: { xs: 4, md: 5 },
         p: 0,
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-        alignItems: 'end',
-        gap: { xs: 1.25, sm: 1.5 },
+        gap: { xs: 1.5, md: 2 },
       }}
     >
-      {entries.map((entry) => {
-        const place = PLACES[entry.rank] ?? PLACES[3];
+      {entries.map((entry, i) => {
+        const medal = MEDALS[entry.rank] ?? MEDALS[3];
         const isMe =
           Boolean(highlightKey) && leaderboardKey(entry.rank, entry.displayName) === highlightKey;
         const name = stripDangerousChars(entry.displayName);
-        const first = entry.rank === 1;
+        const stats = [
+          {
+            value: entry.quarterWins.toLocaleString(),
+            label: entry.quarterWins === 1 ? 'Win' : 'Wins',
+          },
+          { value: entry.squaresClaimed.toLocaleString(), label: 'Squares' },
+          { value: winRate(entry), label: 'Win rate' },
+        ];
 
         return (
           <Box
             component="li"
             key={`${entry.rank}-${entry.displayName}`}
             sx={{
-              order: { xs: 'unset', sm: DESKTOP_ORDER[entry.rank] ?? 3 },
-              display: 'flex',
-              flexDirection: { xs: 'row-reverse', sm: 'column' },
-              alignItems: 'stretch',
-              minWidth: 0,
-              borderRadius: { xs: '16px', sm: 0 },
-              border: { xs: 1, sm: 0 },
-              borderColor: { xs: alpha(place.color, isMe ? 0.7 : 0.3) },
-              overflow: { xs: 'hidden', sm: 'visible' },
-              animation: `${popIn} 0.6s ${easing.out} ${place.delay}s both`,
+              position: 'relative',
+              overflow: 'hidden',
+              borderRadius: '18px',
+              border: 1,
+              borderColor: alpha(medal.color, isMe ? 0.8 : 0.35),
+              background: `linear-gradient(170deg, ${alpha(medal.color, 0.16)} 0%, ${palette.field} 45%)`,
+              boxShadow: entry.rank === 1 ? `0 24px 60px -30px ${alpha(medal.color, 0.6)}` : 'none',
+              animation: `${popIn} 0.55s ${easing.out} ${i * 0.08}s both`,
               '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
             }}
           >
-            {/* the player standing on the step */}
-            <Box
+            {/* the place, large and faint, behind the card */}
+            <Typography
+              aria-hidden
               sx={{
-                flex: 1,
-                minWidth: 0,
-                display: 'flex',
-                flexDirection: { xs: 'row', sm: 'column' },
-                alignItems: 'center',
-                gap: { xs: 1.5, sm: 0.75 },
-                px: { xs: 2, sm: 1 },
-                py: { xs: 1.5, sm: 2 },
-                textAlign: { xs: 'left', sm: 'center' },
+                position: 'absolute',
+                right: -6,
+                top: -18,
+                fontFamily: fonts.display,
+                fontWeight: 800,
+                fontSize: '7.5rem',
+                lineHeight: 1,
+                color: alpha(medal.color, 0.1),
+                pointerEvents: 'none',
               }}
             >
-              <Box
-                aria-hidden
-                sx={{
-                  flexShrink: 0,
-                  display: 'grid',
-                  placeItems: 'center',
-                  width: { xs: 40, sm: first ? 64 : 52 },
-                  height: { xs: 40, sm: first ? 64 : 52 },
-                  borderRadius: '50%',
-                  fontFamily: fonts.display,
-                  fontWeight: 800,
-                  fontSize: { xs: '1.2rem', sm: first ? '1.9rem' : '1.5rem' },
-                  color: place.color,
-                  bgcolor: alpha(place.color, 0.12),
-                  border: 2,
-                  borderColor: alpha(place.color, 0.7),
-                  boxShadow: first ? `0 0 32px ${alpha(place.color, 0.35)}` : 'none',
-                }}
-              >
-                {(name.charAt(0) || '?').toUpperCase()}
-              </Box>
+              {entry.rank}
+            </Typography>
 
-              <Box sx={{ minWidth: 0, flex: { xs: 1, sm: 'none' }, maxWidth: '100%' }}>
-                <Typography
-                  noWrap
-                  sx={{ fontWeight: 700, color: isMe ? 'primary.light' : 'text.primary' }}
-                >
-                  {name}
-                </Typography>
-                {isMe && (
-                  <Typography
-                    component="span"
-                    sx={{
-                      display: 'inline-block',
-                      mt: 0.25,
-                      px: 0.9,
-                      borderRadius: '6px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      color: 'primary.light',
-                      bgcolor: alpha(palette.brand, 0.14),
-                    }}
-                  >
-                    You
-                  </Typography>
-                )}
-              </Box>
-
-              <Box sx={{ textAlign: { xs: 'right', sm: 'center' }, flexShrink: 0 }}>
+            <Box sx={{ position: 'relative', p: { xs: 2, md: 2.5 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <EmojiEventsIcon sx={{ fontSize: 20, color: medal.color }} />
                 <Typography
                   sx={{
                     fontFamily: fonts.display,
                     fontWeight: 800,
-                    lineHeight: 1,
-                    fontSize: { xs: '1.6rem', sm: first ? '2.6rem' : '2.1rem' },
-                    color: first ? place.color : 'text.primary',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {entry.quarterWins.toLocaleString()}
-                </Typography>
-                <Typography
-                  sx={{
-                    color: 'text.secondary',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.12em',
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.06em',
                     textTransform: 'uppercase',
+                    color: medal.color,
                   }}
                 >
-                  {entry.quarterWins === 1 ? 'Win' : 'Wins'}
+                  {medal.place}
                 </Typography>
               </Box>
-            </Box>
 
-            {/* the step itself, carrying the place */}
-            <Box
-              aria-hidden
-              sx={{
-                flexShrink: 0,
-                display: 'grid',
-                placeItems: 'center',
-                width: { xs: 56, sm: 'auto' },
-                height: { xs: 'auto', sm: place.step },
-                borderRadius: { xs: 0, sm: '14px 14px 0 0' },
-                background: `linear-gradient(180deg, ${alpha(place.color, 0.28)} 0%, ${alpha(place.color, 0.04)} 100%)`,
-                borderTop: { xs: 0, sm: `3px solid ${place.color}` },
-                borderRight: { xs: `3px solid ${place.color}`, sm: 0 },
-                fontFamily: fonts.display,
-                fontWeight: 800,
-                fontSize: { xs: '1.8rem', sm: first ? '4rem' : '3.2rem' },
-                lineHeight: 1,
-                color: alpha(place.color, 0.9),
-              }}
-            >
-              {entry.rank}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 2 }}>
+                <Box
+                  aria-hidden
+                  sx={{
+                    flexShrink: 0,
+                    display: 'grid',
+                    placeItems: 'center',
+                    width: 48,
+                    height: 48,
+                    borderRadius: '14px',
+                    fontFamily: fonts.display,
+                    fontWeight: 800,
+                    fontSize: '1.5rem',
+                    color: palette.night,
+                    bgcolor: medal.color,
+                  }}
+                >
+                  {(name.charAt(0) || '?').toUpperCase()}
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography noWrap sx={{ fontWeight: 700, fontSize: '1.05rem' }}>
+                    {name}
+                  </Typography>
+                  {isMe && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        px: 0.9,
+                        borderRadius: '6px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        color: 'primary.light',
+                        bgcolor: alpha(palette.brand, 0.14),
+                      }}
+                    >
+                      You
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box
+                component="dl"
+                sx={{
+                  m: 0,
+                  mt: 2.5,
+                  pt: 2,
+                  borderTop: 1,
+                  borderColor: alpha(medal.color, 0.2),
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                }}
+              >
+                {stats.map((stat, s) => (
+                  // the label comes first for screen readers and sits under the number on screen
+                  <Box
+                    key={stat.label}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column-reverse',
+                      alignItems: s === 0 ? 'flex-start' : s === 2 ? 'flex-end' : 'center',
+                    }}
+                  >
+                    <Box
+                      component="dt"
+                      sx={{
+                        mt: 0.5,
+                        color: 'text.secondary',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {stat.label}
+                    </Box>
+                    <Box
+                      component="dd"
+                      sx={{
+                        m: 0,
+                        fontFamily: fonts.display,
+                        fontWeight: 800,
+                        fontSize: s === 0 ? '1.9rem' : '1.35rem',
+                        lineHeight: 1,
+                        color: s === 0 ? medal.color : 'text.primary',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {stat.value}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
             </Box>
           </Box>
         );

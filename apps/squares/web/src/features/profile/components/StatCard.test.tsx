@@ -24,3 +24,15 @@ describe('StatCard', () => {
     expect(screen.queryByText('50% win rate')).not.toBeInTheDocument();
   });
 });
+
+describe('StatCard progress', () => {
+  it('draws a ring for a share and none without one', () => {
+    const { container, rerender } = render(
+      <StatCard icon={<span />} value={5} label="Quarter Wins" progress={25} highlight />
+    );
+    expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
+
+    rerender(<StatCard icon={<span />} value={5} label="Quarter Wins" />);
+    expect(container.querySelector('.MuiCircularProgress-root')).not.toBeInTheDocument();
+  });
+});

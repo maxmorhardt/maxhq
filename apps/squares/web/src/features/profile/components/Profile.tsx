@@ -62,6 +62,11 @@ export default function Profile() {
     ? new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
     : '';
 
+  const winShare =
+    numbers && numbers.quartersPlayed > 0
+      ? (numbers.quarterWins / numbers.quartersPlayed) * 100
+      : undefined;
+
   return (
     <>
       {loadError && (
@@ -70,185 +75,167 @@ export default function Profile() {
         </Alert>
       )}
 
-      {/* the player card */}
       <Box
         sx={{
-          position: 'relative',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          gap: { xs: 2, sm: 3 },
-          p: { xs: 2.5, sm: 3.5 },
-          mb: 3.5,
-          borderRadius: '22px',
-          border: 1,
-          borderColor: 'divider',
-          background: `radial-gradient(120% 140% at 0% 0%, ${alpha(palette.brand, 0.2)} 0%, transparent 55%), ${palette.field}`,
-          // a faint grid behind the card, the board the player plays on
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            backgroundImage: `linear-gradient(${alpha(palette.chalk, 0.035)} 1px, transparent 1px), linear-gradient(90deg, ${alpha(palette.chalk, 0.035)} 1px, transparent 1px)`,
-            backgroundSize: '28px 28px',
-            maskImage: 'linear-gradient(90deg, transparent 30%, black 100%)',
-          },
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 340px) minmax(0, 1fr)' },
+          gap: { xs: 3, md: 4 },
+          alignItems: 'start',
         }}
       >
+        {/* the ID card: who you are, and the initials you play under */}
         <Box
-          aria-hidden
+          component="aside"
           sx={{
-            flexShrink: 0,
-            display: 'grid',
-            placeItems: 'center',
-            width: { xs: 72, sm: 96 },
-            height: { xs: 72, sm: 96 },
-            borderRadius: '20px',
-            fontFamily: fonts.display,
-            fontWeight: 800,
-            fontSize: { xs: '2.4rem', sm: '3.2rem' },
-            color: '#fff',
-            background: `linear-gradient(140deg, ${palette.brand} 0%, ${palette.brandDeep} 100%)`,
-            boxShadow: `0 14px 40px ${alpha(palette.brand, 0.3)}`,
+            position: { md: 'sticky' },
+            top: { md: 96 },
+            borderRadius: '22px',
+            border: 1,
+            borderColor: 'divider',
+            bgcolor: palette.field,
+            overflow: 'hidden',
           }}
         >
-          {(user?.displayName?.charAt(0) || '?').toUpperCase()}
-        </Box>
-
-        <Box sx={{ position: 'relative', zIndex: 1, minWidth: 0 }}>
-          <Typography
-            component="h1"
+          <Box
+            aria-hidden
             sx={{
-              fontFamily: fonts.display,
-              fontWeight: 800,
-              fontSize: { xs: '2.2rem', sm: '3rem' },
-              lineHeight: 0.95,
-              textTransform: 'uppercase',
-              overflowWrap: 'anywhere',
+              height: 84,
+              // a few yard lines across the band
+              backgroundImage: `repeating-linear-gradient(90deg, ${alpha(palette.chalk, 0.18)} 0 2px, transparent 2px 48px), linear-gradient(120deg, ${palette.brandDeep}, ${palette.brand} 60%, ${alpha(palette.gold, 0.7)})`,
             }}
-          >
-            {user?.displayName || '–'}
-          </Typography>
-          <Typography sx={{ color: 'text.secondary', mt: 0.75, overflowWrap: 'anywhere' }}>
-            {user?.email ?? auth.user?.profile?.email}
-          </Typography>
-          {memberSince && (
-            <Typography
-              component="span"
+          />
+          <Box sx={{ px: { xs: 2.5, sm: 3 }, pb: 3 }}>
+            <Box
+              aria-hidden
               sx={{
-                display: 'inline-block',
-                mt: 1.25,
-                px: 1.1,
-                py: 0.35,
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: 'text.secondary',
-                bgcolor: alpha(palette.chalk, 0.06),
-                border: 1,
-                borderColor: 'divider',
+                mt: '-44px',
+                display: 'grid',
+                placeItems: 'center',
+                width: 88,
+                height: 88,
+                borderRadius: '22px',
+                fontFamily: fonts.display,
+                fontWeight: 800,
+                fontSize: '3rem',
+                color: '#fff',
+                bgcolor: palette.night,
+                border: 4,
+                borderColor: palette.field,
+                boxShadow: `inset 0 0 0 2px ${alpha(palette.brand, 0.6)}`,
               }}
             >
-              Member since {memberSince}
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
-      <Section title="Your Numbers">
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
-            borderRadius: '18px',
-            border: 1,
-            borderColor: 'divider',
-            overflow: 'hidden',
-            // hairlines between the cells, whichever way the strip wraps
-            gap: '1px',
-            backgroundColor: palette.line,
-            '& > *': { bgcolor: 'background.paper' },
-          }}
-        >
-          <StatCard
-            icon={<GridOnIcon sx={{ fontSize: 'inherit' }} />}
-            value={numbers?.contestsCreated}
-            label="Contests Created"
-          />
-          <StatCard
-            icon={<GroupsIcon sx={{ fontSize: 'inherit' }} />}
-            value={numbers?.contestsJoined}
-            label="Contests Joined"
-          />
-          <StatCard
-            icon={<GridViewIcon sx={{ fontSize: 'inherit' }} />}
-            value={numbers?.squaresClaimed}
-            label="Squares Claimed"
-          />
-          <StatCard
-            icon={<EmojiEventsIcon sx={{ fontSize: 'inherit' }} />}
-            value={numbers?.quarterWins}
-            label="Quarter Wins"
-            caption={winRate}
-            highlight
-          />
-        </Box>
-      </Section>
-
-      <LeaderboardRankCard
-        rank={rank.data ?? null}
-        loading={false}
-        error={rank.isError}
-        animate={false}
-      />
-
-      <Section title="Settings">
-        <Box
-          sx={{
-            borderRadius: '18px',
-            border: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-          }}
-        >
-          <InitialsCard initials={user?.defaultInitials} disabled={loadError} />
-
-          {/* danger zone */}
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: { xs: 'flex-start', sm: 'center' },
-              gap: 2,
-              p: { xs: 2, sm: 2.5 },
-              borderTop: 1,
-              borderColor: 'divider',
-              borderRadius: '0 0 18px 18px',
-              bgcolor: alpha(palette.flag, 0.04),
-            }}
-          >
-            <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontWeight: 700, color: 'error.main' }}>Delete account</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Anonymizes your contest history and removes your personal data. Delete or leave any
-                active contests first. This cannot be undone.
-              </Typography>
+              {(user?.displayName?.charAt(0) || '?').toUpperCase()}
             </Box>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteForeverIcon />}
-              onClick={openDialog}
-              disabled={loadError}
-              sx={{ flexShrink: 0 }}
+            <Typography
+              component="h1"
+              sx={{
+                mt: 2,
+                fontFamily: fonts.display,
+                fontWeight: 800,
+                fontSize: '2.2rem',
+                lineHeight: 0.95,
+                textTransform: 'uppercase',
+                overflowWrap: 'anywhere',
+              }}
             >
-              Delete Account
-            </Button>
+              {user?.displayName || '–'}
+            </Typography>
+            <Typography sx={{ color: 'text.secondary', mt: 0.75, overflowWrap: 'anywhere' }}>
+              {user?.email ?? auth.user?.profile?.email}
+            </Typography>
+            {memberSince && (
+              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Member since {memberSince}
+              </Typography>
+            )}
+
+            <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+              <InitialsCard initials={user?.defaultInitials} disabled={loadError} />
+            </Box>
           </Box>
         </Box>
-      </Section>
+
+        <Box sx={{ display: 'grid', gap: 3.5, minWidth: 0 }}>
+          <Section title="Career">
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr 1fr', lg: 'repeat(4, minmax(0, 1fr))' },
+                gap: 1.5,
+              }}
+            >
+              <StatCard
+                icon={<GridOnIcon sx={{ fontSize: 'inherit' }} />}
+                value={numbers?.contestsCreated}
+                label="Contests Created"
+              />
+              <StatCard
+                icon={<GroupsIcon sx={{ fontSize: 'inherit' }} />}
+                value={numbers?.contestsJoined}
+                label="Contests Joined"
+              />
+              <StatCard
+                icon={<GridViewIcon sx={{ fontSize: 'inherit' }} />}
+                value={numbers?.squaresClaimed}
+                label="Squares Claimed"
+              />
+              <StatCard
+                icon={<EmojiEventsIcon sx={{ fontSize: 'inherit' }} />}
+                value={numbers?.quarterWins}
+                label="Quarter Wins"
+                caption={winRate}
+                progress={winShare}
+                highlight
+              />
+            </Box>
+          </Section>
+
+          <Section title="Standing">
+            <LeaderboardRankCard
+              rank={rank.data ?? null}
+              loading={false}
+              error={rank.isError}
+              animate={false}
+            />
+          </Section>
+
+          <Section title="Account">
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: 2,
+                p: { xs: 2, sm: 2.5 },
+                borderRadius: '18px',
+                border: 1,
+                borderColor: alpha(palette.flag, 0.35),
+                bgcolor: alpha(palette.flag, 0.04),
+              }}
+            >
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontWeight: 700, color: 'error.main' }}>
+                  Delete account
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Anonymizes your contest history, removes your personal data, and signs you out on
+                  every device. Delete or leave any active contests first. This cannot be undone.
+                </Typography>
+              </Box>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteForeverIcon />}
+                onClick={openDialog}
+                disabled={loadError}
+                sx={{ flexShrink: 0 }}
+              >
+                Delete Account
+              </Button>
+            </Box>
+          </Section>
+        </Box>
+      </Box>
 
       <DeleteAccountDialog {...dialogProps} />
     </>

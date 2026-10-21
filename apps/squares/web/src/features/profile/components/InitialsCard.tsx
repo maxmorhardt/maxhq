@@ -40,48 +40,42 @@ export default function InitialsCard({ initials, disabled }: Props) {
 
   const shown = draft ?? initials;
 
+  // laid out for the narrow ID card: the square and its note, then the controls under them
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' },
-        alignItems: { xs: 'flex-start', sm: 'center' },
-        gap: { xs: 2, sm: 2.5 },
-        p: { xs: 2, sm: 2.5 },
-      }}
-    >
-      {/* a preview of how a claimed square reads on the board */}
-      <Box
-        sx={{
-          flexShrink: 0,
-          display: 'grid',
-          placeItems: 'center',
-          width: 60,
-          height: 60,
-          borderRadius: '10px',
-          fontFamily: fonts.display,
-          fontWeight: 800,
-          fontSize: '1.4rem',
-          letterSpacing: '0.04em',
-          color: shown ? palette.chalk : 'text.secondary',
-          bgcolor: shown ? alpha(palette.brand, 0.28) : alpha(palette.chalk, 0.04),
-          border: 1,
-          borderColor: shown ? alpha(palette.brand, 0.6) : 'divider',
-          borderStyle: shown ? 'solid' : 'dashed',
-        }}
-      >
-        {shown || '—'}
-      </Box>
-
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontWeight: 700 }}>Default Initials</Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Shown on every square you claim. Changing them updates your squares in active contests.
-        </Typography>
+    <Box sx={{ display: 'grid', gap: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* a preview of how a claimed square reads on the board */}
+        <Box
+          sx={{
+            flexShrink: 0,
+            display: 'grid',
+            placeItems: 'center',
+            width: 64,
+            height: 64,
+            borderRadius: '12px',
+            fontFamily: fonts.display,
+            fontWeight: 800,
+            fontSize: '1.5rem',
+            letterSpacing: '0.04em',
+            color: shown ? palette.chalk : 'text.secondary',
+            bgcolor: shown ? alpha(palette.brand, 0.28) : alpha(palette.chalk, 0.04),
+            border: 1,
+            borderColor: shown ? alpha(palette.brand, 0.6) : 'divider',
+            borderStyle: shown ? 'solid' : 'dashed',
+          }}
+        >
+          {shown || '—'}
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 700 }}>Default Initials</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Shown on every square you claim. Changing them updates your squares in active contests.
+          </Typography>
+        </Box>
       </Box>
 
       {draft !== null ? (
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
             size="small"
             label="Initials"
@@ -100,9 +94,9 @@ export default function InitialsCard({ initials, disabled }: Props) {
       ) : (
         <Button
           variant="outlined"
+          fullWidth
           onClick={() => setDraft(initials ?? '')}
           disabled={disabled}
-          sx={{ flexShrink: 0 }}
         >
           Edit
         </Button>

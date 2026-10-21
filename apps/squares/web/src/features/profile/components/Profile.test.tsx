@@ -56,15 +56,16 @@ describe('Profile', () => {
     expect(screen.getByText('40')).toBeInTheDocument();
     expect(screen.getByText('25% win rate')).toBeInTheDocument();
     expect(screen.getByTestId('initials')).toHaveTextContent('AS');
-    expect(screen.getByRole('heading', { name: 'Your Numbers' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Career' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Standing' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Account' })).toBeInTheDocument();
     expect(screen.getByText("You're #7 of 50")).toBeInTheDocument();
   });
 
   it('shows a skeleton while anything loads', () => {
     api.useGetMyStatsQuery.mockReturnValue({ isLoading: true });
     renderWithProviders(<Profile />);
-    expect(screen.queryByText('Your Numbers')).not.toBeInTheDocument();
+    expect(screen.queryByText('Career')).not.toBeInTheDocument();
   });
 
   it('reports a profile that failed to load and blocks deletion', () => {

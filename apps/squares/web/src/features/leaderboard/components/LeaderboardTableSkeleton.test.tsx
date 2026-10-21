@@ -23,9 +23,9 @@ describe('LeaderboardTableSkeleton', () => {
   it('renders a placeholder for every column of a row', () => {
     const { container } = renderSkeleton();
 
-    // rank, avatar, name, wins bar, wins, win rate
+    // rank, the bar, squares, win rate
     const firstRow = container.querySelector('[data-testid="leaderboard-row-skeleton"]');
-    expect(firstRow?.querySelectorAll('.MuiSkeleton-root')).toHaveLength(6);
+    expect(firstRow?.querySelectorAll('.MuiSkeleton-root')).toHaveLength(4);
   });
 
   it('fades each row more than the one above it', () => {

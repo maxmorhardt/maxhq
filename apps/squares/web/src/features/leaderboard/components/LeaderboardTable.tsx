@@ -11,7 +11,7 @@ interface Props {
   entries: LeaderboardEntry[];
   loading: boolean;
   highlightKey?: string;
-  // the leader's wins, so the bars measure everyone against first place
+  // the leader's wins, so every bar is measured against first place
   maxWins?: number;
 }
 
@@ -24,30 +24,18 @@ function winRate(entry: LeaderboardEntry) {
   return `${((entry.quarterWins / entry.quartersPlayed) * 100).toFixed(0)}%`;
 }
 
-const wide = { display: { xs: 'none', sm: 'table-cell' } };
-
-const cellSx = {
-  py: 1.5,
-  px: { xs: 1.25, sm: 2 },
-  borderBottom: 1,
-  borderColor: 'divider',
-  textAlign: 'left',
-} as const;
+const COLUMNS = { xs: '36px minmax(0, 1fr)', sm: '44px minmax(0, 1fr) 76px 76px' };
 
 const headSx = {
-  ...cellSx,
-  py: 1.25,
   color: 'text.secondary',
-  fontSize: '0.72rem',
+  fontSize: '0.7rem',
   fontWeight: 700,
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   whiteSpace: 'nowrap',
-  bgcolor: alpha(palette.chalk, 0.02),
 } as const;
 
-const numSx = { textAlign: 'right', fontVariantNumeric: 'tabular-nums' } as const;
-
+// everyone below the podium as a race of bars: each bar runs as far as its wins reach toward the leader's
 export default function LeaderboardTable({ entries, loading, highlightKey, maxWins }: Props) {
   if (loading) {
     return <LeaderboardTableSkeleton />;
@@ -60,176 +48,150 @@ export default function LeaderboardTable({ entries, loading, highlightKey, maxWi
   const top = Math.max(maxWins ?? 0, ...entries.map((e) => e.quarterWins), 1);
 
   return (
-    <Box
-      sx={{
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: '18px',
-        overflow: 'hidden',
-        bgcolor: 'background.paper',
-      }}
-    >
+    <Box>
       <Box
-        component="table"
+        aria-hidden
         sx={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          '& tbody tr:last-of-type td': { borderBottom: 0 },
+          display: { xs: 'none', sm: 'grid' },
+          gridTemplateColumns: COLUMNS.sm,
+          gap: 1.5,
+          px: 0.5,
+          pb: 1,
         }}
       >
-        <thead>
-          <tr>
-            <Box component="th" scope="col" sx={{ ...headSx, width: { xs: 40, sm: 64 } }}>
-              Rank
-            </Box>
-            <Box component="th" scope="col" sx={headSx}>
-              Player
-            </Box>
-            <Box component="th" scope="col" sx={{ ...headSx, ...numSx, width: { sm: 200 } }}>
-              Wins
-            </Box>
-            <Box component="th" scope="col" sx={{ ...headSx, ...numSx, ...wide }}>
-              Squares
-            </Box>
-            <Box component="th" scope="col" sx={{ ...headSx, ...numSx, ...wide }}>
-              Win Rate
-            </Box>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => {
-            const isMe =
-              Boolean(highlightKey) &&
-              leaderboardKey(entry.rank, entry.displayName) === highlightKey;
-            const name = stripDangerousChars(entry.displayName);
+        <Box sx={headSx}>Rank</Box>
+        <Box sx={headSx}>Player · Wins</Box>
+        <Box sx={{ ...headSx, textAlign: 'right' }}>Squares</Box>
+        <Box sx={{ ...headSx, textAlign: 'right' }}>Win Rate</Box>
+      </Box>
 
-            return (
-              <Box
-                component="tr"
-                key={`${entry.rank}-${entry.displayName}`}
+      <Box
+        component="ol"
+        aria-label="Standings"
+        sx={{ listStyle: 'none', m: 0, p: 0, display: 'grid', gap: 1 }}
+      >
+        {entries.map((entry) => {
+          const isMe =
+            Boolean(highlightKey) && leaderboardKey(entry.rank, entry.displayName) === highlightKey;
+          const name = stripDangerousChars(entry.displayName);
+          const reach = Math.max((entry.quarterWins / top) * 100, 6);
+
+          return (
+            <Box
+              component="li"
+              key={`${entry.rank}-${entry.displayName}`}
+              aria-label={`${entry.rank}. ${name}, ${entry.quarterWins} ${entry.quarterWins === 1 ? 'win' : 'wins'}`}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: COLUMNS,
+                alignItems: 'center',
+                gap: 1.5,
+                px: 0.5,
+              }}
+            >
+              <Typography
                 sx={{
-                  bgcolor: isMe ? alpha(palette.brand, 0.1) : 'transparent',
-                  boxShadow: isMe ? `inset 3px 0 0 ${palette.brand}` : 'none',
-                  transition: 'background-color 160ms',
-                  '&:hover': {
-                    bgcolor: isMe ? alpha(palette.brand, 0.14) : alpha(palette.chalk, 0.03),
-                  },
+                  fontFamily: fonts.display,
+                  fontWeight: 800,
+                  fontSize: '1.35rem',
+                  color: isMe ? 'primary.light' : 'text.secondary',
+                  fontVariantNumeric: 'tabular-nums',
+                  textAlign: 'center',
+                }}
+              >
+                {entry.rank}
+              </Typography>
+
+              {/* the bar and the name and wins riding on it */}
+              <Box
+                sx={{
+                  position: 'relative',
+                  height: 48,
+                  borderRadius: '12px',
+                  bgcolor: alpha(palette.chalk, 0.03),
+                  border: 1,
+                  borderColor: isMe ? alpha(palette.brand, 0.6) : 'divider',
+                  overflow: 'hidden',
                 }}
               >
                 <Box
-                  component="td"
+                  aria-hidden
                   sx={{
-                    ...cellSx,
-                    fontFamily: fonts.display,
-                    fontWeight: 800,
-                    fontSize: '1.25rem',
-                    color: 'text.secondary',
-                    fontVariantNumeric: 'tabular-nums',
+                    position: 'absolute',
+                    inset: 0,
+                    width: `${reach}%`,
+                    background: `linear-gradient(90deg, ${alpha(palette.brand, isMe ? 0.45 : 0.22)}, ${alpha(palette.brand, isMe ? 0.25 : 0.08)})`,
+                    borderRight: 2,
+                    borderColor: alpha(palette.brand, isMe ? 0.9 : 0.5),
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: 'relative',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.25,
+                    px: 1.5,
                   }}
                 >
-                  {entry.rank}
-                </Box>
-
-                <Box component="td" sx={{ ...cellSx, maxWidth: 0, width: '100%' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-                    <Box
-                      aria-hidden
-                      sx={{
-                        flexShrink: 0,
-                        display: { xs: 'none', sm: 'grid' },
-                        placeItems: 'center',
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        fontSize: '0.8rem',
-                        fontWeight: 800,
-                        color: isMe ? 'primary.light' : 'text.secondary',
-                        bgcolor: alpha(palette.chalk, 0.06),
-                        border: 1,
-                        borderColor: isMe ? alpha(palette.brand, 0.5) : 'divider',
-                      }}
-                    >
-                      {(name.charAt(0) || '?').toUpperCase()}
-                    </Box>
-                    <Typography noWrap sx={{ fontWeight: 600 }}>
-                      {name}
-                    </Typography>
-                    {isMe && (
-                      <Typography
-                        component="span"
-                        sx={{
-                          flexShrink: 0,
-                          px: 0.9,
-                          borderRadius: '6px',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          color: 'primary.light',
-                          bgcolor: alpha(palette.brand, 0.14),
-                        }}
-                      >
-                        You
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-
-                <Box component="td" sx={{ ...cellSx, ...numSx }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'flex-end',
-                      gap: 1.5,
-                    }}
-                  >
-                    <Box
-                      aria-hidden
-                      sx={{
-                        display: { xs: 'none', sm: 'block' },
-                        width: 110,
-                        height: 6,
-                        borderRadius: 3,
-                        bgcolor: alpha(palette.chalk, 0.06),
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: `${(entry.quarterWins / top) * 100}%`,
-                          height: '100%',
-                          borderRadius: 3,
-                          bgcolor: isMe ? palette.brand : alpha(palette.brand, 0.55),
-                        }}
-                      />
-                    </Box>
+                  <Typography noWrap sx={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
+                    {name}
+                  </Typography>
+                  {isMe && (
                     <Typography
                       component="span"
                       sx={{
-                        fontFamily: fonts.display,
-                        fontWeight: 800,
-                        fontSize: '1.2rem',
-                        minWidth: 28,
+                        flexShrink: 0,
+                        px: 0.9,
+                        borderRadius: '6px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        color: 'primary.light',
+                        bgcolor: alpha(palette.brand, 0.18),
                       }}
                     >
-                      {entry.quarterWins.toLocaleString()}
+                      You
                     </Typography>
-                  </Box>
-                </Box>
-
-                <Box component="td" sx={{ ...cellSx, ...numSx, ...wide, color: 'text.secondary' }}>
-                  {entry.squaresClaimed.toLocaleString()}
-                </Box>
-
-                <Box
-                  component="td"
-                  sx={{ ...cellSx, ...numSx, ...wide, fontWeight: 700, color: 'primary.light' }}
-                >
-                  {winRate(entry)}
+                  )}
+                  <Typography
+                    sx={{
+                      flexShrink: 0,
+                      fontFamily: fonts.display,
+                      fontWeight: 800,
+                      fontSize: '1.3rem',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {entry.quarterWins.toLocaleString()}
+                  </Typography>
                 </Box>
               </Box>
-            );
-          })}
-        </tbody>
+
+              <Typography
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  textAlign: 'right',
+                  color: 'text.secondary',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {entry.squaresClaimed.toLocaleString()}
+              </Typography>
+              <Typography
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  textAlign: 'right',
+                  fontWeight: 700,
+                  color: 'primary.light',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {winRate(entry)}
+              </Typography>
+            </Box>
+          );
+        })}
       </Box>
     </Box>
   );

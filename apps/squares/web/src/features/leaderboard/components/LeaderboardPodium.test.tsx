@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import LeaderboardPodium from './LeaderboardPodium';
 import type { LeaderboardEntry } from '../../../types/leaderboard';
@@ -29,11 +29,18 @@ describe('LeaderboardPodium', () => {
     expect(screen.getByText('Sam R.')).toBeInTheDocument();
   });
 
-  it('renders win totals', () => {
+  it('deals each player a card with their place and stat line', () => {
     renderPodium();
 
-    expect(screen.getByText('12')).toBeInTheDocument();
-    expect(screen.getByText('9')).toBeInTheDocument();
+    const cards = within(screen.getByRole('list', { name: 'Top three' })).getAllByRole('listitem');
+    expect(cards).toHaveLength(3);
+    expect(cards[0]).toHaveTextContent('1st');
+    expect(cards[0]).toHaveTextContent('12');
+    expect(cards[0]).toHaveTextContent('48');
+    expect(cards[0]).toHaveTextContent('25%');
+    expect(cards[1]).toHaveTextContent('2nd');
+    expect(cards[1]).toHaveTextContent('9');
+    expect(cards[2]).toHaveTextContent('3rd');
   });
 
   it('pluralizes the wins label', () => {
