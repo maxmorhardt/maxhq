@@ -28,15 +28,29 @@ describe('ProjectsPage', () => {
   it('renders a card for every repository', () => {
     renderWithProviders(<ProjectsPage />);
 
-    for (const name of ['squares', 'squares services', 'infra', 'charts', 'workflows', 'maxhq']) {
-      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+    const names = ['squares', 'squares services', 'maxhq.io', 'charts', 'gitops', 'workflows'];
+    for (const name of names) {
+      expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument();
     }
   });
 
-  it('lists maxhq with its react stack', () => {
+  it('points the gitops card at the gitops repo and the Terraform in maxhq', () => {
+    renderWithProviders(<ProjectsPage />);
+
+    const links = screen.getAllByRole('link', { name: 'View on GitHub' });
+    expect(links.map((a) => a.getAttribute('href'))).toContain(
+      'https://github.com/maxmorhardt/gitops'
+    );
+    expect(screen.getByRole('link', { name: /Terraform & bootstrap/ })).toHaveAttribute(
+      'href',
+      'https://github.com/maxmorhardt/maxhq/tree/main/infra'
+    );
+  });
+
+  it('lists the site with its react stack', () => {
     renderWithProviders(<ProjectsPage />);
 
     expect(screen.getByText('React 19')).toBeInTheDocument();
-    expect(screen.getByText('Emotion')).toBeInTheDocument();
+    expect(screen.getByText('Material UI')).toBeInTheDocument();
   });
 });
