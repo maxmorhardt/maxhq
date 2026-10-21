@@ -5,14 +5,21 @@ export function formatMatchup(game: Pick<Game, 'awayTeam' | 'homeTeam'>): string
   return `${game.awayTeam} @ ${game.homeTeam}`;
 }
 
-export function formatKickoff(gameTime: string): string {
+// the kickoff's day and time apart, for places too narrow to put them on one line
+export function kickoffParts(gameTime: string): { day: string; time: string } {
   const kickoff = new Date(gameTime);
-  const day = kickoff.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-  const time = kickoff.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return {
+    day: kickoff.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    }),
+    time: kickoff.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+  };
+}
+
+export function formatKickoff(gameTime: string): string {
+  const { day, time } = kickoffParts(gameTime);
   return `${day} · ${time}`;
 }
 

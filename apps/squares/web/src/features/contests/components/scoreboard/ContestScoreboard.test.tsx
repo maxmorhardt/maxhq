@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeContest, makeViewer } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
 import type { Contest, Game } from '../../../../types/contest';
+import { kickoffParts } from '../../../../utils/game';
 import ContestScoreboard from './ContestScoreboard';
 
 vi.mock('../details/ContestActionIcons', () => ({ default: () => <div data-testid="actions" /> }));
@@ -45,6 +46,16 @@ describe('ContestScoreboard', () => {
     expect(screen.getByLabelText('home score')).toHaveTextContent('17');
     expect(screen.getByText('Q3')).toBeInTheDocument();
     expect(screen.getByText('LIVE')).toBeInTheDocument();
+  });
+
+  it('puts the kickoff day over its time before the game, to fit on a phone', () => {
+    const scheduled = { ...game, status: 'scheduled', period: 0 } as Game;
+    renderBoard(makeContest({ status: 'ACTIVE' }), makeViewer(), scheduled);
+
+    const { day, time } = kickoffParts(scheduled.gameTime);
+    expect(screen.getByText(day)).toBeInTheDocument();
+    expect(screen.getByText(time)).toBeInTheDocument();
+    expect(screen.queryByText('LIVE')).not.toBeInTheDocument();
   });
 
   it('labels the viewer and the contest privacy', () => {

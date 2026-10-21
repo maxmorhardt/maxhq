@@ -6,7 +6,7 @@ import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
 import type { Contest, Game, Participant } from '../../../../types/contest';
 import { getStatusLabel } from '../../../../utils/contestStatus';
-import { currentScore, gameClock, isLive } from '../../../../utils/game';
+import { currentScore, gameClock, isLive, kickoffParts } from '../../../../utils/game';
 import type { ContestViewer } from '../../live/viewer';
 import ConnectionStatus from '../ConnectionStatus';
 import ContestActionIcons from '../details/ContestActionIcons';
@@ -181,14 +181,31 @@ export default function ContestScoreboard({
               fontSize: { xs: '0.85rem', sm: '1rem' },
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              whiteSpace: 'nowrap',
+              lineHeight: 1.15,
               bgcolor: contest.status === 'FINISHED' ? 'secondary.main' : 'background.default',
               color: contest.status === 'FINISHED' ? palette.night : 'text.primary',
               border: 1,
               borderColor: contest.status === 'FINISHED' ? 'secondary.main' : 'divider',
             }}
           >
-            {clock}
+            {/* before kickoff the day sits over the time, so it fits between the teams on a phone */}
+            {game?.status === 'scheduled' ? (
+              <>
+                <Box component="span" sx={{ display: 'block', whiteSpace: 'nowrap' }}>
+                  {kickoffParts(game.gameTime).day}
+                </Box>
+                <Box
+                  component="span"
+                  sx={{ display: 'block', whiteSpace: 'nowrap', color: 'text.secondary' }}
+                >
+                  {kickoffParts(game.gameTime).time}
+                </Box>
+              </>
+            ) : (
+              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                {clock}
+              </Box>
+            )}
           </Box>
           {live && (
             <Box

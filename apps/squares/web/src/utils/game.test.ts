@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { makeContest, makeQuarterResult } from '../test/fixtures';
 import type { Game } from '../types/contest';
-import { currentScore, formatKickoff, formatMatchup, gameClock, isLive } from './game';
+import {
+  currentScore,
+  formatKickoff,
+  formatMatchup,
+  gameClock,
+  isLive,
+  kickoffParts,
+} from './game';
 
 describe('formatMatchup', () => {
   it('should format as "away @ home"', () => {
@@ -54,5 +61,14 @@ describe('currentScore', () => {
       home: 14,
     });
     expect(currentScore(makeContest(), undefined)).toBeNull();
+  });
+});
+
+describe('kickoffParts', () => {
+  it('splits the kickoff into the day and the time', () => {
+    const { day, time } = kickoffParts('2026-10-25T17:00:00Z');
+    expect(formatKickoff('2026-10-25T17:00:00Z')).toBe(`${day} · ${time}`);
+    expect(day).not.toContain(':');
+    expect(time).toMatch(/\d:\d\d/);
   });
 });
