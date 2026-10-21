@@ -1,26 +1,22 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"html/template"
-	"mime/multipart"
 	"net/http"
 	"net/smtp"
-	"net/textproto"
-	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
-	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/templates"
 	"github.com/maxmorhardt/maxhq/libs/platform/logging"
 )
 
-var contactEmailTmpl = template.Must(template.New("contact_email").Parse(templates.ContactEmailHTML))
+// covers loading the submission and the SMTP exchange
+const notifyTimeout = 30 * time.Second
 
 type ContactService interface {
 	SubmitContact(ctx context.Context, req *model.ContactRequest, ipAddress string) error
@@ -64,25 +60,35 @@ func (s *contactService) SubmitContact(ctx context.Context, req *model.ContactRe
 
 	log.Info("contact submission saved to database", "submission_id", submission.ID)
 
+	// the request may finish first, so the notification runs on a context that outlives it
+	notifyCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), notifyTimeout)
 	go func() {
-		if err := s.sendEmailNotification(req); err != nil {
-			log.Error("failed to send contact email notification", "error", err, "submission_id", submission.ID)
-		} else {
-			log.Info("contact email notification sent", "submission_id", submission.ID)
-		}
+		defer cancel()
+		s.notify(notifyCtx, submission.ID)
 	}()
 
 	return nil
 }
 
-func sanitizeHeader(v string) string {
-	v = strings.ReplaceAll(v, "\r", "")
-	v = strings.ReplaceAll(v, "\n", "")
-	return v
+func (s *contactService) notify(ctx context.Context, submissionID uuid.UUID) {
+	log := logging.FromContext(ctx).With("submission_id", submissionID)
+
+	// the email is built from the stored row, so it shows exactly what was saved
+	submission, err := s.repo.GetByID(ctx, submissionID)
+	if err != nil {
+		log.Error("failed to load contact submission for the email notification", "error", err)
+		return
+	}
+
+	if err := s.sendEmailNotification(submission); err != nil {
+		log.Error("failed to send contact email notification", "error", err)
+		return
+	}
+	log.Info("contact email notification sent")
 }
 
-func (s *contactService) sendEmailNotification(req *model.ContactRequest) error {
-	msg, err := s.buildContactEmail(req)
+func (s *contactService) sendEmailNotification(submission *model.ContactSubmission) error {
+	msg, err := BuildContactEmail(s.smtp.User, s.smtp.SupportEmail, submission)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
@@ -93,65 +99,6 @@ func (s *contactService) sendEmailNotification(req *model.ContactRequest) error 
 
 	if err := smtp.SendMail(addr, auth, s.smtp.User, to, msg); err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
-	}
-
-	return nil
-}
-
-func (s *contactService) buildContactEmail(req *model.ContactRequest) ([]byte, error) {
-	var htmlBody bytes.Buffer
-	if err := contactEmailTmpl.Execute(&htmlBody, req); err != nil {
-		return nil, fmt.Errorf("failed to render contact email template: %w", err)
-	}
-
-	plainBody := fmt.Sprintf(
-		"New contact form submission:\n\n"+
-			"Name: %s\n"+
-			"Email: %s\n"+
-			"Subject: %s\n\n"+
-			"Message:\n%s\n",
-		req.Name,
-		req.Email,
-		req.Subject,
-		req.Message,
-	)
-
-	var msg bytes.Buffer
-
-	fmt.Fprintf(&msg, "From: %s\r\n", sanitizeHeader(s.smtp.User))
-	fmt.Fprintf(&msg, "To: %s\r\n", sanitizeHeader(s.smtp.SupportEmail))
-	fmt.Fprintf(&msg, "Subject: %s\r\n", sanitizeHeader(fmt.Sprintf("Contact Form: %s", req.Subject)))
-	fmt.Fprintf(&msg, "Reply-To: %s\r\n", sanitizeHeader(req.Email))
-	fmt.Fprintf(&msg, "MIME-Version: 1.0\r\n")
-
-	mpw := multipart.NewWriter(&msg)
-	fmt.Fprintf(&msg, "Content-Type: multipart/alternative; boundary=%q\r\n", mpw.Boundary())
-	fmt.Fprintf(&msg, "\r\n")
-
-	if err := writeMIMEPart(mpw, `text/plain; charset="UTF-8"`, []byte(plainBody)); err != nil {
-		return nil, err
-	}
-	if err := writeMIMEPart(mpw, `text/html; charset="UTF-8"`, htmlBody.Bytes()); err != nil {
-		return nil, err
-	}
-
-	if err := mpw.Close(); err != nil {
-		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
-	}
-
-	return msg.Bytes(), nil
-}
-
-func writeMIMEPart(mpw *multipart.Writer, contentType string, body []byte) error {
-	header := make(textproto.MIMEHeader)
-	header.Set("Content-Type", contentType)
-
-	pw, err := mpw.CreatePart(header)
-	if err != nil {
-		return fmt.Errorf("failed to create MIME part %q: %w", contentType, err)
-	}
-	if _, err := pw.Write(body); err != nil {
-		return fmt.Errorf("failed to write MIME part %q: %w", contentType, err)
 	}
 
 	return nil
