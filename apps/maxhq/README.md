@@ -8,7 +8,7 @@
 
 ## Overview
 
-Personal portfolio website built with React 19 and TypeScript. Features a full-width landing page with an interactive terminal, scroll-driven animations, light/dark theming, and a router-based multi-page layout for showcasing projects, apps, background, and contact information.
+Personal portfolio website built with React 19 and TypeScript. Features a full-width landing page with a 3D platform-stack hero, scroll-driven animations, light/dark theming, and a router-based multi-page layout for showcasing projects, apps, background, and contact information.
 
 ## Features
 

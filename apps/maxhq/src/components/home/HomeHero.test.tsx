@@ -22,11 +22,9 @@ describe('HomeHero', () => {
     expect(screen.getByRole('link', { name: 'Get in touch' })).toHaveAttribute('href', '/contact');
   });
 
-  it('settles the terminal flat under reduced motion', async () => {
+  it('shows the platform stack beside the headline', () => {
     renderWithProviders(<HomeHero />);
 
-    expect(await screen.findByLabelText('Terminal command input')).toBeInTheDocument();
-    const section = screen.getByRole('heading', { level: 1 }).closest('section');
-    expect(section?.style.getPropertyValue('--progress')).toBe('1');
+    expect(screen.getByRole('img', { name: /stack of layers/ })).toBeInTheDocument();
   });
 });

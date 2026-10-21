@@ -53,13 +53,13 @@
 - Page headings use `variant="h4"`; row and section labels use `variant="overline"`. Both are configured in the theme, so do not hand-set those font sizes.
 - Prefer `Box` with flex or grid props over MUI `Stack`. Use `@mui/icons-material` rather than another icon library.
 - Breakpoints are `sm: 600, md: 960, lg: 1200, xl: 1400`, so `<Container maxWidth="lg">` is the 1200px page width and `maxWidth="xl"` is the 1400px header and footer width. Do not hand-roll `maxWidth` plus `mx: 'auto'`.
-- Scroll-linked motion (the hero terminal settling, the chapter rail filling, the pipeline lighting up) reads a `--progress` CSS variable that `useScrollProgress` writes onto an element, so it never re-renders per frame. Derive styles from `var(--progress, 0)` in CSS; reduced motion pins it to `1`.
+- Scroll-linked motion (the hero's platform stack fanning out, the chapter rail filling, the pipeline lighting up) reads a `--progress` CSS variable that `useScrollProgress` writes onto an element, so it never re-renders per frame. Derive styles from `var(--progress, 0)` in CSS; reduced motion pins it to `1`.
 - Fonts are self-hosted from `@fontsource-variable` (Mona Sans, JetBrains Mono) and imported in `root.tsx`. Code surfaces turn ligatures off.
 - Use `RevealSection` for scroll reveals. `variant` picks the entrance offset (`up`, `left`, `scale`, `rise`); `delay` (0 to 4) staggers in 100ms steps.
 - `MuiCssBaseline.styleOverrides` reads through `theme.vars` deliberately. Using `theme.palette` there bakes in one scheme's literal values and the toggle stops repainting.
 - Theme preference lives in `localStorage` under `maxhq:theme`. `<InitColorSchemeScript>` in `root.tsx` applies it before first paint, and its `modeStorageKey` must stay in sync with the `ThemeProvider` in `providers.tsx` (both read `COLOR_SCHEME_STORAGE_KEY` from `theme.ts`).
 - `AppHeader` holds the theme-toggle icon behind a `mounted` flag because `useColorScheme().mode` is undefined until the client reads storage. Keep that guard.
-- `HeroTerminal` and `CodeWindow` deliberately keep their own hard-coded GitHub-dark palette in both color schemes. They are a terminal and an editor, not themed surfaces.
+- `CodeWindow` deliberately keeps its own hard-coded GitHub-dark palette in both color schemes. It is an editor, not a themed surface.
 - Avoid comments unless the code is genuinely non-obvious. When you do comment: **one line, lowercase, explaining the flow** (`// ensure not null and validate fields`, `// normalize to uppercase`, `// get the contest from the cache`). In JSX use section markers the same way (`{/* hero section */}`). No multi-line comment blocks, and no header comment above a function/type that just restates its name.
 - **Always brace control statements.** Never a one-line `if (x) return;` — write it as `if (x) {`, newline, body, newline, `}`. Enforced by the `curly` ESLint rule.
 - The Helm chart is `charts/maxhq` in this repo. A change that needs a chart change (env, port, route) makes it in the same PR; the chart releases as `maxhq-chart`.
@@ -80,7 +80,7 @@ Missing any step ships a route that 404s in production or never gets indexed.
 
 - Tests are colocated as `Foo.test.tsx` and run under Vitest in jsdom.
 - Use `renderWithProviders` from `src/testUtils.tsx`. It mirrors the real provider stack (Helmet, MUI theme, `CssBaseline`, `MemoryRouter`) and accepts a `route` option for asserting active-route behavior.
-- `setupTests.ts` forces `prefers-reduced-motion`, so `HeroTerminal` prints its boot script synchronously instead of typing. To exercise the animated path, override `window.matchMedia` and drive it with `vi.useFakeTimers()` plus `vi.runAllTimersAsync()` (see `HeroTerminal.test.tsx`).
+- `setupTests.ts` forces `prefers-reduced-motion`, so motion renders in its settled state. To exercise the animated path, override `window.matchMedia` (see `PlatformStack.test.tsx`).
 - `IntersectionObserver` is absent in jsdom. When stubbing it use a **class**, because the hook calls it with `new`, and restore it in `afterEach`. `useScrollReveal` falls back to immediately visible when the API is missing, so tests see revealed content.
 - Prefer role-based queries (`getByRole('link', { name })`) over test ids.
 - Coverage is gated at **80%** for statements, branches, functions, and lines in `vitest.config.ts`. Do not lower a threshold to get a build green.
