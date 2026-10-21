@@ -29,7 +29,7 @@ describe('AppsPage', () => {
     expect(within(squares).getByRole('heading', { name: 'Winners light up' })).toBeInTheDocument();
   });
 
-  it('explains what signing in with Google shares and what it is used for', () => {
+  it('explains what signing in shares and what it is used for', () => {
     renderWithProviders(<AppsPage />);
 
     const data = screen.getByRole('region', { name: 'Your account and your data' });
@@ -40,6 +40,21 @@ describe('AppsPage', () => {
     expect(within(data).getByRole('link', { name: 'support@maxhq.io' })).toHaveAttribute(
       'href',
       'mailto:support@maxhq.io'
+    );
+  });
+
+  it('stays generic across sign-in providers', () => {
+    renderWithProviders(<AppsPage />);
+
+    const data = screen.getByRole('region', { name: 'Your account and your data' });
+    expect(within(data).getByText(/already have with Google or GitHub/)).toBeInTheDocument();
+    expect(within(data).getByRole('link', { name: 'Google' })).toHaveAttribute(
+      'href',
+      'https://myaccount.google.com/connections'
+    );
+    expect(within(data).getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+      'href',
+      'https://github.com/settings/applications'
     );
   });
 
