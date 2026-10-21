@@ -10,7 +10,7 @@ export default function JoinPage() {
   return (
     <RequireAuth
       fallback={<LoadingScreen title="Loading invite..." subtitle="Please wait..." />}
-      unauthenticated={<InviteSignIn />}
+      unauthenticated={<InviteSignIn token={token} />}
     >
       <JoinInvite token={token} />
     </RequireAuth>

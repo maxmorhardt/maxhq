@@ -166,7 +166,13 @@ func TestGetInvitePreview_Success(t *testing.T) {
 	inv := mocks.NewInviteRepository(t)
 	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, Role: model.ParticipantRoleParticipant, MaxSquares: 5}, nil)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{ID: contestID, Name: "Pool", Owner: "owner"}, nil)
+	kickoff := time.Date(2026, 10, 25, 17, 0, 0, 0, time.UTC)
+	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{
+		ID: contestID, Name: "Pool", Owner: "owner", Status: model.ContestStatusActive,
+		HomeTeam: "Lions", AwayTeam: "Bears",
+		Squares: []model.Square{{Owner: "a"}, {Owner: "b"}, {}},
+		Game:    &model.Game{HomeAbbr: "DET", AwayAbbr: "CHI", GameTime: kickoff},
+	}, nil)
 
 	got, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
 		GetInvitePreview(context.Background(), "tok")
@@ -174,6 +180,12 @@ func TestGetInvitePreview_Success(t *testing.T) {
 	assert.Equal(t, contestID, got.ContestID)
 	assert.Equal(t, "Pool", got.ContestName)
 	assert.Equal(t, "owner", got.Owner)
+	assert.Equal(t, model.ContestStatusActive, got.Status)
+	assert.Equal(t, 2, got.ClaimedSquares)
+	assert.Equal(t, 3, got.TotalSquares)
+	assert.Equal(t, "Bears", got.AwayTeam)
+	assert.Equal(t, "DET", got.HomeAbbr)
+	assert.Equal(t, &kickoff, got.GameTime)
 }
 
 func TestRedeemInvite_DBError(t *testing.T) {

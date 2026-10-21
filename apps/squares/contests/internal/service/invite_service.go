@@ -128,13 +128,33 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 	}
 
 	log.Info("retrieved invite preview", "contest_id", contest.ID)
-	return &model.InvitePreviewResponse{
-		ContestID:   contest.ID,
-		ContestName: contest.Name,
-		Owner:       contest.Owner,
-		Role:        string(invite.Role),
-		MaxSquares:  invite.MaxSquares,
-	}, nil
+	return invitePreview(contest, invite), nil
+}
+
+func invitePreview(contest *model.Contest, invite *model.ContestInvite) *model.InvitePreviewResponse {
+	preview := &model.InvitePreviewResponse{
+		ContestID:    contest.ID,
+		ContestName:  contest.Name,
+		Owner:        contest.Owner,
+		Role:         string(invite.Role),
+		MaxSquares:   invite.MaxSquares,
+		Status:       contest.Status,
+		TotalSquares: len(contest.Squares),
+		HomeTeam:     contest.HomeTeam,
+		AwayTeam:     contest.AwayTeam,
+	}
+	for i := range contest.Squares {
+		if contest.Squares[i].Owner != "" {
+			preview.ClaimedSquares++
+		}
+	}
+	if contest.Game != nil {
+		preview.HomeAbbr = contest.Game.HomeAbbr
+		preview.AwayAbbr = contest.Game.AwayAbbr
+		kickoff := contest.Game.GameTime
+		preview.GameTime = &kickoff
+	}
+	return preview
 }
 
 func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*model.ContestParticipant, error) {

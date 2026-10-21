@@ -1,175 +1,278 @@
-import { EmojiEvents, GridView, Groups, Login } from '@mui/icons-material';
-import { Box, Button, Container, keyframes, Paper, Typography, useTheme } from '@mui/material';
-import { useState } from 'react';
-import SignInDialog from '../../../auth/SignInDialog';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import GoogleIcon from '@mui/icons-material/Google';
+import { Box, Button, Container, LinearProgress, Link, Skeleton, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { useAuth } from 'react-oidc-context';
+import { errorMessage } from '../../../api/errors';
+import { fonts, game as palette } from '../../../app/theme';
+import InAppBrowserNotice from '../../../auth/InAppBrowserNotice';
+import { signInWithProvider, type OIDCProvider } from '../../../auth/oidc';
+import TeamMark from '../../../components/TeamMark';
+import type { InvitePreviewResponse } from '../../../types/contest';
+import { formatKickoff } from '../../../utils/game';
+import { usePreviewInviteQuery } from '../../contests/api';
+import JoinError from './JoinError';
 
-const float = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-`;
+interface Props {
+  token: string;
+}
 
-const pulse = keyframes`
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-`;
+const BOARD_SIZE = 100;
 
-export default function InviteSignIn() {
-  const theme = useTheme();
-  const [signInOpen, setSignInOpen] = useState(false);
+// the claimed squares scattered over a small board, in the same order the landing demo fills its own
+function MiniBoard({ claimed, total }: { claimed: number; total: number }) {
+  const filled = Math.round((claimed / Math.max(total, 1)) * BOARD_SIZE);
+  return (
+    <Box
+      aria-hidden
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(10, 1fr)',
+        gap: '3px',
+        width: '100%',
+        maxWidth: 220,
+        aspectRatio: '1',
+        p: 1,
+        borderRadius: '12px',
+        bgcolor: palette.night,
+        border: 1,
+        borderColor: 'divider',
+      }}
+    >
+      {Array.from({ length: BOARD_SIZE }, (_, i) => {
+        const taken = (i * 37) % BOARD_SIZE < filled;
+        return (
+          <Box
+            key={i}
+            sx={{
+              borderRadius: '3px',
+              bgcolor: taken ? alpha(palette.brand, 0.55) : 'transparent',
+              border: 1,
+              borderColor: taken ? alpha(palette.brand, 0.8) : palette.line,
+            }}
+          />
+        );
+      })}
+    </Box>
+  );
+}
 
-  const features = [
-    { icon: <GridView />, text: 'Claim your squares' },
-    { icon: <EmojiEvents />, text: 'Win each quarter' },
-    { icon: <Groups />, text: 'Compete with friends' },
-  ];
+function whatToExpect(preview: InvitePreviewResponse): string {
+  const open = preview.totalSquares - preview.claimedSquares;
+  if (preview.status !== 'ACTIVE') {
+    return 'The game is underway, so you can join to follow the board live.';
+  }
+  if (open <= 0) {
+    return 'The board is full and locked, so you can join to watch the game.';
+  }
+  return `You can claim up to ${preview.maxSquares} of the ${open} open squares.`;
+}
+
+function ContestHeading({ preview }: { preview: InvitePreviewResponse }) {
+  const matchup =
+    preview.awayTeam && preview.homeTeam ? `${preview.awayTeam} at ${preview.homeTeam}` : null;
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 5, md: 8 }, px: { xs: 2, sm: 3 } }}>
-      <Box
+    <Box sx={{ gridArea: 'heading' }}>
+      <Typography
         sx={{
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: { xs: 2, md: 0 },
+          color: 'primary.light',
+          fontSize: '0.78rem',
+          fontWeight: 700,
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
         }}
       >
-        {/* animated grid icon */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            mb: { xs: 1.5, md: 3 },
-            animation: `${float} 3s ease-in-out infinite`,
-          }}
-        >
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: `0 8px 32px ${theme.palette.primary.main}40`,
-            }}
-          >
-            <GridView sx={{ fontSize: 40, color: 'white' }} />
+        You&apos;re invited
+      </Typography>
+      <Typography
+        component="h1"
+        sx={{
+          mt: 1,
+          fontFamily: fonts.display,
+          fontWeight: 800,
+          fontSize: { xs: '2.6rem', md: '3.6rem' },
+          lineHeight: 0.95,
+          textTransform: 'uppercase',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        {preview.contestName}
+      </Typography>
+
+      {matchup && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 2.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TeamMark abbr={preview.awayAbbr} name={preview.awayTeam} size={40} />
+            <Box sx={{ ml: -0.75, borderRadius: '12px', boxShadow: `0 0 0 3px ${palette.night}` }}>
+              <TeamMark abbr={preview.homeAbbr} name={preview.homeTeam} size={40} />
+            </Box>
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontWeight: 700 }}>{matchup}</Typography>
+            {preview.gameTime && (
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
+                Kickoff {formatKickoff(preview.gameTime)}
+              </Typography>
+            )}
           </Box>
         </Box>
+      )}
+    </Box>
+  );
+}
 
-        {/* heading */}
+function ContestFill({ preview }: { preview: InvitePreviewResponse }) {
+  const fill = (preview.claimedSquares / Math.max(preview.totalSquares, 1)) * 100;
+
+  return (
+    <Box
+      sx={{
+        gridArea: 'fill',
+        display: 'flex',
+        alignItems: 'center',
+        gap: { xs: 2, sm: 3 },
+        flexDirection: { xs: 'column', sm: 'row' },
+      }}
+    >
+      <MiniBoard claimed={preview.claimedSquares} total={preview.totalSquares} />
+      <Box sx={{ flex: 1, width: '100%' }}>
         <Typography
-          variant="h3"
           sx={{
+            fontFamily: fonts.display,
             fontWeight: 800,
-            mb: { xs: 1, md: 2 },
-            fontSize: { xs: '1.75rem', md: '2.75rem' },
-            color: 'white',
+            fontSize: '2.2rem',
+            lineHeight: 1,
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
-          You're Invited!
+          {preview.claimedSquares}
+          <Box component="span" sx={{ color: 'text.secondary', fontSize: '1.2rem' }}>
+            /{preview.totalSquares} claimed
+          </Box>
         </Typography>
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'rgba(255,255,255,0.8)',
-            fontWeight: 300,
-            maxWidth: 500,
-            mx: 'auto',
-            mb: { xs: 2, md: 5 },
-            lineHeight: 1.6,
-            fontSize: { xs: '0.95rem', sm: '1.25rem' },
-          }}
-        >
-          Someone shared a squares contest with you. Sign in or create an account to join the
-          action.
+        <LinearProgress
+          variant="determinate"
+          value={fill}
+          aria-label="squares claimed"
+          sx={{ mt: 1.25, height: 8, borderRadius: 4, bgcolor: alpha(palette.chalk, 0.08) }}
+        />
+        <Typography sx={{ mt: 1.5, color: 'text.secondary', lineHeight: 1.6 }}>
+          {whatToExpect(preview)}
         </Typography>
+      </Box>
+    </Box>
+  );
+}
 
-        {/* feature highlights */}
+// an invite opened while signed out: the contest it leads to, and sign-in that comes straight back here
+export default function InviteSignIn({ token }: Props) {
+  const auth = useAuth();
+  const { data: preview, error, isLoading } = usePreviewInviteQuery(token);
+
+  if (error) {
+    return (
+      <JoinError
+        variant="error"
+        message={errorMessage(error, 'This invite link is invalid or expired')}
+      />
+    );
+  }
+
+  const signIn = (provider: OIDCProvider) => signInWithProvider(auth, provider);
+
+  return (
+    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 8 }, px: { xs: 2, sm: 3 } }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.25fr) minmax(0, 0.75fr)' },
+          // on phones sign-in comes right after what the contest is, before the board details
+          gridTemplateAreas: {
+            xs: '"heading" "signin" "fill"',
+            md: '"heading signin" "fill signin"',
+          },
+          columnGap: 7,
+          rowGap: { xs: 4, md: 3.5 },
+          alignItems: 'start',
+        }}
+      >
+        {isLoading || !preview ? (
+          <Box data-testid="invite-preview-loading" sx={{ gridArea: 'heading' }}>
+            <Skeleton variant="text" width={120} />
+            <Skeleton variant="text" width="80%" sx={{ fontSize: '3.4rem' }} />
+            <Skeleton variant="rounded" width="60%" height={44} sx={{ mt: 2.5 }} />
+          </Box>
+        ) : (
+          <>
+            <ContestHeading preview={preview} />
+            <ContestFill preview={preview} />
+          </>
+        )}
+
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: { xs: 0.75, sm: 4 },
-            mt: { xs: 1, md: 0 },
-            mb: { xs: 2, md: 5 },
+            gridArea: 'signin',
+            alignSelf: { md: 'center' },
+            p: { xs: 2.5, sm: 3.5 },
+            borderRadius: '22px',
+            border: 1,
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            boxShadow: '0 40px 90px -40px rgba(0, 0, 0, 0.9)',
+            display: 'grid',
+            gap: 1.5,
           }}
         >
-          {features.map((feature, i) => (
-            <Paper
-              key={i}
-              elevation={0}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: { xs: 0.5, sm: 1 },
-                width: 'auto',
-                px: { xs: 1, sm: 2.5 },
-                py: { xs: 0.75, sm: 1 },
-                borderRadius: 2,
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                animation: `${pulse} 3s ease-in-out ${i * 0.5}s infinite`,
-              }}
-            >
-              <Box
-                sx={{
-                  color: theme.palette.primary.main,
-                  display: { xs: 'none', sm: 'flex' },
-                  '& svg': { fontSize: { xs: 20, sm: 24 } },
-                }}
-              >
-                {feature.icon}
-              </Box>
-              <Typography
-                sx={{
-                  color: 'white',
-                  fontWeight: 500,
-                  fontSize: { xs: '0.7rem', sm: '0.9rem' },
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {feature.text}
-              </Typography>
-            </Paper>
-          ))}
-        </Box>
+          <Typography
+            component="h2"
+            sx={{
+              fontFamily: fonts.display,
+              fontWeight: 800,
+              fontSize: '1.7rem',
+              lineHeight: 1,
+              textTransform: 'uppercase',
+            }}
+          >
+            Take your seat
+          </Typography>
+          <Typography sx={{ color: 'text.secondary', mb: 1 }}>
+            Sign in and you join the contest straight away.
+          </Typography>
 
-        {/* action button */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            mb: 4,
-            width: '100%',
-          }}
-        >
+          <InAppBrowserNotice />
+
           <Button
             variant="contained"
             size="large"
-            startIcon={<Login />}
-            onClick={() => setSignInOpen(true)}
-            sx={{
-              px: 5,
-              py: 1.5,
-              fontWeight: 700,
-              fontSize: '1rem',
-              borderRadius: 2,
-              minWidth: { xs: 240, sm: 260 },
-              boxShadow: `0 8px 24px ${theme.palette.primary.main}55`,
-            }}
+            startIcon={<GoogleIcon />}
+            onClick={() => signIn('google')}
           >
-            Sign In to Join
+            Continue with Google
           </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            color="inherit"
+            startIcon={<GitHubIcon />}
+            onClick={() => signIn('github')}
+          >
+            Continue with GitHub
+          </Button>
+
+          <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1 }}>
+            By signing in, you agree to our{' '}
+            <Link href="https://maxhq.io/terms-of-service" target="_blank" rel="noreferrer">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="https://maxhq.io/privacy-policy" target="_blank" rel="noreferrer">
+              Privacy Policy
+            </Link>
+            .
+          </Typography>
         </Box>
       </Box>
-
-      <SignInDialog open={signInOpen} onClose={() => setSignInOpen(false)} />
     </Container>
   );
 }

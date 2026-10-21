@@ -236,4 +236,12 @@ export interface InvitePreviewResponse {
   maxSquares: number;
   owner: string;
   role: string;
+  status: ContestStatus;
+  claimedSquares: number;
+  totalSquares: number;
+  homeTeam?: string;
+  awayTeam?: string;
+  homeAbbr?: string;
+  awayAbbr?: string;
+  gameTime?: string;
 }

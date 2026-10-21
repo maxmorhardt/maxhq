@@ -1712,10 +1712,28 @@ const docTemplatecontests = `{
         "model.InvitePreviewResponse": {
             "type": "object",
             "properties": {
+                "awayAbbr": {
+                    "type": "string"
+                },
+                "awayTeam": {
+                    "type": "string"
+                },
+                "claimedSquares": {
+                    "type": "integer"
+                },
                 "contestId": {
                     "type": "string"
                 },
                 "contestName": {
+                    "type": "string"
+                },
+                "gameTime": {
+                    "type": "string"
+                },
+                "homeAbbr": {
+                    "type": "string"
+                },
+                "homeTeam": {
                     "type": "string"
                 },
                 "maxSquares": {
@@ -1726,6 +1744,12 @@ const docTemplatecontests = `{
                 },
                 "role": {
                     "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/model.ContestStatus"
+                },
+                "totalSquares": {
+                    "type": "integer"
                 }
             }
         },
