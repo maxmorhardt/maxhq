@@ -638,6 +638,12 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "409": {
+                        "description": "The board is full and locked",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -841,6 +847,12 @@ const docTemplatecontests = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "The board is full and locked",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -1863,6 +1875,10 @@ const docTemplatecontests = `{
         "model.Square": {
             "type": "object",
             "properties": {
+                "claimedAt": {
+                    "description": "set on claim and cleared on release; updated_at also moves when initials cascade",
+                    "type": "string"
+                },
                 "col": {
                     "type": "integer"
                 },

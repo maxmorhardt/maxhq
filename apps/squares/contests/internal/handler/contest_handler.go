@@ -226,6 +226,7 @@ func (h *contestHandler) ClaimRandomSquares(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
+// @Failure 409 {object} api.APIError "The board is full and locked"
 // @Router /contests/{id}/squares/{squareId}/claim [delete]
 func (h *contestHandler) ClearSquare(c *gin.Context) {
 	contestID, ok := api.PathUUID(c, "id")
@@ -244,6 +245,8 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrSquareNotFound), c))
+		case errors.Is(err, errs.ErrBoardLocked):
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedSquareEdit):
@@ -271,6 +274,7 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
+// @Failure 409 {object} api.APIError "The board is full and locked"
 // @Router /contests/{id}/squares/claims [delete]
 func (h *contestHandler) ClearMySquares(c *gin.Context) {
 	contestID, ok := api.PathUUID(c, "id")
@@ -284,6 +288,8 @@ func (h *contestHandler) ClearMySquares(c *gin.Context) {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
+		case errors.Is(err, errs.ErrBoardLocked):
+			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrDatabaseUnavailable):

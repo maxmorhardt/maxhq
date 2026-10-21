@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -216,6 +217,7 @@ func (r *contestRepository) ClaimSquare(ctx context.Context, square *model.Squar
 				"owner":      owner,
 				"owner_name": ownerName,
 				"updated_by": owner,
+				"claimed_at": time.Now(),
 				"version":    gorm.Expr("version + 1"),
 			})
 		if res.Error != nil {
@@ -290,6 +292,7 @@ func (r *contestRepository) ClaimRandomSquares(ctx context.Context, contestID uu
 				"owner":      owner,
 				"owner_name": ownerName,
 				"updated_by": owner,
+				"claimed_at": time.Now(),
 				"version":    gorm.Expr("version + 1"),
 			}).Error; err != nil {
 			return err
@@ -313,6 +316,7 @@ func (r *contestRepository) ClearSquare(ctx context.Context, square *model.Squar
 				"value":      "",
 				"owner":      "",
 				"owner_name": "",
+				"claimed_at": nil,
 				"version":    gorm.Expr("version + 1"),
 			}).Error; err != nil {
 			return err
@@ -372,6 +376,7 @@ func (r *contestRepository) ClearSquaresByOwner(ctx context.Context, contestID u
 				"value":      "",
 				"owner":      "",
 				"owner_name": "",
+				"claimed_at": nil,
 				"version":    gorm.Expr("version + 1"),
 			}).Error; err != nil {
 			return err

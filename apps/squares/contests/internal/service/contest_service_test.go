@@ -301,7 +301,7 @@ func TestClearSquare_SquareNotFound(t *testing.T) {
 func TestClearSquare_Success(t *testing.T) {
 	squareID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "u"}}}, nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "u"}, {}}}, nil)
 	repo.EXPECT().ClearSquare(mock.Anything, mock.Anything).Return(&model.Square{ID: squareID}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -503,7 +503,7 @@ func TestClaimSquare_LimitReachedConcurrently(t *testing.T) {
 func TestClaimSquare_ReEditOwnSquare(t *testing.T) {
 	squareID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "u"}}}, nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "u"}, {}}}, nil)
 	repo.EXPECT().ClaimSquare(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&model.Square{ID: squareID, Value: "XY", Owner: "u"}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -520,7 +520,7 @@ func TestClaimSquare_ReEditOwnSquare(t *testing.T) {
 func TestClaimSquare_OwnedByAnotherUser(t *testing.T) {
 	squareID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "other"}}}, nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "other"}, {}}}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
@@ -532,7 +532,7 @@ func TestClaimSquare_OwnedByAnotherUser(t *testing.T) {
 func TestClearSquare_OwnerDespiteAuthFail(t *testing.T) {
 	squareID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "u"}}}, nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "u"}, {}}}, nil)
 	repo.EXPECT().ClearSquare(mock.Anything, mock.Anything).Return(&model.Square{ID: squareID}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
@@ -546,7 +546,7 @@ func TestClearSquare_OwnerDespiteAuthFail(t *testing.T) {
 func TestClearSquare_Unauthorized(t *testing.T) {
 	squareID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "someone"}}}, nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "someone"}, {}}}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
 
@@ -643,4 +643,25 @@ func TestClaimRandomSquares_ReturnsRepositoryErrors(t *testing.T) {
 		_, err := contestSvc(repo, mocks.NewParticipantRepository(t), authorized(t, nil)).ClaimRandomSquares(claimCtx(), uuid.New(), 2, "u")
 		assert.ErrorIs(t, err, want)
 	}
+}
+
+func TestClearSquare_FullBoardIsLocked(t *testing.T) {
+	squareID := uuid.New()
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).
+		Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{ID: squareID, Owner: "u"}, {Owner: "v"}}}, nil)
+
+	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
+		ClearSquare(context.Background(), uuid.New(), squareID, "u")
+	assert.ErrorIs(t, err, errs.ErrBoardLocked)
+}
+
+func TestClearUserSquares_FullBoardIsLocked(t *testing.T) {
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).
+		Return(&model.Contest{Status: model.ContestStatusActive, Squares: []model.Square{{Owner: "u"}, {Owner: "v"}}}, nil)
+
+	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
+		ClearUserSquares(context.Background(), uuid.New(), "u")
+	assert.ErrorIs(t, err, errs.ErrBoardLocked)
 }

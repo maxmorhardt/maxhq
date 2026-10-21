@@ -35,8 +35,9 @@ describe('ContestDetails', () => {
     renderDetails(fullGrid(), makeViewer(), game);
     expect(screen.getByText('Board full')).toBeInTheDocument();
     expect(
-      screen.getByText(/It locks and the numbers are drawn at kickoff \(/)
+      screen.getByText(/The board is full and locked\. The numbers are drawn at kickoff \(/)
     ).toBeInTheDocument();
+    expect(screen.queryByTestId('square-actions')).not.toBeInTheDocument();
   });
 
   it('explains each later stage', () => {

@@ -1,4 +1,10 @@
-import type { ActivityEvent, Contest, ContestStatus, Participant } from '../../../types/contest';
+import type {
+  ActivityEvent,
+  Contest,
+  ContestStatus,
+  Participant,
+  Square,
+} from '../../../types/contest';
 import { getStatusLabel } from '../../../utils/contestStatus';
 import type { ContestEvent } from './events';
 
@@ -31,7 +37,7 @@ export function seedActivity(contest: Contest, participants: Participant[]): Act
       id: `seed-square-${s.id}`,
       type: 'square_claimed',
       message: `${s.ownerName || 'Someone'} claimed square (${s.row}, ${s.col})`,
-      timestamp: s.updatedAt || s.createdAt,
+      timestamp: s.claimedAt || s.updatedAt || s.createdAt,
     }));
 
   const winners = (contest.quarterResults ?? []).map<ActivityEvent>((qr) => ({
@@ -44,11 +50,17 @@ export function seedActivity(contest: Contest, participants: Participant[]): Act
   return [...joined, ...claimed, ...winners].sort(byTime).slice(-MAX_ACTIVITY);
 }
 
-// the feed line an event adds; previousStatus tells a real status change from an edit
+// what the contest looked like before the event, to tell real changes from edits
+export interface Before {
+  status?: ContestStatus;
+  square?: Pick<Square, 'owner' | 'value'>;
+}
+
+// the feed line an event adds
 export function describeEvent(
   event: ContestEvent,
   id: string,
-  previousStatus?: ContestStatus
+  before: Before = {}
 ): ActivityEvent | null {
   const entry = (type: ActivityEvent['type'], message: string): ActivityEvent => ({
     id,
@@ -59,10 +71,16 @@ export function describeEvent(
 
   switch (event.type) {
     case 'square.updated': {
-      const { row, col, value, ownerName } = event.data;
-      return value.trim() === ''
-        ? entry('square_cleared', `Square (${row}, ${col}) was cleared`)
-        : entry('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
+      const { row, col, value, owner, ownerName } = event.data;
+      if (value.trim() === '') {
+        return entry('square_cleared', `Square (${row}, ${col}) was cleared`);
+      }
+      // new initials on a held square, or a departed player's square kept in play, are not claims
+      const held = before.square && before.square.value.trim() !== '';
+      if (owner === GHOST_USER || (held && before.square?.owner === owner)) {
+        return null;
+      }
+      return entry('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
     }
     case 'quarter.recorded': {
       const qr = event.data;
@@ -72,7 +90,7 @@ export function describeEvent(
       );
     }
     case 'contest.updated':
-      return previousStatus && event.data.status !== previousStatus
+      return before.status && event.data.status !== before.status
         ? entry('contest_status', `Contest status changed to ${getStatusLabel(event.data.status)}`)
         : null;
     case 'participant.joined':

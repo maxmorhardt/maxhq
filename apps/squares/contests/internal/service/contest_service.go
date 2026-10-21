@@ -468,6 +468,12 @@ func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uu
 		return nil, errs.ErrSquareNotEditable
 	}
 
+	// a full board is final: every square stays as claimed until kickoff
+	if util.AllSquaresClaimed(contest) {
+		log.Warn("cannot clear a square on a full board", "square_id", squareID, "contest_id", contestID)
+		return nil, errs.ErrBoardLocked
+	}
+
 	square := findSquare(contest, squareID)
 	if square == nil {
 		log.Warn("square not found in contest", "square_id", squareID, "contest_id", contestID)
@@ -517,6 +523,11 @@ func (s *contestService) ClearUserSquares(ctx context.Context, contestID uuid.UU
 	if contest.Status != model.ContestStatusActive {
 		log.Warn("cannot clear squares when contest is not active", "contest_id", contestID, "contest_status", contest.Status)
 		return nil, errs.ErrSquareNotEditable
+	}
+
+	if util.AllSquaresClaimed(contest) {
+		log.Warn("cannot clear squares on a full board", "contest_id", contestID, "user", user)
+		return nil, errs.ErrBoardLocked
 	}
 
 	var clearedSquares []model.Square

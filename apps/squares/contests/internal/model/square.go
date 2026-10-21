@@ -17,10 +17,12 @@ type Square struct {
 	Owner     string    `json:"owner"`
 	OwnerName string    `json:"ownerName"`
 	Version   int64     `json:"version" gorm:"not null;default:1"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	CreatedBy string    `json:"createdBy"`
-	UpdatedBy string    `json:"updatedBy"`
+	// set on claim and cleared on release; updated_at also moves when initials cascade
+	ClaimedAt *time.Time `json:"claimedAt,omitempty"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	CreatedBy string     `json:"createdBy"`
+	UpdatedBy string     `json:"updatedBy"`
 }
 
 func (s *Square) BeforeCreate(tx *gorm.DB) (err error) {

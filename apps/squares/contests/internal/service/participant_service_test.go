@@ -356,7 +356,7 @@ func TestRemoveParticipant_Terminal(t *testing.T) {
 func TestRemoveParticipant_InProgressGhostsSquares(t *testing.T) {
 	contestWithSquare := &model.Contest{
 		Status:  model.ContestStatusQ2,
-		Squares: []model.Square{{Owner: "target"}},
+		Squares: []model.Square{{Owner: "target"}, {}},
 	}
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(contestWithSquare, nil)
@@ -480,7 +480,7 @@ func TestRemoveParticipant_ClearSquaresFails(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{
 		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "target"}},
+		Squares: []model.Square{{Owner: "target"}, {}},
 	}, nil).Once()
 	c.EXPECT().ClearSquare(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 	p := mocks.NewParticipantRepository(t)
@@ -528,7 +528,7 @@ func TestRemoveParticipant_EventFailureFailsTheRemoval(t *testing.T) {
 func TestRemoveParticipant_WithSquaresToClear(t *testing.T) {
 	contestWithSquare := &model.Contest{
 		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "target"}},
+		Squares: []model.Square{{Owner: "target"}, {}},
 	}
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(contestWithSquare, nil)
@@ -545,7 +545,7 @@ func TestRemoveParticipant_WithSquaresToClear(t *testing.T) {
 func TestRemoveParticipant_ClearSquareFails(t *testing.T) {
 	contestWithSquare := &model.Contest{
 		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "target"}},
+		Squares: []model.Square{{Owner: "target"}, {}},
 	}
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(contestWithSquare, nil)
@@ -570,4 +570,21 @@ func TestRemoveParticipant_DeleteFails(t *testing.T) {
 	svc := service.NewParticipantService(p, c, passTx(), anyEvents())
 	err := svc.RemoveParticipant(context.Background(), uuid.New(), "target", "owner")
 	assert.Error(t, err)
+}
+
+func TestRemoveParticipant_FullBoardGhostsTheirSquares(t *testing.T) {
+	full := &model.Contest{
+		Status:  model.ContestStatusActive,
+		Squares: []model.Square{{Owner: "target", Value: "TG"}, {Owner: "owner", Value: "OW"}},
+	}
+	c := mocks.NewContestRepository(t)
+	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(full, nil)
+	c.EXPECT().GhostSquare(mock.Anything, mock.Anything).Return(&model.Square{}, nil).Once()
+	p := mocks.NewParticipantRepository(t)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(&model.ContestParticipant{Role: model.ParticipantRoleOwner}, nil)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target").Return(&model.ContestParticipant{Role: model.ParticipantRoleParticipant}, nil)
+	p.EXPECT().Delete(mock.Anything, mock.Anything, "target").Return(nil)
+
+	svc := service.NewParticipantService(p, c, passTx(), anyEvents())
+	require.NoError(t, svc.RemoveParticipant(context.Background(), uuid.New(), "target", "owner"))
 }

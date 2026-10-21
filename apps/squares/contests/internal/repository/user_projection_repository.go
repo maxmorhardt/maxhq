@@ -152,7 +152,7 @@ func (r *userProjectionRepository) ScrubUserData(ctx context.Context, email stri
 		if err := tx.Model(&model.Square{}).
 			Where("owner = ? AND contest_id IN (?)", email,
 				tx.Model(&model.Contest{}).Select("id").Where("status NOT IN ?", liveStatuses)).
-			Updates(map[string]any{"value": "", "owner": "", "owner_name": "", "version": gorm.Expr("version + 1")}).Error; err != nil {
+			Updates(map[string]any{"value": "", "owner": "", "owner_name": "", "claimed_at": nil, "version": gorm.Expr("version + 1")}).Error; err != nil {
 			return err
 		}
 

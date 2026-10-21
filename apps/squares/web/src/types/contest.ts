@@ -48,6 +48,8 @@ export interface Square {
   owner: string;
   ownerName: string;
   version: number;
+  // when the square was claimed; updatedAt also moves when the owner changes their initials
+  claimedAt?: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;

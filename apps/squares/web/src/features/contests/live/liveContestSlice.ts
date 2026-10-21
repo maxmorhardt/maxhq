@@ -160,11 +160,19 @@ const liveContestSlice = createSlice({
     },
     eventReceived(state, action: PayloadAction<{ id: string | null; event: ContestEvent }>) {
       const { id, event } = action.payload;
-      const previousStatus = state.contest?.status;
+      // copied out before the event is applied, since applying it changes the draft in place
+      const square =
+        event.type === 'square.updated'
+          ? state.contest?.squares.find((s) => s.id === event.data.id)
+          : undefined;
+      const before = {
+        status: state.contest?.status,
+        square: square && { owner: square.owner, value: square.value },
+      };
 
       applyEvent(state, event);
 
-      const entry = describeEvent(event, id ?? `${event.type}-${event.timestamp}`, previousStatus);
+      const entry = describeEvent(event, id ?? `${event.type}-${event.timestamp}`, before);
       if (entry) {
         state.activity.push(entry);
         state.activity = state.activity.slice(-MAX_ACTIVITY);

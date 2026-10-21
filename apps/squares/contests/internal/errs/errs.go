@@ -16,6 +16,7 @@ var (
 	ErrContestNotEditable   = errors.New("contest is not in an editable state")
 	ErrContestFinalized     = errors.New("contest is finished or deleted and cannot be modified")
 	ErrSquareNotEditable    = errors.New("squares can only be edited when contest is active")
+	ErrBoardLocked          = errors.New("the board is full and locked, so squares can no longer be cleared")
 	ErrSquareTaken          = errors.New("that square was just claimed by someone else")
 	ErrNoEmptySquares       = errors.New("there are no empty squares left")
 	ErrContestAlreadyExists = errors.New("contest already exists with this name")

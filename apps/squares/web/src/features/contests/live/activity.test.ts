@@ -38,6 +38,28 @@ describe('seedActivity', () => {
     ]);
   });
 
+  it('places a claim when it was made, not when the owner last changed their initials', () => {
+    const contest = makeContest({
+      squares: [
+        makeSquare({
+          id: 's1',
+          value: 'AB',
+          ownerName: 'Ann',
+          claimedAt: '2026-01-01T01:00:00Z',
+          updatedAt: '2026-01-01T09:00:00Z',
+        }),
+      ],
+      quarterResults: [makeQuarterResult({ createdAt: '2026-01-01T03:00:00Z' })],
+    });
+
+    const feed = seedActivity(contest, []);
+    expect(feed.map((a) => a.message)).toEqual([
+      'Ann claimed square (0, 0)',
+      'Q1 winner: Player (7-3)',
+    ]);
+    expect(feed[0].timestamp).toBe('2026-01-01T01:00:00Z');
+  });
+
   it('keeps only the latest entries', () => {
     const squares = Array.from({ length: MAX_ACTIVITY + 5 }, (_, i) =>
       makeSquare({ id: `s${i}`, value: 'X', updatedAt: new Date(i * 1000).toISOString() })
@@ -62,6 +84,26 @@ describe('describeEvent', () => {
     expect(describeEvent(cleared, 'id')?.message).toBe('Square (1, 2) was cleared');
   });
 
+  it('skips new initials on a held square and a departed player kept in play', () => {
+    const renamed = event(
+      'square.updated',
+      makeSquare({ row: 1, col: 2, value: 'XY', owner: 'ann@x.com', ownerName: 'Ann' })
+    );
+    expect(
+      describeEvent(renamed, 'id', { square: { owner: 'ann@x.com', value: 'AB' } })
+    ).toBeNull();
+
+    const ghosted = event('square.updated', makeSquare({ value: 'AB', owner: 'ghost' }));
+    expect(
+      describeEvent(ghosted, 'id', { square: { owner: 'ann@x.com', value: 'AB' } })
+    ).toBeNull();
+
+    // the same square freed and taken by someone else is a real claim
+    expect(describeEvent(renamed, 'id', { square: { owner: '', value: '' } })?.type).toBe(
+      'square_claimed'
+    );
+  });
+
   it('describes quarter results', () => {
     expect(describeEvent(event('quarter.recorded', makeQuarterResult()), 'id')?.message).toBe(
       'Q1 winner: Player (7-3)'
@@ -70,8 +112,10 @@ describe('describeEvent', () => {
 
   it('describes a status change but not an edit', () => {
     const update = event('contest.updated', { status: 'Q2' });
-    expect(describeEvent(update, 'id', 'Q1')?.message).toBe('Contest status changed to Quarter 2');
-    expect(describeEvent(update, 'id', 'Q2')).toBeNull();
+    expect(describeEvent(update, 'id', { status: 'Q1' })?.message).toBe(
+      'Contest status changed to Quarter 2'
+    );
+    expect(describeEvent(update, 'id', { status: 'Q2' })).toBeNull();
   });
 
   it('describes joins and removals', () => {
