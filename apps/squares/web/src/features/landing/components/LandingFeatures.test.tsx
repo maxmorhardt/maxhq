@@ -21,7 +21,8 @@ describe('LandingFeatures', () => {
     renderWithProviders(<LandingFeatures />);
 
     const feed = screen.getByRole('figure', { name: 'Example contest activity' });
-    expect(feed).toHaveTextContent('jordan@gmail.com joined the contest');
+    expect(feed).toHaveTextContent('Jordan D. joined the contest');
+    expect(feed).not.toHaveTextContent('@');
     expect(feed).toHaveTextContent('Jordan claimed square (4, 7)');
     expect(feed).toHaveTextContent('Contest status changed to Quarter 1');
     expect(feed).toHaveTextContent('Q2 winner: Jordan (14-7)');

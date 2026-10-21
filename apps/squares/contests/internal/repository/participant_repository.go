@@ -39,8 +39,10 @@ func (r *participantRepository) GetByContestAndUser(ctx context.Context, contest
 func (r *participantRepository) GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
 	var participants []model.ContestParticipant
 	err := database.Conn(ctx, r.db).
-		Where("contest_id = ?", contestID).
-		Order("joined_at ASC").
+		Select("contest_participants.*, COALESCE(users.display_name, '') AS display_name").
+		Joins("LEFT JOIN users ON users.email = contest_participants.user_id").
+		Where("contest_participants.contest_id = ?", contestID).
+		Order("contest_participants.joined_at ASC").
 		Find(&participants).Error
 	return participants, err
 }

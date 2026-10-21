@@ -6,6 +6,7 @@ import type {
   Square,
 } from '../../../types/contest';
 import { getStatusLabel } from '../../../utils/contestStatus';
+import { participantName } from '../../../utils/publicName';
 import type { ContestEvent } from './events';
 
 // the feed keeps the latest entries so a long game cannot grow it without bound
@@ -27,7 +28,7 @@ export function seedActivity(contest: Contest, participants: Participant[]): Act
     .map<ActivityEvent>((p) => ({
       id: `seed-participant-${p.id}`,
       type: 'participant_added',
-      message: `${p.userId} joined the contest`,
+      message: `${participantName(p)} joined the contest`,
       timestamp: p.joinedAt || p.createdAt,
     }));
 
@@ -94,9 +95,9 @@ export function describeEvent(
         ? entry('contest_status', `Contest status changed to ${getStatusLabel(event.data.status)}`)
         : null;
     case 'participant.joined':
-      return entry('participant_added', `${event.data.userId} joined the contest`);
+      return entry('participant_added', `${participantName(event.data)} joined the contest`);
     case 'participant.removed':
-      return entry('participant_removed', `${event.data.userId} was removed`);
+      return entry('participant_removed', `${participantName(event.data)} left the contest`);
     default:
       return null;
   }

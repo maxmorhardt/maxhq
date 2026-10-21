@@ -14,6 +14,12 @@ export function toPublicName(displayName: string): string {
   return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
 }
 
+// what other players see for a participant: a shortened name, never their email
+export function participantName(participant: { displayName?: string }): string {
+  const name = participant.displayName?.trim();
+  return name && !name.includes('@') ? toPublicName(name) : 'A player';
+}
+
 // identifies a leaderboard row uniquely enough to highlight, since tied players share a rank
 export function leaderboardKey(rank: number, displayName: string): string {
   return `${rank}:${displayName}`;

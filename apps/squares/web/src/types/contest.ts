@@ -196,6 +196,8 @@ export interface Participant {
   id: string;
   contestId: string;
   userId: string;
+  // the name other players see; emails are shown only to the contest owner
+  displayName?: string;
   inviteId: string;
   role: ParticipantRole;
   maxSquares: number;

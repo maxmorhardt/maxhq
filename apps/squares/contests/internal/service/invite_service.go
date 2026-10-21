@@ -18,7 +18,7 @@ import (
 type InviteService interface {
 	CreateInvite(ctx context.Context, contestID uuid.UUID, req *model.CreateInviteRequest, user string) (*model.ContestInvite, error)
 	GetInvitePreview(ctx context.Context, token string) (*model.InvitePreviewResponse, error)
-	RedeemInvite(ctx context.Context, token, user string) (*model.ContestParticipant, error)
+	RedeemInvite(ctx context.Context, token, user, displayName string) (*model.ContestParticipant, error)
 	GetInvitesByContestID(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestInvite, error)
 	DeleteInvite(ctx context.Context, contestID, inviteID uuid.UUID, user string) error
 }
@@ -157,7 +157,7 @@ func invitePreview(contest *model.Contest, invite *model.ContestInvite) *model.I
 	return preview
 }
 
-func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*model.ContestParticipant, error) {
+func (s *inviteService) RedeemInvite(ctx context.Context, token, user, displayName string) (*model.ContestParticipant, error) {
 	log := logging.FromContext(ctx)
 
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
@@ -212,11 +212,12 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user string) (*
 	}
 
 	participant := &model.ContestParticipant{
-		ContestID:  invite.ContestID,
-		UserID:     user,
-		Role:       invite.Role,
-		MaxSquares: invite.MaxSquares,
-		InviteID:   &invite.ID,
+		ContestID:   invite.ContestID,
+		UserID:      user,
+		DisplayName: displayName,
+		Role:        invite.Role,
+		MaxSquares:  invite.MaxSquares,
+		InviteID:    &invite.ID,
 	}
 
 	// the repository re-checks the pool, uses, and duplicate joins atomically, so it is the authority

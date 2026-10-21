@@ -28,11 +28,16 @@ describe('seedActivity', () => {
     });
     const participants = [
       makeParticipant({ id: 'owner', role: 'owner' }),
-      makeParticipant({ id: 'p', userId: 'bo@x.com', joinedAt: '2026-01-01T01:00:00Z' }),
+      makeParticipant({
+        id: 'p',
+        userId: 'bo@x.com',
+        displayName: 'Bo Jackson',
+        joinedAt: '2026-01-01T01:00:00Z',
+      }),
     ];
 
     expect(seedActivity(contest, participants).map((a) => a.message)).toEqual([
-      'bo@x.com joined the contest',
+      'Bo J. joined the contest',
       'Ann claimed square (0, 0)',
       'Q1 winner: Player (7-3)',
     ]);
@@ -118,13 +123,18 @@ describe('describeEvent', () => {
     expect(describeEvent(update, 'id', { status: 'Q2' })).toBeNull();
   });
 
-  it('describes joins and removals', () => {
-    const participant = makeParticipant({ userId: 'bo@x.com' });
+  it('names who joined and left without showing their email', () => {
+    const participant = makeParticipant({ userId: 'bo@x.com', displayName: 'Bo Jackson' });
     expect(describeEvent(event('participant.joined', participant), 'id')?.message).toBe(
-      'bo@x.com joined the contest'
+      'Bo J. joined the contest'
     );
     expect(describeEvent(event('participant.removed', participant), 'id')?.message).toBe(
-      'bo@x.com was removed'
+      'Bo J. left the contest'
+    );
+
+    const unnamed = makeParticipant({ userId: 'bo@x.com', displayName: 'bo@x.com' });
+    expect(describeEvent(event('participant.joined', unnamed), 'id')?.message).toBe(
+      'A player joined the contest'
     );
   });
 
