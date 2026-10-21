@@ -2,7 +2,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import { Box, Button, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
-import { fonts, primaryTint } from '../../theme';
+import { primaryTint } from '../../theme';
 import RevealSection from '../common/RevealSection';
 
 export interface AppFeature {
@@ -15,6 +15,8 @@ export interface AppEntry {
   id: string;
   name: string;
   tagline: string;
+  // a small mark for the app's tile
+  icon: ReactNode;
   description: string;
   href: string;
   status: 'Live' | 'In development';
@@ -154,38 +156,5 @@ export default function AppShowcase({ app, flip = false }: Props) {
 
       {app.extra && <Box sx={{ mt: { xs: 5, md: 7 } }}>{app.extra}</Box>}
     </Box>
-  );
-}
-
-// a quiet tile that keeps a place for what comes next
-export function UpNextTile() {
-  return (
-    <RevealSection
-      sx={{
-        p: { xs: 3, md: 4 },
-        borderRadius: '24px',
-        border: 1,
-        borderStyle: 'dashed',
-        borderColor: 'divider',
-      }}
-    >
-      <Typography
-        sx={{
-          fontFamily: fonts.mono,
-          fontSize: '0.8rem',
-          color: 'primary.main',
-          letterSpacing: '0.04em',
-        }}
-      >
-        ~/apps $ ls --coming-soon
-      </Typography>
-      <Typography variant="h3" component="h2" sx={{ mt: 1 }}>
-        More apps are on the way
-      </Typography>
-      <Typography sx={{ mt: 0.5, maxWidth: '60ch' }}>
-        New apps join this page as they launch, and you sign in to every one of them with the same
-        maxhq account.
-      </Typography>
-    </RevealSection>
   );
 }

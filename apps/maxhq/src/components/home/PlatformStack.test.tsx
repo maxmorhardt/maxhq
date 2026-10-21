@@ -14,9 +14,9 @@ describe('PlatformStack', () => {
     renderWithProviders(<PlatformStack />);
 
     expect(
-      screen.getByRole('img', { name: /interface, API, services, and cluster/ })
+      screen.getByRole('img', { name: /interface, API, infrastructure, and monitoring/ })
     ).toBeInTheDocument();
-    for (const label of ['01 cluster', '02 services', '03 api', '04 interface']) {
+    for (const label of ['01 interface', '02 api', '03 infra', '04 monitoring']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });

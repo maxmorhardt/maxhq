@@ -1,12 +1,13 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import AppShowcase, { type AppEntry, UpNextTile } from './AppShowcase';
+import AppShowcase, { type AppEntry } from './AppShowcase';
 import { renderWithProviders } from '../../testUtils';
 
 const app: AppEntry = {
   id: 'pool',
   name: 'Pool',
   tagline: 'A tagline',
+  icon: <span />,
   description: 'A description',
   href: 'https://pool.maxhq.io',
   status: 'Live',
@@ -41,11 +42,5 @@ describe('AppShowcase', () => {
 
     expect(screen.getByText('In development')).toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
-  });
-
-  it('renders the up next tile', () => {
-    renderWithProviders(<UpNextTile />);
-
-    expect(screen.getByRole('heading', { name: 'More apps are on the way' })).toBeInTheDocument();
   });
 });

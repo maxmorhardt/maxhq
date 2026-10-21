@@ -6,10 +6,10 @@ import PageHeader from '../components/common/PageHeader';
 import RepoMap from '../components/projects/RepoMap';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
-import ProjectCard, { type Project } from '../components/projects/ProjectCard';
+import ProjectRow, { type Project } from '../components/projects/ProjectRow';
 import { pageSection } from '../theme';
 
-// two rows of three: the apps, then the platform that builds, versions, and runs them
+// the apps first, then the platform that builds, versions, and runs them
 const projects: Project[] = [
   {
     name: 'squares',
@@ -77,6 +77,11 @@ const projects: Project[] = [
   },
 ];
 
+const groups = [
+  { title: 'Apps', blurb: 'What people use', start: 0, count: 3 },
+  { title: 'Platform', blurb: 'What builds and runs them', start: 3, count: 3 },
+];
+
 export default function ProjectsPage() {
   return (
     <Box>
@@ -92,43 +97,47 @@ export default function ProjectsPage() {
       />
 
       <Container maxWidth="lg" sx={{ pb: pageSection.py }}>
+        {groups.map((group) => (
+          <Box
+            key={group.title}
+            component="section"
+            aria-labelledby={`group-${group.title}`}
+            sx={{ mb: { xs: 7, md: 10 } }}
+          >
+            <RevealSection
+              sx={{
+                display: 'flex',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                mb: 1,
+              }}
+            >
+              <Typography id={`group-${group.title}`} variant="h3" component="h2">
+                {group.title}
+              </Typography>
+              <Typography sx={{ fontSize: '0.88rem' }}>{group.blurb}</Typography>
+            </RevealSection>
+            <Box component="ol" start={group.start + 1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
+              {projects.slice(group.start, group.start + group.count).map((project, i) => (
+                <ProjectRow key={project.name} project={project} index={group.start + i} />
+              ))}
+            </Box>
+          </Box>
+        ))}
+
         {/* under the hood: how a change reaches the clusters */}
-        <RevealSection>
-          <Typography variant="h3" component="h2" sx={{ mb: 3, fontSize: '1.4rem' }}>
-            Under the hood
-          </Typography>
-        </RevealSection>
-
-        <RevealSection variant="rise" sx={{ mb: 5 }}>
-          <RepoMap />
-        </RevealSection>
-
-        {/* the repositories */}
-        <RevealSection>
-          <Typography variant="h3" component="h2" sx={{ mt: 10, mb: 3, fontSize: '1.4rem' }}>
-            The repositories
-          </Typography>
-        </RevealSection>
-
-        <Box
-          sx={{
-            display: 'grid',
-            // fixed columns that divide the six cards evenly at every width
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, minmax(0, 1fr))',
-              lg: 'repeat(3, minmax(0, 1fr))',
-            },
-            gap: 2.5,
-          }}
-        >
-          {projects.map((project, i) => (
-            <ProjectCard
-              key={project.name}
-              project={project}
-              rootMargin={i < 3 ? '0px 0px 15% 0px' : undefined}
-            />
-          ))}
+        <Box component="section" aria-labelledby="under-the-hood">
+          <RevealSection>
+            <Typography id="under-the-hood" variant="h3" component="h2" sx={{ mb: 1 }}>
+              Under the hood
+            </Typography>
+            <Typography sx={{ mb: 4, maxWidth: '60ch' }}>
+              How a change in any of these repositories reaches the clusters.
+            </Typography>
+          </RevealSection>
+          <RevealSection variant="rise">
+            <RepoMap />
+          </RevealSection>
         </Box>
       </Container>
     </Box>

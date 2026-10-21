@@ -3,17 +3,19 @@ import BlockIcon from '@mui/icons-material/Block';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
+import GridViewIcon from '@mui/icons-material/GridView';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import ShieldIcon from '@mui/icons-material/Shield';
 import { Box, Button, Container, Link as MuiLink, Typography } from '@mui/material';
 import { Fragment, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import AppShowcase, { type AppEntry, UpNextTile } from '../components/apps/AppShowcase';
+import AppDirectory from '../components/apps/AppDirectory';
+import AppShowcase, { type AppEntry } from '../components/apps/AppShowcase';
 import SquaresBoard from '../components/apps/SquaresBoard';
 import StepTrack from '../components/apps/StepTrack';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
-import { fonts, pageSection, primaryTint } from '../theme';
+import { pageSection, primaryTint } from '../theme';
 
 // every app on maxhq; add an entry here and it gets its own card, index link and anchor
 const apps: AppEntry[] = [
@@ -21,6 +23,7 @@ const apps: AppEntry[] = [
     id: 'squares',
     name: 'Squares',
     tagline: 'Football squares for the whole party',
+    icon: <GridViewIcon />,
     description:
       'The classic Super Bowl pool, online. One person sets up the board, everyone claims their squares from their phone, and the live score calls the winner every quarter.',
     href: 'https://squares.maxhq.io',
@@ -126,6 +129,7 @@ function DataCard({ title, children }: { title: string; children: ReactNode }) {
         border: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
+        height: '100%',
       }}
     >
       <Typography variant="h3" sx={{ mb: 2.5 }}>
@@ -156,19 +160,7 @@ export default function AppsPage() {
       >
         <Container maxWidth="lg">
           <RevealSection>
-            <Typography
-              sx={{
-                fontFamily: fonts.mono,
-                fontSize: '0.85rem',
-                color: 'primary.main',
-                letterSpacing: '0.04em',
-              }}
-            >
-              ~/apps
-            </Typography>
-            <Typography variant="h1" sx={{ mt: 1.5 }}>
-              Apps
-            </Typography>
+            <Typography variant="h1">Apps</Typography>
           </RevealSection>
           <RevealSection delay={1}>
             <Typography
@@ -180,67 +172,9 @@ export default function AppsPage() {
             </Typography>
           </RevealSection>
 
-          <RevealSection
-            delay={2}
-            component="nav"
-            aria-label="Apps on maxhq"
-            sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', gap: 1.25 }}
-          >
-            {apps.map((app) => (
-              <Box
-                key={app.id}
-                component="a"
-                href={`#${app.id}`}
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 1.75,
-                  py: 0.9,
-                  borderRadius: 999,
-                  border: 1,
-                  borderColor: 'divider',
-                  bgcolor: 'background.paper',
-                  color: 'text.primary',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.92rem',
-                  transition: 'border-color 160ms',
-                  '&:hover': { borderColor: 'primary.main' },
-                }}
-              >
-                <Box
-                  component="span"
-                  aria-hidden
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: app.status === 'Live' ? 'success.main' : 'warning.main',
-                  }}
-                />
-                {app.name}
-              </Box>
-            ))}
-            <Box
-              component="a"
-              href="#your-data"
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                px: 1.75,
-                py: 0.9,
-                borderRadius: 999,
-                color: 'text.secondary',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '0.92rem',
-                '&:hover': { color: 'text.primary' },
-              }}
-            >
-              Your account &amp; data ↓
-            </Box>
-          </RevealSection>
+          <Box sx={{ mt: { xs: 5, md: 6 } }}>
+            <AppDirectory apps={apps} />
+          </Box>
         </Container>
       </Box>
 
@@ -248,29 +182,13 @@ export default function AppsPage() {
         {apps.map((app, i) => (
           <AppShowcase key={app.id} app={app} flip={i % 2 === 1} />
         ))}
-        <UpNextTile />
       </Container>
 
       {/* what signing in shares and what we do with it, kept here for the sign-in providers' app reviews */}
-      <Box
-        component="section"
-        id="your-data"
-        aria-labelledby="your-data-title"
-        sx={{ ...pageSection, scrollMarginTop: 64 }}
-      >
+      <Box component="section" aria-labelledby="your-data-title" sx={pageSection}>
         <Container maxWidth="lg">
           <RevealSection sx={{ maxWidth: '62ch' }}>
-            <Typography
-              sx={{
-                fontFamily: fonts.mono,
-                fontSize: '0.85rem',
-                color: 'primary.main',
-                letterSpacing: '0.04em',
-              }}
-            >
-              ~/apps $ cat privacy.md
-            </Typography>
-            <Typography id="your-data-title" variant="h2" sx={{ mt: 1.5 }}>
+            <Typography id="your-data-title" variant="h2">
               Your account and your data
             </Typography>
             <Typography sx={{ mt: 2 }}>
@@ -285,9 +203,8 @@ export default function AppsPage() {
             sx={{
               mt: { xs: 5, md: 7 },
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
               gap: { xs: 2, md: 3 },
-              alignItems: 'start',
             }}
           >
             <DataCard title="What your sign-in shares with us">
@@ -323,41 +240,36 @@ export default function AppsPage() {
               </Box>
             </DataCard>
 
-            <Box sx={{ display: 'grid', gap: { xs: 2, md: 3 } }}>
-              <DataCard title="What we never do">
-                <Box
-                  component="ul"
-                  sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gap: 1.5 }}
-                >
-                  {never.map((line) => (
-                    <Box key={line} component="li" sx={{ display: 'flex', gap: 1.25 }}>
-                      <BlockIcon sx={{ mt: '3px', fontSize: 18, color: 'text.secondary' }} />
-                      <Typography variant="body2">{line}</Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </DataCard>
+            <DataCard title="What we never do">
+              <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gap: 1.5 }}>
+                {never.map((line) => (
+                  <Box key={line} component="li" sx={{ display: 'flex', gap: 1.25 }}>
+                    <BlockIcon sx={{ mt: '3px', fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2">{line}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </DataCard>
 
-              <DataCard title="Leaving is easy">
-                <Box sx={{ display: 'flex', gap: 1.25 }}>
-                  <DeleteOutlinedIcon sx={{ mt: '3px', fontSize: 18, color: 'text.secondary' }} />
-                  <Typography variant="body2">
-                    Delete your account anytime from your profile in any app, or email{' '}
-                    <MuiLink href="mailto:support@maxhq.io">support@maxhq.io</MuiLink> and we’ll do
-                    it for you. You can also remove maxhq’s access in your account settings with{' '}
-                    {providers.map((provider, i) => (
-                      <Fragment key={provider.name}>
-                        {i > 0 && (i === providers.length - 1 ? ' or ' : ', ')}
-                        <MuiLink href={provider.access} target="_blank" rel="noreferrer">
-                          {provider.name}
-                        </MuiLink>
-                      </Fragment>
-                    ))}
-                    .
-                  </Typography>
-                </Box>
-              </DataCard>
-            </Box>
+            <DataCard title="Leaving is easy">
+              <Box sx={{ display: 'flex', gap: 1.25 }}>
+                <DeleteOutlinedIcon sx={{ mt: '3px', fontSize: 18, color: 'text.secondary' }} />
+                <Typography variant="body2">
+                  Delete your account anytime from your profile in any app, or email{' '}
+                  <MuiLink href="mailto:support@maxhq.io">support@maxhq.io</MuiLink> and we’ll do it
+                  for you. You can also remove maxhq’s access in your account settings with{' '}
+                  {providers.map((provider, i) => (
+                    <Fragment key={provider.name}>
+                      {i > 0 && (i === providers.length - 1 ? ' or ' : ', ')}
+                      <MuiLink href={provider.access} target="_blank" rel="noreferrer">
+                        {provider.name}
+                      </MuiLink>
+                    </Fragment>
+                  ))}
+                  .
+                </Typography>
+              </Box>
+            </DataCard>
           </Box>
 
           <RevealSection

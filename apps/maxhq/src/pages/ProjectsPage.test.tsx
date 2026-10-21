@@ -10,11 +10,12 @@ describe('ProjectsPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Projects' })).toBeInTheDocument();
   });
 
-  it('renders both section headings', () => {
+  it('renders the section headings', () => {
     renderWithProviders(<ProjectsPage />);
 
-    expect(screen.getByRole('heading', { name: 'Under the hood' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'The repositories' })).toBeInTheDocument();
+    for (const name of ['Apps', 'Platform', 'Under the hood']) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
+    }
   });
 
   it('maps how a change reaches the clusters', () => {
@@ -25,19 +26,22 @@ describe('ProjectsPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders a card for every repository', () => {
+  it('lists every repository in order', () => {
     renderWithProviders(<ProjectsPage />);
 
     const names = ['squares', 'squares services', 'maxhq.io', 'charts', 'gitops', 'workflows'];
     for (const name of names) {
       expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument();
     }
+    expect(
+      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)
+    ).toEqual(names);
   });
 
-  it('points the gitops card at the gitops repo and the Terraform in maxhq', () => {
+  it('points gitops at the gitops repo and the Terraform in maxhq', () => {
     renderWithProviders(<ProjectsPage />);
 
-    const links = screen.getAllByRole('link', { name: 'View on GitHub' });
+    const links = screen.getAllByRole('link', { name: /Repository/ });
     expect(links.map((a) => a.getAttribute('href'))).toContain(
       'https://github.com/maxmorhardt/gitops'
     );
@@ -50,7 +54,6 @@ describe('ProjectsPage', () => {
   it('lists the site with its react stack', () => {
     renderWithProviders(<ProjectsPage />);
 
-    expect(screen.getByText('React 19')).toBeInTheDocument();
-    expect(screen.getByText('Material UI')).toBeInTheDocument();
+    expect(screen.getByText(/React 19\s+·.*Material UI/)).toBeInTheDocument();
   });
 });

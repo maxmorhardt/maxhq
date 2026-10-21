@@ -4,15 +4,16 @@ import AppsPage from './AppsPage';
 import { renderWithProviders } from '../testUtils';
 
 describe('AppsPage', () => {
-  it('renders the page heading and an index of the apps', () => {
+  it('renders the page heading and a directory of the apps', () => {
     renderWithProviders(<AppsPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Apps' })).toBeInTheDocument();
-    const index = screen.getByRole('navigation', { name: 'Apps on maxhq' });
-    expect(within(index).getByRole('link', { name: /Squares/ })).toHaveAttribute(
+    const directory = screen.getByRole('list', { name: 'Apps' });
+    expect(within(directory).getByRole('link', { name: 'Squares' })).toHaveAttribute(
       'href',
       '#squares'
     );
+    expect(within(directory).getByText('More apps on the way')).toBeInTheDocument();
   });
 
   it('presents squares with a link out to the live app', () => {

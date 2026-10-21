@@ -16,52 +16,61 @@ const plane = (theme: Theme) =>
 
 const mono = { fontFamily: fonts.mono, fontSize: 12, lineHeight: 1 } as const;
 
-function Cluster() {
-  const lit = new Set([0, 4, 5, 7]);
+function Monitoring() {
+  const bars = [38, 52, 44, 61, 47, 72, 58, 40, 55, 66, 49, 35];
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25, flex: 1 }}>
-      {Array.from({ length: 9 }, (_, i) => (
-        <Box
-          key={i}
-          sx={{
-            display: 'grid',
-            placeItems: 'center',
-            borderRadius: '8px',
-            border: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.default',
-          }}
-        >
+    <Box sx={{ display: 'grid', gap: 1.25, flex: 1, gridTemplateRows: 'auto 1fr' }}>
+      <Box sx={{ ...mono, display: 'flex', gap: 2, color: 'text.secondary' }}>
+        <span>latency</span>
+        <span>errors</span>
+        <Box component="span" sx={{ ml: 'auto', color: 'success.main' }}>
+          ● healthy
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 0.75,
+          px: 1,
+          pb: 1,
+          borderRadius: '8px',
+          border: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.default',
+        }}
+      >
+        {bars.map((height, i) => (
           <Box
+            key={i}
             sx={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              bgcolor: lit.has(i) ? 'success.main' : 'divider',
-              boxShadow: lit.has(i) ? '0 0 10px currentColor' : 'none',
-              color: 'success.main',
+              flex: 1,
+              height: `${height}%`,
+              borderRadius: '3px 3px 0 0',
+              bgcolor: i === 5 ? 'primary.main' : (theme) => secondaryTint(theme, 0.45),
             }}
           />
-        </Box>
-      ))}
+        ))}
+      </Box>
     </Box>
   );
 }
 
-function Services() {
+function Infra() {
+  const services = ['eks', 'ec2', 'efs', 's3', 'lambda', 'dynamodb'];
+
   return (
-    <Box sx={{ display: 'grid', gap: 1.25, flex: 1, alignContent: 'center' }}>
-      {['contests', 'games', 'accounts', 'realtime'].map((name, i) => (
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25, flex: 1 }}>
+      {services.map((name, i) => (
         <Box
           key={name}
           sx={{
             ...mono,
             display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 1.5,
-            py: 1.1,
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            p: 1,
             borderRadius: '8px',
             border: 1,
             borderColor: i === 0 ? (theme) => primaryTint(theme, 0.5) : 'divider',
@@ -69,7 +78,16 @@ function Services() {
             color: 'text.primary',
           }}
         >
-          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              bgcolor: 'success.main',
+              boxShadow: '0 0 10px currentColor',
+              color: 'success.main',
+            }}
+          />
           {name}
         </Box>
       ))}
@@ -79,23 +97,23 @@ function Services() {
 
 function Routes() {
   const routes = [
-    { method: 'GET', path: '/contests' },
-    { method: 'POST', path: '/squares' },
-    { method: 'GET', path: '/games/week' },
-    { method: 'SSE', path: '/stream' },
+    { method: 'POST', path: '/workspaces' },
+    { method: 'GET', path: '/workspaces/{id}' },
+    { method: 'PATCH', path: '/workspaces/{id}' },
+    { method: 'DELETE', path: '/workspaces/{id}' },
   ];
 
   return (
     <Box sx={{ display: 'grid', gap: 1.25, flex: 1, alignContent: 'center' }}>
       {routes.map((route) => (
         <Box
-          key={route.path}
+          key={route.method}
           sx={{ ...mono, display: 'flex', gap: 1.25, color: 'text.secondary', py: 0.5 }}
         >
           <Box
             component="span"
             sx={{
-              width: 34,
+              width: 50,
               fontWeight: 700,
               color: route.method === 'GET' ? 'secondary.main' : 'primary.main',
             }}
@@ -112,32 +130,59 @@ function Routes() {
 }
 
 function Interface() {
+  const workspaces = [
+    { name: 'vs code', status: 'running' },
+    { name: 'jupyterlab', status: 'running' },
+    { name: 'rstudio', status: 'starting' },
+  ];
+
   return (
-    <Box sx={{ display: 'grid', gap: 1.25, flex: 1, gridTemplateRows: 'auto 1fr' }}>
-      <Box sx={{ display: 'flex', gap: 0.75 }}>
+    <Box sx={{ display: 'grid', gap: 1, flex: 1, alignContent: 'center' }}>
+      {workspaces.map((workspace, i) => (
         <Box
-          sx={{ width: '38%', height: 8, borderRadius: 4, bgcolor: 'text.primary', opacity: 0.8 }}
-        />
-        <Box sx={{ width: '18%', height: 8, borderRadius: 4, bgcolor: 'divider', ml: 'auto' }} />
-      </Box>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0.75 }}>
-        {Array.from({ length: 25 }, (_, i) => (
+          key={workspace.name}
+          sx={{
+            ...mono,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 1.5,
+            py: 1.1,
+            borderRadius: '8px',
+            border: 1,
+            borderColor: i === 0 ? 'primary.main' : 'divider',
+            bgcolor: i === 0 ? (theme) => primaryTint(theme, 0.14) : 'background.default',
+            color: 'text.primary',
+          }}
+        >
+          {workspace.name}
           <Box
-            key={i}
+            component="span"
             sx={{
-              borderRadius: '5px',
+              ml: 'auto',
+              px: 0.75,
+              py: 0.4,
+              borderRadius: 999,
+              fontSize: 10,
+              color: workspace.status === 'running' ? 'success.main' : 'warning.main',
               border: 1,
-              borderColor: i === 12 ? 'primary.main' : 'divider',
-              bgcolor:
-                i === 12
-                  ? 'primary.main'
-                  : [3, 6, 9, 16, 22].includes(i)
-                    ? (theme) => primaryTint(theme, 0.22)
-                    : 'background.default',
+              borderColor: 'currentColor',
             }}
-          />
-        ))}
-      </Box>
+          >
+            {workspace.status}
+          </Box>
+        </Box>
+      ))}
+      <Box
+        sx={{
+          height: 8,
+          mt: 0.5,
+          width: '46%',
+          borderRadius: 4,
+          bgcolor: 'primary.main',
+          opacity: 0.8,
+        }}
+      />
     </Box>
   );
 }
@@ -150,10 +195,10 @@ interface Layer {
 
 // bottom to top, the way a request lands
 const layers: Layer[] = [
-  { name: 'cluster', detail: 'k3s · argo cd', content: <Cluster /> },
-  { name: 'services', detail: 'go · spring boot', content: <Services /> },
-  { name: 'api', detail: 'rest · sse', content: <Routes /> },
-  { name: 'interface', detail: 'react · angular', content: <Interface /> },
+  { name: 'monitoring', detail: 'datadog · grafana', content: <Monitoring /> },
+  { name: 'infra', detail: 'aws · eks · terraform', content: <Infra /> },
+  { name: 'api', detail: 'spring boot · openapi', content: <Routes /> },
+  { name: 'interface', detail: 'angular · primeng', content: <Interface /> },
 ];
 
 const top = layers.length - 1;
@@ -205,7 +250,7 @@ export default function PlatformStack() {
   return (
     <Box
       role="img"
-      aria-label="The platform as a stack of layers: interface, API, services, and cluster"
+      aria-label="A platform as a stack of layers: interface, API, infrastructure, and monitoring"
       sx={{
         // the gap between layers widens with the hero's scroll progress
         '--gap': 'calc(132px + var(--progress, 0) * 70px)',
@@ -284,7 +329,7 @@ export default function PlatformStack() {
             >
               <Box sx={{ ...mono, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
                 <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
-                  {String(i + 1).padStart(2, '0')} {layer.name}
+                  {String(layers.length - i).padStart(2, '0')} {layer.name}
                 </Box>
                 <Box component="span" sx={{ color: 'text.secondary' }}>
                   {layer.detail}
