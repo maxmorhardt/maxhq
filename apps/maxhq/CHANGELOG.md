@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.1.0...maxhq/1.1.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#118](https://github.com/maxmorhardt/maxhq/issues/118)) ([2539652](https://github.com/maxmorhardt/maxhq/commit/2539652dad803d6d24b3e4c9ce42495144ba6e4c))
+* move go libs and tidy code ([#120](https://github.com/maxmorhardt/maxhq/issues/120)) ([50d5227](https://github.com/maxmorhardt/maxhq/commit/50d52270b54442348e1e36e55ce988ce2c0e83d6))
+
 ## [1.1.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.0.0...maxhq/1.1.0) (2026-10-21)
 
 

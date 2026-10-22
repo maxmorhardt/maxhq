@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.0.0...squares-games/2.0.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* move go libs and tidy code ([#120](https://github.com/maxmorhardt/maxhq/issues/120)) ([50d5227](https://github.com/maxmorhardt/maxhq/commit/50d52270b54442348e1e36e55ce988ce2c0e83d6))
+
 ## [2.0.0](https://github.com/maxmorhardt/maxhq/compare/squares-games/1.0.0...squares-games/2.0.0) (2026-10-21)
 
 
