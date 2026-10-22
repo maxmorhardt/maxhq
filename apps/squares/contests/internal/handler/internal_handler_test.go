@@ -10,7 +10,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

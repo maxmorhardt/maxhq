@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type LeaderboardHandler interface {
@@ -25,7 +25,6 @@ func NewLeaderboardHandler(leaderboardService service.LeaderboardService) Leader
 	}
 }
 
-// GetLeaderboard godoc
 // @Summary Get the all-time leaderboard
 // @Description Returns players ranked by quarter wins. Display names only, no emails
 // @Tags leaderboard
@@ -59,7 +58,6 @@ func (h *leaderboardHandler) GetLeaderboard(c *gin.Context) {
 	c.JSON(http.StatusOK, leaderboard)
 }
 
-// GetMyRank godoc
 // @Summary Get the current user's leaderboard rank
 // @Description Returns the authenticated user's rank, total ranked players, and quarter wins
 // @Tags leaderboard

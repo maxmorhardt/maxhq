@@ -8,7 +8,6 @@ import RevealSection from '../components/common/RevealSection';
 import ProjectRow, { type Project } from '../components/projects/ProjectRow';
 import { pageSection } from '../theme';
 
-// the apps first, then the platform that builds, versions, and runs them
 const projects: Project[] = [
   {
     name: 'squares',

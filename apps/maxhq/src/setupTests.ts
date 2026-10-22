@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
 
-// default tests to reduced motion so animations render statically
+// default tests to reduced motion
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   configurable: true,

@@ -54,7 +54,6 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
         p: { xs: 2.5, sm: 4 },
       }}
     >
-      {/* form title */}
       <Typography
         component="h2"
         sx={{
@@ -71,7 +70,6 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
         Questions, bugs, or ideas. Every message reaches a real person.
       </Typography>
 
-      {/* contact form */}
       <Box
         component="form"
         onSubmit={handleSubmit}
@@ -101,7 +99,6 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
           />
         </Box>
 
-        {/* subject field */}
         <TextField
           fullWidth
           label="Subject"
@@ -112,7 +109,6 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
           slotProps={{ htmlInput: { maxLength: 200 } }}
         />
 
-        {/* message field */}
         <TextField
           fullWidth
           label="Message"
@@ -147,7 +143,6 @@ export default function ContactForm({ onSubmit, isSubmitting }: Props) {
           )}
         </Box>
 
-        {/* submit button */}
         <Button
           type="submit"
           variant="contained"

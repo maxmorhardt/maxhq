@@ -65,7 +65,6 @@ function Square({
           };
 
   return (
-    // square cell with labels and winner highlighting
     <Box sx={{ position: 'relative', flex: '1 1 0', minWidth: 0 }}>
       {/* top label for x-axis */}
       {rowIndex === 0 && xLabel !== undefined && (
@@ -97,7 +96,6 @@ function Square({
         </Box>
       )}
 
-      {/* clickable square button with conditional styling */}
       <Button
         key={`${rowIndex}-${colIndex}`}
         onClick={() => handleSquareClick(rowIndex, colIndex)}

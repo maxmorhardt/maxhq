@@ -1,7 +1,7 @@
 import { alpha, createTheme, type Theme } from '@mui/material/styles';
 
-// build tints from channel vars; theme.palette in a callback is the default scheme only
-export const tint = (channel: string, opacity: number) => `rgba(${channel} / ${opacity})`;
+// build tints from channel vars
+const tint = (channel: string, opacity: number) => `rgba(${channel} / ${opacity})`;
 
 export const primaryTint = (theme: Theme, opacity: number) => {
   const primary = (theme.vars ?? theme).palette.primary as { mainChannel: string };
@@ -29,13 +29,12 @@ declare module '@mui/material/styles' {
   }
 }
 
-// matches the key the pre-react site used, so a returning visitor keeps their choice
 export const COLOR_SCHEME_STORAGE_KEY = 'maxhq:theme';
 
 const sans = "'Mona Sans Variable', system-ui, 'Segoe UI', Roboto, sans-serif";
 const mono = "'JetBrains Mono Variable', ui-monospace, Consolas, monospace";
 
-export const fonts = { sans, mono };
+export const fonts = { mono };
 
 export const easing = {
   reveal: 'cubic-bezier(0.16, 1, 0.3, 1)',
@@ -43,12 +42,11 @@ export const easing = {
 };
 
 export const layout = {
-  // the header is fixed height so pages can offset against it
+  // fixed header height for pages to offset
   headerHeight: { xs: '60px', lg: '68px' },
-  proseWidth: 760,
 };
 
-// vertical rhythm shared by every page section; widths come from <Container>
+// common vertical section padding with container deciding
 export const pageSection = {
   width: '100%',
   py: { xs: '3.5rem', lg: '5.5rem' },
@@ -57,7 +55,7 @@ export const pageSection = {
 const violet = { light: '#7c3aed', dark: '#a78bfa' };
 const azure = { light: '#2563eb', dark: '#60a5fa' };
 
-export const theme = createTheme({
+const theme = createTheme({
   cssVariables: {
     colorSchemeSelector: 'class',
   },
@@ -90,14 +88,14 @@ export const theme = createTheme({
       },
     },
   },
-  // lg/xl line up with <Container maxWidth> so pages don't hand-roll widths
+  // lg/xl line up with maxWidth
   breakpoints: {
     values: { xs: 0, sm: 600, md: 960, lg: 1200, xl: 1400 },
   },
   shape: { borderRadius: 14 },
   typography: {
     fontFamily: sans,
-    // the root font is 18px, so mui sizes its components against that
+    // 18px root font for mui to size components against
     htmlFontSize: 18,
     h1: {
       fontSize: 'clamp(2.6rem, 6.4vw, 5.25rem)',
@@ -114,7 +112,6 @@ export const theme = createTheme({
       textWrap: 'balance',
     },
     h3: { fontSize: '1.3rem', lineHeight: 1.25, fontWeight: 620, letterSpacing: '-0.015em' },
-    // the recurring "page heading" size, so pages just use variant="h4"
     h4: {
       fontSize: 'clamp(2.5rem, 5.5vw, 4rem)',
       lineHeight: 1.04,
@@ -186,7 +183,7 @@ export const theme = createTheme({
       },
     },
 
-    // headings default to the strong text color without a per-use sx
+    // headings default to the strong text color
     MuiTypography: {
       styleOverrides: {
         h1: { color: 'var(--mui-palette-text-primary)' },
@@ -197,7 +194,7 @@ export const theme = createTheme({
       },
     },
 
-    // one elevation language: a hairline border, never a border plus a soft shadow
+    // one elevation language: a hairline border, no border with soft shadow
     MuiCard: {
       defaultProps: { variant: 'outlined' },
       styleOverrides: {
@@ -253,7 +250,7 @@ export const theme = createTheme({
       defaultProps: { underline: 'hover', color: 'primary' },
     },
 
-    // the sticky translucent bar, declared once
+    // the sticky translucent header
     MuiAppBar: {
       defaultProps: { position: 'sticky', color: 'transparent', elevation: 0 },
       styleOverrides: {
@@ -292,7 +289,7 @@ export const theme = createTheme({
 
     MuiAvatar: {
       styleOverrides: {
-        // icon tiles read as rounded squares rather than circles
+        // icon tiles rounded squares
         rounded: { borderRadius: 12 },
       },
     },

@@ -39,7 +39,7 @@ describe('DemoBoard', () => {
     renderWithProviders(<DemoBoard stage={4} />);
 
     expect(screen.getByRole('img')).toHaveAccessibleName(/away 7 and home 14/i);
-    expect(screen.getByText('Q3')).toBeInTheDocument();
+    expect(screen.getByText('Q2')).toBeInTheDocument();
     expect(screen.getByText('14')).toBeInTheDocument();
   });
 });

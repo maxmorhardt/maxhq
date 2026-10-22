@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { fonts, game as palette } from '../../../app/theme';
 
-export interface StatCardProps {
+interface StatCardProps {
   icon: ReactNode;
   value: number | undefined;
   label: string;

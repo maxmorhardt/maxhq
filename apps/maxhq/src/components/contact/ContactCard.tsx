@@ -12,7 +12,7 @@ export interface ContactChannel {
   handle: string;
 }
 
-export interface ContactCardProps {
+interface ContactCardProps {
   channel: ContactChannel;
   delay?: 0 | 1 | 2 | 3 | 4;
 }

@@ -5,11 +5,11 @@ import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter } from 'react-router';
 import theme, { COLOR_SCHEME_STORAGE_KEY } from './theme';
 
-export interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
+interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string;
 }
 
-// mirrors the real provider stack so components behave as they do in the app
+// mirrors the real provider stack
 export function renderWithProviders(
   ui: ReactElement,
   { route = '/', ...options }: RenderWithProvidersOptions = {}

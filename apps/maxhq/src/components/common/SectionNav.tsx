@@ -2,12 +2,12 @@ import { Box, Link, Typography } from '@mui/material';
 import { useActiveSection } from '../../hooks/useActiveSection';
 import { easing } from '../../theme';
 
-export interface SectionNavItem {
+interface SectionNavItem {
   id: string;
   label: string;
 }
 
-export interface SectionNavProps {
+interface SectionNavProps {
   items: SectionNavItem[];
   title: string;
 }

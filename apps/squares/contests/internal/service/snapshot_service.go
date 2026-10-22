@@ -9,7 +9,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -30,10 +30,7 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 	log := logging.FromContext(ctx)
 
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionView); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.ErrContestNotFound
-		}
-		if errors.Is(err, errs.ErrDatabaseUnavailable) {
+		if errors.Is(err, errs.ErrContestNotFound) || errors.Is(err, errs.ErrDatabaseUnavailable) {
 			return nil, err
 		}
 		log.Warn("user not authorized to view contest", "contest_id", contestID, "user", user)

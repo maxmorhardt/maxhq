@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/errs"
-	"github.com/maxmorhardt/maxhq/libs/platform/httpclient"
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/httpclient"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 )
 
 type ContestAccessClient interface {

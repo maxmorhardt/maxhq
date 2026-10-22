@@ -4,7 +4,7 @@ import { getUserManager } from './userManager';
 // refresh a little early so a token never expires mid-request
 const REFRESH_MARGIN_SECONDS = 60;
 // how long a caller waits on a refresh before carrying on with what it has
-export const REFRESH_WAIT_MS = 5_000;
+const REFRESH_WAIT_MS = 5_000;
 
 let refreshing: Promise<User | null> | null = null;
 

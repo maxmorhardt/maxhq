@@ -5,7 +5,6 @@ import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { layout } from '../../theme';
 import PlatformStack from './PlatformStack';
 
-// the headline beside the platform it describes; scrolling away fans the stack's layers apart
 export default function HomeHero() {
   const stage = useScrollProgress<HTMLElement>({ anchor: 0 });
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export interface ScrollProgressOptions {
+interface ScrollProgressOptions {
   // the viewport line, as a fraction of its height, that the element is measured against
   anchor?: number;
 }

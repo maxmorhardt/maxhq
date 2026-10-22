@@ -10,11 +10,11 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/clients"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/metrics"
-	"github.com/maxmorhardt/maxhq/libs/platform/cache"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
-	"github.com/maxmorhardt/maxhq/libs/platform/streams"
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
-	"github.com/maxmorhardt/maxhq/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 	"github.com/redis/go-redis/v9"
 )
 

@@ -13,11 +13,11 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/routes"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/cache"
-	"github.com/maxmorhardt/maxhq/libs/platform/database"
-	"github.com/maxmorhardt/maxhq/libs/platform/middleware"
-	"github.com/maxmorhardt/maxhq/libs/platform/server"
-	"github.com/maxmorhardt/maxhq/libs/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 )
 
 const (

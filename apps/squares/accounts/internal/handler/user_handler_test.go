@@ -10,7 +10,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

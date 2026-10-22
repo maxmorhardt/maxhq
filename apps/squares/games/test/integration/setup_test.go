@@ -15,8 +15,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/bootstrap"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/config"
-	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/redis/go-redis/v9"
 )
 

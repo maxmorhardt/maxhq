@@ -3,7 +3,7 @@ import type { ElementType, ReactNode } from 'react';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { easing } from '../../theme';
 
-export type RevealVariant = 'up' | 'left' | 'scale' | 'rise';
+type RevealVariant = 'up' | 'left' | 'scale' | 'rise';
 
 // the offset each variant animates in from
 const hiddenTransform: Record<RevealVariant, string> = {
@@ -13,25 +13,21 @@ const hiddenTransform: Record<RevealVariant, string> = {
   rise: 'translateY(48px) scale(0.96)',
 };
 
-export interface RevealSectionProps extends Omit<BoxProps, 'ref'> {
+interface RevealSectionProps extends Omit<BoxProps, 'ref'> {
   delay?: 0 | 1 | 2 | 3 | 4;
   variant?: RevealVariant;
   component?: ElementType;
-  threshold?: number;
-  rootMargin?: string;
   children?: ReactNode;
 }
 
 export default function RevealSection({
   delay = 0,
   variant = 'up',
-  threshold,
-  rootMargin,
   children,
   sx,
   ...rest
 }: RevealSectionProps) {
-  const { ref, visible } = useScrollReveal<HTMLDivElement>({ threshold, rootMargin });
+  const { ref, visible } = useScrollReveal<HTMLDivElement>();
 
   return (
     <Box

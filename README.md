@@ -70,6 +70,6 @@ All Go code is one module: [`go.mod`](go.mod) at the root, so every service and 
 | --- | --- |
 | everything not listed below (`apps/maxhq`, `charts`, `infra`, CI, repo config) | Apache-2.0 ([`LICENSE`](LICENSE)) |
 | `apps/squares/**` | PolyForm Noncommercial 1.0.0 (the `LICENSE` in each squares app) |
-| `libs/**` | PolyForm Noncommercial 1.0.0 ([`libs/platform/LICENSE`](libs/platform/LICENSE), [`libs/squares/LICENSE`](libs/squares/LICENSE)); both were extracted from the squares API |
+| `libs/**` | PolyForm Noncommercial 1.0.0 ([`libs/go/platform/LICENSE`](libs/go/platform/LICENSE), [`libs/go/squares/LICENSE`](libs/go/squares/LICENSE)); both were extracted from the squares API |
 
 A directory's own `LICENSE` overrides the root one for everything under it.

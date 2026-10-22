@@ -5,13 +5,7 @@ import RevealSection from '../components/common/RevealSection';
 import StatusTerminal from '../components/common/StatusTerminal';
 import { pageSection } from '../theme';
 
-export interface ErrorPageProps {
-  message?: string;
-}
-
-export default function ErrorPage({
-  message = 'Something broke while loading this page. Reloading usually clears it, and if it keeps happening I would like to hear about it.',
-}: ErrorPageProps) {
+export default function ErrorPage() {
   // only runs from the click handler, so it never touches window during prerender
   const reload = () => window.location.reload();
 
@@ -44,7 +38,8 @@ export default function ErrorPage({
 
           <RevealSection delay={1}>
             <Typography color="text.secondary" sx={{ mb: 4, maxWidth: '48ch' }}>
-              {message}
+              Something broke while loading this page. Reloading usually clears it, and if it keeps
+              happening I would like to hear about it.
             </Typography>
           </RevealSection>
 

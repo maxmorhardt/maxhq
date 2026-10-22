@@ -12,11 +12,11 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/repository"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/util"
-	"github.com/maxmorhardt/maxhq/libs/platform/cache"
-	"github.com/maxmorhardt/maxhq/libs/platform/database"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
-	"github.com/maxmorhardt/maxhq/libs/platform/streams"
-	"github.com/maxmorhardt/maxhq/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 	"gorm.io/gorm"
 )
 

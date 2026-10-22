@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/maxmorhardt/maxhq/libs/squares/initials"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/initials"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -12,9 +12,9 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/database"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -250,7 +250,7 @@ func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID,
 		contest, err := s.repo.GetByIDForUpdate(ctx, contestID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return err
+				return errs.ErrContestNotFound
 			}
 			log.Error("failed to get contest for delete", "contest_id", contestID, "error", err)
 			return errs.ErrDatabaseUnavailable
@@ -287,10 +287,10 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 
 	contest, err := s.repo.GetByID(ctx, contestID)
 	if err != nil {
-		log.Error("failed to get contest for square claim", "contest_id", contestID, "error", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, errs.ErrContestNotFound
 		}
+		log.Error("failed to get contest for square claim", "contest_id", contestID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
@@ -307,7 +307,7 @@ func (s *contestService) ClaimSquare(ctx context.Context, contestID, squareID uu
 	square := findSquare(contest, squareID)
 	if square == nil {
 		log.Warn("square not found in contest", "square_id", squareID, "contest_id", contestID)
-		return nil, gorm.ErrRecordNotFound
+		return nil, errs.ErrSquareNotFound
 	}
 
 	if square.Owner != "" && square.Owner != user {
@@ -455,11 +455,10 @@ func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uu
 
 	contest, err := s.repo.GetByID(ctx, contestID)
 	if err != nil {
-		log.Error("failed to get contest for square clear", "contest_id", contestID, "error", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, errs.ErrContestNotFound
 		}
-
+		log.Error("failed to get contest for square clear", "contest_id", contestID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
@@ -477,7 +476,7 @@ func (s *contestService) ClearSquare(ctx context.Context, contestID, squareID uu
 	square := findSquare(contest, squareID)
 	if square == nil {
 		log.Warn("square not found in contest", "square_id", squareID, "contest_id", contestID)
-		return nil, gorm.ErrRecordNotFound
+		return nil, errs.ErrSquareNotFound
 	}
 
 	isSquareOwner := square.Owner == user
@@ -512,11 +511,10 @@ func (s *contestService) ClearUserSquares(ctx context.Context, contestID uuid.UU
 
 	contest, err := s.repo.GetByID(ctx, contestID)
 	if err != nil {
-		log.Error("failed to get contest for clearing user squares", "contest_id", contestID, "error", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, errs.ErrContestNotFound
 		}
-
+		log.Error("failed to get contest for clearing user squares", "contest_id", contestID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
 

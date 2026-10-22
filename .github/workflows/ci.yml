@@ -151,7 +151,7 @@ jobs:
     uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@main
     with:
       repository: ${{ github.repository }}
-      working_directory: libs/${{ matrix.lib }}
+      working_directory: libs/go/${{ matrix.lib }}
       module_directory: .
 
   # charts

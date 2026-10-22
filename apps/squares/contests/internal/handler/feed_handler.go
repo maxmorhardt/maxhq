@@ -10,7 +10,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 )
 
 type FeedHandler interface {
@@ -25,7 +25,6 @@ func NewFeedHandler(feedService service.FeedService) FeedHandler {
 	return &feedHandler{feedService: feedService}
 }
 
-// GetFeed godoc
 // @Summary List my contests
 // @Description Contests the caller owns or has joined, newest first, one page at a time. Pass nextCursor back as cursor for the next page.
 // @Tags contests

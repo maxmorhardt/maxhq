@@ -18,7 +18,7 @@ const structuredData = {
     '@type': 'Organization',
     name: 'Fidelity Investments',
   },
-  sameAs: ['https://github.com/maxmorhardt', 'https://www.linkedin.com/in/max-morhardt-60b9121b8/'],
+  sameAs: ['https://github.com/maxmorhardt', 'https://www.linkedin.com/in/maxmorhardt'],
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -50,7 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {/* applies the stored color scheme before paint so there's no flash */}
+        {/* applies the stored color scheme before paint */}
         <InitColorSchemeScript
           attribute="class"
           defaultMode="dark"
@@ -67,7 +67,6 @@ export default function Root() {
   return <App />;
 }
 
-// react-router renders this inside <Layout> whenever a route throws
 export function ErrorBoundary() {
   const error = useRouteError();
 

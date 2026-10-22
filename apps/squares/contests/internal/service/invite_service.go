@@ -10,8 +10,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/metrics"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxhq/libs/platform/database"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 	"gorm.io/gorm"
 )
 
@@ -56,7 +56,7 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, errs.ErrContestNotFound
 		}
 		log.Error("failed to get contest", "contest_id", contestID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
@@ -275,7 +275,7 @@ func (s *inviteService) DeleteInvite(ctx context.Context, contestID, inviteID uu
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
+			return errs.ErrContestNotFound
 		}
 		log.Error("failed to get contest", "contest_id", contestID, "error", err)
 		return errs.ErrDatabaseUnavailable

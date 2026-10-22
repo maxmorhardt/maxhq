@@ -75,7 +75,7 @@ mocks: ## Regenerate testify mocks
 
 .PHONY: swag
 swag: ## Regenerate the swagger docs
-	$(SWAG) init --quiet -g main.go -d ./cmd/$(SERVICE),./internal/handler,../../../libs/platform/server \
+	$(SWAG) init --quiet -g main.go -d ./cmd/$(SERVICE),./internal/handler,../../../libs/go/platform/server \
 		--parseDependency --instanceName $(SERVICE) -o docs
 
 .PHONY: swag-check

@@ -7,13 +7,13 @@ issue-845-fix: true
 mockname: "{{.InterfaceName}}"
 filename: "{{.InterfaceName}}.go"
 packages:
-  github.com/maxmorhardt/maxhq/libs/platform/database:
+  github.com/maxmorhardt/maxhq/libs/go/platform/database:
     interfaces:
       Transactor:
-  github.com/maxmorhardt/maxhq/libs/platform/streams:
+  github.com/maxmorhardt/maxhq/libs/go/platform/streams:
     interfaces:
       Outbox:
-  github.com/maxmorhardt/maxhq/libs/platform/cache:
+  github.com/maxmorhardt/maxhq/libs/go/platform/cache:
     interfaces:
       RevocationStore:
   github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/clients:

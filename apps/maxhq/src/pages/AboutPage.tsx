@@ -42,7 +42,6 @@ const experience: { company: string; roles: Role[] }[] = [
   },
 ];
 
-// short helper so the prose below reads close to the original markup
 function C({ children }: { children: ReactNode }) {
   return <code>{children}</code>;
 }

@@ -8,8 +8,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type ContactHandler interface {

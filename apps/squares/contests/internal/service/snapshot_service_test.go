@@ -37,7 +37,7 @@ func TestSnapshot_AuthorizationOutcomes(t *testing.T) {
 		authErr error
 		want    error
 	}{
-		{"missing contest", gorm.ErrRecordNotFound, errs.ErrContestNotFound},
+		{"missing contest", errs.ErrContestNotFound, errs.ErrContestNotFound},
 		{"not a participant", errs.ErrNotParticipant, errs.ErrInsufficientRole},
 		{"database down", errs.ErrDatabaseUnavailable, errs.ErrDatabaseUnavailable},
 	}

@@ -39,20 +39,19 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // anchor elements for dropdown menus
   const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
 
-  // menu toggle handlers
+  const visiblePages = auth.isAuthenticated
+    ? pages
+    : pages.filter((page) => page.name !== 'Contests');
+
   const handleOpenNavMenu = (event: MouseEvent<HTMLElement>) => setAnchorElNav(event.currentTarget);
   const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) =>
     setAnchorElUser(event.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
-  const isAuthButtonDisabled = auth.isLoading;
-
-  // handle account settings menu clicks
   const handleSettingClick = (setting: string) => {
     if (setting === 'Profile') {
       navigate('/profile');
@@ -124,12 +123,7 @@ export default function Header() {
               component="nav"
               sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 0.5 }}
             >
-              {pages.map((page) => {
-                // hide contests link if not authenticated
-                if (page.name === 'Contests' && !auth.isAuthenticated) {
-                  return;
-                }
-
+              {visiblePages.map((page) => {
                 const active =
                   location.pathname === page.navigate ||
                   location.pathname.startsWith(`${page.navigate}/`);
@@ -176,15 +170,15 @@ export default function Header() {
               handleOpenNavMenu={handleOpenNavMenu}
               handleCloseNavMenu={handleCloseNavMenu}
               anchorElNav={anchorElNav}
-              pages={pages}
+              pages={visiblePages}
             />
 
-            {/* authentication controls (login/register or user menu) */}
+            {/* sign-in button or user menu */}
             <HeaderAuth
               handleOpenUserMenu={handleOpenUserMenu}
               handleCloseUserMenu={handleCloseUserMenu}
               handleSettingClick={handleSettingClick}
-              isAuthButtonDisabled={isAuthButtonDisabled}
+              isAuthButtonDisabled={auth.isLoading}
               anchorElUser={anchorElUser}
               settings={settings}
             />

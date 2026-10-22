@@ -12,7 +12,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 // covers loading the submission and the SMTP exchange

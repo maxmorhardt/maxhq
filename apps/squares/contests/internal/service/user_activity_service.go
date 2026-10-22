@@ -7,10 +7,10 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxhq/libs/platform/database"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
-	"github.com/maxmorhardt/maxhq/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 )
 
 type UserActivityService interface {

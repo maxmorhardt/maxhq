@@ -43,27 +43,21 @@ export default function CallbackPage() {
       return;
     }
 
-    try {
-      if (auth.isAuthenticated) {
-        sessionStorage.removeItem('auth_redirect_path');
-        // a fresh sign-in lifts the block a deleted account leaves, before the app makes its first call
-        void notifySession('restore', auth.user?.id_token).then(() =>
-          setPendingPath(savedRedirectPath.current)
-        );
-        return;
-      }
+    if (auth.isAuthenticated) {
+      sessionStorage.removeItem('auth_redirect_path');
+      // a fresh sign-in lifts the block a deleted account leaves, before the app makes its first call
+      void notifySession('restore', auth.user?.id_token).then(() =>
+        setPendingPath(savedRedirectPath.current)
+      );
+      return;
+    }
 
-      if (auth.error) {
-        console.error('Auth error after loading and is authenticated checks', auth.error);
-        showToast('Authentication failed. Please try again', 'error');
-        navigate('/', { replace: true });
-      }
-    } catch (error) {
-      console.error('Error during post authentication redirect:', error);
+    if (auth.error) {
+      console.error('Sign-in callback failed', auth.error);
       showToast('Authentication failed. Please try again', 'error');
       navigate('/', { replace: true });
     }
-  }, [auth.isLoading, auth.isAuthenticated, auth.error, navigate, auth, showToast]);
+  }, [auth.isLoading, auth.isAuthenticated, auth.error, auth.user, navigate, showToast]);
 
   // start outro once auth is ready and the minimum display time has elapsed
   useEffect(() => {

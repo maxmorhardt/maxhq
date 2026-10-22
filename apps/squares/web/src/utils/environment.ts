@@ -1,4 +1,4 @@
-export const PRODUCTION_DOMAIN = 'maxhq.io';
+const PRODUCTION_DOMAIN = 'maxhq.io';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 

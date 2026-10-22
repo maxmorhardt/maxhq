@@ -50,7 +50,7 @@ Every page resolves its states in the same order, so the conditional rendering n
 ## Live Contest Stream
 
 - The realtime service sends a `contest.snapshot` on connect (or only the missed events on resume), then one typed event per change. Every event is `{ type, contestId, updatedBy, timestamp, data }`.
-- To add an event type: add it to the backend in `libs/squares/events`, then add it to the `ContestEvent` union and `KNOWN_TYPES` in `live/events.ts`, and add its handler in `eventHandlers` in `liveContestSlice.ts`. The types make a missing handler a compile error. Add a feed line in `activity.ts` if it should show in the activity feed.
+- To add an event type: add it to the backend in `libs/go/squares/events`, then add it to the `ContestEvent` union and `KNOWN_TYPES` in `live/events.ts`, and add its handler in `eventHandlers` in `liveContestSlice.ts`. The types make a missing handler a compile error. Add a feed line in `activity.ts` if it should show in the activity feed.
 - Handlers must be idempotent: the same change can arrive as a write's response and again as its event, and a resume can replay events. Squares and contests carry a `version`; never apply an older one.
 - Side effects (toasts, navigation, the winner dialog) go in the `onEvent` callback a container passes to `useContestStream`, never in a reducer.
 - Unknown event types are skipped so the server can ship a new event first. A garbled event resyncs from a fresh snapshot. A 409 on a claim calls `resync`.

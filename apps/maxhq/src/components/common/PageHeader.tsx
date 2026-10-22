@@ -2,13 +2,12 @@ import { Box, Container, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import RevealSection from './RevealSection';
 
-export interface PageHeaderProps {
+interface PageHeaderProps {
   title: string;
   lede: ReactNode;
-  width?: 'md' | 'lg';
 }
 
-export default function PageHeader({ title, lede, width = 'lg' }: PageHeaderProps) {
+export default function PageHeader({ title, lede }: PageHeaderProps) {
   return (
     <Box
       component="header"
@@ -29,7 +28,7 @@ export default function PageHeader({ title, lede, width = 'lg' }: PageHeaderProp
         }}
       />
 
-      <Container maxWidth={width} sx={{ position: 'relative' }}>
+      <Container maxWidth="lg" sx={{ position: 'relative' }}>
         <RevealSection>
           <Typography variant="h4" component="h1">
             {title}

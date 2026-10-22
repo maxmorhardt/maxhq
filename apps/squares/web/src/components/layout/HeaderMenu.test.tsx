@@ -4,10 +4,6 @@ import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
 import HeaderMenu from './HeaderMenu';
 
-vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
-
-import { useAuth } from 'react-oidc-context';
-
 const theme = createTheme();
 
 const mockPages = [
@@ -35,12 +31,6 @@ function renderMenu(overrides?: { anchorElNav?: HTMLElement | null }) {
 
 describe('HeaderMenu', () => {
   beforeEach(() => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      isLoading: false,
-      activeNavigator: undefined,
-      signinRedirect: vi.fn(),
-    } as unknown as ReturnType<typeof useAuth>);
     mockCloseNavMenu.mockClear();
   });
 
@@ -59,40 +49,18 @@ describe('HeaderMenu', () => {
     document.body.removeChild(anchorEl);
   });
 
-  it('hides Contests menu item when unauthenticated', () => {
+  it('renders every page it is given', () => {
     const anchorEl = document.createElement('button');
     document.body.appendChild(anchorEl);
     renderMenu({ anchorElNav: anchorEl });
 
-    expect(screen.queryByText('Contests')).not.toBeInTheDocument();
-    expect(screen.getByText('Learn More')).toBeInTheDocument();
-    document.body.removeChild(anchorEl);
-  });
-
-  it('shows Contests menu item when authenticated', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      activeNavigator: undefined,
-      signinRedirect: vi.fn(),
-    } as unknown as ReturnType<typeof useAuth>);
-
-    const anchorEl = document.createElement('button');
-    document.body.appendChild(anchorEl);
-    renderMenu({ anchorElNav: anchorEl });
-
-    expect(screen.getByText('Contests')).toBeInTheDocument();
+    for (const page of mockPages) {
+      expect(screen.getByText(page.name)).toBeInTheDocument();
+    }
     document.body.removeChild(anchorEl);
   });
 
   it('renders menu items as prefetching links and closes the menu on click', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      activeNavigator: undefined,
-      signinRedirect: vi.fn(),
-    } as unknown as ReturnType<typeof useAuth>);
-
     const anchorEl = document.createElement('button');
     document.body.appendChild(anchorEl);
     renderMenu({ anchorElNav: anchorEl });

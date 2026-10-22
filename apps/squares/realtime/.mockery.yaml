@@ -7,7 +7,7 @@ issue-845-fix: true
 mockname: "{{.InterfaceName}}"
 filename: "{{.InterfaceName}}.go"
 packages:
-  github.com/maxmorhardt/maxhq/libs/platform/cache:
+  github.com/maxmorhardt/maxhq/libs/go/platform/cache:
     interfaces:
       RevocationStore:
   github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/clients:

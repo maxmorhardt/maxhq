@@ -13,8 +13,8 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `realtime/` - server-sent events for one contest, and a public stream of live game scores, both resumable with `Last-Event-ID`. Owns no data.
 - Each service is a package tree in the repo's single Go module (root `go.mod`), with its own image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>`), Argo CD Application, and release-please component. Its Helm chart is `charts/squares-<service>`. A service never imports another service's packages; Go's `internal` rule enforces it.
 - Shared code lives in two library packages in the same module:
-  - `libs/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
-  - `libs/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
+  - `libs/go/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
+  - `libs/go/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
 - Everything sits behind the `maxhq` Envoy Gateway at `api.maxhq.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
 
 ## Service Boundaries
@@ -27,7 +27,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `users` - accounts. Read by contests.
 - Consumers keep their position in their own schema (`stream_offsets`), handle entries in order, and retry a failing entry with backoff before moving on. A handler must tolerate seeing an entry again after a crash. A payload that can never decode is logged and skipped.
 - Synchronous calls between services are limited to two internal reads on contests (`/internal/contests/:id/snapshot` for realtime, `/internal/users/:email/activity` for accounts), guarded by `X-Internal-Token` and a NetworkPolicy, and made through `httpclient.Internal`, which retries network errors and 5xx. Keep it that way.
-- Changing a payload in `libs/squares` is a contract change: keep it backwards compatible (add fields, never rename or retype), and land the writer and every reader in the same PR.
+- Changing a payload in `libs/go/squares` is a contract change: keep it backwards compatible (add fields, never rename or retype), and land the writer and every reader in the same PR.
 
 ## Core Principles
 
@@ -89,7 +89,7 @@ Examples:
 
 ## Non-Goals for Routine Changes
 
-- Importing one service's code from another, or moving service logic into `libs/platform`.
+- Importing one service's code from another, or moving service logic into `libs/go/platform`.
 - Writing to another service's schema or calling another service outside the two internal reads.
 - Lowering the coverage threshold or disabling a linter to get a build green.
 - Editing the Argo CD Applications from this repo.

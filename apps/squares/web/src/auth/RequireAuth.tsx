@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
 import LoadingScreen from '../components/feedback/LoadingScreen';
 import UnauthorizedError from '../components/errors/UnauthorizedError';
+import { refreshSession } from './token';
 
 interface Props {
   children: ReactNode;
@@ -17,6 +18,16 @@ export default function RequireAuth({
   unauthenticated = <UnauthorizedError />,
 }: Props) {
   const auth = useAuth();
+  const [renewSettled, setRenewSettled] = useState(false);
+
+  // a session that expired while the app was closed loads as signed out until its refresh token renews it
+  const renewable = !auth.isLoading && !auth.isAuthenticated && !!auth.user?.refresh_token;
+
+  useEffect(() => {
+    if (renewable && !renewSettled) {
+      void refreshSession().finally(() => setRenewSettled(true));
+    }
+  }, [renewable, renewSettled]);
 
   if (auth.activeNavigator === 'signinRedirect') {
     return (
@@ -24,7 +35,7 @@ export default function RequireAuth({
     );
   }
 
-  if (auth.isLoading) {
+  if (auth.isLoading || (renewable && !renewSettled)) {
     return fallback;
   }
 

@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
-	"github.com/maxmorhardt/maxhq/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,7 +19,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-export interface PageMetaProps {
+interface PageMetaProps {
   title: string;
   description: string;
   canonical?: string;
