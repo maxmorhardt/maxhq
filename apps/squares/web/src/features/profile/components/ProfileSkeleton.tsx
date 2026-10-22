@@ -1,4 +1,5 @@
 import { Box, Skeleton } from '@mui/material';
+import { game as palette } from '../../../app/theme';
 
 const cardSx = { borderRadius: '18px', border: 1, borderColor: 'divider' } as const;
 
@@ -14,17 +15,12 @@ export default function ProfileSkeleton() {
         alignItems: 'start',
       }}
     >
-      <Box sx={{ ...cardSx, borderRadius: '22px', overflow: 'hidden' }}>
-        <Skeleton variant="rectangular" height={84} />
-        <Box sx={{ px: 3, pb: 3 }}>
-          <Skeleton
-            variant="rounded"
-            width={88}
-            height={88}
-            sx={{ mt: '-44px', borderRadius: '22px' }}
-          />
+      <Box sx={{ ...cardSx, borderRadius: '22px', bgcolor: palette.field }}>
+        <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
+          <Skeleton variant="rounded" width={88} height={88} sx={{ borderRadius: '22px' }} />
           <Skeleton variant="text" width="70%" sx={{ mt: 2, fontSize: '2.2rem' }} />
-          <Skeleton variant="text" width="60%" />
+          <Skeleton variant="text" width="80%" sx={{ mt: 0.75 }} />
+          <Skeleton variant="text" width="55%" />
           <Box
             data-testid="setting-skeleton"
             sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}

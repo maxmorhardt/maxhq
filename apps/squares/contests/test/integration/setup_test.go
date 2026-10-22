@@ -16,10 +16,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/bootstrap"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/config"
-	"github.com/maxmorhardt/maxhq/libs/platform/streams"
-	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
-	"github.com/maxmorhardt/maxhq/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )
@@ -101,7 +101,7 @@ func call(t *testing.T, id testkit.Identity, method, path string, body any, head
 	return testkit.Call(t, contestsURL, id, method, path, body, headers...)
 }
 
-// seedGame publishes a scheduled game and waits for contests to project it, so a contest can link to it
+// publishes a scheduled game and waits for contests to project it, so a contest can link to it
 func seedGame(t *testing.T) events.Game {
 	t.Helper()
 	gameID := uuid.New()

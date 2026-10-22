@@ -13,7 +13,7 @@ import type {
   UpdateParticipantRequest,
 } from '../../types/contest';
 
-export const FEED_PAGE_SIZE = 20;
+const FEED_PAGE_SIZE = 20;
 
 type FeedFilters = Omit<ContestFeedParams, 'cursor' | 'limit'>;
 

@@ -1,7 +1,6 @@
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GridViewIcon from '@mui/icons-material/GridView';
 import { Box, Typography } from '@mui/material';
-
 import { easing, fonts, primaryTint } from '../../theme';
 
 const awayNumbers = [3, 7, 1, 9, 4];
@@ -43,12 +42,7 @@ const axisSx = {
   color: 'text.secondary',
 } as const;
 
-export interface SquaresBoardProps {
-  // the parent reveal drives the cell pop-in animation
-  animate?: boolean;
-}
-
-export default function SquaresBoard({ animate = true }: SquaresBoardProps) {
+export default function SquaresBoard() {
   const rows = [0, 1, 2, 3, 4];
 
   return (
@@ -86,7 +80,7 @@ export default function SquaresBoard({ animate = true }: SquaresBoardProps) {
                     display: 'grid',
                     placeItems: 'center',
                     border: 1,
-                    // fixed radius; the theme's 12px base would make these circles
+                    // fixed radius; the theme's 14px base would make these circles
                     borderRadius: '8px',
                     fontFamily: fonts.mono,
                     fontSize: '0.62rem',
@@ -112,10 +106,8 @@ export default function SquaresBoard({ animate = true }: SquaresBoardProps) {
 
                     opacity: 0,
                     transform: 'scale(0.7)',
-                    ...(animate && {
-                      animation: `cell-pop 0.4s ${easing.spring} both`,
-                      animationDelay: `${(r * 5 + c) * 32}ms`,
-                    }),
+                    animation: `cell-pop 0.4s ${easing.spring} both`,
+                    animationDelay: `${(r * 5 + c) * 32}ms`,
                     '@keyframes cell-pop': {
                       to: { opacity: 1, transform: 'scale(1)' },
                     },

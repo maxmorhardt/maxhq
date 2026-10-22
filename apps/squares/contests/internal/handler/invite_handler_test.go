@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestCreateInvite_Success(t *testing.T) {
@@ -61,7 +60,7 @@ func TestCreateInvite_Forbidden(t *testing.T) {
 	createInviteErr(t, "stranger", errs.ErrInsufficientRole, http.StatusForbidden)
 }
 func TestCreateInvite_NotFound(t *testing.T) {
-	createInviteErr(t, "owner1", gorm.ErrRecordNotFound, http.StatusNotFound)
+	createInviteErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
 }
 func TestCreateInvite_InternalError(t *testing.T) {
 	createInviteErr(t, "owner1", assert.AnError, http.StatusInternalServerError)
@@ -208,7 +207,7 @@ func TestGetInvites_Forbidden(t *testing.T) {
 	getInvitesErr(t, "stranger", errs.ErrInsufficientRole, http.StatusForbidden)
 }
 func TestGetInvites_NotFound(t *testing.T) {
-	getInvitesErr(t, "owner1", gorm.ErrRecordNotFound, http.StatusNotFound)
+	getInvitesErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
 }
 func TestGetInvites_InternalError(t *testing.T) {
 	getInvitesErr(t, "owner1", assert.AnError, http.StatusInternalServerError)
@@ -266,7 +265,7 @@ func TestDeleteInvite_Forbidden(t *testing.T) {
 	deleteInviteErr(t, "stranger", errs.ErrInsufficientRole, http.StatusForbidden)
 }
 func TestDeleteInvite_NotFound(t *testing.T) {
-	deleteInviteErr(t, "owner1", gorm.ErrRecordNotFound, http.StatusNotFound)
+	deleteInviteErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
 }
 func TestDeleteInvite_InternalError(t *testing.T) {
 	deleteInviteErr(t, "owner1", assert.AnError, http.StatusInternalServerError)

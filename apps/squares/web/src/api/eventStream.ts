@@ -32,7 +32,7 @@ const DEFAULT_HEARTBEAT_TIMEOUT_MS = 60_000;
 // the server writes as soon as a stream opens, so a slow first byte means it is stuck
 const DEFAULT_CONNECT_TIMEOUT_MS = 5_000;
 // three quick retries, under two seconds in all, before asking the user
-export const RETRY_DELAYS_MS = [250, 500, 1000];
+const RETRY_DELAYS_MS = [250, 500, 1000];
 
 export function backoff(attempt: number): number {
   const base = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length) - 1];

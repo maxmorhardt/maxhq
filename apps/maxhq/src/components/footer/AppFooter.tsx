@@ -14,7 +14,7 @@ const links: FooterLink[] = [
   { label: 'GitHub', href: 'https://github.com/maxmorhardt', icon: <GitHubIcon /> },
   {
     label: 'LinkedIn',
-    href: 'https://www.linkedin.com/in/max-morhardt-60b9121b8/',
+    href: 'https://www.linkedin.com/in/maxmorhardt',
     icon: <LinkedInIcon />,
   },
   { label: 'Email', href: 'mailto:max@maxhq.io', icon: <EmailIcon /> },

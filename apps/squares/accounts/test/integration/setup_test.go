@@ -16,11 +16,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/bootstrap"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/config"
-	"github.com/maxmorhardt/maxhq/libs/platform/middleware"
-	"github.com/maxmorhardt/maxhq/libs/platform/server"
-	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 	"github.com/redis/go-redis/v9"
 )
 

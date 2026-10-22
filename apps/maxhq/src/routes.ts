@@ -8,6 +8,5 @@ export default [
   route('contact', 'pages/ContactPage.tsx'),
   route('terms-of-service', 'pages/TermsOfServicePage.tsx'),
   route('privacy-policy', 'pages/PrivacyPolicyPage.tsx'),
-  route('404', 'pages/NotFoundPage.tsx', { id: 'prerender-404' }),
   route('*', 'pages/NotFoundPage.tsx'),
 ] satisfies RouteConfig;

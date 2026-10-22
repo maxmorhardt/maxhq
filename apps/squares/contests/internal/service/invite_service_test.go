@@ -23,7 +23,7 @@ func TestCreateInvite_ContestNotFound(t *testing.T) {
 
 	_, err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
 		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{}, "u")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, errs.ErrContestNotFound)
 }
 
 func inviteSvc(inv *mocks.InviteRepository, p *mocks.ParticipantRepository, c *mocks.ContestRepository, pSvc *mocks.ParticipantService) service.InviteService {

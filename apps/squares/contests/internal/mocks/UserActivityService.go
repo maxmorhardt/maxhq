@@ -5,8 +5,8 @@ package mocks
 import (
 	context "context"
 
-	contracts "github.com/maxmorhardt/maxhq/libs/squares/contracts"
-	events "github.com/maxmorhardt/maxhq/libs/squares/events"
+	contracts "github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
+	events "github.com/maxmorhardt/maxhq/libs/go/squares/events"
 
 	mock "github.com/stretchr/testify/mock"
 

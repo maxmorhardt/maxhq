@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-// Week identifies one week of one NFL season phase (preseason, regular season, or postseason)
+// one week of one NFL season phase (preseason, regular season, or postseason)
 type Week struct {
 	Season     int `json:"season"`
 	SeasonType int `json:"seasonType"`
 	Week       int `json:"week"`
 }
 
-// SeasonWeek is one week of ESPN's season calendar: its name and when it runs
+// one week of ESPN's season calendar: its name and when it runs
 type SeasonWeek struct {
 	Week     `gorm:"embedded"`
 	Label    string    `json:"label"`
@@ -22,7 +22,7 @@ type SeasonWeek struct {
 
 func (SeasonWeek) TableName() string { return "season_weeks" }
 
-// DefaultLabel names a week the calendar does not list
+// names a week the calendar does not list
 func (w Week) DefaultLabel() string {
 	switch w.SeasonType {
 	case 1:

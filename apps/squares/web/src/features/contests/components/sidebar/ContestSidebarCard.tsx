@@ -54,10 +54,8 @@ export default function ContestSidebarCard({
         </Typography>
       </Box>
 
-      {/* divider */}
       <Divider sx={{ mb: 1.25 }} />
 
-      {/* card content */}
       {children}
     </Paper>
   );

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/maxmorhardt/maxhq/libs/platform/httpclient"
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/httpclient"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 )
 
 type ContestActivityClient interface {
@@ -25,5 +25,6 @@ func (c *contestActivityClient) GetUserActivity(ctx context.Context, email strin
 	if err := c.contests.GetJSON(ctx, contracts.UserActivityPath(email), &summary); err != nil {
 		return nil, fmt.Errorf("contests activity request failed: %w", err)
 	}
+
 	return &summary, nil
 }

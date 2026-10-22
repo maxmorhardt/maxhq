@@ -29,8 +29,8 @@ Games and accounts publish the same way, to the `games` and `users` streams, and
 
 ## Shared code
 
-- [`libs/platform`](../../libs/platform) - config, Postgres, Valkey, outbox and streams, middleware, server.
-- [`libs/squares`](../../libs/squares) - the contract between the services: stream names, event payloads, the `/internal` API, and shared helpers like initials.
+- [`libs/go/platform`](../../libs/go/platform) - config, Postgres, Valkey, outbox and streams, middleware, server.
+- [`libs/go/squares`](../../libs/go/squares) - the contract between the services: stream names, event payloads, the `/internal` API, and shared helpers like initials.
 
 ## Running locally
 

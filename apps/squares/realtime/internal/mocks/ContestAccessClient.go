@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	contracts "github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	contracts "github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 	mock "github.com/stretchr/testify/mock"
 
 	uuid "github.com/google/uuid"

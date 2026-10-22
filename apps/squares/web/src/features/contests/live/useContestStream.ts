@@ -12,7 +12,7 @@ import {
   streamStatusChanged,
 } from './liveContestSlice';
 
-export const SNAPSHOT_TIMEOUT_MS = 4_000;
+const SNAPSHOT_TIMEOUT_MS = 4_000;
 
 export const contestEventsUrl = (contestId: string) =>
   `${API_BASE_URL}/events/contests/${encodeURIComponent(contestId)}`;

@@ -16,7 +16,7 @@ const channels: ContactChannel[] = [
   },
   {
     label: 'LinkedIn',
-    href: 'https://www.linkedin.com/in/max-morhardt-60b9121b8/',
+    href: 'https://www.linkedin.com/in/maxmorhardt',
     icon: <LinkedInIcon />,
     handle: 'Max Morhardt',
   },

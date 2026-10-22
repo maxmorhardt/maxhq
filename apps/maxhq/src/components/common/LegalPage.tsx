@@ -8,7 +8,7 @@ export interface LegalSection {
   content: string | string[];
 }
 
-export interface LegalPageProps {
+interface LegalPageProps {
   title: string;
   lastUpdated: string;
   sections: LegalSection[];

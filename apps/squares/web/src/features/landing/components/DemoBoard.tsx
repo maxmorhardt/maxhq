@@ -60,8 +60,8 @@ const games: Record<DemoStage, Pick<Game, 'status' | 'period' | 'gameTime'>> = {
   1: scheduled,
   2: scheduled,
   3: { status: 'in_progress', period: 1, gameTime: kickoff },
-  // the second quarter has just been called, so the game is into the third
-  4: { status: 'in_progress', period: 3, gameTime: kickoff },
+  // the first quarter has just been called, so the game is into the second
+  4: { status: 'in_progress', period: 2, gameTime: kickoff },
 };
 
 const digitSx = {

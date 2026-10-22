@@ -14,13 +14,6 @@ describe('ErrorPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders a supplied message over the default one', () => {
-    renderWithProviders(<ErrorPage message="Try again in a minute." />);
-
-    expect(screen.getByText('Try again in a minute.')).toBeInTheDocument();
-    expect(screen.queryByText(/Reloading usually clears it/)).not.toBeInTheDocument();
-  });
-
   it('offers links back into the site and a reload button', async () => {
     const reload = vi.fn();
     vi.spyOn(window, 'location', 'get').mockReturnValue({

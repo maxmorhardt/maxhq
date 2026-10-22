@@ -6,9 +6,9 @@ import (
 
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
-	"github.com/maxmorhardt/maxhq/libs/platform/streams"
-	"github.com/maxmorhardt/maxhq/libs/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 )
 
 var (

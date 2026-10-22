@@ -11,7 +11,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -150,7 +150,7 @@ func TestDeleteContest_NotFound(t *testing.T) {
 
 	err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
 		DeleteContest(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, errs.ErrContestNotFound)
 }
 
 func TestDeleteContest_Unauthorized(t *testing.T) {
@@ -193,7 +193,7 @@ func TestClaimSquare_SquareNotFound(t *testing.T) {
 
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), pSvc).
 		ClaimSquare(context.Background(), uuid.New(), uuid.New(), "u")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, errs.ErrSquareNotFound)
 }
 
 func TestClaimSquare_NotParticipant(t *testing.T) {
@@ -295,7 +295,7 @@ func TestClearSquare_SquareNotFound(t *testing.T) {
 
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
 		ClearSquare(context.Background(), uuid.New(), uuid.New(), "u")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, errs.ErrSquareNotFound)
 }
 
 func TestClearSquare_Success(t *testing.T) {
@@ -327,7 +327,7 @@ func TestClearUserSquares_NotFound(t *testing.T) {
 
 	_, err := contestSvc(repo, mocks.NewParticipantRepository(t), mocks.NewParticipantService(t)).
 		ClearUserSquares(context.Background(), uuid.New(), "u")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, errs.ErrContestNotFound)
 }
 
 func TestClearUserSquares_RepoError(t *testing.T) {

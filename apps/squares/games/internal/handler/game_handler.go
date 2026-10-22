@@ -10,8 +10,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type GameHandler interface {

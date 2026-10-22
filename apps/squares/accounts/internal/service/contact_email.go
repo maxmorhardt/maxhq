@@ -27,9 +27,8 @@ func oneLine(v string) string {
 	}, v)
 }
 
-// BuildContactEmail renders a stored submission as a multipart message to support.
-// Submitted text only reaches headers RFC 2047 encoded or as a parsed address,
-// and the bodies are quoted-printable, so nothing a visitor types can add a header or a part.
+// submitted text only reaches headers RFC 2047 encoded or as a parsed address, and the bodies are
+// quoted-printable, so nothing a visitor types can add a header or a part
 func BuildContactEmail(from, to string, sub *model.ContactSubmission) ([]byte, error) {
 	var htmlBody bytes.Buffer
 	if err := contactEmailTmpl.Execute(&htmlBody, sub); err != nil {

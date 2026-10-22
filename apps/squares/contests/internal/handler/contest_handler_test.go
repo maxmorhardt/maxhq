@@ -17,12 +17,11 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestCreateContest_Success(t *testing.T) {
@@ -122,7 +121,7 @@ func TestDeleteContest_InvalidID(t *testing.T) {
 }
 
 func TestDeleteContest_NotFound(t *testing.T) {
-	deleteContestErr(t, "owner1", gorm.ErrRecordNotFound, http.StatusNotFound)
+	deleteContestErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
 }
 func TestDeleteContest_Finalized(t *testing.T) {
 	deleteContestErr(t, "owner1", errs.ErrContestFinalized, http.StatusForbidden)
@@ -185,7 +184,10 @@ func TestClaimSquare_InvalidSquareID(t *testing.T) {
 }
 
 func TestClaimSquare_NotFound(t *testing.T) {
-	claimSquareErr(t, "owner1", gorm.ErrRecordNotFound, http.StatusNotFound)
+	claimSquareErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
+}
+func TestClaimSquare_SquareNotFound(t *testing.T) {
+	claimSquareErr(t, "owner1", errs.ErrSquareNotFound, http.StatusNotFound)
 }
 func TestClaimSquare_SquareNotEditable(t *testing.T) {
 	claimSquareErr(t, "owner1", errs.ErrSquareNotEditable, http.StatusForbidden)
@@ -260,7 +262,10 @@ func clearSquareBadID(t *testing.T, target string) {
 }
 
 func TestClearSquare_NotFound(t *testing.T) {
-	clearSquareErr(t, "owner1", gorm.ErrRecordNotFound, http.StatusNotFound)
+	clearSquareErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
+}
+func TestClearSquare_SquareNotFound(t *testing.T) {
+	clearSquareErr(t, "owner1", errs.ErrSquareNotFound, http.StatusNotFound)
 }
 func TestClearSquare_Forbidden(t *testing.T) {
 	clearSquareErr(t, "stranger", errs.ErrUnauthorizedSquareEdit, http.StatusForbidden)
@@ -329,7 +334,7 @@ func TestClearMySquares_BoardLocked(t *testing.T) {
 }
 
 func TestClearMySquares_NotFound(t *testing.T) {
-	clearMySquaresErr(t, gorm.ErrRecordNotFound, http.StatusNotFound)
+	clearMySquaresErr(t, errs.ErrContestNotFound, http.StatusNotFound)
 }
 func TestClearMySquares_SquareNotEditable(t *testing.T) {
 	clearMySquaresErr(t, errs.ErrSquareNotEditable, http.StatusForbidden)

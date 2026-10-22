@@ -1,4 +1,5 @@
 import { Box, Button, Container, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
@@ -14,7 +15,12 @@ const links = [
 ];
 
 export default function NotFoundPage() {
-  const { pathname } = useLocation();
+  const location = useLocation();
+
+  // every missing path is served the prerendered /404, so the real path is swapped in after hydration
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const pathname = mounted ? location.pathname : '/404';
 
   return (
     <Box

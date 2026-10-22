@@ -13,7 +13,7 @@
 - `apps/maxhq/` - portfolio site (React Router, prerendered).
 - `apps/squares/web/` - squares frontend (React Router SPA).
 - `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each has its own image, chart, and release. `apps/squares/AGENTS.md` has the rules they share.
-- `libs/` - Go libraries the services share: `platform` (infrastructure) and `squares` (the contract between the squares services). Not released on their own.
+- `libs/go/` - Go libraries the services share: `platform` (infrastructure) and `squares` (the contract between the squares services). Not released on their own.
 - `charts/<name>/` - one self-contained Helm chart per app, plus `gateway` (Gateway API infrastructure, not an app) and `cloudflare-cidr`, a CronJob that posts to Discord when Cloudflare's IP ranges drift from the gateway's `trustedCIDRs`. Each chart is its own release (`<chart>-chart`), published to `oci://ghcr.io/maxmorhardt/charts`.
 - `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS for every domain, and GitHub rulesets and deployment environments. See `infra/terraform/README.md`.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.

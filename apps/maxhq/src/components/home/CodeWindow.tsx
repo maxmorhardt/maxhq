@@ -24,9 +24,9 @@ const tokenColor: Record<Token, string> = {
   punct: '#8b949e',
 };
 
-const FIRST_LINE = 605;
+const FIRST_LINE = 360;
 
-// lines 605-615 of apps/squares/contests/internal/service/contest_service.go
+// lines 360-370 of apps/squares/contests/internal/service/contest_service.go
 const lines: [string, Token][][] = [
   [['// the repository re-checks status, ownership, and the limit atomically', 'comment']],
   [

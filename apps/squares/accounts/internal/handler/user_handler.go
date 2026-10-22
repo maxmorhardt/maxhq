@@ -9,8 +9,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type UserHandler interface {
@@ -31,7 +31,6 @@ func NewUserHandler(userService service.UserService) UserHandler {
 	}
 }
 
-// GetMe godoc
 // @Summary Get the current user's profile
 // @Description Returns the profile of the authenticated user, creating it on first access
 // @Tags users
@@ -66,7 +65,6 @@ func toProfileResponse(user *model.User) model.UserProfileResponse {
 	}
 }
 
-// UpdateMe godoc
 // @Summary Update the current user's profile
 // @Description Updates the authenticated user's default initials; contests applies them to the user's squares in live contests
 // @Tags users
@@ -103,7 +101,6 @@ func (h *userHandler) UpdateMe(c *gin.Context) {
 	c.JSON(http.StatusOK, toProfileResponse(profile))
 }
 
-// DeleteMe godoc
 // @Summary Delete the current user's account
 // @Description Deletes the account and tombstones it so older tokens stop working everywhere; contests anonymizes the history under the ghost identity. Blocked while the user owns or participates in any active contest.
 // @Tags users
@@ -131,7 +128,6 @@ func (h *userHandler) DeleteMe(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// SignOutMe godoc
 // @Summary Sign out the current token
 // @Description Revokes the token this request was made with until it expires, so a copy of it stops working. The account's other devices keep their own tokens.
 // @Tags users
@@ -150,7 +146,6 @@ func (h *userHandler) SignOutMe(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// RestoreMe godoc
 // @Summary Restore an account after a new sign-in
 // @Description Deleting an account blocks every token for it, refreshed ones included, until the user signs in again. The web calls this right after an interactive sign-in to lift that block; a token issued before the deletion is refused.
 // @Tags users

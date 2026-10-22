@@ -14,8 +14,8 @@ describe('CodeWindow', () => {
     renderWithProviders(<CodeWindow />);
 
     expect(screen.getByText('PublishSquareUpdate')).toBeInTheDocument();
-    expect(screen.getByText('605')).toBeInTheDocument();
-    expect(screen.getByText('615')).toBeInTheDocument();
+    expect(screen.getByText('360')).toBeInTheDocument();
+    expect(screen.getByText('370')).toBeInTheDocument();
   });
 
   it('captions what the excerpt shows', () => {

@@ -5,7 +5,6 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import type { JSX, MouseEvent } from 'react';
-import { useAuth } from 'react-oidc-context';
 import { Link } from 'react-router';
 
 interface HeaderMenuProps {
@@ -21,10 +20,7 @@ export default function HeaderMenu({
   anchorElNav,
   pages,
 }: HeaderMenuProps) {
-  const auth = useAuth();
-
   return (
-    // mobile menu button and dropdown
     <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
       <IconButton size="large" aria-label="menu" onClick={handleOpenNavMenu} color="inherit">
         <MenuIcon />
@@ -44,29 +40,21 @@ export default function HeaderMenu({
           Menu
         </Typography>
 
-        {/* navigation menu items */}
-        {pages.map((page) => {
-          // hide contests link if not authenticated
-          if (page.name === 'Contests' && !auth.isAuthenticated) {
-            return null;
-          }
-
-          return (
-            <MenuItem
-              key={page.name}
-              component={Link}
-              to={page.navigate}
-              prefetch="intent"
-              onClick={handleCloseNavMenu}
-              sx={{ py: 1.25, color: 'inherit', textDecoration: 'none' }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                {page.icon}
-                <Typography>{page.name}</Typography>
-              </Box>
-            </MenuItem>
-          );
-        })}
+        {pages.map((page) => (
+          <MenuItem
+            key={page.name}
+            component={Link}
+            to={page.navigate}
+            prefetch="intent"
+            onClick={handleCloseNavMenu}
+            sx={{ py: 1.25, color: 'inherit', textDecoration: 'none' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {page.icon}
+              <Typography>{page.name}</Typography>
+            </Box>
+          </MenuItem>
+        ))}
       </Menu>
     </Box>
   );

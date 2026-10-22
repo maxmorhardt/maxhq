@@ -8,9 +8,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
-	"gorm.io/gorm"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type ParticipantHandler interface {
@@ -53,8 +52,8 @@ func (h *participantHandler) GetParticipants(c *gin.Context) {
 	participants, err := h.participantService.GetParticipants(c.Request.Context(), contestID, user)
 	if err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(errs.ErrInsufficientRole), c))
 		default:
@@ -107,7 +106,7 @@ func (h *participantHandler) UpdateParticipant(c *gin.Context) {
 	participant, err := h.participantService.UpdateParticipant(c.Request.Context(), contestID, targetUserID, &req, user)
 	if err != nil {
 		switch {
-		case errors.Is(err, errs.ErrNotParticipant):
+		case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrNotParticipant):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
@@ -155,7 +154,7 @@ func (h *participantHandler) RemoveParticipant(c *gin.Context) {
 	user := c.GetString(api.UserKey)
 	if err := h.participantService.RemoveParticipant(c.Request.Context(), contestID, targetUserID, user); err != nil {
 		switch {
-		case errors.Is(err, errs.ErrNotParticipant):
+		case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrNotParticipant):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))

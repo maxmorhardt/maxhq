@@ -19,7 +19,7 @@ describe('ContactPage', () => {
     );
     expect(screen.getByRole('link', { name: /LinkedIn/ })).toHaveAttribute(
       'href',
-      'https://www.linkedin.com/in/max-morhardt-60b9121b8/'
+      'https://www.linkedin.com/in/maxmorhardt'
     );
     expect(screen.getByRole('link', { name: /Email/ })).toHaveAttribute(
       'href',

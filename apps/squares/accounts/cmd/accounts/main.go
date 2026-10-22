@@ -10,13 +10,13 @@ import (
 	_ "github.com/maxmorhardt/maxhq/apps/squares/accounts/docs"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/bootstrap"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/config"
-	"github.com/maxmorhardt/maxhq/libs/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 )
 
 // @title           Squares Accounts API
 // @version         1.0.0
-// @description     Profiles, account deletion, and the contact form for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.
+// @description     Profiles, account deletion, and the contact form for squares.maxhq.io.
 // @securityDefinitions.apikey BearerAuth
 // @type apiKey
 // @in header

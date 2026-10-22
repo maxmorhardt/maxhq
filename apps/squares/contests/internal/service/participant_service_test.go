@@ -29,7 +29,7 @@ func TestAuthorize_VisibilityNotFound(t *testing.T) {
 	c.EXPECT().GetVisibilityByID(mock.Anything, mock.Anything).Return(model.ContestVisibility(""), gorm.ErrRecordNotFound)
 
 	svc := service.NewParticipantService(mocks.NewParticipantRepository(t), c, passTx(), anyEvents())
-	assert.ErrorIs(t, svc.Authorize(context.Background(), uuid.New(), "u", service.ActionView), gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, svc.Authorize(context.Background(), uuid.New(), "u", service.ActionView), errs.ErrContestNotFound)
 }
 
 func TestAuthorize_VisibilityDBError(t *testing.T) {
@@ -127,7 +127,7 @@ func TestUpdateParticipant_ContestNotFound(t *testing.T) {
 
 	svc := service.NewParticipantService(mocks.NewParticipantRepository(t), c, passTx(), anyEvents())
 	_, err := svc.UpdateParticipant(context.Background(), uuid.New(), "target", &model.UpdateParticipantRequest{}, "owner")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, errs.ErrContestNotFound)
 }
 
 func TestUpdateParticipant_TerminalContest(t *testing.T) {
@@ -397,7 +397,7 @@ func TestRemoveParticipant_ContestNotFound(t *testing.T) {
 
 	svc := service.NewParticipantService(mocks.NewParticipantRepository(t), c, passTx(), anyEvents())
 	err := svc.RemoveParticipant(context.Background(), uuid.New(), "target", "owner")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, errs.ErrContestNotFound)
 }
 
 func TestRemoveParticipant_ContestDBError(t *testing.T) {

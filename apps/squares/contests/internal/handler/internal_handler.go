@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 )
 
 type InternalHandler interface {
@@ -25,7 +25,6 @@ func NewInternalHandler(snapshotService service.SnapshotService, userActivitySer
 	return &internalHandler{snapshotService: snapshotService, userActivityService: userActivityService}
 }
 
-// GetContestSnapshot godoc
 // @Summary Contest snapshot for a viewer (internal)
 // @Description Returns the contest and its participants if the given user may view it. Called by the realtime service.
 // @Tags internal
@@ -63,7 +62,6 @@ func (h *internalHandler) GetContestSnapshot(c *gin.Context) {
 	c.JSON(http.StatusOK, snapshot)
 }
 
-// GetUserActivity godoc
 // @Summary A user's contest activity (internal)
 // @Description Returns the user's live contests and first activity. Called by the accounts service before it creates a profile or deletes an account.
 // @Tags internal

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 )
 
 type UserActivityHandler interface {
@@ -21,7 +21,6 @@ func NewUserActivityHandler(userActivityService service.UserActivityService) Use
 	return &userActivityHandler{userActivityService: userActivityService}
 }
 
-// GetMyStats godoc
 // @Summary Get the current user's stats
 // @Description Returns contest and square stats for the authenticated user
 // @Tags users
@@ -42,7 +41,6 @@ func (h *userActivityHandler) GetMyStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
-// GetMyActiveContests godoc
 // @Summary Get the current user's active contests
 // @Description Returns the non-terminal contests the user owns or participates in, which block account deletion
 // @Tags users

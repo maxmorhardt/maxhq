@@ -1,12 +1,12 @@
 import { Box } from '@mui/material';
 import { fonts } from '../../theme';
 
-export interface StatusLine {
+interface StatusLine {
   text: string;
   kind: 'cmd' | 'out' | 'err';
 }
 
-export interface StatusTerminalProps {
+interface StatusTerminalProps {
   title: string;
   lines: StatusLine[];
 }
@@ -57,12 +57,7 @@ export default function StatusTerminal({ title, lines }: StatusTerminalProps) {
 
       <Box sx={{ px: 2.5, py: 2.25, fontSize: '0.84rem', lineHeight: 1.7 }}>
         {lines.map((line, i) => (
-          // the prerendered 404 knows only its own path, so the client fills in the real one
-          <Box
-            key={i}
-            suppressHydrationWarning
-            sx={{ overflowWrap: 'anywhere', color: term[line.kind] }}
-          >
+          <Box key={i} sx={{ overflowWrap: 'anywhere', color: term[line.kind] }}>
             {line.kind === 'cmd' ? (
               <Box component="span" sx={{ mr: 1, color: term.prompt }}>
                 ~ $

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/database"
-	"github.com/maxmorhardt/maxhq/libs/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/maxmorhardt/maxhq/libs/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

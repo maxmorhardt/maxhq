@@ -8,9 +8,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
-	"gorm.io/gorm"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type ContestHandler interface {
@@ -104,8 +103,8 @@ func (h *contestHandler) DeleteContest(c *gin.Context) {
 	user := c.GetString(api.UserKey)
 	if err := h.contestService.DeleteContest(c.Request.Context(), contestID, user); err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedContestDelete):
@@ -149,8 +148,8 @@ func (h *contestHandler) ClaimSquare(c *gin.Context) {
 	claimedSquare, err := h.contestService.ClaimSquare(c.Request.Context(), contestID, squareID, user)
 	if err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrSquareNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrSquareNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedSquareEdit):
@@ -244,8 +243,8 @@ func (h *contestHandler) ClearSquare(c *gin.Context) {
 	clearedSquare, err := h.contestService.ClearSquare(c.Request.Context(), contestID, squareID, user)
 	if err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrSquareNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrSquareNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrBoardLocked):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):
@@ -287,8 +286,8 @@ func (h *contestHandler) ClearMySquares(c *gin.Context) {
 	clearedSquares, err := h.contestService.ClearUserSquares(c.Request.Context(), contestID, user)
 	if err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrBoardLocked):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrSquareNotEditable):

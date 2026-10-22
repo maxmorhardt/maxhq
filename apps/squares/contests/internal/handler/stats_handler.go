@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type StatsHandler interface {
@@ -23,7 +23,6 @@ func NewStatsHandler(statsService service.StatsService) StatsHandler {
 	}
 }
 
-// GetStats godoc
 // @Summary Get platform stats
 // @Description Returns public stats including contests created today, squares claimed today, and total active contests
 // @Tags stats

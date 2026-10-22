@@ -8,8 +8,8 @@ import (
 
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxhq/libs/platform/cache"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 const (

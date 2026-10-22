@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestGetParticipants_Success(t *testing.T) {
@@ -66,7 +65,7 @@ func getParticipantsErr(t *testing.T, user string, svcErr error, wantCode int) {
 }
 
 func TestGetParticipants_NotFound(t *testing.T) {
-	getParticipantsErr(t, "user1", gorm.ErrRecordNotFound, http.StatusNotFound)
+	getParticipantsErr(t, "user1", errs.ErrContestNotFound, http.StatusNotFound)
 }
 func TestGetParticipants_Forbidden(t *testing.T) {
 	getParticipantsErr(t, "stranger", errs.ErrNotParticipant, http.StatusForbidden)
@@ -142,6 +141,9 @@ func TestUpdateParticipant_CannotChangeOwner(t *testing.T) {
 func TestUpdateParticipant_SquareLimitTooLow(t *testing.T) {
 	updateParticipantErr(t, "owner1", "user1", errs.ErrSquareLimitTooLow, http.StatusBadRequest)
 }
+func TestUpdateParticipant_ContestNotFound(t *testing.T) {
+	updateParticipantErr(t, "owner1", "user1", errs.ErrContestNotFound, http.StatusNotFound)
+}
 func TestUpdateParticipant_NotParticipant(t *testing.T) {
 	updateParticipantErr(t, "owner1", "unknown", errs.ErrNotParticipant, http.StatusNotFound)
 }
@@ -191,6 +193,9 @@ func removeParticipantErr(t *testing.T, user, target string, svcErr error, wantC
 
 func TestRemoveParticipant_Forbidden(t *testing.T) {
 	removeParticipantErr(t, "stranger", "user1", errs.ErrInsufficientRole, http.StatusForbidden)
+}
+func TestRemoveParticipant_ContestNotFound(t *testing.T) {
+	removeParticipantErr(t, "owner1", "user1", errs.ErrContestNotFound, http.StatusNotFound)
 }
 func TestRemoveParticipant_CannotRemoveOwner(t *testing.T) {
 	removeParticipantErr(t, "owner1", "owner1", errs.ErrCannotRemoveOwner, http.StatusForbidden)

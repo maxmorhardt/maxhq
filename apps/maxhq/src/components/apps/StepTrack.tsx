@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { fonts, primaryTint } from '../../theme';
 
-export interface TrackStep {
+interface TrackStep {
   title: string;
   body: string;
 }
@@ -68,7 +68,7 @@ export default function StepTrack({ steps }: { steps: TrackStep[] }) {
             position: 'relative',
             display: 'grid',
             gridTemplateColumns: { xs: 'auto 1fr', md: '1fr' },
-            gap: { xs: 2.5, md: 2.5 },
+            gap: 2.5,
           }}
         >
           <Box
@@ -108,7 +108,7 @@ export default function StepTrack({ steps }: { steps: TrackStep[] }) {
           </Box>
 
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h3" component="h3" sx={{ mb: 0.75, fontSize: '1.15rem' }}>
+            <Typography variant="h3" sx={{ mb: 0.75, fontSize: '1.15rem' }}>
               {step.title}
             </Typography>
             <Typography color="text.secondary" sx={{ maxWidth: '40ch' }}>

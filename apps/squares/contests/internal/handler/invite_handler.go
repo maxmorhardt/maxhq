@@ -8,9 +8,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
-	"gorm.io/gorm"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type InviteHandler interface {
@@ -64,8 +63,8 @@ func (h *inviteHandler) CreateInvite(c *gin.Context) {
 	invite, err := h.inviteService.CreateInvite(c.Request.Context(), contestID, &req, user)
 	if err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole):
@@ -190,8 +189,8 @@ func (h *inviteHandler) GetInvites(c *gin.Context) {
 	invites, err := h.inviteService.GetInvitesByContestID(c.Request.Context(), contestID, user)
 	if err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
@@ -231,8 +230,8 @@ func (h *inviteHandler) DeleteInvite(c *gin.Context) {
 	user := c.GetString(api.UserKey)
 	if err := h.inviteService.DeleteInvite(c.Request.Context(), contestID, inviteID, user); err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(errs.ErrContestNotFound), c))
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole):

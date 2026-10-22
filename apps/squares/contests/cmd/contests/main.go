@@ -10,8 +10,8 @@ import (
 	_ "github.com/maxmorhardt/maxhq/apps/squares/contests/docs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/bootstrap"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/config"
-	"github.com/maxmorhardt/maxhq/libs/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 )
 
 // @title           Squares Contests API

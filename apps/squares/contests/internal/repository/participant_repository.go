@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"gorm.io/gorm"
 )
 

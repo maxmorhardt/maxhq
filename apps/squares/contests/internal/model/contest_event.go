@@ -7,7 +7,7 @@ import (
 	"gorm.io/datatypes"
 )
 
-// ContestUpdate is the contest.updated payload: the contest without its squares, results, or game
+// the contest.updated payload: the contest without its squares, results, or game
 type ContestUpdate struct {
 	Name       string            `json:"name"`
 	HomeTeam   string            `json:"homeTeam"`

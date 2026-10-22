@@ -11,7 +11,7 @@ describe('PageHeader', () => {
   });
 
   it('renders the lede', () => {
-    renderWithProviders(<PageHeader title="About" lede="Who I am." width="md" />);
+    renderWithProviders(<PageHeader title="About" lede="Who I am." />);
 
     expect(screen.getByText('Who I am.')).toBeInTheDocument();
   });

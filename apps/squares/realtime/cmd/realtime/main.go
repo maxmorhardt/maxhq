@@ -10,8 +10,8 @@ import (
 	_ "github.com/maxmorhardt/maxhq/apps/squares/realtime/docs"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/bootstrap"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/model"
-	"github.com/maxmorhardt/maxhq/libs/platform/config"
-	"github.com/maxmorhardt/maxhq/libs/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 )
 
 // @title           Squares Realtime API

@@ -17,7 +17,6 @@ import PageMeta from '../components/common/PageMeta';
 import RevealSection from '../components/common/RevealSection';
 import { pageSection, primaryTint } from '../theme';
 
-// every app on maxhq; add an entry here and it gets its own card, index link and anchor
 const apps: AppEntry[] = [
   {
     id: 'squares',

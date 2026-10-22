@@ -8,7 +8,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/metrics"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/service"
-	"github.com/maxmorhardt/maxhq/libs/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 // spaces out the season sync's requests so a full season is not a burst
