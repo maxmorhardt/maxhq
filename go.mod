@@ -1,6 +1,6 @@
 module github.com/maxmorhardt/maxhq
 
-go 1.27.2
+go 1.27.3
 
 ignore (
 	./apps/maxhq/node_modules
