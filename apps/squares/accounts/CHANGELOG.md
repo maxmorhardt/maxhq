@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.1.1...squares-accounts/1.1.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **squares:** board labels, live quarter results, realtime gaps, and a contests restructure ([#126](https://github.com/maxmorhardt/maxhq/issues/126)) ([66bee00](https://github.com/maxmorhardt/maxhq/commit/66bee000e8cbeef801ddaaeecee92ce9ac93f158))
+
 ## [1.1.1](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.1.0...squares-accounts/1.1.1) (2026-10-22)
 
 
