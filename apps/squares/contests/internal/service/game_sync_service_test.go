@@ -74,6 +74,27 @@ func TestGameSync_AdvancesStartedContest(t *testing.T) {
 	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
+type inTxKey struct{}
+
+func TestGameSync_ReloadsGameInTheWriteTransaction(t *testing.T) {
+	game := liveGame(uuid.New(), model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3})
+	inTx := mock.MatchedBy(func(ctx context.Context) bool { return ctx.Value(inTxKey{}) != nil })
+
+	tx := &mocks.Transactor{}
+	tx.On("Do", mock.Anything, mock.Anything).
+		Return(func(ctx context.Context, fn func(context.Context) error) error {
+			return fn(context.WithValue(ctx, inTxKey{}, true))
+		})
+
+	g := mocks.NewGameProjectionRepository(t)
+	g.EXPECT().Upsert(inTx, game).Return(nil)
+	g.EXPECT().GetByID(inTx, game.ID).Return(game, nil)
+	c := mocks.NewContestRepository(t)
+	c.EXPECT().GetIDsByGameID(mock.Anything, game.ID).Return(nil, nil)
+
+	require.NoError(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), tx, quietFeed(t)).ApplyGameUpdate(context.Background(), game))
+}
+
 func TestGameSync_AutoStartsAndBackfills(t *testing.T) {
 	game := liveGame(uuid.New(),
 		model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3},
