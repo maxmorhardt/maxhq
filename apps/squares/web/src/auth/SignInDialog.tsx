@@ -13,7 +13,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from 'react-oidc-context';
-import InAppBrowserNotice from './InAppBrowserNotice';
 import { signInWithProvider, type OIDCProvider } from './oidc';
 
 interface SignInDialogProps {
@@ -50,7 +49,6 @@ export default function SignInDialog({ open, onClose, redirectPath }: SignInDial
       </DialogTitle>
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 0.5 }}>
-          <InAppBrowserNotice />
           <Button
             variant="outlined"
             color="inherit"

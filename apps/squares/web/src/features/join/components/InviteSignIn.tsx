@@ -5,7 +5,6 @@ import { alpha } from '@mui/material/styles';
 import { useAuth } from 'react-oidc-context';
 import { errorMessage } from '../../../api/errors';
 import { fonts, game as palette } from '../../../app/theme';
-import InAppBrowserNotice from '../../../auth/InAppBrowserNotice';
 import { signInWithProvider, type OIDCProvider } from '../../../auth/oidc';
 import TeamMark from '../../../components/TeamMark';
 import type { InvitePreviewResponse } from '../../../types/contest';
@@ -239,8 +238,6 @@ export default function InviteSignIn({ token }: Props) {
           <Typography sx={{ color: 'text.secondary', mb: 1 }}>
             Sign in and you join the contest straight away.
           </Typography>
-
-          <InAppBrowserNotice />
 
           <Button
             variant="contained"
