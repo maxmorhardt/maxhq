@@ -207,8 +207,8 @@ func (s *contestService) FinalizeFromScores(ctx context.Context, contest *model.
 	}
 
 	err = s.tx.Do(ctx, func(ctx context.Context) error {
-		if err := s.applyQuarterResults(ctx, contest, results, systemUser); err != nil {
-			return err
+		if applyErr := s.applyQuarterResults(ctx, contest, results, systemUser); applyErr != nil {
+			return applyErr
 		}
 		return s.events.PublishContestUpdate(ctx, contest.ID, systemUser, contest)
 	})

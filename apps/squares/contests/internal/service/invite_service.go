@@ -12,6 +12,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/initials"
 )
 
 type InviteService interface {
@@ -26,6 +27,7 @@ type inviteService struct {
 	inviteRepo         repository.InviteRepository
 	participantRepo    repository.ParticipantRepository
 	contestRepo        repository.ContestRepository
+	userRepo           repository.UserRepository
 	participantService ParticipantService
 	tx                 database.Transactor
 	events             ContestEventPublisher
@@ -35,6 +37,7 @@ func NewInviteService(
 	inviteRepo repository.InviteRepository,
 	participantRepo repository.ParticipantRepository,
 	contestRepo repository.ContestRepository,
+	userRepo repository.UserRepository,
 	participantService ParticipantService,
 	tx database.Transactor,
 	events ContestEventPublisher,
@@ -43,6 +46,7 @@ func NewInviteService(
 		inviteRepo:         inviteRepo,
 		participantRepo:    participantRepo,
 		contestRepo:        contestRepo,
+		userRepo:           userRepo,
 		participantService: participantService,
 		tx:                 tx,
 		events:             events,
@@ -223,6 +227,11 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user, displayNa
 	err = s.tx.Do(ctx, func(ctx context.Context) error {
 		if redeemErr := s.inviteRepo.RedeemInvite(ctx, invite.ID, participant, model.MaxContestSquares); redeemErr != nil {
 			return redeemErr
+		}
+
+		// a first-time player may join before accounts has published their profile, so the players list needs a name now
+		if _, seedErr := s.userRepo.GetOrCreate(ctx, user, displayName, initials.FromName(displayName)); seedErr != nil {
+			return seedErr
 		}
 
 		return s.events.PublishParticipantJoined(ctx, invite.ContestID, participant)

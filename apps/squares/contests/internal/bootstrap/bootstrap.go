@@ -69,7 +69,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	participantService := service.NewParticipantService(participantRepo, contestRepo, squareRepo, tx, events)
 	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, participantService)
 	squareService := service.NewSquareService(squareRepo, contestRepo, participantRepo, userRepo, tx, events, participantService)
-	inviteService := service.NewInviteService(inviteRepo, participantRepo, contestRepo, participantService, tx, events)
+	inviteService := service.NewInviteService(inviteRepo, participantRepo, contestRepo, userRepo, participantService, tx, events)
 	leaderboardService := service.NewLeaderboardService(repository.NewLeaderboardRepository(db), sharedCache)
 	statsService := service.NewStatsService(repository.NewStatsRepository(db), sharedCache)
 	userSyncService := service.NewUserSyncService(userRepo, squareRepo, tx, events)

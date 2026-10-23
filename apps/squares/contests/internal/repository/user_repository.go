@@ -24,6 +24,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
+// seeds contests' copy with accounts' defaults when it is missing; accounts' user events always overwrite it
 func (r *userRepository) GetOrCreate(ctx context.Context, email, defaultDisplayName, defaultInitials string) (*model.User, error) {
 	conn := database.Conn(ctx, r.db)
 
@@ -60,8 +61,10 @@ func (r *userRepository) Upsert(ctx context.Context, user *model.User) error {
 }
 
 // returns what live viewers need to hear about: the squares freed in unfinished contests and the memberships removed
-func (r *userRepository) Scrub(ctx context.Context, email string) (cleared []model.Square, removed []model.ContestParticipant, err error) {
-	err = database.InTx(ctx, func(tx *gorm.DB) error {
+func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestParticipant, error) {
+	var cleared []model.Square
+	var removed []model.ContestParticipant
+	err := database.InTx(ctx, func(tx *gorm.DB) error {
 		if err := tx.Model(&cleared).Clauses(clause.Returning{}).
 			Where("owner = ? AND contest_id IN (?)", email,
 				tx.Model(&model.Contest{}).Select("id").Where("status NOT IN ?", terminalStatuses)).

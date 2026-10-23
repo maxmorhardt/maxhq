@@ -23,8 +23,8 @@ type userSyncService struct {
 	events     ContestEventPublisher
 }
 
-func NewUserSyncService(userRepo repository.UserRepository, squareRepo repository.SquareRepository, tx database.Transactor, events ContestEventPublisher) UserSyncService {
-	return &userSyncService{userRepo: userRepo, squareRepo: squareRepo, tx: tx, events: events}
+func NewUserSyncService(userRepo repository.UserRepository, squareRepo repository.SquareRepository, tx database.Transactor, publisher ContestEventPublisher) UserSyncService {
+	return &userSyncService{userRepo: userRepo, squareRepo: squareRepo, tx: tx, events: publisher}
 }
 
 func (s *userSyncService) ApplyUserUpdated(ctx context.Context, event *events.UserUpdated) error {
