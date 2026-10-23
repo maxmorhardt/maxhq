@@ -12,12 +12,12 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func passTx() *mocks.Transactor {
@@ -60,7 +60,7 @@ func TestGetProfile_Existing(t *testing.T) {
 func TestGetProfile_CreatesWithFirstActivityAndAnnouncesIt(t *testing.T) {
 	first := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
 	d := newUserDeps(t)
-	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(nil, gorm.ErrRecordNotFound)
+	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(nil, database.ErrNotFound)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{FirstActivity: &first}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool {
 		return u.DefaultInitials == "MM" && u.CreatedAt.Equal(first)
@@ -75,7 +75,7 @@ func TestGetProfile_CreatesWithFirstActivityAndAnnouncesIt(t *testing.T) {
 
 func TestGetProfile_CreatesEvenWhenContestsIsDown(t *testing.T) {
 	d := newUserDeps(t)
-	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(nil, errors.New("down"))
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool { return u.CreatedAt.IsZero() })).
 		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, error) { return u, nil })
@@ -93,7 +93,7 @@ func TestGetProfile_Errors(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 
 	d = newUserDeps(t)
-	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 	_, err = d.svc().GetProfile(context.Background(), "a@b.com", "Max")
@@ -113,7 +113,7 @@ func TestUpdateProfile_PublishesTheChange(t *testing.T) {
 
 func TestUpdateProfile_Errors(t *testing.T) {
 	d := newUserDeps(t)
-	d.repo.EXPECT().UpdateInitials(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	d.repo.EXPECT().UpdateInitials(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	_, err := d.svc().UpdateProfile(context.Background(), "a@b.com", "XY")
 	assert.ErrorIs(t, err, errs.ErrUserNotFound)
 

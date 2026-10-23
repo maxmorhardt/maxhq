@@ -81,7 +81,7 @@ func (r *gameRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Game
 	err := database.Conn(ctx, r.db).
 		Preload("Scores", func(db *gorm.DB) *gorm.DB { return db.Order("quarter ASC") }).
 		First(&game, "id = ?", id).Error
-	return &game, err
+	return &game, database.TranslateError(err)
 }
 
 func (r *gameRepository) GetUpcoming(ctx context.Context) ([]model.Game, error) {

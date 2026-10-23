@@ -21,7 +21,7 @@ describe('profileApi', () => {
       'PATCH',
       '/users/me',
     ],
-    ['getMyStats', () => profileApi.endpoints.getMyStats.initiate(), 'GET', '/users/me/stats'],
+    ['getMyStats', () => profileApi.endpoints.getMyStats.initiate(), 'GET', '/stats/me'],
     [
       'deleteMyAccount',
       () => profileApi.endpoints.deleteMyAccount.initiate(),
@@ -34,11 +34,5 @@ describe('profileApi', () => {
     const fetch = stubFetch({});
     await makeStore().dispatch(action() as never);
     expect(fetch.lastRequest()).toMatchObject({ method, path });
-  });
-
-  it('treats a null active contest list as empty', async () => {
-    stubFetch(null);
-    const result = await makeStore().dispatch(profileApi.endpoints.getMyActiveContests.initiate());
-    expect(result.data).toEqual([]);
   });
 });

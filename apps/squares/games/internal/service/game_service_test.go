@@ -11,11 +11,11 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func passTx() *mocks.Transactor {
@@ -276,7 +276,7 @@ func TestGameService_GetGame_CachesResult(t *testing.T) {
 
 func TestGameService_GetGame_Errors(t *testing.T) {
 	g := mocks.NewGameRepository(t)
-	g.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound).Once()
+	g.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound).Once()
 	_, err := gameSvc(t, g, nil).GetGame(context.Background(), uuid.New())
 	assert.ErrorIs(t, err, errs.ErrGameNotFound)
 

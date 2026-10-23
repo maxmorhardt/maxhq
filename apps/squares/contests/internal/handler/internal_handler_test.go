@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func internalRouter(snapshots *mocks.SnapshotService, activity *mocks.UserActivityService) *gin.Engine {
-	h := NewInternalHandler(snapshots, activity)
+func internalRouter(snapshots *mocks.SnapshotService, stats *mocks.StatsService) *gin.Engine {
+	h := NewInternalHandler(snapshots, stats)
 	r := gin.New()
 	r.GET("/internal/contests/:id/snapshot", h.GetContestSnapshot)
 	r.GET("/internal/users/:email/activity", h.GetUserActivity)
@@ -63,21 +63,21 @@ func TestGetContestSnapshot_BadRequest(t *testing.T) {
 }
 
 func TestGetUserActivity(t *testing.T) {
-	activity := mocks.NewUserActivityService(t)
-	activity.EXPECT().GetActivitySummary(mock.Anything, "a@b.com").
+	stats := mocks.NewStatsService(t)
+	stats.EXPECT().GetUserActivity(mock.Anything, "a@b.com").
 		Return(&contracts.UserActivitySummary{ActiveContests: []contracts.UserActiveContest{}}, nil)
 
-	w := doRequest(internalRouter(nil, activity), jsonReq(http.MethodGet, "/internal/users/a@b.com/activity", nil))
+	w := doRequest(internalRouter(nil, stats), jsonReq(http.MethodGet, "/internal/users/a@b.com/activity", nil))
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.JSONEq(t, `{"activeContests":[]}`, w.Body.String())
 }
 
 func TestGetUserActivity_Error(t *testing.T) {
-	activity := mocks.NewUserActivityService(t)
-	activity.EXPECT().GetActivitySummary(mock.Anything, mock.Anything).Return(nil, errs.ErrDatabaseUnavailable)
+	stats := mocks.NewStatsService(t)
+	stats.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(nil, errs.ErrDatabaseUnavailable)
 
-	w := doRequest(internalRouter(nil, activity), jsonReq(http.MethodGet, "/internal/users/a@b.com/activity", nil))
+	w := doRequest(internalRouter(nil, stats), jsonReq(http.MethodGet, "/internal/users/a@b.com/activity", nil))
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }

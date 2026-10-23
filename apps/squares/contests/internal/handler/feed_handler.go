@@ -33,7 +33,7 @@ func NewFeedHandler(feedService service.FeedService) FeedHandler {
 // @Param cursor query string false "nextCursor from the previous page"
 // @Param limit query int false "Page size" minimum(1) maximum(50) default(20)
 // @Param role query string false "owned or joined" Enums(owned, joined)
-// @Param status query string false "open, live, or finished" Enums(open, live, finished)
+// @Param status query string false "open, live, active (open or live), or finished" Enums(open, live, active, finished)
 // @Param search query string false "Case-insensitive name filter" maxlength(100)
 // @Success 200 {object} model.ContestFeedResponse
 // @Failure 400 {object} api.APIError

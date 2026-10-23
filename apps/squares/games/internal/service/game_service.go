@@ -17,7 +17,6 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
-	"gorm.io/gorm"
 )
 
 const (
@@ -144,7 +143,7 @@ func (s *gameService) GetGame(ctx context.Context, id uuid.UUID) (*model.Game, e
 		return s.gameRepo.GetByID(ctx, id)
 	})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return nil, errs.ErrGameNotFound
 		}
 		log.Error("failed to get game", "game_id", id, "error", err)

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -23,13 +22,9 @@ type ContestRepository interface {
 	Update(ctx context.Context, contest *model.Contest) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	ApplyQuarterResults(ctx context.Context, contest *model.Contest, results []model.QuarterResult) error
-
-	ClaimSquare(ctx context.Context, square *model.Square, value, owner, ownerName string) (*model.Square, error)
-	ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, value, owner, ownerName string) ([]model.Square, error)
-	ClearSquare(ctx context.Context, square *model.Square) (*model.Square, error)
-	GhostSquare(ctx context.Context, square *model.Square) (*model.Square, error)
-	ClearSquaresByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error)
 }
+
+var terminalStatuses = []model.ContestStatus{model.ContestStatusFinished, model.ContestStatusDeleted}
 
 type contestRepository struct {
 	db *gorm.DB
@@ -62,7 +57,7 @@ func (r *contestRepository) getByID(db *gorm.DB, id uuid.UUID) (*model.Contest, 
 		}).
 		First(&contest, "id = ? AND status != ?", id, model.ContestStatusDeleted).Error
 
-	return &contest, err
+	return &contest, database.TranslateError(err)
 }
 
 func (r *contestRepository) GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error) {
@@ -70,7 +65,7 @@ func (r *contestRepository) GetVisibilityByID(ctx context.Context, id uuid.UUID)
 	err := database.Conn(ctx, r.db).
 		Select("visibility").
 		First(&contest, "id = ? AND status != ?", id, model.ContestStatusDeleted).Error
-	return contest.Visibility, err
+	return contest.Visibility, database.TranslateError(err)
 }
 
 func (r *contestRepository) ExistsByOwnerAndName(ctx context.Context, owner, name string) (bool, error) {
@@ -94,7 +89,7 @@ func (r *contestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID
 }
 
 func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
+	return database.InTx(ctx, func(tx *gorm.DB) error {
 		contest.Version = 1
 		if err := tx.Create(contest).Error; err != nil {
 			return err
@@ -159,7 +154,7 @@ func (r *contestRepository) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r *contestRepository) ApplyQuarterResults(ctx context.Context, contest *model.Contest, results []model.QuarterResult) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
+	return database.InTx(ctx, func(tx *gorm.DB) error {
 		if err := saveContest(tx, contest); err != nil {
 			return err
 		}
@@ -174,216 +169,4 @@ func (r *contestRepository) ApplyQuarterResults(ctx context.Context, contest *mo
 			DoNothing: true,
 		}).Create(results).Error
 	})
-}
-
-// squares only change while the contest is ACTIVE; the shared lock blocks a concurrent start until this edit commits
-func lockActiveContest(tx *gorm.DB, contestID uuid.UUID) error {
-	var contest model.Contest
-	if err := tx.Clauses(clause.Locking{Strength: "SHARE"}).
-		Select("id", "status").
-		First(&contest, "id = ?", contestID).Error; err != nil {
-		return err
-	}
-
-	if contest.Status != model.ContestStatusActive {
-		return errs.ErrSquareNotEditable
-	}
-
-	return nil
-}
-
-func reloadSquare(tx *gorm.DB, square *model.Square) error {
-	return tx.First(square, "id = ?", square.ID).Error
-}
-
-func (r *contestRepository) ClaimSquare(ctx context.Context, square *model.Square, value, owner, ownerName string) (*model.Square, error) {
-	err := database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		if err := lockActiveContest(tx, square.ContestID); err != nil {
-			return err
-		}
-
-		// lock the participant row so this user's concurrent claims serialize and the limit below holds
-		var participant model.ContestParticipant
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("contest_id = ? AND user_id = ?", square.ContestID, owner).
-			First(&participant).Error; err != nil {
-			return err
-		}
-
-		res := tx.Model(&model.Square{}).
-			Where("id = ? AND (owner = ? OR owner = ?)", square.ID, "", owner).
-			Updates(map[string]any{
-				"value":      value,
-				"owner":      owner,
-				"owner_name": ownerName,
-				"updated_by": owner,
-				"claimed_at": time.Now(),
-				"version":    gorm.Expr("version + 1"),
-			})
-		if res.Error != nil {
-			return res.Error
-		}
-		if res.RowsAffected == 0 {
-			return errs.ErrSquareTaken
-		}
-
-		// count after the write so the new claim is included, then roll back if it broke the limit
-		var claimed int64
-		if err := tx.Model(&model.Square{}).
-			Where("contest_id = ? AND owner = ? AND value != ?", square.ContestID, owner, "").
-			Count(&claimed).Error; err != nil {
-			return err
-		}
-		if claimed > int64(participant.MaxSquares) {
-			return errs.ErrSquareLimitReached
-		}
-
-		return reloadSquare(tx, square)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return square, nil
-}
-
-// SKIP LOCKED lets concurrent fills take different squares instead of waiting on or colliding with each other
-func (r *contestRepository) ClaimRandomSquares(ctx context.Context, contestID uuid.UUID, count int, value, owner, ownerName string) ([]model.Square, error) {
-	var claimed []model.Square
-	err := database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		if err := lockActiveContest(tx, contestID); err != nil {
-			return err
-		}
-
-		var participant model.ContestParticipant
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("contest_id = ? AND user_id = ?", contestID, owner).
-			First(&participant).Error; err != nil {
-			return err
-		}
-
-		var held int64
-		if err := tx.Model(&model.Square{}).
-			Where("contest_id = ? AND owner = ? AND value != ?", contestID, owner, "").
-			Count(&held).Error; err != nil {
-			return err
-		}
-		remaining := participant.MaxSquares - int(held)
-		if remaining <= 0 {
-			return errs.ErrSquareLimitReached
-		}
-		count = min(count, remaining)
-
-		var ids []uuid.UUID
-		if err := tx.Raw(
-			`SELECT id FROM squares WHERE contest_id = ? AND owner = '' AND value = '' ORDER BY random() LIMIT ? FOR UPDATE SKIP LOCKED`,
-			contestID, count,
-		).Scan(&ids).Error; err != nil {
-			return err
-		}
-		if len(ids) == 0 {
-			return errs.ErrNoEmptySquares
-		}
-
-		if err := tx.Model(&model.Square{}).
-			Where("id IN ?", ids).
-			Updates(map[string]any{
-				"value":      value,
-				"owner":      owner,
-				"owner_name": ownerName,
-				"updated_by": owner,
-				"claimed_at": time.Now(),
-				"version":    gorm.Expr("version + 1"),
-			}).Error; err != nil {
-			return err
-		}
-
-		return tx.Where("id IN ?", ids).Order("\"row\", col").Find(&claimed).Error
-	})
-
-	return claimed, err
-}
-
-func (r *contestRepository) ClearSquare(ctx context.Context, square *model.Square) (*model.Square, error) {
-	err := database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		if err := lockActiveContest(tx, square.ContestID); err != nil {
-			return err
-		}
-
-		if err := tx.Model(&model.Square{}).
-			Where("id = ?", square.ID).
-			Updates(map[string]any{
-				"value":      "",
-				"owner":      "",
-				"owner_name": "",
-				"claimed_at": nil,
-				"version":    gorm.Expr("version + 1"),
-			}).Error; err != nil {
-			return err
-		}
-
-		return reloadSquare(tx, square)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return square, nil
-}
-
-// in-progress squares keep their value so scoring is unaffected; only the owner identity is dropped
-func (r *contestRepository) GhostSquare(ctx context.Context, square *model.Square) (*model.Square, error) {
-	err := database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Square{}).
-			Where("id = ?", square.ID).
-			Updates(map[string]any{
-				"owner":      model.GhostUser,
-				"owner_name": "",
-				"version":    gorm.Expr("version + 1"),
-			}).Error; err != nil {
-			return err
-		}
-
-		return reloadSquare(tx, square)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return square, nil
-}
-
-func (r *contestRepository) ClearSquaresByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error) {
-	var clearedSquares []model.Square
-	err := database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		if err := lockActiveContest(tx, contestID); err != nil {
-			return err
-		}
-
-		var ids []uuid.UUID
-		if err := tx.Model(&model.Square{}).
-			Where("contest_id = ? AND owner = ?", contestID, owner).
-			Pluck("id", &ids).Error; err != nil {
-			return err
-		}
-		if len(ids) == 0 {
-			return nil
-		}
-
-		if err := tx.Model(&model.Square{}).
-			Where("id IN ?", ids).
-			Updates(map[string]any{
-				"value":      "",
-				"owner":      "",
-				"owner_name": "",
-				"claimed_at": nil,
-				"version":    gorm.Expr("version + 1"),
-			}).Error; err != nil {
-			return err
-		}
-
-		return tx.Where("id IN ?", ids).Order("\"row\", col").Find(&clearedSquares).Error
-	})
-
-	return clearedSquares, err
 }

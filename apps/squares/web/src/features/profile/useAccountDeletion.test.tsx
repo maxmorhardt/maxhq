@@ -9,11 +9,11 @@ import { useAccountDeletion } from './useAccountDeletion';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 const api = vi.hoisted(() => ({
-  useGetMyActiveContestsQuery: vi.fn(),
   useDeleteMyAccountMutation: vi.fn(),
 }));
 vi.mock('./api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 const contests = vi.hoisted(() => ({
+  useGetActiveContestsQuery: vi.fn(),
   useDeleteContestMutation: vi.fn(),
   useRemoveParticipantMutation: vi.fn(),
 }));
@@ -45,7 +45,7 @@ describe('useAccountDeletion', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     auth = mockAuth({ email: 'me@x.com' });
-    api.useGetMyActiveContestsQuery.mockReturnValue({ data: [], isError: false, refetch });
+    contests.useGetActiveContestsQuery.mockReturnValue({ data: [], isError: false, refetch });
     api.useDeleteMyAccountMutation.mockReturnValue(mockMutation(undefined));
     contests.useDeleteContestMutation.mockReturnValue(mockMutation(undefined));
     contests.useRemoveParticipantMutation.mockReturnValue(mockMutation(undefined));
@@ -53,13 +53,13 @@ describe('useAccountDeletion', () => {
 
   it('only checks active contests once the dialog opens', () => {
     const { result } = setup();
-    expect(api.useGetMyActiveContestsQuery).toHaveBeenLastCalledWith(
+    expect(contests.useGetActiveContestsQuery).toHaveBeenLastCalledWith(
       undefined,
       expect.objectContaining({ skip: true })
     );
     act(() => result.current.openDialog());
     expect(result.current.dialogProps.open).toBe(true);
-    expect(api.useGetMyActiveContestsQuery).toHaveBeenLastCalledWith(
+    expect(contests.useGetActiveContestsQuery).toHaveBeenLastCalledWith(
       undefined,
       expect.objectContaining({ skip: false })
     );

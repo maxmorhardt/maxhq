@@ -112,9 +112,10 @@ describe('liveContestSlice events', () => {
     expect(state.participants).toHaveLength(2);
     state = receive(
       state,
-      event('participant.joined', makeParticipant({ id: 'p-2', userId: 'b@x.com', maxSquares: 9 }))
+      event('participant.updated', makeParticipant({ id: 'p-2', userId: 'b@x.com', maxSquares: 9 }))
     );
     expect(state.participants).toHaveLength(2);
+    expect(state.participants.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
     state = receive(state, event('participant.removed', makeParticipant({ userId: 'b@x.com' })));
     expect(state.participants.map((p) => p.userId)).toEqual(['player@x.com']);
   });

@@ -91,6 +91,7 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 
 	t.Run("filters by status", func(t *testing.T) {
 		assert.Len(t, feed(t, owner, url.Values{"status": {"open"}}).Contests, 4)
+		assert.Len(t, feed(t, owner, url.Values{"status": {"active"}}).Contests, 4)
 		assert.Empty(t, feed(t, owner, url.Values{"status": {"finished"}}).Contests)
 	})
 

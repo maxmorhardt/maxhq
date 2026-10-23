@@ -10,10 +10,10 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestSnapshot_ReturnsContestAndParticipantsToViewers(t *testing.T) {
@@ -59,7 +59,7 @@ func TestSnapshot_LoadErrors(t *testing.T) {
 
 	pSvc := okAuth(t)
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByID(mock.Anything, contestID).Return(nil, gorm.ErrRecordNotFound)
+	repo.EXPECT().GetByID(mock.Anything, contestID).Return(nil, database.ErrNotFound)
 	_, err := service.NewSnapshotService(repo, pSvc).GetSnapshot(context.Background(), contestID, "v")
 	assert.ErrorIs(t, err, errs.ErrContestNotFound)
 

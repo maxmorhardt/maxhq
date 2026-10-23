@@ -33,7 +33,7 @@ func TestGameSyncRepository_UpsertGuardsAgainstOlderSnapshots(t *testing.T) {
 			{ID: uuid.New(), Quarter: 2, HomeScore: 14, AwayScore: 3},
 		},
 	}
-	require.NoError(t, NewGameSyncRepository(gdb).Upsert(context.Background(), game))
+	require.NoError(t, inTxErr(gdb, func(ctx context.Context) error { return NewGameSyncRepository(gdb).Upsert(ctx, game) }))
 	assert.Len(t, game.Scores, 2, "the caller's game is not mutated")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -44,7 +44,9 @@ func TestGameSyncRepository_UpsertWithoutScores(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "games"`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	require.NoError(t, NewGameSyncRepository(gdb).Upsert(context.Background(), &model.Game{ID: uuid.New(), ESPNID: "401"}))
+	require.NoError(t, inTxErr(gdb, func(ctx context.Context) error {
+		return NewGameSyncRepository(gdb).Upsert(ctx, &model.Game{ID: uuid.New(), ESPNID: "401"})
+	}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -54,7 +56,9 @@ func TestGameSyncRepository_UpsertError(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "games"`).WillReturnError(errors.New("db"))
 	mock.ExpectRollback()
 
-	require.Error(t, NewGameSyncRepository(gdb).Upsert(context.Background(), &model.Game{ID: uuid.New()}))
+	require.Error(t, inTxErr(gdb, func(ctx context.Context) error {
+		return NewGameSyncRepository(gdb).Upsert(ctx, &model.Game{ID: uuid.New()})
+	}))
 }
 
 func TestGameSyncRepository_GetByID(t *testing.T) {

@@ -24,64 +24,6 @@ func (_m *ParticipantRepository) EXPECT() *ParticipantRepository_Expecter {
 	return &ParticipantRepository_Expecter{mock: &_m.Mock}
 }
 
-// CountSquaresByUser provides a mock function with given fields: ctx, contestID, userID
-func (_m *ParticipantRepository) CountSquaresByUser(ctx context.Context, contestID uuid.UUID, userID string) (int, error) {
-	ret := _m.Called(ctx, contestID, userID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CountSquaresByUser")
-	}
-
-	var r0 int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (int, error)); ok {
-		return rf(ctx, contestID, userID)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) int); ok {
-		r0 = rf(ctx, contestID, userID)
-	} else {
-		r0 = ret.Get(0).(int)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
-		r1 = rf(ctx, contestID, userID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ParticipantRepository_CountSquaresByUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountSquaresByUser'
-type ParticipantRepository_CountSquaresByUser_Call struct {
-	*mock.Call
-}
-
-// CountSquaresByUser is a helper method to define mock.On call
-//   - ctx context.Context
-//   - contestID uuid.UUID
-//   - userID string
-func (_e *ParticipantRepository_Expecter) CountSquaresByUser(ctx interface{}, contestID interface{}, userID interface{}) *ParticipantRepository_CountSquaresByUser_Call {
-	return &ParticipantRepository_CountSquaresByUser_Call{Call: _e.mock.On("CountSquaresByUser", ctx, contestID, userID)}
-}
-
-func (_c *ParticipantRepository_CountSquaresByUser_Call) Run(run func(ctx context.Context, contestID uuid.UUID, userID string)) *ParticipantRepository_CountSquaresByUser_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *ParticipantRepository_CountSquaresByUser_Call) Return(_a0 int, _a1 error) *ParticipantRepository_CountSquaresByUser_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *ParticipantRepository_CountSquaresByUser_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (int, error)) *ParticipantRepository_CountSquaresByUser_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Delete provides a mock function with given fields: ctx, contestID, userID
 func (_m *ParticipantRepository) Delete(ctx context.Context, contestID uuid.UUID, userID string) error {
 	ret := _m.Called(ctx, contestID, userID)

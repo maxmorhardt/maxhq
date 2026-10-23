@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestInviteRepository_GetByToken_Success(t *testing.T) {
@@ -36,7 +36,7 @@ func TestInviteRepository_GetByToken_NotFound(t *testing.T) {
 
 	_, err := repo.GetByToken(context.Background(), "missing")
 
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, database.ErrNotFound)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -82,7 +82,9 @@ func TestInviteRepository_RedeemInvite(t *testing.T) {
 	mock.ExpectExec(`UPDATE "contest_invites"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
-	err := repo.RedeemInvite(context.Background(), uuid.New(), &model.ContestParticipant{ContestID: contestID, UserID: "u", MaxSquares: 10}, 100)
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.RedeemInvite(ctx, uuid.New(), &model.ContestParticipant{ContestID: contestID, UserID: "u", MaxSquares: 10}, 100)
+	})
 	require.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -101,7 +103,9 @@ func TestInviteRepository_RedeemInvite_PoolExhausted(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"coalesce"}).AddRow(95))
 	mock.ExpectRollback()
 
-	err := repo.RedeemInvite(context.Background(), uuid.New(), &model.ContestParticipant{ContestID: contestID, UserID: "u", MaxSquares: 10}, 100)
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.RedeemInvite(ctx, uuid.New(), &model.ContestParticipant{ContestID: contestID, UserID: "u", MaxSquares: 10}, 100)
+	})
 	require.ErrorIs(t, err, errs.ErrNotEnoughSquares)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -122,7 +126,9 @@ func TestInviteRepository_RedeemInvite_UsesExhausted(t *testing.T) {
 	mock.ExpectExec(`UPDATE "contest_invites"`).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectRollback()
 
-	err := repo.RedeemInvite(context.Background(), uuid.New(), &model.ContestParticipant{ContestID: contestID, UserID: "u", MaxSquares: 10}, 100)
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.RedeemInvite(ctx, uuid.New(), &model.ContestParticipant{ContestID: contestID, UserID: "u", MaxSquares: 10}, 100)
+	})
 	require.ErrorIs(t, err, errs.ErrInviteMaxUsesReached)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

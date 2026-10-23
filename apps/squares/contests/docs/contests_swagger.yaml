@@ -93,8 +93,8 @@ definitions:
       createdAt:
         type: string
       displayName:
-        description: read from the user projection, so other players can be shown
-          a name instead of an email
+        description: read from contests.users, so other players can be shown a name
+          instead of an email
         type: string
       id:
         type: string
@@ -517,10 +517,11 @@ paths:
         in: query
         name: role
         type: string
-      - description: open, live, or finished
+      - description: open, live, active (open or live), or finished
         enum:
         - open
         - live
+        - active
         - finished
         in: query
         name: status
@@ -878,7 +879,7 @@ paths:
       - BearerAuth: []
       summary: Clear square value and owner
       tags:
-      - contests
+      - squares
     put:
       description: Claims a square for the authenticated user using their profile
         default initials
@@ -924,7 +925,7 @@ paths:
       - BearerAuth: []
       summary: Claim a single square in a contest
       tags:
-      - contests
+      - squares
   /contests/{id}/squares/claims:
     delete:
       consumes:
@@ -970,7 +971,7 @@ paths:
       - BearerAuth: []
       summary: Clear all of the caller's squares in a contest
       tags:
-      - contests
+      - squares
   /contests/{id}/squares/random:
     post:
       consumes:
@@ -1016,7 +1017,7 @@ paths:
       - BearerAuth: []
       summary: Claim random empty squares
       tags:
-      - contests
+      - squares
   /health/live:
     get:
       description: Returns UP if the service process is running
@@ -1259,29 +1260,7 @@ paths:
       summary: Get platform stats
       tags:
       - stats
-  /users/me/active-contests:
-    get:
-      description: Returns the non-terminal contests the user owns or participates
-        in, which block account deletion
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/contracts.UserActiveContest'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Get the current user's active contests
-      tags:
-      - users
-  /users/me/stats:
+  /stats/me:
     get:
       description: Returns contest and square stats for the authenticated user
       produces:
@@ -1299,7 +1278,7 @@ paths:
       - BearerAuth: []
       summary: Get the current user's stats
       tags:
-      - users
+      - stats
 securityDefinitions:
   BearerAuth:
     in: header

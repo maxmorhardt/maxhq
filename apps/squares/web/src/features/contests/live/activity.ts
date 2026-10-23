@@ -18,8 +18,7 @@ const GHOST_USER = 'ghost';
 export const winnerLabel = (winner: string, winnerName: string) =>
   winner === GHOST_USER ? 'ghost' : winnerName;
 
-const byTime = (a: ActivityEvent, b: ActivityEvent) =>
-  new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+const timeOf = (event: ActivityEvent) => new Date(event.timestamp).getTime();
 
 // rebuilds the feed from a snapshot, so a fresh viewer sees what already happened
 export function seedActivity(contest: Contest, participants: Participant[]): ActivityEvent[] {
@@ -48,7 +47,14 @@ export function seedActivity(contest: Contest, participants: Participant[]): Act
     timestamp: qr.createdAt,
   }));
 
-  return [...joined, ...claimed, ...winners].sort(byTime).slice(-MAX_ACTIVITY);
+  // the board locks before kickoff, so a claim stamped after a quarter (a backfilled claimedAt) still sorts before it
+  const lockedAt = Math.min(...winners.map(timeOf));
+  const sortTime = (event: ActivityEvent) =>
+    event.type === 'square_claimed' ? Math.min(timeOf(event), lockedAt) : timeOf(event);
+
+  return [...joined, ...claimed, ...winners]
+    .sort((a, b) => sortTime(a) - sortTime(b))
+    .slice(-MAX_ACTIVITY);
 }
 
 // what the contest looked like before the event, to tell real changes from edits

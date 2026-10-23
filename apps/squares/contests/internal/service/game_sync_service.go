@@ -11,7 +11,6 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
-	"gorm.io/gorm"
 )
 
 type GameSyncService interface {
@@ -19,7 +18,7 @@ type GameSyncService interface {
 }
 
 type gameSyncService struct {
-	gameRepo       repository.GameProjectionRepository
+	gameRepo       repository.GameSyncRepository
 	contestRepo    repository.ContestRepository
 	contestService ContestService
 	tx             database.Transactor
@@ -27,7 +26,7 @@ type gameSyncService struct {
 }
 
 func NewGameSyncService(
-	gameRepo repository.GameProjectionRepository,
+	gameRepo repository.GameSyncRepository,
 	contestRepo repository.ContestRepository,
 	contestService ContestService,
 	tx database.Transactor,
@@ -49,7 +48,7 @@ func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game)
 	var stored *model.Game
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		if err := s.gameRepo.Upsert(ctx, game); err != nil {
-			log.Error("failed to update game projection", "error", err)
+			log.Error("failed to save game", "error", err)
 			return err
 		}
 
@@ -59,7 +58,7 @@ func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game)
 
 		var err error
 		if stored, err = s.gameRepo.GetByID(ctx, game.ID); err != nil {
-			log.Error("failed to reload game projection", "error", err)
+			log.Error("failed to reload game", "error", err)
 			return err
 		}
 		return nil
@@ -93,7 +92,7 @@ func (s *gameSyncService) reconcileContest(ctx context.Context, contestID uuid.U
 	return s.tx.Do(ctx, func(ctx context.Context) error {
 		contest, err := s.contestRepo.GetByIDForUpdate(ctx, contestID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, database.ErrNotFound) {
 				return nil
 			}
 			return err

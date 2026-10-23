@@ -9,8 +9,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
-	"gorm.io/gorm"
 )
 
 type SnapshotService interface {
@@ -26,8 +26,10 @@ func NewSnapshotService(contestRepo repository.ContestRepository, participantSer
 	return &snapshotService{contestRepo: contestRepo, participantService: participantService}
 }
 
+// realtime replays only events after the position it read first, so a replica missing a commit would lose it for good
 func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*model.ContestSnapshot, error) {
 	log := logging.FromContext(ctx)
+	ctx = database.ReadPrimary(ctx)
 
 	if err := s.participantService.Authorize(ctx, contestID, user, ActionView); err != nil {
 		if errors.Is(err, errs.ErrContestNotFound) || errors.Is(err, errs.ErrDatabaseUnavailable) {
@@ -39,7 +41,7 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return nil, errs.ErrContestNotFound
 		}
 		log.Error("failed to get contest for snapshot", "contest_id", contestID, "error", err)

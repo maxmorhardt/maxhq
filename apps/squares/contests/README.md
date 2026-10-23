@@ -12,17 +12,17 @@ Contests, squares, participants, invites, the leaderboard, and stats. One of the
 
 | Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
-| `GET /contests` | the caller's owned and joined contests, newest first, cursor paginated, filtered by `role`, `status`, and `search` |
+| `GET /contests` | the caller's owned and joined contests, newest first, cursor paginated, filtered by `role`, `status` (`open`, `live`, `active`, `finished`), and `search` |
 | `/contests/**` | create, edit, and delete contests (each linked to a live NFL game); claim, clear, and randomly fill squares |
 | `/invites/**` | preview and redeem invite links |
 | `/leaderboard`, `/stats` | public stats, cached in Valkey |
-| `/users/me/stats`, `/users/me/active-contests` | the signed-in user's contest activity |
+| `/leaderboard/me`, `/stats/me` | the signed-in user's rank and contest stats |
 | `/internal/contests/:id/snapshot` | realtime only: the full contest, or 403/404 |
 | `/internal/users/:email/activity` | accounts only: active contests and first activity |
 
 ## Events
 
-- **Writes:** `contest:<id>` - every change to a contest (`square.updated`, `contest.updated`, `quarter.recorded`, `participant.joined`, `participant.removed`, `contest.deleted`), each a `{type, contestId, updatedBy, timestamp, data}` envelope from `libs/go/squares/events`.
+- **Writes:** `contest:<id>` - every change to a contest (`square.updated`, `contest.updated`, `quarter.recorded`, `participant.joined`, `participant.updated`, `participant.removed`, `contest.deleted`), each a `{type, contestId, updatedBy, timestamp, data}` envelope from `libs/go/squares/events`.
 - **Reads:** `games` (`contests-games`): keeps the local copy of each game, used only to validate new contests and to auto-start and score them; clients read games from the games service. `users` (`contests-users`): keeps display names and initials, cascades new initials onto live squares, and scrubs deleted users.
 
 ## Development

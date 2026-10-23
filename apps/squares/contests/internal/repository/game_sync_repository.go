@@ -29,7 +29,7 @@ var gameColumns = []string{
 }
 
 func (r *gameSyncRepository) Upsert(ctx context.Context, game *model.Game) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
+	return database.InTx(ctx, func(tx *gorm.DB) error {
 		row := *game
 		row.Scores = nil
 
@@ -66,5 +66,5 @@ func (r *gameSyncRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.
 	err := database.Conn(ctx, r.db).
 		Preload("Scores", func(db *gorm.DB) *gorm.DB { return db.Order("quarter ASC") }).
 		First(&game, "id = ?", id).Error
-	return &game, err
+	return &game, database.TranslateError(err)
 }

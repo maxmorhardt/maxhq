@@ -14,13 +14,15 @@ import {
   ListItemText,
   Box,
 } from '@mui/material';
-import type { UserActiveContest } from '../../../types/user';
+import type { ContestSummary } from '../../../types/contest';
+
+export type BlockingContest = Pick<ContestSummary, 'id' | 'name' | 'role'>;
 
 export interface DeleteAccountDialogProps {
   open: boolean;
   deleting: boolean;
   busyId: string | null;
-  activeContests: UserActiveContest[] | null;
+  activeContests: BlockingContest[] | null;
   activeContestsError: boolean;
   actionError: string | null;
   onClose: () => void;

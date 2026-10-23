@@ -42,7 +42,7 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	require.NoError(t, pub.PublishQuarterResult(ctx, contestID, "u", &model.QuarterResult{Quarter: 1}))
 	require.NoError(t, pub.PublishContestDeleted(ctx, contestID, "u"))
 	require.NoError(t, pub.PublishParticipantRemoved(ctx, contestID, "u", participant))
-	require.NoError(t, pub.PublishParticipantAdded(ctx, contestID, participant))
+	require.NoError(t, pub.PublishParticipantJoined(ctx, contestID, participant))
 
 	types := make([]string, 0, len(*captured))
 	for _, e := range *captured {

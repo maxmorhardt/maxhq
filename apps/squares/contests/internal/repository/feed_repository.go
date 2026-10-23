@@ -44,7 +44,7 @@ func (r *feedRepository) List(ctx context.Context, user string, f *model.Contest
 	case model.FeedRoleJoined:
 		q = q.Where("c.owner <> ? AND cp.id IS NOT NULL", user)
 	default:
-		q = q.Where("(c.owner = ? OR cp.id IS NOT NULL)", user)
+		q = q.Where("c.owner = ? OR cp.id IS NOT NULL", user)
 	}
 
 	if len(f.Statuses) > 0 {

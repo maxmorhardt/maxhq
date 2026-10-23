@@ -22,10 +22,6 @@ static_resources:
                           route: { cluster: accounts, prefix_rewrite: /swagger }
                         - match: { prefix: /squares/swagger/realtime }
                           route: { cluster: realtime, prefix_rewrite: /swagger }
-                        - match: { path: /squares/users/me/stats }
-                          route: { cluster: contests, prefix_rewrite: /users/me/stats }
-                        - match: { path: /squares/users/me/active-contests }
-                          route: { cluster: contests, prefix_rewrite: /users/me/active-contests }
                         - match: { path: /squares/users/me/sign-out }
                           route: { cluster: accounts, prefix_rewrite: /users/me/sign-out }
                         - match: { path: /squares/users/me/restore }

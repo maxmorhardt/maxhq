@@ -13,7 +13,7 @@ import (
 type UserRepository interface {
 	GetOrCreate(ctx context.Context, email, defaultDisplayName, defaultInitials string) (*model.User, error)
 	Upsert(ctx context.Context, user *model.User) error
-	Scrub(ctx context.Context, email string) error
+	Scrub(ctx context.Context, email string) (cleared []model.Square, removed []model.ContestParticipant, err error)
 }
 
 type userRepository struct {
@@ -59,9 +59,10 @@ func (r *userRepository) Upsert(ctx context.Context, user *model.User) error {
 		Create(user).Error
 }
 
-func (r *userRepository) Scrub(ctx context.Context, email string) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Square{}).
+// returns what live viewers need to hear about: the squares freed in unfinished contests and the memberships removed
+func (r *userRepository) Scrub(ctx context.Context, email string) (cleared []model.Square, removed []model.ContestParticipant, err error) {
+	err = database.InTx(ctx, func(tx *gorm.DB) error {
+		if err := tx.Model(&cleared).Clauses(clause.Returning{}).
 			Where("owner = ? AND contest_id IN (?)", email,
 				tx.Model(&model.Contest{}).Select("id").Where("status NOT IN ?", terminalStatuses)).
 			Updates(map[string]any{"value": "", "owner": "", "owner_name": "", "claimed_at": nil, "version": gorm.Expr("version + 1")}).Error; err != nil {
@@ -91,10 +92,14 @@ func (r *userRepository) Scrub(ctx context.Context, email string) error {
 			}
 		}
 
-		if err := tx.Where("user_id = ?", email).Delete(&model.ContestParticipant{}).Error; err != nil {
+		if err := tx.Clauses(clause.Returning{}).Where("user_id = ?", email).Delete(&removed).Error; err != nil {
 			return err
 		}
 
 		return tx.Where("email = ?", email).Delete(&model.User{}).Error
 	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return cleared, removed, nil
 }

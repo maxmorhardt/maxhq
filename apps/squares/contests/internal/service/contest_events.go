@@ -15,7 +15,8 @@ type ContestEventPublisher interface {
 	PublishQuarterResult(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult) error
 	PublishContestDeleted(ctx context.Context, contestID uuid.UUID, updatedBy string) error
 	PublishParticipantRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error
-	PublishParticipantAdded(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error
+	PublishParticipantJoined(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error
+	PublishParticipantUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error
 }
 
 type contestEventPublisher struct {
@@ -46,8 +47,12 @@ func (p *contestEventPublisher) PublishParticipantRemoved(ctx context.Context, c
 	return p.publish(ctx, events.ParticipantRemovedType, contestID, updatedBy, participant)
 }
 
-func (p *contestEventPublisher) PublishParticipantAdded(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error {
+func (p *contestEventPublisher) PublishParticipantJoined(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error {
 	return p.publish(ctx, events.ParticipantJoinedType, contestID, participant.UserID, participant)
+}
+
+func (p *contestEventPublisher) PublishParticipantUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error {
+	return p.publish(ctx, events.ParticipantUpdatedType, contestID, updatedBy, participant)
 }
 
 func (p *contestEventPublisher) publish(ctx context.Context, eventType string, contestID uuid.UUID, updatedBy string, data any) error {

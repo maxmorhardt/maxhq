@@ -1,10 +1,5 @@
 import { baseApi } from '../../api/baseApi';
-import type {
-  UpdateUserProfileRequest,
-  UserActiveContest,
-  UserProfile,
-  UserStats,
-} from '../../types/user';
+import type { UpdateUserProfileRequest, UserProfile, UserStats } from '../../types/user';
 
 export const profileApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -19,14 +14,8 @@ export const profileApi = baseApi.injectEndpoints({
     }),
 
     getMyStats: build.query<UserStats, void>({
-      query: () => '/users/me/stats',
+      query: () => '/stats/me',
       providesTags: ['UserStats'],
-    }),
-
-    getMyActiveContests: build.query<UserActiveContest[], void>({
-      query: () => '/users/me/active-contests',
-      transformResponse: (contests: UserActiveContest[] | null) => contests ?? [],
-      providesTags: ['ActiveContests'],
     }),
 
     deleteMyAccount: build.mutation<void, void>({
@@ -39,6 +28,5 @@ export const {
   useGetMyProfileQuery,
   useUpdateMyProfileMutation,
   useGetMyStatsQuery,
-  useGetMyActiveContestsQuery,
   useDeleteMyAccountMutation,
 } = profileApi;

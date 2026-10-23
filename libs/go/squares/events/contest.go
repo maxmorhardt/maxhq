@@ -16,6 +16,7 @@ const (
 	SquareUpdatedType      = "square.updated"
 	QuarterRecordedType    = "quarter.recorded"
 	ParticipantJoinedType  = "participant.joined"
+	ParticipantUpdatedType = "participant.updated"
 	ParticipantRemovedType = "participant.removed"
 	AccessRevokedType      = "access.revoked"
 )

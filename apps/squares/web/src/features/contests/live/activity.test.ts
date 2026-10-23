@@ -65,6 +65,22 @@ describe('seedActivity', () => {
     expect(feed[0].timestamp).toBe('2026-01-01T01:00:00Z');
   });
 
+  it('keeps claims ahead of quarter results even when stamped after them', () => {
+    const contest = makeContest({
+      squares: [
+        makeSquare({ id: 's1', value: 'AB', ownerName: 'Ann', claimedAt: '2026-01-02T10:00:00Z' }),
+      ],
+      quarterResults: [makeQuarterResult({ createdAt: '2026-01-01T23:00:00Z' })],
+    });
+
+    const feed = seedActivity(contest, []);
+    expect(feed.map((a) => a.message)).toEqual([
+      'Ann claimed square (0, 0)',
+      'Q1 winner: Player (7-3)',
+    ]);
+    expect(feed[0].timestamp).toBe('2026-01-02T10:00:00Z');
+  });
+
   it('keeps only the latest entries', () => {
     const squares = Array.from({ length: MAX_ACTIVITY + 5 }, (_, i) =>
       makeSquare({ id: `s${i}`, value: 'X', updatedAt: new Date(i * 1000).toISOString() })

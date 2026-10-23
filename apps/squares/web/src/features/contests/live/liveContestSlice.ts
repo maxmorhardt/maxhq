@@ -131,6 +131,7 @@ const eventHandlers: { [T in ContestEventType]: EventHandler<T> } = {
   'square.updated': (state, { data }) => upsertSquare(state, data),
   'quarter.recorded': (state, { data }) => addQuarterResult(state, data),
   'participant.joined': (state, { data }) => upsertParticipant(state, data),
+  'participant.updated': (state, { data }) => upsertParticipant(state, data),
   'participant.removed': (state, { data }) => removeParticipant(state, data.userId),
   'access.revoked': (state) => {
     state.ended = 'revoked';

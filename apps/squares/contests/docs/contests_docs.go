@@ -60,10 +60,11 @@ const docTemplatecontests = `{
                         "enum": [
                             "open",
                             "live",
+                            "active",
                             "finished"
                         ],
                         "type": "string",
-                        "description": "open, live, or finished",
+                        "description": "open, live, active (open or live), or finished",
                         "name": "status",
                         "in": "query"
                     },
@@ -544,7 +545,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Clear all of the caller's squares in a contest",
                 "parameters": [
@@ -614,7 +615,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Claim random empty squares",
                 "parameters": [
@@ -681,7 +682,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Claim a single square in a contest",
                 "parameters": [
@@ -753,7 +754,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Clear square value and owner",
                 "parameters": [
@@ -1175,41 +1176,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/users/me/active-contests": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the non-terminal contests the user owns or participates in, which block account deletion",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get the current user's active contests",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/contracts.UserActiveContest"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/me/stats": {
+        "/stats/me": {
             "get": {
                 "security": [
                     {
@@ -1221,7 +1188,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "stats"
                 ],
                 "summary": "Get the current user's stats",
                 "responses": {
@@ -1382,7 +1349,7 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "displayName": {
-                    "description": "read from the user projection, so other players can be shown a name instead of an email",
+                    "description": "read from contests.users, so other players can be shown a name instead of an email",
                     "type": "string"
                 },
                 "id": {
