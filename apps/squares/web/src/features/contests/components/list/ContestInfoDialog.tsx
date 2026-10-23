@@ -63,7 +63,7 @@ export default function ContestInfoDialog({ contest, onClose, onDelete }: Props)
         onClick={onClose}
         size="small"
         aria-label="Close dialog"
-        sx={{ position: 'absolute', right: 10, top: 10, color: 'text.secondary' }}
+        sx={{ position: 'absolute', right: 10, top: 10, zIndex: 1, color: 'text.secondary' }}
       >
         <Close fontSize="small" />
       </IconButton>
