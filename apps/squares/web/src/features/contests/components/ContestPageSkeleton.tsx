@@ -18,39 +18,35 @@ export default function ContestPageSkeleton() {
         gap: { xs: 2, sm: 2.5 },
       }}
     >
-      <Skeleton variant="rounded" height={190} sx={card} />
+      <Skeleton variant="rounded" height={186} sx={card} />
 
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' },
           gap: 1.25,
         }}
       >
         {[1, 2, 3, 4].map((q) => (
-          <Skeleton key={q} variant="rounded" height={104} sx={card} />
+          <Skeleton key={q} variant="rounded" height={108} sx={card} />
         ))}
       </Box>
 
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: 'auto minmax(0, 1fr)' },
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1.25fr) minmax(0, 1fr)' },
           gap: { xs: 2, sm: 2.5 },
         }}
       >
+        {/* the board is close to square, and like the real one it sets the row height */}
         <Skeleton
           variant="rounded"
-          sx={{
-            ...card,
-            width: { xs: '100%', sm: 640, md: 720 },
-            height: { xs: 380, sm: 640, md: 720 },
-            mx: 'auto',
-          }}
+          sx={{ ...card, width: '100%', height: 'auto', aspectRatio: '1.04' }}
         />
-        <Box sx={{ display: 'grid', gap: { xs: 2, sm: 2.5 }, alignContent: 'start' }}>
-          <Skeleton variant="rounded" height={240} sx={card} />
-          <Skeleton variant="rounded" height={320} sx={card} />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 2.5 } }}>
+          <Skeleton variant="rounded" height={228} sx={card} />
+          <Skeleton variant="rounded" sx={{ ...card, flex: 1, minHeight: 320 }} />
         </Box>
       </Box>
     </Box>

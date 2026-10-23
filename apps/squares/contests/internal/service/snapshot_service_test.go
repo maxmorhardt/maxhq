@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -29,6 +30,25 @@ func TestSnapshot_ReturnsContestAndParticipantsToViewers(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "C", snap.Contest.Name)
 	assert.Len(t, snap.Participants, 1)
+}
+
+func TestSnapshot_ReturnsTheRecordedQuarterResults(t *testing.T) {
+	contestID := uuid.New()
+	recorded := model.QuarterResult{ID: uuid.New(), Quarter: 1, HomeTeamScore: 10, WinnerName: "Casey", CreatedAt: time.Date(2026, 10, 23, 1, 5, 0, 0, time.UTC)}
+	pSvc := mocks.NewParticipantService(t)
+	pSvc.EXPECT().Authorize(mock.Anything, contestID, "v@b.com", service.ActionView).Return(nil)
+	pSvc.EXPECT().GetParticipants(mock.Anything, contestID).Return(nil, nil)
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().GetByID(mock.Anything, contestID).Return(&model.Contest{
+		ID:             contestID,
+		QuarterResults: []model.QuarterResult{recorded},
+		Game:           &model.Game{Scores: []model.GameScore{{Quarter: 1, HomeScore: 10}, {Quarter: 2, HomeScore: 20, AwayScore: 14}}},
+	}, nil)
+
+	snap, err := service.NewSnapshotService(repo, pSvc).GetSnapshot(context.Background(), contestID, "v@b.com")
+
+	require.NoError(t, err)
+	assert.Equal(t, []model.QuarterResult{recorded}, snap.Contest.QuarterResults)
 }
 
 func TestSnapshot_AuthorizationOutcomes(t *testing.T) {

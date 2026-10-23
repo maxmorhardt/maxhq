@@ -4,7 +4,6 @@ import (
 	cryptorand "crypto/rand"
 	"encoding/json"
 	"math/big"
-	"sort"
 
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
@@ -136,22 +135,4 @@ func QuarterResultFor(c *model.Contest, quarter, homeScore, awayScore int) (*mod
 		Winner:        owner,
 		WinnerName:    ownerName,
 	}, nil
-}
-
-func SynthesizeFromGame(c *model.Contest) {
-	if c.Game == nil {
-		return
-	}
-
-	results := make([]model.QuarterResult, 0, len(c.Game.Scores))
-	for _, s := range c.Game.Scores {
-		r, err := QuarterResultFor(c, s.Quarter, s.HomeScore, s.AwayScore)
-		if err != nil {
-			continue
-		}
-		results = append(results, *r)
-	}
-
-	sort.Slice(results, func(i, j int) bool { return results[i].Quarter < results[j].Quarter })
-	c.QuarterResults = results
 }
