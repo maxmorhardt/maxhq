@@ -68,6 +68,14 @@ describe('ContestGrid', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
   });
 
+  it('labels the columns with the home team and the rows with the away team, as contests scores them', () => {
+    renderGrid();
+    const home = screen.getByText('Lions');
+    const away = screen.getByText('Bears');
+    expect(home.compareDocumentPosition(away) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(away).toHaveStyle({ writingMode: 'vertical-rl' });
+  });
+
   it('claims an empty square', async () => {
     const { cells } = renderGrid();
     fireEvent.click(cells()[1]);

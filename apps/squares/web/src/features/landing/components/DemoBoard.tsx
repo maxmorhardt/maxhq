@@ -10,7 +10,10 @@ export type DemoStage = 0 | 1 | 2 | 3 | 4;
 const AWAY_DIGITS = [3, 7, 1, 9, 4, 0, 6, 2, 8, 5];
 const HOME_DIGITS = [2, 8, 4, 0, 5, 6, 1, 9, 3, 7];
 const SCORE = { away: 7, home: 14 };
-const WINNER = { row: HOME_DIGITS.indexOf(SCORE.home % 10), col: AWAY_DIGITS.indexOf(SCORE.away) };
+const WINNER = {
+  row: AWAY_DIGITS.indexOf(SCORE.away % 10),
+  col: HOME_DIGITS.indexOf(SCORE.home % 10),
+};
 const YOURS = new Set(['0-4', '3-8', '6-2', '8-6']);
 const INITIALS = ['AK', 'JD', 'SR', 'TL', 'BW', 'CG', 'RP', 'MO', 'LH', 'DK', 'EV', 'NB', 'JT'];
 
@@ -198,9 +201,9 @@ export default function DemoBoard({ stage }: Props) {
         }}
       >
         <span />
-        {AWAY_DIGITS.map((digit, col) => (
+        {HOME_DIGITS.map((digit, col) => (
           <Box
-            key={`away-${col}`}
+            key={`home-${col}`}
             sx={{
               ...digitSx,
               pb: 0.5,
@@ -225,7 +228,7 @@ export default function DemoBoard({ stage }: Props) {
                 transition: `opacity 500ms ${easing.out} ${row * 45}ms, transform 500ms ${easing.out} ${row * 45}ms, color 300ms`,
               }}
             >
-              {drawn ? HOME_DIGITS[row] : '–'}
+              {drawn ? AWAY_DIGITS[row] : '–'}
             </Box>
 
             {cells.slice(row * 10, row * 10 + 10).map((cell) => {

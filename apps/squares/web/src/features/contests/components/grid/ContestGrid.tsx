@@ -114,9 +114,9 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-          {/* away team across the top */}
+          {/* home team across the top: contests scores columns by the home digit and rows by the away digit */}
           <Typography sx={{ ...teamLabelSx, mb: 'clamp(16px, 4.5cqw, 34px)' }}>
-            {contest.awayTeam || 'Away Team'}
+            {contest.homeTeam || 'Home Team'}
           </Typography>
 
           <Box
@@ -127,7 +127,7 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
               pb: 'clamp(10px, 3cqw, 28px)',
             }}
           >
-            {/* home team down the side */}
+            {/* away team down the side */}
             <Typography
               sx={{
                 ...teamLabelSx,
@@ -136,7 +136,7 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
                 mr: 'clamp(24px, 5.5cqw, 36px)',
               }}
             >
-              {contest.homeTeam || 'Home Team'}
+              {contest.awayTeam || 'Away Team'}
             </Typography>
 
             <Box
