@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,6 +65,7 @@ func TestGetFeed_RejectsBadParams(t *testing.T) {
 		"cursor=abc",
 		"role=admin",
 		"status=pending", "status=open,live",
+		"search=" + strings.Repeat("a", model.MaxFeedSearchLength+1),
 	} {
 		code, _ := getFeed(feedRouter(mocks.NewFeedService(t)), q)
 		assert.Equal(t, http.StatusBadRequest, code, q)

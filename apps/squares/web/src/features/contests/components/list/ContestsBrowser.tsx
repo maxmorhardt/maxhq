@@ -134,6 +134,7 @@ export default function ContestsBrowser() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             slotProps={{
+              htmlInput: { maxLength: 100 },
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
