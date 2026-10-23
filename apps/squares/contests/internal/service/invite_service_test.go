@@ -11,15 +11,15 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestCreateInvite_ContestNotFound(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 
 	_, err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
 		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{}, "u")
@@ -27,7 +27,7 @@ func TestCreateInvite_ContestNotFound(t *testing.T) {
 }
 
 func inviteSvc(inv *mocks.InviteRepository, p *mocks.ParticipantRepository, c *mocks.ContestRepository, pSvc *mocks.ParticipantService) service.InviteService {
-	return service.NewInviteService(inv, p, c, pSvc, passTx(), anyEvents())
+	return service.NewInviteService(inv, p, c, anyUser(), pSvc, passTx(), anyEvents())
 }
 
 func TestCreateInvite_DBError(t *testing.T) {
@@ -115,7 +115,7 @@ func TestCreateInvite_Success(t *testing.T) {
 
 func TestGetInvitePreview_NotFound(t *testing.T) {
 	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
 		GetInvitePreview(context.Background(), "tok")
@@ -262,7 +262,7 @@ func TestRedeemInvite_GetTotalAllocatedSquaresError(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, errors.New("db error"))
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
@@ -277,7 +277,7 @@ func TestRedeemInvite_NotEnoughSquares(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(60, nil)
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
@@ -292,7 +292,7 @@ func TestRedeemInvite_RepoFails(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
@@ -309,7 +309,7 @@ func redeemConflict(t *testing.T, repoErr, want error) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
@@ -325,7 +325,7 @@ func TestRedeemInvite_UsesExhaustedConcurrently(t *testing.T) {
 }
 
 func TestRedeemInvite_JoinedConcurrently(t *testing.T) {
-	redeemConflict(t, gorm.ErrDuplicatedKey, errs.ErrAlreadyParticipant)
+	redeemConflict(t, database.ErrDuplicate, errs.ErrAlreadyParticipant)
 }
 
 func TestRedeemInvite_Success(t *testing.T) {
@@ -336,13 +336,45 @@ func TestRedeemInvite_Success(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
 
 	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
 	require.NoError(t, err)
 	assert.Equal(t, "u", got.UserID)
 	assert.Equal(t, 10, got.MaxSquares)
+}
+
+func redeemableInvite(t *testing.T) (*mocks.InviteRepository, *mocks.ParticipantRepository, *mocks.ContestRepository) {
+	inv := mocks.NewInviteRepository(t)
+	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: uuid.New(), Role: model.ParticipantRoleParticipant, MaxSquares: 10}, nil)
+	inv.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	c := mocks.NewContestRepository(t)
+	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	p := mocks.NewParticipantRepository(t)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
+	return inv, p, c
+}
+
+func TestRedeemInvite_SeedsThePlayersName(t *testing.T) {
+	inv, p, c := redeemableInvite(t)
+	users := mocks.NewUserRepository(t)
+	users.EXPECT().GetOrCreate(mock.Anything, "u@b.com", "Jordan Lee", "JL").Return(&model.User{Email: "u@b.com"}, nil).Once()
+
+	_, err := service.NewInviteService(inv, p, c, users, mocks.NewParticipantService(t), passTx(), anyEvents()).
+		RedeemInvite(context.Background(), "tok", "u@b.com", "Jordan Lee")
+	require.NoError(t, err)
+}
+
+func TestRedeemInvite_SeedFailureFailsTheJoin(t *testing.T) {
+	inv, p, c := redeemableInvite(t)
+	users := mocks.NewUserRepository(t)
+	users.EXPECT().GetOrCreate(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+
+	_, err := service.NewInviteService(inv, p, c, users, mocks.NewParticipantService(t), passTx(), mocks.NewContestEventPublisher(t)).
+		RedeemInvite(context.Background(), "tok", "u@b.com", "Jordan Lee")
+	assert.Error(t, err)
 }
 
 func TestGetInvitesByContestID_Success(t *testing.T) {

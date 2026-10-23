@@ -32,7 +32,7 @@ func NewInviteRepository(db *gorm.DB) InviteRepository {
 func (r *inviteRepository) GetByToken(ctx context.Context, token string) (*model.ContestInvite, error) {
 	var invite model.ContestInvite
 	err := database.Conn(ctx, r.db).Where("token = ?", token).First(&invite).Error
-	return &invite, err
+	return &invite, database.TranslateError(err)
 }
 
 func (r *inviteRepository) GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestInvite, error) {
@@ -46,7 +46,7 @@ func (r *inviteRepository) Create(ctx context.Context, invite *model.ContestInvi
 }
 
 func (r *inviteRepository) RedeemInvite(ctx context.Context, inviteID uuid.UUID, participant *model.ContestParticipant, maxPoolSquares int) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
+	return database.InTx(ctx, func(tx *gorm.DB) error {
 		// lock the contest so concurrent redemptions cannot both pass the pool check below
 		var contest model.Contest
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -68,7 +68,7 @@ func (r *inviteRepository) RedeemInvite(ctx context.Context, inviteID uuid.UUID,
 			return errs.ErrNotEnoughSquares
 		}
 
-		// the unique index on (contest_id, user_id) turns a duplicate join into gorm.ErrDuplicatedKey
+		// the unique index on (contest_id, user_id) turns a duplicate join into database.ErrDuplicate
 		if err := tx.Create(participant).Error; err != nil {
 			return err
 		}

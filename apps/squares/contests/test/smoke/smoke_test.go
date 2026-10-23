@@ -49,7 +49,7 @@ func TestSmoke(t *testing.T) {
 	})
 
 	t.Run("rejects requests without the gateway's identity", func(t *testing.T) {
-		assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, svc.URL, testkit.Anonymous, http.MethodGet, "/users/me/stats", nil).Status)
+		assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, svc.URL, testkit.Anonymous, http.MethodGet, "/stats/me", nil).Status)
 	})
 
 	t.Run("guards its internal routes with the service token", func(t *testing.T) {

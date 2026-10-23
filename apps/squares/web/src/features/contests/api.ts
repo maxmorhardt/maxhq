@@ -3,6 +3,7 @@ import type {
   Contest,
   ContestFeedParams,
   ContestFeedResponse,
+  ContestSummary,
   CreateContestRequest,
   CreateInviteRequest,
   Invite,
@@ -39,6 +40,13 @@ export const contestsApi = baseApi.injectEndpoints({
         params: { ...queryArg, limit: FEED_PAGE_SIZE, cursor: pageParam || undefined },
       }),
       providesTags: ['ContestFeed'],
+    }),
+
+    // the contests that block account deletion until they are deleted or left
+    getActiveContests: build.query<ContestSummary[], void>({
+      query: () => ({ url: '/contests', params: { status: 'active', limit: 50 } }),
+      transformResponse: (feed: ContestFeedResponse) => feed.contests,
+      providesTags: ['ActiveContests'],
     }),
 
     createContest: build.mutation<Contest, CreateContestRequest>({
@@ -131,6 +139,7 @@ export const contestsApi = baseApi.injectEndpoints({
 
 export const {
   useGetContestFeedInfiniteQuery,
+  useGetActiveContestsQuery,
   useCreateContestMutation,
   useDeleteContestMutation,
   useClaimSquareMutation,

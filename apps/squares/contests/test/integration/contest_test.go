@@ -49,7 +49,14 @@ func TestContest_FullLifecycle(t *testing.T) {
 
 	t.Run("member redeems the invite", func(t *testing.T) {
 		resp := call(t, testkit.As(memberUser), http.MethodPost, "/invites/"+inviteToken+"/redeem", nil)
-		assert.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+		require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+
+		// a first-time player has a name in the players list before claiming or opening their profile
+		for _, p := range snapshot(t, ownerUser, contestID).Participants {
+			if p.UserID == memberUser {
+				assert.Equal(t, "Test "+memberUser, p.DisplayName)
+			}
+		}
 	})
 
 	t.Run("member fills half the grid and the owner the rest", func(t *testing.T) {

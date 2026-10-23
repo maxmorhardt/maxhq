@@ -32,5 +32,5 @@ func (r *contactRepository) Create(ctx context.Context, submission *model.Contac
 func (r *contactRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.ContactSubmission, error) {
 	var submission model.ContactSubmission
 	err := database.Conn(ctx, r.db).First(&submission, "id = ?", id).Error
-	return &submission, err
+	return &submission, database.TranslateError(err)
 }

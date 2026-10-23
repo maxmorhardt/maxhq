@@ -17,12 +17,12 @@ type InternalHandler interface {
 }
 
 type internalHandler struct {
-	snapshotService     service.SnapshotService
-	userActivityService service.UserActivityService
+	snapshotService service.SnapshotService
+	statsService    service.StatsService
 }
 
-func NewInternalHandler(snapshotService service.SnapshotService, userActivityService service.UserActivityService) InternalHandler {
-	return &internalHandler{snapshotService: snapshotService, userActivityService: userActivityService}
+func NewInternalHandler(snapshotService service.SnapshotService, statsService service.StatsService) InternalHandler {
+	return &internalHandler{snapshotService: snapshotService, statsService: statsService}
 }
 
 // @Summary Contest snapshot for a viewer (internal)
@@ -72,7 +72,7 @@ func (h *internalHandler) GetContestSnapshot(c *gin.Context) {
 // @Failure 500 {object} api.APIError
 // @Router /internal/users/{email}/activity [get]
 func (h *internalHandler) GetUserActivity(c *gin.Context) {
-	summary, err := h.userActivityService.GetActivitySummary(c.Request.Context(), c.Param("email"))
+	summary, err := h.statsService.GetUserActivity(c.Request.Context(), c.Param("email"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return

@@ -25,7 +25,7 @@ func entry(t *testing.T, eventType string, payload any) streams.Entry {
 	return streams.Entry{ID: "1-0", Type: eventType, Data: data}
 }
 
-func TestGameHandler_AppliesGameUpdatesAsProjections(t *testing.T) {
+func TestGameHandler_AppliesGameUpdates(t *testing.T) {
 	gameID := uuid.New()
 	kickoff := time.Now().Truncate(time.Second)
 	sync := mocks.NewGameSyncService(t)
@@ -59,7 +59,7 @@ func TestGameHandler_SkipsUndecodableAndUnknownEntries(t *testing.T) {
 }
 
 func TestUserHandler_RoutesByType(t *testing.T) {
-	activity := mocks.NewUserActivityService(t)
+	activity := mocks.NewUserSyncService(t)
 	activity.EXPECT().ApplyUserUpdated(mock.Anything, &events.UserUpdated{Email: "a@b.com", DefaultInitials: "AB"}).Return(nil).Once()
 	activity.EXPECT().ApplyUserDeleted(mock.Anything, mock.MatchedBy(func(e *events.UserDeleted) bool { return e.Email == "a@b.com" })).Return(nil).Once()
 	handle := consumer.UserHandler(activity)
@@ -70,7 +70,7 @@ func TestUserHandler_RoutesByType(t *testing.T) {
 }
 
 func TestUserHandler_SkipsUndecodablePayloads(t *testing.T) {
-	handle := consumer.UserHandler(mocks.NewUserActivityService(t))
+	handle := consumer.UserHandler(mocks.NewUserSyncService(t))
 
 	assert.NoError(t, handle(context.Background(), streams.Entry{Type: events.UserUpdatedType, Data: []byte("{")}))
 	assert.NoError(t, handle(context.Background(), streams.Entry{Type: events.UserDeletedType, Data: []byte("{")}))

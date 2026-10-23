@@ -16,10 +16,3 @@ export interface UserStats {
   quarterWins: number;
   quartersPlayed: number;
 }
-
-export interface UserActiveContest {
-  id: string;
-  name: string;
-  owner: string;
-  role: 'owner' | 'participant';
-}

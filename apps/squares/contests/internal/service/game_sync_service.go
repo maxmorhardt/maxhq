@@ -11,7 +11,6 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
-	"gorm.io/gorm"
 )
 
 type GameSyncService interface {
@@ -19,7 +18,7 @@ type GameSyncService interface {
 }
 
 type gameSyncService struct {
-	gameRepo       repository.GameProjectionRepository
+	gameRepo       repository.GameSyncRepository
 	contestRepo    repository.ContestRepository
 	contestService ContestService
 	tx             database.Transactor
@@ -27,7 +26,7 @@ type gameSyncService struct {
 }
 
 func NewGameSyncService(
-	gameRepo repository.GameProjectionRepository,
+	gameRepo repository.GameSyncRepository,
 	contestRepo repository.ContestRepository,
 	contestService ContestService,
 	tx database.Transactor,
@@ -45,18 +44,26 @@ func NewGameSyncService(
 func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game) error {
 	log := logging.FromContext(ctx).With("game_id", game.ID)
 
-	if err := s.gameRepo.Upsert(ctx, game); err != nil {
-		log.Error("failed to update game projection", "error", err)
-		return err
-	}
+	// one transaction keeps the read-back on the primary; the replica can lag the write and miss the new quarter
+	var stored *model.Game
+	err := s.tx.Do(ctx, func(ctx context.Context) error {
+		if err := s.gameRepo.Upsert(ctx, game); err != nil {
+			log.Error("failed to save game", "error", err)
+			return err
+		}
 
-	if game.Status == model.GameStatusScheduled {
+		if game.Status == model.GameStatusScheduled {
+			return nil
+		}
+
+		var err error
+		if stored, err = s.gameRepo.GetByID(ctx, game.ID); err != nil {
+			log.Error("failed to reload game", "error", err)
+			return err
+		}
 		return nil
-	}
-
-	stored, err := s.gameRepo.GetByID(ctx, game.ID)
-	if err != nil {
-		log.Error("failed to reload game projection", "error", err)
+	})
+	if err != nil || stored == nil {
 		return err
 	}
 
@@ -85,7 +92,7 @@ func (s *gameSyncService) reconcileContest(ctx context.Context, contestID uuid.U
 	return s.tx.Do(ctx, func(ctx context.Context) error {
 		contest, err := s.contestRepo.GetByIDForUpdate(ctx, contestID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, database.ErrNotFound) {
 				return nil
 			}
 			return err

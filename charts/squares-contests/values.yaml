@@ -89,9 +89,7 @@ route:
       - /invites
       - /leaderboard
       - /stats
-    exact:
-      - /users/me/stats
-      - /users/me/active-contests
+    exact: []
   swaggerName: contests
   rateLimit:
     enabled: true

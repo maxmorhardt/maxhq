@@ -10,17 +10,17 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type GameProjectionRepository interface {
+type GameSyncRepository interface {
 	Upsert(ctx context.Context, game *model.Game) error
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error)
 }
 
-type gameProjectionRepository struct {
+type gameSyncRepository struct {
 	db *gorm.DB
 }
 
-func NewGameProjectionRepository(db *gorm.DB) GameProjectionRepository {
-	return &gameProjectionRepository{db: db}
+func NewGameSyncRepository(db *gorm.DB) GameSyncRepository {
+	return &gameSyncRepository{db: db}
 }
 
 var gameColumns = []string{
@@ -28,8 +28,8 @@ var gameColumns = []string{
 	"week", "season", "season_type", "status", "period", "home_score", "away_score", "updated_at",
 }
 
-func (r *gameProjectionRepository) Upsert(ctx context.Context, game *model.Game) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
+func (r *gameSyncRepository) Upsert(ctx context.Context, game *model.Game) error {
+	return database.InTx(ctx, func(tx *gorm.DB) error {
 		row := *game
 		row.Scores = nil
 
@@ -61,10 +61,10 @@ func (r *gameProjectionRepository) Upsert(ctx context.Context, game *model.Game)
 	})
 }
 
-func (r *gameProjectionRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error) {
+func (r *gameSyncRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error) {
 	var game model.Game
 	err := database.Conn(ctx, r.db).
 		Preload("Scores", func(db *gorm.DB) *gorm.DB { return db.Order("quarter ASC") }).
 		First(&game, "id = ?", id).Error
-	return &game, err
+	return &game, database.TranslateError(err)
 }

@@ -9,9 +9,9 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func userRows(email, initials string) *sqlmock.Rows {
@@ -31,7 +31,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	gdb, mock = newMockDB(t)
 	mock.ExpectQuery(`SELECT \* FROM "users"`).WillReturnRows(sqlmock.NewRows([]string{"id"}))
 	_, err = NewUserRepository(gdb).GetByEmail(context.Background(), "a@b.com")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, database.ErrNotFound)
 }
 
 func TestUserRepository_CreateIfMissing(t *testing.T) {
@@ -84,7 +84,7 @@ func TestUserRepository_UpdateInitials_MissingAndErrors(t *testing.T) {
 	mock.ExpectExec(`UPDATE "users"`).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectCommit()
 	_, err := NewUserRepository(gdb).UpdateInitials(context.Background(), "a@b.com", "XY")
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorIs(t, err, database.ErrNotFound)
 
 	gdb, mock = newMockDB(t)
 	mock.ExpectBegin()
@@ -109,7 +109,9 @@ func TestUserRepository_DeleteWithTombstone(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO deleted_accounts .* ON CONFLICT \(email\) DO UPDATE`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	require.NoError(t, NewUserRepository(gdb).DeleteWithTombstone(context.Background(), "a@b.com", time.Now()))
+	require.NoError(t, database.NewTransactor(gdb).Do(context.Background(), func(ctx context.Context) error {
+		return NewUserRepository(gdb).DeleteWithTombstone(ctx, "a@b.com", time.Now())
+	}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -119,7 +121,15 @@ func TestUserRepository_DeleteWithTombstone_RollsBack(t *testing.T) {
 	mock.ExpectExec(`DELETE FROM "users"`).WillReturnError(errors.New("db"))
 	mock.ExpectRollback()
 
-	require.Error(t, NewUserRepository(gdb).DeleteWithTombstone(context.Background(), "a@b.com", time.Now()))
+	require.Error(t, database.NewTransactor(gdb).Do(context.Background(), func(ctx context.Context) error {
+		return NewUserRepository(gdb).DeleteWithTombstone(ctx, "a@b.com", time.Now())
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUserRepository_DeleteWithTombstone_NeedsATransaction(t *testing.T) {
+	gdb, _ := newMockDB(t)
+	assert.ErrorIs(t, NewUserRepository(gdb).DeleteWithTombstone(context.Background(), "a@b.com", time.Now()), database.ErrNoTransaction)
 }
 
 func TestUserRepository_TombstonesSince(t *testing.T) {

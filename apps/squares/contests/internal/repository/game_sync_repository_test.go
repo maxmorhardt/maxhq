@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGameProjection_UpsertGuardsAgainstOlderSnapshots(t *testing.T) {
+func TestGameSyncRepository_UpsertGuardsAgainstOlderSnapshots(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	gameID := uuid.New()
 	mock.ExpectBegin()
@@ -33,31 +33,35 @@ func TestGameProjection_UpsertGuardsAgainstOlderSnapshots(t *testing.T) {
 			{ID: uuid.New(), Quarter: 2, HomeScore: 14, AwayScore: 3},
 		},
 	}
-	require.NoError(t, NewGameProjectionRepository(gdb).Upsert(context.Background(), game))
+	require.NoError(t, inTxErr(gdb, func(ctx context.Context) error { return NewGameSyncRepository(gdb).Upsert(ctx, game) }))
 	assert.Len(t, game.Scores, 2, "the caller's game is not mutated")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGameProjection_UpsertWithoutScores(t *testing.T) {
+func TestGameSyncRepository_UpsertWithoutScores(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "games"`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	require.NoError(t, NewGameProjectionRepository(gdb).Upsert(context.Background(), &model.Game{ID: uuid.New(), ESPNID: "401"}))
+	require.NoError(t, inTxErr(gdb, func(ctx context.Context) error {
+		return NewGameSyncRepository(gdb).Upsert(ctx, &model.Game{ID: uuid.New(), ESPNID: "401"})
+	}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGameProjection_UpsertError(t *testing.T) {
+func TestGameSyncRepository_UpsertError(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "games"`).WillReturnError(errors.New("db"))
 	mock.ExpectRollback()
 
-	require.Error(t, NewGameProjectionRepository(gdb).Upsert(context.Background(), &model.Game{ID: uuid.New()}))
+	require.Error(t, inTxErr(gdb, func(ctx context.Context) error {
+		return NewGameSyncRepository(gdb).Upsert(ctx, &model.Game{ID: uuid.New()})
+	}))
 }
 
-func TestGameProjection_GetByID(t *testing.T) {
+func TestGameSyncRepository_GetByID(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	gameID := uuid.New()
 	mock.ExpectQuery(`SELECT \* FROM "games" WHERE id = \$1`).
@@ -65,7 +69,7 @@ func TestGameProjection_GetByID(t *testing.T) {
 	mock.ExpectQuery(`SELECT \* FROM "game_scores"`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "game_id", "quarter"}).AddRow(uuid.New(), gameID, 1))
 
-	game, err := NewGameProjectionRepository(gdb).GetByID(context.Background(), gameID)
+	game, err := NewGameSyncRepository(gdb).GetByID(context.Background(), gameID)
 
 	require.NoError(t, err)
 	assert.Equal(t, model.GameStatusFinal, game.Status)

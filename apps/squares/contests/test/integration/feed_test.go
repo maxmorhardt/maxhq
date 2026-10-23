@@ -84,8 +84,14 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 		assert.Zero(t, owned.Contests[0].MySquares)
 	})
 
+	t.Run("search wildcards match literally", func(t *testing.T) {
+		assert.Empty(t, feed(t, owner, url.Values{"search": {"%"}}).Contests)
+		assert.Empty(t, feed(t, owner, url.Values{"search": {"_"}}).Contests)
+	})
+
 	t.Run("filters by status", func(t *testing.T) {
 		assert.Len(t, feed(t, owner, url.Values{"status": {"open"}}).Contests, 4)
+		assert.Len(t, feed(t, owner, url.Values{"status": {"active"}}).Contests, 4)
 		assert.Empty(t, feed(t, owner, url.Values{"status": {"finished"}}).Contests)
 	})
 

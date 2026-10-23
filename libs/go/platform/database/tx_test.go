@@ -91,6 +91,42 @@ func TestConn_UsesTransactionWhenPresent(t *testing.T) {
 	assert.Equal(t, db.Statement.ConnPool, plain.Statement.ConnPool)
 }
 
+func TestInTx_RunsInTheCallersTransaction(t *testing.T) {
+	db, mock := newMockDB(t)
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+
+	err := NewTransactor(db).Do(context.Background(), func(ctx context.Context) error {
+		return InTx(ctx, func(tx *gorm.DB) error {
+			state := ctx.Value(txKey{}).(*txState)
+			assert.Equal(t, state.tx.Statement.ConnPool, tx.Statement.ConnPool)
+			return gorm.ErrRecordNotFound
+		})
+	})
+	assert.ErrorIs(t, err, ErrNotFound)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestInTx_RefusesWithoutATransaction(t *testing.T) {
+	called := false
+	err := InTx(context.Background(), func(*gorm.DB) error {
+		called = true
+		return nil
+	})
+	assert.ErrorIs(t, err, ErrNoTransaction)
+	assert.False(t, called)
+}
+
+func TestConn_ReadPrimaryRoutesToTheWriter(t *testing.T) {
+	db, _ := newMockDB(t)
+
+	_, onPrimary := Conn(ReadPrimary(context.Background()), db).Statement.Settings.Load("gorm:db_resolver:write")
+	assert.True(t, onPrimary)
+
+	_, onPlain := Conn(context.Background(), db).Statement.Settings.Load("gorm:db_resolver:write")
+	assert.False(t, onPlain)
+}
+
 func TestAfterCommit_RunsImmediatelyWithoutTransaction(t *testing.T) {
 	called := false
 	AfterCommit(context.Background(), func() { called = true })

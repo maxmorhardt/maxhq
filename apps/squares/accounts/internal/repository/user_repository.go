@@ -37,7 +37,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 	user := &model.User{}
 	if err := database.Conn(ctx, r.db).Where("email = ?", email).First(user).Error; err != nil {
-		return nil, err
+		return nil, database.TranslateError(err)
 	}
 
 	return user, nil
@@ -69,7 +69,7 @@ func (r *userRepository) UpdateInitials(ctx context.Context, email, initials str
 		return nil, res.Error
 	}
 	if res.RowsAffected == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, database.ErrNotFound
 	}
 
 	user := &model.User{}
@@ -81,7 +81,7 @@ func (r *userRepository) UpdateInitials(ctx context.Context, email, initials str
 }
 
 func (r *userRepository) DeleteWithTombstone(ctx context.Context, email string, deletedAt time.Time) error {
-	return database.Conn(ctx, r.db).Transaction(func(tx *gorm.DB) error {
+	return database.InTx(ctx, func(tx *gorm.DB) error {
 		if err := tx.Where("email = ?", email).Delete(&model.User{}).Error; err != nil {
 			return err
 		}

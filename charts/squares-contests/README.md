@@ -19,8 +19,7 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | --- | --- |
 | `/contests/**` | create, edit, and delete contests; claim and clear squares |
 | `/invites/**` | preview and redeem invite links |
-| `/leaderboard`, `/stats` | public stats, cached in Valkey |
-| `/users/me/stats`, `/users/me/active-contests` | the signed-in user's contest activity |
+| `/leaderboard`, `/stats` | public stats, cached in Valkey; `/leaderboard/me` and `/stats/me` for the signed-in user |
 | `/swagger/contests` | the API reference |
 
 ## Secrets

@@ -21,8 +21,9 @@ packages:
       InviteRepository:
       StatsRepository:
       LeaderboardRepository:
-      UserProjectionRepository:
-      GameProjectionRepository:
+      SquareRepository:
+      UserRepository:
+      GameSyncRepository:
   github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service:
     interfaces:
       ContestService:
@@ -32,6 +33,7 @@ packages:
       InviteService:
       StatsService:
       LeaderboardService:
-      UserActivityService:
+      SquareService:
+      UserSyncService:
       GameSyncService:
       SnapshotService:

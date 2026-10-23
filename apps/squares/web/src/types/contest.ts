@@ -57,7 +57,7 @@ export interface Square {
 }
 
 export type FeedRole = 'owned' | 'joined';
-export type FeedStatus = 'open' | 'live' | 'finished';
+export type FeedStatus = 'open' | 'live' | 'active' | 'finished';
 
 export interface ContestFeedParams {
   cursor?: string;

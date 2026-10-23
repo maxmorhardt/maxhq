@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	DefaultFeedLimit = 20
-	MaxFeedLimit     = 50
+	DefaultFeedLimit    = 20
+	MaxFeedLimit        = 50
+	MaxFeedSearchLength = 100
 )
 
 type FeedRole string
@@ -26,6 +27,7 @@ const (
 var FeedStatusGroups = map[string][]ContestStatus{
 	"open":     {ContestStatusActive},
 	"live":     {ContestStatusQ1, ContestStatusQ2, ContestStatusQ3, ContestStatusQ4},
+	"active":   {ContestStatusActive, ContestStatusQ1, ContestStatusQ2, ContestStatusQ3, ContestStatusQ4},
 	"finished": {ContestStatusFinished},
 }
 

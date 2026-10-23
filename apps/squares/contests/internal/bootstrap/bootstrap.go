@@ -62,15 +62,17 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	contestRepo := repository.NewContestRepository(db)
 	participantRepo := repository.NewParticipantRepository(db)
 	inviteRepo := repository.NewInviteRepository(db)
-	gameRepo := repository.NewGameProjectionRepository(db)
-	userRepo := repository.NewUserProjectionRepository(db)
+	squareRepo := repository.NewSquareRepository(db)
+	gameRepo := repository.NewGameSyncRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
-	participantService := service.NewParticipantService(participantRepo, contestRepo, tx, events)
-	contestService := service.NewContestService(contestRepo, participantRepo, gameRepo, userRepo, tx, events, participantService)
-	inviteService := service.NewInviteService(inviteRepo, participantRepo, contestRepo, participantService, tx, events)
+	participantService := service.NewParticipantService(participantRepo, contestRepo, squareRepo, tx, events)
+	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, participantService)
+	squareService := service.NewSquareService(squareRepo, contestRepo, participantRepo, userRepo, tx, events, participantService)
+	inviteService := service.NewInviteService(inviteRepo, participantRepo, contestRepo, userRepo, participantService, tx, events)
 	leaderboardService := service.NewLeaderboardService(repository.NewLeaderboardRepository(db), sharedCache)
 	statsService := service.NewStatsService(repository.NewStatsRepository(db), sharedCache)
-	userActivityService := service.NewUserActivityService(userRepo, tx, events)
+	userSyncService := service.NewUserSyncService(userRepo, squareRepo, tx, events)
 	feedService := service.NewFeedService(repository.NewFeedRepository(db), sharedCache)
 	gameSyncService := service.NewGameSyncService(gameRepo, contestRepo, contestService, tx, feedService)
 	snapshotService := service.NewSnapshotService(contestRepo, participantService)
@@ -82,14 +84,14 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	}), Service)
 
 	routes.Register(engine, &routes.Handlers{
-		Contest:      handler.NewContestHandler(contestService),
-		Feed:         handler.NewFeedHandler(feedService),
-		Participant:  handler.NewParticipantHandler(participantService),
-		Invite:       handler.NewInviteHandler(inviteService),
-		Leaderboard:  handler.NewLeaderboardHandler(leaderboardService),
-		Stats:        handler.NewStatsHandler(statsService),
-		UserActivity: handler.NewUserActivityHandler(userActivityService),
-		Internal:     handler.NewInternalHandler(snapshotService, userActivityService),
+		Contest:     handler.NewContestHandler(contestService),
+		Square:      handler.NewSquareHandler(squareService),
+		Feed:        handler.NewFeedHandler(feedService),
+		Participant: handler.NewParticipantHandler(participantService),
+		Invite:      handler.NewInviteHandler(inviteService),
+		Leaderboard: handler.NewLeaderboardHandler(leaderboardService),
+		Stats:       handler.NewStatsHandler(statsService),
+		Internal:    handler.NewInternalHandler(snapshotService, statsService),
 	}, routes.Guards{
 		Auth:       middleware.Authenticate(cache.NewRevocationStore(infra.Redis)),
 		Idempotent: middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
@@ -104,7 +106,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 		relay:  relay,
 		consumers: []*streams.Consumer{
 			streams.NewConsumer(db, infra.Redis, consumer.GamesSpec, consumer.GameHandler(gameSyncService)),
-			streams.NewConsumer(db, infra.Redis, consumer.UsersSpec, consumer.UserHandler(userActivityService)),
+			streams.NewConsumer(db, infra.Redis, consumer.UsersSpec, consumer.UserHandler(userSyncService)),
 		},
 	}
 }

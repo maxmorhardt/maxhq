@@ -32,7 +32,7 @@ type Contest struct {
 	Status         ContestStatus     `json:"status" gorm:"not null;default:ACTIVE"`
 	Version        int64             `json:"version" gorm:"not null;default:1"`
 	GameID         *uuid.UUID        `json:"gameId,omitempty" gorm:"type:uuid;index"`
-	// scoring reads the projection; clients get the game itself from the games API
+	// scoring reads contests' copy of the game; clients get the game itself from the games API
 	Game      *Game     `json:"-" gorm:"foreignKey:GameID;constraint:OnDelete:SET NULL"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`

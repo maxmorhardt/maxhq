@@ -17,7 +17,6 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/metrics"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
-	"gorm.io/gorm"
 )
 
 // matches how long a deletion blocks the account in redis: longer than any refresh token lives
@@ -64,7 +63,7 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		log.Info("retrieved user profile")
 		return user, nil
 	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, database.ErrNotFound) {
 		log.Error("failed to get user", "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
@@ -113,7 +112,7 @@ func (s *userService) UpdateProfile(ctx context.Context, email, defaultInitials 
 		return s.outbox.Add(ctx, events.UsersStream, events.UserUpdatedType, userUpdated(user))
 	})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return nil, errs.ErrUserNotFound
 		}
 		log.Error("failed to update user profile", "error", err)

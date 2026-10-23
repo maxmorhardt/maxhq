@@ -11,10 +11,10 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func liveGame(gameID uuid.UUID, scores ...model.GameScore) *model.Game {
@@ -36,9 +36,9 @@ func fullContest(status model.ContestStatus, gameID uuid.UUID) *model.Contest {
 	return &model.Contest{ID: uuid.New(), Status: status, GameID: &gameID, XLabels: labels, YLabels: labels, Squares: squares}
 }
 
-func syncFixture(t *testing.T, game *model.Game, contest *model.Contest) (*mocks.GameProjectionRepository, *mocks.ContestRepository, *mocks.ContestService) {
+func syncFixture(t *testing.T, game *model.Game, contest *model.Contest) (*mocks.GameSyncRepository, *mocks.ContestRepository, *mocks.ContestService) {
 	t.Helper()
-	g := mocks.NewGameProjectionRepository(t)
+	g := mocks.NewGameSyncRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
 	c := mocks.NewContestRepository(t)
 	cs := mocks.NewContestService(t)
@@ -58,7 +58,7 @@ func syncFixture(t *testing.T, game *model.Game, contest *model.Contest) (*mocks
 	return g, c, cs
 }
 
-func TestGameSync_ScheduledGameOnlyRefreshesProjection(t *testing.T) {
+func TestGameSync_ScheduledGameOnlySavesGame(t *testing.T) {
 	game := &model.Game{ID: uuid.New(), Status: model.GameStatusScheduled}
 	g, c, cs := syncFixture(t, game, nil)
 
@@ -72,6 +72,27 @@ func TestGameSync_AdvancesStartedContest(t *testing.T) {
 	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 1, 7, 3).Return(&model.QuarterResult{Quarter: 1, Winner: "u"}, nil).Once()
 
 	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
+}
+
+type inTxKey struct{}
+
+func TestGameSync_ReloadsGameInTheWriteTransaction(t *testing.T) {
+	game := liveGame(uuid.New(), model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3})
+	inTx := mock.MatchedBy(func(ctx context.Context) bool { return ctx.Value(inTxKey{}) != nil })
+
+	tx := &mocks.Transactor{}
+	tx.On("Do", mock.Anything, mock.Anything).
+		Return(func(ctx context.Context, fn func(context.Context) error) error {
+			return fn(context.WithValue(ctx, inTxKey{}, true))
+		})
+
+	g := mocks.NewGameSyncRepository(t)
+	g.EXPECT().Upsert(inTx, game).Return(nil)
+	g.EXPECT().GetByID(inTx, game.ID).Return(game, nil)
+	c := mocks.NewContestRepository(t)
+	c.EXPECT().GetIDsByGameID(mock.Anything, game.ID).Return(nil, nil)
+
+	require.NoError(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), tx, quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
 
 func TestGameSync_AutoStartsAndBackfills(t *testing.T) {
@@ -178,13 +199,13 @@ func TestGameSync_FinalizesWhenGameEndsBeforeKickoffLock(t *testing.T) {
 
 func TestGameSync_ContestDeletedMeanwhileIsSkipped(t *testing.T) {
 	game := liveGame(uuid.New())
-	g := mocks.NewGameProjectionRepository(t)
+	g := mocks.NewGameSyncRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
 	g.EXPECT().GetByID(mock.Anything, game.ID).Return(game, nil)
 	contestID := uuid.New()
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetIDsByGameID(mock.Anything, game.ID).Return([]uuid.UUID{contestID}, nil)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, contestID).Return(nil, gorm.ErrRecordNotFound)
+	c.EXPECT().GetByIDForUpdate(mock.Anything, contestID).Return(nil, database.ErrNotFound)
 
 	require.NoError(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 }
@@ -192,23 +213,23 @@ func TestGameSync_ContestDeletedMeanwhileIsSkipped(t *testing.T) {
 func TestGameSync_Errors(t *testing.T) {
 	game := liveGame(uuid.New())
 
-	g := mocks.NewGameProjectionRepository(t)
+	g := mocks.NewGameSyncRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(errors.New("db"))
 	assert.Error(t, service.NewGameSyncService(g, mocks.NewContestRepository(t), mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 
-	g = mocks.NewGameProjectionRepository(t)
+	g = mocks.NewGameSyncRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
 	g.EXPECT().GetByID(mock.Anything, game.ID).Return(nil, errors.New("db"))
 	assert.Error(t, service.NewGameSyncService(g, mocks.NewContestRepository(t), mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 
-	g = mocks.NewGameProjectionRepository(t)
+	g = mocks.NewGameSyncRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
 	g.EXPECT().GetByID(mock.Anything, game.ID).Return(game, nil)
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetIDsByGameID(mock.Anything, game.ID).Return(nil, errors.New("db"))
 	assert.Error(t, service.NewGameSyncService(g, c, mocks.NewContestService(t), passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
 
-	g = mocks.NewGameProjectionRepository(t)
+	g = mocks.NewGameSyncRepository(t)
 	g.EXPECT().Upsert(mock.Anything, game).Return(nil)
 	g.EXPECT().GetByID(mock.Anything, game.ID).Return(game, nil)
 	c = mocks.NewContestRepository(t)

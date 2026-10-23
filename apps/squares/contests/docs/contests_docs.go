@@ -60,14 +60,16 @@ const docTemplatecontests = `{
                         "enum": [
                             "open",
                             "live",
+                            "active",
                             "finished"
                         ],
                         "type": "string",
-                        "description": "open, live, or finished",
+                        "description": "open, live, active (open or live), or finished",
                         "name": "status",
                         "in": "query"
                     },
                     {
+                        "maxLength": 100,
                         "type": "string",
                         "description": "Case-insensitive name filter",
                         "name": "search",
@@ -394,67 +396,6 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/participants": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all participants and their roles. Any participant can view. Public contests allow any authenticated user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "participants"
-                ],
-                "summary": "Get all participants for a contest",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Contest ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.ContestParticipant"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
         "/contests/{id}/participants/{userId}": {
             "delete": {
                 "security": [
@@ -604,7 +545,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Clear all of the caller's squares in a contest",
                 "parameters": [
@@ -674,7 +615,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Claim random empty squares",
                 "parameters": [
@@ -741,7 +682,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Claim a single square in a contest",
                 "parameters": [
@@ -813,7 +754,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contests"
+                    "squares"
                 ],
                 "summary": "Clear square value and owner",
                 "parameters": [
@@ -1235,41 +1176,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/users/me/active-contests": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the non-terminal contests the user owns or participates in, which block account deletion",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get the current user's active contests",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/contracts.UserActiveContest"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/me/stats": {
+        "/stats/me": {
             "get": {
                 "security": [
                     {
@@ -1281,7 +1188,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "stats"
                 ],
                 "summary": "Get the current user's stats",
                 "responses": {
@@ -1442,7 +1349,7 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "displayName": {
-                    "description": "read from the user projection, so other players can be shown a name instead of an email",
+                    "description": "read from contests.users, so other players can be shown a name instead of an email",
                     "type": "string"
                 },
                 "id": {

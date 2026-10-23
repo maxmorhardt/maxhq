@@ -80,6 +80,7 @@ func ParseLabels(c *model.Contest) (xLabels, yLabels []int8, err error) {
 	return xLabels, yLabels, nil
 }
 
+// columns (xLabels) are the home team and rows (yLabels) the away team; the web board labels them the same way
 func ComputeWinner(homeScore, awayScore int, xLabels, yLabels []int8) (row, col int, ok bool) {
 	homeLastDigit := homeScore % 10
 	awayLastDigit := awayScore % 10

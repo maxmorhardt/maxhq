@@ -56,20 +56,6 @@ func TestParticipantRepository_GetTotalAllocatedSquares(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestParticipantRepository_CountSquaresByUser(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewParticipantRepository(gdb)
-
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-
-	count, err := repo.CountSquaresByUser(context.Background(), uuid.New(), "u1")
-
-	require.NoError(t, err)
-	assert.Equal(t, 3, count)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestParticipantRepository_Delete(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewParticipantRepository(gdb)

@@ -1,14 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import DeleteAccountDialog from './DeleteAccountDialog';
-import type { UserActiveContest } from '../../../types/user';
+import DeleteAccountDialog, { type BlockingContest } from './DeleteAccountDialog';
 
 function baseProps() {
   return {
     open: true,
     deleting: false,
     busyId: null,
-    activeContests: [] as UserActiveContest[] | null,
+    activeContests: [] as BlockingContest[] | null,
     activeContestsError: false,
     actionError: null as string | null,
     onClose: vi.fn(),
@@ -42,9 +41,9 @@ describe('DeleteAccountDialog', () => {
 
   it('lists blocking contests with owner delete and participant leave actions', () => {
     const props = baseProps();
-    const active: UserActiveContest[] = [
-      { id: 'c1', name: 'pool', owner: 'a@b.com', role: 'owner' },
-      { id: 'c2', name: 'office', owner: 'other@b.com', role: 'participant' },
+    const active: BlockingContest[] = [
+      { id: 'c1', name: 'pool', role: 'owner' },
+      { id: 'c2', name: 'office', role: 'participant' },
     ];
     render(<DeleteAccountDialog {...props} activeContests={active} />);
 
@@ -73,9 +72,7 @@ describe('DeleteAccountDialog', () => {
   });
 
   it('renders an inline action error in the blocking-contests view', () => {
-    const active: UserActiveContest[] = [
-      { id: 'c1', name: 'pool', owner: 'a@b.com', role: 'owner' },
-    ];
+    const active: BlockingContest[] = [{ id: 'c1', name: 'pool', role: 'owner' }];
     render(
       <DeleteAccountDialog
         {...baseProps()}

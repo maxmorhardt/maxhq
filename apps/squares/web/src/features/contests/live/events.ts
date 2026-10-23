@@ -22,6 +22,7 @@ export type ContestEvent =
   | Envelope<'square.updated', Square>
   | Envelope<'quarter.recorded', QuarterResult>
   | Envelope<'participant.joined', Participant>
+  | Envelope<'participant.updated', Participant>
   | Envelope<'participant.removed', Participant>
   | Envelope<'access.revoked', undefined>;
 
@@ -37,6 +38,7 @@ const KNOWN_TYPES: Record<ContestEventType, true> = {
   'square.updated': true,
   'quarter.recorded': true,
   'participant.joined': true,
+  'participant.updated': true,
   'participant.removed': true,
   'access.revoked': true,
 };

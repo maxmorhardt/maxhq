@@ -12,12 +12,10 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
-	"gorm.io/gorm"
 )
 
 type ParticipantService interface {
-	GetParticipants(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestParticipant, error)
-	GetParticipantsInternal(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error)
+	GetParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error)
 	UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error)
 	RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error
 	Authorize(ctx context.Context, contestID uuid.UUID, userID string, act Action) error
@@ -26,6 +24,7 @@ type ParticipantService interface {
 type participantService struct {
 	participantRepo repository.ParticipantRepository
 	contestRepo     repository.ContestRepository
+	squareRepo      repository.SquareRepository
 	tx              database.Transactor
 	events          ContestEventPublisher
 }
@@ -33,12 +32,14 @@ type participantService struct {
 func NewParticipantService(
 	participantRepo repository.ParticipantRepository,
 	contestRepo repository.ContestRepository,
+	squareRepo repository.SquareRepository,
 	tx database.Transactor,
 	events ContestEventPublisher,
 ) ParticipantService {
 	return &participantService{
 		participantRepo: participantRepo,
 		contestRepo:     contestRepo,
+		squareRepo:      squareRepo,
 		tx:              tx,
 		events:          events,
 	}
@@ -77,7 +78,7 @@ func (s *participantService) Authorize(ctx context.Context, contestID uuid.UUID,
 	if act == ActionView {
 		visibility, err := s.contestRepo.GetVisibilityByID(ctx, contestID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, database.ErrNotFound) {
 				return errs.ErrContestNotFound
 			}
 			log.Error("failed to get contest visibility for authorization", "contest_id", contestID, "error", err)
@@ -91,7 +92,7 @@ func (s *participantService) Authorize(ctx context.Context, contestID uuid.UUID,
 
 	participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return errs.ErrNotParticipant
 		}
 		log.Error("failed to get participant for authorization", "contest_id", contestID, "user_id", userID, "error", err)
@@ -106,19 +107,7 @@ func (s *participantService) Authorize(ctx context.Context, contestID uuid.UUID,
 	return nil
 }
 
-func (s *participantService) GetParticipants(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestParticipant, error) {
-	if err := s.Authorize(ctx, contestID, user, ActionView); err != nil {
-		return nil, err
-	}
-
-	return s.fetchParticipants(ctx, contestID)
-}
-
-func (s *participantService) GetParticipantsInternal(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
-	return s.fetchParticipants(ctx, contestID)
-}
-
-func (s *participantService) fetchParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
+func (s *participantService) GetParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
 	log := logging.FromContext(ctx)
 
 	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)
@@ -134,86 +123,95 @@ func (s *participantService) fetchParticipants(ctx context.Context, contestID uu
 func (s *participantService) UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error) {
 	log := logging.FromContext(ctx)
 
-	contest, err := s.contestRepo.GetByID(ctx, contestID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.ErrContestNotFound
-		}
-		log.Error("failed to get contest", "contest_id", contestID, "error", err)
-		return nil, errs.ErrDatabaseUnavailable
-	}
-
-	if contest.Status.IsTerminal() {
-		log.Warn("cannot update participant in terminal state", "contest_id", contestID, "status", contest.Status)
-		return nil, errs.ErrContestFinalized
-	}
-
-	if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
-		return nil, authErr
-	}
-
-	participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, targetUserID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.ErrNotParticipant
-		}
-		log.Error("failed to get participant", "contest_id", contestID, "user_id", targetUserID, "error", err)
-		return nil, errs.ErrDatabaseUnavailable
-	}
-
-	if participant.Role == model.ParticipantRoleOwner && req.Role != nil {
-		return nil, errs.ErrCannotChangeOwner
-	}
-
-	if req.Role != nil {
-		participant.Role = model.ParticipantRole(*req.Role)
-	}
-
-	targetMax := participant.MaxSquares
-	if req.MaxSquares != nil {
-		targetMax = *req.MaxSquares
-	}
-
-	switch participant.Role {
-	case model.ParticipantRoleViewer:
-		if req.MaxSquares != nil && *req.MaxSquares > 0 {
-			return nil, errs.ErrViewerCannotHaveSquares
-		}
-		targetMax = 0
-	case model.ParticipantRoleParticipant:
-		if targetMax < 1 {
-			return nil, errs.ErrInvalidSquareCount
-		}
-	case model.ParticipantRoleOwner:
-	}
-
-	if targetMax != participant.MaxSquares {
-		claimed, err := s.participantRepo.CountSquaresByUser(ctx, contestID, targetUserID)
+	var participant *model.ContestParticipant
+	err := s.tx.Do(ctx, func(ctx context.Context) error {
+		// the contest lock serializes this pool check with invite redemptions, which take the same lock
+		contest, err := s.contestRepo.GetByIDForUpdate(ctx, contestID)
 		if err != nil {
-			log.Error("failed to count squares by user", "contest_id", contestID, "user_id", targetUserID, "error", err)
-			return nil, errs.ErrDatabaseUnavailable
+			if errors.Is(err, database.ErrNotFound) {
+				return errs.ErrContestNotFound
+			}
+			log.Error("failed to get contest", "contest_id", contestID, "error", err)
+			return errs.ErrDatabaseUnavailable
 		}
 
-		if targetMax < claimed {
-			return nil, errs.ErrSquareLimitTooLow
+		if contest.Status.IsTerminal() {
+			log.Warn("cannot update participant in terminal state", "contest_id", contestID, "status", contest.Status)
+			return errs.ErrContestFinalized
 		}
 
-		totalAllocated, err := s.participantRepo.GetTotalAllocatedSquares(ctx, contestID)
+		if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
+			return authErr
+		}
+
+		participant, err = s.participantRepo.GetByContestAndUser(ctx, contestID, targetUserID)
 		if err != nil {
-			log.Error("failed to get total allocated squares", "contest_id", contestID, "error", err)
-			return nil, errs.ErrDatabaseUnavailable
+			if errors.Is(err, database.ErrNotFound) {
+				return errs.ErrNotParticipant
+			}
+			log.Error("failed to get participant", "contest_id", contestID, "user_id", targetUserID, "error", err)
+			return errs.ErrDatabaseUnavailable
 		}
 
-		newTotal := totalAllocated - participant.MaxSquares + targetMax
-		if newTotal > 100 {
-			return nil, errs.ErrNotEnoughSquares
+		if participant.Role == model.ParticipantRoleOwner && req.Role != nil {
+			return errs.ErrCannotChangeOwner
 		}
 
-		participant.MaxSquares = targetMax
-	}
+		if req.Role != nil {
+			participant.Role = model.ParticipantRole(*req.Role)
+		}
 
-	if err := s.participantRepo.Update(ctx, participant); err != nil {
-		log.Error("failed to update participant", "contest_id", contestID, "user_id", targetUserID, "error", err)
+		targetMax := participant.MaxSquares
+		if req.MaxSquares != nil {
+			targetMax = *req.MaxSquares
+		}
+
+		switch participant.Role {
+		case model.ParticipantRoleViewer:
+			if req.MaxSquares != nil && *req.MaxSquares > 0 {
+				return errs.ErrViewerCannotHaveSquares
+			}
+			targetMax = 0
+		case model.ParticipantRoleParticipant:
+			if targetMax < 1 {
+				return errs.ErrInvalidSquareCount
+			}
+		case model.ParticipantRoleOwner:
+		}
+
+		if targetMax != participant.MaxSquares {
+			claimed, err := s.squareRepo.CountByOwner(ctx, contestID, targetUserID)
+			if err != nil {
+				log.Error("failed to count squares by user", "contest_id", contestID, "user_id", targetUserID, "error", err)
+				return errs.ErrDatabaseUnavailable
+			}
+
+			if targetMax < claimed {
+				return errs.ErrSquareLimitTooLow
+			}
+
+			totalAllocated, err := s.participantRepo.GetTotalAllocatedSquares(ctx, contestID)
+			if err != nil {
+				log.Error("failed to get total allocated squares", "contest_id", contestID, "error", err)
+				return errs.ErrDatabaseUnavailable
+			}
+
+			newTotal := totalAllocated - participant.MaxSquares + targetMax
+			if newTotal > 100 {
+				return errs.ErrNotEnoughSquares
+			}
+
+			participant.MaxSquares = targetMax
+		}
+
+		if err := s.participantRepo.Update(ctx, participant); err != nil {
+			log.Error("failed to update participant", "contest_id", contestID, "user_id", targetUserID, "error", err)
+			return err
+		}
+
+		return s.events.PublishParticipantUpdated(ctx, contestID, user, participant)
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -226,7 +224,7 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return errs.ErrContestNotFound
 		}
 		log.Error("failed to get contest", "contest_id", contestID, "error", err)
@@ -246,7 +244,7 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 
 	participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, targetUserID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return errs.ErrNotParticipant
 		}
 		log.Error("failed to get participant", "contest_id", contestID, "user_id", targetUserID, "error", err)
@@ -290,9 +288,9 @@ func (s *participantService) releaseParticipantSquares(ctx context.Context, cont
 		var updatedSquare *model.Square
 		var err error
 		if ghost {
-			updatedSquare, err = s.contestRepo.GhostSquare(ctx, &contest.Squares[i])
+			updatedSquare, err = s.squareRepo.Ghost(ctx, &contest.Squares[i])
 		} else {
-			updatedSquare, err = s.contestRepo.ClearSquare(ctx, &contest.Squares[i])
+			updatedSquare, err = s.squareRepo.Clear(ctx, &contest.Squares[i])
 		}
 		if err != nil {
 			return err

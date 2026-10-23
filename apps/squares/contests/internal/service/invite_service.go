@@ -12,7 +12,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
-	"gorm.io/gorm"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/initials"
 )
 
 type InviteService interface {
@@ -27,6 +27,7 @@ type inviteService struct {
 	inviteRepo         repository.InviteRepository
 	participantRepo    repository.ParticipantRepository
 	contestRepo        repository.ContestRepository
+	userRepo           repository.UserRepository
 	participantService ParticipantService
 	tx                 database.Transactor
 	events             ContestEventPublisher
@@ -36,6 +37,7 @@ func NewInviteService(
 	inviteRepo repository.InviteRepository,
 	participantRepo repository.ParticipantRepository,
 	contestRepo repository.ContestRepository,
+	userRepo repository.UserRepository,
 	participantService ParticipantService,
 	tx database.Transactor,
 	events ContestEventPublisher,
@@ -44,6 +46,7 @@ func NewInviteService(
 		inviteRepo:         inviteRepo,
 		participantRepo:    participantRepo,
 		contestRepo:        contestRepo,
+		userRepo:           userRepo,
 		participantService: participantService,
 		tx:                 tx,
 		events:             events,
@@ -55,7 +58,7 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return nil, errs.ErrContestNotFound
 		}
 		log.Error("failed to get contest", "contest_id", contestID, "error", err)
@@ -106,7 +109,7 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return nil, errs.ErrInviteNotFound
 		}
 		log.Error("failed to get invite by token", "error", err)
@@ -162,7 +165,7 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user, displayNa
 
 	invite, err := s.inviteRepo.GetByToken(ctx, token)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return nil, errs.ErrInviteNotFound
 		}
 		log.Error("failed to get invite by token", "error", err)
@@ -195,7 +198,7 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user, displayNa
 		log.Warn("user already a participant", "contest_id", invite.ContestID, "user", user)
 		return nil, errs.ErrAlreadyParticipant
 	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, database.ErrNotFound) {
 		log.Error("failed to check existing participant", "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
@@ -226,7 +229,12 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user, displayNa
 			return redeemErr
 		}
 
-		return s.events.PublishParticipantAdded(ctx, invite.ContestID, participant)
+		// a first-time player may join before accounts has published their profile, so the players list needs a name now
+		if _, seedErr := s.userRepo.GetOrCreate(ctx, user, displayName, initials.FromName(displayName)); seedErr != nil {
+			return seedErr
+		}
+
+		return s.events.PublishParticipantJoined(ctx, invite.ContestID, participant)
 	})
 	if err != nil {
 		switch {
@@ -236,7 +244,7 @@ func (s *inviteService) RedeemInvite(ctx context.Context, token, user, displayNa
 		case errors.Is(err, errs.ErrInviteMaxUsesReached):
 			log.Warn("invite uses exhausted before redemption committed", "invite_id", invite.ID, "user", user)
 			return nil, err
-		case errors.Is(err, gorm.ErrDuplicatedKey):
+		case errors.Is(err, database.ErrDuplicate):
 			log.Warn("user joined contest concurrently", "contest_id", invite.ContestID, "user", user)
 			return nil, errs.ErrAlreadyParticipant
 		}
@@ -274,7 +282,7 @@ func (s *inviteService) DeleteInvite(ctx context.Context, contestID, inviteID uu
 
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, database.ErrNotFound) {
 			return errs.ErrContestNotFound
 		}
 		log.Error("failed to get contest", "contest_id", contestID, "error", err)

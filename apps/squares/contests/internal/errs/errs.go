@@ -38,6 +38,7 @@ var (
 	ErrInvalidCursor = errors.New("invalid cursor parameter")
 	ErrInvalidLimit  = errors.New("invalid limit parameter")
 	ErrInvalidFilter = errors.New("invalid filter parameter")
+	ErrInvalidSearch = errors.New("invalid search parameter")
 )
 
 var (

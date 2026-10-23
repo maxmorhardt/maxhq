@@ -13,7 +13,6 @@ import (
 )
 
 type ParticipantHandler interface {
-	GetParticipants(c *gin.Context)
 	UpdateParticipant(c *gin.Context)
 	RemoveParticipant(c *gin.Context)
 }
@@ -26,44 +25,6 @@ func NewParticipantHandler(participantService service.ParticipantService) Partic
 	return &participantHandler{
 		participantService: participantService,
 	}
-}
-
-// @Summary Get all participants for a contest
-// @Description Returns all participants and their roles. Any participant can view. Public contests allow any authenticated user
-// @Tags participants
-// @Produce json
-// @Param id path string true "Contest ID"
-// @Success 200 {array} model.ContestParticipant
-// @Failure 400 {object} api.APIError
-// @Failure 403 {object} api.APIError
-// @Failure 404 {object} api.APIError
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/{id}/participants [get]
-func (h *participantHandler) GetParticipants(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestID, ok := api.PathUUID(c, "id")
-	if !ok {
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-	participants, err := h.participantService.GetParticipants(c.Request.Context(), contestID, user)
-	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrContestNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(errs.ErrInsufficientRole), c))
-		default:
-			log.Error("failed to get participants", "error", err)
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get participants", c))
-		}
-		return
-	}
-
-	c.JSON(http.StatusOK, participants)
 }
 
 // @Summary Update a participant's role or square limit

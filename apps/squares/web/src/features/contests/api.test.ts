@@ -109,4 +109,12 @@ describe('contestsApi', () => {
     );
     expect(fetch.lastRequest().url.searchParams.get('cursor')).toBe('next');
   });
+
+  it('lists active contests from the feed', async () => {
+    fetch = stubFetch({ contests: [{ id: 'c1', name: 'pool', role: 'owner' }] });
+    const result = await store.dispatch(endpoints.getActiveContests.initiate());
+    expect(fetch.lastRequest()).toMatchObject({ method: 'GET', path: '/contests' });
+    expect(fetch.lastRequest().url.searchParams.get('status')).toBe('active');
+    expect(result.data).toEqual([{ id: 'c1', name: 'pool', role: 'owner' }]);
+  });
 });

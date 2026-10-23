@@ -32,11 +32,11 @@ func GameHandler(gameSync service.GameSyncService) streams.Handler {
 			return nil
 		}
 
-		return gameSync.ApplyGameUpdate(ctx, toProjection(&event.Game))
+		return gameSync.ApplyGameUpdate(ctx, toGame(&event.Game))
 	}
 }
 
-func UserHandler(userActivity service.UserActivityService) streams.Handler {
+func UserHandler(userSync service.UserSyncService) streams.Handler {
 	return func(ctx context.Context, entry streams.Entry) error {
 		log := logging.FromContext(ctx)
 
@@ -47,14 +47,14 @@ func UserHandler(userActivity service.UserActivityService) streams.Handler {
 				log.Error("dropping undecodable user updated event", "error", err)
 				return nil
 			}
-			return userActivity.ApplyUserUpdated(ctx, &event)
+			return userSync.ApplyUserUpdated(ctx, &event)
 		case events.UserDeletedType:
 			var event events.UserDeleted
 			if err := json.Unmarshal(entry.Data, &event); err != nil {
 				log.Error("dropping undecodable user deleted event", "error", err)
 				return nil
 			}
-			return userActivity.ApplyUserDeleted(ctx, &event)
+			return userSync.ApplyUserDeleted(ctx, &event)
 		default:
 			log.Warn("ignoring unknown user event")
 			return nil
@@ -62,7 +62,7 @@ func UserHandler(userActivity service.UserActivityService) streams.Handler {
 	}
 }
 
-func toProjection(g *events.Game) *model.Game {
+func toGame(g *events.Game) *model.Game {
 	scores := make([]model.GameScore, 0, len(g.Scores))
 	for _, sc := range g.Scores {
 		scores = append(scores, model.GameScore{ID: sc.ID, GameID: g.ID, Quarter: sc.Quarter, HomeScore: sc.HomeScore, AwayScore: sc.AwayScore})

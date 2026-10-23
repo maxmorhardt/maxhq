@@ -6,14 +6,14 @@ import (
 )
 
 type Handlers struct {
-	Contest      handler.ContestHandler
-	Feed         handler.FeedHandler
-	Participant  handler.ParticipantHandler
-	Invite       handler.InviteHandler
-	Leaderboard  handler.LeaderboardHandler
-	Stats        handler.StatsHandler
-	UserActivity handler.UserActivityHandler
-	Internal     handler.InternalHandler
+	Contest     handler.ContestHandler
+	Square      handler.SquareHandler
+	Feed        handler.FeedHandler
+	Participant handler.ParticipantHandler
+	Invite      handler.InviteHandler
+	Leaderboard handler.LeaderboardHandler
+	Stats       handler.StatsHandler
+	Internal    handler.InternalHandler
 }
 
 type Guards struct {
@@ -32,12 +32,11 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	contests.GET("", g.Auth, h.Feed.GetFeed)
 	contests.POST("", write(h.Contest.CreateContest)...)
 	contests.DELETE("/:id", write(h.Contest.DeleteContest)...)
-	contests.PUT("/:id/squares/:squareId/claim", write(h.Contest.ClaimSquare)...)
-	contests.POST("/:id/squares/random", write(h.Contest.ClaimRandomSquares)...)
-	contests.DELETE("/:id/squares/claims", write(h.Contest.ClearMySquares)...)
-	contests.DELETE("/:id/squares/:squareId/claim", write(h.Contest.ClearSquare)...)
+	contests.PUT("/:id/squares/:squareId/claim", write(h.Square.ClaimSquare)...)
+	contests.POST("/:id/squares/random", write(h.Square.ClaimRandomSquares)...)
+	contests.DELETE("/:id/squares/claims", write(h.Square.ClearMySquares)...)
+	contests.DELETE("/:id/squares/:squareId/claim", write(h.Square.ClearSquare)...)
 
-	contests.GET("/:id/participants", g.Auth, h.Participant.GetParticipants)
 	contests.PATCH("/:id/participants/:userId", write(h.Participant.UpdateParticipant)...)
 	contests.DELETE("/:id/participants/:userId", write(h.Participant.RemoveParticipant)...)
 
@@ -52,9 +51,7 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	r.GET("/leaderboard", h.Leaderboard.GetLeaderboard)
 	r.GET("/leaderboard/me", g.Auth, h.Leaderboard.GetMyRank)
 	r.GET("/stats", h.Stats.GetStats)
-
-	r.GET("/users/me/stats", g.Auth, h.UserActivity.GetMyStats)
-	r.GET("/users/me/active-contests", g.Auth, h.UserActivity.GetMyActiveContests)
+	r.GET("/stats/me", g.Auth, h.Stats.GetMyStats)
 
 	internal := r.Group("/internal", g.Internal)
 	internal.GET("/contests/:id/snapshot", h.Internal.GetContestSnapshot)

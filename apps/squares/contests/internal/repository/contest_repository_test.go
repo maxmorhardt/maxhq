@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"
@@ -34,6 +35,21 @@ func newMockDB(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {
 	require.NoError(t, err)
 
 	return gdb, mock
+}
+
+// runs a repository call the way a service does, inside its unit of work
+func inTx[T any](gdb *gorm.DB, call func(ctx context.Context) (T, error)) (T, error) {
+	var out T
+	err := database.NewTransactor(gdb).Do(context.Background(), func(ctx context.Context) error {
+		var err error
+		out, err = call(ctx)
+		return err
+	})
+	return out, err
+}
+
+func inTxErr(gdb *gorm.DB, call func(ctx context.Context) error) error {
+	return database.NewTransactor(gdb).Do(context.Background(), call)
 }
 
 func TestContestRepository_GetVisibilityByID(t *testing.T) {
@@ -134,231 +150,6 @@ func TestContestRepository_GetIDsByGameID(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func expectActiveContestLock(mock sqlmock.Sqlmock, contestID uuid.UUID, status model.ContestStatus) {
-	mock.ExpectQuery(`SELECT "id","status" FROM "contests" WHERE id = \$1 .*FOR SHARE`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "status"}).AddRow(contestID, status))
-}
-
-func expectSquareReload(mock sqlmock.Sqlmock, squareID, contestID uuid.UUID, value, owner string, version int64) {
-	mock.ExpectQuery(`SELECT \* FROM "squares" WHERE id = \$1`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "value", "owner", "updated_by", "version"}).
-			AddRow(squareID, contestID, value, owner, owner, version))
-}
-
-func expectClaimParticipantLock(mock sqlmock.Sqlmock, contestID uuid.UUID, maxSquares int) {
-	mock.ExpectQuery(`SELECT \* FROM "contest_participants".*FOR UPDATE`).
-		WithArgs(contestID, "owner", 1).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "user_id", "max_squares"}).
-			AddRow(uuid.New(), contestID, "owner", maxSquares))
-}
-
-func TestContestRepository_ClaimSquare(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	squareID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	expectClaimParticipantLock(mock, contestID, 5)
-	mock.ExpectExec(`UPDATE "squares" SET .*"version"=version \+ 1`).WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
-		WithArgs(contestID, "owner", "").
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	expectSquareReload(mock, squareID, contestID, "AB", "owner", 2)
-	mock.ExpectCommit()
-
-	sq, err := repo.ClaimSquare(context.Background(), &model.Square{ID: squareID, ContestID: contestID}, "AB", "owner", "Owner Name")
-
-	require.NoError(t, err)
-	assert.Equal(t, "AB", sq.Value)
-	assert.Equal(t, "owner", sq.Owner)
-	assert.Equal(t, "owner", sq.UpdatedBy)
-	assert.Equal(t, int64(2), sq.Version)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_ClaimSquare_ContestNoLongerActive(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusQ1)
-	mock.ExpectRollback()
-
-	sq, err := repo.ClaimSquare(context.Background(), &model.Square{ID: uuid.New(), ContestID: contestID}, "AB", "owner", "Owner Name")
-
-	require.ErrorIs(t, err, errs.ErrSquareNotEditable)
-	assert.Nil(t, sq)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_ClaimSquare_LostRace(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	expectClaimParticipantLock(mock, contestID, 5)
-	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 0))
-	mock.ExpectRollback()
-
-	sq, err := repo.ClaimSquare(context.Background(), &model.Square{ID: uuid.New(), ContestID: contestID}, "AB", "owner", "Owner Name")
-
-	require.ErrorIs(t, err, errs.ErrSquareTaken)
-	assert.Nil(t, sq)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_ClaimSquare_OverLimit(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	expectClaimParticipantLock(mock, contestID, 3)
-	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
-		WithArgs(contestID, "owner", "").
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(4))
-	mock.ExpectRollback()
-
-	sq, err := repo.ClaimSquare(context.Background(), &model.Square{ID: uuid.New(), ContestID: contestID}, "AB", "owner", "Owner Name")
-
-	require.ErrorIs(t, err, errs.ErrSquareLimitReached)
-	assert.Nil(t, sq)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_ClearSquare(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	squareID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 1))
-	expectSquareReload(mock, squareID, contestID, "", "", 3)
-	mock.ExpectCommit()
-
-	sq, err := repo.ClearSquare(context.Background(), &model.Square{ID: squareID, ContestID: contestID, Value: "AB", Owner: "o"})
-
-	require.NoError(t, err)
-	assert.Empty(t, sq.Owner)
-	assert.Empty(t, sq.Value)
-	assert.Equal(t, int64(3), sq.Version)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_ClearSquare_ContestNoLongerActive(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusQ2)
-	mock.ExpectRollback()
-
-	_, err := repo.ClearSquare(context.Background(), &model.Square{ID: uuid.New(), ContestID: contestID})
-
-	require.ErrorIs(t, err, errs.ErrSquareNotEditable)
-}
-
-func TestContestRepository_GhostSquare(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	squareID := uuid.New()
-	mock.ExpectBegin()
-	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 1))
-	expectSquareReload(mock, squareID, contestID, "AB", model.GhostUser, 4)
-	mock.ExpectCommit()
-
-	sq, err := repo.GhostSquare(context.Background(), &model.Square{ID: squareID, ContestID: contestID, Value: "AB", Owner: "o"})
-
-	require.NoError(t, err)
-	assert.Equal(t, model.GhostUser, sq.Owner)
-	assert.Equal(t, "AB", sq.Value)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_GhostSquare_Error(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	mock.ExpectBegin()
-	mock.ExpectExec(`UPDATE "squares"`).WillReturnError(errors.New("db"))
-	mock.ExpectRollback()
-
-	_, err := repo.GhostSquare(context.Background(), &model.Square{ID: uuid.New()})
-	require.Error(t, err)
-}
-
-func TestContestRepository_ClearSquaresByOwner(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	first, second := uuid.New(), uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	mock.ExpectQuery(`SELECT "id" FROM "squares" WHERE contest_id = \$1 AND owner = \$2`).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(first).AddRow(second))
-	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 2))
-	mock.ExpectQuery(`SELECT \* FROM "squares" WHERE id IN`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "owner", "value", "version"}).
-			AddRow(first, contestID, "", "", 2).
-			AddRow(second, contestID, "", "", 2))
-	mock.ExpectCommit()
-
-	squares, err := repo.ClearSquaresByOwner(context.Background(), contestID, "o")
-
-	require.NoError(t, err)
-	assert.Len(t, squares, 2)
-	for _, sq := range squares {
-		assert.Empty(t, sq.Owner)
-		assert.Empty(t, sq.Value)
-		assert.Equal(t, int64(2), sq.Version)
-	}
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_ClearSquaresByOwner_None(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	mock.ExpectQuery(`SELECT "id" FROM "squares"`).WillReturnRows(sqlmock.NewRows([]string{"id"}))
-	mock.ExpectCommit()
-
-	squares, err := repo.ClearSquaresByOwner(context.Background(), contestID, "o")
-
-	require.NoError(t, err)
-	assert.Empty(t, squares)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestContestRepository_ClearSquaresByOwner_ContestNoLongerActive(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	contestID := uuid.New()
-	mock.ExpectBegin()
-	expectActiveContestLock(mock, contestID, model.ContestStatusFinished)
-	mock.ExpectRollback()
-
-	_, err := repo.ClearSquaresByOwner(context.Background(), contestID, "o")
-
-	require.ErrorIs(t, err, errs.ErrSquareNotEditable)
-}
-
 func TestContestRepository_GetByIDForUpdate(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewContestRepository(gdb)
@@ -407,7 +198,9 @@ func TestContestRepository_Create(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "contest_participants"`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	err := repo.Create(context.Background(), &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestParticipant{UserID: "owner"})
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.Create(ctx, &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestParticipant{UserID: "owner"})
+	})
 	require.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -420,7 +213,9 @@ func TestContestRepository_Create_Error(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "contests"`).WillReturnError(errors.New("insert failed"))
 	mock.ExpectRollback()
 
-	err := repo.Create(context.Background(), &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestParticipant{UserID: "owner"})
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.Create(ctx, &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestParticipant{UserID: "owner"})
+	})
 	require.Error(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -435,8 +230,10 @@ func TestContestRepository_ApplyQuarterResults(t *testing.T) {
 	mock.ExpectCommit()
 
 	contestID := uuid.New()
-	err := repo.ApplyQuarterResults(context.Background(), &model.Contest{ID: contestID, Name: "x"},
-		[]model.QuarterResult{{ContestID: contestID, Quarter: 1, Winner: "u@example.com"}})
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.ApplyQuarterResults(ctx, &model.Contest{ID: contestID, Name: "x"},
+			[]model.QuarterResult{{ContestID: contestID, Quarter: 1, Winner: "u@example.com"}})
+	})
 	require.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -449,7 +246,9 @@ func TestContestRepository_ApplyQuarterResults_NoResults(t *testing.T) {
 	mock.ExpectExec(`UPDATE "contests"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
-	err := repo.ApplyQuarterResults(context.Background(), &model.Contest{ID: uuid.New(), Name: "x"}, nil)
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.ApplyQuarterResults(ctx, &model.Contest{ID: uuid.New(), Name: "x"}, nil)
+	})
 	require.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -462,7 +261,9 @@ func TestContestRepository_ApplyQuarterResults_UpdateError(t *testing.T) {
 	mock.ExpectExec(`UPDATE "contests"`).WillReturnError(errors.New("db"))
 	mock.ExpectRollback()
 
-	err := repo.ApplyQuarterResults(context.Background(), &model.Contest{ID: uuid.New(), Name: "x"}, nil)
+	err := inTxErr(gdb, func(ctx context.Context) error {
+		return repo.ApplyQuarterResults(ctx, &model.Contest{ID: uuid.New(), Name: "x"}, nil)
+	})
 	require.Error(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

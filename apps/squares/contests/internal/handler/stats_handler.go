@@ -11,6 +11,7 @@ import (
 
 type StatsHandler interface {
 	GetStats(c *gin.Context)
+	GetMyStats(c *gin.Context)
 }
 
 type statsHandler struct {
@@ -33,10 +34,30 @@ func NewStatsHandler(statsService service.StatsService) StatsHandler {
 func (h *statsHandler) GetStats(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	stats, err := h.statsService.GetStats(c.Request.Context())
+	stats, err := h.statsService.GetSiteStats(c.Request.Context())
 	if err != nil {
 		log.Error("failed to get stats", "error", err)
 		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get stats", c))
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
+}
+
+// @Summary Get the current user's stats
+// @Description Returns contest and square stats for the authenticated user
+// @Tags stats
+// @Produce json
+// @Success 200 {object} model.UserStatsResponse
+// @Failure 500 {object} api.APIError
+// @Security BearerAuth
+// @Router /stats/me [get]
+func (h *statsHandler) GetMyStats(c *gin.Context) {
+	user := c.GetString(api.UserKey)
+
+	stats, err := h.statsService.GetUserStats(c.Request.Context(), user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 

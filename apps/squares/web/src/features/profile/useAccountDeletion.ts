@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
-import { useDeleteContestMutation, useRemoveParticipantMutation } from '../contests/api';
+import {
+  useDeleteContestMutation,
+  useGetActiveContestsQuery,
+  useRemoveParticipantMutation,
+} from '../contests/api';
 import { useToast } from '../toast/useToast';
-import { useDeleteMyAccountMutation, useGetMyActiveContestsQuery } from './api';
+import { useDeleteMyAccountMutation } from './api';
 import type { DeleteAccountDialogProps } from './components/DeleteAccountDialog';
 
 // account deletion is blocked until every active contest is deleted or left, so the dialog walks through them
@@ -17,7 +21,7 @@ export function useAccountDeletion() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const active = useGetMyActiveContestsQuery(undefined, {
+  const active = useGetActiveContestsQuery(undefined, {
     skip: !open,
     refetchOnMountOrArgChange: true,
   });
