@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql/driver"
 	"testing"
 	"time"
 
@@ -180,6 +181,28 @@ func TestGameRepository_NextKickoff(t *testing.T) {
 	require.NoError(t, err)
 	assert.WithinDuration(t, want, got, time.Second)
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGameRepository_NextKickoff_IncludesLateKickoff(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	late := time.Now().Add(-5 * time.Minute)
+	mock.ExpectQuery(`SELECT "game_time" FROM "games" WHERE status = \$1 AND game_time > \$2`).
+		WithArgs(string(model.GameStatusScheduled), beforeTime(time.Now().Add(-lateKickoffWindow+time.Minute)), 1).
+		WillReturnRows(sqlmock.NewRows([]string{"game_time"}).AddRow(late))
+
+	got, err := repo.NextKickoff(context.Background())
+	require.NoError(t, err)
+	assert.WithinDuration(t, late, got, time.Second)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+type beforeTime time.Time
+
+func (b beforeTime) Match(v driver.Value) bool {
+	t, ok := v.(time.Time)
+	return ok && t.Before(time.Time(b))
 }
 
 func TestGameRepository_NextKickoff_None(t *testing.T) {
