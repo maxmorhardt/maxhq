@@ -14,6 +14,9 @@ import (
 
 const upcomingWindow = 14 * 24 * time.Hour
 
+// ESPN keeps a game pre for a few minutes past its listed kickoff, and a postponed one indefinitely
+const lateKickoffWindow = 4 * time.Hour
+
 type GameRepository interface {
 	Upsert(ctx context.Context, game *model.Game) (changed bool, err error)
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error)
@@ -209,7 +212,7 @@ func (r *gameRepository) HasLiveGame(ctx context.Context) (bool, error) {
 func (r *gameRepository) NextKickoff(ctx context.Context) (time.Time, error) {
 	var kickoff []time.Time
 	err := database.Conn(ctx, r.db).Model(&model.Game{}).
-		Where("status = ? AND game_time > ?", model.GameStatusScheduled, time.Now()).
+		Where("status = ? AND game_time > ?", model.GameStatusScheduled, time.Now().Add(-lateKickoffWindow)).
 		Order("game_time ASC").Limit(1).
 		Pluck("game_time", &kickoff).Error
 	if err != nil || len(kickoff) == 0 {

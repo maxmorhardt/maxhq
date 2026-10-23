@@ -277,6 +277,15 @@ func TestScoresWorker_NextDelay_WakesAtKickoff(t *testing.T) {
 	assert.LessOrEqual(t, delay, 30*time.Minute)
 }
 
+func TestScoresWorker_NextDelay_KickoffPassedStillScheduled(t *testing.T) {
+	gameSvc := mocks.NewGameService(t)
+	gameSvc.EXPECT().Activity(mock.Anything).
+		Return(model.GameActivity{NextKickoff: time.Now().Add(-5 * time.Minute)}, nil)
+
+	w := newWorker(t, mocks.NewESPNClient(t), gameSvc)
+	assert.Equal(t, w.activeInterval, w.nextDelay(context.Background()))
+}
+
 func TestScoresWorker_NextDelay_ActivityError(t *testing.T) {
 	gameSvc := mocks.NewGameService(t)
 	gameSvc.EXPECT().Activity(mock.Anything).Return(model.GameActivity{}, errors.New("db"))
