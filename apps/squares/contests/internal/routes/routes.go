@@ -37,7 +37,6 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	contests.DELETE("/:id/squares/claims", write(h.Contest.ClearMySquares)...)
 	contests.DELETE("/:id/squares/:squareId/claim", write(h.Contest.ClearSquare)...)
 
-	contests.GET("/:id/participants", g.Auth, h.Participant.GetParticipants)
 	contests.PATCH("/:id/participants/:userId", write(h.Participant.UpdateParticipant)...)
 	contests.DELETE("/:id/participants/:userId", write(h.Participant.RemoveParticipant)...)
 

@@ -75,72 +75,12 @@ func (_c *ParticipantService_Authorize_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
-// GetParticipants provides a mock function with given fields: ctx, contestID, user
-func (_m *ParticipantService) GetParticipants(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestParticipant, error) {
-	ret := _m.Called(ctx, contestID, user)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetParticipants")
-	}
-
-	var r0 []model.ContestParticipant
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) ([]model.ContestParticipant, error)); ok {
-		return rf(ctx, contestID, user)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) []model.ContestParticipant); ok {
-		r0 = rf(ctx, contestID, user)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.ContestParticipant)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
-		r1 = rf(ctx, contestID, user)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ParticipantService_GetParticipants_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetParticipants'
-type ParticipantService_GetParticipants_Call struct {
-	*mock.Call
-}
-
-// GetParticipants is a helper method to define mock.On call
-//   - ctx context.Context
-//   - contestID uuid.UUID
-//   - user string
-func (_e *ParticipantService_Expecter) GetParticipants(ctx interface{}, contestID interface{}, user interface{}) *ParticipantService_GetParticipants_Call {
-	return &ParticipantService_GetParticipants_Call{Call: _e.mock.On("GetParticipants", ctx, contestID, user)}
-}
-
-func (_c *ParticipantService_GetParticipants_Call) Run(run func(ctx context.Context, contestID uuid.UUID, user string)) *ParticipantService_GetParticipants_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *ParticipantService_GetParticipants_Call) Return(_a0 []model.ContestParticipant, _a1 error) *ParticipantService_GetParticipants_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *ParticipantService_GetParticipants_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) ([]model.ContestParticipant, error)) *ParticipantService_GetParticipants_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetParticipantsInternal provides a mock function with given fields: ctx, contestID
-func (_m *ParticipantService) GetParticipantsInternal(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
+// GetParticipants provides a mock function with given fields: ctx, contestID
+func (_m *ParticipantService) GetParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
 	ret := _m.Called(ctx, contestID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetParticipantsInternal")
+		panic("no return value specified for GetParticipants")
 	}
 
 	var r0 []model.ContestParticipant
@@ -165,31 +105,31 @@ func (_m *ParticipantService) GetParticipantsInternal(ctx context.Context, conte
 	return r0, r1
 }
 
-// ParticipantService_GetParticipantsInternal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetParticipantsInternal'
-type ParticipantService_GetParticipantsInternal_Call struct {
+// ParticipantService_GetParticipants_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetParticipants'
+type ParticipantService_GetParticipants_Call struct {
 	*mock.Call
 }
 
-// GetParticipantsInternal is a helper method to define mock.On call
+// GetParticipants is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contestID uuid.UUID
-func (_e *ParticipantService_Expecter) GetParticipantsInternal(ctx interface{}, contestID interface{}) *ParticipantService_GetParticipantsInternal_Call {
-	return &ParticipantService_GetParticipantsInternal_Call{Call: _e.mock.On("GetParticipantsInternal", ctx, contestID)}
+func (_e *ParticipantService_Expecter) GetParticipants(ctx interface{}, contestID interface{}) *ParticipantService_GetParticipants_Call {
+	return &ParticipantService_GetParticipants_Call{Call: _e.mock.On("GetParticipants", ctx, contestID)}
 }
 
-func (_c *ParticipantService_GetParticipantsInternal_Call) Run(run func(ctx context.Context, contestID uuid.UUID)) *ParticipantService_GetParticipantsInternal_Call {
+func (_c *ParticipantService_GetParticipants_Call) Run(run func(ctx context.Context, contestID uuid.UUID)) *ParticipantService_GetParticipants_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uuid.UUID))
 	})
 	return _c
 }
 
-func (_c *ParticipantService_GetParticipantsInternal_Call) Return(_a0 []model.ContestParticipant, _a1 error) *ParticipantService_GetParticipantsInternal_Call {
+func (_c *ParticipantService_GetParticipants_Call) Return(_a0 []model.ContestParticipant, _a1 error) *ParticipantService_GetParticipants_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ParticipantService_GetParticipantsInternal_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]model.ContestParticipant, error)) *ParticipantService_GetParticipantsInternal_Call {
+func (_c *ParticipantService_GetParticipants_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]model.ContestParticipant, error)) *ParticipantService_GetParticipants_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -48,7 +48,7 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 
 	util.SynthesizeFromGame(contest)
 
-	participants, err := s.participantService.GetParticipantsInternal(ctx, contestID)
+	participants, err := s.participantService.GetParticipants(ctx, contestID)
 	if err != nil {
 		return nil, err
 	}

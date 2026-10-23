@@ -76,48 +76,23 @@ func TestAuthorize_OwnerCanDelete(t *testing.T) {
 	assert.NoError(t, svc.Authorize(context.Background(), uuid.New(), "u", service.ActionDeleteContest))
 }
 
-func TestGetParticipants_AuthorizeFails(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetVisibilityByID(mock.Anything, mock.Anything).Return(model.ContestVisibilityPrivate, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-
-	svc := service.NewParticipantService(p, c, passTx(), anyEvents())
-	_, err := svc.GetParticipants(context.Background(), uuid.New(), "stranger")
-	assert.ErrorIs(t, err, errs.ErrNotParticipant)
-}
-
 func TestGetParticipants_Success(t *testing.T) {
-	contestID := uuid.New()
-	want := []model.ContestParticipant{{ContestID: contestID, UserID: "u"}}
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetVisibilityByID(mock.Anything, mock.Anything).Return(model.ContestVisibilityPublic, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(want, nil)
-
-	svc := service.NewParticipantService(p, c, passTx(), anyEvents())
-	got, err := svc.GetParticipants(context.Background(), contestID, "u")
-	require.NoError(t, err)
-	assert.Equal(t, want, got)
-}
-
-func TestGetParticipantsInternal_Success(t *testing.T) {
 	want := []model.ContestParticipant{{UserID: "u"}}
 	p := mocks.NewParticipantRepository(t)
 	p.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(want, nil)
 
 	svc := service.NewParticipantService(p, mocks.NewContestRepository(t), passTx(), anyEvents())
-	got, err := svc.GetParticipantsInternal(context.Background(), uuid.New())
+	got, err := svc.GetParticipants(context.Background(), uuid.New())
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }
 
-func TestGetParticipantsInternal_Error(t *testing.T) {
+func TestGetParticipants_Error(t *testing.T) {
 	p := mocks.NewParticipantRepository(t)
 	p.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 
 	svc := service.NewParticipantService(p, mocks.NewContestRepository(t), passTx(), anyEvents())
-	_, err := svc.GetParticipantsInternal(context.Background(), uuid.New())
+	_, err := svc.GetParticipants(context.Background(), uuid.New())
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 

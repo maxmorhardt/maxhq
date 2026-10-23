@@ -387,67 +387,6 @@
                 }
             }
         },
-        "/contests/{id}/participants": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all participants and their roles. Any participant can view. Public contests allow any authenticated user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "participants"
-                ],
-                "summary": "Get all participants for a contest",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Contest ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.ContestParticipant"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
         "/contests/{id}/participants/{userId}": {
             "delete": {
                 "security": [

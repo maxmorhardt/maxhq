@@ -16,8 +16,7 @@ import (
 )
 
 type ParticipantService interface {
-	GetParticipants(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestParticipant, error)
-	GetParticipantsInternal(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error)
+	GetParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error)
 	UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error)
 	RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error
 	Authorize(ctx context.Context, contestID uuid.UUID, userID string, act Action) error
@@ -106,19 +105,7 @@ func (s *participantService) Authorize(ctx context.Context, contestID uuid.UUID,
 	return nil
 }
 
-func (s *participantService) GetParticipants(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestParticipant, error) {
-	if err := s.Authorize(ctx, contestID, user, ActionView); err != nil {
-		return nil, err
-	}
-
-	return s.fetchParticipants(ctx, contestID)
-}
-
-func (s *participantService) GetParticipantsInternal(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
-	return s.fetchParticipants(ctx, contestID)
-}
-
-func (s *participantService) fetchParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
+func (s *participantService) GetParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error) {
 	log := logging.FromContext(ctx)
 
 	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)

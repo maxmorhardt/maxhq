@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -14,68 +13,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
-
-func TestGetParticipants_Success(t *testing.T) {
-	contestID := uuid.New()
-	svc := mocks.NewParticipantService(t)
-	svc.EXPECT().GetParticipants(mock.Anything, mock.Anything, mock.Anything).Return([]model.ContestParticipant{
-		{ID: uuid.New(), ContestID: contestID, UserID: "owner1", Role: model.ParticipantRoleOwner},
-		{ID: uuid.New(), ContestID: contestID, UserID: "user1", Role: model.ParticipantRoleParticipant},
-	}, nil)
-	h := NewParticipantHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/:id/participants", h.GetParticipants)
-
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/contests/%s/participants", contestID), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp []model.ContestParticipant
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Len(t, resp, 2)
-}
-
-func TestGetParticipants_InvalidID(t *testing.T) {
-	h := NewParticipantHandler(mocks.NewParticipantService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/:id/participants", h.GetParticipants)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/bad-id/participants", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func getParticipantsErr(t *testing.T, user string, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewParticipantService(t)
-	svc.EXPECT().GetParticipants(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewParticipantHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware(user))
-	r.GET("/contests/:id/participants", h.GetParticipants)
-
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/contests/%s/participants", uuid.New()), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestGetParticipants_NotFound(t *testing.T) {
-	getParticipantsErr(t, "user1", errs.ErrContestNotFound, http.StatusNotFound)
-}
-func TestGetParticipants_Forbidden(t *testing.T) {
-	getParticipantsErr(t, "stranger", errs.ErrNotParticipant, http.StatusForbidden)
-}
-func TestGetParticipants_InsufficientRole(t *testing.T) {
-	getParticipantsErr(t, "viewer", errs.ErrInsufficientRole, http.StatusForbidden)
-}
-func TestGetParticipants_InternalError(t *testing.T) {
-	getParticipantsErr(t, "user1", assert.AnError, http.StatusInternalServerError)
-}
 
 func TestUpdateParticipant_Success(t *testing.T) {
 	contestID := uuid.New()
