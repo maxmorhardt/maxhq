@@ -45,18 +45,26 @@ func NewGameSyncService(
 func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game) error {
 	log := logging.FromContext(ctx).With("game_id", game.ID)
 
-	if err := s.gameRepo.Upsert(ctx, game); err != nil {
-		log.Error("failed to update game projection", "error", err)
-		return err
-	}
+	// one transaction keeps the read-back on the primary; the replica can lag the write and miss the new quarter
+	var stored *model.Game
+	err := s.tx.Do(ctx, func(ctx context.Context) error {
+		if err := s.gameRepo.Upsert(ctx, game); err != nil {
+			log.Error("failed to update game projection", "error", err)
+			return err
+		}
 
-	if game.Status == model.GameStatusScheduled {
+		if game.Status == model.GameStatusScheduled {
+			return nil
+		}
+
+		var err error
+		if stored, err = s.gameRepo.GetByID(ctx, game.ID); err != nil {
+			log.Error("failed to reload game projection", "error", err)
+			return err
+		}
 		return nil
-	}
-
-	stored, err := s.gameRepo.GetByID(ctx, game.ID)
-	if err != nil {
-		log.Error("failed to reload game projection", "error", err)
+	})
+	if err != nil || stored == nil {
 		return err
 	}
 
