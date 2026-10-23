@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.2](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.0.1...squares-games/2.0.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **squares-games:** keep polling a game still scheduled past its kickoff ([#121](https://github.com/maxmorhardt/maxhq/issues/121)) ([979c0f9](https://github.com/maxmorhardt/maxhq/commit/979c0f9b7eadb151e9b63f9464bc6e47056f6b9e))
+* **squares:** board labels, live quarter results, realtime gaps, and a contests restructure ([#126](https://github.com/maxmorhardt/maxhq/issues/126)) ([66bee00](https://github.com/maxmorhardt/maxhq/commit/66bee000e8cbeef801ddaaeecee92ce9ac93f158))
+
 ## [2.0.1](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.0.0...squares-games/2.0.1) (2026-10-22)
 
 
