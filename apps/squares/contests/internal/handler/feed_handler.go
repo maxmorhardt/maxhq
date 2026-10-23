@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -33,7 +34,7 @@ func NewFeedHandler(feedService service.FeedService) FeedHandler {
 // @Param limit query int false "Page size" minimum(1) maximum(50) default(20)
 // @Param role query string false "owned or joined" Enums(owned, joined)
 // @Param status query string false "open, live, or finished" Enums(open, live, finished)
-// @Param search query string false "Case-insensitive name filter"
+// @Param search query string false "Case-insensitive name filter" maxlength(100)
 // @Success 200 {object} model.ContestFeedResponse
 // @Failure 400 {object} api.APIError
 // @Failure 500 {object} api.APIError
@@ -59,6 +60,10 @@ func parseFeedFilter(c *gin.Context) (*model.ContestFeedFilter, error) {
 	f := &model.ContestFeedFilter{
 		Search: strings.TrimSpace(c.Query("search")),
 		Limit:  model.DefaultFeedLimit,
+	}
+
+	if utf8.RuneCountInString(f.Search) > model.MaxFeedSearchLength {
+		return nil, errs.ErrInvalidSearch
 	}
 
 	if raw := c.Query("limit"); raw != "" {

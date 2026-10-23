@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
@@ -17,6 +18,8 @@ type FeedRepository interface {
 type feedRepository struct {
 	db *gorm.DB
 }
+
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
 func NewFeedRepository(db *gorm.DB) FeedRepository {
 	return &feedRepository{db: db}
@@ -48,7 +51,7 @@ func (r *feedRepository) List(ctx context.Context, user string, f *model.Contest
 		q = q.Where("c.status IN ?", f.Statuses)
 	}
 	if f.Search != "" {
-		q = q.Where("c.name ILIKE ?", "%"+f.Search+"%")
+		q = q.Where("c.name ILIKE ?", "%"+likeEscaper.Replace(f.Search)+"%")
 	}
 	if f.Cursor != nil {
 		q = q.Where("(c.updated_at, c.id) < (?, ?)", f.Cursor.At, f.Cursor.ID)

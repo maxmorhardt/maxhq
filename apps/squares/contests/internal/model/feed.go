@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	DefaultFeedLimit = 20
-	MaxFeedLimit     = 50
+	DefaultFeedLimit    = 20
+	MaxFeedLimit        = 50
+	MaxFeedSearchLength = 100
 )
 
 type FeedRole string

@@ -68,6 +68,7 @@ const docTemplatecontests = `{
                         "in": "query"
                     },
                     {
+                        "maxLength": 100,
                         "type": "string",
                         "description": "Case-insensitive name filter",
                         "name": "search",
