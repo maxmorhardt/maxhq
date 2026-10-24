@@ -11,10 +11,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
 )
 
-const maxConnLifetime = time.Hour
+const (
+	maxConnLifetime    = time.Hour
+	slowQueryThreshold = time.Second
+)
 
 func InitDB(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (*gorm.DB, error) {
 	db, err := setupPrimary(cfg, schema, migrations)
@@ -39,7 +43,7 @@ func InitDB(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (*gorm.
 func setupPrimary(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (*gorm.DB, error) {
 	dsn := formatDSN(cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode, schema)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{TranslateError: true})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{TranslateError: true, Logger: newLogger()})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to primary database: %w", err)
 	}
@@ -70,6 +74,16 @@ func setupPrimary(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (
 
 	slog.Info("primary database configured", "schema", schema)
 	return db, nil
+}
+
+// not-found is an expected result for lookups, and parameterized SQL keeps values out of the logs
+func newLogger() logger.Interface {
+	return logger.NewSlogLogger(slog.Default(), logger.Config{
+		LogLevel:                  logger.Warn,
+		SlowThreshold:             slowQueryThreshold,
+		IgnoreRecordNotFoundError: true,
+		ParameterizedQueries:      true,
+	})
 }
 
 func formatDSN(host string, port int, user, password, dbname, sslmode, schema string) string {
