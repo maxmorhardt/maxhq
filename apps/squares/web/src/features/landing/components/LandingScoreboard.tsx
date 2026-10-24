@@ -84,7 +84,7 @@ export default function LandingScoreboard() {
                     />
                   ) : (
                     <Typography
-                      title={tile.value?.toLocaleString()}
+                      title={tile.value?.toLocaleString('en-US')}
                       sx={{
                         fontFamily: fonts.display,
                         fontWeight: 800,

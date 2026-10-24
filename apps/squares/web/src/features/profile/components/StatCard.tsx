@@ -69,7 +69,7 @@ export default function StatCard({
 
       <Box>
         <Typography
-          title={value?.toLocaleString()}
+          title={value?.toLocaleString('en-US')}
           sx={{
             fontFamily: fonts.display,
             fontWeight: 800,

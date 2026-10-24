@@ -5,7 +5,7 @@ import StatCard from './StatCard';
 describe('StatCard', () => {
   it('renders the compact value and label', () => {
     render(<StatCard icon={<span />} value={1234} label="Squares Claimed" />);
-    expect(screen.getByText('1.2K')).toHaveAttribute('title', (1234).toLocaleString());
+    expect(screen.getByText('1.2K')).toHaveAttribute('title', '1,234');
     expect(screen.getByText('Squares Claimed')).toBeInTheDocument();
   });
 

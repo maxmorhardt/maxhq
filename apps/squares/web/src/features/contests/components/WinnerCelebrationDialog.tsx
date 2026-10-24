@@ -69,14 +69,37 @@ function enter(
   };
 }
 
-function ScoreDigits({ value }: { value: number }) {
+const scoreType = {
+  fontFamily: fonts.display,
+  fontWeight: 800,
+  fontSize: '2.6rem',
+  lineHeight: 1,
+  fontVariantNumeric: 'tabular-nums',
+} as const;
+
+function ScoreSide({ label, value }: { label: string; value: number }) {
   return (
-    <>
-      {String(value).slice(0, -1)}
-      <Box component="span" sx={{ color: game.gold }}>
-        {value % 10}
-      </Box>
-    </>
+    <Box>
+      <Typography sx={scoreType}>
+        {String(value).slice(0, -1)}
+        <Box component="span" sx={{ color: game.gold }}>
+          {value % 10}
+        </Box>
+      </Typography>
+      <Typography
+        sx={{
+          mt: 0.5,
+          fontFamily: fonts.display,
+          fontWeight: 700,
+          fontSize: '0.72rem',
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: 'text.secondary',
+        }}
+      >
+        {label}
+      </Typography>
+    </Box>
   );
 }
 
@@ -129,11 +152,13 @@ function WinningBoard({ row, col, rowDigit, colDigit }: BoardProps) {
         }}
       >
         <Typography
+          data-testid="column-digit"
           sx={{ ...axisLabel, bottom: 'calc(100% + 14px)', left: offset(col), width: cell }}
         >
           {colDigit}
         </Typography>
         <Typography
+          data-testid="row-digit"
           sx={{ ...axisLabel, right: 'calc(100% + 14px)', top: offset(row), height: cell }}
         >
           {rowDigit}
@@ -281,29 +306,27 @@ export default function WinnerCelebrationDialog({ result, onClose }: Props) {
         <WinningBoard
           row={shown?.winnerRow ?? 0}
           col={shown?.winnerCol ?? 0}
-          rowDigit={home % 10}
-          colDigit={away % 10}
+          rowDigit={away % 10}
+          colDigit={home % 10}
         />
 
-        <Typography
+        {/* away on the left, matching the scoreboard */}
+        <Box
           sx={{
             mt: 3,
-            fontFamily: fonts.display,
-            fontWeight: 800,
-            fontSize: '2.6rem',
-            lineHeight: 1,
-            fontVariantNumeric: 'tabular-nums',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            gap: 1.5,
             ...enter(rise, WINNER_AT - 120),
           }}
         >
-          <ScoreDigits value={home} />
-          <Box component="span" sx={{ color: 'text.secondary', mx: 1.5 }}>
-            &ndash;
-          </Box>
-          <ScoreDigits value={away} />
-        </Typography>
+          <ScoreSide label="Away" value={away} />
+          <Typography sx={{ ...scoreType, color: 'text.secondary' }}>&ndash;</Typography>
+          <ScoreSide label="Home" value={home} />
+        </Box>
         <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary', ...enter(rise, WINNER_AT - 40) }}>
-          Last digits {home % 10} and {away % 10} landed on your square.
+          Last digits {away % 10} and {home % 10} landed on your square.
         </Typography>
 
         <Box sx={enter(rise, WINNER_AT + 40)}>

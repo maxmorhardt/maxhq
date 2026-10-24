@@ -27,7 +27,15 @@ describe('WinnerCelebrationDialog', () => {
   it('renders the winning square and score', () => {
     render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
     expect(screen.getByText('Q2 Final')).toBeInTheDocument();
-    expect(screen.getByText('Last digits 1 and 4 landed on your square.')).toBeInTheDocument();
+    expect(screen.getByText('Last digits 4 and 1 landed on your square.')).toBeInTheDocument();
+    expect(screen.getByText('Away').previousSibling).toHaveTextContent('14');
+    expect(screen.getByText('Home').previousSibling).toHaveTextContent('21');
+  });
+
+  it('labels the column with the home digit and the row with the away digit', () => {
+    render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
+    expect(screen.getByTestId('column-digit')).toHaveTextContent('1');
+    expect(screen.getByTestId('row-digit')).toHaveTextContent('4');
   });
 
   it('keeps the last result on screen while closing', () => {
