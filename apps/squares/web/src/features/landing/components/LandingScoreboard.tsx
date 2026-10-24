@@ -2,6 +2,7 @@ import { Box, Container, Skeleton, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { fonts, game } from '../../../app/theme';
 import Reveal from '../../../components/Reveal';
+import { formatCount } from '../../../utils/formatCount';
 import { useGetSiteStatsQuery } from '../api';
 
 export default function LandingScoreboard() {
@@ -83,6 +84,7 @@ export default function LandingScoreboard() {
                     />
                   ) : (
                     <Typography
+                      title={tile.value?.toLocaleString()}
                       sx={{
                         fontFamily: fonts.display,
                         fontWeight: 800,
@@ -93,7 +95,7 @@ export default function LandingScoreboard() {
                         textShadow: `0 0 24px ${alpha(game.gold, 0.25)}`,
                       }}
                     >
-                      {tile.value?.toLocaleString() ?? '–'}
+                      {tile.value === undefined ? '–' : formatCount(tile.value)}
                     </Typography>
                   )}
                   <Typography

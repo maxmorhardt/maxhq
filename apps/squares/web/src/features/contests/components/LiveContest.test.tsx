@@ -125,14 +125,14 @@ describe('LiveContest', () => {
     snapshot();
     emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
     expect(screen.getByTestId('view')).toHaveTextContent('flash');
-    expect(screen.getByText('You Won!')).toBeInTheDocument();
+    expect(screen.getByText('Your Square Hit')).toBeInTheDocument();
   });
 
   it('only celebrates the viewer’s own wins', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
     emit(event('quarter.recorded', makeQuarterResult({ winner: 'someone@x.com' })));
-    expect(screen.queryByText('You Won!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Your Square Hit')).not.toBeInTheDocument();
   });
 
   it('sends a removed viewer away from a private contest', () => {

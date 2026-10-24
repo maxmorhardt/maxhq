@@ -20,6 +20,18 @@ interface Props {
   onRetry: () => void;
 }
 
+// below this width the names would crowd out the score, so the badge and score stand alone
+const NARROW = '@container scorebug (max-width: 600px)';
+
+const visuallyHidden = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+} as const;
+
 function TeamSide({
   abbr,
   name,
@@ -36,13 +48,20 @@ function TeamSide({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: { xs: 1, sm: 1.75 },
+        gap: 1.75,
         flexDirection: side === 'home' ? 'row-reverse' : 'row',
         minWidth: 0,
+        [NARROW]: { gap: 1 },
       }}
     >
       <TeamMark abbr={abbr} name={name} size={44} />
-      <Box sx={{ minWidth: 0, textAlign: side === 'home' ? 'right' : 'left' }}>
+      <Box
+        sx={{
+          minWidth: 0,
+          textAlign: side === 'home' ? 'right' : 'left',
+          [NARROW]: visuallyHidden,
+        }}
+      >
         <Typography
           sx={{
             fontFamily: fonts.display,
@@ -71,13 +90,14 @@ function TeamSide({
       <Typography
         aria-label={`${side} score`}
         sx={{
-          mx: { xs: 0.5, sm: 1.5 },
+          mx: 1.5,
           fontFamily: fonts.display,
           fontWeight: 800,
-          fontSize: { xs: '2.4rem', sm: '3.2rem' },
+          fontSize: 'clamp(2.2rem, 11cqi, 3.2rem)',
           lineHeight: 1,
           fontVariantNumeric: 'tabular-nums',
           color: score === null ? 'text.secondary' : 'text.primary',
+          [NARROW]: { mx: 0.5 },
         }}
       >
         {score ?? '–'}
@@ -151,97 +171,100 @@ export default function ContestScoreboard({
         <ContestActionIcons contest={contest} participants={participants} viewer={viewer} />
       </Box>
 
-      {/* the score bug */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
-          alignItems: 'center',
-          gap: { xs: 1, sm: 2 },
-          px: { xs: 1.5, sm: 3 },
-          py: { xs: 2, sm: 2.5 },
-          background: `linear-gradient(90deg, ${alpha(palette.brand, 0.06)}, transparent 30%, transparent 70%, ${alpha(palette.brand, 0.06)})`,
-        }}
-      >
-        <TeamSide
-          side="away"
-          abbr={game?.awayAbbr}
-          name={game?.awayTeam ?? contest.awayTeam ?? 'Away'}
-          score={score?.away ?? null}
-        />
+      {/* the score bug, laid out by its own width since the page column can be narrow on a wide screen */}
+      <Box sx={{ containerType: 'inline-size', containerName: 'scorebug' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
+            alignItems: 'center',
+            gap: 2,
+            px: 3,
+            py: { xs: 2, sm: 2.5 },
+            background: `linear-gradient(90deg, ${alpha(palette.brand, 0.06)}, transparent 30%, transparent 70%, ${alpha(palette.brand, 0.06)})`,
+            [NARROW]: { gap: 1, px: 1.5 },
+          }}
+        >
+          <TeamSide
+            side="away"
+            abbr={game?.awayAbbr}
+            name={game?.awayTeam ?? contest.awayTeam ?? 'Away'}
+            score={score?.away ?? null}
+          />
 
-        <Box sx={{ display: 'grid', justifyItems: 'center', gap: 0.75, textAlign: 'center' }}>
-          <Box
-            sx={{
-              px: 1.25,
-              py: 0.5,
-              borderRadius: '8px',
-              fontFamily: fonts.display,
-              fontWeight: 800,
-              fontSize: { xs: '0.85rem', sm: '1rem' },
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              lineHeight: 1.15,
-              bgcolor: contest.status === 'FINISHED' ? 'secondary.main' : 'background.default',
-              color: contest.status === 'FINISHED' ? palette.night : 'text.primary',
-              border: 1,
-              borderColor: contest.status === 'FINISHED' ? 'secondary.main' : 'divider',
-            }}
-          >
-            {/* before kickoff the day sits over the time, so it fits between the teams on a phone */}
-            {game?.status === 'scheduled' ? (
-              <>
-                <Box component="span" sx={{ display: 'block', whiteSpace: 'nowrap' }}>
-                  {kickoffParts(game.gameTime).day}
+          <Box sx={{ display: 'grid', justifyItems: 'center', gap: 0.75, textAlign: 'center' }}>
+            <Box
+              sx={{
+                px: 1.25,
+                py: 0.5,
+                borderRadius: '8px',
+                fontFamily: fonts.display,
+                fontWeight: 800,
+                fontSize: { xs: '0.85rem', sm: '1rem' },
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                lineHeight: 1.15,
+                bgcolor: contest.status === 'FINISHED' ? 'secondary.main' : 'background.default',
+                color: contest.status === 'FINISHED' ? palette.night : 'text.primary',
+                border: 1,
+                borderColor: contest.status === 'FINISHED' ? 'secondary.main' : 'divider',
+              }}
+            >
+              {/* before kickoff the day sits over the time, so it fits between the teams on a phone */}
+              {game?.status === 'scheduled' ? (
+                <>
+                  <Box component="span" sx={{ display: 'block', whiteSpace: 'nowrap' }}>
+                    {kickoffParts(game.gameTime).day}
+                  </Box>
+                  <Box
+                    component="span"
+                    sx={{ display: 'block', whiteSpace: 'nowrap', color: 'text.secondary' }}
+                  >
+                    {kickoffParts(game.gameTime).time}
+                  </Box>
+                </>
+              ) : (
+                <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                  {clock}
                 </Box>
+              )}
+            </Box>
+            {live && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  fontFamily: fonts.display,
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.16em',
+                  color: 'error.main',
+                }}
+              >
                 <Box
-                  component="span"
-                  sx={{ display: 'block', whiteSpace: 'nowrap', color: 'text.secondary' }}
-                >
-                  {kickoffParts(game.gameTime).time}
-                </Box>
-              </>
-            ) : (
-              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
-                {clock}
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: 'error.main',
+                    animation: 'live-blink 1.6s ease-in-out infinite',
+                    '@keyframes live-blink': { '50%': { opacity: 0.3 } },
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
+                LIVE
               </Box>
             )}
           </Box>
-          {live && (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.75,
-                fontFamily: fonts.display,
-                fontWeight: 700,
-                fontSize: '0.75rem',
-                letterSpacing: '0.16em',
-                color: 'error.main',
-              }}
-            >
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  bgcolor: 'error.main',
-                  animation: 'live-blink 1.6s ease-in-out infinite',
-                  '@keyframes live-blink': { '50%': { opacity: 0.3 } },
-                  '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-                }}
-              />
-              LIVE
-            </Box>
-          )}
-        </Box>
 
-        <TeamSide
-          side="home"
-          abbr={game?.homeAbbr}
-          name={game?.homeTeam ?? contest.homeTeam ?? 'Home'}
-          score={score?.home ?? null}
-        />
+          <TeamSide
+            side="home"
+            abbr={game?.homeAbbr}
+            name={game?.homeTeam ?? contest.homeTeam ?? 'Home'}
+            score={score?.home ?? null}
+          />
+        </Box>
       </Box>
 
       <Box sx={{ px: 2, pb: status === 'live' || status === 'connecting' ? 0 : 1.5 }}>

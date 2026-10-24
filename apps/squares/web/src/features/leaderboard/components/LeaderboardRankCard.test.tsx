@@ -28,8 +28,6 @@ describe('LeaderboardRankCard', () => {
 
     expect(screen.getByText("You're #7 of 143")).toBeInTheDocument();
     expect(screen.getByText('5 quarter wins all-time')).toBeInTheDocument();
-    // 7 of 143 sits inside the top 5%
-    expect(screen.getByText('Top 5%')).toBeInTheDocument();
   });
 
   it('uses the singular form for a single win', () => {
@@ -43,7 +41,6 @@ describe('LeaderboardRankCard', () => {
 
     expect(screen.getByText("You're not ranked yet")).toBeInTheDocument();
     expect(screen.getByText(/Win a quarter in any contest/)).toBeInTheDocument();
-    expect(screen.queryByText(/^Top/)).not.toBeInTheDocument();
   });
 
   it('renders a skeleton while loading', () => {

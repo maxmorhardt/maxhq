@@ -3,9 +3,9 @@ import { render, screen } from '@testing-library/react';
 import StatCard from './StatCard';
 
 describe('StatCard', () => {
-  it('renders the formatted value and label', () => {
+  it('renders the compact value and label', () => {
     render(<StatCard icon={<span />} value={1234} label="Squares Claimed" />);
-    expect(screen.getByText('1,234')).toBeInTheDocument();
+    expect(screen.getByText('1.2K')).toHaveAttribute('title', (1234).toLocaleString());
     expect(screen.getByText('Squares Claimed')).toBeInTheDocument();
   });
 

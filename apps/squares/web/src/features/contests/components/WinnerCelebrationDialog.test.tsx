@@ -21,20 +21,25 @@ const result = {
 describe('WinnerCelebrationDialog', () => {
   it('renders nothing when there is no result', () => {
     render(<WinnerCelebrationDialog result={null} onClose={vi.fn()} />);
-    expect(screen.queryByText('You Won!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Your Square Hit')).not.toBeInTheDocument();
   });
 
   it('renders the winning square and score', () => {
     render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
-    expect(screen.getByText('You Won!')).toBeInTheDocument();
-    expect(screen.getByText('Your square (5, 3) took Quarter 2')).toBeInTheDocument();
-    expect(screen.getByText(/21/)).toBeInTheDocument();
+    expect(screen.getByText('Q2 Final')).toBeInTheDocument();
+    expect(screen.getByText('Last digits 1 and 4 landed on your square.')).toBeInTheDocument();
   });
 
-  it('calls onClose when the "Let\'s Go!" button is clicked', () => {
+  it('keeps the last result on screen while closing', () => {
+    const { rerender } = render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
+    rerender(<WinnerCelebrationDialog result={null} onClose={vi.fn()} />);
+    expect(screen.getByText('Q2 Final')).toBeInTheDocument();
+  });
+
+  it('calls onClose when the "Back to the Board" button is clicked', () => {
     const onClose = vi.fn();
     render(<WinnerCelebrationDialog result={result} onClose={onClose} />);
-    fireEvent.click(screen.getByRole('button', { name: /let's go/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to the Board' }));
     expect(onClose).toHaveBeenCalled();
   });
 

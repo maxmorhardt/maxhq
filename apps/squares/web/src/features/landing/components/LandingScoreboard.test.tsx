@@ -24,7 +24,7 @@ describe('LandingScoreboard', () => {
     renderWithProviders(<LandingScoreboard />);
 
     expect(screen.getByText('12')).toBeInTheDocument();
-    expect(screen.getByText((1840).toLocaleString())).toBeInTheDocument();
+    expect(screen.getByText('1.8K')).toHaveAttribute('title', (1840).toLocaleString());
     expect(screen.getByText('Active contests')).toBeInTheDocument();
   });
 
