@@ -1,3 +1,4 @@
+import { ErrorResponse, ErrorTimeout } from 'oidc-client-ts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const manager = { getUser: vi.fn(), signinSilent: vi.fn(), removeUser: vi.fn() };
@@ -35,7 +36,7 @@ describe('getIdToken', () => {
 
   it('keeps an unexpired token when the refresh fails', async () => {
     manager.getUser.mockResolvedValue(user(30));
-    manager.signinSilent.mockRejectedValue(new Error('offline'));
+    manager.signinSilent.mockRejectedValue(new TypeError('Failed to fetch'));
     expect(await getIdToken()).toBe('old');
   });
 
@@ -74,6 +75,50 @@ describe('refreshSession', () => {
     manager.signinSilent.mockResolvedValue(user(3600, 'new'));
     await Promise.all([refreshSession(), refreshSession()]);
     expect(manager.signinSilent).toHaveBeenCalledTimes(1);
+  });
+
+  describe('when the provider rejects the refresh', () => {
+    const rejected = new ErrorResponse({ error: 'server_error' });
+
+    beforeEach(async () => {
+      // a success clears any rejections left over from earlier tests
+      manager.signinSilent.mockResolvedValueOnce(user(3600, 'new'));
+      await refreshSession();
+      vi.clearAllMocks();
+    });
+
+    it('keeps the session after one rejection', async () => {
+      manager.signinSilent.mockRejectedValue(rejected);
+      expect(await refreshSession()).toBeNull();
+      expect(manager.removeUser).not.toHaveBeenCalled();
+    });
+
+    it('drops the session after repeated rejections', async () => {
+      manager.signinSilent.mockRejectedValue(new Error('Internal Server Error (500)'));
+      await refreshSession();
+      await refreshSession();
+      expect(manager.removeUser).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts counting again after a refresh succeeds', async () => {
+      manager.signinSilent.mockRejectedValueOnce(rejected);
+      manager.signinSilent.mockResolvedValueOnce(user(3600, 'new'));
+      manager.signinSilent.mockRejectedValueOnce(rejected);
+      await refreshSession();
+      await refreshSession();
+      await refreshSession();
+      expect(manager.removeUser).not.toHaveBeenCalled();
+    });
+
+    it('keeps the session while the provider is unreachable', async () => {
+      manager.signinSilent.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      manager.signinSilent.mockRejectedValueOnce(new ErrorTimeout('Network timed out'));
+      manager.signinSilent.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      await refreshSession();
+      await refreshSession();
+      await refreshSession();
+      expect(manager.removeUser).not.toHaveBeenCalled();
+    });
   });
 });
 
