@@ -154,39 +154,6 @@ jobs:
       working_directory: libs/go/${{ matrix.lib }}
       module_directory: .
 
-  squares-stamps:
-    name: Stamp squares services
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          # a push with GITHUB_TOKEN would not rerun CI on the stamped commit
-          token: ${{ github.event.pull_request.head.repo.full_name == github.repository && secrets.RELEASE_PLEASE_TOKEN || github.token }}
-
-      - name: Stamp each service with the shared Go inputs
-        run: |
-          stamp=$(git rev-parse HEAD:go.mod HEAD:go.sum HEAD:libs/go HEAD:apps/squares/Dockerfile HEAD:apps/squares/service.mk HEAD:apps/squares/migrate.mk | git hash-object --stdin)
-          for svc in contests games accounts realtime; do
-            echo "$stamp" > "apps/squares/$svc/shared.stamp"
-          done
-          [ -z "$(git status --porcelain -- 'apps/squares/*/shared.stamp')" ] && exit 0
-          if [ "$SAME_REPO" != "true" ]; then
-            echo "::error::shared Go inputs changed, set every apps/squares/*/shared.stamp to $stamp"
-            exit 1
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
-          git add apps/squares/*/shared.stamp
-          git commit -m 'ci: stamp squares services with the shared go inputs'
-          git push
-
   # charts
 
   charts:
@@ -262,7 +229,6 @@ jobs:
       - squares-go
       - squares-docker
       - go-libs
-      - squares-stamps
       - charts
       - terraform
       - k3s-bootstrap

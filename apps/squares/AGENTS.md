@@ -79,7 +79,7 @@ Conventional commits, enforced on PR titles and consumed by release-please. The 
 
 - `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime` - one service.
 - `squares` - the web app.
-- A change to the shared Go inputs (`libs/go`, `go.mod`, `go.sum`, `apps/squares/Dockerfile`, `service.mk`, `migrate.mk`) releases all four services: CI rewrites each service's `shared.stamp` on the PR. Never edit a stamp by hand.
+- A change to `libs/*` alone releases nothing: it ships with each service's next release. To ship it now, change each service that needs it in the same PR (see `libs/AGENTS.md`).
 
 Examples:
 
