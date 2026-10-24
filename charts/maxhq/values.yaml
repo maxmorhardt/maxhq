@@ -117,7 +117,7 @@ metrics:
     name: metrics
   serviceMonitor:
     enabled: true
-    interval: 30s
+    interval: 60s
     scrapeTimeout: 10s
     labels: {}
     honorLabels: true
@@ -125,69 +125,6 @@ metrics:
     enabled: true
     labels: {}
     rules:
-      # High Request Latency for nginx
-      - alert: HighNginxRequestLatency
-        expr: |
-          histogram_quantile(0.99, sum(rate(nginx_http_request_duration_seconds_bucket{service="{{ include "app.fullname" . }}"}[5m])) by (le)) > 0.5
-        for: 5m
-        labels:
-          severity: warning
-          component: maxhq
-          layer: frontend
-        annotations:
-          summary: 'High nginx request latency detected'
-          description: 'P99 latency is {{ $value }}s for {{ $labels.service }}'
-
-      # High Error Rate
-      - alert: HighNginxErrorRate
-        expr: |
-          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.05
-        for: 5m
-        labels:
-          severity: warning
-          component: maxhq
-          layer: frontend
-        annotations:
-          summary: 'High HTTP error rate'
-          description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
-
-      - alert: CriticalNginxErrorRate
-        expr: |
-          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"5.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.10
-        for: 2m
-        labels:
-          severity: critical
-          component: maxhq
-          layer: frontend
-        annotations:
-          summary: 'Critical HTTP error rate'
-          description: 'Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
-
-      # High 4xx Rate
-      - alert: HighNginx4xxRate
-        expr: |
-          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.20
-        for: 10m
-        labels:
-          severity: warning
-          component: maxhq
-          layer: frontend
-        annotations:
-          summary: 'High client error rate'
-          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
-
-      - alert: CriticalNginx4xxRate
-        expr: |
-          sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}",status=~"4.."}[5m])) / sum(rate(nginx_http_requests_total{service="{{ include "app.fullname" . }}"}[5m])) > 0.50
-        for: 5m
-        labels:
-          severity: critical
-          component: maxhq
-          layer: frontend
-        annotations:
-          summary: 'Critical client error rate'
-          description: '4xx error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}'
-
       # Nginx Specific Alerts
       - alert: NginxDown
         expr: |

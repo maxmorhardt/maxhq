@@ -1,12 +1,18 @@
 package database
 
 import (
+	"bytes"
+	"context"
+	"errors"
+	"log/slog"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func TestInitDB_ConnectionError(t *testing.T) {
@@ -106,4 +112,38 @@ func TestValidateReadReplicaConfig(t *testing.T) {
 
 func TestClose_NilIsSafe(t *testing.T) {
 	assert.NotPanics(t, func() { Close(nil) })
+}
+
+func TestNewLogger(t *testing.T) {
+	tests := []struct {
+		name    string
+		elapsed time.Duration
+		err     error
+		logged  string
+	}{
+		{name: "fast query", elapsed: time.Millisecond},
+		{name: "record not found", elapsed: time.Millisecond, err: gorm.ErrRecordNotFound},
+		{name: "slow query", elapsed: 2 * slowQueryThreshold, logged: "WARN"},
+		{name: "failed query", elapsed: time.Millisecond, err: errors.New("boom"), logged: "ERROR"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			prev := slog.Default()
+			slog.SetDefault(slog.New(slog.NewJSONHandler(&buf, nil)))
+			t.Cleanup(func() { slog.SetDefault(prev) })
+
+			newLogger().Trace(context.Background(), time.Now().Add(-tt.elapsed), func() (string, int64) {
+				return "SELECT * FROM contests WHERE id = $1", 1
+			}, tt.err)
+
+			if tt.logged == "" {
+				assert.Empty(t, buf.String())
+				return
+			}
+			assert.Contains(t, buf.String(), `"level":"`+tt.logged+`"`)
+			assert.Contains(t, buf.String(), "id = $1")
+		})
+	}
 }
