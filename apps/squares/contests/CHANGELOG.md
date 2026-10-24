@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.4](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.0.3...squares-contests/2.0.4) (2026-10-24)
+
+
+### Bug Fixes
+
+* **squares:** mobile ui fixes and read replica resilience ([#131](https://github.com/maxmorhardt/maxhq/issues/131)) ([e2fd303](https://github.com/maxmorhardt/maxhq/commit/e2fd3039f7144d8e02201c49e5e7b24f45face41))
+
 ## [2.0.3](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.0.2...squares-contests/2.0.3) (2026-10-24)
 
 
