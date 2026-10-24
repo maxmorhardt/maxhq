@@ -38,6 +38,15 @@ describe('WinnerCelebrationDialog', () => {
     expect(screen.getByTestId('row-digit')).toHaveTextContent('4');
   });
 
+  it('labels the scores with the team abbreviations when it has them', () => {
+    render(
+      <WinnerCelebrationDialog result={result} onClose={vi.fn()} awayAbbr="PIT" homeAbbr="NO" />
+    );
+    expect(screen.getByText('PIT').previousSibling).toHaveTextContent('14');
+    expect(screen.getByText('NO').previousSibling).toHaveTextContent('21');
+    expect(screen.queryByText('Away')).not.toBeInTheDocument();
+  });
+
   it('keeps the last result on screen while closing', () => {
     const { rerender } = render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
     rerender(<WinnerCelebrationDialog result={null} onClose={vi.fn()} />);

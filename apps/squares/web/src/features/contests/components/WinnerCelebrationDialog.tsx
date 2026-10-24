@@ -16,6 +16,8 @@ import type { QuarterResult } from '../../../types/contest';
 interface Props {
   result: QuarterResult | null;
   onClose: () => void;
+  awayAbbr?: string;
+  homeAbbr?: string;
 }
 
 const paperIn = keyframes`
@@ -221,7 +223,7 @@ function WinningBoard({ row, col, rowDigit, colDigit }: BoardProps) {
   );
 }
 
-export default function WinnerCelebrationDialog({ result, onClose }: Props) {
+export default function WinnerCelebrationDialog({ result, onClose, awayAbbr, homeAbbr }: Props) {
   // keep the last result on screen while the dialog fades out
   const [shown, setShown] = useState(result);
   if (result && result !== shown) {
@@ -321,9 +323,9 @@ export default function WinnerCelebrationDialog({ result, onClose }: Props) {
             ...enter(rise, WINNER_AT - 120),
           }}
         >
-          <ScoreSide label="Away" value={away} />
+          <ScoreSide label={awayAbbr || 'Away'} value={away} />
           <Typography sx={{ ...scoreType, color: 'text.secondary' }}>&ndash;</Typography>
-          <ScoreSide label="Home" value={home} />
+          <ScoreSide label={homeAbbr || 'Home'} value={home} />
         </Box>
         <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary', ...enter(rise, WINNER_AT - 40) }}>
           Last digits {away % 10} and {home % 10} landed on your square.

@@ -112,7 +112,13 @@ export default function LiveContest({ contestId }: Props) {
         winnerFlash={winnerFlash}
         onStale={resync}
       />
-      <WinnerCelebrationDialog result={celebration} onClose={() => setCelebration(null)} />
+      {/* the game can still be loading when a quarter lands, so the dialog falls back to away and home */}
+      <WinnerCelebrationDialog
+        result={celebration}
+        onClose={() => setCelebration(null)}
+        awayAbbr={game?.awayAbbr}
+        homeAbbr={game?.homeAbbr}
+      />
     </>
   );
 }
