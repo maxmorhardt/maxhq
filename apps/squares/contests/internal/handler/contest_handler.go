@@ -37,7 +37,8 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 // @Success 201 {object} model.ContestSwagger
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
-// @Failure 409 {object} api.APIError "You already have a contest with this name"
+// @Failure 404 {object} api.APIError
+// @Failure 409 {object} api.APIError "The game is past the first quarter"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests [post]
@@ -64,7 +65,7 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrDatabaseUnavailable):
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestAlreadyExists):
+		case errors.Is(err, errs.ErrGamePastFirstQuarter):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrGameNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))

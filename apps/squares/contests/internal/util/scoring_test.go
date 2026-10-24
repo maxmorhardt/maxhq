@@ -55,26 +55,6 @@ func TestQuarterResultFor(t *testing.T) {
 	assert.Equal(t, "u", r.Winner)
 }
 
-func TestSynthesizeFromGame(t *testing.T) {
-	c := startedContest(model.ContestStatusQ2)
-	c.Game = &model.Game{ID: uuid.New(), Scores: []model.GameScore{
-		{Quarter: 2, HomeScore: 14, AwayScore: 10},
-		{Quarter: 1, HomeScore: 7, AwayScore: 3},
-	}}
-
-	SynthesizeFromGame(c)
-
-	require.Len(t, c.QuarterResults, 2)
-	assert.Equal(t, 1, c.QuarterResults[0].Quarter)
-	assert.Equal(t, 2, c.QuarterResults[1].Quarter)
-}
-
-func TestSynthesizeFromGame_NoGame(t *testing.T) {
-	c := startedContest(model.ContestStatusQ1)
-	SynthesizeFromGame(c)
-	assert.Empty(t, c.QuarterResults)
-}
-
 func TestRandomizedLabels(t *testing.T) {
 	xJSON, yJSON, err := RandomizedLabels()
 	require.NoError(t, err)

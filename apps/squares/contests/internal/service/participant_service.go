@@ -140,6 +140,11 @@ func (s *participantService) UpdateParticipant(ctx context.Context, contestID uu
 			return errs.ErrContestFinalized
 		}
 
+		if contest.Status != model.ContestStatusActive {
+			log.Warn("cannot update participant after kickoff", "contest_id", contestID, "status", contest.Status)
+			return errs.ErrParticipantsLocked
+		}
+
 		if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
 			return authErr
 		}

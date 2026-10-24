@@ -8,7 +8,6 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
-	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/util"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
@@ -47,8 +46,6 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 		log.Error("failed to get contest for snapshot", "contest_id", contestID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
-
-	util.SynthesizeFromGame(contest)
 
 	participants, err := s.participantService.GetParticipants(ctx, contestID)
 	if err != nil {

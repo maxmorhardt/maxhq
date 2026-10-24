@@ -70,7 +70,7 @@ describe('ContestScoreboard', () => {
       makeViewer({ isParticipant: false, participant: undefined })
     );
     expect(screen.getByText('Away')).toBeInTheDocument();
-    expect(screen.getByText('Finished')).toBeInTheDocument();
+    expect(screen.getByText('Final')).toBeInTheDocument();
     expect(screen.getByText('Watching')).toBeInTheDocument();
     expect(screen.getByLabelText('home score')).toHaveTextContent('–');
   });

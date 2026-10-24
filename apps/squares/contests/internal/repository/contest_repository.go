@@ -15,7 +15,6 @@ type ContestRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error)
-	ExistsByOwnerAndName(ctx context.Context, owner, name string) (bool, error)
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
 
 	Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error
@@ -66,16 +65,6 @@ func (r *contestRepository) GetVisibilityByID(ctx context.Context, id uuid.UUID)
 		Select("visibility").
 		First(&contest, "id = ? AND status != ?", id, model.ContestStatusDeleted).Error
 	return contest.Visibility, database.TranslateError(err)
-}
-
-func (r *contestRepository) ExistsByOwnerAndName(ctx context.Context, owner, name string) (bool, error) {
-	var count int64
-	err := database.Conn(ctx, r.db).
-		Model(&model.Contest{}).
-		Where("owner = ? AND name = ? AND status != ?", owner, name, model.ContestStatusDeleted).
-		Count(&count).Error
-
-	return count > 0, err
 }
 
 // ids only: each contest is reloaded under its own lock before it is reconciled

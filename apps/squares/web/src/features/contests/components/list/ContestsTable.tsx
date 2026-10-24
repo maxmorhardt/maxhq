@@ -8,7 +8,6 @@ import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
 import { MAX_CONTEST_SQUARES, type ContestSummary } from '../../../../types/contest';
 import { getStatusLabel, isInGameStatus, isTerminalStatus } from '../../../../utils/contestStatus';
-import { formatKickoff } from '../../../../utils/game';
 import LeaveContestDialog from '../LeaveContestDialog';
 import ContestInfoDialog from './ContestInfoDialog';
 import DeleteContestDialog from './DeleteContestDialog';
@@ -26,7 +25,7 @@ const roleLabel: Record<ContestSummary['role'], string> = {
   viewer: 'Viewer',
 };
 
-function StatusPill({ status }: { status: ContestSummary['status'] }) {
+function StatusPill({ status, gameTime }: Pick<ContestSummary, 'status' | 'gameTime'>) {
   const live = isInGameStatus(status);
   const final = status === 'FINISHED';
   const color = live ? palette.flag : final ? palette.gold : palette.brand;
@@ -56,7 +55,7 @@ function StatusPill({ status }: { status: ContestSummary['status'] }) {
       {live && (
         <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: color }} />
       )}
-      {getStatusLabel(status)}
+      {getStatusLabel(status, gameTime)}
     </Box>
   );
 }
@@ -181,7 +180,6 @@ export default function ContestsTable({
         <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gap: 1.25 }}>
           {contests.map((contest) => {
             const fill = (contest.claimedSquares / MAX_CONTEST_SQUARES) * 100;
-            const upcoming = contest.status === 'ACTIVE' && contest.gameTime;
 
             return (
               <Box
@@ -235,7 +233,6 @@ export default function ContestsTable({
                   </Typography>
                   <Typography noWrap sx={{ color: 'text.secondary', fontSize: '0.82rem' }}>
                     {matchup(contest) || '–'}
-                    {upcoming ? ` · ${formatKickoff(contest.gameTime!)}` : ''}
                   </Typography>
                 </Box>
 
@@ -259,7 +256,7 @@ export default function ContestsTable({
                 </Box>
 
                 <Box sx={{ gridArea: 'status', justifySelf: { md: 'end' } }}>
-                  <StatusPill status={contest.status} />
+                  <StatusPill status={contest.status} gameTime={contest.gameTime} />
                 </Box>
 
                 <Box sx={{ gridArea: 'role', justifySelf: { md: 'center' } }}>

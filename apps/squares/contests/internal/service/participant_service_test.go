@@ -114,6 +114,18 @@ func TestUpdateParticipant_TerminalContest(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrContestFinalized)
 }
 
+func TestUpdateParticipant_AfterKickoff(t *testing.T) {
+	for _, status := range []model.ContestStatus{model.ContestStatusQ1, model.ContestStatusQ4} {
+		c := mocks.NewContestRepository(t)
+		c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: status}, nil)
+
+		svc := service.NewParticipantService(mocks.NewParticipantRepository(t), c, mocks.NewSquareRepository(t), passTx(), anyEvents())
+		maxSquares := 20
+		_, err := svc.UpdateParticipant(context.Background(), uuid.New(), "target", &model.UpdateParticipantRequest{MaxSquares: &maxSquares}, "owner")
+		assert.ErrorIs(t, err, errs.ErrParticipantsLocked, status)
+	}
+}
+
 func TestUpdateParticipant_CannotChangeOwner(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)

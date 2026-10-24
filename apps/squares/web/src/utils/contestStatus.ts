@@ -10,37 +10,37 @@ export interface StatusOption {
 export const statusOptions: StatusOption[] = [
   {
     value: 'ACTIVE',
-    label: 'Active',
+    label: 'Open',
     description: 'Players can join and fill squares',
     color: '#4caf50',
   },
   {
     value: 'Q1',
-    label: 'Quarter 1',
+    label: 'Q1',
     description: 'First quarter in progress',
     color: '#2196f3',
   },
   {
     value: 'Q2',
-    label: 'Quarter 2',
+    label: 'Q2',
     description: 'Second quarter in progress',
     color: '#2196f3',
   },
   {
     value: 'Q3',
-    label: 'Quarter 3',
+    label: 'Q3',
     description: 'Third quarter in progress',
     color: '#2196f3',
   },
   {
     value: 'Q4',
-    label: 'Quarter 4',
+    label: 'Q4',
     description: 'Fourth quarter in progress',
     color: '#2196f3',
   },
   {
     value: 'FINISHED',
-    label: 'Finished',
+    label: 'Final',
     description: 'Contest is complete',
     color: '#9e9e9e',
   },
@@ -61,7 +61,14 @@ export function getStatusOption(status: ContestStatus): StatusOption {
   return option || statusOptions[0];
 }
 
-export function getStatusLabel(status: ContestStatus): string {
+// an open contest reads as its kickoff, like a scoreboard does before the game
+export function getStatusLabel(status: ContestStatus, gameTime?: string): string {
+  const kickoff = gameTime ? new Date(gameTime) : undefined;
+  if (status === 'ACTIVE' && kickoff && kickoff.getTime() > Date.now()) {
+    const day = kickoff.toLocaleDateString(undefined, { weekday: 'short' });
+    const time = kickoff.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return `${day} ${time}`;
+  }
   return getStatusOption(status).label;
 }
 
