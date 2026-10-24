@@ -174,8 +174,7 @@ func (s *userService) SignOut(ctx context.Context, email string, issuedAt, expir
 	return nil
 }
 
-// a deletion blocks even refreshed tokens, so a deleted account's other devices are signed out;
-// the web calls this only after an interactive sign-in, which lifts the block for a returning user
+// lifts a deletion's token block; the web calls it only after an interactive sign-in, so other devices stay signed out
 func (s *userService) RestoreAccount(ctx context.Context, email string, issuedAt int64) error {
 	log := logging.FromContext(ctx)
 

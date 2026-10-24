@@ -111,7 +111,7 @@ export default function LearnMorePage() {
     {
       question: 'How are winners determined?',
       answer:
-        "Winners are decided by the last digit of each team's score at the end of each quarter. For example, if the score is Home 14, Away 7, the winning square sits where row 4 meets column 7. The app calculates this automatically from the live score.",
+        "Winners are decided by the last digit of each team's score at the end of each quarter. For example, if the score is Home 14, Away 7, the winning square sits where the home team's 4 column meets the away team's 7 row. The app calculates this automatically from the live score.",
     },
     {
       question: 'How do I leave a contest?',

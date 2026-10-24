@@ -108,8 +108,7 @@ func (r *gameRepository) GetUpcoming(ctx context.Context) ([]model.Game, error) 
 	return games, err
 }
 
-// the calendar week running now, else the last one that ended, so the Super Bowl stays up through the
-// offseason until the next season's first week begins; with no calendar yet, the week of the nearest game
+// the week running now, else the last one that ended (keeps the Super Bowl up all offseason); with no calendar, the nearest game's week
 func (r *gameRepository) CurrentWeek(ctx context.Context) (*model.Week, error) {
 	now := time.Now()
 	db := database.Conn(ctx, r.db)

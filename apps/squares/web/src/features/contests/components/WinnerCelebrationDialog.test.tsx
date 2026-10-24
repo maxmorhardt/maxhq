@@ -21,20 +21,42 @@ const result = {
 describe('WinnerCelebrationDialog', () => {
   it('renders nothing when there is no result', () => {
     render(<WinnerCelebrationDialog result={null} onClose={vi.fn()} />);
-    expect(screen.queryByText('You Won!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Your Square Hit')).not.toBeInTheDocument();
   });
 
   it('renders the winning square and score', () => {
     render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
-    expect(screen.getByText('You Won!')).toBeInTheDocument();
-    expect(screen.getByText('Your square (5, 3) took Quarter 2')).toBeInTheDocument();
-    expect(screen.getByText(/21/)).toBeInTheDocument();
+    expect(screen.getByText('Q2 Final')).toBeInTheDocument();
+    expect(screen.getByText('Last digits 4 and 1 landed on your square.')).toBeInTheDocument();
+    expect(screen.getByText('Away').previousSibling).toHaveTextContent('14');
+    expect(screen.getByText('Home').previousSibling).toHaveTextContent('21');
   });
 
-  it('calls onClose when the "Let\'s Go!" button is clicked', () => {
+  it('labels the column with the home digit and the row with the away digit', () => {
+    render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
+    expect(screen.getByTestId('column-digit')).toHaveTextContent('1');
+    expect(screen.getByTestId('row-digit')).toHaveTextContent('4');
+  });
+
+  it('labels the scores with the team abbreviations when it has them', () => {
+    render(
+      <WinnerCelebrationDialog result={result} onClose={vi.fn()} awayAbbr="PIT" homeAbbr="NO" />
+    );
+    expect(screen.getByText('PIT').previousSibling).toHaveTextContent('14');
+    expect(screen.getByText('NO').previousSibling).toHaveTextContent('21');
+    expect(screen.queryByText('Away')).not.toBeInTheDocument();
+  });
+
+  it('keeps the last result on screen while closing', () => {
+    const { rerender } = render(<WinnerCelebrationDialog result={result} onClose={vi.fn()} />);
+    rerender(<WinnerCelebrationDialog result={null} onClose={vi.fn()} />);
+    expect(screen.getByText('Q2 Final')).toBeInTheDocument();
+  });
+
+  it('calls onClose when the "Back to the Board" button is clicked', () => {
     const onClose = vi.fn();
     render(<WinnerCelebrationDialog result={result} onClose={onClose} />);
-    fireEvent.click(screen.getByRole('button', { name: /let's go/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to the Board' }));
     expect(onClose).toHaveBeenCalled();
   });
 

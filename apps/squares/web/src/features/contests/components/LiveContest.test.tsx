@@ -125,14 +125,31 @@ describe('LiveContest', () => {
     snapshot();
     emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
     expect(screen.getByTestId('view')).toHaveTextContent('flash');
-    expect(screen.getByText('You Won!')).toBeInTheDocument();
+    expect(screen.getByText('Your Square Hit')).toBeInTheDocument();
+  });
+
+  it('labels the celebration with the game’s team abbreviations once it has loaded', () => {
+    games.useGetGameQuery.mockReturnValue({ data: { homeAbbr: 'NO', awayAbbr: 'PIT' } });
+    const { snapshot, emit } = renderLive();
+    snapshot(makeContest({ gameId: 'g-1' }));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    expect(screen.getByText('PIT')).toBeInTheDocument();
+    expect(screen.getByText('NO')).toBeInTheDocument();
+  });
+
+  it('falls back to away and home while the game is still loading', () => {
+    const { snapshot, emit } = renderLive();
+    snapshot();
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    expect(screen.getByText('Away')).toBeInTheDocument();
+    expect(screen.getByText('Home')).toBeInTheDocument();
   });
 
   it('only celebrates the viewer’s own wins', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
     emit(event('quarter.recorded', makeQuarterResult({ winner: 'someone@x.com' })));
-    expect(screen.queryByText('You Won!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Your Square Hit')).not.toBeInTheDocument();
   });
 
   it('sends a removed viewer away from a private contest', () => {

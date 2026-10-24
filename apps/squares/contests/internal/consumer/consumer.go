@@ -27,7 +27,6 @@ func GameHandler(gameSync service.GameSyncService) streams.Handler {
 
 		var event events.GameUpdated
 		if err := json.Unmarshal(entry.Data, &event); err != nil {
-			// a payload that will never decode is skipped rather than retried forever
 			log.Error("dropping undecodable game event", "error", err)
 			return nil
 		}

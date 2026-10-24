@@ -14,11 +14,6 @@ interface Props {
   animate?: boolean;
 }
 
-// how far up the table the player sits, rounded up so first place reads as top 1%
-function topShare(rank: LeaderboardRankResponse) {
-  return Math.max(1, Math.ceil((rank.rank / Math.max(rank.totalRanked, 1)) * 100));
-}
-
 // the notches where a ticket tears, punched out of the card in the page color
 const notch = (side: 'top' | 'bottom') => ({
   content: '""',
@@ -94,37 +89,17 @@ export default function LeaderboardRankCard({
           '&::after': notch('bottom'),
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <Typography
-            sx={{
-              color: palette.gold,
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Your standing
-          </Typography>
-          {ranked && (
-            <Box
-              component="span"
-              sx={{
-                px: 0.9,
-                borderRadius: '6px',
-                fontFamily: fonts.display,
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-                color: palette.night,
-                bgcolor: palette.gold,
-              }}
-            >
-              Top {topShare(rank!)}%
-            </Box>
-          )}
-        </Box>
+        <Typography
+          sx={{
+            color: palette.gold,
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Your standing
+        </Typography>
 
         {loading ? (
           <Skeleton variant="text" width={180} sx={{ fontSize: '1.4rem' }} />

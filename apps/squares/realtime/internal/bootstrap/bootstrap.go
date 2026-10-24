@@ -36,7 +36,7 @@ func Connect(cfg *model.RealtimeConfig) (*server.Infra, error) {
 	})
 }
 
-// shutdown should be closed when the process starts draining, so open streams end and clients move to another replica
+// close shutdown on drain so open streams end and clients reconnect to another replica
 func New(cfg *model.RealtimeConfig, infra *server.Infra, shutdown <-chan struct{}) *App {
 	revocations := cache.NewRevocationStore(infra.Redis)
 	hub := service.NewHub(infra.Redis)

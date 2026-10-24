@@ -2,6 +2,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { fonts, game as palette } from '../../../app/theme';
+import { formatCount } from '../../../utils/formatCount';
 
 interface StatCardProps {
   icon: ReactNode;
@@ -68,6 +69,7 @@ export default function StatCard({
 
       <Box>
         <Typography
+          title={value?.toLocaleString('en-US')}
           sx={{
             fontFamily: fonts.display,
             fontWeight: 800,
@@ -77,7 +79,7 @@ export default function StatCard({
             fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {value?.toLocaleString() ?? '–'}
+          {value === undefined ? '–' : formatCount(value)}
         </Typography>
         <Typography sx={{ mt: 0.75, fontWeight: 600 }}>{label}</Typography>
         {caption && (
