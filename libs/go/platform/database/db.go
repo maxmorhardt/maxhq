@@ -142,14 +142,18 @@ func setupReadReplica(cfg *config.DatabaseConfig, schema string, db *gorm.DB) er
 		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
 	}
 
+	// db_name must differ from the primary's or the registration is rejected as a duplicate
+	if err := prometheus.Register(collectors.NewDBStatsCollector(replica, cfg.ReadName+"-replica")); err != nil {
+		slog.Warn("failed to register read replica stats collector", "error", err)
+	}
+
 	monitor := newReplicaMonitor(replica)
 	resolver := dbresolver.Register(dbresolver.Config{
 		Replicas: []gorm.Dialector{
 			postgres.New(postgres.Config{Conn: replica}),
 			postgres.New(postgres.Config{Conn: primary}),
 		},
-		Policy:            monitor,
-		TraceResolverMode: true,
+		Policy: monitor,
 	})
 
 	resolver.SetConnMaxIdleTime(maxConnLifetime)

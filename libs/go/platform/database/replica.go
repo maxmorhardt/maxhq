@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -14,7 +15,7 @@ const (
 	replicaCheckInterval = 2 * time.Second
 	replicaPingTimeout   = time.Second
 	replicaMinBackoff    = time.Second
-	replicaMaxBackoff    = time.Minute
+	replicaMaxBackoff    = 10 * time.Second
 )
 
 type replicaConn interface {
@@ -31,6 +32,7 @@ type replicaMonitor struct {
 	maxBackoff time.Duration
 	stop       chan struct{}
 	done       chan struct{}
+	closeOnce  sync.Once
 }
 
 func newReplicaMonitor(conn replicaConn) *replicaMonitor {
@@ -50,7 +52,7 @@ func (m *replicaMonitor) Initialize(*gorm.DB) error { return nil }
 
 // pools are [replica, primary]: dbresolver skips the policy when it has a single replica
 func (m *replicaMonitor) Resolve(pools []gorm.ConnPool) gorm.ConnPool {
-	if m.healthy.Load() {
+	if len(pools) < 2 || m.healthy.Load() {
 		return pools[0]
 	}
 	return pools[1]
@@ -97,7 +99,9 @@ func (m *replicaMonitor) run() {
 }
 
 func (m *replicaMonitor) close() {
-	close(m.stop)
-	<-m.done
-	_ = m.conn.Close()
+	m.closeOnce.Do(func() {
+		close(m.stop)
+		<-m.done
+		_ = m.conn.Close()
+	})
 }

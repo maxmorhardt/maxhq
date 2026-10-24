@@ -65,6 +65,13 @@ func TestReplicaMonitor_Resolve(t *testing.T) {
 	assert.Same(t, replica, m.Resolve(pools))
 }
 
+func TestReplicaMonitor_ResolveSinglePool(t *testing.T) {
+	only := &sql.DB{}
+	m := newReplicaMonitor(&fakeReplica{})
+
+	assert.Same(t, only, m.Resolve([]gorm.ConnPool{only}))
+}
+
 func TestReplicaMonitor_Check(t *testing.T) {
 	conn := &fakeReplica{err: errors.New("connection refused")}
 	m := newReplicaMonitor(conn)
@@ -110,4 +117,12 @@ func TestReplicaMonitor_CloseStopsRunAndClosesConn(t *testing.T) {
 	assert.True(t, conn.closed)
 	_, open := <-m.done
 	assert.False(t, open)
+}
+
+func TestReplicaMonitor_CloseTwiceIsSafe(t *testing.T) {
+	m := newReplicaMonitor(&fakeReplica{})
+	go m.run()
+
+	m.close()
+	assert.NotPanics(t, m.close)
 }
