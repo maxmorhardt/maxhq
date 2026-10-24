@@ -1,6 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>maxmorhardt/workflows//renovate/default.json"],
+  "gitIgnoredAuthors": ["41898283+github-actions[bot]@users.noreply.github.com"],
+  "packageRules": [
+    {
+      "description": "go module updates restamp the squares services, so release-please ships them to prod",
+      "matchManagers": ["gomod"],
+      "semanticCommitType": "fix"
+    }
+  ],
   "customManagers": [
     {
       "customType": "regex",
