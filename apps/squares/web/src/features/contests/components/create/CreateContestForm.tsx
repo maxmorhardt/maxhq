@@ -103,7 +103,11 @@ function GameOption({
 export default function CreateContestForm() {
   const navigate = useNavigate();
   const email = useAuth().user?.profile?.email;
-  const { data: games = [], isLoading: gamesLoading } = useGetUpcomingGamesQuery();
+  const {
+    data: games = [],
+    isLoading: gamesLoading,
+    refetch: refetchGames,
+  } = useGetUpcomingGamesQuery();
   const [createContest, { isLoading: creating }] = useCreateContestMutation();
 
   const [name, setName] = useState('');
@@ -140,6 +144,7 @@ export default function CreateContestForm() {
       game: gameId ? undefined : 'Pick the game this contest is played on',
       name: name.trim() ? undefined : 'Contest name is required',
     };
+
     setFieldErrors(errors);
 
     if (errors.game || errors.name) {
@@ -171,10 +176,12 @@ export default function CreateContestForm() {
       }).unwrap();
       navigate(`/contests/${contest.id}`);
     } catch (err) {
-      // a taken name belongs on the name field, not the top of the form
+      // the form sat open until the game was past the first quarter
       if (errorStatus(err) === 409) {
-        setFieldErrors({ name: errorMessage(err, 'You already have a contest with this name') });
-        focusField('name');
+        setGameId('');
+        setFieldErrors({ game: errorMessage(err, 'That game is past the first quarter') });
+        focusField('game');
+        void refetchGames();
         return;
       }
       setError(errorMessage(err, 'Error creating contest'));

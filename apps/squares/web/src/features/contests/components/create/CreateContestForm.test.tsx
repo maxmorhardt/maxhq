@@ -26,16 +26,17 @@ const game = {
   awayTeam: 'Bears',
   homeAbbr: 'DET',
   awayAbbr: 'CHI',
-  gameTime: '2026-11-01T18:00:00Z',
+  gameTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
 } as Game;
 
 describe('CreateContestForm', () => {
   let create: ReturnType<typeof vi.fn>;
+  const refetch = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth({ email: 'owner@x.com' });
-    games.useGetUpcomingGamesQuery.mockReturnValue({ data: [game], isLoading: false });
+    games.useGetUpcomingGamesQuery.mockReturnValue({ data: [game], isLoading: false, refetch });
     const [trigger, state] = mockMutation(makeContest({ id: 'new' }));
     create = trigger;
     api.useCreateContestMutation.mockReturnValue([trigger, state]);
@@ -110,21 +111,22 @@ describe('CreateContestForm', () => {
     expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('marks the name field when the name is already taken', async () => {
+  it('drops the game and asks for another when it is past the first quarter', async () => {
     api.useCreateContestMutation.mockReturnValue(
-      mockMutation({ error: { status: 409, message: 'contest already exists with this name' } })
+      mockMutation({ error: { status: 409, message: 'That game is past the first quarter' } })
     );
     renderWithProviders(<CreateContestForm />);
     pickGame();
     fireEvent.change(nameField(), { target: { value: 'Bowl' } });
     submit();
-    await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
-    expect(nameField()).toHaveFocus();
-    expect(screen.getByText('contest already exists with this name')).toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
-    fireEvent.change(nameField(), { target: { value: 'Bowl 2' } });
+    expect(await screen.findByText('That game is past the first quarter')).toBeInTheDocument();
+    const option = screen.getByRole('radio', { name: 'Bears @ Lions' });
+    expect(option).toHaveAttribute('aria-checked', 'false');
+    expect(option).toHaveFocus();
+    expect(refetch).toHaveBeenCalled();
     expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
   });
 
   it('needs an email to create a contest', () => {

@@ -174,8 +174,34 @@ func TestContest_IdempotentCreate(t *testing.T) {
 	assert.Equal(t, first.ID, second.ID, "the retry returns the original contest")
 	assert.Equal(t, "true", resp2.Header.Get("Idempotent-Replayed"))
 
-	_, resp3 := createContestFor(t, &game, ownerUser, "Idempotent Bowl", 10)
-	assert.Equal(t, http.StatusConflict, resp3.Status, "a new create with the same name is a conflict")
+	third, resp3 := createContestFor(t, &game, ownerUser, "Idempotent Bowl", 10)
+	require.Equal(t, http.StatusCreated, resp3.Status, string(resp3.Body))
+	assert.NotEqual(t, first.ID, third.ID, "a new create with the same name is its own contest")
+}
+
+func TestContest_CreatableUntilTheFirstQuarterEnds(t *testing.T) {
+	game := seedGame(t)
+	game.Status = events.GameStatusInProgress
+	game.Period = 1
+	game.UpdatedAt = time.Now()
+	publish(t, events.GamesStream, events.GameUpdatedType, events.GameUpdated{Game: game})
+	require.Eventually(t, func() bool {
+		var status string
+		err := rawDB.QueryRow(`SELECT status FROM contests.games WHERE id = $1`, game.ID).Scan(&status)
+		return err == nil && status == string(events.GameStatusInProgress)
+	}, eventually, 100*time.Millisecond, "the kickoff reaches the contests projection")
+
+	_, resp := createContestFor(t, &game, ownerUser, "Late Bowl", 10)
+	require.Equal(t, http.StatusCreated, resp.Status, "a form left open past kickoff still goes through in the first quarter")
+
+	game.Period = 2
+	game.UpdatedAt = time.Now()
+	publish(t, events.GamesStream, events.GameUpdatedType, events.GameUpdated{Game: game})
+
+	require.Eventually(t, func() bool {
+		_, resp := createContestFor(t, &game, ownerUser, "Late Bowl", 10)
+		return resp.Status == http.StatusConflict
+	}, eventually, 200*time.Millisecond)
 }
 
 func TestContest_ActiveContestCanBeDeleted(t *testing.T) {

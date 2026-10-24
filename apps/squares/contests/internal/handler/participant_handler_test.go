@@ -73,6 +73,9 @@ func updateParticipantErr(t *testing.T, user, target string, svcErr error, wantC
 func TestUpdateParticipant_Forbidden(t *testing.T) {
 	updateParticipantErr(t, "stranger", "user1", errs.ErrInsufficientRole, http.StatusForbidden)
 }
+func TestUpdateParticipant_AfterKickoff(t *testing.T) {
+	updateParticipantErr(t, "owner1", "user1", errs.ErrParticipantsLocked, http.StatusForbidden)
+}
 func TestUpdateParticipant_CannotChangeOwner(t *testing.T) {
 	updateParticipantErr(t, "owner1", "owner1", errs.ErrCannotChangeOwner, http.StatusForbidden)
 }

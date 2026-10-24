@@ -70,8 +70,8 @@ func TestCreateContest_OwnerMismatch(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, w.Code)
 }
 
-func TestCreateContest_AlreadyExists(t *testing.T) {
-	createContestErr(t, errs.ErrContestAlreadyExists, http.StatusConflict)
+func TestCreateContest_GamePastFirstQuarter(t *testing.T) {
+	createContestErr(t, errs.ErrGamePastFirstQuarter, http.StatusConflict)
 }
 func TestCreateContest_DatabaseUnavailable(t *testing.T) {
 	createContestErr(t, errs.ErrDatabaseUnavailable, http.StatusInternalServerError)

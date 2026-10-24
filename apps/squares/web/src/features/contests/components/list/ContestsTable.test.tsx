@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { makeStore } from '../../../../app/store';
 import ContestsTable from './ContestsTable';
 import type { ContestSummary } from '../../../../types/contest';
+import { getStatusLabel } from '../../../../utils/contestStatus';
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 
@@ -158,9 +159,11 @@ describe('ContestsTable', () => {
     expect(screen.getByTestId('footer')).toBeInTheDocument();
   });
 
-  it('shows the kickoff of a contest that has not started', () => {
-    renderTable({ contests: [{ ...contest, status: 'ACTIVE', gameTime: '2026-11-01T18:00:00Z' }] });
-    expect(screen.getByText(/Eagles @ Chiefs · /)).toBeInTheDocument();
+  it('shows the kickoff as the status of a contest that has not started', () => {
+    const gameTime = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    renderTable({ contests: [{ ...contest, status: 'ACTIVE', gameTime }] });
+    expect(screen.getByText(getStatusLabel('ACTIVE', gameTime))).toBeInTheDocument();
+    expect(screen.getByText('Eagles @ Chiefs')).toBeInTheDocument();
   });
 
   it('opens a contest from the keyboard', () => {

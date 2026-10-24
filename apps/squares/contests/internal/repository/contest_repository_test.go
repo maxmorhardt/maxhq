@@ -66,20 +66,6 @@ func TestContestRepository_GetVisibilityByID(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestContestRepository_ExistsByOwnerAndName(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewContestRepository(gdb)
-
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests"`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
-
-	exists, err := repo.ExistsByOwnerAndName(context.Background(), "owner", "name")
-
-	require.NoError(t, err)
-	assert.True(t, exists)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestContestRepository_Delete(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewContestRepository(gdb)

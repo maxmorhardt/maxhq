@@ -167,64 +167,6 @@ func (_c *ContestRepository_Delete_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
-// ExistsByOwnerAndName provides a mock function with given fields: ctx, owner, name
-func (_m *ContestRepository) ExistsByOwnerAndName(ctx context.Context, owner string, name string) (bool, error) {
-	ret := _m.Called(ctx, owner, name)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ExistsByOwnerAndName")
-	}
-
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (bool, error)); ok {
-		return rf(ctx, owner, name)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) bool); ok {
-		r0 = rf(ctx, owner, name)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, owner, name)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ContestRepository_ExistsByOwnerAndName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExistsByOwnerAndName'
-type ContestRepository_ExistsByOwnerAndName_Call struct {
-	*mock.Call
-}
-
-// ExistsByOwnerAndName is a helper method to define mock.On call
-//   - ctx context.Context
-//   - owner string
-//   - name string
-func (_e *ContestRepository_Expecter) ExistsByOwnerAndName(ctx interface{}, owner interface{}, name interface{}) *ContestRepository_ExistsByOwnerAndName_Call {
-	return &ContestRepository_ExistsByOwnerAndName_Call{Call: _e.mock.On("ExistsByOwnerAndName", ctx, owner, name)}
-}
-
-func (_c *ContestRepository_ExistsByOwnerAndName_Call) Run(run func(ctx context.Context, owner string, name string)) *ContestRepository_ExistsByOwnerAndName_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *ContestRepository_ExistsByOwnerAndName_Call) Return(_a0 bool, _a1 error) *ContestRepository_ExistsByOwnerAndName_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *ContestRepository_ExistsByOwnerAndName_Call) RunAndReturn(run func(context.Context, string, string) (bool, error)) *ContestRepository_ExistsByOwnerAndName_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetByID provides a mock function with given fields: ctx, id
 func (_m *ContestRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Contest, error) {
 	ret := _m.Called(ctx, id)

@@ -47,17 +47,30 @@ describe('getStatusOption', () => {
 
 describe('getStatusLabel', () => {
   it('should return the label for each status', () => {
-    expect(getStatusLabel('ACTIVE')).toBe('Active');
-    expect(getStatusLabel('Q1')).toBe('Quarter 1');
-    expect(getStatusLabel('Q2')).toBe('Quarter 2');
-    expect(getStatusLabel('Q3')).toBe('Quarter 3');
-    expect(getStatusLabel('Q4')).toBe('Quarter 4');
-    expect(getStatusLabel('FINISHED')).toBe('Finished');
+    expect(getStatusLabel('ACTIVE')).toBe('Open');
+    expect(getStatusLabel('Q1')).toBe('Q1');
+    expect(getStatusLabel('Q2')).toBe('Q2');
+    expect(getStatusLabel('Q3')).toBe('Q3');
+    expect(getStatusLabel('Q4')).toBe('Q4');
+    expect(getStatusLabel('FINISHED')).toBe('Final');
     expect(getStatusLabel('DELETED')).toBe('Deleted');
   });
 
-  it('should return "Active" for unknown status', () => {
-    expect(getStatusLabel('INVALID' as ContestStatus)).toBe('Active');
+  it('should read an open contest as its kickoff', () => {
+    const kickoff = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const gameTime = kickoff.toISOString();
+    const day = kickoff.toLocaleDateString(undefined, { weekday: 'short' });
+    const time = kickoff.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    expect(getStatusLabel('ACTIVE', gameTime)).toBe(`${day} ${time}`);
+    expect(getStatusLabel('Q2', gameTime)).toBe('Q2');
+  });
+
+  it('should not show a kickoff that has already passed', () => {
+    expect(getStatusLabel('ACTIVE', new Date(Date.now() - 60 * 1000).toISOString())).toBe('Open');
+  });
+
+  it('should return "Open" for unknown status', () => {
+    expect(getStatusLabel('INVALID' as ContestStatus)).toBe('Open');
   });
 });
 

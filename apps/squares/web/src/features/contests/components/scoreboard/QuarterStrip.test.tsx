@@ -67,4 +67,16 @@ describe('QuarterStrip', () => {
 
     expect(quarters()[0]).toHaveTextContent('No winner');
   });
+
+  it('calls a quarter that landed on an empty square for the ghost', () => {
+    const contest = makeContest({
+      status: 'Q2',
+      quarterResults: [makeQuarterResult({ winner: '', winnerName: '' })],
+    });
+
+    renderWithProviders(<QuarterStrip contest={contest} viewer={makeViewer()} />);
+
+    expect(quarters()[0]).toHaveTextContent('ghost');
+    expect(quarters()[0]).not.toHaveTextContent('Winner');
+  });
 });

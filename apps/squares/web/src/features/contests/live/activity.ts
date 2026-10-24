@@ -15,8 +15,9 @@ export const MAX_ACTIVITY = 200;
 // a ghosted square (owner left a private contest) keeps its value but has no owner name
 const GHOST_USER = 'ghost';
 
+// an unclaimed winning square reads the same as a departed player's
 export const winnerLabel = (winner: string, winnerName: string) =>
-  winner === GHOST_USER ? 'ghost' : winnerName;
+  winner === GHOST_USER || winner === '' ? 'ghost' : winnerName;
 
 const timeOf = (event: ActivityEvent) => new Date(event.timestamp).getTime();
 

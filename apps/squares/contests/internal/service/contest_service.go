@@ -51,17 +51,6 @@ func NewContestService(
 func (s *contestService) CreateContest(ctx context.Context, req *model.CreateContestRequest, user string) (*model.Contest, error) {
 	log := logging.FromContext(ctx)
 
-	exists, err := s.repo.ExistsByOwnerAndName(ctx, req.Owner, req.Name)
-	if err != nil {
-		log.Error("failed to check if contest exists", "owner", req.Owner, "name", req.Name, "error", err)
-		return nil, errs.ErrDatabaseUnavailable
-	}
-
-	if exists {
-		log.Warn("contest already exists", "owner", req.Owner, "name", req.Name)
-		return nil, errs.ErrContestAlreadyExists
-	}
-
 	xLabelsJSON, yLabelsJSON := util.InitialLabels()
 	visibility := model.ContestVisibilityPrivate
 	if req.Visibility == "public" {
@@ -81,6 +70,12 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 
 		log.Error("failed to get game for contest link", "game_id", gameID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
+	}
+
+	// a form left open past kickoff still goes through while the first quarter is on
+	if game.Status == model.GameStatusFinal || (game.Status == model.GameStatusInProgress && game.Period > 1) {
+		log.Warn("cannot create contest for a game past the first quarter", "game_id", gameID, "game_status", game.Status, "period", game.Period)
+		return nil, errs.ErrGamePastFirstQuarter
 	}
 
 	contest := model.Contest{

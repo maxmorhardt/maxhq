@@ -582,8 +582,12 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
         "409":
-          description: You already have a contest with this name
+          description: The game is past the first quarter
           schema:
             $ref: '#/definitions/api.APIError'
         "500":

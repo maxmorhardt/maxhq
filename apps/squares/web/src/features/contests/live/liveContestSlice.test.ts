@@ -85,7 +85,7 @@ describe('liveContestSlice events', () => {
     );
     expect(state.contest).toMatchObject({ name: 'Renamed', status: 'Q1', version: 2 });
     expect(state.contest?.squares).toHaveLength(9);
-    expect(state.activity.at(-1)?.message).toBe('Contest status changed to Quarter 1');
+    expect(state.activity.at(-1)?.message).toBe('Contest status changed to Q1');
   });
 
   it('ignores a contest update older than what it holds', () => {

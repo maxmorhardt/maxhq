@@ -129,12 +129,16 @@ describe('describeEvent', () => {
     expect(describeEvent(event('quarter.recorded', makeQuarterResult()), 'id')?.message).toBe(
       'Q1 winner: Player (7-3)'
     );
+    const unclaimed = makeQuarterResult({ winner: '', winnerName: '' });
+    expect(describeEvent(event('quarter.recorded', unclaimed), 'id')?.message).toBe(
+      'Q1 winner: ghost (7-3)'
+    );
   });
 
   it('describes a status change but not an edit', () => {
     const update = event('contest.updated', { status: 'Q2' });
     expect(describeEvent(update, 'id', { status: 'Q1' })?.message).toBe(
-      'Contest status changed to Quarter 2'
+      'Contest status changed to Q2'
     );
     expect(describeEvent(update, 'id', { status: 'Q2' })).toBeNull();
   });
@@ -162,6 +166,7 @@ describe('describeEvent', () => {
 describe('winnerLabel', () => {
   it('names ghosted winners', () => {
     expect(winnerLabel('ghost', '')).toBe('ghost');
+    expect(winnerLabel('', '')).toBe('ghost');
     expect(winnerLabel('a@x.com', 'Ann')).toBe('Ann');
   });
 });

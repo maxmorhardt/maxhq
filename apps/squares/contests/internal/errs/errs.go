@@ -13,14 +13,13 @@ var (
 )
 
 var (
-	ErrContestNotEditable   = errors.New("contest is not in an editable state")
-	ErrContestFinalized     = errors.New("contest is finished or deleted and cannot be modified")
-	ErrSquareNotEditable    = errors.New("squares can only be edited when contest is active")
-	ErrBoardLocked          = errors.New("the board is full and locked, so squares can no longer be cleared")
-	ErrSquareTaken          = errors.New("that square was just claimed by someone else")
-	ErrNoEmptySquares       = errors.New("there are no empty squares left")
-	ErrContestAlreadyExists = errors.New("contest already exists with this name")
-	ErrVersionConflict      = errors.New("this contest was changed by someone else, refresh and try again")
+	ErrContestNotEditable = errors.New("contest is not in an editable state")
+	ErrContestFinalized   = errors.New("contest is finished or deleted and cannot be modified")
+	ErrSquareNotEditable  = errors.New("squares can only be edited when contest is active")
+	ErrBoardLocked        = errors.New("the board is full and locked, so squares can no longer be cleared")
+	ErrSquareTaken        = errors.New("that square was just claimed by someone else")
+	ErrNoEmptySquares     = errors.New("there are no empty squares left")
+	ErrVersionConflict    = errors.New("this contest was changed by someone else, refresh and try again")
 )
 
 var (
@@ -43,6 +42,7 @@ var (
 
 var (
 	ErrGameNotFound            = errors.New("game not found")
+	ErrGamePastFirstQuarter    = errors.New("that game is past the first quarter, pick another one")
 	ErrInviteNotFound          = errors.New("invite not found")
 	ErrInviteExpired           = errors.New("invite link has expired")
 	ErrInviteMaxUsesReached    = errors.New("invite link has reached its usage limit")
@@ -55,6 +55,7 @@ var (
 	ErrSquareLimitReached      = errors.New("you have reached your square limit for this contest")
 	ErrSquareLimitTooLow       = errors.New("new limit cannot be below the number of squares already claimed")
 	ErrInvalidSquareCount      = errors.New("participants must be allotted at least one square")
+	ErrParticipantsLocked      = errors.New("players can only be edited before kickoff")
 	ErrViewerCannotHaveSquares = errors.New("viewers cannot be allotted squares")
 	ErrWinnerNotDeterminable   = errors.New("winner cannot be determined for the given score")
 	ErrInvalidQuarter          = errors.New("quarter must be between 1 and 4")
