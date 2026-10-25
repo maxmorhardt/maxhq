@@ -8,14 +8,12 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
   annotations:
     argocd.argoproj.io/hook: PostSync
-    # deleted once it succeeds; a failed run stays for debugging until the next sync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
 spec:
   backoffLimit: {{ .Values.cachePurge.backoffLimit }}
   activeDeadlineSeconds: {{ .Values.cachePurge.activeDeadlineSeconds }}
   template:
     metadata:
-      # not the app's selector labels, or its Service would route to and scrape this pod
       labels:
         app.kubernetes.io/name: {{ include "app.fullname" . }}-cache-purge
         app.kubernetes.io/instance: {{ .Release.Name }}
