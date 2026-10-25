@@ -193,7 +193,7 @@ jobs:
   k3s-bootstrap:
     needs: changes
     if: needs.changes.outputs.k3s == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-python.yml@feat/ci-python
+    uses: maxmorhardt/workflows/.github/workflows/ci-python.yml@main
     with:
       repository: ${{ github.repository }}
       app_name: k3s-bootstrap
