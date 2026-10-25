@@ -154,6 +154,47 @@ jobs:
       working_directory: libs/go/${{ matrix.lib }}
       module_directory: .
 
+  lib-consumers:
+    name: Lib changes touch their services
+    needs: changes
+    if: needs.changes.outputs.go_libs == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 2
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Require a change in every service that imports a changed lib
+        env:
+          GOOS: linux
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+        run: |
+          mod=$(go list -m)
+          changed=$(git diff --name-only HEAD^1 HEAD -- 'libs/go/*.go' ':!libs/go/*_test.go' | xargs -r -n1 dirname | sort -u | sed "s#^#$mod/#")
+          [ -z "$changed" ] && exit 0
+          touched=$(git diff --name-only HEAD^1 HEAD -- apps/squares)
+          status=0
+          for svc in contests games accounts realtime; do
+            deps=$(go list -deps "./apps/squares/$svc/cmd/$svc")
+            used=$(grep -Fx "$changed" <<<"$deps" | sed "s#^$mod/##" | tr '\n' ' ' || true)
+            [ -z "$used" ] && continue
+            grep -q "^apps/squares/$svc/" <<<"$touched" && continue
+            echo "::error::squares-$svc imports ${used}but this PR changes nothing in apps/squares/$svc, so release-please would not release it"
+            status=1
+          done
+          exit $status
+
   # charts
 
   charts:
@@ -229,6 +270,7 @@ jobs:
       - squares-go
       - squares-docker
       - go-libs
+      - lib-consumers
       - charts
       - terraform
       - k3s-bootstrap
