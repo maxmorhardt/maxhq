@@ -35,7 +35,7 @@ flowchart LR
   end
 
   pg -->|WAL + base backups| s3[(S3)]
-  alloy -->|metrics, logs| grafana[Grafana Cloud<br/>alerts to Discord]
+  alloy -->|metrics, logs| grafana[Grafana Cloud<br/>alerts to Telegram]
 
   gh[GitHub Actions] -->|images| hub[(Docker Hub)]
   gh -->|charts| ghcr[(GHCR)]

@@ -39,16 +39,16 @@ def trusted_ranges():
 	return {cidr for cidr in cidrs if not ipaddress.ip_network(cidr).is_private}
 
 
-def discord(subject, body):
-	payload = json.dumps({"embeds": [{"title": subject, "description": body[:4000], "color": 0xF38020}]}).encode()
-	fetch(os.environ["DISCORD_WEBHOOK"], {"Content-Type": "application/json"}, data=payload)
+def telegram(subject, body):
+	payload = json.dumps({"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": f"{subject}\n\n{body}"[:4096]}).encode()
+	fetch(f"https://api.telegram.org/bot{os.environ['TELEGRAM_TOKEN']}/sendMessage", {"Content-Type": "application/json"}, data=payload)
 
 
 def notify(subject, body):
 	try:
-		discord(subject, body)
+		telegram(subject, body)
 	except Exception as e:
-		log.error("discord notification failed: %s", e)
+		log.error("telegram notification failed: %s", e)
 		return False
 	return True
 
