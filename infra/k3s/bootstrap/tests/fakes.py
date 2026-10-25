@@ -14,17 +14,17 @@ def tailscale_status(state: str = "Running", ip: str = "100.64.0.1", dns: str = 
 
 
 def make_cluster(profile: Profile = Profile.PI, **overrides) -> Cluster:
-    defaults = dict(
-        name="dev",
-        profile=profile,
-        k3s_version="v1.36.5+k3s1",
-        lan_cidr="10.0.0.0/24" if profile == Profile.PI else None,
-        nodes=(
+    defaults = {
+        "name": "dev",
+        "profile": profile,
+        "k3s_version": "v1.36.5+k3s1",
+        "lan_cidr": "10.0.0.0/24" if profile == Profile.PI else None,
+        "nodes": (
             Node("dev-1", "10.0.0.1", Role.INIT),
             Node("dev-2", "10.0.0.2", Role.SERVER),
             Node("dev-3", "10.0.0.3", Role.AGENT),
         ),
-    )
+    }
     return Cluster(**(defaults | overrides))
 
 

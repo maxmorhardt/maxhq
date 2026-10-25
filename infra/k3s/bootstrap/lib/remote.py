@@ -1,10 +1,11 @@
 """SSH access to a node, behind a small interface the bootstrap steps are written against."""
 
+import contextlib
 import io
 import logging
 import shlex
 import time
-from typing import Protocol
+from typing import Protocol, Self
 
 from fabric import Connection
 
@@ -48,7 +49,7 @@ class SshRemote:
         self._reboot_timeout = reboot_timeout
         self._conn: Connection | None = None
 
-    def __enter__(self) -> "SshRemote":
+    def __enter__(self) -> Self:
         self._connect()
         return self
 
@@ -84,10 +85,9 @@ class SshRemote:
     def reboot(self) -> None:
         boot_id = self._boot_id()
         log.info("%s: rebooting", self.name)
-        try:
+        # the connection drops mid-command
+        with contextlib.suppress(Exception):
             self._connection().run("sudo systemctl reboot", hide="both", warn=True)
-        except Exception:
-            pass
         self._conn.close()
 
         deadline = time.monotonic() + self._reboot_timeout
@@ -118,7 +118,7 @@ class SshRemote:
             )
             try:
                 conn.open()
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - every failure means try the next host
                 errors.append(f"{host}: {exc}")
                 continue
             self._conn = conn

@@ -7,6 +7,9 @@ from lib.inventory import Cluster
 POD_CIDR = "10.42.0.0/16"
 SERVICE_CIDR = "10.43.0.0/16"
 TAILSCALE_PORT = 41641
+BEFORE6_RULES = "/etc/ufw/before6.rules"
+# force tailscale ipv4 to avoid network switches causing packet loss
+IPV6_TAILSCALE_DROP = f"-A ufw6-before-output -p udp --sport {TAILSCALE_PORT} -j DROP"
 
 
 def rules(cluster: Cluster) -> list[str]:
@@ -25,6 +28,7 @@ def rules(cluster: Cluster) -> list[str]:
 def commands(allow_rules: list[str]) -> list[str]:
     return [
         "ufw --force reset",
+        f"sed -i '/^-A ufw6-before-output -o lo -j ACCEPT$/a {IPV6_TAILSCALE_DROP}' {BEFORE6_RULES}",
         "ufw default deny incoming",
         "ufw default allow outgoing",
         *(f"ufw {rule}" for rule in allow_rules),
@@ -33,4 +37,4 @@ def commands(allow_rules: list[str]) -> list[str]:
 
 
 def fingerprint(allow_rules: list[str]) -> str:
-    return hashlib.sha256("\n".join(allow_rules).encode()).hexdigest()
+    return hashlib.sha256("\n".join([*allow_rules, IPV6_TAILSCALE_DROP]).encode()).hexdigest()

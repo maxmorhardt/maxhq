@@ -191,32 +191,13 @@ jobs:
       tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || '' }}
 
   k3s-bootstrap:
-    name: k3s bootstrap tests
     needs: changes
     if: needs.changes.outputs.k3s == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: infra/k3s/bootstrap
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: '3.15'
-          cache: pip
-          cache-dependency-path: infra/k3s/bootstrap/requirements-dev.txt
-
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
-
-      - name: Test
-        run: pytest
+    uses: maxmorhardt/workflows/.github/workflows/ci-python.yml@main
+    with:
+      repository: ${{ github.repository }}
+      app_name: k3s-bootstrap
+      working_directory: infra/k3s/bootstrap
 
   ci-complete:
     name: CI Complete

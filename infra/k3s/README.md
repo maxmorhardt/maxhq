@@ -108,6 +108,11 @@ ufw is identical on every node and denies all inbound traffic except:
 | `lan_cidr`, if set | everything |
 | anywhere | the cluster's `open_ports` over tcp; prod opens 443 so Cloudflare's proxy reaches the gateway |
 
+Tailscale's direct paths are IPv4 only, so peers don't keep switching between address families and
+briefly stalling etcd. tailscaled accepts its own port inbound before ufw sees it, so the block is
+an outbound drop of IPv6 udp from 41641 inserted into `before6.rules`, ahead of ufw's
+established-connection accept.
+
 No k3s port is ever exposed on a public IP, and adding a node never touches the others. The
 applied rule set is fingerprinted in `/etc/maxhq/firewall.sha256`; `up` only rewrites ufw when it
 changes.
