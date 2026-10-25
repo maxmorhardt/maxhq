@@ -35,3 +35,15 @@ variable "txt" {
   }))
   default = {}
 }
+
+variable "cached_hosts" {
+  description = "Prod hosts serving prebuilt pages whose HTML is cached at the edge; \"\" is the apex"
+  type        = list(string)
+  default     = []
+}
+
+variable "cache_edge_ttl" {
+  description = "Seconds Cloudflare keeps cached HTML; the Free plan's minimum is 7200"
+  type        = number
+  default     = 7200
+}

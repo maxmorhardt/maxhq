@@ -74,3 +74,45 @@ resource "cloudflare_dns_record" "txt" {
   content = "\"${each.value.content}\""
   ttl     = 1
 }
+
+# cache html at edge
+resource "cloudflare_ruleset" "cache" {
+  count = length(var.cached_hosts) > 0 ? 1 : 0
+
+  zone_id = local.zone_id
+  name    = "Cache static sites"
+  kind    = "zone"
+  phase   = "http_request_cache_settings"
+
+  rules = [{
+    ref         = "cache_static_html"
+    description = "Edge-cache prebuilt pages; hashed /assets/ keep their origin headers"
+    expression = format(
+      "(http.host in {%s} and not starts_with(http.request.uri.path, \"/assets/\"))",
+      join(" ", [for h in var.cached_hosts : "\"${h == "" ? var.domain : "${h}.${var.domain}"}\""])
+    )
+    action  = "set_cache_settings"
+    enabled = true
+    action_parameters = {
+      cache = true
+      edge_ttl = {
+        mode    = "override_origin"
+        default = var.cache_edge_ttl
+        status_code_ttl = [{
+          status_code_range = { from = 300, to = 599 }
+          value             = -1
+        }]
+      }
+      browser_ttl = {
+        mode = "respect_origin"
+      }
+      cache_key = {
+        custom_key = {
+          query_string = {
+            exclude = { all = true }
+          }
+        }
+      }
+    }
+  }]
+}

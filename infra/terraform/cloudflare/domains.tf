@@ -1,8 +1,9 @@
 locals {
   domains = {
     "maxhq.io" = {
-      prod_hosts = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
-      dev        = true
+      prod_hosts   = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
+      cached_hosts = ["", "squares", "olympics"]
+      dev          = true
       mx = {
         "mx.zoho.com"  = 10
         "mx2.zoho.com" = 20
@@ -21,12 +22,13 @@ module "domains" {
   source   = "./modules/domain"
   for_each = toset(keys(local.domains))
 
-  domain     = each.key
-  prod_hosts = try(local.domains[each.key].prod_hosts, [])
-  prod_ips   = var.prod_ips
-  dev_ips    = try(local.domains[each.key].dev, false) ? var.dev_ips : []
-  mx         = try(local.domains[each.key].mx, {})
-  txt        = try(local.domains[each.key].txt, {})
+  domain       = each.key
+  prod_hosts   = try(local.domains[each.key].prod_hosts, [])
+  cached_hosts = try(local.domains[each.key].cached_hosts, [])
+  prod_ips     = var.prod_ips
+  dev_ips      = try(local.domains[each.key].dev, false) ? var.dev_ips : []
+  mx           = try(local.domains[each.key].mx, {})
+  txt          = try(local.domains[each.key].txt, {})
 }
 
 moved {
