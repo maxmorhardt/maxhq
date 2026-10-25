@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/maxmorhardt/maxhq/compare/squares-chart/1.1.1...squares-chart/1.1.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* keep cache purge Job pods out of the app Service ([#145](https://github.com/maxmorhardt/maxhq/issues/145)) ([b2ca6d8](https://github.com/maxmorhardt/maxhq/commit/b2ca6d8d6b0e1564608bc39e2c7bf457f39e2e64))
+
 ## [1.1.1](https://github.com/maxmorhardt/maxhq/compare/squares-chart/1.1.0...squares-chart/1.1.1) (2026-10-25)
 
 

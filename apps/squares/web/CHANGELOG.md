@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.1.0...squares/2.1.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **squares:** show contest player names the same way everywhere ([#146](https://github.com/maxmorhardt/maxhq/issues/146)) ([fead300](https://github.com/maxmorhardt/maxhq/commit/fead3008d8fcc99e224ec6008a1e4e5b7d362a2b))
+
 ## [2.1.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.0.4...squares/2.1.0) (2026-10-25)
 
 
