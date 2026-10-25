@@ -17,6 +17,10 @@ go_libs:
 squares_build:
   - 'apps/squares/Dockerfile*'
   - 'apps/squares/*.mk'
+libs_go:
+  - 'libs/go/**'
+libs_stamps:
+  - 'apps/squares/*/libs.stamp'
 charts:
   - 'charts/**'
 terraform:

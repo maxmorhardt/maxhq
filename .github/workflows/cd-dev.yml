@@ -8,6 +8,8 @@ on:
       - 'apps/**'
       - 'libs/**'
       - 'charts/**'
+      - 'go.mod'
+      - 'go.sum'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +19,7 @@ permissions:
 jobs:
   changes:
     name: Detect changes
+    if: "!startsWith(github.event.head_commit.message, 'chore: release main')"
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.tag.outputs.tag }}

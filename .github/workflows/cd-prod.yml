@@ -27,7 +27,7 @@ jobs:
       kind: ${{ steps.parse.outputs.kind }}
       app: ${{ steps.parse.outputs.app }}
       version: ${{ steps.parse.outputs.version }}
-      dev_tag: ${{ steps.parse.outputs.dev_tag }}
+      filters: ${{ steps.parse.outputs.filters }}
     steps:
       - name: Split tag into app and version
         id: parse
@@ -39,11 +39,18 @@ jobs:
           if [ "${component%-chart}" != "$component" ]; then
             kind=chart
           fi
+          app="${component%-chart}"
+          # the dev path filters (.github/path-filters.yml) that build each app's image
+          case "$app" in
+            maxhq) filters=maxhq ;;
+            squares) filters=squares_web ;;
+            squares-*) filters="${app#squares-} go_libs squares_build" ;;
+          esac
           {
             echo "kind=$kind"
-            echo "app=${component%-chart}"
+            echo "app=$app"
             echo "version=${TAG#*/}"
-            echo "dev_tag=sha-${GITHUB_SHA::7}"
+            echo "filters=${filters:-}"
           } >> "$GITHUB_OUTPUT"
 
   # app releases
@@ -54,7 +61,7 @@ jobs:
     uses: maxmorhardt/workflows/.github/workflows/cd-promote.yml@main
     with:
       app_name: ${{ needs.parse.outputs.app }}
-      source_tag: ${{ needs.parse.outputs.dev_tag }}
+      path_filters: ${{ needs.parse.outputs.filters }}
       target_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
 
