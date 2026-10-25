@@ -35,23 +35,19 @@ spec:
             capabilities:
               drop:
                 - ALL
+          envFrom:
+            - secretRef:
+                name: {{ .Values.cachePurge.existingSecret }}
           env:
-            - name: ZONE_ID
-              value: {{ required "cachePurge.zoneId is required" .Values.cachePurge.zoneId | quote }}
             - name: PURGE_BODY
               value: {{ dict "hosts" .Values.route.hostnames | toJson | quote }}
-            - name: CF_API_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.cachePurge.secret.name }}
-                  key: {{ .Values.cachePurge.secret.key }}
           command:
             - sh
             - -c
             - >-
               curl -fsS --retry 3 -X POST
-              "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache"
-              -H "Authorization: Bearer $CF_API_TOKEN"
+              "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache"
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"
               -H "Content-Type: application/json"
               --data "$PURGE_BODY"
           resources:

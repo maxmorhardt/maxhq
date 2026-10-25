@@ -97,10 +97,7 @@ pdb:
 
 cachePurge:
   enabled: false
-  zoneId: ''
-  secret:
-    name: cloudflare-api-token
-    key: api-token
+  existingSecret: cloudflare
   image:
     repository: curlimages/curl
     tag: 8.11.1

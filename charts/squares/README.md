@@ -12,4 +12,4 @@ Published to `oci://ghcr.io/maxmorhardt/charts/squares`, released as `squares-ch
 ## Optional
 
 - **Prometheus** — metrics on port 9113
-- **Cloudflare cache purge** — `cachePurge.enabled` runs a PostSync Job that purges the route hostnames; needs `cachePurge.zoneId` and a `cloudflare-api-token` secret (key `api-token`) with Zone → Cache Purge: Purge
+- **Cloudflare cache purge** — `cachePurge.enabled` runs a PostSync Job that purges the route hostnames; needs a `cloudflare` secret with `CLOUDFLARE_ZONE_ID` and `CLOUDFLARE_API_TOKEN` (Zone → Cache Purge: Purge)
