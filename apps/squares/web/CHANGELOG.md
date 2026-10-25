@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.0.4...squares/2.1.0) (2026-10-25)
+
+
+### Features
+
+* gzip, uncached asset 404s, and a post-deploy Cloudflare purge for maxhq and squares ([#137](https://github.com/maxmorhardt/maxhq/issues/137)) ([5183587](https://github.com/maxmorhardt/maxhq/commit/518358752204fd01a32cc2f775663c9bf900377f))
+
 ## [2.0.4](https://github.com/maxmorhardt/maxhq/compare/squares/2.0.3...squares/2.0.4) (2026-10-25)
 
 

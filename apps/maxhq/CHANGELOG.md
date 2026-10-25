@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.1.1...maxhq/1.2.0) (2026-10-25)
+
+
+### Features
+
+* gzip, uncached asset 404s, and a post-deploy Cloudflare purge for maxhq and squares ([#137](https://github.com/maxmorhardt/maxhq/issues/137)) ([5183587](https://github.com/maxmorhardt/maxhq/commit/518358752204fd01a32cc2f775663c9bf900377f))
+
 ## [1.1.1](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.1.0...maxhq/1.1.1) (2026-10-22)
 
 
