@@ -79,7 +79,7 @@ Conventional commits, enforced on PR titles and consumed by release-please. The 
 
 - `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime` - one service.
 - `squares` - the web app.
-- A change to `libs/*` alone releases nothing, so CI requires the same PR to change every service that imports the changed package (see `libs/AGENTS.md`).
+- A change to `libs/*` alone releases nothing: it ships with each service's next release. To ship it now, change each service that needs it in the same PR (see `libs/AGENTS.md`).
 
 Examples:
 
