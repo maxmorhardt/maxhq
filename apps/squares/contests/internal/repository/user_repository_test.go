@@ -80,9 +80,12 @@ func TestUserRepository_Upsert(t *testing.T) {
 func TestUserRepository_Scrub(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	contestID := uuid.New()
+	startedID := uuid.New()
 	mock.ExpectBegin()
-	mock.ExpectQuery(`UPDATE "squares" SET .*"owner"=\$\d+.*WHERE owner = \$\d+ AND contest_id IN .* RETURNING \*`).
+	mock.ExpectQuery(`UPDATE "squares" SET "claimed_at"=.*WHERE owner = \$\d+ AND contest_id IN \(SELECT "id" FROM "contests" WHERE status =\s*\$\d+\).*RETURNING \*`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "value", "owner"}).AddRow(uuid.New(), contestID, "", ""))
+	mock.ExpectQuery(`UPDATE "squares" SET "owner"=.*WHERE owner = \$\d+ AND contest_id IN \(SELECT "id" FROM "contests" WHERE status NOT IN .* AND status <> \$\d+.*RETURNING \*`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "value", "owner"}).AddRow(uuid.New(), startedID, "AB", model.GhostUser))
 	for range 10 {
 		mock.ExpectExec(`UPDATE "(squares|quarter_results|contests|contest_invites)" SET`).WillReturnResult(sqlmock.NewResult(0, 0))
 	}
@@ -91,15 +94,17 @@ func TestUserRepository_Scrub(t *testing.T) {
 	mock.ExpectExec(`DELETE FROM "users"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
-	var cleared []model.Square
+	var released []model.Square
 	var removed []model.ContestParticipant
 	require.NoError(t, inTxErr(gdb, func(ctx context.Context) error {
 		var err error
-		cleared, removed, err = NewUserRepository(gdb).Scrub(ctx, "a@b.com")
+		released, removed, err = NewUserRepository(gdb).Scrub(ctx, "a@b.com")
 		return err
 	}))
-	require.Len(t, cleared, 1)
-	assert.Equal(t, contestID, cleared[0].ContestID)
+	require.Len(t, released, 2)
+	assert.Equal(t, contestID, released[0].ContestID)
+	assert.Equal(t, startedID, released[1].ContestID)
+	assert.Equal(t, model.GhostUser, released[1].Owner, "a started board's squares are ghosted, not freed")
 	require.Len(t, removed, 1)
 	assert.Equal(t, "a@b.com", removed[0].UserID)
 	assert.NoError(t, mock.ExpectationsWereMet())

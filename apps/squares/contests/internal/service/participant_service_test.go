@@ -576,7 +576,7 @@ func TestRemoveParticipant_DeleteFails(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestRemoveParticipant_FullBoardGhostsTheirSquares(t *testing.T) {
+func TestRemoveParticipant_FullBoardBeforeKickoffFreesTheirSquares(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
 	full := &model.Contest{
 		Status:  model.ContestStatusActive,
@@ -584,7 +584,7 @@ func TestRemoveParticipant_FullBoardGhostsTheirSquares(t *testing.T) {
 	}
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(full, nil)
-	sq.EXPECT().Ghost(mock.Anything, mock.Anything).Return(&model.Square{}, nil).Once()
+	sq.EXPECT().Clear(mock.Anything, mock.Anything).Return(&model.Square{}, nil).Once()
 	p := mocks.NewParticipantRepository(t)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(&model.ContestParticipant{Role: model.ParticipantRoleOwner}, nil)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target").Return(&model.ContestParticipant{Role: model.ParticipantRoleParticipant}, nil)

@@ -43,9 +43,13 @@ func TestEvents_ContestChangesAreAppendedToTheContestStream(t *testing.T) {
 	assert.Equal(t, ownerUser, claimed.Owner)
 	assert.Equal(t, int64(2), claimed.Version)
 
-	var unpublished int
-	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.outbox WHERE published_at IS NULL`).Scan(&unpublished))
-	assert.Zero(t, unpublished)
+	// the relay appends before it commits published_at, and other tests' rows may still be queued
+	require.Eventually(t, func() bool {
+		var unpublished int
+		err := rawDB.QueryRow(`SELECT COUNT(*) FROM contests.outbox WHERE stream = $1 AND published_at IS NULL`,
+			events.ContestStream(contest.ID)).Scan(&unpublished)
+		return err == nil && unpublished == 0
+	}, eventually, 100*time.Millisecond, "the relay marks the contest's outbox rows published")
 }
 
 func TestEvents_GameKickoffAutoStartsAndScoresLinkedContests(t *testing.T) {
