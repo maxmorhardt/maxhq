@@ -10,7 +10,8 @@ def test_only_the_tailnet_pods_and_services_get_in():
         "allow in on tailscale0",
         "allow from 10.42.0.0/16",
         "allow from 10.43.0.0/16",
-        "allow proto udp to any port 41641",
+        "allow proto udp from 0.0.0.0/0 to any port 41641",
+        "deny out proto udp from ::/0 port 41641",
     ]
 
 

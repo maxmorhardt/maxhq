@@ -104,7 +104,7 @@ ufw is identical on every node and denies all inbound traffic except:
 | --- | --- |
 | `tailscale0` | everything |
 | pods `10.42.0.0/16`, services `10.43.0.0/16` | everything |
-| anywhere | 41641 udp, so Tailscale peers connect directly instead of through a relay |
+| anywhere over IPv4 | 41641 udp, so Tailscale peers connect directly instead of through a relay. IPv6 on 41641 is blocked both ways, so peers stay on one path instead of switching between address families |
 | `lan_cidr`, if set | everything |
 | anywhere | the cluster's `open_ports` over tcp; prod opens 443 so Cloudflare's proxy reaches the gateway |
 
