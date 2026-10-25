@@ -100,7 +100,7 @@ cachePurge:
   existingSecret: cloudflare
   image:
     repository: curlimages/curl
-    tag: 8.11.1
+    tag: 8.23.0
     pullPolicy: IfNotPresent
   runAsUser: 100
   backoffLimit: 2
