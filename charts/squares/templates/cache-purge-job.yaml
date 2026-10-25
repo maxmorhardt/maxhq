@@ -14,8 +14,10 @@ spec:
   activeDeadlineSeconds: {{ .Values.cachePurge.activeDeadlineSeconds }}
   template:
     metadata:
+      # not the app's selector labels, or its Service would route to and scrape this pod
       labels:
-        {{- include "app.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/name: {{ include "app.fullname" . }}-cache-purge
+        app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: cache-purge
     spec:
       restartPolicy: Never
