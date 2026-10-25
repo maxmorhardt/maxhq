@@ -1,5 +1,4 @@
 {{- if .Values.cachePurge.enabled }}
-# runs after argo cd reports the rollout healthy, so cloudflare refills from new pods
 apiVersion: batch/v1
 kind: Job
 metadata:
