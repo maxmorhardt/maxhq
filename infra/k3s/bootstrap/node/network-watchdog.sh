@@ -21,11 +21,11 @@ QUEUE=$STATE/queued-alerts
 TOKEN="${TELEGRAM_TOKEN:-}"     # from /etc/network-watchdog.env
 CHAT="${TELEGRAM_CHAT_ID:-}"
 
-# severity markers that lead each Telegram message
-GREEN=🟢
-YELLOW=🟡
-ORANGE=🟠
-RED=🔴
+# severity emoji that lead each Telegram message, as JSON escapes so no locale can mangle them
+GREEN='\ud83d\udfe2'
+YELLOW='\ud83d\udfe1'
+ORANGE='\ud83d\udfe0'
+RED='\ud83d\udd34'
 
 HOST=$(hostname)
 mkdir -p "$STATE"
