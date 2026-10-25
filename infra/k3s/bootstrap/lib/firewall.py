@@ -8,7 +8,7 @@ POD_CIDR = "10.42.0.0/16"
 SERVICE_CIDR = "10.43.0.0/16"
 TAILSCALE_PORT = 41641
 BEFORE6_RULES = "/etc/ufw/before6.rules"
-# tailscaled accepts its port ahead of ufw, so IPv6 is dropped on the way out, before ufw accepts established flows
+# force tailscale ipv4 to avoid network switches causing packet loss
 IPV6_TAILSCALE_DROP = f"-A ufw6-before-output -p udp --sport {TAILSCALE_PORT} -j DROP"
 
 
