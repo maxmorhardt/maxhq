@@ -6,22 +6,18 @@ import type {
   Square,
 } from '../../../types/contest';
 import { getStatusLabel } from '../../../utils/contestStatus';
-import { participantName } from '../../../utils/publicName';
+import { participantName, toPublicName } from '../../../utils/publicName';
 import type { ContestEvent } from './events';
 
-// the feed keeps the latest entries so a long game cannot grow it without bound
 export const MAX_ACTIVITY = 200;
-
-// a ghosted square (owner left a private contest) keeps its value but has no owner name
 const GHOST_USER = 'ghost';
 
-// an unclaimed winning square reads the same as a departed player's
-export const winnerLabel = (winner: string, winnerName: string) =>
-  winner === GHOST_USER || winner === '' ? 'ghost' : winnerName;
+export const ownerLabel = (owner: string, ownerName: string) =>
+  owner === GHOST_USER || owner === '' ? GHOST_USER : toPublicName(ownerName);
 
 const timeOf = (event: ActivityEvent) => new Date(event.timestamp).getTime();
 
-// rebuilds the feed from a snapshot, so a fresh viewer sees what already happened
+// rebuilds the feed from a snapshot
 export function seedActivity(contest: Contest, participants: Participant[]): ActivityEvent[] {
   const joined = participants
     .filter((p) => p.role !== 'owner')
@@ -37,18 +33,18 @@ export function seedActivity(contest: Contest, participants: Participant[]): Act
     .map<ActivityEvent>((s) => ({
       id: `seed-square-${s.id}`,
       type: 'square_claimed',
-      message: `${s.ownerName || 'Someone'} claimed square (${s.row}, ${s.col})`,
+      message: `${ownerLabel(s.owner, s.ownerName)} claimed square (${s.row}, ${s.col})`,
       timestamp: s.claimedAt || s.updatedAt || s.createdAt,
     }));
 
   const winners = (contest.quarterResults ?? []).map<ActivityEvent>((qr) => ({
     id: `seed-qr-${qr.id}`,
     type: 'quarter_winner',
-    message: `Q${qr.quarter} winner: ${winnerLabel(qr.winner, qr.winnerName)} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
+    message: `Q${qr.quarter} winner: ${ownerLabel(qr.winner, qr.winnerName)} (${qr.homeTeamScore}-${qr.awayTeamScore})`,
     timestamp: qr.createdAt,
   }));
 
-  // the board locks before kickoff, so a claim stamped after a quarter (a backfilled claimedAt) still sorts before it
+  // handle backfilled square claim
   const lockedAt = Math.min(...winners.map(timeOf));
   const sortTime = (event: ActivityEvent) =>
     event.type === 'square_claimed' ? Math.min(timeOf(event), lockedAt) : timeOf(event);
@@ -58,7 +54,7 @@ export function seedActivity(contest: Contest, participants: Participant[]): Act
     .slice(-MAX_ACTIVITY);
 }
 
-// what the contest looked like before the event, to tell real changes from edits
+// state before content event
 export interface Before {
   status?: ContestStatus;
   square?: Pick<Square, 'owner' | 'value'>;
@@ -88,13 +84,13 @@ export function describeEvent(
       if (owner === GHOST_USER || (held && before.square?.owner === owner)) {
         return null;
       }
-      return entry('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
+      return entry('square_claimed', `${toPublicName(ownerName)} claimed square (${row}, ${col})`);
     }
     case 'quarter.recorded': {
       const qr = event.data;
       return entry(
         'quarter_winner',
-        `Q${qr.quarter} winner: ${winnerLabel(qr.winner, qr.winnerName)} (${qr.homeTeamScore}-${qr.awayTeamScore})`
+        `Q${qr.quarter} winner: ${ownerLabel(qr.winner, qr.winnerName)} (${qr.homeTeamScore}-${qr.awayTeamScore})`
       );
     }
     case 'contest.updated':

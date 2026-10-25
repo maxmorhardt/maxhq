@@ -61,7 +61,9 @@ describe('liveContestSlice stream lifecycle', () => {
 
 describe('liveContestSlice events', () => {
   it('replaces everything with a snapshot and seeds the feed', () => {
-    const state = live(makeContest({ squares: [makeSquare({ value: 'AB', ownerName: 'Ann' })] }));
+    const state = live(
+      makeContest({ squares: [makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: 'Ann' })] })
+    );
     expect(state.contest?.id).toBe('c-1');
     expect(state.participants).toHaveLength(1);
     expect(state.activity.map((a) => a.message)).toContain('Ann claimed square (0, 0)');

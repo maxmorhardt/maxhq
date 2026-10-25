@@ -45,7 +45,7 @@ const sampleActivity = [
   ),
   sample(
     'square.updated',
-    { row: 4, col: 7, value: 'JD', owner: 'jordan@gmail.com', ownerName: 'Jordan' },
+    { row: 4, col: 7, value: 'JD', owner: 'jordan@gmail.com', ownerName: 'Jordan Diaz' },
     at(19, 2)
   ),
   sample('contest.updated', { status: 'Q1' }, at(20, 20), { status: 'ACTIVE' }),
@@ -61,7 +61,7 @@ const sampleActivity = [
       homeTeamScore: 14,
       awayTeamScore: 7,
       winner: 'jordan@gmail.com',
-      winnerName: 'Jordan',
+      winnerName: 'Jordan Diaz',
     },
     at(21, 43)
   ),

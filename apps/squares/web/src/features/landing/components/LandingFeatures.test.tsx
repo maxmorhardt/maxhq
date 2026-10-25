@@ -23,8 +23,8 @@ describe('LandingFeatures', () => {
     const feed = screen.getByRole('figure', { name: 'Example contest activity' });
     expect(feed).toHaveTextContent('Jordan D. joined the contest');
     expect(feed).not.toHaveTextContent('@');
-    expect(feed).toHaveTextContent('Jordan claimed square (4, 7)');
+    expect(feed).toHaveTextContent('Jordan D. claimed square (4, 7)');
     expect(feed).toHaveTextContent('Contest status changed to Q1');
-    expect(feed).toHaveTextContent('Q2 winner: Jordan (14-7)');
+    expect(feed).toHaveTextContent('Q2 winner: Jordan D. (14-7)');
   });
 });

@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { fonts, game as palette } from '../../../../app/theme';
 import type { Contest, Game, QuarterResult } from '../../../../types/contest';
-import { winnerLabel } from '../../live/activity';
+import { ownerLabel } from '../../live/activity';
 import type { ContestViewer } from '../../live/viewer';
 
 interface Props {
@@ -144,7 +144,7 @@ export default function QuarterStrip({ contest, game, viewer }: Props) {
               {result
                 ? mine
                   ? 'You won'
-                  : winnerLabel(result.winner, result.winnerName) || 'Winner'
+                  : ownerLabel(result.winner, result.winnerName)
                 : state === 'scored'
                   ? 'No winner'
                   : state === 'live'

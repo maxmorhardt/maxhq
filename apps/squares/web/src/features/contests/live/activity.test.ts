@@ -5,7 +5,7 @@ import {
   makeQuarterResult,
   makeSquare,
 } from '../../../test/fixtures';
-import { describeEvent, MAX_ACTIVITY, seedActivity, winnerLabel } from './activity';
+import { describeEvent, MAX_ACTIVITY, ownerLabel, seedActivity } from './activity';
 import type { ContestEvent } from './events';
 
 const event = (type: ContestEvent['type'], data: unknown) =>
@@ -21,7 +21,13 @@ describe('seedActivity', () => {
   it('rebuilds joins, claims, and winners in time order', () => {
     const contest = makeContest({
       squares: [
-        makeSquare({ id: 's1', value: 'AB', ownerName: 'Ann', updatedAt: '2026-01-01T02:00:00Z' }),
+        makeSquare({
+          id: 's1',
+          value: 'AB',
+          owner: 'ann@x.com',
+          ownerName: 'Ann',
+          updatedAt: '2026-01-01T02:00:00Z',
+        }),
         makeSquare({ id: 's2' }),
       ],
       quarterResults: [makeQuarterResult({ createdAt: '2026-01-01T03:00:00Z' })],
@@ -49,6 +55,7 @@ describe('seedActivity', () => {
         makeSquare({
           id: 's1',
           value: 'AB',
+          owner: 'ann@x.com',
           ownerName: 'Ann',
           claimedAt: '2026-01-01T01:00:00Z',
           updatedAt: '2026-01-01T09:00:00Z',
@@ -68,7 +75,13 @@ describe('seedActivity', () => {
   it('keeps claims ahead of quarter results even when stamped after them', () => {
     const contest = makeContest({
       squares: [
-        makeSquare({ id: 's1', value: 'AB', ownerName: 'Ann', claimedAt: '2026-01-02T10:00:00Z' }),
+        makeSquare({
+          id: 's1',
+          value: 'AB',
+          owner: 'ann@x.com',
+          ownerName: 'Ann',
+          claimedAt: '2026-01-02T10:00:00Z',
+        }),
       ],
       quarterResults: [makeQuarterResult({ createdAt: '2026-01-01T23:00:00Z' })],
     });
@@ -103,6 +116,12 @@ describe('describeEvent', () => {
       timestamp: '2026-01-02T00:00:00Z',
     });
     expect(describeEvent(cleared, 'id')?.message).toBe('Square (1, 2) was cleared');
+  });
+
+  it('names square owners and winners the same way as participants', () => {
+    const claimed = event('square.updated', makeSquare({ value: 'AB', ownerName: 'Bo Jackson' }));
+    expect(describeEvent(claimed, 'id')?.message).toMatch(/^Bo J\. claimed/);
+    expect(ownerLabel('bo@x.com', 'Bo Jackson')).toBe('Bo J.');
   });
 
   it('skips new initials on a held square and a departed player kept in play', () => {
@@ -154,7 +173,7 @@ describe('describeEvent', () => {
 
     const unnamed = makeParticipant({ userId: 'bo@x.com', displayName: 'bo@x.com' });
     expect(describeEvent(event('participant.joined', unnamed), 'id')?.message).toBe(
-      'A player joined the contest'
+      'bo joined the contest'
     );
   });
 
@@ -163,10 +182,10 @@ describe('describeEvent', () => {
   });
 });
 
-describe('winnerLabel', () => {
-  it('names ghosted winners', () => {
-    expect(winnerLabel('ghost', '')).toBe('ghost');
-    expect(winnerLabel('', '')).toBe('ghost');
-    expect(winnerLabel('a@x.com', 'Ann')).toBe('Ann');
+describe('ownerLabel', () => {
+  it('names ghosted owners and winners', () => {
+    expect(ownerLabel('ghost', '')).toBe('ghost');
+    expect(ownerLabel('', '')).toBe('ghost');
+    expect(ownerLabel('a@x.com', 'Ann')).toBe('Ann');
   });
 });

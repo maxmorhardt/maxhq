@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { leaderboardKey, toPublicName } from './publicName';
+import { leaderboardKey, participantName, toPublicName } from './publicName';
 
 describe('toPublicName', () => {
   it('abbreviates the surname', () => {
@@ -32,6 +32,20 @@ describe('toPublicName', () => {
 
   it('collapses extra whitespace', () => {
     expect(toPublicName('  Max   Morhardt  ')).toBe('Max M.');
+  });
+});
+
+describe('participantName', () => {
+  it('shortens the name', () => {
+    expect(participantName({ displayName: 'Max Morhardt' })).toBe('Max M.');
+  });
+
+  it('leaves an already short name unchanged', () => {
+    expect(participantName({ displayName: 'Max M.' })).toBe('Max M.');
+  });
+
+  it('falls back when there is no name', () => {
+    expect(participantName({})).toBe('Player');
   });
 });
 

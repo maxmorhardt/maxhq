@@ -17,6 +17,7 @@ import { errorMessage } from '../../../../api/errors';
 import type { Contest, Square } from '../../../../types/contest';
 import { useToast } from '../../../toast/useToast';
 import { useClearSquareMutation } from '../../api';
+import { ownerLabel } from '../../live/activity';
 import type { ContestViewer } from '../../live/viewer';
 
 interface Props {
@@ -85,7 +86,9 @@ export default function SquareDialog({ square, contest, viewer, onClose }: Props
                 variant="body2"
                 sx={{ color: 'text.secondary', overflowWrap: 'anywhere' }}
               >
-                {isMine ? 'Claimed by you' : `Claimed by ${square.ownerName || square.owner}`}
+                {isMine
+                  ? 'Claimed by you'
+                  : `Claimed by ${ownerLabel(square.owner, square.ownerName)}`}
               </Typography>
             </>
           ) : (
