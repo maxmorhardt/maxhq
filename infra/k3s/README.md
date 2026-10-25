@@ -161,8 +161,8 @@ anything under `infra/k3s/` changes.
 | file | purpose |
 | --- | --- |
 | `bootstrap/node/pre-reboot.sh` | run by kured before each reboot: prune images, upgrade, vacuum logs |
-| `bootstrap/node/network-watchdog.sh` | recovers the Pis' ethernet after ISP drops; Discord alerts |
-| `bootstrap/node/network-watchdog.env.example` | template for the watchdog's `DISCORD_WEBHOOK_URL` |
+| `bootstrap/node/network-watchdog.sh` | recovers the Pis' ethernet after ISP drops; Telegram alerts |
+| `bootstrap/node/network-watchdog.env.example` | template for the watchdog's `TELEGRAM_TOKEN` and `TELEGRAM_CHAT_ID` |
 | `bootstrap/systemd/network-watchdog.{service,timer}` | runs the watchdog every five minutes |
 
 ## MicroSD to NVMe (Pis)
@@ -185,13 +185,13 @@ sudo rpi-eeprom-config --edit
 ## Network watchdog (Pis)
 
 Recovers the Pis' ethernet after ISP maintenance drops. It runs every five minutes, snapshots
-network state, walks a recovery ladder, and sends a Discord alert with the before/after log.
+network state, walks a recovery ladder, and sends a Telegram alert with the before/after log.
 
 ```bash
 journalctl -u network-watchdog.service -r
 systemctl status network-watchdog.timer
 ```
 
-For Discord alerts, copy `bootstrap/node/network-watchdog.env.example` to
-`bootstrap/node/network-watchdog.env` (gitignored) and set `DISCORD_WEBHOOK_URL`; the next `up`
-deploys it to `/etc/network-watchdog.env`.
+For Telegram alerts, copy `bootstrap/node/network-watchdog.env.example` to
+`bootstrap/node/network-watchdog.env` (gitignored) and set the bot's `TELEGRAM_TOKEN` and the
+`TELEGRAM_CHAT_ID` to message; the next `up` deploys it to `/etc/network-watchdog.env`.

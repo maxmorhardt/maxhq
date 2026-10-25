@@ -18,13 +18,14 @@ DOWN=$STATE/down-since
 ALERTED=$STATE/alerted
 REBOOTED=$STATE/last-reboot
 QUEUE=$STATE/queued-alerts
-WEBHOOK="${DISCORD_WEBHOOK_URL:-}"   # from /etc/network-watchdog.env
+TOKEN="${TELEGRAM_TOKEN:-}"     # from /etc/network-watchdog.env
+CHAT="${TELEGRAM_CHAT_ID:-}"
 
-# Discord embed colors, as the decimal ints its API expects
-GREEN=3066993
-YELLOW=15844367
-ORANGE=15105570
-RED=15158332
+# severity emoji that lead each Telegram message, as JSON escapes so no locale can mangle them
+GREEN='\ud83d\udfe2'
+YELLOW='\ud83d\udfe1'
+ORANGE='\ud83d\udfe0'
+RED='\ud83d\udd34'
 
 HOST=$(hostname)
 mkdir -p "$STATE"
@@ -56,7 +57,7 @@ mins() {
     echo $(( ($(date +%s) - start) / 60 ))
 }
 
-# Discord is unreachable mid-outage, so alerts queue and go out on a later run
+# Telegram is unreachable mid-outage, so alerts queue and go out on a later run
 alert() {
     log "$2"
     echo "$1 $2" >> "$QUEUE"
@@ -66,19 +67,19 @@ send_queued_alerts() {
     if [ ! -s "$QUEUE" ]; then
         return 0
     fi
-    if [ -z "$WEBHOOK" ]; then
+    if [ -z "$TOKEN" ] || [ -z "$CHAT" ]; then
         rm -f "$QUEUE"
         return 0
     fi
 
-    # each queued line is a color int followed by the message
+    # each queued line is a severity marker followed by the message
     local color message escaped payload
     while read -r color message; do
         # quotes and backslashes would otherwise break the JSON payload
         escaped=$(sed 's/[\\"]/\\&/g' <<<"$message")
-        payload=$(printf '{"embeds":[{"title":"%s","description":"%s","color":%s}]}' "$HOST" "$escaped" "$color")
-        if ! curl -sfS -m 15 -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK" >/dev/null; then
-            log "Discord send failed, alerts stay queued"
+        payload=$(printf '{"chat_id":"%s","text":"%s %s: %s"}' "$CHAT" "$color" "$HOST" "$escaped")
+        if ! curl -sfS -m 15 -H 'Content-Type: application/json' -d "$payload" "https://api.telegram.org/bot$TOKEN/sendMessage" >/dev/null; then
+            log "Telegram send failed, alerts stay queued"
             return 0
         fi
     done < "$QUEUE"
