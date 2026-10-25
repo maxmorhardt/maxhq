@@ -2,7 +2,7 @@ locals {
   domains = {
     "maxhq.io" = {
       prod_hosts   = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
-      cached_hosts = ["", "squares"]
+      cached_hosts = ["", "squares", "olympics"]
       dev          = true
       mx = {
         "mx.zoho.com"  = 10
