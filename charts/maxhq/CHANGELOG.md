@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/maxmorhardt/maxhq/compare/maxhq-chart/1.1.0...maxhq-chart/1.1.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* give the nginx-exporter sidecar CPU headroom for scrape bursts ([#142](https://github.com/maxmorhardt/maxhq/issues/142)) ([5a18646](https://github.com/maxmorhardt/maxhq/commit/5a186460344461bb9230385a73c00c55ba1434b1))
+
 ## [1.1.0](https://github.com/maxmorhardt/maxhq/compare/maxhq-chart/1.0.1...maxhq-chart/1.1.0) (2026-10-25)
 
 
