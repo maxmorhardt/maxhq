@@ -3,48 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact Form Submission</title>
-  <style>
-    body, h1, p { margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f4f4f7; color: #1a1a2e; line-height: 1.6; }
-    .wrapper { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
-    .header { background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 24px 32px; }
-    .header h1 { font-size: 20px; font-weight: 700; color: #fff; }
-    .header p { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 2px; }
-    .body { padding: 24px 32px; }
-    .field { margin-bottom: 16px; }
-    .field:last-child { margin-bottom: 0; }
-    .label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #2563eb; margin-bottom: 4px; }
-    .value { font-size: 15px; color: #1a1a2e; word-break: break-word; }
-    .value a { color: #2563eb; text-decoration: none; }
-    .msg { background: #eff6ff; border-left: 3px solid #2563eb; border-radius: 0 6px 6px 0; padding: 12px 16px; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
-    .footer { border-top: 1px solid #e5e7eb; padding: 16px 32px; text-align: center; }
-    .footer p { font-size: 12px; color: #9ca3af; }
-  </style>
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
+  <title>New contact submission</title>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <h1>New Contact Submission</h1>
-      <p>{{.Subject}}</p>
-    </div>
-    <div class="body">
-      <div class="field">
-        <span class="label">From</span>
-        <span class="value">{{.Name}}</span>
-      </div>
-      <div class="field">
-        <span class="label">Email</span>
-        <span class="value"><a href="mailto:{{.Email}}">{{.Email}}</a></span>
-      </div>
-      <div class="field">
-        <span class="label">Message</span>
-        <div class="msg">{{.Message}}</div>
-      </div>
-    </div>
-    <div class="footer">
-      <p>Sent via the Squares contact form.</p>
-    </div>
-  </div>
+<body style="margin:0;padding:0;background-color:#eef1f7;-webkit-text-size-adjust:100%;">
+  <!-- inbox preview text -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#eef1f7;">{{.Name}}: {{.Message}}</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef1f7" style="background-color:#eef1f7;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#ffffff;border:1px solid #dde3ef;border-radius:14px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+          <tr>
+            <td bgcolor="#0b1222" style="background-color:#0b1222;padding:24px 32px 26px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="vertical-align:middle;padding-right:10px;">
+                          <table role="presentation" cellpadding="0" cellspacing="2" border="0">
+                            <tr>
+                              <td width="8" height="8" bgcolor="#3d9bff" style="width:8px;height:8px;background-color:#3d9bff;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td>
+                              <td width="8" height="8" bgcolor="#f7c948" style="width:8px;height:8px;background-color:#f7c948;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td>
+                            </tr>
+                            <tr>
+                              <td width="8" height="8" bgcolor="#f7c948" style="width:8px;height:8px;background-color:#f7c948;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td>
+                              <td width="8" height="8" bgcolor="#3d9bff" style="width:8px;height:8px;background-color:#3d9bff;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td style="vertical-align:middle;font-size:13px;font-weight:800;letter-spacing:2px;color:#eef2fa;">SQUARES</td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="vertical-align:middle;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#f7c948;">Contact form</td>
+                </tr>
+              </table>
+
+              <h1 style="margin:22px 0 0;font-size:22px;line-height:1.3;font-weight:700;color:#ffffff;word-break:break-word;">{{.Subject}}</h1>
+              <p style="margin:6px 0 0;font-size:13px;line-height:1.5;color:#93a0ba;">
+                From {{.Name}}{{if not .CreatedAt.IsZero}} &middot; {{.CreatedAt.UTC.Format "Jan 2, 2006 at 3:04 PM MST"}}{{end}}
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td bgcolor="#3d9bff" height="4" style="background-color:#3d9bff;height:4px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <tr>
+            <td style="padding:28px 32px 8px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:15px;line-height:1.5;color:#16223a;">
+                <tr>
+                  <td width="72" style="width:72px;padding:0 12px 10px 0;vertical-align:top;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#7d8aa6;line-height:22px;">Name</td>
+                  <td style="padding:0 0 10px;vertical-align:top;word-break:break-word;font-weight:600;">{{.Name}}</td>
+                </tr>
+                <tr>
+                  <td width="72" style="width:72px;padding:0 12px 0 0;vertical-align:top;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#7d8aa6;line-height:22px;">Email</td>
+                  <td style="padding:0;vertical-align:top;word-break:break-all;"><a href="mailto:{{.Email}}" style="color:#1976d2;text-decoration:none;">{{.Email}}</a></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:20px 32px 0;">
+              <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#7d8aa6;">Message</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td bgcolor="#f4f7fc" style="background-color:#f4f7fc;border-left:4px solid #3d9bff;border-radius:0 8px 8px 0;padding:16px 20px;font-size:15px;line-height:1.6;color:#16223a;white-space:pre-wrap;word-break:break-word;">{{.Message}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:28px 32px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td bgcolor="#1976d2" style="background-color:#1976d2;border-radius:8px;">
+                    <a href="mailto:{{.Email}}?subject=Re%3A%20{{.Subject}}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;">Reply to {{.Name}}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td bgcolor="#f7f9fc" style="background-color:#f7f9fc;border-top:1px solid #e6ebf4;padding:16px 32px;font-size:12px;line-height:1.6;color:#7d8aa6;">
+              Sent from the contact form on <a href="https://squares.maxhq.io" style="color:#7d8aa6;text-decoration:underline;">squares.maxhq.io</a>. Replying to this email goes straight to {{.Name}}.
+              <br />Ref {{.ID}}
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
