@@ -19,7 +19,6 @@ permissions:
 jobs:
   changes:
     name: Detect changes
-    # a release commit only bumps versions and changelogs; prod promotes the image dev already built
     if: "!startsWith(github.event.head_commit.message, 'chore: release main')"
     runs-on: ubuntu-latest
     outputs:
