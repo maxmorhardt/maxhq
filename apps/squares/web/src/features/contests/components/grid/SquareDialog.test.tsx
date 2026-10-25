@@ -57,6 +57,23 @@ describe('SquareDialog', () => {
     expect(screen.queryByRole('button', { name: 'Clear Square' })).not.toBeInTheDocument();
   });
 
+  it('shortens the owner’s name and never falls back to their email', () => {
+    const { unmount } = renderDialog(
+      makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: 'Ann Lee' })
+    );
+    expect(screen.getByText('Claimed by Ann L.')).toBeInTheDocument();
+    unmount();
+
+    renderDialog(makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: '' }));
+    expect(screen.getByText('Claimed by Player')).toBeInTheDocument();
+    expect(screen.queryByText(/ann@x\.com/)).not.toBeInTheDocument();
+  });
+
+  it('names a departed player’s square ghost', () => {
+    renderDialog(makeSquare({ value: 'AB', owner: 'ghost', ownerName: '' }));
+    expect(screen.getByText('Claimed by ghost')).toBeInTheDocument();
+  });
+
   it('lists the quarters a square won and locks it after kickoff', () => {
     renderDialog(
       mine,
