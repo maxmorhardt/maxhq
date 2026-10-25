@@ -27,13 +27,8 @@ jobs:
       kind: ${{ steps.parse.outputs.kind }}
       app: ${{ steps.parse.outputs.app }}
       version: ${{ steps.parse.outputs.version }}
-      dev_tag: ${{ steps.source.outputs.dev_tag }}
+      filters: ${{ steps.parse.outputs.filters }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
-
       - name: Split tag into app and version
         id: parse
         env:
@@ -44,32 +39,19 @@ jobs:
           if [ "${component%-chart}" != "$component" ]; then
             kind=chart
           fi
+          app="${component%-chart}"
+          # the dev path filters (.github/path-filters.yml) that build each app's image
+          case "$app" in
+            maxhq) filters=maxhq ;;
+            squares) filters=squares_web ;;
+            squares-*) filters="${app#squares-} go_libs squares_build" ;;
+          esac
           {
             echo "kind=$kind"
-            echo "app=${component%-chart}"
+            echo "app=$app"
             echo "version=${TAG#*/}"
+            echo "filters=${filters:-}"
           } >> "$GITHUB_OUTPUT"
-
-      # the release commit only changes changelogs, so promote the image dev built for the last real change
-      - name: Find the dev image to promote
-        id: source
-        if: steps.parse.outputs.kind == 'image'
-        env:
-          APP: ${{ steps.parse.outputs.app }}
-        run: |
-          case "$APP" in
-            maxhq) filters=(maxhq) ;;
-            squares) filters=(squares_web) ;;
-            squares-*) filters=("${APP#squares-}" go_libs squares_build) ;;
-            *) echo "::error::no dev path filters for $APP"; exit 1 ;;
-          esac
-          mapfile -t paths < <(for f in "${filters[@]}"; do yq ".${f}[]" .github/path-filters.yml; done | sed 's/^/:(glob)/')
-          commit=$(git log -1 --format=%H "$GITHUB_SHA^" -- "${paths[@]}" ':(glob,exclude)**/CHANGELOG.md')
-          if [ -z "$commit" ]; then
-            echo "::error::no commit before $GITHUB_SHA changed $APP"
-            exit 1
-          fi
-          echo "dev_tag=sha-${commit::7}" >> "$GITHUB_OUTPUT"
 
   # app releases
 
@@ -79,7 +61,7 @@ jobs:
     uses: maxmorhardt/workflows/.github/workflows/cd-promote.yml@main
     with:
       app_name: ${{ needs.parse.outputs.app }}
-      source_tag: ${{ needs.parse.outputs.dev_tag }}
+      path_filters: ${{ needs.parse.outputs.filters }}
       target_tag: ${{ needs.parse.outputs.version }}
     secrets: inherit
 
