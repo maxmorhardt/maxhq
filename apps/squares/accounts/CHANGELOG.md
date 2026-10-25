@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.1.3...squares-accounts/1.1.4) (2026-10-25)
+
+
+### Bug Fixes
+
+* **squares-contests:** free a removed player's squares before kickoff ([#149](https://github.com/maxmorhardt/maxhq/issues/149)) ([16d556b](https://github.com/maxmorhardt/maxhq/commit/16d556b09782625fa90baad9c694af5efb7d3053))
+
 ## [1.1.3](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.1.2...squares-accounts/1.1.3) (2026-10-25)
 
 
