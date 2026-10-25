@@ -8,7 +8,8 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    # deleted once it succeeds; a failed run stays for debugging until the next sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
 spec:
   backoffLimit: {{ .Values.cachePurge.backoffLimit }}
   activeDeadlineSeconds: {{ .Values.cachePurge.activeDeadlineSeconds }}
