@@ -13,7 +13,7 @@ import (
 type UserRepository interface {
 	GetOrCreate(ctx context.Context, email, defaultDisplayName, defaultInitials string) (*model.User, error)
 	Upsert(ctx context.Context, user *model.User) error
-	Scrub(ctx context.Context, email string) (cleared []model.Square, removed []model.ContestParticipant, err error)
+	Scrub(ctx context.Context, email string) (released []model.Square, removed []model.ContestParticipant, err error)
 }
 
 type userRepository struct {
@@ -60,17 +60,27 @@ func (r *userRepository) Upsert(ctx context.Context, user *model.User) error {
 		Create(user).Error
 }
 
-// returns what live viewers need to hear about: the squares freed in unfinished contests and the memberships removed
+// returns what live viewers need to hear about: the squares released in unfinished contests and the memberships removed
 func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestParticipant, error) {
-	var cleared []model.Square
+	var released []model.Square
 	var removed []model.ContestParticipant
 	err := database.InTx(ctx, func(tx *gorm.DB) error {
-		if err := tx.Model(&cleared).Clauses(clause.Returning{}).
+		if err := tx.Model(&released).Clauses(clause.Returning{}).
 			Where("owner = ? AND contest_id IN (?)", email,
-				tx.Model(&model.Contest{}).Select("id").Where("status NOT IN ?", terminalStatuses)).
+				tx.Model(&model.Contest{}).Select("id").Where("status = ?", model.ContestStatusActive)).
 			Updates(map[string]any{"value": "", "owner": "", "owner_name": "", "claimed_at": nil, "version": gorm.Expr("version + 1")}).Error; err != nil {
 			return err
 		}
+
+		// a started board keeps its squares whole, as when a player is removed mid-game
+		var ghosted []model.Square
+		if err := tx.Model(&ghosted).Clauses(clause.Returning{}).
+			Where("owner = ? AND contest_id IN (?)", email,
+				tx.Model(&model.Contest{}).Select("id").Where("status NOT IN ? AND status <> ?", terminalStatuses, model.ContestStatusActive)).
+			Updates(map[string]any{"owner": model.GhostUser, "owner_name": "", "version": gorm.Expr("version + 1")}).Error; err != nil {
+			return err
+		}
+		released = append(released, ghosted...)
 
 		anonymize := []struct {
 			tableModel any
@@ -104,5 +114,5 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 	if err != nil {
 		return nil, nil, err
 	}
-	return cleared, removed, nil
+	return released, removed, nil
 }

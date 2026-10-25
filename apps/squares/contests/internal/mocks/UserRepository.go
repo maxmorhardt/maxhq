@@ -141,8 +141,8 @@ func (_c *UserRepository_Scrub_Call) Run(run func(ctx context.Context, email str
 	return _c
 }
 
-func (_c *UserRepository_Scrub_Call) Return(cleared []model.Square, removed []model.ContestParticipant, err error) *UserRepository_Scrub_Call {
-	_c.Call.Return(cleared, removed, err)
+func (_c *UserRepository_Scrub_Call) Return(released []model.Square, removed []model.ContestParticipant, err error) *UserRepository_Scrub_Call {
+	_c.Call.Return(released, removed, err)
 	return _c
 }
 

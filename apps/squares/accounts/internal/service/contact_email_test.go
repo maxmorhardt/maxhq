@@ -59,6 +59,7 @@ func TestBuildContactEmail(t *testing.T) {
 
 	assert.Contains(t, parts["text/plain"], "Message:\nQ2 shows 7–3 <b>twice</b>")
 	assert.Contains(t, parts["text/html"], "&lt;b&gt;twice&lt;/b&gt;", "the html part escapes what the visitor typed")
+	assert.Contains(t, parts["text/html"], `href="mailto:ann@x.com?subject=Re%3A%20Scores%20look%20off"`, "the reply button encodes the subject")
 }
 
 func TestBuildContactEmail_SubmittedTextCannotAddHeaders(t *testing.T) {
