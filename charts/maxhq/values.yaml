@@ -95,6 +95,27 @@ pdb:
   enabled: true
   minAvailable: 1
 
+cachePurge:
+  enabled: false
+  zoneId: ''
+  secret:
+    name: cloudflare-api-token
+    key: api-token
+  image:
+    repository: curlimages/curl
+    tag: 8.11.1
+    pullPolicy: IfNotPresent
+  runAsUser: 100
+  backoffLimit: 2
+  activeDeadlineSeconds: 120
+  resources:
+    limits:
+      cpu: 50m
+      memory: 32Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
 metrics:
   image:
     name: nginx-exporter

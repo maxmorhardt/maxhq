@@ -1,0 +1,59 @@
+{{- if .Values.cachePurge.enabled }}
+# runs after argo cd reports the rollout healthy, so cloudflare refills from new pods
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "app.fullname" . }}-cache-purge
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: {{ .Values.cachePurge.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.cachePurge.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "app.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cache-purge
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.cachePurge.runAsUser }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cache-purge
+          image: "{{ .Values.cachePurge.image.repository }}:{{ .Values.cachePurge.image.tag }}"
+          imagePullPolicy: {{ .Values.cachePurge.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: ZONE_ID
+              value: {{ required "cachePurge.zoneId is required" .Values.cachePurge.zoneId | quote }}
+            - name: PURGE_BODY
+              value: {{ dict "hosts" .Values.route.hostnames | toJson | quote }}
+            - name: CF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.cachePurge.secret.name }}
+                  key: {{ .Values.cachePurge.secret.key }}
+          command:
+            - sh
+            - -c
+            - >-
+              curl -fsS --retry 3 -X POST
+              "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache"
+              -H "Authorization: Bearer $CF_API_TOKEN"
+              -H "Content-Type: application/json"
+              --data "$PURGE_BODY"
+          resources:
+            {{- toYaml .Values.cachePurge.resources | nindent 12 }}
+{{- end }}

@@ -11,3 +11,4 @@ Published to `oci://ghcr.io/maxmorhardt/charts/maxhq`, released as `maxhq-chart/
 ## Optional
 
 - **Prometheus** — metrics on port 9113
+- **Cloudflare cache purge** — `cachePurge.enabled` runs a PostSync Job that purges the route hostnames; needs `cachePurge.zoneId` and a `cloudflare-api-token` secret (key `api-token`) with Zone → Cache Purge: Purge
