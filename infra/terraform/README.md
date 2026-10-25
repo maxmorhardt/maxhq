@@ -7,7 +7,7 @@ created by hand.
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/README.md](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/postgres/README.md) |
-| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records. Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
+| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, and the edge-cache rule for `cached_hosts`. Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges) and deployment environments (`production` waits for approval) |
 
 ## Credentials
@@ -15,7 +15,7 @@ created by hand.
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`) |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit and Cache Settings: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 
 In CI, as repository secrets:
