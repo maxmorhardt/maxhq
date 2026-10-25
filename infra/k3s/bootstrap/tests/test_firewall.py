@@ -10,8 +10,7 @@ def test_only_the_tailnet_pods_and_services_get_in():
         "allow in on tailscale0",
         "allow from 10.42.0.0/16",
         "allow from 10.43.0.0/16",
-        "allow proto udp from 0.0.0.0/0 to any port 41641",
-        "deny out proto udp from ::/0 port 41641",
+        "allow proto udp to any port 41641",
     ]
 
 
@@ -33,11 +32,15 @@ def test_cluster_ports_are_never_opened_outside_the_tailnet():
     assert not any(port in rule for rule in rules for port in ("22", "6443", "10250", "2379"))
 
 
-def test_commands_reset_then_deny_by_default_then_enable():
+def test_commands_reset_then_drop_ipv6_tailscale_then_deny_by_default_then_enable():
     commands = firewall.commands(["allow in on tailscale0"])
 
     assert commands == [
         "ufw --force reset",
+        (
+            "sed -i '/^-A ufw6-before-output -o lo -j ACCEPT$/a "
+            "-A ufw6-before-output -p udp --sport 41641 -j DROP' /etc/ufw/before6.rules"
+        ),
         "ufw default deny incoming",
         "ufw default allow outgoing",
         "ufw allow in on tailscale0",
@@ -48,3 +51,10 @@ def test_commands_reset_then_deny_by_default_then_enable():
 def test_fingerprint_changes_with_the_rules():
     assert firewall.fingerprint(["a"]) == firewall.fingerprint(["a"])
     assert firewall.fingerprint(["a"]) != firewall.fingerprint(["a", "b"])
+
+
+def test_fingerprint_covers_the_ipv6_tailscale_drop(monkeypatch):
+    before = firewall.fingerprint(["a"])
+    monkeypatch.setattr(firewall, "IPV6_TAILSCALE_DROP", "")
+
+    assert firewall.fingerprint(["a"]) != before

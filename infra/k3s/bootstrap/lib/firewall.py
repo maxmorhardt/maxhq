@@ -7,6 +7,9 @@ from lib.inventory import Cluster
 POD_CIDR = "10.42.0.0/16"
 SERVICE_CIDR = "10.43.0.0/16"
 TAILSCALE_PORT = 41641
+BEFORE6_RULES = "/etc/ufw/before6.rules"
+# tailscaled accepts its port ahead of ufw, so IPv6 is dropped on the way out, before ufw accepts established flows
+IPV6_TAILSCALE_DROP = f"-A ufw6-before-output -p udp --sport {TAILSCALE_PORT} -j DROP"
 
 
 def rules(cluster: Cluster) -> list[str]:
@@ -14,9 +17,7 @@ def rules(cluster: Cluster) -> list[str]:
         "allow in on tailscale0",
         f"allow from {POD_CIDR}",
         f"allow from {SERVICE_CIDR}",
-        # IPv4 only, so peers don't keep switching paths between address families
-        f"allow proto udp from 0.0.0.0/0 to any port {TAILSCALE_PORT}",
-        f"deny out proto udp from ::/0 port {TAILSCALE_PORT}",
+        f"allow proto udp to any port {TAILSCALE_PORT}",
     ]
     if cluster.lan_cidr:
         allow.append(f"allow from {cluster.lan_cidr}")
@@ -27,6 +28,7 @@ def rules(cluster: Cluster) -> list[str]:
 def commands(allow_rules: list[str]) -> list[str]:
     return [
         "ufw --force reset",
+        f"sed -i '/^-A ufw6-before-output -o lo -j ACCEPT$/a {IPV6_TAILSCALE_DROP}' {BEFORE6_RULES}",
         "ufw default deny incoming",
         "ufw default allow outgoing",
         *(f"ufw {rule}" for rule in allow_rules),
@@ -35,4 +37,4 @@ def commands(allow_rules: list[str]) -> list[str]:
 
 
 def fingerprint(allow_rules: list[str]) -> str:
-    return hashlib.sha256("\n".join(allow_rules).encode()).hexdigest()
+    return hashlib.sha256("\n".join([*allow_rules, IPV6_TAILSCALE_DROP]).encode()).hexdigest()

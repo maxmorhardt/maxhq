@@ -104,9 +104,14 @@ ufw is identical on every node and denies all inbound traffic except:
 | --- | --- |
 | `tailscale0` | everything |
 | pods `10.42.0.0/16`, services `10.43.0.0/16` | everything |
-| anywhere over IPv4 | 41641 udp, so Tailscale peers connect directly instead of through a relay. IPv6 on 41641 is blocked both ways, so peers stay on one path instead of switching between address families |
+| anywhere | 41641 udp, so Tailscale peers connect directly instead of through a relay |
 | `lan_cidr`, if set | everything |
 | anywhere | the cluster's `open_ports` over tcp; prod opens 443 so Cloudflare's proxy reaches the gateway |
+
+Tailscale's direct paths are IPv4 only, so peers don't keep switching between address families and
+briefly stalling etcd. tailscaled accepts its own port inbound before ufw sees it, so the block is
+an outbound drop of IPv6 udp from 41641 inserted into `before6.rules`, ahead of ufw's
+established-connection accept.
 
 No k3s port is ever exposed on a public IP, and adding a node never touches the others. The
 applied rule set is fingerprinted in `/etc/maxhq/firewall.sha256`; `up` only rewrites ufw when it
