@@ -19,13 +19,13 @@
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
 - `.github/workflows/` - `ci.yml` (path-filtered PR checks), `cd-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `cd-prod.yml` (tag-driven promotion of dev's image and deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`. `ci.yml` and `cd-dev.yml` share their path filters from `.github/path-filters.yml`.
-- `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
+- `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt, and `stamp-libs` when `libs/go` is staged. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
 
 ## Core Principles
 
 1. Merges deploy to dev; releases deploy to prod
    - Images and charts version and deploy separately. A merge to `main` builds `sha-<commit>` images for the apps it touched and sets dev's `image.tag`, and publishes any changed chart as `0.0.0-sha-<commit>` to `oci://ghcr.io/maxmorhardt/charts` and sets dev's `targetRevision` (`cd-dev.yml`).
-   - An app release (`<app>/<version>`) promotes the image dev built for that commit (`sha-<commit>` retagged, never rebuilt) and sets prod's `image.tag`. A chart release (`<chart>-chart/<version>`, release-please `helm` type bumping `Chart.yaml`) publishes the chart and sets prod's `targetRevision`. Both wait for approval on the `production` environment (`cd-prod.yml`).
+   - An app release (`<app>/<version>`) promotes the image dev built for the last commit before the release that changed the app's paths in `.github/path-filters.yml` (`sha-<commit>` retagged, never rebuilt) and sets prod's `image.tag`. A chart release (`<chart>-chart/<version>`, release-please `helm` type bumping `Chart.yaml`) publishes the chart and sets prod's `targetRevision`. Both wait for approval on the `production` environment (`cd-prod.yml`).
 2. Tags drive releases
    - Tags are `<component>/<version>`. Pushing one runs `cd-prod.yml` for that component only.
    - Never hand-edit `.release-please-manifest.json`, `CHANGELOG.md`, or a chart's `version`.

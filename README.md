@@ -50,7 +50,7 @@ Prod traffic comes in through Cloudflare's proxy. The squares services keep stat
 [release-please](https://github.com/googleapis/release-please) versions every app and every chart separately in [`release-please-config.json`](release-please-config.json), starting at 1.0.0. Images and charts deploy separately:
 
 - **Dev**, on every merge to `main` ([`cd-dev.yml`](.github/workflows/cd-dev.yml)): changed apps build `sha-<commit>` images and set dev's `image.tag`; changed charts publish `0.0.0-sha-<commit>` to `oci://ghcr.io/maxmorhardt/charts` and set dev's chart version.
-- **Prod**, on a release tag after approval ([`cd-prod.yml`](.github/workflows/cd-prod.yml)): `<app>/<version>` retags the image dev already built for that commit (never rebuilt) and sets prod's `image.tag`; `<chart>-chart/<version>` publishes the chart and sets prod's chart version.
+- **Prod**, on a release tag after approval ([`cd-prod.yml`](.github/workflows/cd-prod.yml)): `<app>/<version>` retags the image dev already built for the app's last change before the release (never rebuilt) and sets prod's `image.tag`; `<chart>-chart/<version>` publishes the chart and sets prod's chart version.
 
 One release pull request covers every app with pending changes. Pull requests are squash merged, so the PR title is the conventional commit release-please reads, and it applies to every app the PR touches.
 
@@ -62,7 +62,7 @@ All Go code is one module: [`go.mod`](go.mod) at the root, so every service and 
 
 ## Git hooks
 
-[`.githooks/pre-commit`](.githooks/pre-commit) runs each UI's own lint-staged when its files are staged, and gofmt on staged Go files. `pnpm install` in either UI turns it on (`git config core.hooksPath .githooks`); there is no npm project at the root.
+[`.githooks/pre-commit`](.githooks/pre-commit) runs each UI's own lint-staged when its files are staged, and gofmt on staged Go files. When `libs/go` is staged it runs [`.githooks/stamp-libs`](.githooks/stamp-libs), which writes the staged `libs/go` tree hash to every squares service's `libs.stamp`, so release-please releases them; CI fails a `libs/go` change without them. `pnpm install` in either UI turns it on (`git config core.hooksPath .githooks`); there is no npm project at the root.
 
 ## Licenses
 

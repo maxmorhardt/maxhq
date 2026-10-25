@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+if [ -n "$(git diff --cached --name-only -- libs/go)" ]; then
+  sh .githooks/stamp-libs
+fi
+
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$staged" ] && exit 0
 

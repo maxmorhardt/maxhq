@@ -79,7 +79,7 @@ Conventional commits, enforced on PR titles and consumed by release-please. The 
 
 - `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime` - one service.
 - `squares` - the web app.
-- A change to `libs/*` alone releases nothing: it ships with each service's next release. To ship it now, change each service that needs it in the same PR (see `libs/AGENTS.md`).
+- A change to `libs/go` releases every service: the pre-commit hook restamps each service's `libs.stamp` (see `libs/AGENTS.md`). `go.mod` and `go.sum` updates from Renovate release nothing; they ship with each service's next release.
 
 Examples:
 
