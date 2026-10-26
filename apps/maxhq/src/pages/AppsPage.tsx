@@ -3,7 +3,6 @@ import BlockIcon from '@mui/icons-material/Block';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
-import GridViewIcon from '@mui/icons-material/GridView';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import ShieldIcon from '@mui/icons-material/Shield';
 import { Box, Button, Container, Link as MuiLink, Typography } from '@mui/material';
@@ -22,7 +21,7 @@ const apps: AppEntry[] = [
     id: 'squares',
     name: 'Squares',
     tagline: 'Football squares for the whole party',
-    icon: <GridViewIcon />,
+    icon: <Box component="img" src="/apps/squares.svg" alt="" sx={{ width: 28, height: 28 }} />,
     description:
       'The classic Super Bowl pool, online. One person sets up the board, everyone claims their squares from their phone, and the live score calls the winner every quarter.',
     href: 'https://squares.maxhq.io',
