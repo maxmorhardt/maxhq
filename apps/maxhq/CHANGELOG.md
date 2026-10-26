@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.2.0...maxhq/1.3.0) (2026-10-26)
+
+
+### Features
+
+* new maxhq logo, refreshed squares logo, and crisp favicons ([#152](https://github.com/maxmorhardt/maxhq/issues/152)) ([8d82509](https://github.com/maxmorhardt/maxhq/commit/8d82509cc0116516f00e0669a7e80721900d4fe7))
+
 ## [1.2.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.1.1...maxhq/1.2.0) (2026-10-25)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.1.1...squares/2.2.0) (2026-10-26)
+
+
+### Features
+
+* new maxhq logo, refreshed squares logo, and crisp favicons ([#152](https://github.com/maxmorhardt/maxhq/issues/152)) ([8d82509](https://github.com/maxmorhardt/maxhq/commit/8d82509cc0116516f00e0669a7e80721900d4fe7))
+
 ## [2.1.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.1.0...squares/2.1.1) (2026-10-25)
 
 
