@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.3.0...maxhq/1.3.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* version icon links so Safari drops its cached favicons ([#155](https://github.com/maxmorhardt/maxhq/issues/155)) ([d876b81](https://github.com/maxmorhardt/maxhq/commit/d876b818c982dbdf53e4d868845d1ed08b0486e6))
+
 ## [1.3.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.2.0...maxhq/1.3.0) (2026-10-26)
 
 
