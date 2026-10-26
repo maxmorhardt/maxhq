@@ -287,9 +287,9 @@
           </a>
           <a class="btn btn-outline" href="mailto:support@maxhq.io">Email support</a>
         </div>
-        <p class="auto rise rise-4" id="auto" hidden>
+        <p class="auto rise rise-4" id="auto" aria-live="polite" hidden>
           <svg class="ring" viewBox="0 0 18 18" aria-hidden="true"><circle class="track" cx="9" cy="9" r="7" /><circle class="fill" id="ring" cx="9" cy="9" r="7" /></svg>
-          <span>This page reloads itself the moment we&rsquo;re back.</span>
+          <span id="auto-text">This page reloads itself the moment we&rsquo;re back.</span>
         </p>
       </div>
 
@@ -346,23 +346,40 @@
   // poll the real origin; once the worker is gone the request stops returning 503
   const PERIOD = 30;
   const auto = document.getElementById("auto");
+  const autoText = document.getElementById("auto-text");
+  const idleText = autoText.textContent;
   const ring = document.getElementById("ring");
   const retry = document.getElementById("retry");
   let left = PERIOD;
+  let inFlight = false;
+  let noteTimer;
   auto.hidden = false;
 
-  const check = async () => {
+  const check = async (manual = false) => {
+    if (inFlight) return;
+    inFlight = true;
+    left = PERIOD;
+    ring.style.strokeDashoffset = "0";
     retry.classList.add("checking");
     try {
-      const res = await fetch(location.href, { method: "HEAD", cache: "no-store" });
-      if (res.status !== 503) { location.reload(); return; }
+      const signal = AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined;
+      const res = await fetch(location.href, { method: "HEAD", cache: "no-store", signal });
+      // a 5xx is still an outage, often cloudflare's own page for a down origin
+      if (res.status < 500) { location.reload(); return; }
     } catch {}
+    inFlight = false;
     setTimeout(() => retry.classList.remove("checking"), 600);
-    left = PERIOD;
+    if (manual) {
+      autoText.textContent = "Still offline. Checked just now.";
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(() => { autoText.textContent = idleText; }, 4000);
+    }
   };
 
-  retry.addEventListener("click", (e) => { e.preventDefault(); check(); });
+  retry.addEventListener("click", (e) => { e.preventDefault(); check(true); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
   setInterval(() => {
+    if (document.hidden || inFlight) return;
     left -= 1;
     ring.style.strokeDashoffset = String(44 * (1 - left / PERIOD));
     if (left <= 0) check();
