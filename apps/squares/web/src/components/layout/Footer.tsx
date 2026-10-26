@@ -29,7 +29,7 @@ export default function Footer() {
         >
           {/* logo and copyright */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-            <Box component="img" src="/squares_logo.png" alt="" sx={{ width: 22, height: 22 }} />
+            <Box component="img" src="/logo.svg" alt="" sx={{ width: 22, height: 22 }} />
             <Typography
               variant="body2"
               sx={{

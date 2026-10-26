@@ -109,7 +109,7 @@ export default function Header() {
                 textDecoration: 'none',
               }}
             >
-              <Box component="img" src="/squares_logo.png" alt="" sx={{ width: 32, height: 32 }} />
+              <Box component="img" src="/logo.svg" alt="" sx={{ width: 32, height: 32 }} />
               <Typography component="span" noWrap sx={wordmarkSx}>
                 Squares
               </Typography>
