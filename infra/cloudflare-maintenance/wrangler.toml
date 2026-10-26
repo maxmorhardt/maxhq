@@ -5,3 +5,9 @@ routes = [
   { pattern = "maxhq.io/*", zone_name = "maxhq.io" },
   { pattern = "*.maxhq.io/*", zone_name = "maxhq.io" },
 ]
+
+# bundle the page's fonts as ArrayBuffers
+[[rules]]
+type = "Data"
+globs = ["**/*.woff2"]
+fallthrough = true

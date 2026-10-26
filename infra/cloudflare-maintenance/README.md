@@ -23,3 +23,11 @@ wrangler deploy
 ```bash
 wrangler delete
 ```
+
+## Preview locally
+
+```bash
+wrangler dev --local
+```
+
+Opens the page at http://127.0.0.1:8787. The page names the app it's covering (for example Squares on `squares.maxhq.io`), and it checks the origin every 30 seconds so visitors reload automatically once the Worker is deleted.
