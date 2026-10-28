@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.2.0...squares/2.2.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* version icon links so Safari drops its cached favicons ([#155](https://github.com/maxmorhardt/maxhq/issues/155)) ([d876b81](https://github.com/maxmorhardt/maxhq/commit/d876b818c982dbdf53e4d868845d1ed08b0486e6))
+
 ## [2.2.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.1.1...squares/2.2.0) (2026-10-26)
 
 
