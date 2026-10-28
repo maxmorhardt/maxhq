@@ -329,12 +329,16 @@ const docTemplategames = `{
             "enum": [
                 "scheduled",
                 "in_progress",
-                "final"
+                "final",
+                "postponed",
+                "canceled"
             ],
             "x-enum-varnames": [
                 "GameStatusScheduled",
                 "GameStatusInProgress",
-                "GameStatusFinal"
+                "GameStatusFinal",
+                "GameStatusPostponed",
+                "GameStatusCanceled"
             ]
         },
         "model.Scoreboard": {
