@@ -15,6 +15,12 @@ variable "prod_ips" {
   sensitive   = true
 }
 
+variable "tunnel_id" {
+  description = "Cloudflare Tunnel the prod hosts route through instead of the prod IPs; null keeps the A records"
+  type        = string
+  default     = null
+}
+
 variable "dev_ips" {
   description = "Tailscale IPs of dev's nodes for dev.<domain> and *.dev.<domain>; empty for no dev records"
   type        = list(string)

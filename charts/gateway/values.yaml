@@ -29,6 +29,26 @@ proxy:
       cpu: 500m
       memory: 512Mi
 
+# cloudflared dials out to Cloudflare, so the proxy needs no public port; routing lives in infra/terraform/cloudflare
+tunnel:
+  enabled: false
+  replicas: 2
+  minAvailable: 1
+  image:
+    repository: cloudflare/cloudflared
+    # renovate: image=cloudflare/cloudflared
+    tag: 2026.10.0
+  tokenSecret:
+    name: cloudflared-token
+    key: token
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
 trustedCIDRs:
   - 10.42.0.0/16
   - 103.21.244.0/22

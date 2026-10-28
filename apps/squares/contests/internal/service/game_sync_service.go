@@ -118,6 +118,8 @@ func (s *gameSyncService) reconcile(ctx context.Context, contest *model.Contest,
 		switch {
 		case game.Status == model.GameStatusFinal:
 			return s.contestService.FinalizeFromScores(ctx, contest, game.Scores)
+		case game.Status == model.GameStatusCanceled:
+			return s.contestService.FinishCanceled(ctx, contest)
 		case game.Status == model.GameStatusInProgress && util.AllSquaresClaimed(contest):
 			if err := s.contestService.AutoStart(ctx, contest); err != nil {
 				return err
@@ -149,6 +151,10 @@ func (s *gameSyncService) reconcile(ctx context.Context, contest *model.Contest,
 
 		currentQuarter = score.Quarter + 1
 		log.Info("applied quarter result", "contest_id", contest.ID, "game_id", game.ID, "quarter", score.Quarter, "winner", result.Winner)
+	}
+
+	if game.Status == model.GameStatusCanceled && !contest.Status.IsTerminal() {
+		return s.contestService.FinishCanceled(ctx, contest)
 	}
 
 	return nil

@@ -43,6 +43,7 @@ var (
 var (
 	ErrGameNotFound            = errors.New("game not found")
 	ErrGamePastFirstQuarter    = errors.New("that game is past the first quarter, pick another one")
+	ErrGameCanceled            = errors.New("that game was canceled, pick another one")
 	ErrInviteNotFound          = errors.New("invite not found")
 	ErrInviteExpired           = errors.New("invite link has expired")
 	ErrInviteMaxUsesReached    = errors.New("invite link has reached its usage limit")

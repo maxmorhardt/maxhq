@@ -15,6 +15,7 @@ type ESPNGame struct {
 	Season     int
 	SeasonType int
 	State      string
+	StatusName string
 	Period     int
 	Completed  bool
 	HomeScore  int
@@ -84,6 +85,7 @@ type scoreboardEvent struct {
 type scoreboardStatus struct {
 	Period int `json:"period"`
 	Type   struct {
+		Name      string `json:"name"`
 		State     string `json:"state"`
 		Completed bool   `json:"completed"`
 	} `json:"type"`

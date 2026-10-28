@@ -73,6 +73,11 @@ func TestCreateContest_OwnerMismatch(t *testing.T) {
 func TestCreateContest_GamePastFirstQuarter(t *testing.T) {
 	createContestErr(t, errs.ErrGamePastFirstQuarter, http.StatusConflict)
 }
+
+func TestCreateContest_GameCanceled(t *testing.T) {
+	createContestErr(t, errs.ErrGameCanceled, http.StatusConflict)
+}
+
 func TestCreateContest_DatabaseUnavailable(t *testing.T) {
 	createContestErr(t, errs.ErrDatabaseUnavailable, http.StatusInternalServerError)
 }

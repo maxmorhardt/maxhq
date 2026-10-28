@@ -1,0 +1,13 @@
+{{- if .Values.tunnel.enabled }}
+# Cloudflare's Origin CA root, which signed the proxy's certificate, so cloudflared verifies the hop to Envoy
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app.fullname" . }}-tunnel-origin-ca
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tunnel
+data:
+  origin_ca_rsa_root.pem: |
+    {{- .Files.Get "files/origin_ca_rsa_root.pem" | nindent 4 }}
+{{- end }}

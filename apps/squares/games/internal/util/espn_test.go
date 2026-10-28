@@ -25,6 +25,7 @@ func TestScoreboardToGames(t *testing.T) {
 	assert.Equal(t, 4, g.Period)
 	assert.True(t, g.Completed)
 	assert.Equal(t, "post", g.State)
+	assert.Equal(t, "STATUS_FINAL", g.StatusName)
 
 	assert.Equal(t, "Chiefs", g.HomeTeam)
 	assert.Equal(t, "KC", g.HomeAbbr)
@@ -105,11 +106,52 @@ func TestCompletedQuarters_Scheduled(t *testing.T) {
 	assert.Empty(t, CompletedQuarters(&model.ESPNGame{}))
 }
 
-func TestGameStatusFromState(t *testing.T) {
-	assert.Equal(t, model.GameStatusInProgress, gameStatusFromState("in"))
-	assert.Equal(t, model.GameStatusFinal, gameStatusFromState("post"))
-	assert.Equal(t, model.GameStatusScheduled, gameStatusFromState("pre"))
-	assert.Equal(t, model.GameStatusScheduled, gameStatusFromState(""))
+func TestCompletedQuarters_AtTheBreak(t *testing.T) {
+	endOfFirst := &model.ESPNGame{Period: 1, StatusName: "STATUS_END_PERIOD", HomeLine: []int{7}, AwayLine: []int{3}}
+	assert.Equal(t, []model.QuarterScore{{Quarter: 1, Home: 7, Away: 3}}, CompletedQuarters(endOfFirst))
+
+	halftime := &model.ESPNGame{Period: 2, StatusName: "STATUS_HALFTIME", HomeLine: []int{7, 3}, AwayLine: []int{3, 7}}
+	quarters := CompletedQuarters(halftime)
+	require.Len(t, quarters, 2)
+	assert.Equal(t, model.QuarterScore{Quarter: 2, Home: 10, Away: 10}, quarters[1])
+}
+
+func TestCompletedQuarters_EndOfRegulationWaitsForTheFinal(t *testing.T) {
+	eg := &model.ESPNGame{Period: 4, StatusName: "STATUS_END_PERIOD", HomeLine: []int{7, 3, 7, 3}, AwayLine: []int{3, 7, 3, 7}}
+
+	quarters := CompletedQuarters(eg)
+
+	require.Len(t, quarters, 3)
+	assert.Equal(t, 3, quarters[2].Quarter)
+}
+
+func TestCompletedQuarters_MidQuarter(t *testing.T) {
+	eg := &model.ESPNGame{Period: 2, StatusName: "STATUS_IN_PROGRESS", HomeLine: []int{7, 3}, AwayLine: []int{3, 0}}
+
+	assert.Equal(t, []model.QuarterScore{{Quarter: 1, Home: 7, Away: 3}}, CompletedQuarters(eg))
+}
+
+func TestGameStatus(t *testing.T) {
+	cases := []struct {
+		name string
+		game model.ESPNGame
+		want model.GameStatus
+	}{
+		{"scheduled", model.ESPNGame{State: "pre", StatusName: "STATUS_SCHEDULED"}, model.GameStatusScheduled},
+		{"no state", model.ESPNGame{}, model.GameStatusScheduled},
+		{"in progress", model.ESPNGame{State: "in", StatusName: "STATUS_IN_PROGRESS"}, model.GameStatusInProgress},
+		{"halftime", model.ESPNGame{State: "in", StatusName: "STATUS_HALFTIME"}, model.GameStatusInProgress},
+		{"final", model.ESPNGame{State: "post", StatusName: "STATUS_FINAL", Completed: true}, model.GameStatusFinal},
+		{"postponed", model.ESPNGame{State: "post", StatusName: "STATUS_POSTPONED"}, model.GameStatusPostponed},
+		{"postponed before the state moves", model.ESPNGame{State: "pre", StatusName: "STATUS_POSTPONED"}, model.GameStatusPostponed},
+		{"stopped short without a name", model.ESPNGame{State: "post"}, model.GameStatusPostponed},
+		{"canceled", model.ESPNGame{State: "post", StatusName: "STATUS_CANCELED"}, model.GameStatusCanceled},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, gameStatus(&tc.game))
+		})
+	}
 }
 
 func TestParseESPNTime(t *testing.T) {
@@ -131,7 +173,7 @@ const scoreboardJSON = `{
       "week": {"number": 18},
       "competitions": [
         {
-          "status": {"period": 4, "type": {"state": "post", "completed": true}},
+          "status": {"period": 4, "type": {"name": "STATUS_FINAL", "state": "post", "completed": true}},
           "competitors": [
             {"homeAway": "home", "score": "24", "team": {"displayName": "Chiefs", "abbreviation": "KC"},
              "linescores": [{"value": 7}, {"value": 3}, {"value": 7}, {"value": 7}]},

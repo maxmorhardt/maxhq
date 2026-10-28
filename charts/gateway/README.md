@@ -12,8 +12,26 @@ to, so this deploys before the apps.
 - **TLS** — the secret named by `tls.secretName` in `envoy-gateway-system`, covering `<domain>` and
   `*.<domain>`: the Cloudflare origin certificate `maxhq.io-tls` in prod, cert-manager's
   `dev.maxhq.io-tls` in dev
-- **DNS** — from `infra/terraform/cloudflare`: prod hosts are Cloudflare-proxied records to the prod
-  nodes (443 open), dev hosts are DNS-only records to dev's Tailscale IPs
+- **DNS** — from `infra/terraform/cloudflare`: prod hosts are Cloudflare-proxied records, to the
+  prod tunnel once `tunnel` is on for the domain there, otherwise to the prod nodes (443 open); dev
+  hosts are DNS-only records to dev's Tailscale IPs
+
+## Tunnel
+
+`tunnel.enabled` runs cloudflared next to the proxy. It dials out to Cloudflare, and Cloudflare
+sends every proxied host through it to the proxy's Service, so the nodes need no public port.
+
+- **Token**: the secret `tunnel.tokenSecret.name` in `envoy-gateway-system`, holding the token from
+  `terraform output -raw prod_tunnel_token` in `infra/terraform/cloudflare`.
+- **Routing**: the tunnel's ingress rules live in Terraform, not here. They send each host to the
+  proxy's Service over HTTPS, with SNI set to the requested host, and verify the proxy's Cloudflare
+  origin certificate against the Origin CA root this chart mounts.
+- **Client IPs**: the proxy sees cloudflared's pod IP, which is inside the trusted pod CIDR, so
+  `X-Forwarded-For` still resolves to the visitor.
+
+Once traffic flows through the tunnel, set `proxy.service.type: ClusterIP`. Removing 443 from the
+nodes' firewall alone does not close it, because ServiceLB's hostPort is NAT'd past ufw's input
+rules.
 
 ## Header stripping
 
