@@ -12,9 +12,8 @@ to, so this deploys before the apps.
 - **TLS** — the secret named by `tls.secretName` in `envoy-gateway-system`, covering `<domain>` and
   `*.<domain>`: the Cloudflare origin certificate `maxhq.io-tls` in prod, cert-manager's
   `dev.maxhq.io-tls` in dev
-- **DNS** — from `infra/terraform/cloudflare`: prod hosts are Cloudflare-proxied records, to the
-  prod tunnel once `tunnel` is on for the domain there, otherwise to the prod nodes (443 open); dev
-  hosts are DNS-only records to dev's Tailscale IPs
+- **DNS** — from `infra/terraform/cloudflare`: prod hosts are Cloudflare-proxied records to the
+  prod tunnel, dev hosts are DNS-only records to dev's Tailscale IPs
 
 ## Tunnel
 
@@ -29,15 +28,10 @@ sends every proxied host through it to the proxy's Service, so the nodes need no
 - **Client IPs**: the proxy sees cloudflared's pod IP, which is inside the trusted pod CIDR, so
   `X-Forwarded-For` still resolves to the visitor.
 
-Once traffic flows through the tunnel, set `proxy.service.type: ClusterIP`. Removing 443 from the
-nodes' firewall alone does not close it, because ServiceLB's hostPort is NAT'd past ufw's input
-rules.
+Prod sets `proxy.service.type: ClusterIP`, so nothing listens on the nodes' public IPs. Dev keeps
+`LoadBalancer`, since its hosts resolve to the nodes' Tailscale IPs. Closing a port in ufw alone
+would not do it: ServiceLB's hostPort is NAT'd past ufw's input rules.
 
 ## Header stripping
 
 The `ClientTrafficPolicy` removes `strippedRequestHeaders` from every request before any filter runs. Apps (squares) trust `X-Auth-*` headers that only a `SecurityPolicy` jwt filter sets, so a client must never be able to send them. Keep this list in step with the `claimToHeaders` in the `squares-*` charts' `values.yaml`.
-
-## Optional
-
-- **cloudflare-cidr** — keeps the trusted CIDR list current for the `ClientTrafficPolicy`
-  that resolves real client IPs from `X-Forwarded-For`

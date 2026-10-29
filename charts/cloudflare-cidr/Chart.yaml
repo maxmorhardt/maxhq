@@ -1,7 +1,0 @@
-apiVersion: v2
-name: cloudflare-cidr
-description: Alerts when Cloudflare's IP ranges drift from the gateway's trustedCIDRs
-type: application
-version: 1.2.0
-# renovate: image=python
-appVersion: 3.15-alpine
