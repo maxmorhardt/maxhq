@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/maxmorhardt/maxhq/compare/gateway-chart/1.2.0...gateway-chart/1.2.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **gateway:** run cloudflared over HTTP/2 ([#163](https://github.com/maxmorhardt/maxhq/issues/163)) ([fd7f9dc](https://github.com/maxmorhardt/maxhq/commit/fd7f9dc12beafcc1cbe72583a8e49ceee2d908eb))
+
 ## [1.2.0](https://github.com/maxmorhardt/maxhq/compare/gateway-chart/1.1.0...gateway-chart/1.2.0) (2026-10-29)
 
 
