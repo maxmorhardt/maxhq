@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.3.0...squares/2.3.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **squares:** fully opaque apple-touch icon ([#168](https://github.com/maxmorhardt/maxhq/issues/168)) ([d3af5a3](https://github.com/maxmorhardt/maxhq/commit/d3af5a3655dfc5796e058490be305a524e7073b0))
+
 ## [2.3.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.2.1...squares/2.3.0) (2026-10-29)
 
 
