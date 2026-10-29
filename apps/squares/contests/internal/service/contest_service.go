@@ -21,6 +21,7 @@ type ContestService interface {
 	ApplyQuarterResult(ctx context.Context, contest *model.Contest, quarter, homeScore, awayScore int) (*model.QuarterResult, error)
 	FinalizeFromScores(ctx context.Context, contest *model.Contest, scores []model.GameScore) error
 	AutoStart(ctx context.Context, contest *model.Contest) error
+	FinishCanceled(ctx context.Context, contest *model.Contest) error
 	DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error
 }
 
@@ -70,6 +71,11 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 
 		log.Error("failed to get game for contest link", "game_id", gameID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
+	}
+
+	if game.Status == model.GameStatusCanceled {
+		log.Warn("cannot create contest for a canceled game", "game_id", gameID)
+		return nil, errs.ErrGameCanceled
 	}
 
 	// a form left open past kickoff still goes through while the first quarter is on
@@ -213,6 +219,29 @@ func (s *contestService) FinalizeFromScores(ctx context.Context, contest *model.
 	}
 
 	log.Info("finalized game-linked contest from final scores", "contest_id", contest.ID, "quarters", len(results))
+	return nil
+}
+
+// a canceled game ends its contests where they stand: played quarters keep their winners, the rest have none,
+// and a board that never kicked off finishes without numbers
+func (s *contestService) FinishCanceled(ctx context.Context, contest *model.Contest) error {
+	log := logging.FromContext(ctx)
+
+	contest.Status = model.ContestStatusFinished
+	contest.UpdatedBy = systemUser
+
+	err := s.tx.Do(ctx, func(ctx context.Context) error {
+		if err := s.repo.Update(ctx, contest); err != nil {
+			return err
+		}
+		return s.events.PublishContestUpdate(ctx, contest.ID, systemUser, contest)
+	})
+	if err != nil {
+		log.Error("failed to finish contest for canceled game", "contest_id", contest.ID, "error", err)
+		return err
+	}
+
+	log.Info("finished contest for canceled game", "contest_id", contest.ID)
 	return nil
 }
 

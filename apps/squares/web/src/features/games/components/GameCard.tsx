@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles';
 import { fonts, game as palette } from '../../../app/theme';
 import TeamMark from '../../../components/TeamMark';
 import type { Game } from '../../../types/contest';
-import { gameClock, isLive } from '../../../utils/game';
+import { gameClock, hasKickedOff, isLive } from '../../../utils/game';
 
 interface Props {
   game: Game;
@@ -38,7 +38,7 @@ const cellSx = {
 function TeamRow({ game, side }: { game: Game; side: 'away' | 'home' }) {
   const score = side === 'home' ? game.homeScore : game.awayScore;
   const other = side === 'home' ? game.awayScore : game.homeScore;
-  const started = game.status !== 'scheduled';
+  const started = hasKickedOff(game);
   const trailing = game.status === 'final' && score < other;
 
   return (
@@ -136,7 +136,7 @@ export default function GameCard({ game }: Props) {
             </Box>
           )}
         </Box>
-        {game.status !== 'scheduled' && (
+        {hasKickedOff(game) && (
           <Box aria-hidden sx={{ display: { xs: 'none', sm: 'flex' }, mr: 'calc(2.2ch + 12px)' }}>
             {QUARTERS.map((q) => (
               <Box key={q} component="span" sx={{ ...cellSx, fontSize: '0.75rem' }}>

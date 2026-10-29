@@ -119,6 +119,8 @@ func TestCreateContest_UntilTheFirstQuarterEnds(t *testing.T) {
 		{model.GameStatusInProgress, 1, nil},
 		{model.GameStatusInProgress, 2, errs.ErrGamePastFirstQuarter},
 		{model.GameStatusFinal, 4, errs.ErrGamePastFirstQuarter},
+		{model.GameStatusPostponed, 0, nil},
+		{model.GameStatusCanceled, 0, errs.ErrGameCanceled},
 	}
 	for _, tc := range cases {
 		gameID := uuid.New()
@@ -305,6 +307,30 @@ func TestAutoStart_UpdateFails(t *testing.T) {
 
 	err := contestSvc(repo, mocks.NewParticipantService(t)).
 		AutoStart(context.Background(), &model.Contest{ID: uuid.New(), Status: model.ContestStatusActive})
+
+	assert.ErrorIs(t, err, errs.ErrVersionConflict)
+}
+
+func TestFinishCanceled_KeepsTheBoardAsItStands(t *testing.T) {
+	contest := &model.Contest{ID: uuid.New(), Status: model.ContestStatusQ2, XLabels: orderedLabels(t), YLabels: orderedLabels(t)}
+	labels := contest.XLabels
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().Update(mock.Anything, contest).Return(nil)
+
+	err := contestSvc(repo, mocks.NewParticipantService(t)).FinishCanceled(context.Background(), contest)
+
+	require.NoError(t, err)
+	assert.Equal(t, model.ContestStatusFinished, contest.Status)
+	assert.Equal(t, "system", contest.UpdatedBy)
+	assert.Equal(t, labels, contest.XLabels)
+}
+
+func TestFinishCanceled_UpdateFails(t *testing.T) {
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errs.ErrVersionConflict)
+
+	err := contestSvc(repo, mocks.NewParticipantService(t)).
+		FinishCanceled(context.Background(), &model.Contest{ID: uuid.New(), Status: model.ContestStatusActive})
 
 	assert.ErrorIs(t, err, errs.ErrVersionConflict)
 }

@@ -7,7 +7,7 @@ created by hand.
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/README.md](https://github.com/maxmorhardt/gitops/blob/main/infrastructure/postgres/README.md) |
-| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod nodes, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, and the edge-cache rule for `cached_hosts`. Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
+| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod tunnel (or the prod nodes, for a domain with `tunnel = false`), `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, and the edge-cache rule for `cached_hosts`. Also the prod Cloudflare Tunnel and its ingress rules (`tunnel.tf`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges) and deployment environments (`production` waits for approval) |
 
 ## Credentials
@@ -15,7 +15,7 @@ created by hand.
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`) |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit and Cache Settings: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, and Account Cloudflare Tunnel: Edit, plus `terraform.tfvars` with `prod_ips` and `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 
 In CI, as repository secrets:
@@ -65,6 +65,18 @@ terraform plan
 Adopting an existing resource: describe it with the provider CLI, write HCL matching it field
 for field, add an `import` block with its real ID, then plan until it reports
 **`0 to add, 0 to change, 0 to destroy`**. Delete the `import` block after applying.
+
+## Moving a domain onto the tunnel
+
+1. Apply with `tunnel = false`. That creates the tunnel and its ingress rules and leaves DNS alone.
+2. Seal the token into gitops as `envoy-gateway-system/cloudflared-token` (key `token`):
+   `terraform output -raw prod_tunnel_token`. Then turn on `tunnel.enabled` in prod's gateway
+   Application and wait until the tunnel shows healthy connectors in the Zero Trust dashboard.
+3. Set `tunnel = true` and apply. The A records to the prod IPs become CNAMEs to the tunnel. If
+   the apply fails with "a record with that host already exists", run it again: the A records are
+   gone by then.
+4. Set `proxy.service.type: ClusterIP` in prod's gateway Application and remove 443 from prod's
+   `open_ports`, so the nodes stop accepting traffic that skipped Cloudflare.
 
 ## Notes
 

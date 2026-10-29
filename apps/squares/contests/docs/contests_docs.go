@@ -157,7 +157,7 @@ const docTemplatecontests = `{
                         }
                     },
                     "409": {
-                        "description": "The game is past the first quarter",
+                        "description": "The game is past the first quarter or was canceled",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }

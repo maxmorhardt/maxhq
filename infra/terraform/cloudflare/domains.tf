@@ -3,7 +3,9 @@ locals {
     "maxhq.io" = {
       prod_hosts   = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
       cached_hosts = ["", "squares", "olympics"]
-      dev          = true
+      # true once prod's cloudflared is connected: prod hosts then route through the tunnel, not the node IPs
+      tunnel = false
+      dev    = true
       mx = {
         "mx.zoho.com"  = 10
         "mx2.zoho.com" = 20
@@ -26,6 +28,7 @@ module "domains" {
   prod_hosts   = try(local.domains[each.key].prod_hosts, [])
   cached_hosts = try(local.domains[each.key].cached_hosts, [])
   prod_ips     = var.prod_ips
+  tunnel_id    = try(local.domains[each.key].tunnel, false) ? cloudflare_zero_trust_tunnel_cloudflared.prod.id : null
   dev_ips      = try(local.domains[each.key].dev, false) ? var.dev_ips : []
   mx           = try(local.domains[each.key].mx, {})
   txt          = try(local.domains[each.key].txt, {})

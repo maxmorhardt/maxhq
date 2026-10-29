@@ -33,10 +33,20 @@ export function gameClock(game: Pick<Game, 'status' | 'period' | 'gameTime'>): s
   if (game.status === 'in_progress') {
     return overtime ? 'OT' : `Q${Math.max(game.period, 1)}`;
   }
+  if (game.status === 'postponed') {
+    return 'Postponed';
+  }
+  if (game.status === 'canceled') {
+    return 'Canceled';
+  }
   return formatKickoff(game.gameTime);
 }
 
 export const isLive = (game?: Pick<Game, 'status'>) => game?.status === 'in_progress';
+
+// a game postponed before kickoff has no score to show, unlike one stopped partway through
+export const hasKickedOff = (game: Pick<Game, 'status' | 'period'>) =>
+  game.status !== 'scheduled' && game.period > 0;
 
 // the score as the scoreboard should show it: the live game, else the last recorded quarter
 export function currentScore(

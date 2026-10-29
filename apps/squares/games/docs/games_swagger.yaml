@@ -89,11 +89,15 @@ definitions:
     - scheduled
     - in_progress
     - final
+    - postponed
+    - canceled
     type: string
     x-enum-varnames:
     - GameStatusScheduled
     - GameStatusInProgress
     - GameStatusFinal
+    - GameStatusPostponed
+    - GameStatusCanceled
   model.Scoreboard:
     properties:
       games:

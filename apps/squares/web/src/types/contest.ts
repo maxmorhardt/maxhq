@@ -108,7 +108,7 @@ export interface QuarterResult {
   updatedBy: string;
 }
 
-export type GameStatus = 'scheduled' | 'in_progress' | 'final';
+export type GameStatus = 'scheduled' | 'in_progress' | 'final' | 'postponed' | 'canceled';
 
 export interface GameScore {
   id: string;

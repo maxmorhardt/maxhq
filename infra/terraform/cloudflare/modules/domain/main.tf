@@ -15,12 +15,17 @@ data "cloudflare_zone" "this" {
 locals {
   zone_id = data.cloudflare_zone.this.zone_id
 
-  prod_records = {
+  prod_records = var.tunnel_id != null ? {} : {
     for pair in setproduct(var.prod_hosts, range(nonsensitive(length(var.prod_ips)))) :
     "${pair[0] == "" ? "@" : pair[0]}-${pair[1]}" => {
       name  = pair[0] == "" ? var.domain : "${pair[0]}.${var.domain}"
       index = pair[1]
     }
+  }
+
+  tunnel_records = var.tunnel_id == null ? {} : {
+    for host in var.prod_hosts :
+    (host == "" ? "@" : host) => host == "" ? var.domain : "${host}.${var.domain}"
   }
 
   dev_records = {
@@ -39,6 +44,17 @@ resource "cloudflare_dns_record" "prod" {
   name    = each.value.name
   type    = "A"
   content = var.prod_ips[each.value.index]
+  proxied = true
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "tunnel" {
+  for_each = local.tunnel_records
+
+  zone_id = local.zone_id
+  name    = each.value
+  type    = "CNAME"
+  content = "${var.tunnel_id}.cfargotunnel.com"
   proxied = true
   ttl     = 1
 }

@@ -1,0 +1,15 @@
+{{- if .Values.tunnel.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "app.fullname" . }}-tunnel
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tunnel
+spec:
+  minAvailable: {{ .Values.tunnel.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: tunnel
+{{- end }}

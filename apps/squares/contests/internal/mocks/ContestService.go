@@ -289,6 +289,53 @@ func (_c *ContestService_FinalizeFromScores_Call) RunAndReturn(run func(context.
 	return _c
 }
 
+// FinishCanceled provides a mock function with given fields: ctx, contest
+func (_m *ContestService) FinishCanceled(ctx context.Context, contest *model.Contest) error {
+	ret := _m.Called(ctx, contest)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FinishCanceled")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.Contest) error); ok {
+		r0 = rf(ctx, contest)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ContestService_FinishCanceled_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FinishCanceled'
+type ContestService_FinishCanceled_Call struct {
+	*mock.Call
+}
+
+// FinishCanceled is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contest *model.Contest
+func (_e *ContestService_Expecter) FinishCanceled(ctx interface{}, contest interface{}) *ContestService_FinishCanceled_Call {
+	return &ContestService_FinishCanceled_Call{Call: _e.mock.On("FinishCanceled", ctx, contest)}
+}
+
+func (_c *ContestService_FinishCanceled_Call) Run(run func(ctx context.Context, contest *model.Contest)) *ContestService_FinishCanceled_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*model.Contest))
+	})
+	return _c
+}
+
+func (_c *ContestService_FinishCanceled_Call) Return(_a0 error) *ContestService_FinishCanceled_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ContestService_FinishCanceled_Call) RunAndReturn(run func(context.Context, *model.Contest) error) *ContestService_FinishCanceled_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewContestService creates a new instance of ContestService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewContestService(t interface {

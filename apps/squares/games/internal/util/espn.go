@@ -7,6 +7,13 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/model"
 )
 
+const (
+	statusEndPeriod = "STATUS_END_PERIOD"
+	statusHalftime  = "STATUS_HALFTIME"
+	statusPostponed = "STATUS_POSTPONED"
+	statusCanceled  = "STATUS_CANCELED"
+)
+
 func ScoreboardToGames(r *model.ScoreboardResponse) []model.ESPNGame {
 	games := make([]model.ESPNGame, 0, len(r.Events))
 	for _, e := range r.Events {
@@ -22,6 +29,7 @@ func ScoreboardToGames(r *model.ScoreboardResponse) []model.ESPNGame {
 			Season:     e.Season.Year,
 			SeasonType: e.Season.Type,
 			State:      comp.Status.Type.State,
+			StatusName: comp.Status.Type.Name,
 			Period:     comp.Status.Period,
 			Completed:  comp.Status.Type.Completed,
 		}
@@ -109,7 +117,7 @@ func ESPNGameToGame(e *model.ESPNGame) *model.Game {
 		Week:       e.Week,
 		Season:     e.Season,
 		SeasonType: e.SeasonType,
-		Status:     gameStatusFromState(e.State),
+		Status:     gameStatus(e),
 		Period:     e.Period,
 		HomeScore:  e.HomeScore,
 		AwayScore:  e.AwayScore,
@@ -124,7 +132,7 @@ func CompletedQuarters(e *model.ESPNGame) []model.QuarterScore {
 	for q := 1; q <= 3 && q-1 < n; q++ {
 		homeTotal += e.HomeLine[q-1]
 		awayTotal += e.AwayLine[q-1]
-		if e.Period > q || e.Completed {
+		if e.Period > q || e.Completed || (e.Period == q && atBreak(e.StatusName)) {
 			out = append(out, model.QuarterScore{Quarter: q, Home: homeTotal, Away: awayTotal})
 		}
 	}
@@ -137,12 +145,23 @@ func CompletedQuarters(e *model.ESPNGame) []model.QuarterScore {
 	return out
 }
 
-func gameStatusFromState(state string) model.GameStatus {
-	switch state {
-	case "in":
-		return model.GameStatusInProgress
-	case "post":
+// a period's score is settled once ESPN calls the end of it, before the next one kicks off
+func atBreak(statusName string) bool {
+	return statusName == statusEndPeriod || statusName == statusHalftime
+}
+
+// ESPN puts postponed and canceled games in the "post" state too, so only a completed one is final;
+// anything else that stopped short is waiting to be played, until ESPN calls it canceled
+func gameStatus(e *model.ESPNGame) model.GameStatus {
+	switch {
+	case e.StatusName == statusCanceled:
+		return model.GameStatusCanceled
+	case e.State == "post" && e.Completed:
 		return model.GameStatusFinal
+	case e.State == "post" || e.StatusName == statusPostponed:
+		return model.GameStatusPostponed
+	case e.State == "in":
+		return model.GameStatusInProgress
 	default:
 		return model.GameStatusScheduled
 	}

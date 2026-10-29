@@ -38,7 +38,7 @@ func NewContestHandler(contestService service.ContestService) ContestHandler {
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
-// @Failure 409 {object} api.APIError "The game is past the first quarter"
+// @Failure 409 {object} api.APIError "The game is past the first quarter or was canceled"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests [post]
@@ -65,7 +65,7 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrDatabaseUnavailable):
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
-		case errors.Is(err, errs.ErrGamePastFirstQuarter):
+		case errors.Is(err, errs.ErrGamePastFirstQuarter), errors.Is(err, errs.ErrGameCanceled):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrGameNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))

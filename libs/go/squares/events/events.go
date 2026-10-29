@@ -51,6 +51,8 @@ const (
 	GameStatusScheduled  = "scheduled"
 	GameStatusInProgress = "in_progress"
 	GameStatusFinal      = "final"
+	GameStatusPostponed  = "postponed"
+	GameStatusCanceled   = "canceled"
 )
 
 type GameUpdated struct {

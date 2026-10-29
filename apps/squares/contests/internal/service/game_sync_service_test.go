@@ -197,6 +197,53 @@ func TestGameSync_FinalizesWhenGameEndsBeforeKickoffLock(t *testing.T) {
 	assert.Equal(t, 4, scores[1].Quarter)
 }
 
+func gameWithStatus(gameID uuid.UUID, status model.GameStatus, scores ...model.GameScore) *model.Game {
+	return &model.Game{ID: gameID, Status: status, Scores: scores}
+}
+
+func TestGameSync_CanceledBeforeKickoffFinishesWithoutNumbers(t *testing.T) {
+	game := gameWithStatus(uuid.New(), model.GameStatusCanceled)
+	contest := fullContest(model.ContestStatusActive, game.ID)
+	g, c, cs := syncFixture(t, game, contest)
+	cs.EXPECT().FinishCanceled(mock.Anything, contest).Return(nil).Once()
+
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
+}
+
+func TestGameSync_CanceledMidGameAppliesPlayedQuartersThenFinishes(t *testing.T) {
+	game := gameWithStatus(uuid.New(), model.GameStatusCanceled,
+		model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3},
+		model.GameScore{Quarter: 2, HomeScore: 14, AwayScore: 10},
+	)
+	contest := fullContest(model.ContestStatusQ2, game.ID)
+	g, c, cs := syncFixture(t, game, contest)
+
+	calls := make([]string, 0, 2)
+	cs.EXPECT().ApplyQuarterResult(mock.Anything, contest, 2, 14, 10).
+		Run(func(_ context.Context, c *model.Contest, _, _, _ int) {
+			c.Status = model.ContestStatusQ3
+			calls = append(calls, "q2")
+		}).
+		Return(&model.QuarterResult{Quarter: 2}, nil).Once()
+	cs.EXPECT().FinishCanceled(mock.Anything, contest).
+		Run(func(context.Context, *model.Contest) { calls = append(calls, "finish") }).
+		Return(nil).Once()
+
+	require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
+	assert.Equal(t, []string{"q2", "finish"}, calls)
+}
+
+func TestGameSync_PostponedGameKeepsContestsWaiting(t *testing.T) {
+	for _, status := range []model.ContestStatus{model.ContestStatusActive, model.ContestStatusQ3} {
+		game := gameWithStatus(uuid.New(), model.GameStatusPostponed, model.GameScore{Quarter: 1, HomeScore: 7, AwayScore: 3})
+		contest := fullContest(status, game.ID)
+		g, c, cs := syncFixture(t, game, contest)
+
+		require.NoError(t, service.NewGameSyncService(g, c, cs, passTx(), quietFeed(t)).ApplyGameUpdate(context.Background(), game))
+		assert.Equal(t, status, contest.Status)
+	}
+}
+
 func TestGameSync_ContestDeletedMeanwhileIsSkipped(t *testing.T) {
 	game := liveGame(uuid.New())
 	g := mocks.NewGameSyncRepository(t)

@@ -11,6 +11,16 @@
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "track image tags that charts pin in values.yaml",
+      "managerFilePatterns": ["/^charts/.+/values\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: image=(?<depName>\\S+)\\s+tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ]
 }

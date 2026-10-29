@@ -6,6 +6,7 @@ import {
   formatKickoff,
   formatMatchup,
   gameClock,
+  hasKickedOff,
   isLive,
   kickoffParts,
 } from './game';
@@ -35,6 +36,11 @@ describe('gameClock', () => {
     expect(gameClock({ status: 'final', period: 4, gameTime: kickoff })).toBe('Final');
     expect(gameClock({ status: 'final', period: 5, gameTime: kickoff })).toBe('Final/OT');
   });
+
+  it('shows a postponed or canceled game as such', () => {
+    expect(gameClock({ status: 'postponed', period: 0, gameTime: kickoff })).toBe('Postponed');
+    expect(gameClock({ status: 'canceled', period: 1, gameTime: kickoff })).toBe('Canceled');
+  });
 });
 
 describe('isLive', () => {
@@ -42,6 +48,16 @@ describe('isLive', () => {
     expect(isLive({ status: 'in_progress' })).toBe(true);
     expect(isLive({ status: 'final' })).toBe(false);
     expect(isLive(undefined)).toBe(false);
+  });
+});
+
+describe('hasKickedOff', () => {
+  it('is true once a period has been played', () => {
+    expect(hasKickedOff({ status: 'scheduled', period: 0 })).toBe(false);
+    expect(hasKickedOff({ status: 'postponed', period: 0 })).toBe(false);
+    expect(hasKickedOff({ status: 'postponed', period: 2 })).toBe(true);
+    expect(hasKickedOff({ status: 'in_progress', period: 1 })).toBe(true);
+    expect(hasKickedOff({ status: 'canceled', period: 1 })).toBe(true);
   });
 });
 
