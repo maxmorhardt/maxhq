@@ -1,7 +1,7 @@
 locals {
   domains = {
     "maxhq.io" = {
-      prod_hosts   = ["", "squares", "api", "login", "argocd", "olympics", "ages"]
+      prod_hosts   = ["", "squares", "api", "login", "olympics", "ages"]
       cached_hosts = ["", "squares", "olympics"]
       dev          = true
       mx = {
