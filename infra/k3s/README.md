@@ -5,7 +5,7 @@ Two k3s clusters, provisioned over SSH by [bootstrap/](bootstrap/) from one inve
 | cluster | profile | nodes | reachable |
 | --- | --- | --- | --- |
 | `dev` | `pi` | Raspberry Pis on the home LAN | Tailscale only |
-| `prod` | `vps` | Contabo VPSes | Tailscale for admin; public HTTPS on 443 from Cloudflare-proxied DNS records |
+| `prod` | `vps` | Contabo VPSes | Tailscale for admin; public traffic arrives over an outbound Cloudflare Tunnel, so no port is open |
 
 Both run three servers on embedded etcd, so the control plane survives losing any one node,
 and all node-to-node traffic goes over Tailscale.
@@ -51,7 +51,7 @@ prod:
   k3s_version: v1.36.5+k3s1    # what new nodes install
   ssh_user: root               # optional, overrides SSH_USER
   lan_cidr: 10.0.0.0/24        # optional: trusted through the firewall
-  open_ports: [443]            # optional: tcp ports open to anyone
+  open_ports: []               # optional: tcp ports open to anyone
   nodes:
     - {name: prod-1, ip: 203.0.113.11, role: init}    # exactly one; creates etcd
     - {name: prod-2, ip: 203.0.113.12, role: server}  # control plane + etcd
@@ -82,7 +82,7 @@ Every step converges, so re-running `up` is how a changed inventory or a new nod
 | journald capped at 500M | ✓ | ✓ |
 | memory cgroup on the kernel cmdline (reboots if needed), `vxlan` module | ✓ | — |
 | Tailscale joined with the cluster's tag | ✓ | ✓ |
-| ufw: deny inbound except tailnet, pods, services, LAN, and `open_ports` (prod: 443) | ✓ | ✓ |
+| ufw: deny inbound except tailnet, pods, services, LAN, and `open_ports` | ✓ | ✓ |
 | k3s on the Tailscale IP, started after tailscaled; pinned version; waits for ready | ✓ | ✓ |
 | `pre-reboot.sh` for kured | ✓ | ✓ |
 | network watchdog timer | ✓ | — |
@@ -106,7 +106,7 @@ ufw is identical on every node and denies all inbound traffic except:
 | pods `10.42.0.0/16`, services `10.43.0.0/16` | everything |
 | anywhere | 41641 udp, so Tailscale peers connect directly instead of through a relay |
 | `lan_cidr`, if set | everything |
-| anywhere | the cluster's `open_ports` over tcp; prod opens 443 so Cloudflare's proxy reaches the gateway |
+| anywhere | the cluster's `open_ports` over tcp; prod opens none, since cloudflared dials out |
 
 Tailscale's direct paths are IPv4 only, so peers don't keep switching between address families and
 briefly stalling etcd. tailscaled accepts its own port inbound before ufw sees it, so the block is

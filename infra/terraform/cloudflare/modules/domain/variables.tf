@@ -4,21 +4,14 @@ variable "domain" {
 }
 
 variable "prod_hosts" {
-  description = "Hosts proxied to the prod nodes; \"\" is the apex"
+  description = "Hosts proxied to prod through the tunnel; \"\" is the apex"
   type        = list(string)
   default     = []
 }
 
-variable "prod_ips" {
-  description = "Public IPs of the prod nodes"
-  type        = list(string)
-  sensitive   = true
-}
-
 variable "tunnel_id" {
-  description = "Cloudflare Tunnel the prod hosts route through instead of the prod IPs; null keeps the A records"
+  description = "Cloudflare Tunnel the prod hosts route through"
   type        = string
-  default     = null
 }
 
 variable "dev_ips" {

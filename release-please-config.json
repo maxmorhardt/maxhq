@@ -69,11 +69,6 @@
       "release-type": "helm",
       "component": "squares-realtime-chart",
       "changelog-path": "CHANGELOG.md"
-    },
-    "charts/cloudflare-cidr": {
-      "release-type": "helm",
-      "component": "cloudflare-cidr-chart",
-      "changelog-path": "CHANGELOG.md"
     }
   }
 }
