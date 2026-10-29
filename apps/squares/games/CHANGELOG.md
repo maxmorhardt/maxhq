@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.0.3...squares-games/2.1.0) (2026-10-29)
+
+
+### Features
+
+* handle canceled games, pay quarters at the break, and add a Cloudflare tunnel ([#159](https://github.com/maxmorhardt/maxhq/issues/159)) ([21afac5](https://github.com/maxmorhardt/maxhq/commit/21afac59d555c8f81a1f2fee6c5e7f95ed31f5ca))
+
 ## [2.0.3](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.0.2...squares-games/2.0.3) (2026-10-25)
 
 
