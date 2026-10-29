@@ -34,6 +34,8 @@ tunnel:
   enabled: false
   replicas: 2
   minAvailable: 1
+  # prod's network drops QUIC (udp 7844), and auto only falls back after the startup probe gives up
+  protocol: http2
   image:
     repository: cloudflare/cloudflared
     # renovate: image=cloudflare/cloudflared
