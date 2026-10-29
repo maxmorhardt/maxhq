@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/maxmorhardt/maxhq/compare/gateway-chart/1.2.1...gateway-chart/1.3.0) (2026-10-29)
+
+
+### Features
+
+* serve prod only through the Cloudflare tunnel ([#162](https://github.com/maxmorhardt/maxhq/issues/162)) ([c05b265](https://github.com/maxmorhardt/maxhq/commit/c05b26531c01df908c107c8c974d6f319f11b8e3))
+
 ## [1.2.1](https://github.com/maxmorhardt/maxhq/compare/gateway-chart/1.2.0...gateway-chart/1.2.1) (2026-10-29)
 
 
