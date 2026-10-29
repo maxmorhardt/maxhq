@@ -37,7 +37,7 @@ tunnel:
   image:
     repository: cloudflare/cloudflared
     # renovate: image=cloudflare/cloudflared
-    tag: 2026.10.0
+    tag: 2026.10.3
   tokenSecret:
     name: cloudflared-token
     key: token
