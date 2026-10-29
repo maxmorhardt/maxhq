@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <meta charSet="UTF-8" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
         <link rel="icon" href="/favicon.ico?v=2" sizes="48x48" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=2" />
