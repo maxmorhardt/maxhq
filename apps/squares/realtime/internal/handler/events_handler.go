@@ -45,7 +45,7 @@ func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdow
 }
 
 // @Summary Stream contest events
-// @Description Server-sent events for one contest. The first event is a `contest.snapshot` of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (`<ms>-<seq>`) as the SSE id. An `access.revoked` event means the viewer lost access and the stream is closing.
+// @Description Server-sent events for one contest. The first event is a `contest.snapshot` of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (`<ms>-<seq>`) as the SSE id. An `access.revoked` event means the viewer lost access and the stream is closing. A finished contest has nothing to stream: it is refused with 410, and an open stream closes after the `contest.updated` that finishes it.
 // @Tags events
 // @Produce text/event-stream
 // @Param id path string true "Contest ID"
@@ -55,6 +55,7 @@ func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdow
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
+// @Failure 410 {object} api.APIError "The contest is finished; read it from /contests/{id} instead"
 // @Failure 503 {object} api.APIError
 // @Security BearerAuth
 // @Router /events/contests/{id} [get]
@@ -205,6 +206,9 @@ func (h *eventsHandler) rejectSubscribe(c *gin.Context, err error) {
 	case errors.Is(err, errs.ErrInsufficientRole):
 		metrics.RecordStreamResult(model.StreamResultUnauthorized)
 		c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, "Not authorized to view this contest", c))
+	case errors.Is(err, errs.ErrContestFinished):
+		metrics.RecordStreamResult(model.StreamResultFinished)
+		c.JSON(http.StatusGone, api.NewAPIError(http.StatusGone, api.Message(err), c))
 	default:
 		logging.FromGin(c).Error("failed to open contest stream", "error", err)
 		metrics.RecordStreamResult(model.StreamResultUnavailable)
@@ -269,6 +273,9 @@ func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *se
 
 			if event.Envelope.Type == events.ContestDeletedType {
 				return model.StreamCloseContestDeleted
+			}
+			if service.FinishesContest(&event.Envelope) {
+				return model.StreamCloseContestFinished
 			}
 		}
 	}

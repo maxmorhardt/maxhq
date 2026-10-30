@@ -88,6 +88,22 @@ func TestStreamContest_SnapshotThenEventsUntilDeleted(t *testing.T) {
 	assert.True(t, stopped, "the subscription is released when the stream ends")
 }
 
+func TestStreamContest_ClosesOnceTheContestFinishes(t *testing.T) {
+	contestID := uuid.New()
+	ch := make(chan service.Event, 2)
+	ch <- eventOf(t, "8-0", events.ContestUpdatedType, contestID, map[string]any{"status": "FINISHED"})
+	ch <- eventOf(t, "9-0", events.SquareUpdatedType, contestID, map[string]any{"row": 1})
+
+	svc := mocks.NewStreamService(t)
+	svc.EXPECT().Subscribe(mock.Anything, contestID, "v@b.com", "").
+		Return(&service.Subscription{Events: ch, Stop: func() {}}, nil)
+
+	body := serve(streamRouter(svc, slowTimers, nil, farFuture()), "/events/contests/"+contestID.String(), nil).Body.String()
+
+	assert.Contains(t, body, "id: 8-0\nevent: contest.updated\n")
+	assert.NotContains(t, body, "id: 9-0", "nothing is sent after the contest finishes")
+}
+
 func TestStreamContest_ResumesFromHeaderOrQuery(t *testing.T) {
 	for _, tt := range []struct {
 		name   string
@@ -126,6 +142,7 @@ func TestStreamContest_SubscribeErrors(t *testing.T) {
 		errs.ErrContestNotFound:  http.StatusNotFound,
 		errs.ErrInsufficientRole: http.StatusForbidden,
 		errs.ErrDependencyFailed: http.StatusServiceUnavailable,
+		errs.ErrContestFinished:  http.StatusGone,
 	} {
 		svc := mocks.NewStreamService(t)
 		svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, err)

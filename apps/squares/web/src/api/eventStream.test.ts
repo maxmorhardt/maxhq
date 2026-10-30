@@ -121,7 +121,7 @@ describe('openEventStream', () => {
     stream.close();
   });
 
-  it('stops for good on a 400, 403, or 404', async () => {
+  it('stops for good on a 400, 403, 404, or 410', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 404 }));
     const { onRejected } = open();
 

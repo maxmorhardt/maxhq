@@ -1493,6 +1493,10 @@ const docTemplatecontests = `{
                 "gameId": {
                     "type": "string"
                 },
+                "gamePeriod": {
+                    "type": "integer",
+                    "example": 2
+                },
                 "gameTime": {
                     "type": "string"
                 },

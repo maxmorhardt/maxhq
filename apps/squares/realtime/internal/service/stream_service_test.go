@@ -145,6 +145,29 @@ func TestSubscribe_AccessDeniedReleasesTheListener(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrInsufficientRole)
 }
 
+func TestSubscribe_FinishedContestIsRefused(t *testing.T) {
+	client, hub := newHub(t)
+	contestID := uuid.New()
+	contests := mocks.NewContestAccessClient(t)
+	contests.EXPECT().GetSnapshot(mock.Anything, contestID, "v@b.com").
+		Return(&contracts.ContestSnapshot{Contest: json.RawMessage(`{"status":"FINISHED"}`)}, nil)
+
+	_, err := service.NewStreamService(client, hub, contests, nil).Subscribe(context.Background(), contestID, "v@b.com", "")
+
+	assert.ErrorIs(t, err, errs.ErrContestFinished)
+}
+
+func TestFinishesContest(t *testing.T) {
+	update := func(eventType, data string) *events.ContestEvent {
+		return &events.ContestEvent{Type: eventType, Data: json.RawMessage(data)}
+	}
+
+	assert.True(t, service.FinishesContest(update(events.ContestUpdatedType, `{"status":"FINISHED"}`)))
+	assert.False(t, service.FinishesContest(update(events.ContestUpdatedType, `{"status":"Q4"}`)))
+	assert.False(t, service.FinishesContest(update(events.ContestUpdatedType, `{garbled`)))
+	assert.False(t, service.FinishesContest(update(events.QuarterRecordedType, `{"status":"FINISHED"}`)))
+}
+
 func TestSubscribe_RedisDownIsADependencyFailure(t *testing.T) {
 	mr := miniredis.RunT(t)
 	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})

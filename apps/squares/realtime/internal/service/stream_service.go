@@ -21,6 +21,8 @@ import (
 const (
 	eventBuffer = 64
 	replayBatch = 500
+
+	contestFinished = "FINISHED"
 )
 
 type Event struct {
@@ -75,6 +77,10 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 	if err != nil {
 		s.hub.Unsubscribe(listener)
 		return nil, err
+	}
+	if isFinished(snapshot.Contest) {
+		s.hub.Unsubscribe(listener)
+		return nil, errs.ErrContestFinished
 	}
 
 	sub := &Subscription{}
@@ -234,6 +240,18 @@ func (s *streamService) CheckAccess(ctx context.Context, contestID uuid.UUID, us
 
 func (s *streamService) IsRevoked(ctx context.Context, user string, issuedAt int64) (bool, error) {
 	return s.revocations.IsRevoked(ctx, user, issuedAt)
+}
+
+// a finished contest never changes again, so there is nothing left to stream
+func FinishesContest(event *events.ContestEvent) bool {
+	return event.Type == events.ContestUpdatedType && isFinished(event.Data)
+}
+
+func isFinished(contest json.RawMessage) bool {
+	var fields struct {
+		Status string `json:"status"`
+	}
+	return json.Unmarshal(contest, &fields) == nil && fields.Status == contestFinished
 }
 
 func RequiresAccessCheck(event *events.ContestEvent, user string) bool {

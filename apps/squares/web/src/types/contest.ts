@@ -80,6 +80,8 @@ export interface ContestSummary {
   role: ParticipantRole;
   gameId?: string;
   gameTime?: string;
+  // the quarter the game is in, which runs behind status through the break after a quarter pays out
+  gamePeriod?: number;
   claimedSquares: number;
   mySquares: number;
   version: number;

@@ -25,7 +25,11 @@ const roleLabel: Record<ContestSummary['role'], string> = {
   viewer: 'Viewer',
 };
 
-function StatusPill({ status, gameTime }: Pick<ContestSummary, 'status' | 'gameTime'>) {
+function StatusPill({
+  status,
+  gameTime,
+  gamePeriod,
+}: Pick<ContestSummary, 'status' | 'gameTime' | 'gamePeriod'>) {
   const live = isInGameStatus(status);
   const final = status === 'FINISHED';
   const color = live ? palette.flag : final ? palette.gold : palette.brand;
@@ -55,7 +59,7 @@ function StatusPill({ status, gameTime }: Pick<ContestSummary, 'status' | 'gameT
       {live && (
         <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: color }} />
       )}
-      {getStatusLabel(status, gameTime)}
+      {getStatusLabel(status, gameTime, gamePeriod)}
     </Box>
   );
 }
@@ -256,7 +260,11 @@ export default function ContestsTable({
                 </Box>
 
                 <Box sx={{ gridArea: 'status', justifySelf: { md: 'end' } }}>
-                  <StatusPill status={contest.status} gameTime={contest.gameTime} />
+                  <StatusPill
+                    status={contest.status}
+                    gameTime={contest.gameTime}
+                    gamePeriod={contest.gamePeriod}
+                  />
                 </Box>
 
                 <Box sx={{ gridArea: 'role', justifySelf: { md: 'center' } }}>
