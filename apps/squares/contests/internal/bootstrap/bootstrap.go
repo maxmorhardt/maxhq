@@ -84,7 +84,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	}), Service)
 
 	routes.Register(engine, &routes.Handlers{
-		Contest:     handler.NewContestHandler(contestService),
+		Contest:     handler.NewContestHandler(contestService, snapshotService),
 		Square:      handler.NewSquareHandler(squareService),
 		Feed:        handler.NewFeedHandler(feedService),
 		Participant: handler.NewParticipantHandler(participantService),

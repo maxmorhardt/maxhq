@@ -30,6 +30,7 @@ describe('contestsApi', () => {
       'POST',
       '/contests',
     ],
+    ['getContest', () => endpoints.getContest.initiate('c'), 'GET', '/contests/c'],
     ['deleteContest', () => endpoints.deleteContest.initiate('c'), 'DELETE', '/contests/c'],
     [
       'claimSquare',

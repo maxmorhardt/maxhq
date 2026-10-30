@@ -23,12 +23,21 @@ export function formatKickoff(gameTime: string): string {
   return `${day} · ${time}`;
 }
 
+// espn keeps the period at 2 through the break, but the second quarter's score is recorded when it starts
+export const isHalftime = (game: Pick<Game, 'status' | 'period' | 'scores'>) =>
+  game.status === 'in_progress' &&
+  game.period === 2 &&
+  !!game.scores?.some((score) => score.quarter === 2);
+
 // what a scoreboard shows in the middle: the kickoff, the quarter being played, or the final
-export function gameClock(game: Pick<Game, 'status' | 'period' | 'gameTime'>): string {
+export function gameClock(game: Pick<Game, 'status' | 'period' | 'gameTime' | 'scores'>): string {
   const overtime = game.period > 4;
 
   if (game.status === 'final') {
     return overtime ? 'Final/OT' : 'Final';
+  }
+  if (isHalftime(game)) {
+    return 'Halftime';
   }
   if (game.status === 'in_progress') {
     return overtime ? 'OT' : `Q${Math.max(game.period, 1)}`;
@@ -43,6 +52,9 @@ export function gameClock(game: Pick<Game, 'status' | 'period' | 'gameTime'>): s
 }
 
 export const isLive = (game?: Pick<Game, 'status'>) => game?.status === 'in_progress';
+
+export const isGameOver = (game: Pick<Game, 'status'>) =>
+  game.status === 'final' || game.status === 'canceled';
 
 // a game postponed before kickoff has no score to show, unlike one stopped partway through
 export const hasKickedOff = (game: Pick<Game, 'status' | 'period'>) =>

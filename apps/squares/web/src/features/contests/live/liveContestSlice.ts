@@ -3,6 +3,7 @@ import type { StreamStatus } from '../../../api/eventStream';
 import type {
   ActivityEvent,
   Contest,
+  ContestSnapshot,
   ContestStatus,
   ContestUpdate,
   Participant,
@@ -118,12 +119,14 @@ type EventHandler<T extends ContestEventType> = (
 ) => void;
 
 // one handler per event type; the mapped type makes a missing handler a compile error
+function applySnapshot(state: LiveContestState, snapshot: ContestSnapshot) {
+  state.contest = snapshot.contest;
+  state.participants = snapshot.participants ?? [];
+  state.activity = seedActivity(snapshot.contest, state.participants);
+}
+
 const eventHandlers: { [T in ContestEventType]: EventHandler<T> } = {
-  'contest.snapshot': (state, { data }) => {
-    state.contest = data.contest;
-    state.participants = data.participants ?? [];
-    state.activity = seedActivity(data.contest, state.participants);
-  },
+  'contest.snapshot': (state, { data }) => applySnapshot(state, data),
   'contest.updated': (state, { data }) => applyContestUpdate(state, data),
   'contest.deleted': (state) => {
     state.ended = 'deleted';
@@ -183,6 +186,11 @@ const liveContestSlice = createSlice({
   extraReducers: (builder) => {
     // a write's response lands before its event, so the grid updates without waiting on the stream
     builder
+      .addMatcher(endpoints.getContest.matchFulfilled, (state, action) => {
+        if (action.meta.arg.originalArgs === state.contestId) {
+          applySnapshot(state, action.payload);
+        }
+      })
       .addMatcher(
         isAnyOf(endpoints.claimSquare.matchFulfilled, endpoints.clearSquare.matchFulfilled),
         (state, action) => upsertSquare(state, action.payload)

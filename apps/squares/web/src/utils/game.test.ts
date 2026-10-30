@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { makeContest, makeQuarterResult } from '../test/fixtures';
-import type { Game } from '../types/contest';
+import type { Game, GameScore } from '../types/contest';
 import {
   currentScore,
   formatKickoff,
   formatMatchup,
   gameClock,
   hasKickedOff,
+  isGameOver,
+  isHalftime,
   isLive,
   kickoffParts,
 } from './game';
+
+const scored = (...quarters: number[]) => quarters.map((quarter) => ({ quarter }) as GameScore);
 
 describe('formatMatchup', () => {
   it('should format as "away @ home"', () => {
@@ -32,6 +36,15 @@ describe('gameClock', () => {
     expect(gameClock({ status: 'in_progress', period: 5, gameTime: kickoff })).toBe('OT');
   });
 
+  it('shows halftime once the second quarter is scored', () => {
+    expect(
+      gameClock({ status: 'in_progress', period: 2, gameTime: kickoff, scores: scored(1, 2) })
+    ).toBe('Halftime');
+    expect(
+      gameClock({ status: 'in_progress', period: 2, gameTime: kickoff, scores: scored(1) })
+    ).toBe('Q2');
+  });
+
   it('shows the final, noting overtime', () => {
     expect(gameClock({ status: 'final', period: 4, gameTime: kickoff })).toBe('Final');
     expect(gameClock({ status: 'final', period: 5, gameTime: kickoff })).toBe('Final/OT');
@@ -43,11 +56,31 @@ describe('gameClock', () => {
   });
 });
 
+describe('isHalftime', () => {
+  const scores = scored(2);
+
+  it('is true only in the break after the second quarter', () => {
+    expect(isHalftime({ status: 'in_progress', period: 2, scores })).toBe(true);
+    expect(isHalftime({ status: 'in_progress', period: 2 })).toBe(false);
+    expect(isHalftime({ status: 'in_progress', period: 3, scores })).toBe(false);
+    expect(isHalftime({ status: 'canceled', period: 2, scores })).toBe(false);
+  });
+});
+
 describe('isLive', () => {
   it('is true only for a game in progress', () => {
     expect(isLive({ status: 'in_progress' })).toBe(true);
     expect(isLive({ status: 'final' })).toBe(false);
     expect(isLive(undefined)).toBe(false);
+  });
+});
+
+describe('isGameOver', () => {
+  it('is true once the game can no longer change', () => {
+    expect(isGameOver({ status: 'final' })).toBe(true);
+    expect(isGameOver({ status: 'canceled' })).toBe(true);
+    expect(isGameOver({ status: 'in_progress' })).toBe(false);
+    expect(isGameOver({ status: 'postponed' })).toBe(false);
   });
 });
 

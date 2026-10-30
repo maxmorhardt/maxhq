@@ -96,13 +96,23 @@ describe('LiveContest', () => {
   });
 
   it('reads the score from the games service and follows it live', () => {
-    games.useGetGameQuery.mockReturnValue({ data: { homeScore: 14 } });
+    games.useGetGameQuery.mockReturnValue({
+      data: { id: 'g-1', status: 'in_progress', homeScore: 14 },
+    });
     const { snapshot } = renderLive();
     snapshot(makeContest({ gameId: 'g-1' }));
 
     expect(games.useGetGameQuery).toHaveBeenLastCalledWith('g-1');
     expect(games.useGameStream).toHaveBeenLastCalledWith('g-1');
     expect(screen.getByTestId('view')).toHaveAttribute('data-score', '14');
+  });
+
+  it('does not follow a game that is over', () => {
+    games.useGetGameQuery.mockReturnValue({ data: { id: 'g-1', status: 'final', homeScore: 14 } });
+    const { snapshot } = renderLive();
+    snapshot(makeContest({ gameId: 'g-1' }));
+
+    expect(games.useGameStream).toHaveBeenLastCalledWith(undefined);
   });
 
   it('leaves the games stream closed for a contest without a game', () => {

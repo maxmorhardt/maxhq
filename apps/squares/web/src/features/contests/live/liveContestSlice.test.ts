@@ -5,6 +5,7 @@ import {
   makeQuarterResult,
   makeSquare,
 } from '../../../test/fixtures';
+import type { Contest } from '../../../types/contest';
 import type { ContestEvent } from './events';
 import {
   eventReceived,
@@ -131,6 +132,30 @@ describe('liveContestSlice events', () => {
     const opened = liveContestReducer(undefined, streamOpened('c-1'));
     const state = receive(opened, event('square.updated', makeSquare({ value: 'AB' })));
     expect(state.contest).toBeNull();
+  });
+});
+
+describe('liveContestSlice contest read', () => {
+  const read = (contestId: string, status: Contest['status']) => ({
+    type: 'api/executeQuery/fulfilled',
+    payload: { contest: makeContest({ status }), participants: [makeParticipant()] },
+    meta: {
+      arg: { type: 'query', endpointName: 'getContest', originalArgs: contestId },
+      requestId: 'r',
+      requestStatus: 'fulfilled',
+    },
+  });
+
+  it('loads the contest it read over http, like a snapshot', () => {
+    const opened = liveContestReducer(undefined, streamOpened('c-1'));
+    const state = liveContestReducer(opened, read('c-1', 'FINISHED'));
+    expect(state.contest?.status).toBe('FINISHED');
+    expect(state.participants).toHaveLength(1);
+  });
+
+  it('ignores a read of another contest', () => {
+    const opened = liveContestReducer(undefined, streamOpened('c-2'));
+    expect(liveContestReducer(opened, read('c-1', 'FINISHED')).contest).toBeNull();
   });
 });
 

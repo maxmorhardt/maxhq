@@ -31,6 +31,7 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	contests := r.Group("/contests")
 	contests.GET("", g.Auth, h.Feed.GetFeed)
 	contests.POST("", write(h.Contest.CreateContest)...)
+	contests.GET("/:id", g.Auth, h.Contest.GetContest)
 	contests.DELETE("/:id", write(h.Contest.DeleteContest)...)
 	contests.PUT("/:id/squares/:squareId/claim", write(h.Square.ClaimSquare)...)
 	contests.POST("/:id/squares/random", write(h.Square.ClaimRandomSquares)...)
