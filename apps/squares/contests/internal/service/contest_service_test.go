@@ -221,6 +221,25 @@ func TestApplyQuarterResult_StepsStatusAndStamps(t *testing.T) {
 	assert.Equal(t, model.ContestStatusQ2, contest.Status)
 }
 
+func TestApplyQuarterResult_FinishPublishesContestUpdate(t *testing.T) {
+	repo := mocks.NewContestRepository(t)
+	contest := &model.Contest{
+		ID: uuid.New(), Status: model.ContestStatusQ4,
+		XLabels: orderedLabels(t), YLabels: orderedLabels(t),
+		Squares: []model.Square{{Row: 3, Col: 7, Owner: "winner", OwnerName: "Win Ner"}},
+	}
+	repo.EXPECT().ApplyQuarterResults(mock.Anything, contest, mock.Anything).Return(nil)
+	pub := mocks.NewContestEventPublisher(t)
+	quarter := pub.EXPECT().PublishQuarterResult(mock.Anything, contest.ID, "system", mock.Anything).Return(nil).Call
+	pub.EXPECT().PublishContestUpdate(mock.Anything, contest.ID, "system", contest).Return(nil).NotBefore(quarter)
+
+	_, err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), pub, mocks.NewParticipantService(t)).
+		ApplyQuarterResult(context.Background(), contest, 4, 17, 23)
+
+	require.NoError(t, err)
+	assert.Equal(t, model.ContestStatusFinished, contest.Status)
+}
+
 func TestApplyQuarterResult_InvalidQuarter(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 

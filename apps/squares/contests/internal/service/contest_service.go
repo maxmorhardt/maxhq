@@ -172,7 +172,14 @@ func (s *contestService) ApplyQuarterResult(ctx context.Context, contest *model.
 	contest.Status = nextStatus
 	results := []model.QuarterResult{*result}
 	if err := s.tx.Do(ctx, func(ctx context.Context) error {
-		return s.applyQuarterResults(ctx, contest, results, systemUser)
+		if err := s.applyQuarterResults(ctx, contest, results, systemUser); err != nil {
+			return err
+		}
+		// viewers drop their stream on the finishing contest.updated, so every way to finish ends with one
+		if nextStatus != model.ContestStatusFinished {
+			return nil
+		}
+		return s.events.PublishContestUpdate(ctx, contest.ID, systemUser, contest)
 	}); err != nil {
 		log.Error("failed to apply quarter result", "contest_id", contest.ID, "quarter", quarter, "error", err)
 		return nil, err

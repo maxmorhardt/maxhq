@@ -13,18 +13,55 @@ import (
 )
 
 type ContestHandler interface {
+	GetContest(c *gin.Context)
 	CreateContest(c *gin.Context)
 	DeleteContest(c *gin.Context)
 }
 
 type contestHandler struct {
-	contestService service.ContestService
+	contestService  service.ContestService
+	snapshotService service.SnapshotService
 }
 
-func NewContestHandler(contestService service.ContestService) ContestHandler {
+func NewContestHandler(contestService service.ContestService, snapshotService service.SnapshotService) ContestHandler {
 	return &contestHandler{
-		contestService: contestService,
+		contestService:  contestService,
+		snapshotService: snapshotService,
 	}
+}
+
+// @Summary Get a contest
+// @Description Returns the contest and its participants if the user may view it, in the shape of the stream's `contest.snapshot`. For contests that are over, which have nothing left to stream.
+// @Tags contests
+// @Produce json
+// @Param id path string true "Contest ID"
+// @Success 200 {object} model.ContestSnapshotSwagger
+// @Failure 400 {object} api.APIError
+// @Failure 403 {object} api.APIError
+// @Failure 404 {object} api.APIError
+// @Failure 500 {object} api.APIError
+// @Security BearerAuth
+// @Router /contests/{id} [get]
+func (h *contestHandler) GetContest(c *gin.Context) {
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
+		return
+	}
+
+	snapshot, err := h.snapshotService.GetSnapshot(c.Request.Context(), contestID, c.GetString(api.UserKey))
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
+		case errors.Is(err, errs.ErrInsufficientRole):
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
+		default:
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(errs.ErrDatabaseUnavailable), c))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, snapshot)
 }
 
 // @Summary Create a new Contest

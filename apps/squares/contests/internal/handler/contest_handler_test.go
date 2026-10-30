@@ -28,7 +28,7 @@ func TestCreateContest_Success(t *testing.T) {
 	svc := mocks.NewContestService(t)
 	svc.EXPECT().CreateContest(mock.Anything, mock.Anything, mock.Anything).
 		Return(&model.Contest{ID: contestID, Name: "NewContest", Owner: "owner1", Status: model.ContestStatusActive}, nil)
-	h := NewContestHandler(svc)
+	h := NewContestHandler(svc, nil)
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
@@ -49,7 +49,7 @@ func jsonReq(method, target string, v any) *http.Request {
 }
 
 func TestCreateContest_InvalidBody(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
+	h := NewContestHandler(mocks.NewContestService(t), nil)
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
 	r.POST("/contests", h.CreateContest)
@@ -61,7 +61,7 @@ func TestCreateContest_InvalidBody(t *testing.T) {
 }
 
 func TestCreateContest_OwnerMismatch(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
+	h := NewContestHandler(mocks.NewContestService(t), nil)
 	r := gin.New()
 	r.Use(authenticatedMiddleware("user1"))
 	r.POST("/contests", h.CreateContest)
@@ -89,7 +89,7 @@ func createContestErr(t *testing.T, svcErr error, wantCode int) {
 	t.Helper()
 	svc := mocks.NewContestService(t)
 	svc.EXPECT().CreateContest(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewContestHandler(svc)
+	h := NewContestHandler(svc, nil)
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
@@ -99,10 +99,63 @@ func createContestErr(t *testing.T, svcErr error, wantCode int) {
 	assert.Equal(t, wantCode, w.Code)
 }
 
+func TestGetContest(t *testing.T) {
+	contestID := uuid.New()
+	snapshots := mocks.NewSnapshotService(t)
+	snapshots.EXPECT().GetSnapshot(mock.Anything, contestID, "viewer1").
+		Return(&model.ContestSnapshot{Contest: &model.Contest{ID: contestID, Status: model.ContestStatusFinished}}, nil)
+	h := NewContestHandler(nil, snapshots)
+
+	r := gin.New()
+	r.Use(authenticatedMiddleware("viewer1"))
+	r.GET("/contests/:id", h.GetContest)
+
+	req, _ := http.NewRequest(http.MethodGet, "/contests/"+contestID.String(), http.NoBody)
+	w := doRequest(r, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp model.ContestSnapshot
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, contestID, resp.Contest.ID)
+}
+
+func TestGetContest_Errors(t *testing.T) {
+	tests := []struct {
+		err  error
+		want int
+	}{
+		{errs.ErrContestNotFound, http.StatusNotFound},
+		{errs.ErrInsufficientRole, http.StatusForbidden},
+		{errs.ErrDatabaseUnavailable, http.StatusInternalServerError},
+	}
+
+	for _, tt := range tests {
+		snapshots := mocks.NewSnapshotService(t)
+		snapshots.EXPECT().GetSnapshot(mock.Anything, mock.Anything, mock.Anything).Return(nil, tt.err)
+		h := NewContestHandler(nil, snapshots)
+
+		r := gin.New()
+		r.Use(authenticatedMiddleware("viewer1"))
+		r.GET("/contests/:id", h.GetContest)
+
+		req, _ := http.NewRequest(http.MethodGet, "/contests/"+uuid.NewString(), http.NoBody)
+		assert.Equal(t, tt.want, doRequest(r, req).Code, tt.err.Error())
+	}
+}
+
+func TestGetContest_InvalidID(t *testing.T) {
+	h := NewContestHandler(nil, mocks.NewSnapshotService(t))
+	r := gin.New()
+	r.Use(authenticatedMiddleware("viewer1"))
+	r.GET("/contests/:id", h.GetContest)
+
+	req, _ := http.NewRequest(http.MethodGet, "/contests/bad-id", http.NoBody)
+	assert.Equal(t, http.StatusBadRequest, doRequest(r, req).Code)
+}
+
 func TestDeleteContest_Success(t *testing.T) {
 	svc := mocks.NewContestService(t)
 	svc.EXPECT().DeleteContest(mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	h := NewContestHandler(svc)
+	h := NewContestHandler(svc, nil)
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
@@ -114,7 +167,7 @@ func TestDeleteContest_Success(t *testing.T) {
 }
 
 func TestDeleteContest_InvalidID(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t))
+	h := NewContestHandler(mocks.NewContestService(t), nil)
 	r := gin.New()
 	r.Use(authenticatedMiddleware("owner1"))
 	r.DELETE("/contests/:id", h.DeleteContest)
@@ -141,7 +194,7 @@ func deleteContestErr(t *testing.T, user string, svcErr error, wantCode int) {
 	t.Helper()
 	svc := mocks.NewContestService(t)
 	svc.EXPECT().DeleteContest(mock.Anything, mock.Anything, mock.Anything).Return(svcErr)
-	h := NewContestHandler(svc)
+	h := NewContestHandler(svc, nil)
 
 	r := gin.New()
 	r.Use(authenticatedMiddleware(user))

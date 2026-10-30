@@ -3,6 +3,7 @@ import type {
   Contest,
   ContestFeedParams,
   ContestFeedResponse,
+  ContestSnapshot,
   ContestSummary,
   CreateContestRequest,
   CreateInviteRequest,
@@ -47,6 +48,11 @@ export const contestsApi = baseApi.injectEndpoints({
       query: () => ({ url: '/contests', params: { status: 'active', limit: 50 } }),
       transformResponse: (feed: ContestFeedResponse) => feed.contests,
       providesTags: ['ActiveContests'],
+    }),
+
+    // a finished contest has nothing left to stream, so it is read once instead
+    getContest: build.query<ContestSnapshot, string>({
+      query: (id) => `/contests/${id}`,
     }),
 
     createContest: build.mutation<Contest, CreateContestRequest>({

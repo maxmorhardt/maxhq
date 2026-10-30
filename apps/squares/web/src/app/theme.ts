@@ -156,7 +156,7 @@ export const theme = createTheme({
       styleOverrides: { root: { borderColor: game.line } },
     },
     MuiSkeleton: {
-      styleOverrides: { root: { backgroundColor: alpha(game.chalk, 0.06) } },
+      styleOverrides: { root: { backgroundColor: alpha(game.chalk, 0.14) } },
     },
     MuiAccordion: {
       styleOverrides: { root: { backgroundImage: 'none', '&::before': { display: 'none' } } },
