@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.4.0...squares/2.5.0) (2026-10-30)
+
+
+### Features
+
+* stream contests first, refuse finished ones, and label halftime in lists ([#176](https://github.com/maxmorhardt/maxhq/issues/176)) ([d866d94](https://github.com/maxmorhardt/maxhq/commit/d866d94366a02c1a93df33672009ba5cc82d18e2))
+
 ## [2.4.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.3.1...squares/2.4.0) (2026-10-30)
 
 
