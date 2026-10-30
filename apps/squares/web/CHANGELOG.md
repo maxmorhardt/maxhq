@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.3.1...squares/2.4.0) (2026-10-30)
+
+
+### Features
+
+* show halftime, read finished contests once, and brighten skeletons ([#172](https://github.com/maxmorhardt/maxhq/issues/172)) ([a8ab74e](https://github.com/maxmorhardt/maxhq/commit/a8ab74eaeca60d84595aecea498de306d85e1ad4))
+
 ## [2.3.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.3.0...squares/2.3.1) (2026-10-29)
 
 
