@@ -56,6 +56,14 @@ describe('getStatusLabel', () => {
     expect(getStatusLabel('DELETED')).toBe('Deleted');
   });
 
+  it('should read a live contest as the game quarter, and halftime through the break', () => {
+    expect(getStatusLabel('Q2', undefined, 1)).toBe('Q1');
+    expect(getStatusLabel('Q2', undefined, 2)).toBe('Q2');
+    expect(getStatusLabel('Q3', undefined, 2)).toBe('Halftime');
+    expect(getStatusLabel('Q4', undefined, 5)).toBe('OT');
+    expect(getStatusLabel('FINISHED', undefined, 4)).toBe('Final');
+  });
+
   it('should read an open contest as its kickoff', () => {
     const kickoff = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const gameTime = kickoff.toISOString();

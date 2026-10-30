@@ -61,13 +61,24 @@ export function getStatusOption(status: ContestStatus): StatusOption {
   return option || statusOptions[0];
 }
 
-// an open contest reads as its kickoff, like a scoreboard does before the game
-export function getStatusLabel(status: ContestStatus, gameTime?: string): string {
+// an open contest reads as its kickoff and a live one as the game's quarter, like a scoreboard does
+export function getStatusLabel(
+  status: ContestStatus,
+  gameTime?: string,
+  gamePeriod?: number
+): string {
   const kickoff = gameTime ? new Date(gameTime) : undefined;
   if (status === 'ACTIVE' && kickoff && kickoff.getTime() > Date.now()) {
     const day = kickoff.toLocaleDateString(undefined, { weekday: 'short' });
     const time = kickoff.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     return `${day} ${time}`;
+  }
+  if (isInGameStatus(status) && gamePeriod) {
+    // the second quarter pays out when halftime starts, moving the contest on to Q3 early
+    if (status === 'Q3' && gamePeriod === 2) {
+      return 'Halftime';
+    }
+    return gamePeriod > 4 ? 'OT' : `Q${gamePeriod}`;
   }
   return getStatusOption(status).label;
 }

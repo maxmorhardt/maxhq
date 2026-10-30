@@ -12,7 +12,7 @@ export interface EventStreamOptions {
   getToken: (options?: { forceRefresh?: boolean }) => Promise<string | null>;
   onMessage: (message: StreamMessage) => void;
   onStatus: (status: StreamStatus) => void;
-  // a status retrying cannot fix, like 400, 403, or 404; the stream stops
+  // a status retrying cannot fix, like 400, 403, 404, or 410; the stream stops
   onRejected: (status: number) => void;
   heartbeatTimeoutMs?: number;
   connectTimeoutMs?: number;
@@ -26,7 +26,7 @@ export interface EventStream {
 
 type Outcome = 'dropped' | 'failed' | 'unauthorized' | 'rejected';
 
-const REJECTED_STATUSES = new Set([400, 403, 404]);
+const REJECTED_STATUSES = new Set([400, 403, 404, 410]);
 // the server pings every 25s, so a silent minute means the connection is dead
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 60_000;
 // the server writes as soon as a stream opens, so a slow first byte means it is stuck

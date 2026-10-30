@@ -22,7 +22,7 @@ const docTemplaterealtime = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Server-sent events for one contest. The first event is a ` + "`" + `contest.snapshot` + "`" + ` of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (` + "`" + `\u003cms\u003e-\u003cseq\u003e` + "`" + `) as the SSE id. An ` + "`" + `access.revoked` + "`" + ` event means the viewer lost access and the stream is closing.",
+                "description": "Server-sent events for one contest. The first event is a ` + "`" + `contest.snapshot` + "`" + ` of the contest and its participants, unless the client resumes with Last-Event-ID and the gap is still retained, in which case only the missed events are replayed. Every event carries its stream entry id (` + "`" + `\u003cms\u003e-\u003cseq\u003e` + "`" + `) as the SSE id. An ` + "`" + `access.revoked` + "`" + ` event means the viewer lost access and the stream is closing. A finished contest has nothing to stream: it is refused with 410, and an open stream closes after the ` + "`" + `contest.updated` + "`" + ` that finishes it.",
                 "produces": [
                     "text/event-stream"
                 ],
@@ -72,6 +72,12 @@ const docTemplaterealtime = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "410": {
+                        "description": "The contest is finished; read it from /contests/{id} instead",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }

@@ -7,6 +7,7 @@ import { getIdToken } from '../../../auth/token';
 import { isTerminalStatus } from '../../../utils/contestStatus';
 import { contestsApi } from '../api';
 import { parseContestEvent, type ContestEvent } from './events';
+import { selectListedStatus } from './selectors';
 import {
   eventReceived,
   streamClosed,
@@ -16,7 +17,8 @@ import {
 } from './liveContestSlice';
 
 const SNAPSHOT_TIMEOUT_MS = 4_000;
-const REJECTED_STATUSES = new Set([400, 403, 404]);
+// realtime turns away a finished contest, which has nothing left to stream
+const FINISHED_STATUS = 410;
 
 const endFor = (status: number) => (status === 403 ? 'forbidden' : 'not_found');
 
@@ -35,7 +37,10 @@ export function useContestStream(
 ) {
   const dispatch = useAppDispatch();
   const streamRef = useRef<EventStream | null>(null);
+  const rereadRef = useRef<(() => void) | null>(null);
   const notify = useEffectEvent((event: ContestEvent) => onEvent?.(event));
+  const listed = useAppSelector((state) => selectListedStatus(state, contestId));
+  const listedAsFinished = useEffectEvent(() => isTerminalStatus(listed));
 
   useEffect(() => {
     if (!contestId) {
@@ -50,8 +55,15 @@ export function useContestStream(
         url: contestEventsUrl(contestId),
         getToken: getIdToken,
         onStatus: (status) => dispatch(streamStatusChanged(status)),
-        // a malformed id is a contest that does not exist
-        onRejected: (status) => dispatch(streamEnded(endFor(status))),
+        onRejected: (status) => {
+          if (status === FINISHED_STATUS) {
+            streamRef.current = null;
+            read(false);
+            return;
+          }
+          // a malformed id is a contest that does not exist
+          dispatch(streamEnded(endFor(status)));
+        },
         onMessage: ({ id, data }) => {
           const parsed = parseContestEvent(data, contestId);
           if (parsed.kind === 'unknown') {
@@ -78,40 +90,58 @@ export function useContestStream(
       streamRef.current = stream;
     };
 
-    // a finished contest is read once; only one still being played holds a stream open
-    const request = dispatch(
-      contestsApi.endpoints.getContest.initiate(contestId, { subscribe: false, forceRefetch: true })
-    );
-    request.unwrap().then(
-      ({ contest }) => {
-        if (!disposed && !isTerminalStatus(contest.status)) {
-          open();
-        }
-      },
-      (err: unknown) => {
-        if (disposed) {
-          return;
-        }
-        const status = errorStatus(err);
-        if (status !== undefined && REJECTED_STATUSES.has(status)) {
-          dispatch(streamEnded(endFor(status)));
-          return;
-        }
-        // the stream retries on its own and starts with a snapshot, so it covers a failed read
-        open();
-      }
-    );
+    // a finished contest is read once over http; the getContest matcher puts it in the store
+    const read = (fallBackToStream: boolean) => {
+      rereadRef.current = () => read(false);
+      dispatch(streamStatusChanged('connecting'));
+      dispatch(
+        contestsApi.endpoints.getContest.initiate(contestId, {
+          subscribe: false,
+          forceRefetch: true,
+        })
+      )
+        .unwrap()
+        .catch((err: unknown) => {
+          if (disposed) {
+            return;
+          }
+          // the list's status was only a hint, so the stream gets the final say
+          if (fallBackToStream) {
+            open();
+            return;
+          }
+          const status = errorStatus(err);
+          if (status === 403 || status === 404) {
+            dispatch(streamEnded(endFor(status)));
+          } else {
+            dispatch(streamStatusChanged('failed'));
+          }
+        });
+    };
+
+    if (listedAsFinished()) {
+      read(true);
+    } else {
+      open();
+    }
 
     return () => {
       disposed = true;
       streamRef.current?.close();
       streamRef.current = null;
+      rereadRef.current = null;
       dispatch(streamClosed());
     };
   }, [contestId, dispatch]);
 
   // drops local state and starts over from a fresh snapshot, for when a write proves it stale
-  const resync = useCallback(() => streamRef.current?.reconnect({ resync: true }), []);
+  const resync = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.reconnect({ resync: true });
+    } else {
+      rereadRef.current?.();
+    }
+  }, []);
 
   // data is flowing but the snapshot that opens every stream has not come: ask for it again
   const live = useAppSelector((state) => state.liveContest.status === 'live');

@@ -84,6 +84,7 @@ type ContestSummary struct {
 	Role           ParticipantRole   `json:"role" example:"owner"`
 	GameID         *uuid.UUID        `json:"gameId,omitempty"`
 	GameTime       *time.Time        `json:"gameTime,omitempty"`
+	GamePeriod     int               `json:"gamePeriod,omitempty" example:"2"`
 	ClaimedSquares int               `json:"claimedSquares" example:"42"`
 	MySquares      int               `json:"mySquares" example:"5"`
 	Version        int64             `json:"version" example:"3"`

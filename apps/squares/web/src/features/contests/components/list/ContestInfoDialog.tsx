@@ -41,7 +41,7 @@ export default function ContestInfoDialog({ contest, onClose, onDelete }: Props)
   const rows: [string, string][] = [
     ['Game', matchup],
     ['Kickoff', contest.gameTime ? formatKickoff(contest.gameTime) : '–'],
-    ['Status', getStatusLabel(contest.status)],
+    ['Status', getStatusLabel(contest.status, undefined, contest.gamePeriod)],
     ['Visibility', contest.visibility === 'public' ? 'Public' : 'Private'],
     ['Squares claimed', `${contest.claimedSquares} of ${MAX_CONTEST_SQUARES}`],
     ['Your squares', String(contest.mySquares)],

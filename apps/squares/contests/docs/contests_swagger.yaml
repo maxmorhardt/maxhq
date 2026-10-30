@@ -153,6 +153,9 @@ definitions:
         type: string
       gameId:
         type: string
+      gamePeriod:
+        example: 2
+        type: integer
       gameTime:
         type: string
       homeAbbr:
