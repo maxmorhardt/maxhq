@@ -4,7 +4,7 @@
   "version": "2.4.0",
   "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
-  "packageManager": "pnpm@12.16.0",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=24",
     "pnpm": ">=11.8.0"
