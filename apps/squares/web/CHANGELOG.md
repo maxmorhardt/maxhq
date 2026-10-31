@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.5.0...squares/2.6.0) (2026-10-31)
+
+
+### Features
+
+* add microsoft sign-in, faro monitoring, and request tracing ([#180](https://github.com/maxmorhardt/maxhq/issues/180)) ([baf42fb](https://github.com/maxmorhardt/maxhq/commit/baf42fbe41c04a978eed50f3b5bd0bd879234b62))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#178](https://github.com/maxmorhardt/maxhq/issues/178)) ([b581597](https://github.com/maxmorhardt/maxhq/commit/b581597d2d58db5ba67970a7eee5196094522c2c))
+
 ## [2.5.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.4.0...squares/2.5.0) (2026-10-30)
 
 
