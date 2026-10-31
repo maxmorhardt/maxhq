@@ -13,14 +13,10 @@ realtime:
 go_libs:
   - 'go.mod'
   - 'go.sum'
-  - 'libs/**'
+  - 'libs/go/**'
 squares_build:
   - 'apps/squares/Dockerfile*'
   - 'apps/squares/*.mk'
-libs_go:
-  - 'libs/go/**'
-libs_stamps:
-  - 'apps/squares/*/libs.stamp'
 charts:
   - 'charts/**'
 terraform:

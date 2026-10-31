@@ -67,16 +67,16 @@ jobs:
             echo "list=$(echo "${CHANGED:-[]}" | jq -c --argjson all "$all" 'map(select(IN($all[])))')" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Require restamped services with libs/go changes
-        if: steps.filter.outputs.libs_go == 'true'
-        env:
-          STAMPS: ${{ steps.filter.outputs.libs_stamps_files }}
+      - name: Require every service stamped with the current libs/go
         run: |
-          services=$(ls -d apps/squares/*/cmd | wc -l)
-          if [ "$(echo "${STAMPS:-[]}" | jq length)" -ne "$services" ]; then
-            echo "::error::libs/go changed without restamping every service, so release-please would not release them. Run sh .githooks/stamp-libs and commit."
-            exit 1
-          fi
+          tree=$(git rev-parse HEAD:libs/go)
+          for cmd in apps/squares/*/cmd; do
+            stamp=${cmd%/cmd}/libs.stamp
+            if [ "$(cat "$stamp" 2>/dev/null)" != "$tree" ]; then
+              echo "::error file=$stamp::$stamp doesn't match libs/go, so release-please would not release the service. Run sh .githooks/stamp-libs and commit."
+              exit 1
+            fi
+          done
 
   # maxhq
 
