@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/maxmorhardt/maxhq/compare/squares-realtime/2.2.0...squares-realtime/2.3.0) (2026-10-31)
+
+
+### Features
+
+* add microsoft sign-in, faro monitoring, and request tracing ([#180](https://github.com/maxmorhardt/maxhq/issues/180)) ([baf42fb](https://github.com/maxmorhardt/maxhq/commit/baf42fbe41c04a978eed50f3b5bd0bd879234b62))
+
 ## [2.2.0](https://github.com/maxmorhardt/maxhq/compare/squares-realtime/2.1.0...squares-realtime/2.2.0) (2026-10-30)
 
 
