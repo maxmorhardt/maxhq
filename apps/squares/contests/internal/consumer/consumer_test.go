@@ -18,11 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func entry(t *testing.T, eventType string, payload any) streams.Entry {
+func entry(t *testing.T, eventType string, payload any) *streams.Entry {
 	t.Helper()
 	data, err := json.Marshal(payload)
 	require.NoError(t, err)
-	return streams.Entry{ID: "1-0", Type: eventType, Data: data}
+	return &streams.Entry{ID: "1-0", Type: eventType, Data: data}
 }
 
 func TestGameHandler_AppliesGameUpdates(t *testing.T) {
@@ -54,7 +54,7 @@ func TestGameHandler_PropagatesErrorsForRetry(t *testing.T) {
 func TestGameHandler_SkipsUndecodableAndUnknownEntries(t *testing.T) {
 	handle := consumer.GameHandler(mocks.NewGameSyncService(t))
 
-	assert.NoError(t, handle(context.Background(), streams.Entry{Type: events.GameUpdatedType, Data: []byte("{")}))
+	assert.NoError(t, handle(context.Background(), &streams.Entry{Type: events.GameUpdatedType, Data: []byte("{")}))
 	assert.NoError(t, handle(context.Background(), entry(t, "game.cancelled", map[string]string{})))
 }
 
@@ -72,8 +72,8 @@ func TestUserHandler_RoutesByType(t *testing.T) {
 func TestUserHandler_SkipsUndecodablePayloads(t *testing.T) {
 	handle := consumer.UserHandler(mocks.NewUserSyncService(t))
 
-	assert.NoError(t, handle(context.Background(), streams.Entry{Type: events.UserUpdatedType, Data: []byte("{")}))
-	assert.NoError(t, handle(context.Background(), streams.Entry{Type: events.UserDeletedType, Data: []byte("{")}))
+	assert.NoError(t, handle(context.Background(), &streams.Entry{Type: events.UserUpdatedType, Data: []byte("{")}))
+	assert.NoError(t, handle(context.Background(), &streams.Entry{Type: events.UserDeletedType, Data: []byte("{")}))
 }
 
 func TestSpecsUseDistinctLocks(t *testing.T) {

@@ -12,12 +12,15 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
-const HeaderRequestID = "X-Request-Id"
+const (
+	HeaderRequestID    = "X-Request-Id"
+	maxRequestIDLength = 128
+)
 
 func LoggerMiddleware(c *gin.Context) {
 	start := time.Now()
 	requestID := c.GetHeader(HeaderRequestID)
-	if requestID == "" {
+	if requestID == "" || len(requestID) > maxRequestIDLength {
 		requestID = uuid.New().String()
 	}
 

@@ -145,7 +145,7 @@ func (s *streamService) SubscribeGame(ctx context.Context, gameID uuid.UUID, las
 	}, nil
 }
 
-func decodeContestEvent(entry streams.Entry) (events.ContestEvent, error) {
+func decodeContestEvent(entry *streams.Entry) (events.ContestEvent, error) {
 	var envelope events.ContestEvent
 	err := json.Unmarshal(entry.Data, &envelope)
 	return envelope, err
@@ -155,8 +155,8 @@ func decodeContestEvent(entry streams.Entry) (events.ContestEvent, error) {
 var errOtherGame = errors.New("an update for another game")
 
 // game entries carry their type on the stream entry, not in an envelope
-func decodeGameEntry(gameID uuid.UUID) func(streams.Entry) (events.ContestEvent, error) {
-	return func(entry streams.Entry) (events.ContestEvent, error) {
+func decodeGameEntry(gameID uuid.UUID) func(*streams.Entry) (events.ContestEvent, error) {
+	return func(entry *streams.Entry) (events.ContestEvent, error) {
 		var update events.GameUpdated
 		if err := json.Unmarshal(entry.Data, &update); err != nil {
 			return events.ContestEvent{}, err
@@ -168,7 +168,7 @@ func decodeGameEntry(gameID uuid.UUID) func(streams.Entry) (events.ContestEvent,
 	}
 }
 
-func (s *streamService) pump(ctx context.Context, stream, start string, listener *Listener, decode func(streams.Entry) (events.ContestEvent, error)) <-chan Event {
+func (s *streamService) pump(ctx context.Context, stream, start string, listener *Listener, decode func(*streams.Entry) (events.ContestEvent, error)) <-chan Event {
 	out := make(chan Event, eventBuffer)
 	log := logging.FromContext(ctx)
 
@@ -176,7 +176,7 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 		defer close(out)
 		sent := start
 
-		send := func(entry streams.Entry) bool {
+		send := func(entry *streams.Entry) bool {
 			if streams.CompareIDs(entry.ID, sent) <= 0 {
 				return true
 			}
@@ -205,8 +205,8 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 				log.Warn("failed to replay stream entries", "error", err)
 				return
 			}
-			for _, entry := range entries {
-				if !send(entry) {
+			for i := range entries {
+				if !send(&entries[i]) {
 					return
 				}
 			}
@@ -223,7 +223,7 @@ func (s *streamService) pump(ctx context.Context, stream, start string, listener
 				if !ok {
 					return
 				}
-				if !send(entry) {
+				if !send(&entry) {
 					return
 				}
 			}

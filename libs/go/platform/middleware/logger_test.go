@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -146,4 +147,21 @@ func TestLoggerMiddleware_LogsPanicsAsServerErrors(t *testing.T) {
 	assert.Equal(t, "request", entry["msg"])
 	assert.InDelta(t, http.StatusInternalServerError, entry["status"], 0)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+
+func TestLoggerMiddleware_ReplacesOversizedRequestID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	var gotRequestID string
+	r.GET("/x", LoggerMiddleware, func(c *gin.Context) {
+		gotRequestID = c.GetString(api.RequestIDKey)
+		c.Status(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/x", http.NoBody)
+	req.Header.Set(HeaderRequestID, strings.Repeat("a", maxRequestIDLength+1))
+	r.ServeHTTP(httptest.NewRecorder(), req)
+
+	assert.NotEmpty(t, gotRequestID)
+	assert.LessOrEqual(t, len(gotRequestID), maxRequestIDLength)
 }

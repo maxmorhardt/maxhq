@@ -29,7 +29,7 @@ type recorder struct {
 	failOn string
 }
 
-func (r *recorder) handle(_ context.Context, e Entry) error {
+func (r *recorder) handle(_ context.Context, e *Entry) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if e.ID == r.failOn {
@@ -229,11 +229,11 @@ func TestStreamOffset_TableName(t *testing.T) {
 
 func TestConsumer_HandsTheRequestIDToTheHandler(t *testing.T) {
 	var got any
-	c := NewConsumer(nil, nil, testSpec, func(ctx context.Context, _ Entry) error {
+	c := NewConsumer(nil, nil, testSpec, func(ctx context.Context, _ *Entry) error {
 		got = ctx.Value(api.RequestIDKey)
 		return nil
 	})
 
-	require.NoError(t, c.handle(context.Background(), Entry{ID: "1-0", RequestID: "req-1"}))
+	require.NoError(t, c.handle(context.Background(), &Entry{ID: "1-0", RequestID: "req-1"}))
 	assert.Equal(t, "req-1", got)
 }

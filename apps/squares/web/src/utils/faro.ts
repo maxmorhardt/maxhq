@@ -10,7 +10,7 @@ export interface FaroUser {
   name?: string;
 }
 
-const INVITE_TOKEN = /\/(join|invites)\/[^/?#"\s]+/g;
+const INVITE_TOKEN = /\/(join|invites)\/[\w-]+/g;
 
 let loaded: Promise<Faro | null> = Promise.resolve(null);
 
