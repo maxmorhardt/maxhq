@@ -106,7 +106,7 @@ export default function LearnMorePage() {
     {
       question: 'Do I need an account, and how do I sign in?',
       answer:
-        "Yes, everyone needs an account to join a contest and claim squares. You sign in with your Google or GitHub account, so there's no separate password to remember. Your email is your identity across the platform, so signing in with the same email always brings you back to the same account and history.",
+        "Yes, everyone needs an account to join a contest and claim squares. You sign in with your Google, Microsoft, or GitHub account, so there's no separate password to remember. Your email is your identity across the platform, so signing in with the same email always brings you back to the same account and history.",
     },
     {
       question: 'How are winners determined?',

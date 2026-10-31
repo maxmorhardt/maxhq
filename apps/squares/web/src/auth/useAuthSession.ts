@@ -3,6 +3,7 @@ import { useAuth } from 'react-oidc-context';
 import { baseApi } from '../api/baseApi';
 import { useAppDispatch } from '../app/hooks';
 import { useToast } from '../features/toast/useToast';
+import { setFaroUser } from '../utils/faro';
 import { refreshSession } from './token';
 
 // app-wide session upkeep; mounted once in the app layout
@@ -51,6 +52,10 @@ export function useAuthSession() {
     }
     wasAuthenticated.current = auth.isAuthenticated;
   }, [auth.isAuthenticated, auth.isLoading, dispatch]);
+
+  useEffect(() => {
+    setFaroUser(auth.isAuthenticated ? auth.user?.profile : undefined);
+  }, [auth.isAuthenticated, auth.user]);
 
   // timers stall in background tabs, so renew a session that went stale while the tab was away
   useEffect(() => {

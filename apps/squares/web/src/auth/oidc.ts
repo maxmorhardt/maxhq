@@ -1,7 +1,7 @@
 import type { AuthContextProps } from 'react-oidc-context';
 import { oidcAuthority } from '../utils/environment';
 
-export type OIDCProvider = 'google' | 'github';
+export type OIDCProvider = 'google' | 'microsoft' | 'github';
 
 export const OIDC_AUTHORITY = oidcAuthority();
 

@@ -9,6 +9,8 @@ import { useAuthSession } from './useAuthSession';
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 const refreshSession = vi.hoisted(() => vi.fn().mockResolvedValue(null));
 vi.mock('./token', () => ({ refreshSession }));
+const setFaroUser = vi.hoisted(() => vi.fn());
+vi.mock('../utils/faro', () => ({ setFaroUser }));
 
 function setup() {
   const store = makeStore();
@@ -21,6 +23,7 @@ function setup() {
 describe('useAuthSession', () => {
   beforeEach(() => {
     refreshSession.mockClear();
+    setFaroUser.mockClear();
   });
 
   it('renews a stored session once on load', () => {
@@ -64,5 +67,15 @@ describe('useAuthSession', () => {
     setup();
     document.dispatchEvent(new Event('visibilitychange'));
     expect(refreshSession).toHaveBeenCalled();
+  });
+
+  it('tells faro who is signed in, and when they sign out', () => {
+    mockAuth({ email: 'a@x.com' });
+    const { rerender } = setup();
+    expect(setFaroUser).toHaveBeenLastCalledWith({ email: 'a@x.com' });
+
+    mockAuth();
+    rerender();
+    expect(setFaroUser).toHaveBeenLastCalledWith(undefined);
   });
 });

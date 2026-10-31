@@ -3,10 +3,13 @@ import '@fontsource-variable/mona-sans/wght.css';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { isRouteErrorResponse, Links, Meta, Scripts, useRouteError } from 'react-router';
 import App from './App';
+import { initFaro } from './faro';
 import ErrorPage from './pages/ErrorPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Providers from './providers';
 import { COLOR_SCHEME_STORAGE_KEY } from './theme';
+
+void initFaro();
 
 const structuredData = {
   '@context': 'https://schema.org',

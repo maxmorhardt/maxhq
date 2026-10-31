@@ -1,6 +1,7 @@
 import CloseIcon from '@mui/icons-material/Close';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
+import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import {
   Box,
   Button,
@@ -57,6 +58,15 @@ export default function SignInDialog({ open, onClose, redirectPath }: SignInDial
             sx={{ justifyContent: 'flex-start', px: 2, py: 1 }}
           >
             Sign in with Google
+          </Button>
+          <Button
+            variant="outlined"
+            color="inherit"
+            startIcon={<MicrosoftIcon />}
+            onClick={() => handleSignIn('microsoft')}
+            sx={{ justifyContent: 'flex-start', px: 2, py: 1 }}
+          >
+            Sign in with Microsoft
           </Button>
           <Button
             variant="outlined"

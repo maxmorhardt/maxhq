@@ -48,10 +48,16 @@ describe('AppsPage', () => {
     renderWithProviders(<AppsPage />);
 
     const data = screen.getByRole('region', { name: 'Your account and your data' });
-    expect(within(data).getByText(/already have with Google or GitHub/)).toBeInTheDocument();
+    expect(
+      within(data).getByText(/already have with Google, Microsoft, or GitHub/)
+    ).toBeInTheDocument();
     expect(within(data).getByRole('link', { name: 'Google' })).toHaveAttribute(
       'href',
       'https://myaccount.google.com/connections'
+    );
+    expect(within(data).getByRole('link', { name: 'Microsoft' })).toHaveAttribute(
+      'href',
+      'https://account.live.com/consent/Manage'
     );
     expect(within(data).getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',

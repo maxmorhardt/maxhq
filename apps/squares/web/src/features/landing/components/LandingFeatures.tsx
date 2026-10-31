@@ -25,7 +25,7 @@ const features: Feature[] = [
   },
   {
     title: 'Free, with nothing to install',
-    body: 'It runs in the browser on any phone or laptop. Sign in with Google or GitHub and you are on the board.',
+    body: 'It runs in the browser on any phone or laptop. Sign in with Google, Microsoft, or GitHub and you are on the board.',
   },
 ];
 

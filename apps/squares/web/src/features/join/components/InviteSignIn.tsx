@@ -1,5 +1,6 @@
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
+import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import { Box, Button, Container, LinearProgress, Link, Skeleton, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useAuth } from 'react-oidc-context';
@@ -246,6 +247,15 @@ export default function InviteSignIn({ token }: Props) {
             onClick={() => signIn('google')}
           >
             Continue with Google
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            color="inherit"
+            startIcon={<MicrosoftIcon />}
+            onClick={() => signIn('microsoft')}
+          >
+            Continue with Microsoft
           </Button>
           <Button
             variant="outlined"

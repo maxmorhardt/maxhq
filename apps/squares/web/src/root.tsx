@@ -12,6 +12,9 @@ import Header from './components/layout/Header';
 import { ErrorFallback } from './components/feedback/ErrorBoundary';
 import Providers from './app/providers';
 import { gradients } from './types/gradients';
+import { initFaro } from './utils/faro';
+
+initFaro();
 
 const structuredData = {
   '@context': 'https://schema.org',

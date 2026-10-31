@@ -83,10 +83,11 @@ const apps: AppEntry[] = [
 // the accounts people can sign in with, and where each one lists the apps it has shared with
 const providers = [
   { name: 'Google', access: 'https://myaccount.google.com/connections' },
+  { name: 'Microsoft', access: 'https://account.live.com/consent/Manage' },
   { name: 'GitHub', access: 'https://github.com/settings/applications' },
 ];
 
-// "Google or GitHub", "Google, GitHub, or Apple"
+// "Google, Microsoft, or GitHub"
 const providerNames = new Intl.ListFormat('en', { type: 'disjunction' }).format(
   providers.map((provider) => provider.name)
 );
@@ -258,7 +259,7 @@ export default function AppsPage() {
                   for you. You can also remove maxhq’s access in your account settings with{' '}
                   {providers.map((provider, i) => (
                     <Fragment key={provider.name}>
-                      {i > 0 && (i === providers.length - 1 ? ' or ' : ', ')}
+                      {i > 0 && (i === providers.length - 1 ? ', or ' : ', ')}
                       <MuiLink href={provider.access} target="_blank" rel="noreferrer">
                         {provider.name}
                       </MuiLink>

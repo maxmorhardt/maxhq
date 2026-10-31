@@ -2,13 +2,17 @@ package middleware
 
 import (
 	"log/slog"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 func LoggerMiddleware(c *gin.Context) {
+	start := time.Now()
 	requestID := c.GetHeader("X-Request-Id")
 	if requestID == "" {
 		requestID = uuid.New().String()
@@ -28,4 +32,19 @@ func LoggerMiddleware(c *gin.Context) {
 	api.SetContextValue(c, api.LoggerKey, log)
 
 	c.Next()
+
+	if strings.HasPrefix(c.Request.URL.Path, "/health/") {
+		return
+	}
+
+	route := c.FullPath()
+	if route == "" {
+		route = "unmatched"
+	}
+	logging.FromGin(c).Info("request",
+		"method", c.Request.Method,
+		"route", route,
+		"status", c.Writer.Status(),
+		"duration_ms", time.Since(start).Milliseconds(),
+	)
 }
