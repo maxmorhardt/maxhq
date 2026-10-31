@@ -13,16 +13,18 @@ import (
 )
 
 const (
-	fieldType    = "type"
-	fieldData    = "data"
-	fieldEventID = "event_id"
+	fieldType      = "type"
+	fieldData      = "data"
+	fieldEventID   = "event_id"
+	fieldRequestID = "request_id"
 )
 
 type Entry struct {
-	ID      string
-	Type    string
-	Data    []byte
-	EventID string
+	ID        string
+	Type      string
+	Data      []byte
+	EventID   string
+	RequestID string
 }
 
 func Key(name string) string {
@@ -167,10 +169,11 @@ func toEntries(msgs []redis.XMessage) []Entry {
 	entries := make([]Entry, 0, len(msgs))
 	for _, m := range msgs {
 		entries = append(entries, Entry{
-			ID:      m.ID,
-			Type:    stringField(m.Values, fieldType),
-			Data:    []byte(stringField(m.Values, fieldData)),
-			EventID: stringField(m.Values, fieldEventID),
+			ID:        m.ID,
+			Type:      stringField(m.Values, fieldType),
+			Data:      []byte(stringField(m.Values, fieldData)),
+			EventID:   stringField(m.Values, fieldEventID),
+			RequestID: stringField(m.Values, fieldRequestID),
 		})
 	}
 	return entries

@@ -57,6 +57,21 @@ describe('SignInDialog', () => {
     });
   });
 
+  it('lists google, then microsoft, then github', () => {
+    renderDialog();
+    expect(
+      screen.getAllByRole('button', { name: /^sign in with/i }).map((b) => b.textContent)
+    ).toEqual(['Sign in with Google', 'Sign in with Microsoft', 'Sign in with GitHub']);
+  });
+
+  it('redirects with the microsoft connector', () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole('button', { name: /sign in with microsoft/i }));
+    expect(mockSigninRedirect).toHaveBeenCalledWith({
+      extraQueryParams: { connector_id: 'microsoft' },
+    });
+  });
+
   it('redirects with the github connector', () => {
     renderDialog();
     fireEvent.click(screen.getByRole('button', { name: /sign in with github/i }));

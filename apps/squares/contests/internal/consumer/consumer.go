@@ -17,7 +17,7 @@ var (
 )
 
 func GameHandler(gameSync service.GameSyncService) streams.Handler {
-	return func(ctx context.Context, entry streams.Entry) error {
+	return func(ctx context.Context, entry *streams.Entry) error {
 		log := logging.FromContext(ctx)
 
 		if entry.Type != events.GameUpdatedType {
@@ -36,7 +36,7 @@ func GameHandler(gameSync service.GameSyncService) streams.Handler {
 }
 
 func UserHandler(userSync service.UserSyncService) streams.Handler {
-	return func(ctx context.Context, entry streams.Entry) error {
+	return func(ctx context.Context, entry *streams.Entry) error {
 		log := logging.FromContext(ctx)
 
 		switch entry.Type {

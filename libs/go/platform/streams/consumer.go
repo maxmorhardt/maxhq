@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/metrics"
 	"github.com/redis/go-redis/v9"
@@ -20,7 +21,7 @@ const (
 	maxRetryGap        = 2 * time.Minute
 )
 
-type Handler func(ctx context.Context, entry Entry) error
+type Handler func(ctx context.Context, entry *Entry) error
 
 type ConsumerSpec struct {
 	Name    string
@@ -109,7 +110,8 @@ func (c *Consumer) processBatch(ctx context.Context) (batchResult, error) {
 			c.checkGap(ctx, res.offset)
 		}
 
-		for _, entry := range entries {
+		for i := range entries {
+			entry := &entries[i]
 			// handlers open their own transactions; this one only holds the lock and the position
 			if err := c.handle(ctx, entry); err != nil {
 				handlerErr = err
@@ -135,8 +137,12 @@ func (c *Consumer) processBatch(ctx context.Context) (batchResult, error) {
 	return res, handlerErr
 }
 
-func (c *Consumer) handle(ctx context.Context, entry Entry) error {
-	log := logging.FromContext(ctx).With("entry_id", entry.ID, "type", entry.Type)
+func (c *Consumer) handle(ctx context.Context, entry *Entry) error {
+	log := logging.FromContext(ctx).With("entry_id", entry.ID, "type", entry.Type, "event_id", entry.EventID)
+	if entry.RequestID != "" {
+		log = log.With("request_id", entry.RequestID)
+		ctx = context.WithValue(ctx, api.RequestIDKey, entry.RequestID)
+	}
 
 	if err := c.handler(logging.NewContext(ctx, log), entry); err != nil {
 		metrics.IncConsumerMessage(c.spec.Name, "error")

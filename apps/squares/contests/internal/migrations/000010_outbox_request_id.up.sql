@@ -1,0 +1,1 @@
+ALTER TABLE outbox ADD COLUMN IF NOT EXISTS request_id text NOT NULL DEFAULT '';

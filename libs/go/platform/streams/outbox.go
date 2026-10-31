@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -18,6 +19,7 @@ type OutboxEvent struct {
 	Stream      string         `gorm:"not null"`
 	Type        string         `gorm:"not null"`
 	Payload     datatypes.JSON `gorm:"type:jsonb;not null"`
+	RequestID   string         `gorm:"not null"`
 	CreatedAt   time.Time      `gorm:"not null"`
 	PublishedAt *time.Time
 }
@@ -49,11 +51,13 @@ func (o *outbox) Add(ctx context.Context, stream, eventType string, payload any)
 		return fmt.Errorf("failed to marshal outbox payload for %s: %w", eventType, err)
 	}
 
+	requestID, _ := ctx.Value(api.RequestIDKey).(string)
 	event := &OutboxEvent{
 		ID:        uuid.New(),
 		Stream:    stream,
 		Type:      eventType,
 		Payload:   data,
+		RequestID: requestID,
 		CreatedAt: time.Now(),
 	}
 	if err := database.Conn(ctx, o.db).Create(event).Error; err != nil {

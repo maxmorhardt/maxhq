@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -73,4 +74,15 @@ func TestOutbox_AddPropagatesInsertError(t *testing.T) {
 
 func TestOutboxEvent_TableName(t *testing.T) {
 	assert.Equal(t, "outbox", OutboxEvent{}.TableName())
+}
+
+func TestOutbox_AddRecordsTheRequestID(t *testing.T) {
+	db, mock := newMockDB(t)
+	mock.ExpectExec(`INSERT INTO "outbox"`).
+		WithArgs(sqlmock.AnyArg(), "test", "thing.updated", sqlmock.AnyArg(), "req-1", sqlmock.AnyArg(), sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	ctx := context.WithValue(context.Background(), api.RequestIDKey, "req-1")
+	require.NoError(t, NewOutbox(db, nil).Add(ctx, "test", "thing.updated", map[string]string{"a": "b"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

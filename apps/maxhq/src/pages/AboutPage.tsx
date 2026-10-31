@@ -192,7 +192,7 @@ export default function AboutPage() {
               self-hosted Kubernetes clusters through GitHub Actions and <C>Argo CD</C>. It
               implements a contest state machine, automated winner calculation, a transactional
               outbox feeding <C>Redis</C> streams, resumable server-sent events for live updates,
-              Google and GitHub sign-in validated at the gateway through <C>Dex</C>, and{' '}
+              Google, Microsoft, and GitHub sign-in validated at the gateway through <C>Dex</C>, and{' '}
               <C>PostgreSQL</C> persistence with <C>GORM</C>. One build of every service runs in
               both the dev and production clusters, configured per environment.
             </Typography>
@@ -227,14 +227,14 @@ export default function AboutPage() {
               available control plane on embedded <C>etcd</C>. A <C>Python</C> bootstrap tool
               converges every node from a single inventory, and all node-to-node traffic runs over{' '}
               <C>Tailscale</C>. <C>Envoy Gateway</C> routes every app through one front door,{' '}
-              <C>Dex</C> federates Google and GitHub sign-in, <C>CloudNativePG</C> runs replicated{' '}
-              <C>PostgreSQL</C> with continuous backups to S3, and <C>Valkey</C> with Sentinel
-              handles caching and event streams. <C>Argo CD</C> keeps both clusters in sync with
-              Git, so reusable Helm charts and GitHub Actions workflows release every app the same
-              way. <C>Sealed Secrets</C> lets secrets live safely in the repo, <C>Renovate</C> keeps
-              dependencies current, and <C>system-upgrade-controller</C> and <C>kured</C> handle k3s
-              upgrades and coordinated rolling node reboots. The infrastructure around it is code
-              too: <C>Terraform</C> runs through GitHub Actions to manage S3 remote state,{' '}
+              <C>Dex</C> federates Google, Microsoft, and GitHub sign-in, <C>CloudNativePG</C> runs
+              replicated <C>PostgreSQL</C> with continuous backups to S3, and <C>Valkey</C> with
+              Sentinel handles caching and event streams. <C>Argo CD</C> keeps both clusters in sync
+              with Git, so reusable Helm charts and GitHub Actions workflows release every app the
+              same way. <C>Sealed Secrets</C> lets secrets live safely in the repo, <C>Renovate</C>{' '}
+              keeps dependencies current, and <C>system-upgrade-controller</C> and <C>kured</C>{' '}
+              handle k3s upgrades and coordinated rolling node reboots. The infrastructure around it
+              is code too: <C>Terraform</C> runs through GitHub Actions to manage S3 remote state,{' '}
               <C>Cloudflare</C> DNS and edge security, and GitHub repo settings.
             </Typography>
           </Row>

@@ -123,7 +123,7 @@ export default function LandingHero() {
                 '& b': { color: game.chalk, fontWeight: 600 },
               }}
             >
-              <b>Free</b> · nothing to install · sign in with Google or GitHub
+              <b>Free</b> · nothing to install · sign in with Google, Microsoft, or GitHub
             </Typography>
           </Reveal>
         </Box>

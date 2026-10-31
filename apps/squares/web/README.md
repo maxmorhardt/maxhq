@@ -32,7 +32,7 @@ The stream fetches a fresh token for every connection and reconnects as soon as 
 This application requires the following services to be running:
 
 - **Squares API services** (contests, games, accounts, realtime) behind the `api.maxhq.io/squares` gateway
-- **OIDC Provider** (Dex, with Google and GitHub sign-in) for authentication
+- **OIDC Provider** (Dex, with Google, Microsoft, and GitHub sign-in) for authentication
 - **Modern Web Browser** with `fetch` streaming (`ReadableStream`) support
 
 ## Development

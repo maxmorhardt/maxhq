@@ -70,7 +70,7 @@ describe('InviteSignIn', () => {
     expect(screen.queryByText(/ at /)).not.toBeInTheDocument();
   });
 
-  it('signs in with either provider and comes back to the invite', () => {
+  it('signs in with any provider and comes back to the invite', () => {
     window.history.pushState({}, '', '/join/tok');
     renderWithProviders(<InviteSignIn token="tok" />);
 
@@ -79,6 +79,11 @@ describe('InviteSignIn', () => {
       extraQueryParams: { connector_id: 'google' },
     });
     expect(sessionStorage.getItem('auth_redirect_path')).toBe('/join/tok');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Microsoft' }));
+    expect(signinRedirect).toHaveBeenLastCalledWith({
+      extraQueryParams: { connector_id: 'microsoft' },
+    });
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue with GitHub' }));
     expect(signinRedirect).toHaveBeenLastCalledWith({

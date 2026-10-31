@@ -1,5 +1,6 @@
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
+import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import LoginIcon from '@mui/icons-material/Login';
 import PersonIcon from '@mui/icons-material/Person';
 import Box from '@mui/material/Box';
@@ -72,6 +73,12 @@ export default function HeaderAuth({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <GoogleIcon fontSize="small" />
                 <Typography>Google</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem onClick={() => handleSignIn('microsoft')} sx={{ py: 1.25 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <MicrosoftIcon fontSize="small" />
+                <Typography>Microsoft</Typography>
               </Box>
             </MenuItem>
             <MenuItem onClick={() => handleSignIn('github')} sx={{ py: 1.25 }}>

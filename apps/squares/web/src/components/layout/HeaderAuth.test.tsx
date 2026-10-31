@@ -57,8 +57,11 @@ describe('HeaderAuth', () => {
   it('opens the provider dropdown when Sign In is clicked', () => {
     renderAuth();
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-    expect(screen.getByRole('menuitem', { name: /google/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /github/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'Google',
+      'Microsoft',
+      'GitHub',
+    ]);
   });
 
   it('redirects with the google connector when Google is selected', () => {
@@ -68,6 +71,15 @@ describe('HeaderAuth', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
     fireEvent.click(screen.getByRole('menuitem', { name: /google/i }));
     expect(mockSignin).toHaveBeenCalledWith({ extraQueryParams: { connector_id: 'google' } });
+  });
+
+  it('redirects with the microsoft connector when Microsoft is selected', () => {
+    const mockSignin = mockAuth();
+
+    renderAuth();
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /microsoft/i }));
+    expect(mockSignin).toHaveBeenCalledWith({ extraQueryParams: { connector_id: 'microsoft' } });
   });
 
   it('redirects with the github connector when GitHub is selected', () => {

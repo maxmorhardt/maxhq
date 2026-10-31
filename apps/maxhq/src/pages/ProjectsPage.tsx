@@ -13,7 +13,7 @@ const projects: Project[] = [
     name: 'squares',
     category: 'App',
     description:
-      'Real-time NFL squares: a live board that fills in for every player at once, numbers drawn at kickoff, and quarter winners called from the live score. Every game of the season with scores by quarter, a leaderboard, invite links, and Google and GitHub sign-in.',
+      'Real-time NFL squares: a live board that fills in for every player at once, numbers drawn at kickoff, and quarter winners called from the live score. Every game of the season with scores by quarter, a leaderboard, invite links, and Google, Microsoft, and GitHub sign-in.',
     href: 'https://github.com/maxmorhardt/maxhq/tree/main/apps/squares/web',
     links: [{ label: 'Live site', href: 'https://squares.maxhq.io', icon: <OpenInNewIcon /> }],
     tags: ['React', 'TypeScript', 'Redux', 'MUI', 'SSE', 'OIDC'],

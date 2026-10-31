@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,4 +69,17 @@ func TestGetJSON_ReturnsStatusErrorWithoutRetryingClientErrors(t *testing.T) {
 func TestGetJSON_NetworkError(t *testing.T) {
 	err := NewInternal("http://127.0.0.1:1", "t").GetJSON(context.Background(), "/", &payload{})
 	assert.Error(t, err)
+}
+
+func TestGetJSON_ForwardsTheRequestID(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "req-1", r.Header.Get(middleware.HeaderRequestID))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"n":1}`))
+	}))
+	defer srv.Close()
+
+	ctx := context.WithValue(context.Background(), api.RequestIDKey, "req-1")
+	var got payload
+	require.NoError(t, NewInternal(srv.URL, "t").GetJSON(ctx, "/", &got))
 }
