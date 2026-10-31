@@ -22,9 +22,9 @@ func newRedis(t *testing.T) (*miniredis.Miniredis, *redis.Client) {
 }
 
 func outboxRows(ids ...uuid.UUID) *sqlmock.Rows {
-	rows := sqlmock.NewRows([]string{"id", "seq", "stream", "type", "payload", "created_at", "published_at"})
+	rows := sqlmock.NewRows([]string{"id", "seq", "stream", "type", "payload", "request_id", "created_at", "published_at"})
 	for i, id := range ids {
-		rows.AddRow(id, i+1, "test", "thing.updated", []byte(`{"n":1}`), time.Now(), nil)
+		rows.AddRow(id, i+1, "test", "thing.updated", []byte(`{"n":1}`), "req-"+id.String(), time.Now(), nil)
 	}
 	return rows
 }
@@ -72,6 +72,7 @@ func TestRelay_PublishesInOrderAndMarksPublished(t *testing.T) {
 	assert.JSONEq(t, `{"n":1}`, string(entries[0].Data))
 	assert.Equal(t, ids[0].String(), entries[0].EventID)
 	assert.Equal(t, ids[1].String(), entries[1].EventID)
+	assert.Equal(t, "req-"+ids[0].String(), entries[0].RequestID)
 
 	ttl, err := client.PTTL(context.Background(), Key("test")).Result()
 	require.NoError(t, err)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -224,4 +225,15 @@ func TestRetryDelay(t *testing.T) {
 
 func TestStreamOffset_TableName(t *testing.T) {
 	assert.Equal(t, "stream_offsets", StreamOffset{}.TableName())
+}
+
+func TestConsumer_HandsTheRequestIDToTheHandler(t *testing.T) {
+	var got any
+	c := NewConsumer(nil, nil, testSpec, func(ctx context.Context, _ Entry) error {
+		got = ctx.Value(api.RequestIDKey)
+		return nil
+	})
+
+	require.NoError(t, c.handle(context.Background(), Entry{ID: "1-0", RequestID: "req-1"}))
+	assert.Equal(t, "req-1", got)
 }

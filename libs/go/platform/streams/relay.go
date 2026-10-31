@@ -25,13 +25,13 @@ const (
 )
 
 // KEYS[1] stream, KEYS[2] dedupe marker
-// ARGV[1] min id to keep, ARGV[2] stream ttl ms, ARGV[3] dedupe ttl ms, ARGV[4] type, ARGV[5] data, ARGV[6] event id
+// ARGV[1] min id to keep, ARGV[2] stream ttl ms, ARGV[3] dedupe ttl ms, ARGV[4] type, ARGV[5] data, ARGV[6] event id, ARGV[7] request id
 var appendScript = redis.NewScript(`
 local existing = redis.call('GET', KEYS[2])
 if existing then
   return existing
 end
-local id = redis.call('XADD', KEYS[1], 'MINID', '~', ARGV[1], '*', 'type', ARGV[4], 'data', ARGV[5], 'event_id', ARGV[6])
+local id = redis.call('XADD', KEYS[1], 'MINID', '~', ARGV[1], '*', 'type', ARGV[4], 'data', ARGV[5], 'event_id', ARGV[6], 'request_id', ARGV[7])
 redis.call('PEXPIRE', KEYS[1], ARGV[2])
 redis.call('SET', KEYS[2], id, 'PX', ARGV[3])
 return id
@@ -194,5 +194,6 @@ func (r *Relay) appendEvent(ctx context.Context, event *OutboxEvent) error {
 		event.Type,
 		string(event.Payload),
 		event.ID.String(),
+		event.RequestID,
 	).Err()
 }

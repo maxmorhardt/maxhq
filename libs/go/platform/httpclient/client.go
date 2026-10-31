@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
 )
 
@@ -46,7 +47,11 @@ func NewInternal(baseURL, token string) *Internal {
 
 // decodes a 200 JSON body into out; any other status is a *StatusError
 func (c *Internal) GetJSON(ctx context.Context, path string, out any) error {
-	resp, err := c.client.R().SetContext(ctx).ForceContentType("application/json").SetResult(out).Get(path)
+	req := c.client.R().SetContext(ctx).ForceContentType("application/json").SetResult(out)
+	if id, ok := ctx.Value(api.RequestIDKey).(string); ok && id != "" {
+		req.SetHeader(middleware.HeaderRequestID, id)
+	}
+	resp, err := req.Get(path)
 	if err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cache-Control", "If-Match", "Idempotency-Key", "Last-Event-ID"},
-		ExposeHeaders:    []string{"Content-Length", "Content-Type", "ETag", "Idempotent-Replayed", "Retry-After"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type", "ETag", "Idempotent-Replayed", "Retry-After", HeaderRequestID},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	})

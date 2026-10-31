@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/metrics"
 	"github.com/redis/go-redis/v9"
@@ -136,7 +137,11 @@ func (c *Consumer) processBatch(ctx context.Context) (batchResult, error) {
 }
 
 func (c *Consumer) handle(ctx context.Context, entry Entry) error {
-	log := logging.FromContext(ctx).With("entry_id", entry.ID, "type", entry.Type)
+	log := logging.FromContext(ctx).With("entry_id", entry.ID, "type", entry.Type, "event_id", entry.EventID)
+	if entry.RequestID != "" {
+		log = log.With("request_id", entry.RequestID)
+		ctx = context.WithValue(ctx, api.RequestIDKey, entry.RequestID)
+	}
 
 	if err := c.handler(logging.NewContext(ctx, log), entry); err != nil {
 		metrics.IncConsumerMessage(c.spec.Name, "error")

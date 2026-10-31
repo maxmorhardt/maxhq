@@ -10,7 +10,14 @@ export interface FaroUser {
   name?: string;
 }
 
+const INVITE_TOKEN = /\/(join|invites)\/[^/?#"\s]+/g;
+
 let loaded: Promise<Faro | null> = Promise.resolve(null);
+
+// page urls, resource timings and errors can all carry an invite link
+export function redactInviteTokens<T>(item: T): T {
+  return JSON.parse(JSON.stringify(item).replace(INVITE_TOKEN, '/$1/:token')) as T;
+}
 
 // loaded lazily so the SDK stays out of the main bundle
 export function initFaro(hostname?: string, url: string = FARO_URL): void {
@@ -27,6 +34,7 @@ export function initFaro(hostname?: string, url: string = FARO_URL): void {
           environment: isProduction(hostname) ? 'production' : 'development',
         },
         instrumentations: getWebInstrumentations(),
+        beforeSend: redactInviteTokens,
       })
     )
     .catch(() => null);

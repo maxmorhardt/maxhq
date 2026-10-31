@@ -70,7 +70,10 @@ func TestLoggerMiddleware_LogsRequestWithUser(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/contests/42", http.NoBody)
 	req.Header.Set("Cf-Ipcountry", "US")
-	r.ServeHTTP(httptest.NewRecorder(), req)
+	req.Header.Set(HeaderRequestID, "req-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	assert.Equal(t, "req-1", rec.Header().Get(HeaderRequestID))
 
 	var entry map[string]any
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &entry))
@@ -107,4 +110,40 @@ func TestLoggerMiddleware_SkipsHealthProbes(t *testing.T) {
 	r.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/health/live", http.NoBody))
 
 	assert.Empty(t, buf.String())
+}
+
+func TestLoggerMiddleware_HandlerLogsCarryMethodAndRoute(t *testing.T) {
+	buf := captureLogs(t)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(LoggerMiddleware)
+	r.POST("/contests/:id/squares", func(c *gin.Context) {
+		logging.FromGin(c).Error("failed to claim square")
+		c.Status(http.StatusInternalServerError)
+	})
+
+	r.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/contests/42/squares", http.NoBody))
+
+	var entry map[string]any
+	require.NoError(t, json.NewDecoder(buf).Decode(&entry))
+	assert.Equal(t, "failed to claim square", entry["msg"])
+	assert.Equal(t, "POST", entry["method"])
+	assert.Equal(t, "/contests/:id/squares", entry["route"])
+}
+
+func TestLoggerMiddleware_LogsPanicsAsServerErrors(t *testing.T) {
+	buf := captureLogs(t)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(gin.Recovery(), LoggerMiddleware)
+	r.GET("/boom", func(*gin.Context) { panic("boom") })
+
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/boom", http.NoBody))
+
+	var entry map[string]any
+	require.NoError(t, json.Unmarshal(buf.Bytes(), &entry))
+	assert.Equal(t, "request", entry["msg"])
+	assert.InDelta(t, http.StatusInternalServerError, entry["status"], 0)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
