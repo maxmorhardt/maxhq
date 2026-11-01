@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const manager = { getUser: vi.fn(), signinSilent: vi.fn(), removeUser: vi.fn() };
 vi.mock('./userManager', () => ({ getUserManager: () => manager }));
 
-import { getIdToken, refreshSession, signOutLocally } from './token';
+import { getIdToken, holdTokensUntil, refreshSession, signOutLocally } from './token';
 
 const user = (expiresIn: number | undefined, idToken = 'old') => ({
   id_token: idToken,
@@ -15,6 +15,21 @@ const user = (expiresIn: number | undefined, idToken = 'old') => ({
 describe('getIdToken', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('holds the token until a restore settles', async () => {
+    manager.getUser.mockResolvedValue(user(600));
+    let restored: () => void = () => {};
+    holdTokensUntil(new Promise<void>((resolve) => (restored = resolve)));
+
+    let token: string | null | undefined;
+    void getIdToken().then((t) => (token = t));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(token).toBeUndefined();
+
+    restored();
+    await vi.waitFor(() => expect(token).toBe('old'));
   });
 
   it('returns null when nobody is signed in', async () => {

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useSearchParams } from 'react-router';
 import { notifySession } from '../auth/session';
+import { holdTokensUntil } from '../auth/token';
 import AuthLoadingAnimation from '../components/feedback/AuthLoadingAnimation';
 import { useToast } from '../features/toast/useToast';
 
@@ -46,9 +47,9 @@ export default function CallbackPage() {
     if (auth.isAuthenticated) {
       sessionStorage.removeItem('auth_redirect_path');
       // a fresh sign-in lifts the block a deleted account leaves, before the app makes its first call
-      void notifySession('restore', auth.user?.id_token).then(() =>
-        setPendingPath(savedRedirectPath.current)
-      );
+      const restore = notifySession('restore', auth.user?.id_token);
+      holdTokensUntil(restore);
+      void restore.then(() => setPendingPath(savedRedirectPath.current));
       return;
     }
 

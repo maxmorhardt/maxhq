@@ -10,6 +10,12 @@ const MAX_REJECTED_REFRESHES = 2;
 
 let refreshing: Promise<User | null> | null = null;
 let rejectedRefreshes = 0;
+let restoring: Promise<unknown> = Promise.resolve();
+
+// a deleted account's token is refused until a fresh sign-in lifts the block, and a refused call signs the user out
+export function holdTokensUntil(restore: Promise<unknown>): void {
+  restoring = restore;
+}
 
 // a failed fetch or timeout means the provider was unreachable, not that it turned the refresh down
 function isUnreachable(err: unknown): boolean {
@@ -49,6 +55,7 @@ export async function getIdToken({ forceRefresh = false } = {}): Promise<string 
   if (!user) {
     return null;
   }
+  await restoring;
 
   if (!forceRefresh && !isExpiring(user)) {
     return user.id_token ?? null;

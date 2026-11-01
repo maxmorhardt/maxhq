@@ -22,14 +22,14 @@ const identity = (p: Participant): ParticipantIdentity => ({
 
 // answers roster requests one at a time, so a test can hold one in flight
 function rosterServer() {
-  const pending: ((body: ParticipantIdentity[]) => void)[] = [];
+  const pending: ((status: number, body: ParticipantIdentity[]) => void)[] = [];
   const fetchMock = vi.fn(
     () =>
       new Promise<Response>((resolve) => {
-        pending.push((body) =>
+        pending.push((status, body) =>
           resolve(
             new Response(JSON.stringify(body), {
-              status: 200,
+              status,
               headers: { 'Content-Type': 'application/json' },
             })
           )
@@ -37,11 +37,15 @@ function rosterServer() {
       })
   );
   vi.stubGlobal('fetch', fetchMock);
-  const respond = async (players: Participant[]) => {
+  const answer = async (status: number, players: Participant[]) => {
     await waitFor(() => expect(pending.length).toBeGreaterThan(0));
-    await act(async () => pending.shift()!(players.map(identity)));
+    await act(async () => pending.shift()!(status, players.map(identity)));
   };
-  return { requests: () => fetchMock.mock.calls.length, respond };
+  return {
+    requests: () => fetchMock.mock.calls.length,
+    respond: (players: Participant[]) => answer(200, players),
+    fail: () => answer(500, []),
+  };
 }
 
 function render(isOwner: boolean, participants: Participant[]) {
@@ -57,6 +61,7 @@ function render(isOwner: boolean, participants: Participant[]) {
 
 describe('useContestRoster', () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -65,6 +70,35 @@ describe('useContestRoster', () => {
     const { result } = render(false, [owner, pat]);
     expect(result.current).toBeUndefined();
     expect(server.requests()).toBe(0);
+  });
+
+  it('drops the roster once the viewer is no longer the owner', async () => {
+    const server = rosterServer();
+    const { result, rerender } = render(true, [owner]);
+    await server.respond([owner]);
+    await waitFor(() => expect(result.current).toHaveLength(1));
+
+    rerender({ isOwner: false, participants: [owner, pat] });
+    expect(result.current).toBeUndefined();
+    expect(server.requests()).toBe(1);
+  });
+
+  it('retries a refetch that failed, which keeps the old roster', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const server = rosterServer();
+    const { result, rerender } = render(true, [owner]);
+    await server.respond([owner]);
+    await waitFor(() => expect(result.current).toHaveLength(1));
+
+    rerender({ isOwner: true, participants: [owner, pat] });
+    await server.fail();
+    expect(result.current).toHaveLength(1);
+    expect(server.requests()).toBe(2);
+
+    await act(() => vi.advanceTimersByTimeAsync(5_000));
+    await server.respond([owner, pat]);
+    await waitFor(() => expect(result.current).toHaveLength(2));
+    expect(server.requests()).toBe(3);
   });
 
   it('refetches once when someone the roster lacks joins', async () => {

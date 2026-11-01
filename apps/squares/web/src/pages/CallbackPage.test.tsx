@@ -15,6 +15,8 @@ vi.mock('react-router', async () => {
 
 const session = vi.hoisted(() => ({ notifySession: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('../auth/session', () => session);
+const token = vi.hoisted(() => ({ holdTokensUntil: vi.fn() }));
+vi.mock('../auth/token', () => token);
 vi.mock('react-oidc-context', () => ({
   useAuth: vi.fn(),
 }));
@@ -93,6 +95,9 @@ describe('CallbackPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1', { replace: true });
     expect(session.notifySession).toHaveBeenCalledWith('restore', undefined);
+    expect(token.holdTokensUntil).toHaveBeenCalledWith(
+      session.notifySession.mock.results[0]!.value
+    );
   });
 
   it('falls back to /contests when no redirect path is stored', async () => {
