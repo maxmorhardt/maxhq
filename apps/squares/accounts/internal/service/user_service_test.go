@@ -104,20 +104,21 @@ func TestGetProfile_EarlierContestActivityIsAReturningPlayer(t *testing.T) {
 	d.repo.EXPECT().HasTombstone(mock.Anything, "a@b.com").Return(false, nil)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{FirstActivity: &first}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool {
-		return u.SignedUpAt == nil && u.CreatedAt.IsZero()
+		return u.SignedUpAt == nil && u.CreatedAt.Equal(first)
 	})).RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
 	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	_, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max Morhardt")
 
 	require.NoError(t, err)
-	assert.False(t, isNew)
+	assert.False(t, isNew, "they're a member since their first contest, not a new sign-up")
 }
 
 func TestGetProfile_DeletedAccountSigningBackInIsAReturningPlayer(t *testing.T) {
 	d := newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(nil, database.ErrNotFound)
 	d.repo.EXPECT().HasTombstone(mock.Anything, "a@b.com").Return(true, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool { return u.SignedUpAt == nil })).
 		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
 	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -126,7 +127,6 @@ func TestGetProfile_DeletedAccountSigningBackInIsAReturningPlayer(t *testing.T) 
 
 	require.NoError(t, err)
 	assert.False(t, isNew, "contests wiped their history, but the tombstone remembers them")
-	d.contests.AssertNotCalled(t, "GetUserActivity", mock.Anything, mock.Anything)
 }
 
 func TestGetProfile_ConcurrentFirstVisitAnnouncesNothing(t *testing.T) {

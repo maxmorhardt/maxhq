@@ -71,7 +71,7 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		return nil, false, errs.ErrDatabaseUnavailable
 	}
 
-	returning, err := s.isReturning(ctx, email)
+	deleted, err := s.repo.HasTombstone(ctx, email)
 	if err != nil {
 		log.Error("failed to check for a deleted account", "error", err)
 		return nil, false, errs.ErrDatabaseUnavailable
@@ -82,7 +82,14 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		DisplayName:     defaultDisplayName,
 		DefaultInitials: initials.FromName(defaultDisplayName),
 	}
-	if !returning {
+
+	// a deleted account or earlier contest activity is a returning player; an unknown history isn't counted either
+	switch summary, activityErr := s.contests.GetUserActivity(ctx, email); {
+	case activityErr != nil:
+		log.Warn("could not load first activity for new profile", "error", activityErr)
+	case summary.FirstActivity != nil:
+		newUser.CreatedAt = *summary.FirstActivity
+	case !deleted:
 		now := time.Now()
 		newUser.SignedUpAt = &now
 	}
@@ -108,21 +115,6 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		log.Info("retrieved user profile a concurrent visit created")
 	}
 	return user, isSignUp(user), nil
-}
-
-// a deleted account or earlier contest activity means a returning player; an unknown history isn't counted either
-func (s *userService) isReturning(ctx context.Context, email string) (bool, error) {
-	deleted, err := s.repo.HasTombstone(ctx, email)
-	if err != nil || deleted {
-		return deleted, err
-	}
-
-	summary, err := s.contests.GetUserActivity(ctx, email)
-	if err != nil {
-		logging.FromContext(ctx).Warn("could not load first activity for new profile", "error", err)
-		return true, nil
-	}
-	return summary.FirstActivity != nil, nil
 }
 
 func isSignUp(user *model.User) bool {
