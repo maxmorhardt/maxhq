@@ -91,7 +91,6 @@ describe('CreateContestForm', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/contests/new'));
     expect(create).toHaveBeenCalledWith({
       name: 'Bowl',
-      owner: 'owner@x.com',
       visibility: 'public',
       maxSquares: 10,
       gameId: 'g-1',
@@ -127,15 +126,6 @@ describe('CreateContestForm', () => {
     expect(refetch).toHaveBeenCalled();
     expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
     expect(screen.getAllByRole('alert')).toHaveLength(1);
-  });
-
-  it('needs an email to create a contest', () => {
-    mockAuth({});
-    renderWithProviders(<CreateContestForm />);
-    pickGame();
-    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
-    submit();
-    expect(screen.getByText('User is missing an email')).toBeInTheDocument();
   });
 
   it('explains when there are no games to pick', () => {

@@ -6,14 +6,13 @@ import type {
   Square,
 } from '../../../types/contest';
 import { getStatusLabel } from '../../../utils/contestStatus';
-import { participantName, toPublicName } from '../../../utils/publicName';
 import type { ContestEvent } from './events';
 
 export const MAX_ACTIVITY = 200;
 const GHOST_USER = 'ghost';
 
 export const ownerLabel = (owner: string, ownerName: string) =>
-  owner === GHOST_USER || owner === '' ? GHOST_USER : toPublicName(ownerName);
+  owner === GHOST_USER || owner === '' ? GHOST_USER : ownerName;
 
 const timeOf = (event: ActivityEvent) => new Date(event.timestamp).getTime();
 
@@ -24,7 +23,7 @@ export function seedActivity(contest: Contest, participants: Participant[]): Act
     .map<ActivityEvent>((p) => ({
       id: `seed-participant-${p.id}`,
       type: 'participant_added',
-      message: `${participantName(p)} joined the contest`,
+      message: `${p.displayName} joined the contest`,
       timestamp: p.joinedAt || p.createdAt,
     }));
 
@@ -84,7 +83,7 @@ export function describeEvent(
       if (owner === GHOST_USER || (held && before.square?.owner === owner)) {
         return null;
       }
-      return entry('square_claimed', `${toPublicName(ownerName)} claimed square (${row}, ${col})`);
+      return entry('square_claimed', `${ownerName} claimed square (${row}, ${col})`);
     }
     case 'quarter.recorded': {
       const qr = event.data;
@@ -98,9 +97,9 @@ export function describeEvent(
         ? entry('contest_status', `Contest status changed to ${getStatusLabel(event.data.status)}`)
         : null;
     case 'participant.joined':
-      return entry('participant_added', `${participantName(event.data)} joined the contest`);
+      return entry('participant_added', `${event.data.displayName} joined the contest`);
     case 'participant.removed':
-      return entry('participant_removed', `${participantName(event.data)} left the contest`);
+      return entry('participant_removed', `${event.data.displayName} left the contest`);
     default:
       return null;
   }

@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"context"
 
 	"github.com/google/uuid"
@@ -13,10 +15,11 @@ import (
 
 type InviteRepository interface {
 	GetByToken(ctx context.Context, token string) (*model.ContestInvite, error)
+	CountOpenByContestID(ctx context.Context, contestID uuid.UUID) (int, error)
 	GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestInvite, error)
 	Create(ctx context.Context, invite *model.ContestInvite) error
 	RedeemInvite(ctx context.Context, inviteID uuid.UUID, participant *model.ContestParticipant, maxPoolSquares int) error
-	Delete(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, contestID, id uuid.UUID) error
 }
 
 type inviteRepository struct {
@@ -39,6 +42,16 @@ func (r *inviteRepository) GetAllByContestID(ctx context.Context, contestID uuid
 	var invites []model.ContestInvite
 	err := database.Conn(ctx, r.db).Where("contest_id = ?", contestID).Order("created_at DESC").Find(&invites).Error
 	return invites, err
+}
+
+// expired and used-up links no longer count against the cap
+func (r *inviteRepository) CountOpenByContestID(ctx context.Context, contestID uuid.UUID) (int, error) {
+	var count int64
+	err := database.Conn(ctx, r.db).
+		Model(&model.ContestInvite{}).
+		Where("contest_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR uses < max_uses)", contestID, time.Now()).
+		Count(&count).Error
+	return int(count), err
 }
 
 func (r *inviteRepository) Create(ctx context.Context, invite *model.ContestInvite) error {
@@ -88,6 +101,6 @@ func (r *inviteRepository) RedeemInvite(ctx context.Context, inviteID uuid.UUID,
 	})
 }
 
-func (r *inviteRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return database.Conn(ctx, r.db).Where("id = ?", id).Delete(&model.ContestInvite{}).Error
+func (r *inviteRepository) Delete(ctx context.Context, contestID, id uuid.UUID) error {
+	return database.Conn(ctx, r.db).Where("id = ? AND contest_id = ?", id, contestID).Delete(&model.ContestInvite{}).Error
 }

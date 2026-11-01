@@ -80,7 +80,8 @@ type ContestSummary struct {
 	AwayAbbr       string            `json:"awayAbbr,omitempty" example:"DAL"`
 	Status         ContestStatus     `json:"status" example:"ACTIVE"`
 	Visibility     ContestVisibility `json:"visibility" example:"private"`
-	Owner          string            `json:"owner" example:"user@example.com"`
+	Owner          string            `json:"owner" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
+	OwnerName      string            `json:"ownerName,omitempty" example:"Max Morhardt"`
 	Role           ParticipantRole   `json:"role" example:"owner"`
 	GameID         *uuid.UUID        `json:"gameId,omitempty"`
 	GameTime       *time.Time        `json:"gameTime,omitempty"`

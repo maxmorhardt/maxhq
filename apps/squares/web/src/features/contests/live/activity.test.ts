@@ -37,7 +37,7 @@ describe('seedActivity', () => {
       makeParticipant({
         id: 'p',
         userId: 'bo@x.com',
-        displayName: 'Bo Jackson',
+        displayName: 'Bo J.',
         joinedAt: '2026-01-01T01:00:00Z',
       }),
     ];
@@ -118,10 +118,11 @@ describe('describeEvent', () => {
     expect(describeEvent(cleared, 'id')?.message).toBe('Square (1, 2) was cleared');
   });
 
-  it('names square owners and winners the same way as participants', () => {
-    const claimed = event('square.updated', makeSquare({ value: 'AB', ownerName: 'Bo Jackson' }));
+  it('names square owners the way the server does', () => {
+    const claimed = event('square.updated', makeSquare({ value: 'AB', ownerName: 'Bo J.' }));
     expect(describeEvent(claimed, 'id')?.message).toMatch(/^Bo J\. claimed/);
-    expect(ownerLabel('bo@x.com', 'Bo Jackson')).toBe('Bo J.');
+    expect(ownerLabel('u_bo', 'Bo J.')).toBe('Bo J.');
+    expect(ownerLabel('ghost', '')).toBe('ghost');
   });
 
   it('skips new initials on a held square and a departed player kept in play', () => {
@@ -162,18 +163,13 @@ describe('describeEvent', () => {
     expect(describeEvent(update, 'id', { status: 'Q2' })).toBeNull();
   });
 
-  it('names who joined and left without showing their email', () => {
-    const participant = makeParticipant({ userId: 'bo@x.com', displayName: 'Bo Jackson' });
+  it('names who joined and left', () => {
+    const participant = makeParticipant({ userId: 'u_bo', displayName: 'Bo J.' });
     expect(describeEvent(event('participant.joined', participant), 'id')?.message).toBe(
       'Bo J. joined the contest'
     );
     expect(describeEvent(event('participant.removed', participant), 'id')?.message).toBe(
       'Bo J. left the contest'
-    );
-
-    const unnamed = makeParticipant({ userId: 'bo@x.com', displayName: 'bo@x.com' });
-    expect(describeEvent(event('participant.joined', unnamed), 'id')?.message).toBe(
-      'bo joined the contest'
     );
   });
 

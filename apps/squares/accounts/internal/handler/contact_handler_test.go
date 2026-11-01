@@ -13,6 +13,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -91,5 +92,8 @@ func TestSubmitContact_ServiceError(t *testing.T) {
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 	server.SetupValidators()
+	if err := pseudonym.SetKey("0123456789abcdef0123456789abcdef"); err != nil {
+		panic(err)
+	}
 	os.Exit(m.Run())
 }

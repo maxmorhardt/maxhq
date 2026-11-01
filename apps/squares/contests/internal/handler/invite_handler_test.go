@@ -62,6 +62,15 @@ func TestCreateInvite_Forbidden(t *testing.T) {
 func TestCreateInvite_NotFound(t *testing.T) {
 	createInviteErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
 }
+func TestCreateInvite_OpenInviteLimitReached(t *testing.T) {
+	createInviteErr(t, "owner1", errs.ErrInviteLimitReached, http.StatusTooManyRequests)
+}
+func TestCreateInvite_InvalidSquareCount(t *testing.T) {
+	createInviteErr(t, "owner1", errs.ErrInvalidSquareCount, http.StatusBadRequest)
+}
+func TestCreateInvite_DatabaseUnavailable(t *testing.T) {
+	createInviteErr(t, "owner1", errs.ErrDatabaseUnavailable, http.StatusInternalServerError)
+}
 func TestCreateInvite_InternalError(t *testing.T) {
 	createInviteErr(t, "owner1", assert.AnError, http.StatusInternalServerError)
 }

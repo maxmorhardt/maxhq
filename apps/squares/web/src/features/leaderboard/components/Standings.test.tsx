@@ -8,11 +8,6 @@ import Standings from './Standings';
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 const api = vi.hoisted(() => ({ useGetLeaderboardQuery: vi.fn(), useGetMyRankQuery: vi.fn() }));
 vi.mock('../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
-const profile = vi.hoisted(() => ({ useGetMyProfileQuery: vi.fn() }));
-vi.mock('../../profile/api', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  ...profile,
-}));
 vi.mock('./LeaderboardPodium', () => ({
   PODIUM_SIZE: 3,
   default: ({ entries, highlightKey }: { entries: LeaderboardEntry[]; highlightKey?: string }) => (
@@ -46,11 +41,10 @@ describe('Standings', () => {
       isError: false,
     });
     api.useGetMyRankQuery.mockReturnValue({
-      data: { rank: 1, ranked: true },
+      data: { rank: 1, ranked: true, displayName: 'Ann S.' },
       isLoading: false,
       isError: false,
     });
-    profile.useGetMyProfileQuery.mockReturnValue({ data: { displayName: 'Ann Smith' } });
   });
 
   it('puts the top three on the podium and the rest in the table', () => {

@@ -21,6 +21,7 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -76,6 +77,11 @@ func run(m *testing.M) int {
 	contestsSrv := httptest.NewServer(contests)
 	defer contestsSrv.Close()
 
+	err = pseudonym.SetKey("0123456789abcdef0123456789abcdef")
+	if err != nil {
+		slog.Error("pseudonym key", "error", err)
+		return 1
+	}
 	baseCfg = &model.AccountsConfig{
 		Server:    config.ServerConfig{AllowedOrigins: []string{"http://localhost:3000"}},
 		DB:        pg.Config,

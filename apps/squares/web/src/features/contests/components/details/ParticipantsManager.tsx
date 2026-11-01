@@ -9,17 +9,16 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
 import ConfirmDialog from '../../../../components/feedback/ConfirmDialog';
 import type { Contest, Participant, ParticipantRole } from '../../../../types/contest';
 import { isTerminalStatus } from '../../../../utils/contestStatus';
 import { useToast } from '../../../toast/useToast';
-import { useRemoveParticipantMutation } from '../../api';
+import { useGetRosterQuery, useRemoveParticipantMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
 import LeaveContestDialog from '../LeaveContestDialog';
 import EditParticipantDialog from './EditParticipantDialog';
-import { participantName } from '../../../../utils/publicName';
 
 interface Props {
   open: boolean;
@@ -54,6 +53,20 @@ export default function ParticipantsManager({
   // owners edit only before kickoff, but can remove anyone until the contest is final
   const isOpen = !isTerminalStatus(contest.status);
   const canManage = viewer.isOwner && isOpen;
+
+  // the owner sees full names so they know who joined; the shared stream only carries short ones
+  const roster = useGetRosterQuery(contest.id, {
+    skip: !open || !viewer.isOwner,
+    refetchOnMountOrArgChange: true,
+  });
+  const fullNames = new Map(roster.data?.map((p) => [p.userId, p.fullName]));
+  const someoneNew = !!roster.data && participants.some((p) => !fullNames.has(p.userId));
+  const { refetch } = roster;
+  useEffect(() => {
+    if (someoneNew) {
+      void refetch();
+    }
+  }, [someoneNew, refetch]);
 
   const closeRemove = () => {
     removal.reset();
@@ -113,7 +126,7 @@ export default function ParticipantsManager({
                       noWrap
                       sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}
                     >
-                      {participant.userId === viewer.email ? 'You' : participantName(participant)}
+                      {viewer.isMe(participant.userId) ? 'You' : participant.displayName}
                     </Typography>
                     <Chip
                       label={participant.role}
@@ -128,14 +141,13 @@ export default function ParticipantsManager({
                       }}
                     />
                   </Box>
-                  {/* the owner invites and removes people, so only they see who each player is */}
-                  {viewer.isOwner && (
+                  {fullNames.get(participant.userId) && (
                     <Typography
                       variant="caption"
                       noWrap
                       sx={{ display: 'block', color: 'rgba(255,255,255,0.5)' }}
                     >
-                      {participant.userId}
+                      {fullNames.get(participant.userId)}
                     </Typography>
                   )}
                   {/* viewers never hold squares, so there is no count to show */}
@@ -151,7 +163,7 @@ export default function ParticipantsManager({
                     {contest.status === 'ACTIVE' && (
                       <Tooltip title="Edit">
                         <IconButton
-                          aria-label={`Edit ${participant.userId}`}
+                          aria-label={`Edit ${participant.displayName}`}
                           size="small"
                           onClick={() => setEditing(participant)}
                           sx={{ color: 'rgba(255,255,255,0.6)' }}
@@ -163,7 +175,7 @@ export default function ParticipantsManager({
                     {participant.role !== 'owner' && (
                       <Tooltip title="Remove">
                         <IconButton
-                          aria-label={`Remove ${participant.userId}`}
+                          aria-label={`Remove ${participant.displayName}`}
                           size="small"
                           onClick={() => setRemoving(participant)}
                           sx={actionSx}
@@ -176,7 +188,7 @@ export default function ParticipantsManager({
                 )}
 
                 {/* anyone but the owner can leave until the contest is final */}
-                {isOpen && participant.userId === viewer.email && participant.role !== 'owner' && (
+                {isOpen && viewer.isMe(participant.userId) && participant.role !== 'owner' && (
                   <Tooltip title="Leave contest">
                     <IconButton
                       aria-label="Leave contest"
@@ -218,8 +230,8 @@ export default function ParticipantsManager({
         loading={removal.isLoading}
         error={removal.error ? errorMessage(removal.error, 'Failed to remove participant') : null}
       >
-        Are you sure you want to remove <strong>{removing ? participantName(removing) : ''}</strong>
-        ? They'll be removed from the contest and will need a new invite to rejoin.
+        Are you sure you want to remove <strong>{removing?.displayName}</strong>? They'll be removed
+        from the contest and will need a new invite to rejoin.
       </ConfirmDialog>
 
       {/* leaving closes the whole manager */}

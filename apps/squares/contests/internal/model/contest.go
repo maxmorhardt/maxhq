@@ -9,7 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-const MaxContestSquares = 100
+const (
+	MaxContestSquares = 100
+	// caps what one account can create, so a script cannot fill the database
+	MaxOpenContestsPerOwner  = 25
+	MaxOpenInvitesPerContest = 25
+)
 
 type ContestVisibility string
 

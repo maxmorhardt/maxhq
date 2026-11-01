@@ -17,7 +17,7 @@ func TestSmoke(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(rd.Terminate)
 
-	env := []string{"REDIS_URL=" + rd.Config.URL, "INTERNAL_API_TOKEN=smoke", "CONTESTS_INTERNAL_URL=http://127.0.0.1:1"}
+	env := []string{"REDIS_URL=" + rd.Config.URL, "INTERNAL_API_TOKEN=smoke", "PSEUDONYM_KEY=0123456789abcdef0123456789abcdef", "CONTESTS_INTERNAL_URL=http://127.0.0.1:1"}
 
 	svc := testkit.StartBinary(t, "../..", "./cmd/realtime", env)
 

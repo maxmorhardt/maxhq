@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
 
 const (
@@ -17,8 +17,6 @@ const (
 
 	DefaultLeaderboardLimit = 10
 	MaxLeaderboardLimit     = 100
-
-	anonymousPlayer = "Player"
 )
 
 type LeaderboardService interface {
@@ -80,23 +78,10 @@ func assignRanks(entries []model.LeaderboardEntry) []model.LeaderboardEntry {
 }
 
 func publicName(displayName string) string {
-	if at := strings.Index(displayName, "@"); at >= 0 {
-		displayName = displayName[:at]
+	if name := pseudonym.Name(displayName); name != "" {
+		return name
 	}
-
-	parts := strings.Fields(displayName)
-	if len(parts) == 0 {
-		return anonymousPlayer
-	}
-
-	first := parts[0]
-	if len(parts) == 1 {
-		return first
-	}
-
-	last := []rune(parts[len(parts)-1])
-
-	return first + " " + strings.ToUpper(string(last[0])) + "."
+	return pseudonym.Unnamed
 }
 
 func (s *leaderboardService) GetUserRank(ctx context.Context, email string) (*model.LeaderboardRankResponse, error) {
@@ -107,6 +92,7 @@ func (s *leaderboardService) GetUserRank(ctx context.Context, email string) (*mo
 		log.Error("failed to get user rank", "error", err)
 		return nil, err
 	}
+	rank.DisplayName = publicName(rank.DisplayName)
 
 	return rank, nil
 }

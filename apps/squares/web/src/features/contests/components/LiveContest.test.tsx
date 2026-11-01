@@ -13,6 +13,9 @@ import {
 import LiveContest from './LiveContest';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+vi.mock('../../profile/api', () => ({
+  useGetMyProfileQuery: vi.fn(() => ({ data: { userId: 'player@x.com' } })),
+}));
 const stream = vi.hoisted(() => ({
   onEvent: undefined as ((e: ContestEvent) => void) | undefined,
   resync: vi.fn(),

@@ -10,6 +10,7 @@ import type {
   Invite,
   InvitePreviewResponse,
   Participant,
+  ParticipantIdentity,
   RandomClaimResponse,
   Square,
   UpdateParticipantRequest,
@@ -122,6 +123,11 @@ export const contestsApi = baseApi.injectEndpoints({
       invalidatesTags: ['ContestFeed', 'ActiveContests', 'UserStats'],
     }),
 
+    // full names for the owner only; everyone else sees short names
+    getRoster: build.query<ParticipantIdentity[], string>({
+      query: (contestId) => `/contests/${contestId}/roster`,
+    }),
+
     updateParticipant: build.mutation<
       Participant,
       ParticipantArgs & { request: UpdateParticipantRequest }
@@ -157,6 +163,7 @@ export const {
   useDeleteInviteMutation,
   usePreviewInviteQuery,
   useRedeemInviteMutation,
+  useGetRosterQuery,
   useUpdateParticipantMutation,
   useRemoveParticipantMutation,
 } = contestsApi;

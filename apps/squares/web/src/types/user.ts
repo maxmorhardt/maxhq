@@ -1,4 +1,6 @@
 export interface UserProfile {
+  // how contests name this user; never the email
+  userId: string;
   email: string;
   displayName: string;
   defaultInitials: string;

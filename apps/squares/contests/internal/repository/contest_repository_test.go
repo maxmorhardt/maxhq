@@ -52,6 +52,21 @@ func inTxErr(gdb *gorm.DB, call func(ctx context.Context) error) error {
 	return database.NewTransactor(gdb).Do(context.Background(), call)
 }
 
+func TestContestRepository_CountOpenByOwner(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewContestRepository(gdb)
+
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests" WHERE owner = \$1 AND status NOT IN \(\$2,\$3\)`).
+		WithArgs("o@x.com", model.ContestStatusFinished, model.ContestStatusDeleted).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
+
+	count, err := repo.CountOpenByOwner(context.Background(), "o@x.com")
+
+	require.NoError(t, err)
+	assert.Equal(t, 7, count)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestContestRepository_GetVisibilityByID(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewContestRepository(gdb)

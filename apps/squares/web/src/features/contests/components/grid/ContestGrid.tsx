@@ -163,7 +163,7 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
                         xLabel={xLabel}
                         yLabel={yLabel}
                         isWinner={winningPositions.has(`${row}-${col}`)}
-                        isMine={!!viewer.email && square?.owner === viewer.email}
+                        isMine={viewer.isMe(square?.owner)}
                         isNewWinner={winnerFlash?.row === row && winnerFlash?.col === col}
                       />
                     );

@@ -1,4 +1,5 @@
-import type { ContestViewer } from '../features/contests/live/viewer';
+import { getContestViewer, type ContestViewer } from '../features/contests/live/viewer';
+import type { Me } from '../features/profile/useMe';
 import type { Contest, Participant, QuarterResult, Square } from '../types/contest';
 
 export function makeSquare(overrides: Partial<Square> = {}): Square {
@@ -54,6 +55,7 @@ export function makeParticipant(overrides: Partial<Participant> = {}): Participa
     id: 'p-1',
     contestId: 'c-1',
     userId: 'player@x.com',
+    displayName: 'Pat P.',
     inviteId: '',
     role: 'participant',
     maxSquares: 5,
@@ -83,9 +85,15 @@ export function makeQuarterResult(overrides: Partial<QuarterResult> = {}): Quart
   };
 }
 
-export function makeViewer(overrides: Partial<ContestViewer> = {}): ContestViewer {
+// pass me to sign in as someone else; isMe follows it
+export function makeViewer({
+  me = { userId: 'player@x.com' },
+  ...overrides
+}: Partial<ContestViewer> & { me?: Me } = {}): ContestViewer {
+  const { isMe } = getContestViewer(me, makeContest(), []);
   return {
-    email: 'player@x.com',
+    me,
+    isMe,
     participant: makeParticipant(),
     isOwner: false,
     isParticipant: true,

@@ -21,7 +21,7 @@ func TestSmoke(t *testing.T) {
 	t.Cleanup(rd.Terminate)
 
 	env := append(pg.Env(), "REDIS_URL="+rd.Config.URL,
-		"INTERNAL_API_TOKEN=smoke", "CONTESTS_INTERNAL_URL=http://127.0.0.1:1",
+		"INTERNAL_API_TOKEN=smoke", "PSEUDONYM_KEY=0123456789abcdef0123456789abcdef", "CONTESTS_INTERNAL_URL=http://127.0.0.1:1",
 		"SMTP_HOST=127.0.0.1", "SMTP_PORT=1", "SMTP_USER=smoke@squares.test", "SMTP_PASSWORD=x", "SUPPORT_EMAIL=smoke@squares.test",
 		"TURNSTILE_SECRET_KEY=x", "TURNSTILE_BASE_URL=http://127.0.0.1:1",
 	)

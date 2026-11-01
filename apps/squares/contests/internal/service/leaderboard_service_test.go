@@ -128,14 +128,14 @@ func TestLeaderboardService_GetLeaderboard_Error(t *testing.T) {
 }
 
 func TestLeaderboardService_GetUserRank_Success(t *testing.T) {
-	want := &model.LeaderboardRankResponse{Rank: 7, TotalRanked: 143, QuarterWins: 5, Ranked: true}
 	repo := mocks.NewLeaderboardRepository(t)
-	repo.EXPECT().GetUserRank(mock.Anything, "user@example.com").Return(want, nil)
+	repo.EXPECT().GetUserRank(mock.Anything, "user@example.com").
+		Return(&model.LeaderboardRankResponse{Rank: 7, TotalRanked: 143, QuarterWins: 5, Ranked: true, DisplayName: "Max Morhardt"}, nil)
 
 	got, err := service.NewLeaderboardService(repo, newMemCache()).GetUserRank(context.Background(), "user@example.com")
 
 	require.NoError(t, err)
-	assert.Equal(t, want, got)
+	assert.Equal(t, &model.LeaderboardRankResponse{Rank: 7, TotalRanked: 143, QuarterWins: 5, Ranked: true, DisplayName: "Max M."}, got, "named as the leaderboard shows them")
 }
 
 func TestLeaderboardService_GetUserRank_Error(t *testing.T) {

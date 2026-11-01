@@ -4,7 +4,7 @@ import { alpha } from '@mui/material/styles';
 import { popIn } from '../../../components/animations';
 import { easing, fonts, game as palette } from '../../../app/theme';
 import type { LeaderboardEntry } from '../../../types/leaderboard';
-import { leaderboardKey } from '../../../utils/publicName';
+import { leaderboardKey } from '../utils/leaderboardKey';
 import { stripDangerousChars } from '../../../utils/sanitize';
 
 export const PODIUM_SIZE = 3;

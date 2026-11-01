@@ -24,20 +24,26 @@ function renderCard(props: Partial<React.ComponentProps<typeof LeaderboardRankCa
 
 describe('LeaderboardRankCard', () => {
   it('shows the rank when the user is ranked', () => {
-    renderCard({ rank: { rank: 7, totalRanked: 143, quarterWins: 5, ranked: true } });
+    renderCard({
+      rank: { rank: 7, totalRanked: 143, quarterWins: 5, ranked: true, displayName: 'Max M.' },
+    });
 
     expect(screen.getByText("You're #7 of 143")).toBeInTheDocument();
     expect(screen.getByText('5 quarter wins all-time')).toBeInTheDocument();
   });
 
   it('uses the singular form for a single win', () => {
-    renderCard({ rank: { rank: 40, totalRanked: 143, quarterWins: 1, ranked: true } });
+    renderCard({
+      rank: { rank: 40, totalRanked: 143, quarterWins: 1, ranked: true, displayName: 'Max M.' },
+    });
 
     expect(screen.getByText('1 quarter win all-time')).toBeInTheDocument();
   });
 
   it('prompts unranked users', () => {
-    renderCard({ rank: { rank: 0, totalRanked: 143, quarterWins: 0, ranked: false } });
+    renderCard({
+      rank: { rank: 0, totalRanked: 143, quarterWins: 0, ranked: false, displayName: 'Max M.' },
+    });
 
     expect(screen.getByText("You're not ranked yet")).toBeInTheDocument();
     expect(screen.getByText(/Win a quarter in any contest/)).toBeInTheDocument();
@@ -57,7 +63,7 @@ describe('LeaderboardRankCard', () => {
 
   it('hides the action when asked', () => {
     renderCard({
-      rank: { rank: 7, totalRanked: 143, quarterWins: 5, ranked: true },
+      rank: { rank: 7, totalRanked: 143, quarterWins: 5, ranked: true, displayName: 'Max M.' },
       showAction: false,
     });
 
@@ -66,7 +72,9 @@ describe('LeaderboardRankCard', () => {
   });
 
   it('navigates to the leaderboard', () => {
-    renderCard({ rank: { rank: 7, totalRanked: 143, quarterWins: 5, ranked: true } });
+    renderCard({
+      rank: { rank: 7, totalRanked: 143, quarterWins: 5, ranked: true, displayName: 'Max M.' },
+    });
 
     fireEvent.click(screen.getByRole('button', { name: /view leaderboard/i }));
 

@@ -36,9 +36,6 @@ definitions:
       name:
         example: test
         type: string
-      owner:
-        example: user@example.com
-        type: string
       role:
         example: owner
         type: string
@@ -93,8 +90,8 @@ definitions:
       createdAt:
         type: string
       displayName:
-        description: read from contests.users, so other players can be shown a name
-          instead of an email
+        description: read from contests.users; clients only ever get the short public
+          form
         type: string
       id:
         type: string
@@ -173,7 +170,10 @@ definitions:
         example: Sunday Night Squares
         type: string
       owner:
-        example: user@example.com
+        example: u_3q2mL0x9VfTzQk1rB7cW8a
+        type: string
+      ownerName:
+        example: Max Morhardt
         type: string
       role:
         allOf:
@@ -254,9 +254,6 @@ definitions:
         maxLength: 20
         minLength: 1
         type: string
-      owner:
-        maxLength: 255
-        type: string
       visibility:
         enum:
         - private
@@ -265,7 +262,6 @@ definitions:
     required:
     - gameId
     - name
-    - owner
     type: object
   model.CreateInviteRequest:
     properties:
@@ -310,6 +306,8 @@ definitions:
         type: integer
       owner:
         type: string
+      ownerName:
+        type: string
       role:
         type: string
       status:
@@ -337,6 +335,10 @@ definitions:
     type: object
   model.LeaderboardRankResponse:
     properties:
+      displayName:
+        description: as the leaderboard shows it, so the client can find its own row
+        example: Max M.
+        type: string
       quarterWins:
         example: 5
         type: integer
@@ -356,6 +358,15 @@ definitions:
         items:
           $ref: '#/definitions/model.LeaderboardEntry'
         type: array
+    type: object
+  model.ParticipantIdentity:
+    properties:
+      fullName:
+        example: Max Morhardt
+        type: string
+      userId:
+        example: u_3q2mL0x9VfTzQk1rB7cW8a
+        type: string
     type: object
   model.ParticipantRole:
     enum:
@@ -581,16 +592,16 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.APIError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/api.APIError'
         "409":
           description: The game is past the first quarter or was canceled
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "429":
+          description: The owner already has the most open contests allowed
           schema:
             $ref: '#/definitions/api.APIError'
         "500":
@@ -745,6 +756,10 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/api.APIError'
+        "429":
+          description: The contest already has the most open invite links allowed
+          schema:
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal Server Error
           schema:
@@ -874,6 +889,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a participant's role or square limit
+      tags:
+      - participants
+  /contests/{id}/roster:
+    get:
+      description: Full names for the contest's managers, so they know who joined.
+        Other players only ever see short names.
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ParticipantIdentity'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Who each player is
       tags:
       - participants
   /contests/{id}/squares/{squareId}/claim:

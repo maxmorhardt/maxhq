@@ -134,6 +134,66 @@ func (_c *ParticipantService_GetParticipants_Call) RunAndReturn(run func(context
 	return _c
 }
 
+// GetRoster provides a mock function with given fields: ctx, contestID, user
+func (_m *ParticipantService) GetRoster(ctx context.Context, contestID uuid.UUID, user string) ([]model.ParticipantIdentity, error) {
+	ret := _m.Called(ctx, contestID, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRoster")
+	}
+
+	var r0 []model.ParticipantIdentity
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) ([]model.ParticipantIdentity, error)); ok {
+		return rf(ctx, contestID, user)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) []model.ParticipantIdentity); ok {
+		r0 = rf(ctx, contestID, user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ParticipantIdentity)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, contestID, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ParticipantService_GetRoster_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRoster'
+type ParticipantService_GetRoster_Call struct {
+	*mock.Call
+}
+
+// GetRoster is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - user string
+func (_e *ParticipantService_Expecter) GetRoster(ctx interface{}, contestID interface{}, user interface{}) *ParticipantService_GetRoster_Call {
+	return &ParticipantService_GetRoster_Call{Call: _e.mock.On("GetRoster", ctx, contestID, user)}
+}
+
+func (_c *ParticipantService_GetRoster_Call) Run(run func(ctx context.Context, contestID uuid.UUID, user string)) *ParticipantService_GetRoster_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *ParticipantService_GetRoster_Call) Return(_a0 []model.ParticipantIdentity, _a1 error) *ParticipantService_GetRoster_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ParticipantService_GetRoster_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) ([]model.ParticipantIdentity, error)) *ParticipantService_GetRoster_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RemoveParticipant provides a mock function with given fields: ctx, contestID, targetUserID, user
 func (_m *ParticipantService) RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, user string) error {
 	ret := _m.Called(ctx, contestID, targetUserID, user)

@@ -95,6 +95,17 @@ route:
     enabled: true
     requests: 100
     unit: Second
+    # per client and per gateway replica; the service also caps open contests per owner and open invites per contest
+    rules:
+      - path: /contests
+        methods: [POST]
+        requests: 30
+        unit: Hour
+      - path: /contests/[^/]+/invites
+        pathType: RegularExpression
+        methods: [POST]
+        requests: 60
+        unit: Hour
 
 auth:
   enabled: true

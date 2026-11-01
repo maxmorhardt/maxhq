@@ -38,14 +38,10 @@ function sample(type: ContestEvent['type'], data: object, timestamp: string, bef
 }
 
 const sampleActivity = [
-  sample(
-    'participant.joined',
-    { userId: 'jordan@gmail.com', displayName: 'Jordan Diaz' },
-    at(18, 58)
-  ),
+  sample('participant.joined', { userId: 'u_jordan', displayName: 'Jordan D.' }, at(18, 58)),
   sample(
     'square.updated',
-    { row: 4, col: 7, value: 'JD', owner: 'jordan@gmail.com', ownerName: 'Jordan Diaz' },
+    { row: 4, col: 7, value: 'JD', owner: 'u_jordan', ownerName: 'Jordan D.' },
     at(19, 2)
   ),
   sample('contest.updated', { status: 'Q1' }, at(20, 20), { status: 'ACTIVE' }),
@@ -60,8 +56,8 @@ const sampleActivity = [
       quarter: 2,
       homeTeamScore: 14,
       awayTeamScore: 7,
-      winner: 'jordan@gmail.com',
-      winnerName: 'Jordan Diaz',
+      winner: 'u_jordan',
+      winnerName: 'Jordan D.',
     },
     at(21, 43)
   ),

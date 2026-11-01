@@ -41,6 +41,7 @@ func NewInviteHandler(inviteService service.InviteService) InviteHandler {
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
+// @Failure 429 {object} api.APIError "The contest already has the most open invite links allowed"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests/{id}/invites [post]
@@ -71,6 +72,10 @@ func (h *inviteHandler) CreateInvite(c *gin.Context) {
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInvalidSquareCount):
 			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
+		case errors.Is(err, errs.ErrInviteLimitReached):
+			c.JSON(http.StatusTooManyRequests, api.NewAPIError(http.StatusTooManyRequests, api.Message(err), c))
+		case errors.Is(err, errs.ErrDatabaseUnavailable):
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		default:
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to create invite", c))
 		}

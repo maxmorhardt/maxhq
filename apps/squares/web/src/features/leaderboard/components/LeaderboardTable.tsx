@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { fonts, game as palette } from '../../../app/theme';
 import type { LeaderboardEntry } from '../../../types/leaderboard';
-import { leaderboardKey } from '../../../utils/publicName';
+import { leaderboardKey } from '../utils/leaderboardKey';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import LeaderboardEmptyState from './LeaderboardEmptyState';
 import LeaderboardTableSkeleton from './LeaderboardTableSkeleton';

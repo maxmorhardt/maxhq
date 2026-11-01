@@ -15,4 +15,6 @@ export interface LeaderboardRankResponse {
   totalRanked: number;
   quarterWins: number;
   ranked: boolean;
+  // as the leaderboard shows it, to find your own row
+  displayName: string;
 }

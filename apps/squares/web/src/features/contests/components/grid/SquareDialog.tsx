@@ -35,7 +35,7 @@ export default function SquareDialog({ square, contest, viewer, onClose }: Props
     return null;
   }
 
-  const isMine = !!viewer.email && square.owner === viewer.email;
+  const isMine = viewer.isMe(square.owner);
   const isClaimed = square.value.trim() !== '';
   // a full board is locked until kickoff
   const boardFull = contest.squares.every((s) => s.value.trim() !== '');

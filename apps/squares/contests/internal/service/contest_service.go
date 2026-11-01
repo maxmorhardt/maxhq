@@ -84,6 +84,17 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 		return nil, errs.ErrGamePastFirstQuarter
 	}
 
+	open, err := s.repo.CountOpenByOwner(ctx, user)
+	if err != nil {
+		log.Error("failed to count open contests", "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+	if open >= model.MaxOpenContestsPerOwner {
+		log.Warn("open contest limit reached", "open", open, "limit", model.MaxOpenContestsPerOwner)
+		metrics.IncLimitReached("open_contests")
+		return nil, errs.ErrContestLimitReached
+	}
+
 	contest := model.Contest{
 		Name:       req.Name,
 		XLabels:    xLabelsJSON,
@@ -91,7 +102,7 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 		HomeTeam:   game.HomeTeam,
 		AwayTeam:   game.AwayTeam,
 		GameID:     &game.ID,
-		Owner:      req.Owner,
+		Owner:      user,
 		Visibility: visibility,
 		Status:     model.ContestStatusActive,
 	}
@@ -110,7 +121,7 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 
 	metrics.IncContestCreated()
 	metrics.IncParticipantJoined(string(model.ParticipantRoleOwner))
-	log.Info("created contest", "name", req.Name, "contest_id", contest.ID, "owner", req.Owner)
+	log.Info("created contest", "name", req.Name, "contest_id", contest.ID)
 	return &contest, nil
 }
 

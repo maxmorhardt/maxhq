@@ -14,6 +14,7 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -242,6 +243,9 @@ func TestCheckAccessAndRevocation(t *testing.T) {
 }
 
 func TestRequiresAccessCheck(t *testing.T) {
+	require.NoError(t, pseudonym.SetKey("0123456789abcdef0123456789abcdef"))
+	viewer := pseudonym.Of("v@b.com")
+
 	tests := []struct {
 		name      string
 		eventType string
@@ -251,8 +255,8 @@ func TestRequiresAccessCheck(t *testing.T) {
 		{"made private", events.ContestUpdatedType, `{"visibility":"private"}`, true},
 		{"made public", events.ContestUpdatedType, `{"visibility":"public"}`, false},
 		{"unreadable update", events.ContestUpdatedType, `"oops"`, true},
-		{"viewer removed", events.ParticipantRemovedType, `{"userId":"v@b.com"}`, true},
-		{"someone else removed", events.ParticipantRemovedType, `{"userId":"x@b.com"}`, false},
+		{"viewer removed", events.ParticipantRemovedType, `{"userId":"` + viewer + `"}`, true},
+		{"someone else removed", events.ParticipantRemovedType, `{"userId":"` + pseudonym.Of("x@b.com") + `"}`, false},
 		{"square update", events.SquareUpdatedType, `{"visibility":"private"}`, false},
 	}
 

@@ -1,8 +1,7 @@
 import { Alert, Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { leaderboardKey, toPublicName } from '../../../utils/publicName';
-import { useGetMyProfileQuery } from '../../profile/api';
+import { leaderboardKey } from '../utils/leaderboardKey';
 import { useGetLeaderboardQuery, useGetMyRankQuery } from '../api';
 import LeaderboardPodium, { PODIUM_SIZE } from './LeaderboardPodium';
 import LeaderboardRankCard from './LeaderboardRankCard';
@@ -18,7 +17,6 @@ export default function Standings({ header }: Props) {
   const signedIn = useAuth().isAuthenticated;
   const { data: entries = [], isLoading, isError } = useGetLeaderboardQuery();
   const myRank = useGetMyRankQuery(undefined, { skip: !signedIn });
-  const { data: profile } = useGetMyProfileQuery(undefined, { skip: !signedIn });
 
   if (isError) {
     return (
@@ -33,11 +31,10 @@ export default function Standings({ header }: Props) {
   const podium = hasPodium ? entries.slice(0, PODIUM_SIZE) : [];
   const rest = hasPodium ? entries.slice(PODIUM_SIZE) : entries;
 
-  // the API abbreviates names, so match on the same form plus the rank to tell ties apart
-  const highlightKey =
-    profile && myRank.data?.ranked
-      ? leaderboardKey(myRank.data.rank, toPublicName(profile.displayName))
-      : undefined;
+  // rank plus the name as the leaderboard shows it tells ties apart
+  const highlightKey = myRank.data?.ranked
+    ? leaderboardKey(myRank.data.rank, myRank.data.displayName)
+    : undefined;
 
   return (
     <>

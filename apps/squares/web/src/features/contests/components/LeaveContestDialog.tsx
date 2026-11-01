@@ -1,6 +1,6 @@
-import { useAuth } from 'react-oidc-context';
 import { errorMessage } from '../../../api/errors';
 import ConfirmDialog from '../../../components/feedback/ConfirmDialog';
+import { useMe } from '../../profile/useMe';
 import { useRemoveParticipantMutation } from '../api';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function LeaveContestDialog({ contest, onClose, onLeft }: Props) {
-  const email = useAuth().user?.profile?.email;
+  const { userId } = useMe();
   const [removeParticipant, { isLoading, error, reset }] = useRemoveParticipantMutation();
 
   const handleClose = () => {
@@ -19,12 +19,12 @@ export default function LeaveContestDialog({ contest, onClose, onLeft }: Props) 
   };
 
   const handleConfirm = async () => {
-    if (!contest || !email) {
+    if (!contest || !userId) {
       return;
     }
 
     try {
-      await removeParticipant({ contestId: contest.id, userId: email }).unwrap();
+      await removeParticipant({ contestId: contest.id, userId }).unwrap();
       onLeft?.();
       handleClose();
     } catch {

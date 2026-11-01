@@ -60,4 +60,6 @@ var (
 	ErrViewerCannotHaveSquares = errors.New("viewers cannot be allotted squares")
 	ErrWinnerNotDeterminable   = errors.New("winner cannot be determined for the given score")
 	ErrInvalidQuarter          = errors.New("quarter must be between 1 and 4")
+	ErrContestLimitReached     = errors.New("you have too many open contests, finish or delete one first")
+	ErrInviteLimitReached      = errors.New("this contest has too many open invite links, delete one first")
 )

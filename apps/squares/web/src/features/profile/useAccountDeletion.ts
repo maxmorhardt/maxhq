@@ -9,13 +9,14 @@ import {
 import { useToast } from '../toast/useToast';
 import { useDeleteMyAccountMutation } from './api';
 import type { DeleteAccountDialogProps } from './components/DeleteAccountDialog';
+import { useMe } from './useMe';
 
 // account deletion is blocked until every active contest is deleted or left, so the dialog walks through them
 export function useAccountDeletion() {
   const auth = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const email = auth.user?.profile?.email;
+  const { userId } = useMe();
 
   const [open, setOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -59,7 +60,10 @@ export function useAccountDeletion() {
     onLeaveContest: (id) =>
       runContestAction(
         id,
-        () => removeParticipant({ contestId: id, userId: email ?? '' }).unwrap(),
+        () =>
+          userId
+            ? removeParticipant({ contestId: id, userId }).unwrap()
+            : Promise.reject(new Error('profile not loaded')),
         'Failed to leave the contest. Please try again.'
       ),
     onConfirmDelete: async () => {

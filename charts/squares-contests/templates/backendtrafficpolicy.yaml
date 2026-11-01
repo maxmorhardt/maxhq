@@ -23,7 +23,7 @@ spec:
                 value: {{ $cidr }}
               {{- if $rule.path }}
               path:
-                type: Exact
+                type: {{ $rule.pathType | default "Exact" }}
                 value: {{ printf "%s%s" $.Values.route.prefix $rule.path }}
               {{- end }}
               {{- with $rule.methods }}

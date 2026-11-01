@@ -10,6 +10,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -40,7 +41,7 @@ func fullBoardWith(t *testing.T, game *events.Game, player string) (contestID uu
 	theirs = map[uuid.UUID]string{}
 	squares = snapshot(t, ownerUser, contest.ID).Contest.Squares
 	for i := range squares {
-		if squares[i].Owner == player {
+		if squares[i].Owner == pseudonym.Of(player) {
 			theirs[squares[i].ID] = squares[i].Value
 		}
 	}
@@ -79,7 +80,8 @@ func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) 
 	game := seedGame(t)
 	contestID, theirs := fullBoardWith(t, &game, player)
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, player), nil)
+	// clients name players by pseudonym
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	snap := snapshot(t, ownerUser, contestID)
@@ -92,7 +94,7 @@ func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) 
 
 	var mine model.Square
 	for _, sq := range snap.Contest.Squares {
-		if sq.Owner == ownerUser {
+		if sq.Owner == pseudonym.Of(ownerUser) {
 			mine = sq
 			break
 		}
@@ -112,7 +114,7 @@ func TestRemoval_KickAfterKickoffGhostsTheirSquares(t *testing.T) {
 	contestID, theirs := fullBoardWith(t, &game, player)
 	kickoff(t, &game, contestID)
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, player), nil)
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	for _, sq := range squaresOf(t, contestID, theirs) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +39,7 @@ func TestRandomClaim_FillsWithinLimitsWithoutOverlap(t *testing.T) {
 		assert.Equal(t, 5, out.Requested)
 		require.Len(t, out.Squares, 5)
 		for _, sq := range out.Squares {
-			assert.Equal(t, owner, sq.Owner)
+			assert.Equal(t, pseudonym.Of(owner), sq.Owner)
 		}
 	})
 
@@ -59,8 +60,8 @@ func TestRandomClaim_FillsWithinLimitsWithoutOverlap(t *testing.T) {
 		for _, sq := range snapshot(t, owner, contest.ID).Contest.Squares {
 			owners[sq.Owner]++
 		}
-		assert.Equal(t, 50, owners[owner], "capped at the owner's limit")
-		assert.Equal(t, 45, owners[member], "the member took what was left")
+		assert.Equal(t, 50, owners[pseudonym.Of(owner)], "capped at the owner's limit")
+		assert.Equal(t, 45, owners[pseudonym.Of(member)], "the member took what was left")
 		assert.Equal(t, 5, owners[""])
 	})
 

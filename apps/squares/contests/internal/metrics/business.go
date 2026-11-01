@@ -34,6 +34,14 @@ var (
 		[]string{"quarter"},
 	)
 
+	limitsReachedTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "limits_reached_total",
+			Help: "Total number of creations refused by a per-account or per-contest cap",
+		},
+		[]string{"limit"},
+	)
+
 	invitesCreatedTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "invites_created_total",
@@ -84,6 +92,7 @@ func init() {
 		contestsDeletedTotal,
 		contestsStartedTotal,
 		quarterResultsRecordedTotal,
+		limitsReachedTotal,
 		invitesCreatedTotal,
 		invitesRedeemedTotal,
 		participantsJoinedTotal,
@@ -107,6 +116,10 @@ func IncContestStarted() {
 
 func IncQuarterResult(quarter int) {
 	quarterResultsRecordedTotal.WithLabelValues(quarterLabel(quarter)).Inc()
+}
+
+func IncLimitReached(limit string) {
+	limitsReachedTotal.WithLabelValues(limit).Inc()
 }
 
 func IncInviteCreated() {

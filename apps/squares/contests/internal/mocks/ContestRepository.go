@@ -72,6 +72,63 @@ func (_c *ContestRepository_ApplyQuarterResults_Call) RunAndReturn(run func(cont
 	return _c
 }
 
+// CountOpenByOwner provides a mock function with given fields: ctx, owner
+func (_m *ContestRepository) CountOpenByOwner(ctx context.Context, owner string) (int, error) {
+	ret := _m.Called(ctx, owner)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountOpenByOwner")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (int, error)); ok {
+		return rf(ctx, owner)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) int); ok {
+		r0 = rf(ctx, owner)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, owner)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_CountOpenByOwner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountOpenByOwner'
+type ContestRepository_CountOpenByOwner_Call struct {
+	*mock.Call
+}
+
+// CountOpenByOwner is a helper method to define mock.On call
+//   - ctx context.Context
+//   - owner string
+func (_e *ContestRepository_Expecter) CountOpenByOwner(ctx interface{}, owner interface{}) *ContestRepository_CountOpenByOwner_Call {
+	return &ContestRepository_CountOpenByOwner_Call{Call: _e.mock.On("CountOpenByOwner", ctx, owner)}
+}
+
+func (_c *ContestRepository_CountOpenByOwner_Call) Run(run func(ctx context.Context, owner string)) *ContestRepository_CountOpenByOwner_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_CountOpenByOwner_Call) Return(_a0 int, _a1 error) *ContestRepository_CountOpenByOwner_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_CountOpenByOwner_Call) RunAndReturn(run func(context.Context, string) (int, error)) *ContestRepository_CountOpenByOwner_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Create provides a mock function with given fields: ctx, contest, owner
 func (_m *ContestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {
 	ret := _m.Called(ctx, contest, owner)

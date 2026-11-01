@@ -17,6 +17,7 @@ x-env: &env
   DB_SSL_MODE: disable
   REDIS_URL: redis://valkey:6379/0
   INTERNAL_API_TOKEN: local-internal-token
+  PSEUDONYM_KEY: local-pseudonym-key-at-least-32-bytes
   ALLOWED_ORIGINS: http://localhost:3000
   CONTESTS_INTERNAL_URL: http://contests:8080
 

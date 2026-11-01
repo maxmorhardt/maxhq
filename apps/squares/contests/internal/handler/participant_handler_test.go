@@ -15,6 +15,49 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+func TestGetRoster_Success(t *testing.T) {
+	svc := mocks.NewParticipantService(t)
+	svc.EXPECT().GetRoster(mock.Anything, mock.Anything, "owner1").
+		Return([]model.ParticipantIdentity{{UserID: "u_pat", FullName: "Pat Player"}}, nil)
+
+	r := gin.New()
+	r.Use(authenticatedMiddleware("owner1"))
+	r.GET("/contests/:id/roster", NewParticipantHandler(svc).GetRoster)
+
+	w := doRequest(r, jsonReq(http.MethodGet, fmt.Sprintf("/contests/%s/roster", uuid.New()), nil))
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, `[{"userId":"u_pat","fullName":"Pat Player"}]`, w.Body.String())
+}
+
+func TestGetRoster_InvalidContestID(t *testing.T) {
+	r := gin.New()
+	r.Use(authenticatedMiddleware("owner1"))
+	r.GET("/contests/:id/roster", NewParticipantHandler(mocks.NewParticipantService(t)).GetRoster)
+
+	w := doRequest(r, jsonReq(http.MethodGet, "/contests/bad/roster", nil))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestGetRoster_Errors(t *testing.T) {
+	cases := map[error]int{
+		errs.ErrContestNotFound:     http.StatusNotFound,
+		errs.ErrNotParticipant:      http.StatusForbidden,
+		errs.ErrInsufficientRole:    http.StatusForbidden,
+		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
+	}
+	for svcErr, want := range cases {
+		svc := mocks.NewParticipantService(t)
+		svc.EXPECT().GetRoster(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
+
+		r := gin.New()
+		r.Use(authenticatedMiddleware("owner1"))
+		r.GET("/contests/:id/roster", NewParticipantHandler(svc).GetRoster)
+
+		w := doRequest(r, jsonReq(http.MethodGet, fmt.Sprintf("/contests/%s/roster", uuid.New()), nil))
+		assert.Equal(t, want, w.Code, svcErr.Error())
+	}
+}
+
 func TestUpdateParticipant_Success(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewParticipantService(t)

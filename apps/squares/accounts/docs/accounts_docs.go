@@ -428,6 +428,11 @@ const docTemplateaccounts = `{
                 "email": {
                     "type": "string",
                     "example": "user@example.com"
+                },
+                "userId": {
+                    "description": "how contests and streams name this user in place of their email",
+                    "type": "string",
+                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
                 }
             }
         }

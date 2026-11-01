@@ -26,6 +26,12 @@ export interface Contest {
   updatedBy: string;
 }
 
+// who each player is, for the contest's owner only
+export interface ParticipantIdentity {
+  userId: string;
+  fullName: string;
+}
+
 export interface RandomClaimResponse {
   squares: Square[];
   requested: number;
@@ -33,7 +39,6 @@ export interface RandomClaimResponse {
 
 export interface CreateContestRequest {
   name: string;
-  owner: string;
   visibility?: ContestVisibility;
   maxSquares?: number;
   gameId: string;
@@ -77,6 +82,7 @@ export interface ContestSummary {
   status: ContestStatus;
   visibility: ContestVisibility;
   owner: string;
+  ownerName?: string;
   role: ParticipantRole;
   gameId?: string;
   gameTime?: string;
@@ -198,8 +204,8 @@ export interface Participant {
   id: string;
   contestId: string;
   userId: string;
-  // the name other players see; emails are shown only to the contest owner
-  displayName?: string;
+  // the short public name, like "Pat P."
+  displayName: string;
   inviteId: string;
   role: ParticipantRole;
   maxSquares: number;
@@ -239,6 +245,7 @@ export interface InvitePreviewResponse {
   contestName: string;
   maxSquares: number;
   owner: string;
+  ownerName?: string;
   role: string;
   status: ContestStatus;
   claimedSquares: number;

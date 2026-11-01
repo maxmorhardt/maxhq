@@ -73,9 +73,9 @@ func (h *contestHandler) GetContest(c *gin.Context) {
 // @Param Idempotency-Key header string false "Replays the first response when a create is retried with the same key"
 // @Success 201 {object} model.ContestSwagger
 // @Failure 400 {object} api.APIError
-// @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
 // @Failure 409 {object} api.APIError "The game is past the first quarter or was canceled"
+// @Failure 429 {object} api.APIError "The owner already has the most open contests allowed"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests [post]
@@ -91,12 +91,6 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 
 	user := c.GetString(api.UserKey)
 
-	if req.Owner != user {
-		log.Warn("user not authorized to create contest", "user", user, "owner", req.Owner)
-		c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, "User not authorized to create contest for specified owner", c))
-		return
-	}
-
 	contest, err := h.contestService.CreateContest(c.Request.Context(), &req, user)
 	if err != nil {
 		switch {
@@ -106,6 +100,8 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrGameNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
+		case errors.Is(err, errs.ErrContestLimitReached):
+			c.JSON(http.StatusTooManyRequests, api.NewAPIError(http.StatusTooManyRequests, api.Message(err), c))
 		default:
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to create contest", c))
 		}

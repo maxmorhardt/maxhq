@@ -5,6 +5,9 @@ import { renderWithProviders } from '../../../test/render';
 import LeaveContestDialog from './LeaveContestDialog';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+vi.mock('../../profile/api', () => ({
+  useGetMyProfileQuery: vi.fn(() => ({ data: { userId: 'u_me' } })),
+}));
 const api = vi.hoisted(() => ({ useRemoveParticipantMutation: vi.fn() }));
 vi.mock('../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 
@@ -32,7 +35,7 @@ describe('LeaveContestDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'me@x.com' });
+    expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'u_me' });
     expect(onLeft).toHaveBeenCalled();
   });
 

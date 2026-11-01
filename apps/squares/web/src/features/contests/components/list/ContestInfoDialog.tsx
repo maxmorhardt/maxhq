@@ -46,7 +46,7 @@ export default function ContestInfoDialog({ contest, onClose, onDelete }: Props)
     ['Squares claimed', `${contest.claimedSquares} of ${MAX_CONTEST_SQUARES}`],
     ['Your squares', String(contest.mySquares)],
     ['Your role', roleLabel[contest.role]],
-    ['Owner', contest.owner],
+    ['Owner', contest.role === 'owner' ? 'You' : (contest.ownerName ?? '–')],
     ['Created', contest.createdAt ? formatDate(contest.createdAt) : '–'],
   ];
 

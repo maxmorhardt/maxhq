@@ -62,6 +62,7 @@ func upcomingGame(id uuid.UUID) *model.Game {
 func TestCreateContest_WithGame(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, nil)
 	repo.EXPECT().Create(mock.Anything, mock.MatchedBy(func(c *model.Contest) bool {
 		return c.GameID != nil && *c.GameID == gameID && c.HomeTeam == "Chiefs" && c.AwayTeam == "Eagles"
 	}), mock.Anything).Return(nil)
@@ -69,7 +70,7 @@ func TestCreateContest_WithGame(t *testing.T) {
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
 	got, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", Visibility: "public", MaxSquares: 10, GameID: gameID.String()}, "o")
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", Visibility: "public", MaxSquares: 10, GameID: gameID.String()}, "o")
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestVisibilityPublic, got.Visibility)
 	assert.Equal(t, model.ContestStatusActive, got.Status)
@@ -79,11 +80,35 @@ func TestCreateContest_WithGame(t *testing.T) {
 	assert.Equal(t, "Eagles", got.AwayTeam)
 }
 
+func TestCreateContest_OpenContestLimitReached(t *testing.T) {
+	gameID := uuid.New()
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(model.MaxOpenContestsPerOwner, nil)
+	gameRepo := mocks.NewGameSyncRepository(t)
+	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
+
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
+	assert.ErrorIs(t, err, errs.ErrContestLimitReached)
+}
+
+func TestCreateContest_CountOpenError(t *testing.T) {
+	gameID := uuid.New()
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, errors.New("db"))
+	gameRepo := mocks.NewGameSyncRepository(t)
+	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
+
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
 func TestCreateContest_InvalidGameID(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 
 	_, err := contestSvc(repo, mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", GameID: "nope"}, "o")
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: "nope"}, "o")
 	assert.ErrorIs(t, err, errs.ErrGameNotFound)
 }
 
@@ -94,7 +119,7 @@ func TestCreateContest_GameLookupError(t *testing.T) {
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(nil, errors.New("db"))
 
 	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", GameID: gameID.String()}, "o")
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
@@ -105,7 +130,7 @@ func TestCreateContest_GameNotFound(t *testing.T) {
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(nil, database.ErrNotFound)
 
 	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
 	assert.ErrorIs(t, err, errs.ErrGameNotFound)
 }
 
@@ -130,11 +155,12 @@ func TestCreateContest_UntilTheFirstQuarterEnds(t *testing.T) {
 		gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(game, nil)
 		repo := mocks.NewContestRepository(t)
 		if tc.want == nil {
+			repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, nil)
 			repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		}
 
 		_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
-			CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", GameID: gameID.String()}, "o")
+			CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
 		if tc.want == nil {
 			assert.NoError(t, err, "%s period %d", tc.status, tc.period)
 		} else {
@@ -194,12 +220,13 @@ func TestDeleteContest_Success(t *testing.T) {
 func TestCreateContest_RepoError(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, nil)
 	repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
 	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
-		CreateContest(context.Background(), &model.CreateContestRequest{Owner: "o", Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
 	assert.Error(t, err)
 }
 

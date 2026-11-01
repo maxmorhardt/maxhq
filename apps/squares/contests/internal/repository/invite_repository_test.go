@@ -138,11 +138,25 @@ func TestInviteRepository_Delete(t *testing.T) {
 	repo := NewInviteRepository(gdb)
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`DELETE FROM "contest_invites"`).WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`DELETE FROM "contest_invites" WHERE id = \$1 AND contest_id = \$2`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
-	err := repo.Delete(context.Background(), uuid.New())
+	err := repo.Delete(context.Background(), uuid.New(), uuid.New())
 
 	require.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestInviteRepository_CountOpenByContestID(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewInviteRepository(gdb)
+
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "contest_invites" WHERE contest_id = \$1 AND \(expires_at IS NULL OR expires_at > \$2\) AND \(max_uses = 0 OR uses < max_uses\)`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
+
+	count, err := repo.CountOpenByContestID(context.Background(), uuid.New())
+
+	require.NoError(t, err)
+	assert.Equal(t, 3, count)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -1,6 +1,5 @@
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useEffect, useState } from 'react';
-import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 import { useAppSelector } from '../../../app/hooks';
 import ForbiddenError from '../../../components/errors/ForbiddenError';
@@ -9,6 +8,7 @@ import type { QuarterResult } from '../../../types/contest';
 import { isGameOver } from '../../../utils/game';
 import { useGetGameQuery } from '../../games/api';
 import { useGameStream } from '../../games/useGameStream';
+import { isMe, useMe } from '../../profile/useMe';
 import { useToast } from '../../toast/useToast';
 import type { ContestEvent } from '../live/events';
 import {
@@ -36,7 +36,7 @@ interface Props {
 export default function LiveContest({ contestId }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const email = useAuth().user?.profile?.email;
+  const me = useMe();
 
   const contest = useAppSelector(selectLiveContest);
   const participants = useAppSelector(selectLiveParticipants);
@@ -55,12 +55,12 @@ export default function LiveContest({ contestId }: Props) {
         break;
       case 'quarter.recorded':
         setWinnerFlash({ row: event.data.winnerRow, col: event.data.winnerCol });
-        if (event.data.winner === email) {
+        if (isMe(me, event.data.winner)) {
           setCelebration(event.data);
         }
         break;
       case 'participant.removed': {
-        if (event.data.userId !== email) {
+        if (!isMe(me, event.data.userId)) {
           break;
         }
         // a private contest is off-limits once removed; a public one stays viewable
@@ -108,7 +108,7 @@ export default function LiveContest({ contestId }: Props) {
         game={game}
         participants={participants}
         activity={activity}
-        viewer={getContestViewer(email, contest, participants)}
+        viewer={getContestViewer(me, contest, participants)}
         status={status}
         winnerFlash={winnerFlash}
         onStale={resync}

@@ -22,10 +22,9 @@ func UserActivityPath(email string) string {
 }
 
 type UserActiveContest struct {
-	ID    string `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Name  string `json:"name" example:"test"`
-	Owner string `json:"owner" example:"user@example.com"`
-	Role  string `json:"role" example:"owner"`
+	ID   string `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name string `json:"name" example:"test"`
+	Role string `json:"role" example:"owner"`
 }
 
 type UserActivitySummary struct {

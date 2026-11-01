@@ -27,7 +27,8 @@ function renderComponent(props: React.ComponentProps<typeof JoinError>) {
 const preview = {
   contestId: 'abc',
   contestName: 'Super Bowl Contest',
-  owner: 'alice',
+  owner: 'u_alice',
+  ownerName: 'Alice A.',
   maxSquares: 2,
   role: 'participant',
 } as InvitePreviewResponse;
@@ -69,7 +70,7 @@ describe('JoinError', () => {
 
     it('names the owner in the hint when preview is provided', () => {
       renderComponent({ variant: 'no-squares', preview });
-      expect(screen.getByText(/Ask alice to lower/)).toBeInTheDocument();
+      expect(screen.getByText(/Ask Alice A\. to lower/)).toBeInTheDocument();
     });
 
     it('falls back to the contest owner in the hint when preview is null', () => {

@@ -7,6 +7,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
 
 type ContestEventPublisher interface {
@@ -56,7 +57,7 @@ func (p *contestEventPublisher) PublishParticipantUpdated(ctx context.Context, c
 }
 
 func (p *contestEventPublisher) publish(ctx context.Context, eventType string, contestID uuid.UUID, updatedBy string, data any) error {
-	event, err := events.NewContestEvent(eventType, contestID, updatedBy, data)
+	event, err := events.NewContestEvent(eventType, contestID, pseudonym.Of(updatedBy), data)
 	if err != nil {
 		return err
 	}

@@ -16,6 +16,7 @@ type ContestRepository interface {
 	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error)
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
+	CountOpenByOwner(ctx context.Context, owner string) (int, error)
 
 	Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error
 	Update(ctx context.Context, contest *model.Contest) error
@@ -75,6 +76,15 @@ func (r *contestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID
 		Where("game_id = ? AND status NOT IN ?", gameID, []model.ContestStatus{model.ContestStatusDeleted, model.ContestStatusFinished}).
 		Pluck("id", &ids).Error
 	return ids, err
+}
+
+func (r *contestRepository) CountOpenByOwner(ctx context.Context, owner string) (int, error) {
+	var count int64
+	err := database.Conn(ctx, r.db).
+		Model(&model.Contest{}).
+		Where("owner = ? AND status NOT IN ?", owner, terminalStatuses).
+		Count(&count).Error
+	return int(count), err
 }
 
 func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {
