@@ -43,7 +43,7 @@ const participants = [
   }),
 ];
 
-const owner = makeViewer({ me: { userId: 'u_owner' }, isOwner: true });
+const owner = makeViewer({ viewerId: 'u_owner', isOwner: true });
 
 function renderManager(viewer: ContestViewer = owner, contest: Contest = makeContest()) {
   return renderWithProviders(
@@ -76,7 +76,7 @@ describe('ParticipantsManager', () => {
     expect(screen.queryByText(/@x\.com/)).not.toBeInTheDocument();
     unmount();
 
-    renderManager(makeViewer({ me: { userId: 'u_viewer' }, isOwner: false }));
+    renderManager(makeViewer({ viewerId: 'u_viewer', isOwner: false }));
     expect(screen.getByText('Pat P.')).toBeInTheDocument();
     expect(screen.getByText('You')).toBeInTheDocument();
     expect(screen.queryByText(/@x\.com/)).not.toBeInTheDocument();
@@ -112,7 +112,7 @@ describe('ParticipantsManager', () => {
   });
 
   it('never asks a player for the roster', () => {
-    renderManager(makeViewer({ me: { userId: 'u_player' } }));
+    renderManager(makeViewer({ viewerId: 'u_player' }));
     expect(api.useGetRosterQuery).toHaveBeenCalledWith(
       'c-1',
       expect.objectContaining({ skip: true })
@@ -121,7 +121,7 @@ describe('ParticipantsManager', () => {
   });
 
   it('recognises the viewer by pseudonym', () => {
-    renderManager(makeViewer({ me: { userId: 'u_viewer' }, isOwner: false }));
+    renderManager(makeViewer({ viewerId: 'u_viewer', isOwner: false }));
     expect(screen.getByText('You')).toBeInTheDocument();
   });
 
@@ -174,14 +174,14 @@ describe('ParticipantsManager', () => {
   });
 
   it('lets a participant leave, but not change others', () => {
-    renderManager(makeViewer({ me: { userId: 'u_player' } }));
+    renderManager(makeViewer({ viewerId: 'u_player' }));
     expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Leave contest' }));
     expect(screen.getByTestId('leave')).toBeInTheDocument();
   });
 
   it('offers nothing once the contest is finished', () => {
-    renderManager(makeViewer({ me: { userId: 'u_player' } }), makeContest({ status: 'FINISHED' }));
+    renderManager(makeViewer({ viewerId: 'u_player' }), makeContest({ status: 'FINISHED' }));
     expect(screen.queryByRole('button', { name: 'Leave contest' })).not.toBeInTheDocument();
   });
 });

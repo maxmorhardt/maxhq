@@ -12,7 +12,7 @@ import { getStatusLabel } from '../../../../utils/contestStatus';
 const mockNavigate = vi.hoisted(() => vi.fn());
 
 const me = vi.hoisted(() => ({ userId: 'u_alice' as string | undefined }));
-vi.mock('../../../profile/useMe', () => ({ useMe: () => me }));
+vi.mock('../../../profile/useUserId', () => ({ useUserId: () => me.userId }));
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, useNavigate: () => mockNavigate };

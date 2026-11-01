@@ -1,9 +1,9 @@
 import type { Contest, Participant } from '../../../types/contest';
-import { isMe, type Me } from '../../profile/useMe';
+import { isMe } from '../../profile/useUserId';
 
 // who the signed-in user is in this contest, worked out once and passed down
 export interface ContestViewer {
-  me: Me;
+  viewerId: string | undefined;
   isMe: (id: string | undefined) => boolean;
   participant: Participant | undefined;
   isOwner: boolean;
@@ -13,16 +13,16 @@ export interface ContestViewer {
 }
 
 export function getContestViewer(
-  me: Me,
+  viewerId: string | undefined,
   contest: Contest,
   participants: Participant[]
 ): ContestViewer {
-  const mine = (id: string | undefined) => isMe(me, id);
+  const mine = (id: string | undefined) => isMe(viewerId, id);
   const participant = participants.find((p) => mine(p.userId));
   const squaresClaimed = contest.squares.filter((s) => mine(s.owner)).length;
 
   return {
-    me,
+    viewerId,
     isMe: mine,
     participant,
     isOwner: mine(contest.owner),

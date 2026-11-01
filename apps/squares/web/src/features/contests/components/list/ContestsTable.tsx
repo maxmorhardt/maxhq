@@ -7,7 +7,7 @@ import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
 import { MAX_CONTEST_SQUARES, type ContestSummary } from '../../../../types/contest';
 import { getStatusLabel, isInGameStatus, isTerminalStatus } from '../../../../utils/contestStatus';
-import { useMe } from '../../../profile/useMe';
+import { useUserId } from '../../../profile/useUserId';
 import LeaveContestDialog from '../LeaveContestDialog';
 import ContestInfoDialog from './ContestInfoDialog';
 import DeleteContestDialog from './DeleteContestDialog';
@@ -83,7 +83,7 @@ export default function ContestsTable({
   emptySubtitle = 'Create a contest or join one with an invite link',
 }: Props) {
   const navigate = useNavigate();
-  const { userId } = useMe();
+  const userId = useUserId();
 
   const [infoTarget, setInfoTarget] = useState<ContestSummary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ContestSummary | null>(null);

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { baseApi } from '../api/baseApi';
 import { useAppDispatch } from '../app/hooks';
-import { useMe } from '../features/profile/useMe';
+import { useUserId } from '../features/profile/useUserId';
 import { useToast } from '../features/toast/useToast';
 import { setFaroUser } from '../utils/faro';
 import { refreshSession } from './token';
@@ -12,7 +12,7 @@ export function useAuthSession() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
-  const { userId } = useMe();
+  const userId = useUserId();
 
   const triedSilentSignin = useRef(false);
   const lastNavigator = useRef<string | undefined>(undefined);

@@ -9,14 +9,14 @@ import {
 import { useToast } from '../toast/useToast';
 import { useDeleteMyAccountMutation } from './api';
 import type { DeleteAccountDialogProps } from './components/DeleteAccountDialog';
-import { useMe } from './useMe';
+import { useUserId } from './useUserId';
 
 // account deletion is blocked until every active contest is deleted or left, so the dialog walks through them
 export function useAccountDeletion() {
   const auth = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { userId } = useMe();
+  const userId = useUserId();
 
   const [open, setOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);

@@ -14,7 +14,7 @@ const participants = [makeParticipant({ userId: 'u_player', maxSquares: 5 })];
 
 describe('getContestViewer', () => {
   it('counts a participant’s squares and what they have left', () => {
-    expect(getContestViewer({ userId: 'u_player' }, contest, participants)).toMatchObject({
+    expect(getContestViewer('u_player', contest, participants)).toMatchObject({
       isOwner: false,
       isParticipant: true,
       squaresClaimed: 2,
@@ -23,11 +23,11 @@ describe('getContestViewer', () => {
   });
 
   it('recognises the owner', () => {
-    expect(getContestViewer({ userId: 'u_owner' }, contest, participants).isOwner).toBe(true);
+    expect(getContestViewer('u_owner', contest, participants).isOwner).toBe(true);
   });
 
   it('treats a signed-out or unknown viewer as a spectator', () => {
-    const viewer = getContestViewer({}, contest, participants);
+    const viewer = getContestViewer(undefined, contest, participants);
     expect(viewer).toMatchObject({
       isOwner: false,
       isParticipant: false,

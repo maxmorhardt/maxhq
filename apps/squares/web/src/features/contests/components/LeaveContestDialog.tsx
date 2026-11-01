@@ -1,6 +1,6 @@
 import { errorMessage } from '../../../api/errors';
 import ConfirmDialog from '../../../components/feedback/ConfirmDialog';
-import { useMe } from '../../profile/useMe';
+import { useUserId } from '../../profile/useUserId';
 import { useRemoveParticipantMutation } from '../api';
 
 interface Props {
@@ -12,8 +12,8 @@ interface Props {
 }
 
 export default function LeaveContestDialog({ contest, onClose, onLeft, viewerId }: Props) {
-  const me = useMe();
-  const userId = viewerId ?? me.userId;
+  const myUserId = useUserId();
+  const userId = viewerId ?? myUserId;
   const [removeParticipant, { isLoading, error, reset }] = useRemoveParticipantMutation();
 
   const handleClose = () => {
