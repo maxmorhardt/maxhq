@@ -13,6 +13,7 @@ WORKDIR /usr/share/nginx/html
 
 COPY --chown=nginx:nginx dist/client/ .
 COPY --chown=nginx:nginx nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=nginx:nginx security-headers.conf /etc/nginx/snippets/security-headers.conf
 
 USER nginx
 
