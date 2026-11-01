@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.4.0...squares-accounts/1.4.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **squares:** stop the participants dialog crash and fix the [#182](https://github.com/maxmorhardt/maxhq/issues/182) review findings ([#188](https://github.com/maxmorhardt/maxhq/issues/188)) ([8184bd5](https://github.com/maxmorhardt/maxhq/commit/8184bd54d0a36978924f3f2818bf104a75a59b90))
+
 ## [1.4.0](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.3.0...squares-accounts/1.4.0) (2026-11-01)
 
 
