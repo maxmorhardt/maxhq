@@ -58,7 +58,7 @@ const sections: LegalSection[] = [
   {
     title: '7. Cookies and Tracking',
     content:
-      'We use cookies and similar tracking technologies to track activity on our Services and store certain information. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.',
+      'We use cookies and similar tracking technologies to track activity on our Services and store certain information. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. Squares uses the Google tag to measure visits and sign-ups that come from Google Ads, and Google may set cookies to do so. You can manage how Google personalizes ads at adssettings.google.com.',
   },
   {
     title: "8. Children's Privacy",
@@ -86,7 +86,7 @@ export default function PrivacyPolicyPage() {
         canonical="https://maxhq.io/privacy-policy"
       />
 
-      <LegalPage title="Privacy Policy" lastUpdated="July 12, 2026" sections={sections} />
+      <LegalPage title="Privacy Policy" lastUpdated="November 1, 2026" sections={sections} />
     </>
   );
 }

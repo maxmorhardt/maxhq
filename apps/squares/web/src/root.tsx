@@ -13,11 +13,19 @@ import { ErrorFallback } from './components/feedback/ErrorBoundary';
 import Providers from './app/providers';
 import { gradients } from './types/gradients';
 import { initFaro } from './utils/faro';
+import { initGoogleAds } from './utils/googleAds';
 
 initFaro();
+initGoogleAds();
 
-const structuredData = {
-  '@context': 'https://schema.org',
+const website = {
+  '@type': 'WebSite',
+  name: 'Squares',
+  alternateName: 'Squares by maxhq',
+  url: 'https://squares.maxhq.io/',
+};
+
+const application = {
   '@type': 'WebApplication',
   name: 'Squares',
   url: 'https://squares.maxhq.io/',
@@ -36,6 +44,11 @@ const structuredData = {
     name: 'Squares',
     url: 'https://squares.maxhq.io/',
   },
+};
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [website, application],
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
