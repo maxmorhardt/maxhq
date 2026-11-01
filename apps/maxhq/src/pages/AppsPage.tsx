@@ -97,12 +97,12 @@ const shared = [
   {
     icon: <BadgeIcon />,
     label: 'Your name',
-    use: 'Shown on the boards, results, and leaderboards you take part in.',
+    use: 'Other players see your first name and last initial on boards, results, and leaderboards. The owner of a contest you join sees your full name.',
   },
   {
     icon: <MailOutlinedIcon />,
     label: 'Your email address',
-    use: 'Identifies your account. Other players see your name, and only the owner of a contest you join can see your email.',
+    use: 'Identifies your account. It is never shown to other players, including contest owners.',
   },
   {
     icon: <FingerprintIcon />,
