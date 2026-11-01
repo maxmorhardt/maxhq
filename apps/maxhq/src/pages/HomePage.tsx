@@ -34,7 +34,7 @@ const chapters: Chapter[] = [
     id: 'run',
     icon: <DnsIcon />,
     title: 'Run it myself.',
-    body: 'Two k3s clusters I provision and operate: dev on Raspberry Pis at home, production on three cloud VPSes, each with a highly available control plane. Envoy Gateway is the single front door, Dex federates sign-in, and CloudNativePG and Valkey hold the state.',
+    body: 'Two k3s clusters I provision and operate: dev on Raspberry Pis at home, production on three cloud VPSes, each with a highly available control plane. Envoy Gateway routes every app and enforces JWT auth and rate limits, Dex federates Google, Microsoft, and GitHub sign-in, and CloudNativePG and Valkey hold the state.',
     visual: <ClusterDiagram />,
   },
 ];
