@@ -95,13 +95,14 @@ route:
     enabled: true
     requests: 100
     unit: Second
-    # per client and per gateway replica
+    # per client and per gateway replica; the optional query keeps "?x" from slipping past a path match
     rules:
-      - path: /contests
+      - path: /contests(\?.*)?
+        pathType: RegularExpression
         methods: [POST]
         requests: 30
         unit: Hour
-      - path: /contests/[^/]+/invites
+      - path: /contests/[^/]+/invites(\?.*)?
         pathType: RegularExpression
         methods: [POST]
         requests: 60

@@ -24,7 +24,7 @@ spec:
               {{- if $rule.path }}
               path:
                 type: {{ $rule.pathType | default "Exact" }}
-                value: {{ printf "%s%s" $.Values.route.prefix $rule.path }}
+                value: {{ printf "%s%s" $.Values.route.prefix $rule.path | quote }}
               {{- end }}
               {{- with $rule.methods }}
               methods:
