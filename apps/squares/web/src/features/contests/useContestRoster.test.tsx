@@ -115,6 +115,25 @@ describe('useContestRoster', () => {
     expect(server.requests()).toBe(2);
   });
 
+  it('asks again for a player who left and rejoined after the roster dropped them', async () => {
+    const server = rosterServer();
+    const { result, rerender } = render(true, [owner]);
+    await server.respond([owner]);
+    rerender({ isOwner: true, participants: [owner, pat] });
+    await server.respond([owner, pat]);
+    await waitFor(() => expect(result.current).toHaveLength(2));
+
+    rerender({ isOwner: true, participants: [owner] });
+    rerender({ isOwner: true, participants: [owner, sam] });
+    await server.respond([owner, sam]);
+    await waitFor(() => expect(result.current?.map((r) => r.userId)).toEqual(['u_owner', 'u_sam']));
+
+    rerender({ isOwner: true, participants: [owner, sam, pat] });
+    await server.respond([owner, sam, pat]);
+    await waitFor(() => expect(result.current).toHaveLength(3));
+    expect(server.requests()).toBe(4);
+  });
+
   it('refetches after an in-flight request that missed a later join', async () => {
     const server = rosterServer();
     const { result, rerender } = render(true, [owner]);

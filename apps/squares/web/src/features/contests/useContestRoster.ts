@@ -23,19 +23,17 @@ export function useContestRoster(
         .join(',')
     : '';
 
-  // rtk holds an invalidation until an in-flight request settles, then refetches, so ask once per player
+  // rtk holds an invalidation until an in-flight request settles, then refetches, so ask once per missing player
   useEffect(() => {
-    if (requested.current.contestId !== contestId) {
-      requested.current = { contestId, userIds: new Set() };
+    const ids = missing ? missing.split(',') : [];
+    const asked =
+      requested.current.contestId === contestId ? requested.current.userIds : new Set<string>();
+    const unrequested = ids.filter((id) => !asked.has(id));
+    // only the still-missing stay asked for, so a player who leaves and rejoins is asked for again
+    requested.current = { contestId, userIds: new Set(ids) };
+    if (unrequested.length > 0) {
+      dispatch(contestsApi.util.invalidateTags([{ type: 'Roster', id: contestId }]));
     }
-    const unrequested = missing
-      ? missing.split(',').filter((id) => !requested.current.userIds.has(id))
-      : [];
-    if (unrequested.length === 0) {
-      return;
-    }
-    unrequested.forEach((id) => requested.current.userIds.add(id));
-    dispatch(contestsApi.util.invalidateTags([{ type: 'Roster', id: contestId }]));
   }, [missing, contestId, dispatch]);
 
   // a failed refetch keeps the old roster, so nothing else would ask again
