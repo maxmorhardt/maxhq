@@ -4,10 +4,40 @@ import { redactSecrets } from './faro';
 const TAG_ID = 'AW-18549939904';
 
 // the EEA, the UK, and Switzerland, where ad cookies need consent we don't ask for
-const CONSENT_REGIONS =
-  'AT BE BG CH CY CZ DE DK EE ES FI FR GB GR HR HU IE IS IT LI LT LU LV MT NL NO PL PT RO SE SI SK'.split(
-    ' '
-  );
+const CONSENT_REGIONS = [
+  'AT',
+  'BE',
+  'BG',
+  'CH',
+  'CY',
+  'CZ',
+  'DE',
+  'DK',
+  'EE',
+  'ES',
+  'FI',
+  'FR',
+  'GB',
+  'GR',
+  'HR',
+  'HU',
+  'IE',
+  'IS',
+  'IT',
+  'LI',
+  'LT',
+  'LU',
+  'LV',
+  'MT',
+  'NL',
+  'NO',
+  'PL',
+  'PT',
+  'RO',
+  'SE',
+  'SI',
+  'SK',
+];
 
 declare global {
   interface Window {
