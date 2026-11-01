@@ -7,10 +7,7 @@ import type { Contest } from '../../../../types/contest';
 import type { ContestViewer } from '../../live/viewer';
 import ParticipantsManager from './ParticipantsManager';
 
-const api = vi.hoisted(() => ({
-  useRemoveParticipantMutation: vi.fn(),
-  useGetRosterQuery: vi.fn(),
-}));
+const api = vi.hoisted(() => ({ useRemoveParticipantMutation: vi.fn() }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 vi.mock('./EditParticipantDialog', () => ({
   default: ({ participant }: { participant: { userId: string } | null }) =>
@@ -60,7 +57,6 @@ function renderManager(viewer: ContestViewer = owner, contest: Contest = makeCon
 describe('ParticipantsManager', () => {
   beforeEach(() => {
     api.useRemoveParticipantMutation.mockReturnValue(mockMutation(undefined));
-    api.useGetRosterQuery.mockReturnValue({ data: undefined, refetch: vi.fn() });
   });
 
   it('lists everyone with their role and square limit', () => {
@@ -83,41 +79,11 @@ describe('ParticipantsManager', () => {
   });
 
   it('shows the owner who each player is', () => {
-    const refetch = vi.fn();
-    api.useGetRosterQuery.mockReturnValue({
-      data: [
-        { userId: 'u_owner', fullName: 'Olive Owens' },
-        { userId: 'u_player', fullName: 'Pat Player' },
-        { userId: 'u_viewer', fullName: 'Vic Viewer' },
-      ],
-      refetch,
-    });
-    renderManager();
+    const fullNames: Record<string, string> = { u_player: 'Pat Player' };
+    renderManager(
+      makeViewer({ viewerId: 'u_owner', isOwner: true, fullName: (id) => fullNames[id ?? ''] })
+    );
     expect(screen.getByText('Pat Player')).toBeInTheDocument();
-    expect(api.useGetRosterQuery).toHaveBeenCalledWith(
-      'c-1',
-      expect.objectContaining({ skip: false })
-    );
-    expect(refetch).not.toHaveBeenCalled();
-  });
-
-  it('refetches the roster when someone new joins', () => {
-    const refetch = vi.fn();
-    api.useGetRosterQuery.mockReturnValue({
-      data: [{ userId: 'u_owner', fullName: 'Olive Owens' }],
-      refetch,
-    });
-    renderManager();
-    expect(refetch).toHaveBeenCalled();
-  });
-
-  it('never asks a player for the roster', () => {
-    renderManager(makeViewer({ viewerId: 'u_player' }));
-    expect(api.useGetRosterQuery).toHaveBeenCalledWith(
-      'c-1',
-      expect.objectContaining({ skip: true })
-    );
-    expect(screen.queryByText('Pat Player')).not.toBeInTheDocument();
   });
 
   it('recognises the viewer by pseudonym', () => {

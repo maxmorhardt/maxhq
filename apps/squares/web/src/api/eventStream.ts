@@ -134,7 +134,10 @@ export function openEventStream({
       for (;;) {
         const { value, done } = await reader.read();
         if (done) {
-          warn('the server ended the stream, reconnecting');
+          // an abort cancels the read, which also ends it; whoever aborted already said why
+          if (!controller.signal.aborted) {
+            warn('the server ended the stream, reconnecting');
+          }
           return received;
         }
         // the stream counts as live once data actually arrives, not when the headers do

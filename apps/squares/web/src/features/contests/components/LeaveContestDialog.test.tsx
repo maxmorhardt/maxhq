@@ -1,26 +1,18 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mockAuth, mockMutation } from '../../../test/auth';
+import { describe, expect, it, vi } from 'vitest';
+import { mockMutation } from '../../../test/auth';
 import { renderWithProviders } from '../../../test/render';
 import LeaveContestDialog from './LeaveContestDialog';
 
-vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
-vi.mock('../../profile/api', () => ({
-  useGetMyProfileQuery: vi.fn(() => ({ data: { userId: 'u_me' } })),
-}));
 const api = vi.hoisted(() => ({ useRemoveParticipantMutation: vi.fn() }));
 vi.mock('../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 
 const contest = { id: 'c-1', name: 'Test Bowl' };
 
 describe('LeaveContestDialog', () => {
-  beforeEach(() => {
-    mockAuth({ email: 'me@x.com' });
-  });
-
   it('renders nothing without a contest', () => {
     api.useRemoveParticipantMutation.mockReturnValue(mockMutation(undefined));
-    renderWithProviders(<LeaveContestDialog contest={null} onClose={vi.fn()} />);
+    renderWithProviders(<LeaveContestDialog contest={null} userId="u_me" onClose={vi.fn()} />);
     expect(screen.queryByText('Leave Contest')).not.toBeInTheDocument();
   });
 
@@ -29,7 +21,9 @@ describe('LeaveContestDialog', () => {
     api.useRemoveParticipantMutation.mockReturnValue([remove, state]);
     const onClose = vi.fn();
     const onLeft = vi.fn();
-    renderWithProviders(<LeaveContestDialog contest={contest} onClose={onClose} onLeft={onLeft} />);
+    renderWithProviders(
+      <LeaveContestDialog contest={contest} userId="u_me" onClose={onClose} onLeft={onLeft} />
+    );
 
     expect(screen.getByText('Test Bowl')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
@@ -39,25 +33,23 @@ describe('LeaveContestDialog', () => {
     expect(onLeft).toHaveBeenCalled();
   });
 
-  it('leaves as the viewer the live contest named, without the profile', async () => {
+  it('does nothing until the user id is known', () => {
     const [remove, state] = mockMutation(undefined);
     api.useRemoveParticipantMutation.mockReturnValue([remove, state]);
     renderWithProviders(
-      <LeaveContestDialog contest={contest} onClose={vi.fn()} viewerId="u_from_snapshot" />
+      <LeaveContestDialog contest={contest} userId={undefined} onClose={vi.fn()} />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
 
-    await waitFor(() =>
-      expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'u_from_snapshot' })
-    );
+    expect(remove).not.toHaveBeenCalled();
   });
 
   it('shows why leaving failed', () => {
     api.useRemoveParticipantMutation.mockReturnValue(
       mockMutation(undefined, { error: { status: 409, message: 'Game already started' } })
     );
-    renderWithProviders(<LeaveContestDialog contest={contest} onClose={vi.fn()} />);
+    renderWithProviders(<LeaveContestDialog contest={contest} userId="u_me" onClose={vi.fn()} />);
     expect(screen.getByText('Game already started')).toBeInTheDocument();
   });
 
@@ -65,7 +57,7 @@ describe('LeaveContestDialog', () => {
     const [remove, state] = mockMutation({ error: { status: 500, message: 'x' } });
     api.useRemoveParticipantMutation.mockReturnValue([remove, state]);
     const onClose = vi.fn();
-    renderWithProviders(<LeaveContestDialog contest={contest} onClose={onClose} />);
+    renderWithProviders(<LeaveContestDialog contest={contest} userId="u_me" onClose={onClose} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
     await waitFor(() => expect(remove).toHaveBeenCalled());

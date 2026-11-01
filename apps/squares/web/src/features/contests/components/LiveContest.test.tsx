@@ -1,8 +1,10 @@
+import { skipToken } from '@reduxjs/toolkit/query';
 import { act, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockAuth } from '../../../test/auth';
 import { makeContest, makeParticipant, makeQuarterResult } from '../../../test/fixtures';
 import { renderWithProviders } from '../../../test/render';
+import type { Participant } from '../../../types/contest';
 import type { ContestEvent } from '../live/events';
 import {
   eventReceived,
@@ -10,6 +12,7 @@ import {
   streamOpened,
   streamStatusChanged,
 } from '../live/liveContestSlice';
+import type { ContestViewer } from '../live/viewer';
 import LiveContest from './LiveContest';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
@@ -28,11 +31,24 @@ vi.mock('../live/useContestStream', () => ({
   },
 }));
 vi.mock('./ContestView', () => ({
-  default: ({ winnerFlash, game }: { winnerFlash: unknown; game?: { homeScore: number } }) => (
-    <div data-testid="view" data-score={game?.homeScore}>
+  default: ({
+    winnerFlash,
+    game,
+    viewer,
+  }: {
+    winnerFlash: unknown;
+    game?: { homeScore: number };
+    viewer: ContestViewer;
+  }) => (
+    <div data-testid="view" data-score={game?.homeScore} data-full-name={viewer.fullName('u_pat')}>
       {winnerFlash ? 'flash' : ''}
     </div>
   ),
+}));
+const contestsApi = vi.hoisted(() => ({ useGetRosterQuery: vi.fn() }));
+vi.mock('../api', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  ...contestsApi,
 }));
 const games = vi.hoisted(() => ({ useGetGameQuery: vi.fn(), useGameStream: vi.fn() }));
 vi.mock('../../games/api', async (importOriginal) => ({
@@ -56,11 +72,11 @@ function renderLive() {
       result.store.dispatch(action);
     });
   const emit = (e: ContestEvent) => act(() => stream.onEvent?.(e));
-  const snapshot = (contest = makeContest()) =>
+  const snapshot = (contest = makeContest(), participants: Participant[] = []) =>
     dispatch(
       eventReceived({
         id: '1',
-        event: event('contest.snapshot', { contest, participants: [], viewerId: 'u_player' }),
+        event: event('contest.snapshot', { contest, participants, viewerId: 'u_player' }),
       })
     );
   return {
@@ -76,7 +92,54 @@ describe('LiveContest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     games.useGetGameQuery.mockReturnValue({ data: undefined });
+    contestsApi.useGetRosterQuery.mockReturnValue({ currentData: undefined, refetch: vi.fn() });
     mockAuth({ email: 'player@x.com' });
+  });
+
+  it('gives only the owner full names', () => {
+    contestsApi.useGetRosterQuery.mockReturnValue({
+      currentData: [{ userId: 'u_pat', fullName: 'Pat Player' }],
+      refetch: vi.fn(),
+    });
+    const { snapshot } = renderLive();
+    snapshot();
+    expect(contestsApi.useGetRosterQuery).toHaveBeenLastCalledWith(skipToken);
+
+    snapshot(makeContest({ owner: 'u_player' }));
+    expect(contestsApi.useGetRosterQuery).toHaveBeenLastCalledWith('c-1');
+    expect(screen.getByTestId('view')).toHaveAttribute('data-full-name', 'Pat Player');
+  });
+
+  it('refetches the roster when someone new joins', () => {
+    const refetch = vi.fn();
+    contestsApi.useGetRosterQuery.mockReturnValue({
+      currentData: [{ userId: 'u_player', fullName: 'Owen Owner' }],
+      refetch,
+    });
+    const { snapshot } = renderLive();
+    const owned = makeContest({ owner: 'u_player' });
+    snapshot(owned, [makeParticipant({ userId: 'u_player', role: 'owner' })]);
+    expect(refetch).not.toHaveBeenCalled();
+
+    snapshot(owned, [
+      makeParticipant({ userId: 'u_player', role: 'owner' }),
+      makeParticipant({ id: 'p-2', userId: 'u_pat' }),
+    ]);
+    expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  it('never refetches a skipped roster, which still holds its old data', () => {
+    const refetch = vi.fn();
+    contestsApi.useGetRosterQuery.mockReturnValue({
+      data: [{ userId: 'u_owner', fullName: 'Olive Owens' }],
+      currentData: undefined,
+      refetch,
+    });
+    const { snapshot } = renderLive();
+    snapshot(makeContest(), [makeParticipant({ userId: 'u_pat' })]);
+
+    expect(refetch).not.toHaveBeenCalled();
+    expect(screen.getByTestId('view')).not.toHaveAttribute('data-full-name');
   });
 
   it('shows a skeleton until the snapshot arrives', () => {

@@ -99,6 +99,7 @@ describe('openEventStream', () => {
     first.end();
     await flush();
     expect(onStatus).toHaveBeenLastCalledWith('reconnecting');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('the server ended the stream'));
 
     await vi.advanceTimersByTimeAsync(backoff(1));
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -255,6 +256,7 @@ describe('openEventStream', () => {
 
     expect(onMessage).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(warn).not.toHaveBeenCalled();
   });
 });
 
