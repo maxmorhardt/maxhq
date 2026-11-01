@@ -3,6 +3,12 @@ import { redactSecrets } from './faro';
 
 const TAG_ID = 'AW-18549939904';
 
+// the EEA, the UK, and Switzerland, where ad cookies need consent we don't ask for
+const CONSENT_REGIONS =
+  'AT BE BG CH CY CZ DE DK EE ES FI FR GB GR HR HU IE IS IT LI LT LU LV MT NL NO PL PT RO SE SI SK'.split(
+    ' '
+  );
+
 declare global {
   interface Window {
     dataLayer?: unknown[];
@@ -20,6 +26,13 @@ export function initGoogleAds(hostname?: string): void {
     // eslint-disable-next-line prefer-rest-params -- gtag.js only reads Arguments objects, not arrays
     dataLayer.push(arguments);
   };
+  window.gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    region: CONSENT_REGIONS,
+  });
   window.gtag('js', new Date());
   // contest pages put the contest name in the title
   window.gtag('set', {
