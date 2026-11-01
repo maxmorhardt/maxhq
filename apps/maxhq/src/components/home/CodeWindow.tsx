@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { fonts } from '../../theme';
 
-type Token = 'plain' | 'keyword' | 'func' | 'type' | 'comment' | 'punct';
+type Token = 'plain' | 'keyword' | 'func' | 'type' | 'string' | 'comment' | 'punct';
 
 // an editor keeps its own palette in both color schemes, like the hero terminal
 const editor = {
@@ -20,82 +20,118 @@ const tokenColor: Record<Token, string> = {
   keyword: '#ff7b72',
   func: '#d2a8ff',
   type: '#79c0ff',
+  string: '#a5d6ff',
   comment: '#8b949e',
   punct: '#8b949e',
 };
 
-const FIRST_LINE = 360;
+const FIRST_LINE = 93;
 
-// lines 360-370 of apps/squares/contests/internal/service/contest_service.go
+// lines 93-106 of apps/squares/realtime/internal/service/stream_service.go
 const lines: [string, Token][][] = [
-  [['// the repository re-checks status, ownership, and the limit atomically', 'comment']],
   [
-    ['var ', 'keyword'],
-    ['claimedSquare ', 'plain'],
-    ['*', 'punct'],
-    ['model', 'plain'],
-    ['.', 'punct'],
-    ['Square', 'type'],
-  ],
-  [
-    ['err ', 'plain'],
-    ['= ', 'punct'],
-    ['s', 'plain'],
-    ['.', 'punct'],
-    ['tx', 'plain'],
-    ['.', 'punct'],
-    ['Do', 'func'],
-    ['(ctx, ', 'punct'],
-    ['func', 'keyword'],
-    ['(ctx ', 'punct'],
-    ['context', 'plain'],
-    ['.', 'punct'],
-    ['Context', 'type'],
-    [') ', 'punct'],
-    ['error', 'type'],
+    ['switch', 'keyword'],
     [' {', 'punct'],
   ],
   [
-    ['\tvar ', 'keyword'],
-    ['claimErr ', 'plain'],
-    ['error', 'type'],
+    ['case ', 'keyword'],
+    ['lastEventID ', 'plain'],
+    ['!= ', 'punct'],
+    ['""', 'string'],
+    [' && ', 'punct'],
+    ['first ', 'plain'],
+    ['!= ', 'punct'],
+    ['""', 'string'],
+    [' &&', 'punct'],
   ],
   [
-    ['\tclaimedSquare, claimErr ', 'plain'],
+    ['\tstreams', 'plain'],
+    ['.', 'punct'],
+    ['CompareIDs', 'func'],
+    ['(lastEventID, first) ', 'plain'],
+    ['>= ', 'punct'],
+    ['0', 'type'],
+    [' && ', 'punct'],
+    ['streams', 'plain'],
+    ['.', 'punct'],
+    ['CompareIDs', 'func'],
+    ['(lastEventID, last) ', 'plain'],
+    ['<= ', 'punct'],
+    ['0', 'type'],
+    [':', 'punct'],
+  ],
+  [
+    ['\tstart ', 'plain'],
     ['= ', 'punct'],
-    ['s', 'plain'],
+    ['lastEventID', 'plain'],
+  ],
+  [
+    ['\tmetrics', 'plain'],
     ['.', 'punct'],
-    ['repo', 'plain'],
-    ['.', 'punct'],
-    ['ClaimSquare', 'func'],
-    ['(ctx, square, profile.DefaultInitials, user, claims.Name)', 'plain'],
+    ['RecordStreamResume', 'func'],
+    ['(', 'punct'],
+    ['true', 'keyword'],
+    [')', 'punct'],
+  ],
+  [
+    ['default', 'keyword'],
+    [':', 'punct'],
   ],
   [
     ['\tif ', 'keyword'],
-    ['claimErr ', 'plain'],
+    ['lastEventID ', 'plain'],
     ['!= ', 'punct'],
-    ['nil', 'keyword'],
+    ['""', 'string'],
     [' {', 'punct'],
   ],
   [
-    ['\t\treturn ', 'keyword'],
-    ['claimErr', 'plain'],
+    [
+      '\t\t// the gap was trimmed (or the id is from before a redis restart), so start over from a snapshot',
+      'comment',
+    ],
+  ],
+  [
+    ['\t\tmetrics', 'plain'],
+    ['.', 'punct'],
+    ['RecordStreamResume', 'func'],
+    ['(', 'punct'],
+    ['false', 'keyword'],
+    [')', 'punct'],
+  ],
+  [
+    ['\t\tlog', 'plain'],
+    ['.', 'punct'],
+    ['Info', 'func'],
+    ['(', 'punct'],
+    ['"last event id is no longer replayable, sending a snapshot"', 'string'],
+    [', ', 'punct'],
+    ['"last_event_id"', 'string'],
+    [', lastEventID, ', 'plain'],
+    ['"first"', 'string'],
+    [', first, ', 'plain'],
+    ['"last"', 'string'],
+    [', last', 'plain'],
+    [')', 'punct'],
   ],
   [['\t}', 'punct']],
-  [],
   [
-    ['\treturn ', 'keyword'],
-    ['s', 'plain'],
+    ['\tsub', 'plain'],
     ['.', 'punct'],
-    ['events', 'plain'],
-    ['.', 'punct'],
-    ['PublishSquareUpdate', 'func'],
-    ['(ctx, contest.ID, user, claimedSquare)', 'plain'],
+    ['Snapshot ', 'plain'],
+    ['= ', 'punct'],
+    ['snapshot', 'plain'],
   ],
-  [['})', 'punct']],
+  [
+    ['\tsub', 'plain'],
+    ['.', 'punct'],
+    ['SnapshotID ', 'plain'],
+    ['= ', 'punct'],
+    ['start', 'plain'],
+  ],
+  [['}', 'punct']],
 ];
 
-const tabs = ['contest_service.go', 'outbox.go', 'Square.tsx'];
+const tabs = ['stream_service.go', 'hub.go', 'outbox.go'];
 
 export default function CodeWindow() {
   return (
@@ -199,8 +235,9 @@ export default function CodeWindow() {
       </Box>
 
       <Typography component="figcaption" variant="body2" sx={{ mt: 2, maxWidth: '62ch' }}>
-        From the squares contests service. A claimed square and the event announcing it commit in
-        one transaction, so the live stream never shows a square the database doesn&apos;t have.
+        From the squares realtime service. A reconnecting viewer picks up from the last event it saw
+        while the stream still holds it, and gets a fresh snapshot when it doesn&apos;t, so a
+        dropped connection never leaves a board out of date.
       </Typography>
     </Box>
   );

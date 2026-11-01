@@ -11,11 +11,11 @@ describe('PipelineVisual', () => {
       'listitem'
     );
     expect(stages.map((stage) => stage.textContent)).toEqual([
-      'Pull request mergedsquashed into main',
-      'Checks passlint · types · tests',
-      'Image builtsha-2369a65',
-      'Argo CD syncs devgitops/clusters/dev',
-      'Release to prodsame image, retagged',
+      'Checks passlint · tests · scans',
+      'Merged to mainone squash commit',
+      'Image builttagged sha-2369a65',
+      'Live on devArgo CD syncs gitops',
+      'Promoted to prodsame image, on release',
     ]);
   });
 });

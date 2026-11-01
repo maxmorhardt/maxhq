@@ -54,7 +54,7 @@ const projects: Project[] = [
     name: 'gitops',
     category: 'Infrastructure',
     description:
-      'The desired state of the dev and prod k3s clusters. Argo CD on each reconciles its own directory: the gateway, sign-in, Postgres, Valkey, monitoring, and the pinned chart and image of every app. A merge is the deploy, and no CI job holds a kubeconfig. Terraform and the k3s bootstrap live in maxhq.',
+      'The desired state of the dev and prod k3s clusters. Argo CD on each reconciles its own directory: the gateway, sign-in, Postgres, Valkey, monitoring, and the pinned chart and image of every app. A merge is the deploy, and no CI job holds a kubeconfig.',
     href: 'https://github.com/maxmorhardt/gitops',
     links: [
       {
@@ -69,9 +69,9 @@ const projects: Project[] = [
     name: 'workflows',
     category: 'CI/CD',
     description:
-      'Reusable GitHub Actions that build, test, scan, and release every repo: Go, Node, Docker images, Helm charts, Terraform, and release-please. Deploy jobs commit the new image or chart version to gitops: dev on every merge, prod on each release after approval.',
+      'Reusable GitHub Actions that build, test, scan, and release every repo: Go, Node, Python, Docker images, Helm charts, Terraform, and release-please. Deploy jobs commit the new image or chart version to gitops: dev on every merge, prod on each release after approval.',
     href: 'https://github.com/maxmorhardt/workflows',
-    tags: ['GitHub Actions', 'Docker', 'Helm', 'Trivy', 'release-please', 'Renovate'],
+    tags: ['GitHub Actions', 'Docker', 'Helm', 'Python', 'Trivy', 'release-please', 'Renovate'],
   },
 ];
 

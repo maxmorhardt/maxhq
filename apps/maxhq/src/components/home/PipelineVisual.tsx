@@ -14,11 +14,11 @@ interface Stage {
 }
 
 const stages: Stage[] = [
-  { icon: <CallMergeIcon />, title: 'Pull request merged', detail: 'squashed into main' },
-  { icon: <FactCheckIcon />, title: 'Checks pass', detail: 'lint · types · tests' },
-  { icon: <Inventory2Icon />, title: 'Image built', detail: 'sha-2369a65' },
-  { icon: <SyncIcon />, title: 'Argo CD syncs dev', detail: 'gitops/clusters/dev' },
-  { icon: <RocketLaunchIcon />, title: 'Release to prod', detail: 'same image, retagged' },
+  { icon: <FactCheckIcon />, title: 'Checks pass', detail: 'lint · tests · scans' },
+  { icon: <CallMergeIcon />, title: 'Merged to main', detail: 'one squash commit' },
+  { icon: <Inventory2Icon />, title: 'Image built', detail: 'tagged sha-2369a65' },
+  { icon: <SyncIcon />, title: 'Live on dev', detail: 'Argo CD syncs gitops' },
+  { icon: <RocketLaunchIcon />, title: 'Promoted to prod', detail: 'same image, on release' },
 ];
 
 // each stage lights in turn as the chapter's --progress passes its start

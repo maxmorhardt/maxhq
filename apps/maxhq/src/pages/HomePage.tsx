@@ -27,7 +27,7 @@ const chapters: Chapter[] = [
     id: 'ship',
     icon: <RocketLaunchIcon />,
     title: 'Ship it on merge.',
-    body: 'A merge to main builds an image tagged with its commit, and Argo CD rolls it out to dev. A release tag promotes that same image to production, never rebuilt. Git is the only way anything reaches a cluster.',
+    body: 'Every pull request runs lint, tests, and security scans. Merging builds one image tagged with its commit, and Argo CD rolls it out to dev. A release promotes that exact image to production, never rebuilt, so nothing reaches a cluster except through Git.',
     visual: <PipelineVisual />,
   },
   {

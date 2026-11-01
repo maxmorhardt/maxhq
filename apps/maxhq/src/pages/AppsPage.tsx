@@ -165,9 +165,8 @@ export default function AppsPage() {
             <Typography
               sx={{ mt: 2.5, maxWidth: '58ch', fontSize: { md: '1.15rem' }, color: 'text.primary' }}
             >
-              maxhq is the home of the web apps Max Morhardt builds and runs. Every one is free,
-              runs in your browser, and uses the same maxhq account, so you sign in once with{' '}
-              {providerNames} and you’re in.
+              Free web apps that run right in your browser. One maxhq account works across all of
+              them, so you sign in once with {providerNames} and you’re in.
             </Typography>
           </RevealSection>
 

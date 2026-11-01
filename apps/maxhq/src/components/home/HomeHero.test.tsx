@@ -8,7 +8,7 @@ describe('HomeHero', () => {
     renderWithProviders(<HomeHero />);
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Full stack, from the UI to the cluster.'
+      'Platforms, from the API to the cluster.'
     );
   });
 

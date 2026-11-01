@@ -70,7 +70,7 @@ export default function HomeHero() {
                 fontSize: { md: 'clamp(3rem, 5.2vw, 4.4rem)' },
               }}
             >
-              Full stack, from the UI to the cluster.
+              Platforms, from the API to the cluster.
             </Typography>
             <Typography
               sx={{
