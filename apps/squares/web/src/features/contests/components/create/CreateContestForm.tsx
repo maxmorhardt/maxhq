@@ -21,6 +21,7 @@ import { stripDangerousChars } from '../../../../utils/sanitize';
 import { useGetUpcomingGamesQuery } from '../../../games/api';
 import { useCreateContestMutation } from '../../api';
 import FormSection from './FormSection';
+import { trackConversion } from '../../../../utils/googleAds';
 
 const NAME_MAX_LENGTH = 20;
 
@@ -167,6 +168,7 @@ export default function CreateContestForm() {
         maxSquares,
         gameId,
       }).unwrap();
+      trackConversion('contestCreated');
       navigate(`/contests/${contest.id}`);
     } catch (err) {
       // the form sat open until the game was past the first quarter

@@ -13,6 +13,8 @@ vi.mock('../../contests/api', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   ...api,
 }));
+const ads = vi.hoisted(() => ({ trackConversion: vi.fn() }));
+vi.mock('../../../utils/googleAds', () => ads);
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async () => ({
   ...(await vi.importActual<typeof import('react-router')>('react-router')),
@@ -40,6 +42,7 @@ describe('JoinInvite', () => {
     expect(screen.getByText('Joining contest...')).toBeInTheDocument();
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/contests/c-1', { replace: true }));
     expect(store.getState().toast.messages[0]?.message).toBe('Successfully joined contest!');
+    expect(ads.trackConversion).toHaveBeenCalledWith('joinedContest');
   });
 
   it('waits for the invite to load', () => {
