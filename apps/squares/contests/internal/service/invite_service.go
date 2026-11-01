@@ -146,23 +146,18 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	participants, err := s.participantRepo.GetAllByContestID(ctx, invite.ContestID)
-	if err != nil {
-		log.Error("failed to get participants for invite preview", "contest_id", invite.ContestID, "error", err)
+	var ownerName string
+	owner, err := s.participantRepo.GetByContestAndUser(ctx, invite.ContestID, contest.Owner)
+	switch {
+	case err == nil:
+		ownerName = owner.DisplayName
+	case !errors.Is(err, database.ErrNotFound):
+		log.Error("failed to get the owner for invite preview", "contest_id", invite.ContestID, "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
 	log.Info("retrieved invite preview", "contest_id", contest.ID)
-	return invitePreview(contest, invite, ownerName(contest.Owner, participants)), nil
-}
-
-func ownerName(owner string, participants []model.ContestParticipant) string {
-	for i := range participants {
-		if participants[i].UserID == owner {
-			return participants[i].DisplayName
-		}
-	}
-	return ""
+	return invitePreview(contest, invite, ownerName), nil
 }
 
 func invitePreview(contest *model.Contest, invite *model.ContestInvite, ownerName string) *model.InvitePreviewResponse {

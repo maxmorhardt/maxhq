@@ -205,16 +205,29 @@ func TestGetInvitePreview_ContestFetchFails(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
-func TestGetInvitePreview_ParticipantsError(t *testing.T) {
+func TestGetInvitePreview_OwnerLookupError(t *testing.T) {
 	inv := mocks.NewInviteRepository(t)
 	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{Role: model.ParticipantRoleParticipant}, nil)
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
 	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(nil, errors.New("db"))
 
 	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).GetInvitePreview(context.Background(), "tok")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
+func TestGetInvitePreview_OwnerMissingLeavesTheNameOut(t *testing.T) {
+	inv := mocks.NewInviteRepository(t)
+	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{Role: model.ParticipantRoleParticipant}, nil)
+	c := mocks.NewContestRepository(t)
+	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
+	p := mocks.NewParticipantRepository(t)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(nil, database.ErrNotFound)
+
+	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).GetInvitePreview(context.Background(), "tok")
+	require.NoError(t, err)
+	assert.Empty(t, got.OwnerName)
 }
 
 func TestGetInvitePreview_Success(t *testing.T) {
@@ -231,10 +244,7 @@ func TestGetInvitePreview_Success(t *testing.T) {
 	}, nil)
 
 	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetAllByContestID(mock.Anything, contestID).Return([]model.ContestParticipant{
-		{UserID: "a", DisplayName: "Alice Adams"},
-		{UserID: "owner", DisplayName: "Olive Owens"},
-	}, nil)
+	p.EXPECT().GetByContestAndUser(mock.Anything, contestID, "owner").Return(&model.ContestParticipant{UserID: "owner", DisplayName: "Olive Owens"}, nil)
 
 	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
 		GetInvitePreview(context.Background(), "tok")
