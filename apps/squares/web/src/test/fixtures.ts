@@ -1,4 +1,5 @@
-import type { ContestViewer } from '../features/contests/live/viewer';
+import { getContestViewer, type ContestViewer } from '../features/contests/live/viewer';
+import type { Me } from '../features/profile/useMe';
 import type { Contest, Participant, QuarterResult, Square } from '../types/contest';
 
 export function makeSquare(overrides: Partial<Square> = {}): Square {
@@ -13,8 +14,6 @@ export function makeSquare(overrides: Partial<Square> = {}): Square {
     version: 1,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
-    createdBy: 'owner@x.com',
-    updatedBy: 'owner@x.com',
     ...overrides,
   };
 }
@@ -39,12 +38,10 @@ export function makeContest(overrides: Partial<Contest> = {}, size = 3): Contest
     visibility: 'private',
     squares,
     quarterResults: [],
-    owner: 'owner@x.com',
+    owner: 'u_owner',
     version: 1,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
-    createdBy: 'owner@x.com',
-    updatedBy: 'owner@x.com',
     ...overrides,
   };
 }
@@ -53,7 +50,8 @@ export function makeParticipant(overrides: Partial<Participant> = {}): Participa
   return {
     id: 'p-1',
     contestId: 'c-1',
-    userId: 'player@x.com',
+    userId: 'u_player',
+    displayName: 'Pat P.',
     inviteId: '',
     role: 'participant',
     maxSquares: 5,
@@ -73,19 +71,23 @@ export function makeQuarterResult(overrides: Partial<QuarterResult> = {}): Quart
     awayTeamScore: 3,
     winnerRow: 1,
     winnerCol: 2,
-    winner: 'player@x.com',
+    winner: 'u_player',
     winnerName: 'Player',
     createdAt: '2026-01-01T01:00:00Z',
     updatedAt: '2026-01-01T01:00:00Z',
-    createdBy: 'system',
-    updatedBy: 'system',
     ...overrides,
   };
 }
 
-export function makeViewer(overrides: Partial<ContestViewer> = {}): ContestViewer {
+// pass me to sign in as someone else; isMe follows it
+export function makeViewer({
+  me = { userId: 'u_player' },
+  ...overrides
+}: Partial<ContestViewer> & { me?: Me } = {}): ContestViewer {
+  const { isMe } = getContestViewer(me, makeContest(), []);
   return {
-    email: 'player@x.com',
+    me,
+    isMe,
     participant: makeParticipant(),
     isOwner: false,
     isParticipant: true,

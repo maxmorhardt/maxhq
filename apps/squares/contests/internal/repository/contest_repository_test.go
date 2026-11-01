@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
@@ -50,6 +51,22 @@ func inTx[T any](gdb *gorm.DB, call func(ctx context.Context) (T, error)) (T, er
 
 func inTxErr(gdb *gorm.DB, call func(ctx context.Context) error) error {
 	return database.NewTransactor(gdb).Do(context.Background(), call)
+}
+
+func TestContestRepository_CountByOwner(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewContestRepository(gdb)
+	since := time.Now().Add(-model.CreationWindow)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FILTER \(WHERE status NOT IN \(\$1,\$2\)\) AS open, COUNT\(\*\) FILTER \(WHERE created_at > \$3\) AS recent FROM "contests" WHERE owner = \$4`).
+		WithArgs(model.ContestStatusFinished, model.ContestStatusDeleted, since, "o@x.com").
+		WillReturnRows(sqlmock.NewRows([]string{"open", "recent"}).AddRow(7, 12))
+
+	counts, err := repo.CountByOwner(context.Background(), "o@x.com", since)
+
+	require.NoError(t, err)
+	assert.Equal(t, model.CreationCounts{Open: 7, Recent: 12}, counts)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestContestRepository_GetVisibilityByID(t *testing.T) {

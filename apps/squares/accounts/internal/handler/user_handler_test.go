@@ -11,6 +11,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -44,6 +45,7 @@ func TestGetMe_Success(t *testing.T) {
 	var resp model.UserProfileResponse
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "a@b.com", resp.Email)
+	assert.Equal(t, pseudonym.Of("a@b.com"), resp.UserID)
 	assert.Equal(t, "Max", resp.DisplayName)
 }
 

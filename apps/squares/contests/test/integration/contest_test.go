@@ -10,6 +10,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,6 +46,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 		resp := call(t, testkit.Anonymous, http.MethodGet, "/invites/"+inviteToken, nil)
 		require.Equal(t, http.StatusOK, resp.Status)
 		assert.Contains(t, string(resp.Body), "Super Bowl")
+		assert.NotContains(t, string(resp.Body), "@", "the owner is named, never emailed")
 	})
 
 	t.Run("member redeems the invite", func(t *testing.T) {
@@ -53,8 +55,8 @@ func TestContest_FullLifecycle(t *testing.T) {
 
 		// a first-time player has a name in the players list before claiming or opening their profile
 		for _, p := range snapshot(t, ownerUser, contestID).Participants {
-			if p.UserID == memberUser {
-				assert.Equal(t, "Test "+memberUser, p.DisplayName)
+			if p.UserID == pseudonym.Of(memberUser) {
+				assert.Equal(t, "Test M.", p.DisplayName)
 			}
 		}
 	})
@@ -76,7 +78,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 	t.Run("a claimed square cannot be taken", func(t *testing.T) {
 		sq := snapshot(t, ownerUser, contestID).Contest.Squares[0]
 		other := ownerUser
-		if sq.Owner == ownerUser {
+		if sq.Owner == pseudonym.Of(ownerUser) {
 			other = memberUser
 		}
 		resp := call(t, testkit.As(other), http.MethodPut, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, sq.ID), nil)
@@ -88,7 +90,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Equal(t, model.ContestStatusActive, snap.Contest.Status)
 		var mine model.Square
 		for _, sq := range snap.Contest.Squares {
-			if sq.Owner == memberUser {
+			if sq.Owner == pseudonym.Of(memberUser) {
 				mine = sq
 				break
 			}
@@ -212,7 +214,7 @@ func TestContest_ActiveContestCanBeDeleted(t *testing.T) {
 }
 
 func TestContest_RequiresGatewayIdentity(t *testing.T) {
-	resp := call(t, testkit.Anonymous, http.MethodPost, "/contests", model.CreateContestRequest{Owner: ownerUser, Name: "x"})
+	resp := call(t, testkit.Anonymous, http.MethodPost, "/contests", model.CreateContestRequest{Name: "x"})
 	assert.Equal(t, http.StatusUnauthorized, resp.Status)
 
 	internal := call(t, testkit.Anonymous, http.MethodGet, "/internal/users/"+ownerUser+"/activity", nil)

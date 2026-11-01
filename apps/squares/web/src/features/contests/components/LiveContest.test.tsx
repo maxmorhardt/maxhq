@@ -13,6 +13,10 @@ import {
 import LiveContest from './LiveContest';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+// accounts is down for every test here: the page must know the viewer from the contest alone
+vi.mock('../../profile/api', () => ({
+  useGetMyProfileQuery: vi.fn(() => ({ data: undefined, isLoading: false, isError: true })),
+}));
 const stream = vi.hoisted(() => ({
   onEvent: undefined as ((e: ContestEvent) => void) | undefined,
   resync: vi.fn(),
@@ -54,7 +58,10 @@ function renderLive() {
   const emit = (e: ContestEvent) => act(() => stream.onEvent?.(e));
   const snapshot = (contest = makeContest()) =>
     dispatch(
-      eventReceived({ id: '1', event: event('contest.snapshot', { contest, participants: [] }) })
+      eventReceived({
+        id: '1',
+        event: event('contest.snapshot', { contest, participants: [], viewerId: 'u_player' }),
+      })
     );
   return {
     ...result,
@@ -133,7 +140,7 @@ describe('LiveContest', () => {
   it('flashes the winning square and celebrates the viewer’s win', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByTestId('view')).toHaveTextContent('flash');
     expect(screen.getByText('Your Square Hit')).toBeInTheDocument();
   });
@@ -142,7 +149,7 @@ describe('LiveContest', () => {
     games.useGetGameQuery.mockReturnValue({ data: { homeAbbr: 'NO', awayAbbr: 'PIT' } });
     const { snapshot, emit } = renderLive();
     snapshot(makeContest({ gameId: 'g-1' }));
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByText('PIT')).toBeInTheDocument();
     expect(screen.getByText('NO')).toBeInTheDocument();
   });
@@ -150,7 +157,7 @@ describe('LiveContest', () => {
   it('falls back to away and home while the game is still loading', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByText('Away')).toBeInTheDocument();
     expect(screen.getByText('Home')).toBeInTheDocument();
   });
@@ -158,14 +165,14 @@ describe('LiveContest', () => {
   it('only celebrates the viewer’s own wins', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'someone@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_someone' })));
     expect(screen.queryByText('Your Square Hit')).not.toBeInTheDocument();
   });
 
   it('sends a removed viewer away from a private contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'private' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'player@x.com' })));
+    emit(event('participant.removed', makeParticipant({ userId: 'u_player' })));
     expect(navigate).toHaveBeenCalledWith('/contests');
     expect(toasts()[0]?.severity).toBe('warning');
   });
@@ -173,14 +180,14 @@ describe('LiveContest', () => {
   it('lets a removed viewer keep watching a public contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'public' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'player@x.com' })));
+    emit(event('participant.removed', makeParticipant({ userId: 'u_player' })));
     expect(navigate).not.toHaveBeenCalled();
     expect(toasts()[0]?.severity).toBe('info');
   });
 
   it('ignores other people being removed', () => {
     const { emit, toasts } = renderLive();
-    emit(event('participant.removed', makeParticipant({ userId: 'other@x.com' })));
+    emit(event('participant.removed', makeParticipant({ userId: 'u_other' })));
     expect(toasts()).toHaveLength(0);
   });
 });

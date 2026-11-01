@@ -1,6 +1,9 @@
 package model
 
-import "github.com/maxmorhardt/maxhq/libs/go/platform/config"
+import (
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
+)
 
 type AccountsConfig struct {
 	Server    config.ServerConfig
@@ -11,6 +14,7 @@ type AccountsConfig struct {
 	Contests  ContestsConfig
 	SMTP      SMTPConfig
 	Turnstile TurnstileConfig
+	Pseudonym pseudonym.Config
 }
 
 type ContestsConfig struct {

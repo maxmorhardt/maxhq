@@ -11,7 +11,8 @@ import { getStatusLabel } from '../../../../utils/contestStatus';
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 
-vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+const me = vi.hoisted(() => ({ userId: 'u_alice' as string | undefined }));
+vi.mock('../../../profile/useMe', () => ({ useMe: () => me }));
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, useNavigate: () => mockNavigate };
@@ -29,8 +30,6 @@ vi.mock('../LeaveContestDialog', () => ({
     contest ? <div data-testid="leave-dialog">{contest.name}</div> : null,
 }));
 
-import { useAuth } from 'react-oidc-context';
-
 const theme = createTheme();
 
 const contest: ContestSummary = {
@@ -39,7 +38,6 @@ const contest: ContestSummary = {
   name: 'Super Bowl LX',
   status: 'ACTIVE',
   visibility: 'public',
-  owner: 'alice',
   role: 'owner',
   homeTeam: 'Chiefs',
   awayTeam: 'Eagles',
@@ -73,10 +71,7 @@ function renderTable(props: Partial<ComponentProps<typeof ContestsTable>> = {}) 
 describe('ContestsTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: true,
-      user: { profile: { email: 'alice' } },
-    } as unknown as ReturnType<typeof useAuth>);
+    me.userId = 'u_alice';
   });
 
   it('shows the empty state', () => {
@@ -138,11 +133,8 @@ describe('ContestsTable', () => {
     expect(screen.getByTestId('leave-dialog')).toHaveTextContent('Office Pool');
   });
 
-  it('hides leave without a signed-in email', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      isAuthenticated: false,
-      user: undefined,
-    } as unknown as ReturnType<typeof useAuth>);
+  it('hides leave until the user id is known', () => {
+    me.userId = undefined;
     renderTable({ contests: [joined] });
     expect(screen.queryByRole('button', { name: /leave contest/i })).not.toBeInTheDocument();
   });

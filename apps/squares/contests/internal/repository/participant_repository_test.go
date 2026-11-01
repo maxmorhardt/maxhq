@@ -14,14 +14,15 @@ func TestParticipantRepository_GetByContestAndUser(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewParticipantRepository(gdb)
 
-	mock.ExpectQuery(`SELECT .* FROM "contest_participants"`).
-		WillReturnRows(sqlmock.NewRows([]string{"contest_id", "user_id", "role", "max_squares"}).
-			AddRow(uuid.New(), "u1", "owner", 10))
+	mock.ExpectQuery(`SELECT contest_participants\.\*, COALESCE\(users\.display_name, ''\) AS display_name FROM "contest_participants" LEFT JOIN users ON users\.email = contest_participants\.user_id WHERE contest_participants\.contest_id = \$1 AND contest_participants\.user_id = \$2`).
+		WillReturnRows(sqlmock.NewRows([]string{"contest_id", "user_id", "role", "max_squares", "display_name"}).
+			AddRow(uuid.New(), "u1", "owner", 10, "Olive Owens"))
 
 	p, err := repo.GetByContestAndUser(context.Background(), uuid.New(), "u1")
 
 	require.NoError(t, err)
 	assert.Equal(t, "u1", p.UserID)
+	assert.Equal(t, "Olive Owens", p.DisplayName, "events and responses carry this participant, so it needs the name too")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { baseApi } from '../api/baseApi';
 import { useAppDispatch } from '../app/hooks';
+import { useMe } from '../features/profile/useMe';
 import { useToast } from '../features/toast/useToast';
 import { setFaroUser } from '../utils/faro';
 import { refreshSession } from './token';
@@ -11,6 +12,7 @@ export function useAuthSession() {
   const auth = useAuth();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
+  const { userId } = useMe();
 
   const triedSilentSignin = useRef(false);
   const lastNavigator = useRef<string | undefined>(undefined);
@@ -54,8 +56,8 @@ export function useAuthSession() {
   }, [auth.isAuthenticated, auth.isLoading, dispatch]);
 
   useEffect(() => {
-    setFaroUser(auth.isAuthenticated ? auth.user?.profile : undefined);
-  }, [auth.isAuthenticated, auth.user]);
+    setFaroUser(auth.isAuthenticated ? userId : undefined);
+  }, [auth.isAuthenticated, userId]);
 
   // timers stall in background tabs, so renew a session that went stale while the tab was away
   useEffect(() => {

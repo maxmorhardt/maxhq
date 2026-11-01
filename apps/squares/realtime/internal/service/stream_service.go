@@ -15,6 +15,7 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/contracts"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -268,5 +269,5 @@ func RequiresAccessCheck(event *events.ContestEvent, user string) bool {
 	if event.Type == events.ContestUpdatedType {
 		return fields.Visibility == events.ContestVisibilityPrivate
 	}
-	return fields.UserID == user
+	return fields.UserID == pseudonym.Of(user)
 }

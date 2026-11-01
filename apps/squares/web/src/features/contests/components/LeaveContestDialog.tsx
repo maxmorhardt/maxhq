@@ -1,16 +1,19 @@
-import { useAuth } from 'react-oidc-context';
 import { errorMessage } from '../../../api/errors';
 import ConfirmDialog from '../../../components/feedback/ConfirmDialog';
+import { useMe } from '../../profile/useMe';
 import { useRemoveParticipantMutation } from '../api';
 
 interface Props {
   contest: { id: string; name: string } | null;
   onClose: () => void;
   onLeft?: () => void;
+  // the live page already knows the viewer from contests, so it doesn't need the profile
+  viewerId?: string;
 }
 
-export default function LeaveContestDialog({ contest, onClose, onLeft }: Props) {
-  const email = useAuth().user?.profile?.email;
+export default function LeaveContestDialog({ contest, onClose, onLeft, viewerId }: Props) {
+  const me = useMe();
+  const userId = viewerId ?? me.userId;
   const [removeParticipant, { isLoading, error, reset }] = useRemoveParticipantMutation();
 
   const handleClose = () => {
@@ -19,12 +22,12 @@ export default function LeaveContestDialog({ contest, onClose, onLeft }: Props) 
   };
 
   const handleConfirm = async () => {
-    if (!contest || !email) {
+    if (!contest || !userId) {
       return;
     }
 
     try {
-      await removeParticipant({ contestId: contest.id, userId: email }).unwrap();
+      await removeParticipant({ contestId: contest.id, userId }).unwrap();
       onLeft?.();
       handleClose();
     } catch {

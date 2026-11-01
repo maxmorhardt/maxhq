@@ -21,8 +21,8 @@ type Square struct {
 	ClaimedAt *time.Time `json:"claimedAt,omitempty"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
-	CreatedBy string     `json:"createdBy"`
-	UpdatedBy string     `json:"updatedBy"`
+	CreatedBy string     `json:"-"`
+	UpdatedBy string     `json:"-"`
 }
 
 func (s *Square) BeforeCreate(tx *gorm.DB) (err error) {

@@ -25,10 +25,11 @@ type LeaderboardResponse struct {
 }
 
 type LeaderboardRankResponse struct {
-	Rank        int   `json:"rank" example:"7"`
-	TotalRanked int64 `json:"totalRanked" example:"143"`
-	QuarterWins int64 `json:"quarterWins" example:"5"`
-	Ranked      bool  `json:"ranked" example:"true"`
+	Rank        int    `json:"rank" example:"7"`
+	TotalRanked int64  `json:"totalRanked" example:"143"`
+	QuarterWins int64  `json:"quarterWins" example:"5"`
+	Ranked      bool   `json:"ranked" example:"true"`
+	DisplayName string `json:"displayName" example:"Max M."`
 }
 
 type UserStatsResponse struct {
@@ -43,7 +44,7 @@ type UserStatsResponse struct {
 type InvitePreviewResponse struct {
 	ContestID      uuid.UUID     `json:"contestId"`
 	ContestName    string        `json:"contestName"`
-	Owner          string        `json:"owner"`
+	OwnerName      string        `json:"ownerName,omitempty"`
 	Role           string        `json:"role"`
 	MaxSquares     int           `json:"maxSquares"`
 	Status         ContestStatus `json:"status"`
@@ -54,6 +55,11 @@ type InvitePreviewResponse struct {
 	HomeAbbr       string        `json:"homeAbbr,omitempty"`
 	AwayAbbr       string        `json:"awayAbbr,omitempty"`
 	GameTime       *time.Time    `json:"gameTime,omitempty"`
+}
+
+type ParticipantIdentity struct {
+	UserID   string `json:"userId" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
+	FullName string `json:"fullName" example:"Max Morhardt"`
 }
 
 type RandomClaimResponse struct {

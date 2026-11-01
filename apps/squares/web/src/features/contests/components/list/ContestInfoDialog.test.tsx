@@ -20,7 +20,6 @@ const contest: ContestSummary = {
   gameTime: '2026-11-01T18:00:00Z',
   status: 'ACTIVE',
   visibility: 'private',
-  owner: 'owner@x.com',
   role: 'owner',
   claimedSquares: 42,
   mySquares: 6,
@@ -53,9 +52,15 @@ describe('ContestInfoDialog', () => {
     expect(screen.getByText('Bears @ Lions')).toBeInTheDocument();
     expect(screen.getByText('Private')).toBeInTheDocument();
     expect(screen.getByText('42 of 100')).toBeInTheDocument();
-    expect(screen.getByText('owner@x.com')).toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
+  });
+
+  it('names another owner without their email', () => {
+    renderDialog({ role: 'participant', ownerName: 'Olive O.' });
+    expect(screen.getByText('Olive O.')).toBeInTheDocument();
+    expect(screen.queryByText(/u_olive/)).not.toBeInTheDocument();
   });
 
   it('opens the contest', () => {

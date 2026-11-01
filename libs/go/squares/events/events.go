@@ -11,8 +11,9 @@ const (
 	UsersStream = "users"
 )
 
+// v2 leaves behind the entries from before user ids, which carried emails, to expire unread
 func ContestStream(contestID uuid.UUID) string {
-	return "contest:" + contestID.String()
+	return "contest:v2:" + contestID.String()
 }
 
 const (

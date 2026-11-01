@@ -79,8 +79,9 @@ func (r *leaderboardRepository) GetUserRank(ctx context.Context, email string) (
 			CASE WHEN EXISTS (SELECT 1 FROM me)
 				THEN (SELECT COUNT(*) + 1 FROM wins w WHERE w.quarter_wins > (SELECT quarter_wins FROM me))
 				ELSE 0
-			END AS rank`,
-		model.ContestStatusDeleted, model.GhostUser, email).
+			END AS rank,
+			COALESCE((SELECT display_name FROM users WHERE email = ?), '') AS display_name`,
+		model.ContestStatusDeleted, model.GhostUser, email, email).
 		Scan(&rank).Error; err != nil {
 		return nil, err
 	}

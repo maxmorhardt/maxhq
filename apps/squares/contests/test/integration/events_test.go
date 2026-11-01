@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -10,7 +11,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -40,8 +43,16 @@ func TestEvents_ContestChangesAreAppendedToTheContestStream(t *testing.T) {
 		return false
 	}, eventually, 100*time.Millisecond, "the relay appends the outbox row to the contest's stream")
 
-	assert.Equal(t, ownerUser, claimed.Owner)
+	assert.Equal(t, pseudonym.Of(ownerUser), claimed.Owner)
 	assert.Equal(t, int64(2), claimed.Version)
+
+	entries, err := streams.Range(context.Background(), rdb, events.ContestStream(contest.ID), "", 100)
+	require.NoError(t, err)
+	for _, e := range entries {
+		assert.NotContains(t, string(e.Data), "@", "stream entries carry pseudonyms, never emails")
+	}
+	body := call(t, testkit.As(ownerUser), http.MethodGet, fmt.Sprintf("/contests/%s", contest.ID), nil).Body
+	assert.NotContains(t, string(body), "@", "responses carry pseudonyms, never emails")
 
 	// the relay appends before it commits published_at, and other tests' rows may still be queued
 	require.Eventually(t, func() bool {

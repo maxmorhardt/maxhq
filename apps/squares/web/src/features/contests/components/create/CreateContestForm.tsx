@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
-import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
 import { fonts, game as palette } from '../../../../app/theme';
@@ -102,7 +101,6 @@ function GameOption({
 
 export default function CreateContestForm() {
   const navigate = useNavigate();
-  const email = useAuth().user?.profile?.email;
   const {
     data: games = [],
     isLoading: gamesLoading,
@@ -160,16 +158,11 @@ export default function CreateContestForm() {
     if (!validate()) {
       return;
     }
-    if (!email) {
-      setError('User is missing an email');
-      return;
-    }
 
     setError('');
     try {
       const contest = await createContest({
         name: name.trim(),
-        owner: email,
         visibility,
         maxSquares,
         gameId,

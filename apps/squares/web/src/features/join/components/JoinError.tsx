@@ -24,8 +24,8 @@ export default function JoinError({ variant, message, preview }: JoinErrorProps)
           icon: HowToReg,
           text: (
             <>
-              Ask{preview?.owner ? ` ${preview.owner}` : ' the contest owner'} to lower another
-              participant&apos;s square limit to free up space.
+              Ask{preview?.ownerName ? ` ${preview.ownerName}` : ' the contest owner'} to lower
+              another participant&apos;s square limit to free up space.
             </>
           ),
         },

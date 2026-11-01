@@ -8,6 +8,8 @@ import (
 	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	mock "github.com/stretchr/testify/mock"
 
+	time "time"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -22,6 +24,64 @@ type InviteRepository_Expecter struct {
 
 func (_m *InviteRepository) EXPECT() *InviteRepository_Expecter {
 	return &InviteRepository_Expecter{mock: &_m.Mock}
+}
+
+// CountByContestID provides a mock function with given fields: ctx, contestID, since
+func (_m *InviteRepository) CountByContestID(ctx context.Context, contestID uuid.UUID, since time.Time) (model.CreationCounts, error) {
+	ret := _m.Called(ctx, contestID, since)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountByContestID")
+	}
+
+	var r0 model.CreationCounts
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, time.Time) (model.CreationCounts, error)); ok {
+		return rf(ctx, contestID, since)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, time.Time) model.CreationCounts); ok {
+		r0 = rf(ctx, contestID, since)
+	} else {
+		r0 = ret.Get(0).(model.CreationCounts)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, time.Time) error); ok {
+		r1 = rf(ctx, contestID, since)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InviteRepository_CountByContestID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountByContestID'
+type InviteRepository_CountByContestID_Call struct {
+	*mock.Call
+}
+
+// CountByContestID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - since time.Time
+func (_e *InviteRepository_Expecter) CountByContestID(ctx interface{}, contestID interface{}, since interface{}) *InviteRepository_CountByContestID_Call {
+	return &InviteRepository_CountByContestID_Call{Call: _e.mock.On("CountByContestID", ctx, contestID, since)}
+}
+
+func (_c *InviteRepository_CountByContestID_Call) Run(run func(ctx context.Context, contestID uuid.UUID, since time.Time)) *InviteRepository_CountByContestID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(time.Time))
+	})
+	return _c
+}
+
+func (_c *InviteRepository_CountByContestID_Call) Return(_a0 model.CreationCounts, _a1 error) *InviteRepository_CountByContestID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *InviteRepository_CountByContestID_Call) RunAndReturn(run func(context.Context, uuid.UUID, time.Time) (model.CreationCounts, error)) *InviteRepository_CountByContestID_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Create provides a mock function with given fields: ctx, invite
@@ -71,17 +131,17 @@ func (_c *InviteRepository_Create_Call) RunAndReturn(run func(context.Context, *
 	return _c
 }
 
-// Delete provides a mock function with given fields: ctx, id
-func (_m *InviteRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	ret := _m.Called(ctx, id)
+// Delete provides a mock function with given fields: ctx, contestID, id
+func (_m *InviteRepository) Delete(ctx context.Context, contestID uuid.UUID, id uuid.UUID) error {
+	ret := _m.Called(ctx, contestID, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Delete")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r0 = rf(ctx, contestID, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -96,14 +156,15 @@ type InviteRepository_Delete_Call struct {
 
 // Delete is a helper method to define mock.On call
 //   - ctx context.Context
+//   - contestID uuid.UUID
 //   - id uuid.UUID
-func (_e *InviteRepository_Expecter) Delete(ctx interface{}, id interface{}) *InviteRepository_Delete_Call {
-	return &InviteRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
+func (_e *InviteRepository_Expecter) Delete(ctx interface{}, contestID interface{}, id interface{}) *InviteRepository_Delete_Call {
+	return &InviteRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, contestID, id)}
 }
 
-func (_c *InviteRepository_Delete_Call) Run(run func(ctx context.Context, id uuid.UUID)) *InviteRepository_Delete_Call {
+func (_c *InviteRepository_Delete_Call) Run(run func(ctx context.Context, contestID uuid.UUID, id uuid.UUID)) *InviteRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
 	})
 	return _c
 }
@@ -113,7 +174,7 @@ func (_c *InviteRepository_Delete_Call) Return(_a0 error) *InviteRepository_Dele
 	return _c
 }
 
-func (_c *InviteRepository_Delete_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *InviteRepository_Delete_Call {
+func (_c *InviteRepository_Delete_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *InviteRepository_Delete_Call {
 	_c.Call.Return(run)
 	return _c
 }

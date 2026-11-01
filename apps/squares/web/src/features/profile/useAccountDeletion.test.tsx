@@ -10,6 +10,7 @@ import { useAccountDeletion } from './useAccountDeletion';
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 const api = vi.hoisted(() => ({
   useDeleteMyAccountMutation: vi.fn(),
+  useGetMyProfileQuery: vi.fn(() => ({ data: { userId: 'u_me' } })),
 }));
 vi.mock('./api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 const contests = vi.hoisted(() => ({
@@ -76,7 +77,7 @@ describe('useAccountDeletion', () => {
     await act(() => result.current.dialogProps.onLeaveContest('c-2'));
 
     expect(deleteContest).toHaveBeenCalledWith('c-1');
-    expect(leave).toHaveBeenCalledWith({ contestId: 'c-2', userId: 'me@x.com' });
+    expect(leave).toHaveBeenCalledWith({ contestId: 'c-2', userId: 'u_me' });
     expect(result.current.dialogProps.busyId).toBeNull();
   });
 

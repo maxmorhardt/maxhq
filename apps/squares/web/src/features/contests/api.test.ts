@@ -26,7 +26,7 @@ describe('contestsApi', () => {
   const cases: [string, () => unknown, string, string][] = [
     [
       'createContest',
-      () => endpoints.createContest.initiate({ name: 'x', owner: 'o', gameId: 'g' }),
+      () => endpoints.createContest.initiate({ name: 'x', gameId: 'g' }),
       'POST',
       '/contests',
     ],

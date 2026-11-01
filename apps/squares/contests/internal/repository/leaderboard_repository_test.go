@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -64,13 +65,15 @@ func TestLeaderboardRepository_GetUserRank_Ranked(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewLeaderboardRepository(gdb)
 
-	mock.ExpectQuery(`WITH wins AS`).
-		WillReturnRows(sqlmock.NewRows([]string{"total_ranked", "quarter_wins", "rank"}).
-			AddRow(143, 5, 7))
+	mock.ExpectQuery(`WITH wins AS .* AS display_name`).
+		WithArgs(model.ContestStatusDeleted, model.GhostUser, "user@example.com", "user@example.com").
+		WillReturnRows(sqlmock.NewRows([]string{"total_ranked", "quarter_wins", "rank", "display_name"}).
+			AddRow(143, 5, 7, "Max Morhardt"))
 
 	rank, err := repo.GetUserRank(context.Background(), "user@example.com")
 
 	require.NoError(t, err)
+	assert.Equal(t, "Max Morhardt", rank.DisplayName)
 	assert.Equal(t, 7, rank.Rank)
 	assert.Equal(t, int64(143), rank.TotalRanked)
 	assert.Equal(t, int64(5), rank.QuarterWins)

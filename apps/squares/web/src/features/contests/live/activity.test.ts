@@ -24,7 +24,7 @@ describe('seedActivity', () => {
         makeSquare({
           id: 's1',
           value: 'AB',
-          owner: 'ann@x.com',
+          owner: 'u_ann',
           ownerName: 'Ann',
           updatedAt: '2026-01-01T02:00:00Z',
         }),
@@ -36,8 +36,8 @@ describe('seedActivity', () => {
       makeParticipant({ id: 'owner', role: 'owner' }),
       makeParticipant({
         id: 'p',
-        userId: 'bo@x.com',
-        displayName: 'Bo Jackson',
+        userId: 'u_bo',
+        displayName: 'Bo J.',
         joinedAt: '2026-01-01T01:00:00Z',
       }),
     ];
@@ -55,7 +55,7 @@ describe('seedActivity', () => {
         makeSquare({
           id: 's1',
           value: 'AB',
-          owner: 'ann@x.com',
+          owner: 'u_ann',
           ownerName: 'Ann',
           claimedAt: '2026-01-01T01:00:00Z',
           updatedAt: '2026-01-01T09:00:00Z',
@@ -78,7 +78,7 @@ describe('seedActivity', () => {
         makeSquare({
           id: 's1',
           value: 'AB',
-          owner: 'ann@x.com',
+          owner: 'u_ann',
           ownerName: 'Ann',
           claimedAt: '2026-01-02T10:00:00Z',
         }),
@@ -118,25 +118,22 @@ describe('describeEvent', () => {
     expect(describeEvent(cleared, 'id')?.message).toBe('Square (1, 2) was cleared');
   });
 
-  it('names square owners and winners the same way as participants', () => {
-    const claimed = event('square.updated', makeSquare({ value: 'AB', ownerName: 'Bo Jackson' }));
+  it('names square owners the way the server does', () => {
+    const claimed = event('square.updated', makeSquare({ value: 'AB', ownerName: 'Bo J.' }));
     expect(describeEvent(claimed, 'id')?.message).toMatch(/^Bo J\. claimed/);
-    expect(ownerLabel('bo@x.com', 'Bo Jackson')).toBe('Bo J.');
+    expect(ownerLabel('u_bo', 'Bo J.')).toBe('Bo J.');
+    expect(ownerLabel('ghost', '')).toBe('ghost');
   });
 
   it('skips new initials on a held square and a departed player kept in play', () => {
     const renamed = event(
       'square.updated',
-      makeSquare({ row: 1, col: 2, value: 'XY', owner: 'ann@x.com', ownerName: 'Ann' })
+      makeSquare({ row: 1, col: 2, value: 'XY', owner: 'u_ann', ownerName: 'Ann' })
     );
-    expect(
-      describeEvent(renamed, 'id', { square: { owner: 'ann@x.com', value: 'AB' } })
-    ).toBeNull();
+    expect(describeEvent(renamed, 'id', { square: { owner: 'u_ann', value: 'AB' } })).toBeNull();
 
     const ghosted = event('square.updated', makeSquare({ value: 'AB', owner: 'ghost' }));
-    expect(
-      describeEvent(ghosted, 'id', { square: { owner: 'ann@x.com', value: 'AB' } })
-    ).toBeNull();
+    expect(describeEvent(ghosted, 'id', { square: { owner: 'u_ann', value: 'AB' } })).toBeNull();
 
     // the same square freed and taken by someone else is a real claim
     expect(describeEvent(renamed, 'id', { square: { owner: '', value: '' } })?.type).toBe(
@@ -162,18 +159,13 @@ describe('describeEvent', () => {
     expect(describeEvent(update, 'id', { status: 'Q2' })).toBeNull();
   });
 
-  it('names who joined and left without showing their email', () => {
-    const participant = makeParticipant({ userId: 'bo@x.com', displayName: 'Bo Jackson' });
+  it('names who joined and left', () => {
+    const participant = makeParticipant({ userId: 'u_bo', displayName: 'Bo J.' });
     expect(describeEvent(event('participant.joined', participant), 'id')?.message).toBe(
       'Bo J. joined the contest'
     );
     expect(describeEvent(event('participant.removed', participant), 'id')?.message).toBe(
       'Bo J. left the contest'
-    );
-
-    const unnamed = makeParticipant({ userId: 'bo@x.com', displayName: 'bo@x.com' });
-    expect(describeEvent(event('participant.joined', unnamed), 'id')?.message).toBe(
-      'bo joined the contest'
     );
   });
 
@@ -186,6 +178,6 @@ describe('ownerLabel', () => {
   it('names ghosted owners and winners', () => {
     expect(ownerLabel('ghost', '')).toBe('ghost');
     expect(ownerLabel('', '')).toBe('ghost');
-    expect(ownerLabel('a@x.com', 'Ann')).toBe('Ann');
+    expect(ownerLabel('u_a', 'Ann')).toBe('Ann');
   });
 });

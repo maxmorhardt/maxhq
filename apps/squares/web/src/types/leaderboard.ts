@@ -15,4 +15,5 @@ export interface LeaderboardRankResponse {
   totalRanked: number;
   quarterWins: number;
   ranked: boolean;
+  displayName: string;
 }

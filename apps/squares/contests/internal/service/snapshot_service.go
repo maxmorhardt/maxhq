@@ -10,6 +10,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
 
 type SnapshotService interface {
@@ -52,5 +53,5 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 		return nil, err
 	}
 
-	return &model.ContestSnapshot{Contest: contest, Participants: participants}, nil
+	return &model.ContestSnapshot{Contest: contest, Participants: participants, ViewerID: pseudonym.Of(user)}, nil
 }

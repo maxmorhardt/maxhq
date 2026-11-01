@@ -144,12 +144,6 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -158,6 +152,12 @@ const docTemplatecontests = `{
                     },
                     "409": {
                         "description": "The game is past the first quarter or was canceled",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "429": {
+                        "description": "The owner has the most open contests allowed, or created the most allowed in a day",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -396,6 +396,12 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "429": {
+                        "description": "The contest has the most open invite links allowed, or made the most allowed in a day",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -592,6 +598,67 @@ const docTemplatecontests = `{
                 }
             }
         },
+        "/contests/{id}/roster": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Full names for the contest's owner, so they know who joined. Other players only ever see short names.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participants"
+                ],
+                "summary": "Who each player is",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contest ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.ParticipantIdentity"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/contests/{id}/squares/claims": {
             "delete": {
                 "security": [
@@ -723,6 +790,12 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "422": {
+                        "description": "No default initials are set",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -790,6 +863,12 @@ const docTemplatecontests = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "No default initials are set",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -1325,10 +1404,6 @@ const docTemplatecontests = `{
                     "type": "string",
                     "example": "test"
                 },
-                "owner": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
                 "role": {
                     "type": "string",
                     "example": "owner"
@@ -1370,9 +1445,6 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "createdAt": {
-                    "type": "string"
-                },
-                "createdBy": {
                     "type": "string"
                 },
                 "expiresAt": {
@@ -1448,6 +1520,10 @@ const docTemplatecontests = `{
                     "items": {
                         "$ref": "#/definitions/model.ContestParticipant"
                     }
+                },
+                "viewerId": {
+                    "type": "string",
+                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
                 }
             }
         },
@@ -1519,9 +1595,9 @@ const docTemplatecontests = `{
                     "type": "string",
                     "example": "Sunday Night Squares"
                 },
-                "owner": {
+                "ownerName": {
                     "type": "string",
-                    "example": "user@example.com"
+                    "example": "Max M."
                 },
                 "role": {
                     "allOf": [
@@ -1565,9 +1641,6 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "homeTeam": {
                     "type": "string"
                 },
@@ -1596,9 +1669,6 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "version": {
@@ -1633,8 +1703,7 @@ const docTemplatecontests = `{
             "type": "object",
             "required": [
                 "gameId",
-                "name",
-                "owner"
+                "name"
             ],
             "properties": {
                 "gameId": {
@@ -1649,10 +1718,6 @@ const docTemplatecontests = `{
                     "type": "string",
                     "maxLength": 20,
                     "minLength": 1
-                },
-                "owner": {
-                    "type": "string",
-                    "maxLength": 255
                 },
                 "visibility": {
                     "type": "string",
@@ -1722,7 +1787,7 @@ const docTemplatecontests = `{
                 "maxSquares": {
                     "type": "integer"
                 },
-                "owner": {
+                "ownerName": {
                     "type": "string"
                 },
                 "role": {
@@ -1764,6 +1829,10 @@ const docTemplatecontests = `{
         "model.LeaderboardRankResponse": {
             "type": "object",
             "properties": {
+                "displayName": {
+                    "type": "string",
+                    "example": "Max M."
+                },
                 "quarterWins": {
                     "type": "integer",
                     "example": 5
@@ -1793,6 +1862,19 @@ const docTemplatecontests = `{
                 }
             }
         },
+        "model.ParticipantIdentity": {
+            "type": "object",
+            "properties": {
+                "fullName": {
+                    "type": "string",
+                    "example": "Max Morhardt"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
+                }
+            }
+        },
         "model.ParticipantRole": {
             "type": "string",
             "enum": [
@@ -1818,9 +1900,6 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "homeTeamScore": {
                     "type": "integer"
                 },
@@ -1831,9 +1910,6 @@ const docTemplatecontests = `{
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "winner": {
@@ -1895,9 +1971,6 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -1911,9 +1984,6 @@ const docTemplatecontests = `{
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "value": {

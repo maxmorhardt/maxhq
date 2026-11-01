@@ -11,10 +11,12 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
 
 type ParticipantService interface {
 	GetParticipants(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error)
+	GetRoster(ctx context.Context, contestID uuid.UUID, user string) ([]model.ParticipantIdentity, error)
 	UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error)
 	RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error
 	Authorize(ctx context.Context, contestID uuid.UUID, userID string, act Action) error
@@ -119,6 +121,27 @@ func (s *participantService) GetParticipants(ctx context.Context, contestID uuid
 	return participants, nil
 }
 
+func (s *participantService) GetRoster(ctx context.Context, contestID uuid.UUID, user string) ([]model.ParticipantIdentity, error) {
+	if err := s.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
+		return nil, err
+	}
+
+	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)
+	if err != nil {
+		logging.FromContext(ctx).Error("failed to get participants for roster", "contest_id", contestID, "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+
+	roster := make([]model.ParticipantIdentity, 0, len(participants))
+	for i := range participants {
+		roster = append(roster, model.ParticipantIdentity{
+			UserID:   pseudonym.Of(participants[i].UserID),
+			FullName: pseudonym.FullName(participants[i].DisplayName),
+		})
+	}
+	return roster, nil
+}
+
 func (s *participantService) UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error) {
 	log := logging.FromContext(ctx)
 
@@ -146,6 +169,10 @@ func (s *participantService) UpdateParticipant(ctx context.Context, contestID uu
 
 		if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
 			return authErr
+		}
+
+		if targetUserID, err = s.resolveTarget(ctx, contestID, targetUserID); err != nil {
+			return err
 		}
 
 		participant, err = s.participantRepo.GetByContestAndUser(ctx, contestID, targetUserID)
@@ -240,9 +267,14 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 		return errs.ErrContestFinalized
 	}
 
-	if targetUserID != user {
+	if targetUserID == pseudonym.Of(user) {
+		targetUserID = user
+	} else {
 		if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
 			return authErr
+		}
+		if targetUserID, err = s.resolveTarget(ctx, contestID, targetUserID); err != nil {
+			return err
 		}
 	}
 
@@ -281,6 +313,21 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 	metrics.IncParticipantRemoved()
 	log.Info("participant removed", "contest_id", contestID, "target_user", targetUserID)
 	return nil
+}
+
+func (s *participantService) resolveTarget(ctx context.Context, contestID uuid.UUID, target string) (string, error) {
+	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)
+	if err != nil {
+		logging.FromContext(ctx).Error("failed to get participants to resolve a pseudonym", "contest_id", contestID, "error", err)
+		return "", errs.ErrDatabaseUnavailable
+	}
+
+	for i := range participants {
+		if pseudonym.Of(participants[i].UserID) == target {
+			return participants[i].UserID, nil
+		}
+	}
+	return "", errs.ErrNotParticipant
 }
 
 func (s *participantService) releaseParticipantSquares(ctx context.Context, contest *model.Contest, userID string, ghost bool) error {

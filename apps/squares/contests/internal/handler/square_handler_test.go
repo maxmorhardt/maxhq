@@ -70,7 +70,7 @@ func TestClaimSquare_UnauthorizedSquareEdit(t *testing.T) {
 }
 
 func TestClaimSquare_MissingInitials(t *testing.T) {
-	claimSquareErr(t, "owner1", errs.ErrMissingInitials, http.StatusConflict)
+	claimSquareErr(t, "owner1", errs.ErrMissingInitials, http.StatusUnprocessableEntity)
 }
 
 func TestClaimSquare_SquareTaken(t *testing.T) {
@@ -279,7 +279,7 @@ func TestClaimRandomSquares_MapsErrors(t *testing.T) {
 		errs.ErrSquareNotEditable:      http.StatusForbidden,
 		errs.ErrUnauthorizedSquareEdit: http.StatusForbidden,
 		errs.ErrNotParticipant:         http.StatusForbidden,
-		errs.ErrMissingInitials:        http.StatusConflict,
+		errs.ErrMissingInitials:        http.StatusUnprocessableEntity,
 		errs.ErrNoEmptySquares:         http.StatusConflict,
 		errs.ErrSquareLimitReached:     http.StatusConflict,
 		errs.ErrClaimsNotFound:         http.StatusUnauthorized,

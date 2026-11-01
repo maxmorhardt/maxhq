@@ -11,6 +11,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
 
 type UserHandler interface {
@@ -58,6 +59,7 @@ func (h *userHandler) GetMe(c *gin.Context) {
 
 func toProfileResponse(user *model.User) model.UserProfileResponse {
 	return model.UserProfileResponse{
+		UserID:          pseudonym.Of(user.Email),
 		Email:           user.Email,
 		DisplayName:     user.DisplayName,
 		DefaultInitials: user.DefaultInitials,

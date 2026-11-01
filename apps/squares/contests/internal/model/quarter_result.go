@@ -20,8 +20,8 @@ type QuarterResult struct {
 	WinnerName    string    `json:"winnerName"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
-	CreatedBy     string    `json:"createdBy"`
-	UpdatedBy     string    `json:"updatedBy"`
+	CreatedBy     string    `json:"-"`
+	UpdatedBy     string    `json:"-"`
 }
 
 func (q *QuarterResult) BeforeCreate(tx *gorm.DB) (err error) {

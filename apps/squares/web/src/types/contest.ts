@@ -22,8 +22,11 @@ export interface Contest {
   version: number;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+}
+
+export interface ParticipantIdentity {
+  userId: string;
+  fullName: string;
 }
 
 export interface RandomClaimResponse {
@@ -33,7 +36,6 @@ export interface RandomClaimResponse {
 
 export interface CreateContestRequest {
   name: string;
-  owner: string;
   visibility?: ContestVisibility;
   maxSquares?: number;
   gameId: string;
@@ -52,8 +54,6 @@ export interface Square {
   claimedAt?: string;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
 }
 
 export type FeedRole = 'owned' | 'joined';
@@ -76,7 +76,7 @@ export interface ContestSummary {
   awayAbbr?: string;
   status: ContestStatus;
   visibility: ContestVisibility;
-  owner: string;
+  ownerName?: string;
   role: ParticipantRole;
   gameId?: string;
   gameTime?: string;
@@ -106,8 +106,6 @@ export interface QuarterResult {
   winnerName: string;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
 }
 
 export type GameStatus = 'scheduled' | 'in_progress' | 'final' | 'postponed' | 'canceled';
@@ -192,14 +190,14 @@ export type ContestUpdate = Pick<
 export interface ContestSnapshot {
   contest: Contest;
   participants: Participant[];
+  viewerId: string;
 }
 
 export interface Participant {
   id: string;
   contestId: string;
   userId: string;
-  // the name other players see; emails are shown only to the contest owner
-  displayName?: string;
+  displayName: string;
   inviteId: string;
   role: ParticipantRole;
   maxSquares: number;
@@ -223,7 +221,6 @@ export interface Invite {
   uses: number;
   expiresAt?: string;
   createdAt: string;
-  createdBy: string;
   updatedAt: string;
 }
 
@@ -238,7 +235,7 @@ export interface InvitePreviewResponse {
   contestId: string;
   contestName: string;
   maxSquares: number;
-  owner: string;
+  ownerName?: string;
   role: string;
   status: ContestStatus;
   claimedSquares: number;

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
@@ -138,11 +139,28 @@ func TestInviteRepository_Delete(t *testing.T) {
 	repo := NewInviteRepository(gdb)
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`DELETE FROM "contest_invites"`).WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`DELETE FROM "contest_invites" WHERE id = \$1 AND contest_id = \$2`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
-	err := repo.Delete(context.Background(), uuid.New())
+	err := repo.Delete(context.Background(), uuid.New(), uuid.New())
 
 	require.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestInviteRepository_CountByContestID(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewInviteRepository(gdb)
+	contestID := uuid.New()
+	since := time.Now().Add(-model.CreationWindow)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FILTER \(WHERE \(expires_at IS NULL OR expires_at > \$1\) AND \(max_uses = 0 OR uses < max_uses\)\) AS open,\s+COUNT\(\*\) FILTER \(WHERE created_at > \$2\) AS recent FROM "contest_invites" WHERE contest_id = \$3`).
+		WithArgs(sqlmock.AnyArg(), since, contestID).
+		WillReturnRows(sqlmock.NewRows([]string{"open", "recent"}).AddRow(3, 40))
+
+	counts, err := repo.CountByContestID(context.Background(), contestID, since)
+
+	require.NoError(t, err)
+	assert.Equal(t, model.CreationCounts{Open: 3, Recent: 40}, counts)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

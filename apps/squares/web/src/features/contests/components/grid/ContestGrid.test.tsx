@@ -12,11 +12,6 @@ const api = vi.hoisted(() => ({
   useClearSquareMutation: vi.fn(),
 }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
-const profile = vi.hoisted(() => ({ useGetMyProfileQuery: vi.fn() }));
-vi.mock('../../../profile/api', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  ...profile,
-}));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async () => ({
   ...(await vi.importActual<typeof import('react-router')>('react-router')),
@@ -27,7 +22,7 @@ const contest = makeContest({
   homeTeam: 'Lions',
   awayTeam: 'Bears',
   squares: [
-    makeSquare({ id: 'mine', row: 0, col: 0, value: 'ME', owner: 'player@x.com', ownerName: 'Me' }),
+    makeSquare({ id: 'mine', row: 0, col: 0, value: 'ME', owner: 'u_player', ownerName: 'Me' }),
     makeSquare({ id: 'empty', row: 0, col: 1 }),
   ],
   xLabels: [3, 7],
@@ -53,7 +48,6 @@ describe('ContestGrid', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    profile.useGetMyProfileQuery.mockReturnValue({ data: { defaultInitials: 'ME' } });
     const [trigger, state] = mockMutation(makeSquare());
     claim = trigger;
     api.useClaimSquareMutation.mockReturnValue([trigger, state]);
@@ -105,11 +99,15 @@ describe('ContestGrid', () => {
     expect(toasts()[0]?.message).toBe('Square limit reached');
   });
 
-  it('sends the user to set initials first', () => {
-    profile.useGetMyProfileQuery.mockReturnValue({ data: undefined });
-    const { cells } = renderGrid();
+  it('sends the user to set initials when the server has none', async () => {
+    api.useClaimSquareMutation.mockReturnValue(
+      mockMutation({ error: { status: 422, message: 'Set your initials' } })
+    );
+    const { cells, onStale, toasts } = renderGrid();
     fireEvent.click(cells()[1]);
-    expect(navigate).toHaveBeenCalledWith('/profile');
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/profile'));
+    expect(toasts()[0]?.message).toBe('Set your initials');
+    expect(onStale).not.toHaveBeenCalled();
   });
 
   it('resyncs when a claim conflicts', async () => {

@@ -21,7 +21,6 @@ import type {
   UpdateParticipantRequest,
 } from '../../../../types/contest';
 import { errorMessage } from '../../../../api/errors';
-import { participantName } from '../../../../utils/publicName';
 import { useToast } from '../../../toast/useToast';
 import { useUpdateParticipantMutation } from '../../api';
 
@@ -94,13 +93,7 @@ function EditParticipantForm({
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
-        <Typography sx={{ fontWeight: 600 }}>{participantName(participant)}</Typography>
-        <Typography
-          variant="body2"
-          sx={{ mb: 2, color: 'rgba(255,255,255,0.7)', overflowWrap: 'anywhere' }}
-        >
-          {participant.userId}
-        </Typography>
+        <Typography sx={{ mb: 2, fontWeight: 600 }}>{participant.displayName}</Typography>
 
         {!isOwner && (
           <FormControl fullWidth size="small" sx={{ mb: 2 }}>

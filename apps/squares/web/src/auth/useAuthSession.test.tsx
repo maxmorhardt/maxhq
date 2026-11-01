@@ -11,6 +11,8 @@ const refreshSession = vi.hoisted(() => vi.fn().mockResolvedValue(null));
 vi.mock('./token', () => ({ refreshSession }));
 const setFaroUser = vi.hoisted(() => vi.fn());
 vi.mock('../utils/faro', () => ({ setFaroUser }));
+const useMe = vi.hoisted(() => vi.fn(() => ({ userId: 'u_a' })));
+vi.mock('../features/profile/useMe', () => ({ useMe }));
 
 function setup() {
   const store = makeStore();
@@ -72,7 +74,7 @@ describe('useAuthSession', () => {
   it('tells faro who is signed in, and when they sign out', () => {
     mockAuth({ email: 'a@x.com' });
     const { rerender } = setup();
-    expect(setFaroUser).toHaveBeenLastCalledWith({ email: 'a@x.com' });
+    expect(setFaroUser).toHaveBeenLastCalledWith('u_a');
 
     mockAuth();
     rerender();

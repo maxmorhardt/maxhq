@@ -428,6 +428,10 @@ const docTemplateaccounts = `{
                 "email": {
                     "type": "string",
                     "example": "user@example.com"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
                 }
             }
         }

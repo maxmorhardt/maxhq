@@ -49,10 +49,8 @@ describe('faro', () => {
     const { initFaro, setFaroUser } = await load();
     initFaro('squares.maxhq.io', URL);
 
-    setFaroUser({ sub: 'u1', email: 'a@example.com', name: 'A' });
-    await vi.waitFor(() =>
-      expect(api.setUser).toHaveBeenCalledWith({ id: 'u1', email: 'a@example.com', username: 'A' })
-    );
+    setFaroUser('u_1');
+    await vi.waitFor(() => expect(api.setUser).toHaveBeenCalledWith({ id: 'u_1' }));
 
     setFaroUser(undefined);
     await vi.waitFor(() => expect(api.resetUser).toHaveBeenCalled());
@@ -110,7 +108,7 @@ describe('faro', () => {
 
   it('ignores the user before faro starts', async () => {
     const { setFaroUser } = await load();
-    setFaroUser({ sub: 'u1' });
+    setFaroUser('u_1');
     await Promise.resolve();
     expect(api.setUser).not.toHaveBeenCalled();
   });

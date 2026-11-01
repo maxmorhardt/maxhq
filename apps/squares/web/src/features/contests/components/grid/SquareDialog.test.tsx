@@ -9,7 +9,7 @@ import SquareDialog from './SquareDialog';
 const api = vi.hoisted(() => ({ useClearSquareMutation: vi.fn() }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 
-const mine = makeSquare({ value: 'ME', owner: 'player@x.com', ownerName: 'Me' });
+const mine = makeSquare({ value: 'ME', owner: 'u_player', ownerName: 'Me' });
 
 function renderDialog(square: Square | null, contest: Contest = makeContest()) {
   const onClose = vi.fn();
@@ -51,22 +51,16 @@ describe('SquareDialog', () => {
   });
 
   it('shows who claimed someone else’s square', () => {
-    renderDialog(makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: 'Ann' }));
+    renderDialog(makeSquare({ value: 'AB', owner: 'u_ann', ownerName: 'Ann' }));
     expect(screen.getByText('Square Details')).toBeInTheDocument();
     expect(screen.getByText('Claimed by Ann')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Clear Square' })).not.toBeInTheDocument();
   });
 
-  it('shortens the owner’s name and never falls back to their email', () => {
-    const { unmount } = renderDialog(
-      makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: 'Ann Lee' })
-    );
+  it('names the owner as the server does, never by their id', () => {
+    renderDialog(makeSquare({ value: 'AB', owner: 'u_ann', ownerName: 'Ann L.' }));
     expect(screen.getByText('Claimed by Ann L.')).toBeInTheDocument();
-    unmount();
-
-    renderDialog(makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: '' }));
-    expect(screen.getByText('Claimed by Player')).toBeInTheDocument();
-    expect(screen.queryByText(/ann@x\.com/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/u_ann/)).not.toBeInTheDocument();
   });
 
   it('names a departed player’s square ghost', () => {

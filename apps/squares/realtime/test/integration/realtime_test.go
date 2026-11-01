@@ -21,6 +21,7 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,6 +60,11 @@ func run(m *testing.M) int {
 		Internal: config.InternalConfig{Token: internalToken},
 		Contests: model.ContestsConfig{URL: contestsSrv.URL},
 		Stream:   model.StreamConfig{HeartbeatInterval: 25 * time.Second, RevocationInterval: time.Minute},
+	}
+	err = pseudonym.SetKey("0123456789abcdef0123456789abcdef")
+	if err != nil {
+		slog.Error("pseudonym key", "error", err)
+		return 1
 	}
 	infra, err := bootstrap.Connect(cfg)
 	if err != nil {
@@ -205,7 +211,7 @@ func TestRealtime_RemovedViewerIsRevoked(t *testing.T) {
 	stream.Next(t)
 
 	contests.setMembers(contestID, "owner@squares.test")
-	publish(t, contestID, events.ParticipantRemovedType, events.AccessFields{UserID: "kicked@squares.test"})
+	publish(t, contestID, events.ParticipantRemovedType, events.AccessFields{UserID: pseudonym.Of("kicked@squares.test")})
 
 	assert.Equal(t, events.AccessRevokedType, stream.Next(t).Kind)
 	assert.True(t, stream.Ended(5*time.Second))

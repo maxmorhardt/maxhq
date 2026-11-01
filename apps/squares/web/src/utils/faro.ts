@@ -4,12 +4,6 @@ import { appDomain, isProduction } from './environment';
 const FARO_URL =
   'https://faro-collector-prod-us-east-2.grafana.net/collect/4c8da302ecf785b47cd7f5dbc361767c';
 
-export interface FaroUser {
-  sub: string;
-  email?: string;
-  name?: string;
-}
-
 const INVITE_TOKEN = /\/(join|invites)\/[\w-]+/g;
 
 let loaded: Promise<Faro | null> = Promise.resolve(null);
@@ -40,13 +34,13 @@ export function initFaro(hostname?: string, url: string = FARO_URL): void {
     .catch(() => null);
 }
 
-export function setFaroUser(user: FaroUser | undefined): void {
+export function setFaroUser(userId: string | undefined): void {
   void loaded.then((faro) => {
     if (!faro) {
       return;
     }
-    if (user) {
-      faro.api.setUser({ id: user.sub, email: user.email, username: user.name });
+    if (userId) {
+      faro.api.setUser({ id: userId });
     } else {
       faro.api.resetUser();
     }

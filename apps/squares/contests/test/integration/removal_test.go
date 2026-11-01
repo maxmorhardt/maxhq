@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -8,8 +10,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -40,7 +44,7 @@ func fullBoardWith(t *testing.T, game *events.Game, player string) (contestID uu
 	theirs = map[uuid.UUID]string{}
 	squares = snapshot(t, ownerUser, contest.ID).Contest.Squares
 	for i := range squares {
-		if squares[i].Owner == player {
+		if squares[i].Owner == pseudonym.Of(player) {
 			theirs[squares[i].ID] = squares[i].Value
 		}
 	}
@@ -79,7 +83,8 @@ func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) 
 	game := seedGame(t)
 	contestID, theirs := fullBoardWith(t, &game, player)
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, player), nil)
+	// clients name players by pseudonym
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	snap := snapshot(t, ownerUser, contestID)
@@ -92,7 +97,7 @@ func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) 
 
 	var mine model.Square
 	for _, sq := range snap.Contest.Squares {
-		if sq.Owner == ownerUser {
+		if sq.Owner == pseudonym.Of(ownerUser) {
 			mine = sq
 			break
 		}
@@ -112,7 +117,7 @@ func TestRemoval_KickAfterKickoffGhostsTheirSquares(t *testing.T) {
 	contestID, theirs := fullBoardWith(t, &game, player)
 	kickoff(t, &game, contestID)
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, player), nil)
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	for _, sq := range squaresOf(t, contestID, theirs) {
@@ -150,4 +155,45 @@ func TestRemoval_AccountDeletionFreesOpenBoardsAndGhostsStartedOnes(t *testing.T
 	var leftover int
 	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.squares WHERE owner = $1`, player).Scan(&leftover))
 	assert.Zero(t, leftover)
+}
+
+func TestRemoval_EditedAndRemovedPlayersKeepTheirNames(t *testing.T) {
+	player := "named@squares.test"
+	game := seedGame(t)
+	contest, resp := createContestFor(t, &game, ownerUser, "Names "+uuid.NewString()[:8], 50)
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	resp = call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contest.ID.String()+"/invites",
+		model.CreateInviteRequest{MaxSquares: 10, Role: "participant"})
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	var invite model.ContestInvite
+	resp.Decode(t, &invite)
+	resp = call(t, testkit.As(player), http.MethodPost, "/invites/"+invite.Token+"/redeem", nil)
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+
+	path := fmt.Sprintf("/contests/%s/participants/%s", contest.ID, pseudonym.Of(player))
+	maxSquares := 5
+	resp = call(t, testkit.As(ownerUser), http.MethodPatch, path, model.UpdateParticipantRequest{MaxSquares: &maxSquares})
+	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+	var updated model.ContestParticipant
+	resp.Decode(t, &updated)
+	assert.Equal(t, "Test N.", updated.DisplayName, "every viewer's player list takes this entry as is")
+
+	resp = call(t, testkit.As(ownerUser), http.MethodDelete, path, nil)
+	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
+
+	var removed model.ContestParticipant
+	require.Eventually(t, func() bool {
+		entries, err := streams.Range(context.Background(), rdb, events.ContestStream(contest.ID), "", 100)
+		require.NoError(t, err)
+		for _, e := range entries {
+			if e.Type == events.ParticipantRemovedType {
+				var event events.ContestEvent
+				require.NoError(t, json.Unmarshal(e.Data, &event))
+				require.NoError(t, json.Unmarshal(event.Data, &removed))
+				return true
+			}
+		}
+		return false
+	}, eventually, 100*time.Millisecond, "the removal reaches the contest's stream")
+	assert.Equal(t, "Test N.", removed.DisplayName, "the feed says who left")
 }

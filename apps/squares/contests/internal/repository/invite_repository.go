@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -13,10 +14,11 @@ import (
 
 type InviteRepository interface {
 	GetByToken(ctx context.Context, token string) (*model.ContestInvite, error)
+	CountByContestID(ctx context.Context, contestID uuid.UUID, since time.Time) (model.CreationCounts, error)
 	GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestInvite, error)
 	Create(ctx context.Context, invite *model.ContestInvite) error
 	RedeemInvite(ctx context.Context, inviteID uuid.UUID, participant *model.ContestParticipant, maxPoolSquares int) error
-	Delete(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, contestID, id uuid.UUID) error
 }
 
 type inviteRepository struct {
@@ -39,6 +41,18 @@ func (r *inviteRepository) GetAllByContestID(ctx context.Context, contestID uuid
 	var invites []model.ContestInvite
 	err := database.Conn(ctx, r.db).Where("contest_id = ?", contestID).Order("created_at DESC").Find(&invites).Error
 	return invites, err
+}
+
+// expired and used-up invites count as recent; a deleted one is gone, so it leaves nothing behind to cap
+func (r *inviteRepository) CountByContestID(ctx context.Context, contestID uuid.UUID, since time.Time) (model.CreationCounts, error) {
+	var counts model.CreationCounts
+	err := database.Conn(ctx, r.db).
+		Model(&model.ContestInvite{}).
+		Select(`COUNT(*) FILTER (WHERE (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR uses < max_uses)) AS open,
+			COUNT(*) FILTER (WHERE created_at > ?) AS recent`, time.Now(), since).
+		Where("contest_id = ?", contestID).
+		Scan(&counts).Error
+	return counts, err
 }
 
 func (r *inviteRepository) Create(ctx context.Context, invite *model.ContestInvite) error {
@@ -88,6 +102,6 @@ func (r *inviteRepository) RedeemInvite(ctx context.Context, inviteID uuid.UUID,
 	})
 }
 
-func (r *inviteRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return database.Conn(ctx, r.db).Where("id = ?", id).Delete(&model.ContestInvite{}).Error
+func (r *inviteRepository) Delete(ctx context.Context, contestID, id uuid.UUID) error {
+	return database.Conn(ctx, r.db).Where("id = ? AND contest_id = ?", id, contestID).Delete(&model.ContestInvite{}).Error
 }

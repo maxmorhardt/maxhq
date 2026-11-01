@@ -4,14 +4,16 @@ import (
 	"time"
 
 	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
 
 type RealtimeConfig struct {
-	Server   config.ServerConfig
-	Redis    config.RedisConfig
-	Internal config.InternalConfig
-	Contests ContestsConfig
-	Stream   StreamConfig
+	Server    config.ServerConfig
+	Redis     config.RedisConfig
+	Internal  config.InternalConfig
+	Contests  ContestsConfig
+	Stream    StreamConfig
+	Pseudonym pseudonym.Config
 }
 
 type ContestsConfig struct {

@@ -11,11 +11,6 @@ const api = vi.hoisted(() => ({
   useClearMySquaresMutation: vi.fn(),
 }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
-const profile = vi.hoisted(() => ({ useGetMyProfileQuery: vi.fn() }));
-vi.mock('../../../profile/api', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  ...profile,
-}));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async () => ({
   ...(await vi.importActual<typeof import('react-router')>('react-router')),
@@ -32,7 +27,6 @@ function renderActions(viewer: ContestViewer = makeViewer(), emptySquares = 9) {
 describe('SquareActions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    profile.useGetMyProfileQuery.mockReturnValue({ data: { defaultInitials: 'AB' } });
     api.useClaimRandomSquaresMutation.mockReturnValue(
       mockMutation({ squares: [makeSquare()], requested: 1 })
     );
@@ -69,8 +63,10 @@ describe('SquareActions', () => {
     await waitFor(() => expect(toasts()[0]?.message).toBe('Claimed 1 of 2 squares'));
   });
 
-  it('sends the user to set initials first', async () => {
-    profile.useGetMyProfileQuery.mockReturnValue({ data: { defaultInitials: '' } });
+  it('sends the user to set initials when the server has none', async () => {
+    api.useClaimRandomSquaresMutation.mockReturnValue(
+      mockMutation({ error: { status: 422, message: 'Set your initials' } })
+    );
     renderActions();
     fireEvent.click(screen.getByRole('button', { name: 'Randomly Select Square' }));
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/profile'));

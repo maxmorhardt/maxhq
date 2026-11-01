@@ -23,7 +23,6 @@ const invite = (overrides: Partial<Invite> = {}): Invite => ({
   maxUses: 3,
   expiresAt: '2026-02-01T00:00:00Z',
   createdAt: '',
-  createdBy: '',
   updatedAt: '',
   ...overrides,
 });
