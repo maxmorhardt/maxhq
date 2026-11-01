@@ -101,17 +101,15 @@ func TestGetProfile_CreatesEvenWhenContestsIsDown(t *testing.T) {
 	d := newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(nil, errors.New("down"))
-	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool { return u.CreatedAt.IsZero() })).
-		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) {
-			u.CreatedAt = time.Now()
-			return u, true, nil
-		})
+	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).
+		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
 	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	_, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+	user, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
 
 	require.NoError(t, err)
-	assert.True(t, isNew)
+	assert.False(t, isNew, "an unknown history may be a returning player, so it isn't counted")
+	assert.WithinDuration(t, time.Now().Add(-30*time.Minute), user.CreatedAt, time.Minute)
 }
 
 func TestGetProfile_Errors(t *testing.T) {

@@ -92,8 +92,8 @@ func invalidationRouter(svc *mocks.FeedService, status int) *gin.Engine {
 func TestInvalidateFeeds_AfterSuccessfulWrite(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewFeedService(t)
-	svc.EXPECT().Invalidate(mock.Anything, "owner").Once()
-	svc.EXPECT().InvalidateContest(mock.Anything, contestID).Once()
+	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"owner", "player@example.com"}).Once()
+	svc.EXPECT().Invalidate(mock.Anything, "owner", "owner", "player@example.com").Once()
 
 	req, _ := http.NewRequest(http.MethodPost, "/contests/"+contestID.String(), http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusOK), req)
@@ -121,9 +121,8 @@ func TestInvalidateFeeds_SkipsFailedRemoval(t *testing.T) {
 func TestInvalidateFeeds_RemovalFallsBackWhenMembersFail(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewFeedService(t)
-	svc.EXPECT().Members(mock.Anything, contestID).Return(nil).Once()
+	svc.EXPECT().Members(mock.Anything, contestID).Return(nil).Twice()
 	svc.EXPECT().Invalidate(mock.Anything, "owner").Once()
-	svc.EXPECT().InvalidateContest(mock.Anything, contestID).Once()
 
 	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusNoContent), req)

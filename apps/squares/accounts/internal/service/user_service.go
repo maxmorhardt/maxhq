@@ -77,9 +77,12 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		DefaultInitials: initials.FromName(defaultDisplayName),
 	}
 
-	if summary, activityErr := s.contests.GetUserActivity(ctx, email); activityErr != nil {
+	switch summary, activityErr := s.contests.GetUserActivity(ctx, email); {
+	case activityErr != nil:
+		// they may be a returning player, so start the profile just outside the sign-up window rather than over-count
 		log.Warn("could not load first activity for new profile", "error", activityErr)
-	} else if summary.FirstActivity != nil {
+		newUser.CreatedAt = time.Now().Add(-signUpWindow)
+	case summary.FirstActivity != nil:
 		newUser.CreatedAt = *summary.FirstActivity
 	}
 

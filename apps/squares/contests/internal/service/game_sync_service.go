@@ -44,7 +44,6 @@ func NewGameSyncService(
 func (s *gameSyncService) ApplyGameUpdate(ctx context.Context, game *model.Game) error {
 	log := logging.FromContext(ctx).With("game_id", game.ID)
 
-	// one transaction keeps the read-back on the primary; the replica can lag the write and miss the new quarter
 	var stored *model.Game
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		if err := s.gameRepo.Upsert(ctx, game); err != nil {

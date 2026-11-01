@@ -19,6 +19,7 @@ var loads singleflight.Group
 type Cache interface {
 	Get(ctx context.Context, key string) ([]byte, bool, error)
 	Set(ctx context.Context, key string, value []byte, ttl time.Duration) error
+	SetMany(ctx context.Context, keys []string, value []byte, ttl time.Duration) error
 	Delete(ctx context.Context, keys ...string) error
 }
 
@@ -45,6 +46,21 @@ func (c *redisCache) Get(ctx context.Context, k string) (value []byte, found boo
 
 func (c *redisCache) Set(ctx context.Context, k string, value []byte, ttl time.Duration) error {
 	return c.client.Set(ctx, Key("cache", c.namespace, k), value, ttl).Err()
+}
+
+// one round trip however many keys
+func (c *redisCache) SetMany(ctx context.Context, keys []string, value []byte, ttl time.Duration) error {
+	if len(keys) == 0 {
+		return nil
+	}
+
+	_, err := c.client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		for _, k := range keys {
+			pipe.Set(ctx, Key("cache", c.namespace, k), value, ttl)
+		}
+		return nil
+	})
+	return err
 }
 
 func (c *redisCache) Delete(ctx context.Context, keys ...string) error {

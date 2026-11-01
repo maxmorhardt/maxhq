@@ -10,8 +10,8 @@ export const profileApi = baseApi.injectEndpoints({
       async onQueryStarted(_, { queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          if (data.isNew) {
-            trackConversionOnce('signedUp', data.userId);
+          if (data.signUpId) {
+            trackConversionOnce('signedUp', data.signUpId);
           }
         } catch {
           // the query reports its own error

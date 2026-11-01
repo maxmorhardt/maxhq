@@ -1,5 +1,5 @@
 import { skipToken } from '@reduxjs/toolkit/query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppSelector } from '../../../app/hooks';
 import ForbiddenError from '../../../components/errors/ForbiddenError';
@@ -10,7 +10,6 @@ import { useGetGameQuery } from '../../games/api';
 import { useGameStream } from '../../games/useGameStream';
 import { isMe } from '../../profile/useUserId';
 import { useToast } from '../../toast/useToast';
-import { useGetRosterQuery } from '../api';
 import type { ContestEvent } from '../live/events';
 import {
   selectLiveActivity,
@@ -22,6 +21,7 @@ import {
 } from '../live/selectors';
 import { useContestStream } from '../live/useContestStream';
 import { getContestViewer } from '../live/viewer';
+import { useContestRoster } from '../useContestRoster';
 import ContestError from './ContestError';
 import ContestPageSkeleton from './ContestPageSkeleton';
 import ContestView from './ContestView';
@@ -83,39 +83,8 @@ export default function LiveContest({ contestId }: Props) {
   const { data: game } = useGetGameQuery(gameId ?? skipToken);
   useGameStream(game && !isGameOver(game) ? game.id : undefined);
 
-  // currentData: a skipped query keeps its old data but can't be refetched
   const isOwner = !!contest && isMe(viewerId, contest.owner);
-  const {
-    currentData: roster,
-    isFetching: rosterFetching,
-    isError: rosterFailed,
-    refetch: refetchRoster,
-  } = useGetRosterQuery(isOwner ? contestId : skipToken);
-  const missing = roster
-    ? participants
-        .filter((p) => !roster.some((r) => r.userId === p.userId))
-        .map((p) => p.userId)
-        .join(',')
-    : '';
-  // rtk drops a refetch while one is in flight, so wait it out; ask once per missing set, plus one retry if that fails
-  const rosterRequest = useRef({ missing: '', retried: false });
-  useEffect(() => {
-    if (!missing) {
-      rosterRequest.current = { missing: '', retried: false };
-      return;
-    }
-    if (rosterFetching) {
-      return;
-    }
-    if (rosterRequest.current.missing !== missing) {
-      rosterRequest.current = { missing, retried: false };
-    } else if (rosterFailed && !rosterRequest.current.retried) {
-      rosterRequest.current.retried = true;
-    } else {
-      return;
-    }
-    void refetchRoster();
-  }, [missing, rosterFetching, rosterFailed, refetchRoster]);
+  const roster = useContestRoster(contestId, isOwner, participants);
 
   useEffect(() => {
     if (!winnerFlash) {

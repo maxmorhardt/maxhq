@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/errs"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
@@ -47,13 +48,14 @@ func TestGetMe_Success(t *testing.T) {
 	assert.Equal(t, "a@b.com", resp.Email)
 	assert.Equal(t, pseudonym.Of("a@b.com"), resp.UserID)
 	assert.Equal(t, "Max", resp.DisplayName)
-	assert.NotContains(t, w.Body.String(), "isNew")
+	assert.NotContains(t, w.Body.String(), "signUpId")
 }
 
 func TestGetMe_MarksASignUp(t *testing.T) {
+	id := uuid.New()
 	svc, r := newUserRouter(t)
 	svc.EXPECT().GetProfile(mock.Anything, "a@b.com", "Test").
-		Return(&model.User{Email: "a@b.com", DisplayName: "Max"}, true, nil)
+		Return(&model.User{ID: id, Email: "a@b.com", DisplayName: "Max"}, true, nil)
 
 	req, _ := http.NewRequest(http.MethodGet, "/users/me", http.NoBody)
 	w := doRequest(r, req)
@@ -61,7 +63,8 @@ func TestGetMe_MarksASignUp(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp model.UserProfileResponse
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.True(t, resp.IsNew)
+	assert.Equal(t, id.String(), resp.SignUpID)
+	assert.NotEqual(t, resp.UserID, resp.SignUpID)
 }
 
 func TestGetMe_ServiceError(t *testing.T) {

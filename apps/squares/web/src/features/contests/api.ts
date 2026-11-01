@@ -125,6 +125,7 @@ export const contestsApi = baseApi.injectEndpoints({
 
     getRoster: build.query<ParticipantIdentity[], string>({
       query: (contestId) => `/contests/${contestId}/roster`,
+      providesTags: (_result, _error, contestId) => [{ type: 'Roster', id: contestId }],
     }),
 
     updateParticipant: build.mutation<

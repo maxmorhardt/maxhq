@@ -429,9 +429,9 @@ const docTemplateaccounts = `{
                     "type": "string",
                     "example": "user@example.com"
                 },
-                "isNew": {
-                    "type": "boolean",
-                    "example": true
+                "signUpId": {
+                    "type": "string",
+                    "example": "0b5d7c1e-3f4a-4a8e-9c2d-6e1f0a7b8c9d"
                 },
                 "userId": {
                     "type": "string",

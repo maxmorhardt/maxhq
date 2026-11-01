@@ -40,9 +40,9 @@ describe('profileApi', () => {
   });
 
   it('counts a sign-up only when accounts just created the profile', async () => {
-    stubFetch({ userId: 'u_1', isNew: true });
+    stubFetch({ userId: 'u_1', signUpId: 's-1' });
     await makeStore().dispatch(profileApi.endpoints.getMyProfile.initiate());
-    expect(ads.trackConversionOnce).toHaveBeenCalledExactlyOnceWith('signedUp', 'u_1');
+    expect(ads.trackConversionOnce).toHaveBeenCalledExactlyOnceWith('signedUp', 's-1');
 
     ads.trackConversionOnce.mockClear();
     stubFetch({ userId: 'u_1' });

@@ -73,6 +73,24 @@ func TestRedisCache_SetGetDelete(t *testing.T) {
 	assert.False(t, mr.Exists("squares:cache:stats:k"))
 }
 
+func TestRedisCache_SetMany(t *testing.T) {
+	mr, client := newRedis(t)
+	c := NewRedisCache(client, "feed")
+	ctx := context.Background()
+
+	require.NoError(t, c.SetMany(ctx, nil, []byte("v"), time.Minute))
+	require.NoError(t, c.SetMany(ctx, []string{"a", "b"}, []byte("v"), time.Minute))
+	for _, k := range []string{"squares:cache:feed:a", "squares:cache:feed:b"} {
+		got, err := mr.Get(k)
+		require.NoError(t, err)
+		assert.Equal(t, "v", got)
+		assert.Equal(t, time.Minute, mr.TTL(k))
+	}
+
+	mr.Close()
+	assert.Error(t, c.SetMany(ctx, []string{"a"}, []byte("v"), time.Minute))
+}
+
 func TestRedisCache_GetError(t *testing.T) {
 	mr, client := newRedis(t)
 	mr.Close()

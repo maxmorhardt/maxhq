@@ -5,22 +5,18 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
-	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 const (
 	feedCacheTTL      = 2 * time.Minute
 	feedGenerationTTL = time.Hour
-	// how long the people a write was for read their feed from the primary, well past normal replica lag
-	feedPrimaryWindow = time.Minute
 )
 
 type FeedService interface {
@@ -33,11 +29,10 @@ type FeedService interface {
 type feedService struct {
 	repo  repository.FeedRepository
 	cache cache.Cache
-	now   func() time.Time
 }
 
 func NewFeedService(repo repository.FeedRepository, c cache.Cache) FeedService {
-	return &feedService{repo: repo, cache: c, now: time.Now}
+	return &feedService{repo: repo, cache: c}
 }
 
 // cached per user under a generation that every write touching the user bumps
@@ -48,11 +43,6 @@ func (s *feedService) List(ctx context.Context, user string, f *model.ContestFee
 	}
 
 	return cache.GetOrLoad(ctx, s.cache, "contest_feed", key, feedCacheTTL, func(ctx context.Context) (*model.ContestFeedResponse, error) {
-		// a replica that hasn't applied the write would cache the old list under the new generation
-		if s.readsPrimary(ctx, user) {
-			ctx = database.ReadPrimary(ctx)
-		}
-
 		page := *f
 		page.Limit = f.Limit + 1
 
@@ -75,30 +65,22 @@ func (s *feedService) List(ctx context.Context, user string, f *model.ContestFee
 	})
 }
 
-// for the people a write was for, who reload right away; their next load also reads the primary
 func (s *feedService) Invalidate(ctx context.Context, users ...string) {
-	s.invalidate(ctx, true, users...)
-}
-
-func (s *feedService) invalidate(ctx context.Context, primary bool, users ...string) {
 	if s.cache == nil {
 		return
 	}
 
-	gen := []byte(strconv.FormatInt(s.now().UnixNano(), 10))
+	keys := make([]string, 0, len(users))
 	for _, u := range users {
-		if u == "" {
-			continue
+		if u != "" {
+			keys = append(keys, generationKey(u))
 		}
-		if err := s.cache.Set(ctx, generationKey(u), gen, feedGenerationTTL); err != nil {
-			logging.FromContext(ctx).Warn("failed to invalidate contest feed", "user", u, "error", err)
-		}
-		if !primary {
-			continue
-		}
-		if err := s.cache.Set(ctx, primaryKey(u), []byte{1}, feedPrimaryWindow); err != nil {
-			logging.FromContext(ctx).Warn("failed to route contest feed to the primary", "user", u, "error", err)
-		}
+	}
+
+	// unique per write, so two writes in the same clock tick still both invalidate
+	gen := []byte(uuid.NewString())
+	if err := s.cache.SetMany(ctx, keys, gen, feedGenerationTTL); err != nil {
+		logging.FromContext(ctx).Warn("failed to invalidate contest feeds", "users", len(keys), "error", err)
 	}
 }
 
@@ -107,8 +89,7 @@ func (s *feedService) Members(ctx context.Context, contestID uuid.UUID) []string
 		return nil
 	}
 
-	// a lagging replica would miss someone who just joined
-	members, err := s.repo.Members(database.ReadPrimary(ctx), contestID)
+	members, err := s.repo.Members(ctx, contestID)
 	if err != nil {
 		logging.FromContext(ctx).Warn("failed to load contest members for feed invalidation", "contest_id", contestID, "error", err)
 		return nil
@@ -116,9 +97,8 @@ func (s *feedService) Members(ctx context.Context, contestID uuid.UUID) []string
 	return members
 }
 
-// the rest of the contest stays on the replica, since every claim and score update lands here
 func (s *feedService) InvalidateContest(ctx context.Context, contestID uuid.UUID) {
-	s.invalidate(ctx, false, s.Members(ctx, contestID)...)
+	s.Invalidate(ctx, s.Members(ctx, contestID)...)
 }
 
 func (s *feedService) cacheKey(ctx context.Context, user string, f *model.ContestFeedFilter) (string, error) {
@@ -137,18 +117,6 @@ func (s *feedService) cacheKey(ctx context.Context, user string, f *model.Contes
 	return "feed:" + user + ":" + gen + ":" + hex.EncodeToString(sum[:12]), nil
 }
 
-func (s *feedService) readsPrimary(ctx context.Context, user string) bool {
-	if s.cache == nil {
-		return false
-	}
-	_, ok, err := s.cache.Get(ctx, primaryKey(user))
-	return err == nil && ok
-}
-
 func generationKey(user string) string {
 	return "feed-generation:" + user
-}
-
-func primaryKey(user string) string {
-	return "feed-primary:" + user
 }

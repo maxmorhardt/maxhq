@@ -45,7 +45,7 @@ func TestAccounts_FirstSignInCreatesTheProfileAndPublishesIt(t *testing.T) {
 	resp.Decode(t, &profile)
 	assert.Equal(t, user, profile.Email)
 	assert.NotEmpty(t, profile.DefaultInitials, "initials default from the display name")
-	assert.True(t, profile.IsNew, "the first response marks the sign-up")
+	assert.NotEmpty(t, profile.SignUpID, "the first response marks the sign-up")
 
 	require.Eventually(t, func() bool { return len(userEvents(t, user)) == 1 }, eventually, 100*time.Millisecond)
 	entry := userEvents(t, user)[0]
@@ -55,7 +55,7 @@ func TestAccounts_FirstSignInCreatesTheProfileAndPublishesIt(t *testing.T) {
 	require.Equal(t, http.StatusOK, again.Status)
 	var second model.UserProfileResponse
 	again.Decode(t, &second)
-	assert.True(t, second.IsNew, "a retried first visit still reports the sign-up")
+	assert.Equal(t, profile.SignUpID, second.SignUpID, "a retried first visit reports the same sign-up, which the web dedupes")
 	time.Sleep(500 * time.Millisecond)
 	assert.Len(t, userEvents(t, user), 1)
 }

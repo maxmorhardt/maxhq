@@ -6,7 +6,7 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 
 ## Required
 
-- **PostgreSQL** - 17+, primary and optional read replica. One database shared by the squares services; this service migrates only its own `games` schema at startup (and adopts the pre-split `games` and `game_scores` tables from `public` on the first start after the split).
+- **PostgreSQL** - 17+. One database shared by the squares services; this service migrates only its own `games` schema at startup (and adopts the pre-split `games` and `game_scores` tables from `public` on the first start after the split).
 - **Valkey** (the `valkey` namespace) - the games stream, the upcoming-games cache, and the revocation list.
 - **ESPN** - `site.api.espn.com`, public and unauthenticated.
 - **Envoy Gateway** - the `maxhq` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/gateway`), because the service trusts them.
@@ -31,7 +31,6 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 | group | keys |
 | --- | --- |
 | database | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL_MODE` |
-| read replica | the same six with a `DB_READ_` prefix (optional) |
 | redis | `REDIS_URL` |
 | http | `ALLOWED_ORIGINS` |
 

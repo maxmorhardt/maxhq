@@ -13,6 +13,7 @@ export const baseApi = createApi({
     'Leaderboard',
     'MyRank',
     'Profile',
+    'Roster',
     'SiteStats',
     'UserStats',
   ],

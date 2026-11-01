@@ -8,6 +8,7 @@ const calls = () => window.dataLayer!.map((entry) => Array.from(entry as ArrayLi
 
 describe('googleAds', () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     tagScript()?.remove();
     delete window.dataLayer;
     delete window.gtag;
@@ -99,13 +100,12 @@ describe('googleAds', () => {
 
   it('still reports when storage is blocked', () => {
     initGoogleAds('squares.maxhq.io');
-    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
     });
 
     trackConversionOnce('signedUp', 'u_pat');
 
     expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_pat' });
-    getItem.mockRestore();
   });
 });

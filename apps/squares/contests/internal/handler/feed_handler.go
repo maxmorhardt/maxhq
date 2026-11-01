@@ -119,13 +119,13 @@ func InvalidateFeeds(feedService service.FeedService) gin.HandlerFunc {
 		}
 
 		// the owner or the player leaving is one of the members
-		if members != nil {
-			feedService.Invalidate(ctx, members...)
-			return
+		users := members
+		if users == nil {
+			users = []string{c.GetString(api.UserKey)}
+			if hasContest {
+				users = append(users, feedService.Members(ctx, contestID)...)
+			}
 		}
-		feedService.Invalidate(ctx, c.GetString(api.UserKey))
-		if hasContest {
-			feedService.InvalidateContest(ctx, contestID)
-		}
+		feedService.Invalidate(ctx, users...)
 	}
 }

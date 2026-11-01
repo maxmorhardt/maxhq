@@ -117,21 +117,6 @@ func TestInTx_RefusesWithoutATransaction(t *testing.T) {
 	assert.False(t, called)
 }
 
-func TestConn_ReadPrimaryRoutesToTheWriter(t *testing.T) {
-	db, _ := newMockDB(t)
-
-	_, onPrimary := Conn(ReadPrimary(context.Background()), db).Statement.Settings.Load("gorm:db_resolver:write")
-	assert.True(t, onPrimary)
-
-	_, onPlain := Conn(context.Background(), db).Statement.Settings.Load("gorm:db_resolver:write")
-	assert.False(t, onPlain)
-}
-
-func TestReadsPrimary(t *testing.T) {
-	assert.True(t, ReadsPrimary(ReadPrimary(context.Background())))
-	assert.False(t, ReadsPrimary(context.Background()))
-}
-
 func TestAfterCommit_RunsImmediatelyWithoutTransaction(t *testing.T) {
 	called := false
 	AfterCommit(context.Background(), func() { called = true })

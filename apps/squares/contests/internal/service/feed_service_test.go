@@ -11,7 +11,6 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
-	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -86,7 +85,6 @@ func TestFeed_CachesUntilInvalidated(t *testing.T) {
 	_, err = feed.List(ctx, "u", filter)
 	require.NoError(t, err)
 
-	time.Sleep(time.Millisecond)
 	feed.InvalidateContest(ctx, contestID)
 	_, err = feed.List(ctx, "u", filter)
 	require.NoError(t, err)
@@ -103,11 +101,6 @@ func TestFeed_MembersSkipsTheLookupWithoutACache(t *testing.T) {
 	assert.Nil(t, service.NewFeedService(mocks.NewFeedRepository(t), nil).Members(context.Background(), uuid.New()))
 }
 
-var (
-	onPrimary = mock.MatchedBy(database.ReadsPrimary)
-	onReplica = mock.MatchedBy(func(ctx context.Context) bool { return !database.ReadsPrimary(ctx) })
-)
-
 func redisCache(t *testing.T) (*miniredis.Miniredis, cache.Cache) {
 	mr := miniredis.RunT(t)
 	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
@@ -115,56 +108,31 @@ func redisCache(t *testing.T) (*miniredis.Miniredis, cache.Cache) {
 	return mr, cache.NewRedisCache(client, "test")
 }
 
-func TestFeed_ReadsTheReplicaByDefault(t *testing.T) {
-	repo := mocks.NewFeedRepository(t)
-	repo.EXPECT().List(onReplica, "u", mock.Anything).Return(nil, nil).Once()
-
-	_, c := redisCache(t)
-	_, err := service.NewFeedService(repo, c).List(context.Background(), "u", &model.ContestFeedFilter{Limit: 20})
-	require.NoError(t, err)
-}
-
-func TestFeed_ReadsThePrimaryRightAfterTheUsersOwnWrite(t *testing.T) {
+func TestFeed_InvalidatesEveryMemberAtOnce(t *testing.T) {
 	ctx := context.Background()
+	contestID := uuid.New()
+	members := []string{"u", "", "other"}
 	repo := mocks.NewFeedRepository(t)
-	repo.EXPECT().List(onPrimary, "u", mock.Anything).Return(nil, nil).Once()
-
-	_, c := redisCache(t)
-	feed := service.NewFeedService(repo, c)
-	feed.Invalidate(ctx, "u")
-
-	_, err := feed.List(ctx, "u", &model.ContestFeedFilter{Limit: 20})
-	require.NoError(t, err)
-}
-
-func TestFeed_ReturnsToTheReplicaOnceThePrimaryWindowPasses(t *testing.T) {
-	ctx := context.Background()
-	repo := mocks.NewFeedRepository(t)
-	repo.EXPECT().List(onReplica, "u", mock.Anything).Return(nil, nil).Once()
+	repo.EXPECT().Members(mock.Anything, contestID).Return(members, nil).Once()
+	repo.EXPECT().List(mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Times(4)
 
 	mr, c := redisCache(t)
 	feed := service.NewFeedService(repo, c)
-	feed.Invalidate(ctx, "u")
-	mr.FastForward(time.Minute)
+	for _, u := range []string{"u", "other"} {
+		_, err := feed.List(ctx, u, &model.ContestFeedFilter{Limit: 20})
+		require.NoError(t, err)
+	}
 
-	_, err := feed.List(ctx, "u", &model.ContestFeedFilter{Limit: 20})
-	require.NoError(t, err)
-}
-
-func TestFeed_ContestWideInvalidationStaysOnTheReplica(t *testing.T) {
-	ctx := context.Background()
-	contestID := uuid.New()
-	repo := mocks.NewFeedRepository(t)
-	repo.EXPECT().Members(mock.Anything, contestID).Return([]string{"u", "other"}, nil).Once()
-	repo.EXPECT().List(onReplica, "u", mock.Anything).Return(nil, nil).Twice()
-
-	_, c := redisCache(t)
-	feed := service.NewFeedService(repo, c)
-	_, err := feed.List(ctx, "u", &model.ContestFeedFilter{Limit: 20})
-	require.NoError(t, err)
-
-	time.Sleep(time.Millisecond)
 	feed.InvalidateContest(ctx, contestID)
-	_, err = feed.List(ctx, "u", &model.ContestFeedFilter{Limit: 20})
+	u, err := mr.Get(cache.Key("cache", "test", "feed-generation:u"))
 	require.NoError(t, err)
+	other, err := mr.Get(cache.Key("cache", "test", "feed-generation:other"))
+	require.NoError(t, err)
+	assert.Equal(t, u, other, "one write covers every member")
+	assert.False(t, mr.Exists(cache.Key("cache", "test", "feed-generation:")))
+
+	for _, u := range []string{"u", "other"} {
+		_, err := feed.List(ctx, u, &model.ContestFeedFilter{Limit: 20})
+		require.NoError(t, err)
+	}
 }

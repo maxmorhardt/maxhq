@@ -122,9 +122,6 @@ func (s *participantService) GetParticipants(ctx context.Context, contestID uuid
 }
 
 func (s *participantService) GetRoster(ctx context.Context, contestID uuid.UUID, user string) ([]model.ParticipantIdentity, error) {
-	// the web refetches as soon as someone joins, which a lagging replica would miss
-	ctx = database.ReadPrimary(ctx)
-
 	if err := s.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
 		return nil, err
 	}
@@ -256,6 +253,12 @@ func (s *participantService) UpdateParticipant(ctx context.Context, contestID uu
 func (s *participantService) RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error {
 	log := logging.FromContext(ctx)
 
+	// authorized before the contest lock, so a caller who can't remove this player never holds it
+	targetUserID, authErr := s.removalTarget(ctx, contestID, targetUserID, user)
+	if authErr != nil {
+		return authErr
+	}
+
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		// the contest lock waits out in-flight claims and blocks new ones and kickoff, so the squares loaded here are final
 		contest, err := s.contestRepo.GetByIDForUpdate(ctx, contestID)
@@ -270,17 +273,6 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 		if contest.Status.IsTerminal() {
 			log.Warn("cannot remove participant from a finalized contest", "contest_id", contestID, "status", contest.Status)
 			return errs.ErrContestFinalized
-		}
-
-		if targetUserID == pseudonym.Of(user) {
-			targetUserID = user
-		} else {
-			if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
-				return authErr
-			}
-			if targetUserID, err = s.resolveTarget(ctx, contestID, targetUserID); err != nil {
-				return err
-			}
 		}
 
 		participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, targetUserID)
@@ -319,9 +311,27 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 	return nil
 }
 
+// players can always leave; removing someone else takes a manager
+func (s *participantService) removalTarget(ctx context.Context, contestID uuid.UUID, target, user string) (string, error) {
+	if target != pseudonym.Of(user) {
+		if err := s.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
+			return "", err
+		}
+		return s.resolveTarget(ctx, contestID, target)
+	}
+
+	if _, err := s.participantRepo.GetByContestAndUser(ctx, contestID, user); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return "", errs.ErrNotParticipant
+		}
+		logging.FromContext(ctx).Error("failed to get participant", "contest_id", contestID, "error", err)
+		return "", errs.ErrDatabaseUnavailable
+	}
+	return user, nil
+}
+
 func (s *participantService) resolveTarget(ctx context.Context, contestID uuid.UUID, target string) (string, error) {
-	// the owner can act on a player the moment they join, before a replica has them
-	participants, err := s.participantRepo.GetAllByContestID(database.ReadPrimary(ctx), contestID)
+	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)
 	if err != nil {
 		logging.FromContext(ctx).Error("failed to get participants to resolve a pseudonym", "contest_id", contestID, "error", err)
 		return "", errs.ErrDatabaseUnavailable
