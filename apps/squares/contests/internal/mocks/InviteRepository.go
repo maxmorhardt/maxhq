@@ -8,6 +8,8 @@ import (
 	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	mock "github.com/stretchr/testify/mock"
 
+	time "time"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -24,27 +26,27 @@ func (_m *InviteRepository) EXPECT() *InviteRepository_Expecter {
 	return &InviteRepository_Expecter{mock: &_m.Mock}
 }
 
-// CountOpenByContestID provides a mock function with given fields: ctx, contestID
-func (_m *InviteRepository) CountOpenByContestID(ctx context.Context, contestID uuid.UUID) (int, error) {
-	ret := _m.Called(ctx, contestID)
+// CountByContestID provides a mock function with given fields: ctx, contestID, since
+func (_m *InviteRepository) CountByContestID(ctx context.Context, contestID uuid.UUID, since time.Time) (model.CreationCounts, error) {
+	ret := _m.Called(ctx, contestID, since)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CountOpenByContestID")
+		panic("no return value specified for CountByContestID")
 	}
 
-	var r0 int
+	var r0 model.CreationCounts
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (int, error)); ok {
-		return rf(ctx, contestID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, time.Time) (model.CreationCounts, error)); ok {
+		return rf(ctx, contestID, since)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) int); ok {
-		r0 = rf(ctx, contestID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, time.Time) model.CreationCounts); ok {
+		r0 = rf(ctx, contestID, since)
 	} else {
-		r0 = ret.Get(0).(int)
+		r0 = ret.Get(0).(model.CreationCounts)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = rf(ctx, contestID)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, time.Time) error); ok {
+		r1 = rf(ctx, contestID, since)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -52,31 +54,32 @@ func (_m *InviteRepository) CountOpenByContestID(ctx context.Context, contestID 
 	return r0, r1
 }
 
-// InviteRepository_CountOpenByContestID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountOpenByContestID'
-type InviteRepository_CountOpenByContestID_Call struct {
+// InviteRepository_CountByContestID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountByContestID'
+type InviteRepository_CountByContestID_Call struct {
 	*mock.Call
 }
 
-// CountOpenByContestID is a helper method to define mock.On call
+// CountByContestID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contestID uuid.UUID
-func (_e *InviteRepository_Expecter) CountOpenByContestID(ctx interface{}, contestID interface{}) *InviteRepository_CountOpenByContestID_Call {
-	return &InviteRepository_CountOpenByContestID_Call{Call: _e.mock.On("CountOpenByContestID", ctx, contestID)}
+//   - since time.Time
+func (_e *InviteRepository_Expecter) CountByContestID(ctx interface{}, contestID interface{}, since interface{}) *InviteRepository_CountByContestID_Call {
+	return &InviteRepository_CountByContestID_Call{Call: _e.mock.On("CountByContestID", ctx, contestID, since)}
 }
 
-func (_c *InviteRepository_CountOpenByContestID_Call) Run(run func(ctx context.Context, contestID uuid.UUID)) *InviteRepository_CountOpenByContestID_Call {
+func (_c *InviteRepository_CountByContestID_Call) Run(run func(ctx context.Context, contestID uuid.UUID, since time.Time)) *InviteRepository_CountByContestID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(time.Time))
 	})
 	return _c
 }
 
-func (_c *InviteRepository_CountOpenByContestID_Call) Return(_a0 int, _a1 error) *InviteRepository_CountOpenByContestID_Call {
+func (_c *InviteRepository_CountByContestID_Call) Return(_a0 model.CreationCounts, _a1 error) *InviteRepository_CountByContestID_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *InviteRepository_CountOpenByContestID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (int, error)) *InviteRepository_CountOpenByContestID_Call {
+func (_c *InviteRepository_CountByContestID_Call) RunAndReturn(run func(context.Context, uuid.UUID, time.Time) (model.CreationCounts, error)) *InviteRepository_CountByContestID_Call {
 	_c.Call.Return(run)
 	return _c
 }

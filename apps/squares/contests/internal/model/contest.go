@@ -10,10 +10,20 @@ import (
 )
 
 const (
-	MaxContestSquares        = 100
-	MaxOpenContestsPerOwner  = 25
-	MaxOpenInvitesPerContest = 25
+	MaxContestSquares          = 100
+	MaxOpenContestsPerOwner    = 25
+	MaxOpenInvitesPerContest   = 25
+	MaxContestsPerOwnerPerDay  = 50
+	MaxInvitesPerContestPerDay = 100
+
+	CreationWindow = 24 * time.Hour
 )
+
+// how many of something are still usable, and how many were made within the creation window
+type CreationCounts struct {
+	Open   int
+	Recent int
+}
 
 type ContestVisibility string
 

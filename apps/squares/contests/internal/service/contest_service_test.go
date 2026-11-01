@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -62,7 +63,7 @@ func upcomingGame(id uuid.UUID) *model.Game {
 func TestCreateContest_WithGame(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, nil)
+	repo.EXPECT().CountByOwner(mock.Anything, "o", mock.Anything).Return(model.CreationCounts{}, nil)
 	repo.EXPECT().Create(mock.Anything, mock.MatchedBy(func(c *model.Contest) bool {
 		return c.GameID != nil && *c.GameID == gameID && c.HomeTeam == "Chiefs" && c.AwayTeam == "Eagles"
 	}), mock.Anything).Return(nil)
@@ -83,7 +84,7 @@ func TestCreateContest_WithGame(t *testing.T) {
 func TestCreateContest_OpenContestLimitReached(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(model.MaxOpenContestsPerOwner, nil)
+	repo.EXPECT().CountByOwner(mock.Anything, "o", mock.Anything).Return(model.CreationCounts{Open: model.MaxOpenContestsPerOwner}, nil)
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
@@ -92,10 +93,24 @@ func TestCreateContest_OpenContestLimitReached(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrContestLimitReached)
 }
 
-func TestCreateContest_CountOpenError(t *testing.T) {
+func TestCreateContest_DailyContestLimitReached(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, errors.New("db"))
+	repo.EXPECT().CountByOwner(mock.Anything, "o", mock.MatchedBy(func(since time.Time) bool {
+		return time.Since(since).Round(time.Minute) == model.CreationWindow
+	})).Return(model.CreationCounts{Open: 1, Recent: model.MaxContestsPerOwnerPerDay}, nil)
+	gameRepo := mocks.NewGameSyncRepository(t)
+	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
+
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
+	assert.ErrorIs(t, err, errs.ErrDailyContestLimit)
+}
+
+func TestCreateContest_CountError(t *testing.T) {
+	gameID := uuid.New()
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().CountByOwner(mock.Anything, "o", mock.Anything).Return(model.CreationCounts{}, errors.New("db"))
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
@@ -155,7 +170,7 @@ func TestCreateContest_UntilTheFirstQuarterEnds(t *testing.T) {
 		gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(game, nil)
 		repo := mocks.NewContestRepository(t)
 		if tc.want == nil {
-			repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, nil)
+			repo.EXPECT().CountByOwner(mock.Anything, "o", mock.Anything).Return(model.CreationCounts{}, nil)
 			repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		}
 
@@ -220,7 +235,7 @@ func TestDeleteContest_Success(t *testing.T) {
 func TestCreateContest_RepoError(t *testing.T) {
 	gameID := uuid.New()
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().CountOpenByOwner(mock.Anything, "o").Return(0, nil)
+	repo.EXPECT().CountByOwner(mock.Anything, "o", mock.Anything).Return(model.CreationCounts{}, nil)
 	repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)

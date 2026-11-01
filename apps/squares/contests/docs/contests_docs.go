@@ -157,7 +157,7 @@ const docTemplatecontests = `{
                         }
                     },
                     "429": {
-                        "description": "The owner already has the most open contests allowed",
+                        "description": "The owner has the most open contests allowed, or created the most allowed in a day",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -397,7 +397,7 @@ const docTemplatecontests = `{
                         }
                     },
                     "429": {
-                        "description": "The contest already has the most open invite links allowed",
+                        "description": "The contest has the most open invite links allowed, or made the most allowed in a day",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }

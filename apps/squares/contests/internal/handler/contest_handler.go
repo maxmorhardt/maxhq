@@ -75,7 +75,7 @@ func (h *contestHandler) GetContest(c *gin.Context) {
 // @Failure 400 {object} api.APIError
 // @Failure 404 {object} api.APIError
 // @Failure 409 {object} api.APIError "The game is past the first quarter or was canceled"
-// @Failure 429 {object} api.APIError "The owner already has the most open contests allowed"
+// @Failure 429 {object} api.APIError "The owner has the most open contests allowed, or created the most allowed in a day"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests [post]
@@ -100,7 +100,7 @@ func (h *contestHandler) CreateContest(c *gin.Context) {
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrGameNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestLimitReached):
+		case errors.Is(err, errs.ErrContestLimitReached), errors.Is(err, errs.ErrDailyContestLimit):
 			c.JSON(http.StatusTooManyRequests, api.NewAPIError(http.StatusTooManyRequests, api.Message(err), c))
 		default:
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to create contest", c))

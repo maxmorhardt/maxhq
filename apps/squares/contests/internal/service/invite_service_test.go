@@ -65,7 +65,7 @@ func TestCreateInvite_RepoCreateFails(t *testing.T) {
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountOpenByContestID(mock.Anything, mock.Anything).Return(0, nil)
+	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, nil)
 	inv.EXPECT().Create(mock.Anything, mock.Anything).Return(errors.New("db write failed"))
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
@@ -90,7 +90,7 @@ func TestCreateInvite_ViewerForcesZeroSquares(t *testing.T) {
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountOpenByContestID(mock.Anything, mock.Anything).Return(0, nil)
+	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, nil)
 	inv.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 
 	got, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
@@ -106,7 +106,7 @@ func TestCreateInvite_Success(t *testing.T) {
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountOpenByContestID(mock.Anything, mock.Anything).Return(0, nil)
+	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, nil)
 	inv.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 
 	got, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
@@ -122,20 +122,35 @@ func TestCreateInvite_OpenInviteLimitReached(t *testing.T) {
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountOpenByContestID(mock.Anything, mock.Anything).Return(model.MaxOpenInvitesPerContest, nil)
+	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{Open: model.MaxOpenInvitesPerContest}, nil)
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
 		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant"}, "owner")
 	assert.ErrorIs(t, err, errs.ErrInviteLimitReached)
 }
 
-func TestCreateInvite_CountOpenError(t *testing.T) {
+func TestCreateInvite_DailyInviteLimitReached(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountOpenByContestID(mock.Anything, mock.Anything).Return(0, errors.New("db"))
+	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.MatchedBy(func(since time.Time) bool {
+		return time.Since(since).Round(time.Minute) == model.CreationWindow
+	})).Return(model.CreationCounts{Open: 1, Recent: model.MaxInvitesPerContestPerDay}, nil)
+
+	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
+		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant"}, "owner")
+	assert.ErrorIs(t, err, errs.ErrDailyInviteLimit)
+}
+
+func TestCreateInvite_CountError(t *testing.T) {
+	c := mocks.NewContestRepository(t)
+	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	pSvc := mocks.NewParticipantService(t)
+	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	inv := mocks.NewInviteRepository(t)
+	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, errors.New("db"))
 
 	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
 		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant"}, "owner")

@@ -81,15 +81,20 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 		return nil, errs.ErrInvalidSquareCount
 	}
 
-	open, countErr := s.inviteRepo.CountOpenByContestID(ctx, contestID)
+	counts, countErr := s.inviteRepo.CountByContestID(ctx, contestID, time.Now().Add(-model.CreationWindow))
 	if countErr != nil {
-		log.Error("failed to count open invites", "contest_id", contestID, "error", countErr)
+		log.Error("failed to count the contest's invites", "contest_id", contestID, "error", countErr)
 		return nil, errs.ErrDatabaseUnavailable
 	}
-	if open >= model.MaxOpenInvitesPerContest {
-		log.Warn("open invite limit reached", "contest_id", contestID, "open", open, "limit", model.MaxOpenInvitesPerContest)
+	if counts.Open >= model.MaxOpenInvitesPerContest {
+		log.Warn("open invite limit reached", "contest_id", contestID, "open", counts.Open, "limit", model.MaxOpenInvitesPerContest)
 		metrics.IncLimitReached("open_invites")
 		return nil, errs.ErrInviteLimitReached
+	}
+	if counts.Recent >= model.MaxInvitesPerContestPerDay {
+		log.Warn("daily invite limit reached", "contest_id", contestID, "recent", counts.Recent, "limit", model.MaxInvitesPerContestPerDay)
+		metrics.IncLimitReached("daily_invites")
+		return nil, errs.ErrDailyInviteLimit
 	}
 
 	invite := &model.ContestInvite{

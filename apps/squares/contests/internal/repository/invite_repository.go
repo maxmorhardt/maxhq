@@ -14,7 +14,7 @@ import (
 
 type InviteRepository interface {
 	GetByToken(ctx context.Context, token string) (*model.ContestInvite, error)
-	CountOpenByContestID(ctx context.Context, contestID uuid.UUID) (int, error)
+	CountByContestID(ctx context.Context, contestID uuid.UUID, since time.Time) (model.CreationCounts, error)
 	GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestInvite, error)
 	Create(ctx context.Context, invite *model.ContestInvite) error
 	RedeemInvite(ctx context.Context, inviteID uuid.UUID, participant *model.ContestParticipant, maxPoolSquares int) error
@@ -43,13 +43,16 @@ func (r *inviteRepository) GetAllByContestID(ctx context.Context, contestID uuid
 	return invites, err
 }
 
-func (r *inviteRepository) CountOpenByContestID(ctx context.Context, contestID uuid.UUID) (int, error) {
-	var count int64
+// expired and used-up invites count as recent; a deleted one is gone, so it leaves nothing behind to cap
+func (r *inviteRepository) CountByContestID(ctx context.Context, contestID uuid.UUID, since time.Time) (model.CreationCounts, error) {
+	var counts model.CreationCounts
 	err := database.Conn(ctx, r.db).
 		Model(&model.ContestInvite{}).
-		Where("contest_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR uses < max_uses)", contestID, time.Now()).
-		Count(&count).Error
-	return int(count), err
+		Select(`COUNT(*) FILTER (WHERE (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR uses < max_uses)) AS open,
+			COUNT(*) FILTER (WHERE created_at > ?) AS recent`, time.Now(), since).
+		Where("contest_id = ?", contestID).
+		Scan(&counts).Error
+	return counts, err
 }
 
 func (r *inviteRepository) Create(ctx context.Context, invite *model.ContestInvite) error {

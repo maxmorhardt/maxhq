@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
@@ -52,18 +53,19 @@ func inTxErr(gdb *gorm.DB, call func(ctx context.Context) error) error {
 	return database.NewTransactor(gdb).Do(context.Background(), call)
 }
 
-func TestContestRepository_CountOpenByOwner(t *testing.T) {
+func TestContestRepository_CountByOwner(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewContestRepository(gdb)
+	since := time.Now().Add(-model.CreationWindow)
 
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "contests" WHERE owner = \$1 AND status NOT IN \(\$2,\$3\)`).
-		WithArgs("o@x.com", model.ContestStatusFinished, model.ContestStatusDeleted).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FILTER \(WHERE status NOT IN \(\$1,\$2\)\) AS open, COUNT\(\*\) FILTER \(WHERE created_at > \$3\) AS recent FROM "contests" WHERE owner = \$4`).
+		WithArgs(model.ContestStatusFinished, model.ContestStatusDeleted, since, "o@x.com").
+		WillReturnRows(sqlmock.NewRows([]string{"open", "recent"}).AddRow(7, 12))
 
-	count, err := repo.CountOpenByOwner(context.Background(), "o@x.com")
+	counts, err := repo.CountByOwner(context.Background(), "o@x.com", since)
 
 	require.NoError(t, err)
-	assert.Equal(t, 7, count)
+	assert.Equal(t, model.CreationCounts{Open: 7, Recent: 12}, counts)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

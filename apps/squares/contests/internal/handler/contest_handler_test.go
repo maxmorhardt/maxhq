@@ -72,6 +72,10 @@ func TestCreateContest_OpenContestLimitReached(t *testing.T) {
 	createContestErr(t, errs.ErrContestLimitReached, http.StatusTooManyRequests)
 }
 
+func TestCreateContest_DailyContestLimitReached(t *testing.T) {
+	createContestErr(t, errs.ErrDailyContestLimit, http.StatusTooManyRequests)
+}
+
 func TestCreateContest_DatabaseUnavailable(t *testing.T) {
 	createContestErr(t, errs.ErrDatabaseUnavailable, http.StatusInternalServerError)
 }

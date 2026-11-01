@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -84,15 +85,20 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 		return nil, errs.ErrGamePastFirstQuarter
 	}
 
-	open, err := s.repo.CountOpenByOwner(ctx, user)
+	counts, err := s.repo.CountByOwner(ctx, user, time.Now().Add(-model.CreationWindow))
 	if err != nil {
-		log.Error("failed to count open contests", "error", err)
+		log.Error("failed to count the owner's contests", "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
-	if open >= model.MaxOpenContestsPerOwner {
-		log.Warn("open contest limit reached", "open", open, "limit", model.MaxOpenContestsPerOwner)
+	if counts.Open >= model.MaxOpenContestsPerOwner {
+		log.Warn("open contest limit reached", "open", counts.Open, "limit", model.MaxOpenContestsPerOwner)
 		metrics.IncLimitReached("open_contests")
 		return nil, errs.ErrContestLimitReached
+	}
+	if counts.Recent >= model.MaxContestsPerOwnerPerDay {
+		log.Warn("daily contest limit reached", "recent", counts.Recent, "limit", model.MaxContestsPerOwnerPerDay)
+		metrics.IncLimitReached("daily_contests")
+		return nil, errs.ErrDailyContestLimit
 	}
 
 	contest := model.Contest{

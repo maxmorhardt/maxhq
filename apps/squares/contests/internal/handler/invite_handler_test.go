@@ -65,6 +65,9 @@ func TestCreateInvite_NotFound(t *testing.T) {
 func TestCreateInvite_OpenInviteLimitReached(t *testing.T) {
 	createInviteErr(t, "owner1", errs.ErrInviteLimitReached, http.StatusTooManyRequests)
 }
+func TestCreateInvite_DailyInviteLimitReached(t *testing.T) {
+	createInviteErr(t, "owner1", errs.ErrDailyInviteLimit, http.StatusTooManyRequests)
+}
 func TestCreateInvite_InvalidSquareCount(t *testing.T) {
 	createInviteErr(t, "owner1", errs.ErrInvalidSquareCount, http.StatusBadRequest)
 }
