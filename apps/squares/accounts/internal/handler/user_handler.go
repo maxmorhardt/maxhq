@@ -33,7 +33,7 @@ func NewUserHandler(userService service.UserService) UserHandler {
 }
 
 // @Summary Get the current user's profile
-// @Description Returns the profile of the authenticated user, creating it on first access
+// @Description Returns the profile of the authenticated user, creating it on first access; isNew is set only on the response that created it
 // @Tags users
 // @Produce json
 // @Success 200 {object} model.UserProfileResponse
@@ -48,13 +48,15 @@ func (h *userHandler) GetMe(c *gin.Context) {
 		defaultDisplayName = claims.Name
 	}
 
-	profile, err := h.userService.GetProfile(c.Request.Context(), user, defaultDisplayName)
+	profile, created, err := h.userService.GetProfile(c.Request.Context(), user, defaultDisplayName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 
-	c.JSON(http.StatusOK, toProfileResponse(profile))
+	resp := toProfileResponse(profile)
+	resp.IsNew = created
+	c.JSON(http.StatusOK, resp)
 }
 
 func toProfileResponse(user *model.User) model.UserProfileResponse {

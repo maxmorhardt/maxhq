@@ -51,10 +51,11 @@ func TestGetProfile_Existing(t *testing.T) {
 	d := newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(&model.User{Email: "a@b.com", DefaultInitials: "MM"}, nil)
 
-	user, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max Morhardt")
+	user, created, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max Morhardt")
 
 	require.NoError(t, err)
 	assert.Equal(t, "MM", user.DefaultInitials)
+	assert.False(t, created)
 }
 
 func TestGetProfile_CreatesWithFirstActivityAndAnnouncesIt(t *testing.T) {
@@ -64,13 +65,27 @@ func TestGetProfile_CreatesWithFirstActivityAndAnnouncesIt(t *testing.T) {
 	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{FirstActivity: &first}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool {
 		return u.DefaultInitials == "MM" && u.CreatedAt.Equal(first)
-	})).RunAndReturn(func(_ context.Context, u *model.User) (*model.User, error) { return u, nil })
+	})).RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
 	d.outbox.EXPECT().Add(mock.Anything, events.UsersStream, events.UserUpdatedType, events.UserUpdated{Email: "a@b.com", DisplayName: "Max Morhardt", DefaultInitials: "MM"}).Return(nil)
 
-	user, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max Morhardt")
+	user, created, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max Morhardt")
 
 	require.NoError(t, err)
 	assert.Equal(t, "Max Morhardt", user.DisplayName)
+	assert.True(t, created)
+}
+
+func TestGetProfile_ConcurrentFirstVisitIsNotCreated(t *testing.T) {
+	d := newUserDeps(t)
+	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
+	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(&model.User{Email: "a@b.com"}, false, nil)
+	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	_, created, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+
+	require.NoError(t, err)
+	assert.False(t, created)
 }
 
 func TestGetProfile_CreatesEvenWhenContestsIsDown(t *testing.T) {
@@ -78,10 +93,10 @@ func TestGetProfile_CreatesEvenWhenContestsIsDown(t *testing.T) {
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(nil, errors.New("down"))
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool { return u.CreatedAt.IsZero() })).
-		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, error) { return u, nil })
+		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
 	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	_, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+	_, _, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
 
 	require.NoError(t, err)
 }
@@ -89,14 +104,14 @@ func TestGetProfile_CreatesEvenWhenContestsIsDown(t *testing.T) {
 func TestGetProfile_Errors(t *testing.T) {
 	d := newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
-	_, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+	_, _, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 
 	d = newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
-	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
-	_, err = d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(nil, false, errors.New("db"))
+	_, _, err = d.svc().GetProfile(context.Background(), "a@b.com", "Max")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 

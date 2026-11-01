@@ -17,7 +17,7 @@ type Tombstone struct {
 
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
-	CreateIfMissing(ctx context.Context, user *model.User) (*model.User, error)
+	CreateIfMissing(ctx context.Context, user *model.User) (*model.User, bool, error)
 	UpdateInitials(ctx context.Context, email, initials string) (*model.User, error)
 	DeleteWithTombstone(ctx context.Context, email string, deletedAt time.Time) error
 	TombstonesSince(ctx context.Context, since time.Time) ([]Tombstone, error)
@@ -43,22 +43,23 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.U
 	return user, nil
 }
 
-// a concurrent first visit may have created the row already; whichever insert won is returned
-func (r *userRepository) CreateIfMissing(ctx context.Context, user *model.User) (*model.User, error) {
+// a concurrent first visit may have created the row already; whichever insert won is returned, and only it reports created
+func (r *userRepository) CreateIfMissing(ctx context.Context, user *model.User) (*model.User, bool, error) {
 	conn := database.Conn(ctx, r.db)
 
-	if err := conn.
+	res := conn.
 		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "email"}}, DoNothing: true}).
-		Create(user).Error; err != nil {
-		return nil, err
+		Create(user)
+	if res.Error != nil {
+		return nil, false, res.Error
 	}
 
 	stored := &model.User{}
 	if err := conn.Where("email = ?", user.Email).First(stored).Error; err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return stored, nil
+	return stored, res.RowsAffected > 0, nil
 }
 
 func (r *userRepository) UpdateInitials(ctx context.Context, email, initials string) (*model.User, error) {

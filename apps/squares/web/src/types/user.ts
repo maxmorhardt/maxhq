@@ -4,6 +4,8 @@ export interface UserProfile {
   displayName: string;
   defaultInitials: string;
   createdAt: string;
+  // only on the response that created the profile
+  isNew?: boolean;
 }
 
 export interface UpdateUserProfileRequest {

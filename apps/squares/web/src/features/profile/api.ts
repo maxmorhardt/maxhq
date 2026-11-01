@@ -1,11 +1,23 @@
 import { baseApi } from '../../api/baseApi';
 import type { UpdateUserProfileRequest, UserProfile, UserStats } from '../../types/user';
+import { trackConversion } from '../../utils/googleAds';
 
 export const profileApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getMyProfile: build.query<UserProfile, void>({
       query: () => '/users/me',
       providesTags: ['Profile'],
+      // accounts flags only the request that created the profile, so a returning sign-in never counts
+      async onQueryStarted(_, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.isNew) {
+            trackConversion('signedUp');
+          }
+        } catch {
+          // the query reports its own error
+        }
+      },
     }),
 
     updateMyProfile: build.mutation<UserProfile, UpdateUserProfileRequest>({

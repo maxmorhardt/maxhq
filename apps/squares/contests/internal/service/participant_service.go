@@ -255,8 +255,10 @@ func (s *participantService) UpdateParticipant(ctx context.Context, contestID uu
 
 func (s *participantService) RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error {
 	log := logging.FromContext(ctx)
+	// the owner can remove a player the moment they join, before a replica has them or their squares
+	primary := database.ReadPrimary(ctx)
 
-	contest, err := s.contestRepo.GetByID(ctx, contestID)
+	contest, err := s.contestRepo.GetByID(primary, contestID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return errs.ErrContestNotFound
@@ -281,7 +283,7 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 		}
 	}
 
-	participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, targetUserID)
+	participant, err := s.participantRepo.GetByContestAndUser(primary, contestID, targetUserID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return errs.ErrNotParticipant

@@ -148,6 +148,44 @@ describe('LiveContest', () => {
     expect(refetch).toHaveBeenCalledTimes(2);
   });
 
+  it('refetches after an in-flight roster that missed a later join', () => {
+    const refetch = vi.fn();
+    const stale = [{ userId: 'u_player', fullName: 'Owen Owner' }];
+    contestsApi.useGetRosterQuery.mockReturnValue({
+      currentData: stale,
+      isFetching: false,
+      refetch,
+    });
+    const { snapshot } = renderLive();
+    const owned = makeContest({ owner: 'u_player' });
+    const owner = makeParticipant({ userId: 'u_player', role: 'owner' });
+    const pat = makeParticipant({ id: 'p-2', userId: 'u_pat' });
+    const sam = makeParticipant({ id: 'p-3', userId: 'u_sam' });
+
+    snapshot(owned, [owner, pat]);
+    expect(refetch).toHaveBeenCalledOnce();
+
+    contestsApi.useGetRosterQuery.mockReturnValue({
+      currentData: stale,
+      isFetching: true,
+      refetch,
+    });
+    snapshot(owned, [owner, pat, sam]);
+    snapshot(owned, [owner, sam]);
+    expect(refetch).toHaveBeenCalledOnce();
+
+    contestsApi.useGetRosterQuery.mockReturnValue({
+      currentData: stale,
+      isFetching: false,
+      refetch,
+    });
+    snapshot(owned, [owner, sam]);
+    expect(refetch).toHaveBeenCalledTimes(2);
+
+    snapshot(owned, [owner, sam]);
+    expect(refetch).toHaveBeenCalledTimes(2);
+  });
+
   it('never refetches a skipped roster, which still holds its old data', () => {
     const refetch = vi.fn();
     contestsApi.useGetRosterQuery.mockReturnValue({

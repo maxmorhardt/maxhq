@@ -86,7 +86,11 @@ export function initGoogleAds(hostname?: string): void {
   document.head.appendChild(script);
 }
 
-// a no-op outside production, where the tag never loads
+// a no-op outside production, where the tag never loads; never throws into the caller's success path
 export function trackConversion(conversion: Conversion): void {
-  window.gtag?.('event', 'conversion', { send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}` });
+  try {
+    window.gtag?.('event', 'conversion', { send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}` });
+  } catch {
+    // a broken or stubbed tag must not undo the action it reports
+  }
 }

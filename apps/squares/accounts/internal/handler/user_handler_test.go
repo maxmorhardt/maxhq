@@ -36,7 +36,7 @@ func newUserRouter(t *testing.T) (*mocks.UserService, *gin.Engine) {
 func TestGetMe_Success(t *testing.T) {
 	svc, r := newUserRouter(t)
 	svc.EXPECT().GetProfile(mock.Anything, "a@b.com", "Test").
-		Return(&model.User{Email: "a@b.com", DisplayName: "Max"}, nil)
+		Return(&model.User{Email: "a@b.com", DisplayName: "Max"}, false, nil)
 
 	req, _ := http.NewRequest(http.MethodGet, "/users/me", http.NoBody)
 	w := doRequest(r, req)
@@ -47,12 +47,27 @@ func TestGetMe_Success(t *testing.T) {
 	assert.Equal(t, "a@b.com", resp.Email)
 	assert.Equal(t, pseudonym.Of("a@b.com"), resp.UserID)
 	assert.Equal(t, "Max", resp.DisplayName)
+	assert.NotContains(t, w.Body.String(), "isNew")
+}
+
+func TestGetMe_MarksTheResponseThatCreatedTheProfile(t *testing.T) {
+	svc, r := newUserRouter(t)
+	svc.EXPECT().GetProfile(mock.Anything, "a@b.com", "Test").
+		Return(&model.User{Email: "a@b.com", DisplayName: "Max"}, true, nil)
+
+	req, _ := http.NewRequest(http.MethodGet, "/users/me", http.NoBody)
+	w := doRequest(r, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp model.UserProfileResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.True(t, resp.IsNew)
 }
 
 func TestGetMe_ServiceError(t *testing.T) {
 	svc, r := newUserRouter(t)
 	svc.EXPECT().GetProfile(mock.Anything, "a@b.com", "Test").
-		Return(nil, errs.ErrDatabaseUnavailable)
+		Return(nil, false, errs.ErrDatabaseUnavailable)
 
 	req, _ := http.NewRequest(http.MethodGet, "/users/me", http.NoBody)
 	w := doRequest(r, req)

@@ -1,5 +1,5 @@
 import { skipToken } from '@reduxjs/toolkit/query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppSelector } from '../../../app/hooks';
 import ForbiddenError from '../../../components/errors/ForbiddenError';
@@ -85,20 +85,26 @@ export default function LiveContest({ contestId }: Props) {
 
   // currentData: a skipped query keeps its old data but can't be refetched
   const isOwner = !!contest && isMe(viewerId, contest.owner);
-  const { currentData: roster, refetch: refetchRoster } = useGetRosterQuery(
-    isOwner ? contestId : skipToken
-  );
+  const {
+    currentData: roster,
+    isFetching: rosterFetching,
+    refetch: refetchRoster,
+  } = useGetRosterQuery(isOwner ? contestId : skipToken);
   const missing = roster
     ? participants
         .filter((p) => !roster.some((r) => r.userId === p.userId))
         .map((p) => p.userId)
         .join(',')
     : '';
+  // rtk drops a refetch while one is in flight, so wait it out and ask once per missing set
+  const rosterRequestedFor = useRef('');
   useEffect(() => {
-    if (missing) {
-      void refetchRoster();
+    if (!missing || rosterFetching || rosterRequestedFor.current === missing) {
+      return;
     }
-  }, [missing, refetchRoster]);
+    rosterRequestedFor.current = missing;
+    void refetchRoster();
+  }, [missing, rosterFetching, refetchRoster]);
 
   useEffect(() => {
     if (!winnerFlash) {

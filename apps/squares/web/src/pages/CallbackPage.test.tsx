@@ -15,8 +15,6 @@ vi.mock('react-router', async () => {
 
 const session = vi.hoisted(() => ({ notifySession: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('../auth/session', () => session);
-const ads = vi.hoisted(() => ({ trackConversion: vi.fn() }));
-vi.mock('../utils/googleAds', () => ads);
 vi.mock('react-oidc-context', () => ({
   useAuth: vi.fn(),
 }));
@@ -95,8 +93,6 @@ describe('CallbackPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/contests/c-1', { replace: true });
     expect(session.notifySession).toHaveBeenCalledWith('restore', undefined);
-    expect(ads.trackConversion).toHaveBeenCalledTimes(1);
-    expect(ads.trackConversion).toHaveBeenCalledWith('signedUp');
   });
 
   it('falls back to /contests when no redirect path is stored', async () => {

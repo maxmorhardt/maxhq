@@ -84,6 +84,11 @@ definitions:
       email:
         example: user@example.com
         type: string
+      isNew:
+        description: set only on the request that created the profile, so the web
+          counts each sign-up once
+        example: true
+        type: boolean
       userId:
         example: u_3q2mL0x9VfTzQk1rB7cW8a
         type: string
@@ -190,7 +195,7 @@ paths:
       - users
     get:
       description: Returns the profile of the authenticated user, creating it on first
-        access
+        access; isNew is set only on the response that created it
       produces:
       - application/json
       responses:

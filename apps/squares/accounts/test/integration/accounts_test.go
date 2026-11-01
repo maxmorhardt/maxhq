@@ -45,12 +45,17 @@ func TestAccounts_FirstSignInCreatesTheProfileAndPublishesIt(t *testing.T) {
 	resp.Decode(t, &profile)
 	assert.Equal(t, user, profile.Email)
 	assert.NotEmpty(t, profile.DefaultInitials, "initials default from the display name")
+	assert.True(t, profile.IsNew, "the first response marks the sign-up")
 
 	require.Eventually(t, func() bool { return len(userEvents(t, user)) == 1 }, eventually, 100*time.Millisecond)
 	entry := userEvents(t, user)[0]
 	assert.Equal(t, events.UserUpdatedType, entry.Type)
 
-	require.Equal(t, http.StatusOK, testkit.Call(t, replicaB, testkit.As(user), http.MethodGet, "/users/me", nil).Status)
+	again := testkit.Call(t, replicaB, testkit.As(user), http.MethodGet, "/users/me", nil)
+	require.Equal(t, http.StatusOK, again.Status)
+	var second model.UserProfileResponse
+	again.Decode(t, &second)
+	assert.False(t, second.IsNew, "later visits are not sign-ups")
 	time.Sleep(500 * time.Millisecond)
 	assert.Len(t, userEvents(t, user), 1)
 }

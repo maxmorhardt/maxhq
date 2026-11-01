@@ -23,7 +23,7 @@ import (
 const revocationWindow = 91 * 24 * time.Hour
 
 type UserService interface {
-	GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, error)
+	GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, bool, error)
 	UpdateProfile(ctx context.Context, email, initials string) (*model.User, error)
 	DeleteAccount(ctx context.Context, email string) error
 	SignOut(ctx context.Context, email string, issuedAt, expiresAt int64) error
@@ -55,17 +55,17 @@ func NewUserService(
 	}
 }
 
-func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, error) {
+func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, bool, error) {
 	log := logging.FromContext(ctx)
 
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err == nil {
 		log.Info("retrieved user profile")
-		return user, nil
+		return user, false, nil
 	}
 	if !errors.Is(err, database.ErrNotFound) {
 		log.Error("failed to get user", "error", err)
-		return nil, errs.ErrDatabaseUnavailable
+		return nil, false, errs.ErrDatabaseUnavailable
 	}
 
 	newUser := &model.User{
@@ -80,9 +80,10 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		newUser.CreatedAt = *summary.FirstActivity
 	}
 
+	var created bool
 	err = s.tx.Do(ctx, func(ctx context.Context) error {
 		var createErr error
-		user, createErr = s.repo.CreateIfMissing(ctx, newUser)
+		user, created, createErr = s.repo.CreateIfMissing(ctx, newUser)
 		if createErr != nil {
 			return createErr
 		}
@@ -91,11 +92,11 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	})
 	if err != nil {
 		log.Error("failed to create user", "error", err)
-		return nil, errs.ErrDatabaseUnavailable
+		return nil, false, errs.ErrDatabaseUnavailable
 	}
 
-	log.Info("created user profile")
-	return user, nil
+	log.Info("created user profile", "created", created)
+	return user, created, nil
 }
 
 func (s *userService) UpdateProfile(ctx context.Context, email, defaultInitials string) (*model.User, error) {

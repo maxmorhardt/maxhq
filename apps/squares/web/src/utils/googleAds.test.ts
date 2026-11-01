@@ -68,6 +68,14 @@ describe('googleAds', () => {
     ]);
   });
 
+  it('swallows a tag that throws', () => {
+    window.gtag = () => {
+      throw new Error('blocked');
+    };
+
+    expect(() => trackConversion('contestCreated')).not.toThrow();
+  });
+
   it('reports nothing where the tag never loaded', () => {
     expect(() => trackConversion('signedUp')).not.toThrow();
     expect(window.dataLayer).toBeUndefined();

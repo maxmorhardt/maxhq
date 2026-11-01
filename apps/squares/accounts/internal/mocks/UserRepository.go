@@ -27,7 +27,7 @@ func (_m *UserRepository) EXPECT() *UserRepository_Expecter {
 }
 
 // CreateIfMissing provides a mock function with given fields: ctx, user
-func (_m *UserRepository) CreateIfMissing(ctx context.Context, user *model.User) (*model.User, error) {
+func (_m *UserRepository) CreateIfMissing(ctx context.Context, user *model.User) (*model.User, bool, error) {
 	ret := _m.Called(ctx, user)
 
 	if len(ret) == 0 {
@@ -35,8 +35,9 @@ func (_m *UserRepository) CreateIfMissing(ctx context.Context, user *model.User)
 	}
 
 	var r0 *model.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *model.User) (*model.User, error)); ok {
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.User) (*model.User, bool, error)); ok {
 		return rf(ctx, user)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, *model.User) *model.User); ok {
@@ -47,13 +48,19 @@ func (_m *UserRepository) CreateIfMissing(ctx context.Context, user *model.User)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *model.User) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *model.User) bool); ok {
 		r1 = rf(ctx, user)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, *model.User) error); ok {
+		r2 = rf(ctx, user)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // UserRepository_CreateIfMissing_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateIfMissing'
@@ -75,12 +82,12 @@ func (_c *UserRepository_CreateIfMissing_Call) Run(run func(ctx context.Context,
 	return _c
 }
 
-func (_c *UserRepository_CreateIfMissing_Call) Return(_a0 *model.User, _a1 error) *UserRepository_CreateIfMissing_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *UserRepository_CreateIfMissing_Call) Return(_a0 *model.User, _a1 bool, _a2 error) *UserRepository_CreateIfMissing_Call {
+	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 
-func (_c *UserRepository_CreateIfMissing_Call) RunAndReturn(run func(context.Context, *model.User) (*model.User, error)) *UserRepository_CreateIfMissing_Call {
+func (_c *UserRepository_CreateIfMissing_Call) RunAndReturn(run func(context.Context, *model.User) (*model.User, bool, error)) *UserRepository_CreateIfMissing_Call {
 	_c.Call.Return(run)
 	return _c
 }

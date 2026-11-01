@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func userRows(email, initials string) *sqlmock.Rows {
+func userRows(initials string) *sqlmock.Rows {
 	return sqlmock.NewRows([]string{"id", "email", "display_name", "default_initials", "created_at", "updated_at"}).
-		AddRow(uuid.New().String(), email, "Max", initials, time.Now(), time.Now())
+		AddRow(uuid.New().String(), "a@b.com", "Max", initials, time.Now(), time.Now())
 }
 
 func TestUserRepository_GetByEmail(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`SELECT \* FROM "users" WHERE email = \$1`).WillReturnRows(userRows("a@b.com", "MM"))
+	mock.ExpectQuery(`SELECT \* FROM "users" WHERE email = \$1`).WillReturnRows(userRows("MM"))
 
 	user, err := NewUserRepository(gdb).GetByEmail(context.Background(), "a@b.com")
 
@@ -39,12 +39,28 @@ func TestUserRepository_CreateIfMissing(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "users" .* ON CONFLICT \("email"\) DO NOTHING`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	mock.ExpectQuery(`SELECT \* FROM "users"`).WillReturnRows(userRows("a@b.com", "MM"))
+	mock.ExpectQuery(`SELECT \* FROM "users"`).WillReturnRows(userRows("MM"))
 
-	user, err := NewUserRepository(gdb).CreateIfMissing(context.Background(), &model.User{Email: "a@b.com", DefaultInitials: "MM"})
+	user, created, err := NewUserRepository(gdb).CreateIfMissing(context.Background(), &model.User{Email: "a@b.com", DefaultInitials: "MM"})
 
 	require.NoError(t, err)
 	assert.Equal(t, "a@b.com", user.Email)
+	assert.True(t, created)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUserRepository_CreateIfMissing_LostRace(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	mock.ExpectBegin()
+	mock.ExpectExec(`INSERT INTO "users" .* ON CONFLICT \("email"\) DO NOTHING`).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+	mock.ExpectQuery(`SELECT \* FROM "users"`).WillReturnRows(userRows("MM"))
+
+	user, created, err := NewUserRepository(gdb).CreateIfMissing(context.Background(), &model.User{Email: "a@b.com", DefaultInitials: "XY"})
+
+	require.NoError(t, err)
+	assert.Equal(t, "MM", user.DefaultInitials)
+	assert.False(t, created)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -53,7 +69,7 @@ func TestUserRepository_CreateIfMissing_Errors(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "users"`).WillReturnError(errors.New("db"))
 	mock.ExpectRollback()
-	_, err := NewUserRepository(gdb).CreateIfMissing(context.Background(), &model.User{Email: "a@b.com"})
+	_, _, err := NewUserRepository(gdb).CreateIfMissing(context.Background(), &model.User{Email: "a@b.com"})
 	require.Error(t, err)
 
 	gdb, mock = newMockDB(t)
@@ -61,7 +77,7 @@ func TestUserRepository_CreateIfMissing_Errors(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "users"`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	mock.ExpectQuery(`SELECT \* FROM "users"`).WillReturnError(errors.New("db"))
-	_, err = NewUserRepository(gdb).CreateIfMissing(context.Background(), &model.User{Email: "a@b.com"})
+	_, _, err = NewUserRepository(gdb).CreateIfMissing(context.Background(), &model.User{Email: "a@b.com"})
 	require.Error(t, err)
 }
 
@@ -70,7 +86,7 @@ func TestUserRepository_UpdateInitials(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE "users" SET "default_initials"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
-	mock.ExpectQuery(`SELECT \* FROM "users"`).WillReturnRows(userRows("a@b.com", "XY"))
+	mock.ExpectQuery(`SELECT \* FROM "users"`).WillReturnRows(userRows("XY"))
 
 	user, err := NewUserRepository(gdb).UpdateInitials(context.Background(), "a@b.com", "XY")
 
