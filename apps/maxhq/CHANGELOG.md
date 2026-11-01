@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.4.0...maxhq/1.5.0) (2026-11-01)
+
+
+### Features
+
+* **squares-contests:** hide player emails and full names, cap contests, add security headers ([#182](https://github.com/maxmorhardt/maxhq/issues/182)) ([acda671](https://github.com/maxmorhardt/maxhq/commit/acda671095db819712ce0e2982e00cc28befec90))
+
 ## [1.4.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.3.1...maxhq/1.4.0) (2026-10-31)
 
 
