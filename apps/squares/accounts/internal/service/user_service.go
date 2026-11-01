@@ -71,19 +71,20 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		return nil, false, errs.ErrDatabaseUnavailable
 	}
 
+	returning, err := s.isReturning(ctx, email)
+	if err != nil {
+		log.Error("failed to check for a deleted account", "error", err)
+		return nil, false, errs.ErrDatabaseUnavailable
+	}
+
 	newUser := &model.User{
 		Email:           email,
 		DisplayName:     defaultDisplayName,
 		DefaultInitials: initials.FromName(defaultDisplayName),
 	}
-
-	switch summary, activityErr := s.contests.GetUserActivity(ctx, email); {
-	case activityErr != nil:
-		// they may be a returning player, so start the profile just outside the sign-up window rather than over-count
-		log.Warn("could not load first activity for new profile", "error", activityErr)
-		newUser.CreatedAt = time.Now().Add(-signUpWindow)
-	case summary.FirstActivity != nil:
-		newUser.CreatedAt = *summary.FirstActivity
+	if !returning {
+		now := time.Now()
+		newUser.SignedUpAt = &now
 	}
 
 	var created bool
@@ -109,9 +110,23 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	return user, isSignUp(user), nil
 }
 
-// a profile backdated to earlier contest activity belongs to a returning player
+// a deleted account or earlier contest activity means a returning player; an unknown history isn't counted either
+func (s *userService) isReturning(ctx context.Context, email string) (bool, error) {
+	deleted, err := s.repo.HasTombstone(ctx, email)
+	if err != nil || deleted {
+		return deleted, err
+	}
+
+	summary, err := s.contests.GetUserActivity(ctx, email)
+	if err != nil {
+		logging.FromContext(ctx).Warn("could not load first activity for new profile", "error", err)
+		return true, nil
+	}
+	return summary.FirstActivity != nil, nil
+}
+
 func isSignUp(user *model.User) bool {
-	return time.Since(user.CreatedAt) < signUpWindow
+	return user.SignedUpAt != nil && time.Since(*user.SignedUpAt) < signUpWindow
 }
 
 func (s *userService) UpdateProfile(ctx context.Context, email, defaultInitials string) (*model.User, error) {
@@ -208,8 +223,8 @@ func (s *userService) RestoreAccount(ctx context.Context, email string, issuedAt
 		return nil
 	}
 
-	// without the tombstone, a restart cannot put the block back
-	if err := s.repo.DeleteTombstone(ctx, email); err != nil {
+	// a restored tombstone stops a restart from putting the block back
+	if err := s.repo.RestoreTombstone(ctx, email, time.Now()); err != nil {
 		log.Error("failed to clear the tombstone of a restored account", "error", err)
 		return errs.ErrDatabaseUnavailable
 	}

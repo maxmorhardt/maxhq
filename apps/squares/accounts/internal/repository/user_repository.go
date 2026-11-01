@@ -21,7 +21,8 @@ type UserRepository interface {
 	UpdateInitials(ctx context.Context, email, initials string) (*model.User, error)
 	DeleteWithTombstone(ctx context.Context, email string, deletedAt time.Time) error
 	TombstonesSince(ctx context.Context, since time.Time) ([]Tombstone, error)
-	DeleteTombstone(ctx context.Context, email string) error
+	HasTombstone(ctx context.Context, email string) (bool, error)
+	RestoreTombstone(ctx context.Context, email string, restoredAt time.Time) error
 }
 
 type userRepository struct {
@@ -89,7 +90,7 @@ func (r *userRepository) DeleteWithTombstone(ctx context.Context, email string, 
 
 		return tx.Exec(
 			`INSERT INTO deleted_accounts (email, deleted_at) VALUES (?, ?)
-			ON CONFLICT (email) DO UPDATE SET deleted_at = EXCLUDED.deleted_at`,
+			ON CONFLICT (email) DO UPDATE SET deleted_at = EXCLUDED.deleted_at, restored_at = NULL`,
 			email, deletedAt).Error
 	})
 }
@@ -99,11 +100,21 @@ func (r *userRepository) TombstonesSince(ctx context.Context, since time.Time) (
 	err := database.Conn(ctx, r.db).
 		Table("deleted_accounts").
 		Select("email, deleted_at").
-		Where("deleted_at >= ?", since).
+		Where("deleted_at >= ? AND restored_at IS NULL", since).
 		Scan(&tombstones).Error
 	return tombstones, err
 }
 
-func (r *userRepository) DeleteTombstone(ctx context.Context, email string) error {
-	return database.Conn(ctx, r.db).Exec(`DELETE FROM deleted_accounts WHERE email = ?`, email).Error
+func (r *userRepository) HasTombstone(ctx context.Context, email string) (bool, error) {
+	var exists bool
+	err := database.Conn(ctx, r.db).
+		Raw(`SELECT EXISTS (SELECT 1 FROM deleted_accounts WHERE email = ?)`, email).
+		Scan(&exists).Error
+	return exists, err
+}
+
+// kept rather than deleted so a returning player isn't counted as a sign-up again
+func (r *userRepository) RestoreTombstone(ctx context.Context, email string, restoredAt time.Time) error {
+	return database.Conn(ctx, r.db).
+		Exec(`UPDATE deleted_accounts SET restored_at = ? WHERE email = ?`, restoredAt, email).Error
 }

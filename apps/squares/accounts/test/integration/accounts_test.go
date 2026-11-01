@@ -104,7 +104,11 @@ func TestAccounts_DeletionIsBlockedByActiveContestsThenRevokesTheToken(t *testin
 	// only a sign-in after the deletion can restore it, and then the account works again
 	assert.Equal(t, http.StatusForbidden, testkit.Call(t, replicaA, signedIn, http.MethodPost, "/users/me/restore", nil).Status)
 	require.Equal(t, http.StatusNoContent, testkit.Call(t, replicaA, fresh, http.MethodPost, "/users/me/restore", nil).Status)
-	assert.Equal(t, http.StatusOK, testkit.Call(t, replicaB, fresh, http.MethodGet, "/users/me", nil).Status)
+	back := testkit.Call(t, replicaB, fresh, http.MethodGet, "/users/me", nil)
+	require.Equal(t, http.StatusOK, back.Status)
+	var returning model.UserProfileResponse
+	back.Decode(t, &returning)
+	assert.Empty(t, returning.SignUpID, "signing back in after a deletion isn't a new sign-up")
 }
 
 func TestAccounts_SignOutRevokesOnlyThatToken(t *testing.T) {

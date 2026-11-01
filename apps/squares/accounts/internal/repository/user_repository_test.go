@@ -122,7 +122,7 @@ func TestUserRepository_DeleteWithTombstone(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec(`DELETE FROM "users" WHERE email = \$1`).WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectExec(`INSERT INTO deleted_accounts .* ON CONFLICT \(email\) DO UPDATE`).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`INSERT INTO deleted_accounts .* ON CONFLICT \(email\) DO UPDATE SET deleted_at = EXCLUDED.deleted_at, restored_at = NULL`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	require.NoError(t, database.NewTransactor(gdb).Do(context.Background(), func(ctx context.Context) error {
@@ -151,7 +151,7 @@ func TestUserRepository_DeleteWithTombstone_NeedsATransaction(t *testing.T) {
 func TestUserRepository_TombstonesSince(t *testing.T) {
 	deletedAt := time.Now().Add(-time.Hour)
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`SELECT email, deleted_at FROM "deleted_accounts" WHERE deleted_at >= \$1`).
+	mock.ExpectQuery(`SELECT email, deleted_at FROM "deleted_accounts" WHERE deleted_at >= \$1 AND restored_at IS NULL`).
 		WillReturnRows(sqlmock.NewRows([]string{"email", "deleted_at"}).AddRow("a@b.com", deletedAt))
 
 	tombstones, err := NewUserRepository(gdb).TombstonesSince(context.Background(), time.Now().Add(-24*time.Hour))
@@ -161,10 +161,21 @@ func TestUserRepository_TombstonesSince(t *testing.T) {
 	assert.Equal(t, "a@b.com", tombstones[0].Email)
 }
 
-func TestUserRepository_DeleteTombstone(t *testing.T) {
+func TestUserRepository_HasTombstone(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectExec(`DELETE FROM deleted_accounts WHERE email = \$1`).WithArgs("a@b.com").WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectQuery(`SELECT EXISTS \(SELECT 1 FROM deleted_accounts WHERE email = \$1\)`).WithArgs("a@b.com").
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
-	require.NoError(t, NewUserRepository(gdb).DeleteTombstone(context.Background(), "a@b.com"))
+	deleted, err := NewUserRepository(gdb).HasTombstone(context.Background(), "a@b.com")
+
+	require.NoError(t, err)
+	assert.True(t, deleted)
+}
+
+func TestUserRepository_RestoreTombstone(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	mock.ExpectExec(`UPDATE deleted_accounts SET restored_at = \$1 WHERE email = \$2`).WithArgs(sqlmock.AnyArg(), "a@b.com").WillReturnResult(sqlmock.NewResult(0, 1))
+
+	require.NoError(t, NewUserRepository(gdb).RestoreTombstone(context.Background(), "a@b.com", time.Now()))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

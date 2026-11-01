@@ -49,7 +49,7 @@ func (d userDeps) svc() service.UserService {
 
 func TestGetProfile_Existing(t *testing.T) {
 	d := newUserDeps(t)
-	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(&model.User{Email: "a@b.com", DefaultInitials: "MM", CreatedAt: time.Now().Add(-time.Hour)}, nil)
+	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(&model.User{Email: "a@b.com", DefaultInitials: "MM"}, nil)
 
 	user, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max Morhardt")
 
@@ -60,7 +60,8 @@ func TestGetProfile_Existing(t *testing.T) {
 
 func TestGetProfile_RetriedFirstVisitStillReportsTheSignUp(t *testing.T) {
 	d := newUserDeps(t)
-	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(&model.User{Email: "a@b.com", CreatedAt: time.Now().Add(-time.Minute)}, nil)
+	signedUp := time.Now().Add(-time.Minute)
+	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(&model.User{Email: "a@b.com", SignedUpAt: &signedUp}, nil)
 
 	_, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
 
@@ -68,13 +69,24 @@ func TestGetProfile_RetriedFirstVisitStillReportsTheSignUp(t *testing.T) {
 	assert.True(t, isNew)
 }
 
-func TestGetProfile_CreatesWithFirstActivityAndAnnouncesIt(t *testing.T) {
-	first := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+func TestGetProfile_SignUpEndsAfterTheWindow(t *testing.T) {
+	d := newUserDeps(t)
+	signedUp := time.Now().Add(-31 * time.Minute)
+	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(&model.User{Email: "a@b.com", SignedUpAt: &signedUp}, nil)
+
+	_, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+
+	require.NoError(t, err)
+	assert.False(t, isNew)
+}
+
+func TestGetProfile_NewPlayerIsASignUp(t *testing.T) {
 	d := newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(nil, database.ErrNotFound)
-	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{FirstActivity: &first}, nil)
+	d.repo.EXPECT().HasTombstone(mock.Anything, "a@b.com").Return(false, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool {
-		return u.DefaultInitials == "MM" && u.CreatedAt.Equal(first)
+		return u.DefaultInitials == "MM" && u.SignedUpAt != nil && u.CreatedAt.IsZero()
 	})).RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
 	d.outbox.EXPECT().Add(mock.Anything, events.UsersStream, events.UserUpdatedType, events.UserUpdated{Email: "a@b.com", DisplayName: "Max Morhardt", DefaultInitials: "MM"}).Return(nil)
 
@@ -82,14 +94,48 @@ func TestGetProfile_CreatesWithFirstActivityAndAnnouncesIt(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "Max Morhardt", user.DisplayName)
-	assert.False(t, isNew, "earlier contest activity makes this a returning player")
+	assert.True(t, isNew)
+}
+
+func TestGetProfile_EarlierContestActivityIsAReturningPlayer(t *testing.T) {
+	first := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+	d := newUserDeps(t)
+	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(nil, database.ErrNotFound)
+	d.repo.EXPECT().HasTombstone(mock.Anything, "a@b.com").Return(false, nil)
+	d.contests.EXPECT().GetUserActivity(mock.Anything, "a@b.com").Return(&contracts.UserActivitySummary{FirstActivity: &first}, nil)
+	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool {
+		return u.SignedUpAt == nil && u.CreatedAt.IsZero()
+	})).RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
+	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	_, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max Morhardt")
+
+	require.NoError(t, err)
+	assert.False(t, isNew)
+}
+
+func TestGetProfile_DeletedAccountSigningBackInIsAReturningPlayer(t *testing.T) {
+	d := newUserDeps(t)
+	d.repo.EXPECT().GetByEmail(mock.Anything, "a@b.com").Return(nil, database.ErrNotFound)
+	d.repo.EXPECT().HasTombstone(mock.Anything, "a@b.com").Return(true, nil)
+	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.MatchedBy(func(u *model.User) bool { return u.SignedUpAt == nil })).
+		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
+	d.outbox.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	_, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+
+	require.NoError(t, err)
+	assert.False(t, isNew, "contests wiped their history, but the tombstone remembers them")
+	d.contests.AssertNotCalled(t, "GetUserActivity", mock.Anything, mock.Anything)
 }
 
 func TestGetProfile_ConcurrentFirstVisitAnnouncesNothing(t *testing.T) {
 	d := newUserDeps(t)
+	signedUp := time.Now()
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	d.repo.EXPECT().HasTombstone(mock.Anything, mock.Anything).Return(false, nil)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
-	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(&model.User{Email: "a@b.com", CreatedAt: time.Now()}, false, nil)
+	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(&model.User{Email: "a@b.com", SignedUpAt: &signedUp}, false, nil)
 
 	_, isNew, err := d.svc().GetProfile(context.Background(), "a@b.com", "Max")
 
@@ -100,6 +146,7 @@ func TestGetProfile_ConcurrentFirstVisitAnnouncesNothing(t *testing.T) {
 func TestGetProfile_CreatesEvenWhenContestsIsDown(t *testing.T) {
 	d := newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	d.repo.EXPECT().HasTombstone(mock.Anything, mock.Anything).Return(false, nil)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(nil, errors.New("down"))
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).
 		RunAndReturn(func(_ context.Context, u *model.User) (*model.User, bool, error) { return u, true, nil })
@@ -109,7 +156,8 @@ func TestGetProfile_CreatesEvenWhenContestsIsDown(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.False(t, isNew, "an unknown history may be a returning player, so it isn't counted")
-	assert.WithinDuration(t, time.Now().Add(-30*time.Minute), user.CreatedAt, time.Minute)
+	assert.Nil(t, user.SignedUpAt)
+	assert.True(t, user.CreatedAt.IsZero(), "the join date is left to the database")
 }
 
 func TestGetProfile_Errors(t *testing.T) {
@@ -120,6 +168,13 @@ func TestGetProfile_Errors(t *testing.T) {
 
 	d = newUserDeps(t)
 	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	d.repo.EXPECT().HasTombstone(mock.Anything, mock.Anything).Return(false, errors.New("db"))
+	_, _, err = d.svc().GetProfile(context.Background(), "a@b.com", "Max")
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+
+	d = newUserDeps(t)
+	d.repo.EXPECT().GetByEmail(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	d.repo.EXPECT().HasTombstone(mock.Anything, mock.Anything).Return(false, nil)
 	d.contests.EXPECT().GetUserActivity(mock.Anything, mock.Anything).Return(&contracts.UserActivitySummary{}, nil)
 	d.repo.EXPECT().CreateIfMissing(mock.Anything, mock.Anything).Return(nil, false, errors.New("db"))
 	_, _, err = d.svc().GetProfile(context.Background(), "a@b.com", "Max")
@@ -225,7 +280,7 @@ func TestSignOut_RevokesThatToken(t *testing.T) {
 func TestRestoreAccount_LiftsTheBlockAndItsTombstone(t *testing.T) {
 	d := newUserDeps(t)
 	d.revocations.EXPECT().Restore(mock.Anything, "a@b.com", int64(500)).Return(true, nil)
-	d.repo.EXPECT().DeleteTombstone(mock.Anything, "a@b.com").Return(nil)
+	d.repo.EXPECT().RestoreTombstone(mock.Anything, "a@b.com", mock.Anything).Return(nil)
 
 	require.NoError(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 500))
 }
@@ -246,6 +301,6 @@ func TestRestoreAccount_Errors(t *testing.T) {
 	assert.ErrorIs(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 1), errs.ErrDependencyFailed)
 
 	d.revocations.EXPECT().Restore(mock.Anything, mock.Anything, mock.Anything).Return(true, nil).Once()
-	d.repo.EXPECT().DeleteTombstone(mock.Anything, mock.Anything).Return(errors.New("db"))
+	d.repo.EXPECT().RestoreTombstone(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
 	assert.ErrorIs(t, d.svc().RestoreAccount(context.Background(), "a@b.com", 1), errs.ErrDatabaseUnavailable)
 }
