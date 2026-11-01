@@ -22,7 +22,7 @@ const (
 func InitDB(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (*gorm.DB, error) {
 	dsn := formatDSN(cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode, schema)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{TranslateError: true, Logger: newLogger(), DisableAutomaticPing: true})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{TranslateError: true, Logger: newLogger()})
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -30,11 +30,6 @@ func InitDB(cfg *config.DatabaseConfig, schema string, migrations fs.FS) (*gorm.
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get underlying sql.DB: %w", err)
-	}
-
-	if err := sqlDB.Ping(); err != nil {
-		_ = sqlDB.Close()
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
 	// the schema must exist before golang-migrate can create its version table inside it
@@ -78,12 +73,9 @@ func formatDSN(host string, port int, user, password, dbname, sslmode, schema st
 }
 
 func Close(db *gorm.DB) {
-	if db != nil {
-		closeDB(db)
+	if db == nil {
+		return
 	}
-}
-
-func closeDB(db *gorm.DB) {
 	if sqlDB, err := db.DB(); err == nil {
 		_ = sqlDB.Close()
 	}
