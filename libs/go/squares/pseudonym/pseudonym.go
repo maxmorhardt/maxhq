@@ -4,8 +4,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 const (
@@ -26,6 +29,10 @@ func SetKey(k string) error {
 	if len(k) < minKeySize {
 		return fmt.Errorf("PSEUDONYM_KEY must be at least %d bytes", minKeySize)
 	}
+	// a stray CRLF in one service's secret would silently give it different ids
+	if strings.TrimSpace(k) != k {
+		return errors.New("PSEUDONYM_KEY must not start or end with whitespace")
+	}
 	key = []byte(k)
 	return nil
 }
@@ -45,7 +52,13 @@ func Of(email string) string {
 }
 
 func Name(displayName string) string {
-	parts := strings.Fields(FullName(displayName))
+	full := FullName(displayName)
+	// "Last, First" puts the surname first
+	if last, first, ok := strings.Cut(full, ","); ok {
+		full = first + " " + last
+	}
+
+	parts := strings.FieldsFunc(full, func(r rune) bool { return unicode.IsSpace(r) || r == ',' })
 	switch len(parts) {
 	case 0:
 		return ""
@@ -53,8 +66,12 @@ func Name(displayName string) string {
 		return parts[0]
 	}
 
-	last := []rune(parts[len(parts)-1])
-	return parts[0] + " " + strings.ToUpper(string(last[0])) + "."
+	i := strings.IndexFunc(parts[len(parts)-1], unicode.IsLetter)
+	if i < 0 {
+		return parts[0]
+	}
+	initial, _ := utf8.DecodeRuneInString(parts[len(parts)-1][i:])
+	return parts[0] + " " + string(unicode.ToUpper(initial)) + "."
 }
 
 func Public(displayName string) string {

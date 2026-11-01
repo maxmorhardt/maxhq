@@ -27,6 +27,8 @@ func TestSetKey(t *testing.T) {
 	t.Cleanup(func() { key = nil })
 
 	assert.Error(t, SetKey("short"))
+	assert.Error(t, SetKey(testKey+"\r"), "a CRLF from a Windows-made secret")
+	assert.Error(t, SetKey(" "+testKey))
 	assert.Nil(t, key)
 	require.NoError(t, SetKey(testKey))
 	assert.Equal(t, []byte(testKey), key)
@@ -75,6 +77,12 @@ func TestName(t *testing.T) {
 		"   ":                      "",
 		"@handle":                  "",
 		"":                         "",
+		"Morhardt, Max":            "Max M.",
+		"Smith, John, Jr.":         "John S.",
+		"Max,":                     "Max",
+		"Max (Dad)":                "Max D.",
+		"Max 🏈":                    "Max",
+		"Max M.":                   "Max M.",
 	}
 	for in, want := range tests {
 		assert.Equal(t, want, Name(in), in)

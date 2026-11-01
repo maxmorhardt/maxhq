@@ -267,13 +267,14 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 		return errs.ErrContestFinalized
 	}
 
-	if targetUserID, err = s.resolveTarget(ctx, contestID, targetUserID); err != nil {
-		return err
-	}
-
-	if targetUserID != user {
+	if targetUserID == pseudonym.Of(user) {
+		targetUserID = user
+	} else {
 		if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
 			return authErr
+		}
+		if targetUserID, err = s.resolveTarget(ctx, contestID, targetUserID); err != nil {
+			return err
 		}
 	}
 
