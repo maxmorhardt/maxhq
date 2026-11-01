@@ -1,4 +1,3 @@
-import { skipToken } from '@reduxjs/toolkit/query';
 import { act, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockAuth } from '../../../test/auth';
@@ -45,11 +44,8 @@ vi.mock('./ContestView', () => ({
     </div>
   ),
 }));
-const contestsApi = vi.hoisted(() => ({ useGetRosterQuery: vi.fn() }));
-vi.mock('../api', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  ...contestsApi,
-}));
+const roster = vi.hoisted(() => ({ useContestRoster: vi.fn() }));
+vi.mock('../useContestRoster', () => roster);
 const games = vi.hoisted(() => ({ useGetGameQuery: vi.fn(), useGameStream: vi.fn() }));
 vi.mock('../../games/api', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -92,74 +88,23 @@ describe('LiveContest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     games.useGetGameQuery.mockReturnValue({ data: undefined });
-    contestsApi.useGetRosterQuery.mockReturnValue({ currentData: undefined, refetch: vi.fn() });
+    roster.useContestRoster.mockReturnValue(undefined);
     mockAuth({ email: 'player@x.com' });
   });
 
   it('gives only the owner full names', () => {
-    contestsApi.useGetRosterQuery.mockReturnValue({
-      currentData: [{ userId: 'u_pat', fullName: 'Pat Player' }],
-      refetch: vi.fn(),
-    });
+    roster.useContestRoster.mockImplementation((_id: string, isOwner: boolean) =>
+      isOwner ? [{ userId: 'u_pat', fullName: 'Pat Player' }] : undefined
+    );
+    const players = [makeParticipant({ userId: 'u_pat' })];
     const { snapshot } = renderLive();
-    snapshot();
-    expect(contestsApi.useGetRosterQuery).toHaveBeenLastCalledWith(skipToken);
-
-    snapshot(makeContest({ owner: 'u_player' }));
-    expect(contestsApi.useGetRosterQuery).toHaveBeenLastCalledWith('c-1');
-    expect(screen.getByTestId('view')).toHaveAttribute('data-full-name', 'Pat Player');
-  });
-
-  it('refetches the roster when someone new joins', () => {
-    const refetch = vi.fn();
-    contestsApi.useGetRosterQuery.mockReturnValue({
-      currentData: [{ userId: 'u_player', fullName: 'Owen Owner' }],
-      refetch,
-    });
-    const { snapshot } = renderLive();
-    const owned = makeContest({ owner: 'u_player' });
-    snapshot(owned, [makeParticipant({ userId: 'u_player', role: 'owner' })]);
-    expect(refetch).not.toHaveBeenCalled();
-
-    snapshot(owned, [
-      makeParticipant({ userId: 'u_player', role: 'owner' }),
-      makeParticipant({ id: 'p-2', userId: 'u_pat' }),
-    ]);
-    expect(refetch).toHaveBeenCalledOnce();
-  });
-
-  it('refetches again when another player joins before the roster catches up', () => {
-    const refetch = vi.fn();
-    contestsApi.useGetRosterQuery.mockReturnValue({
-      currentData: [{ userId: 'u_player', fullName: 'Owen Owner' }],
-      refetch,
-    });
-    const { snapshot } = renderLive();
-    const owned = makeContest({ owner: 'u_player' });
-    const owner = makeParticipant({ userId: 'u_player', role: 'owner' });
-    const pat = makeParticipant({ id: 'p-2', userId: 'u_pat' });
-    const sam = makeParticipant({ id: 'p-3', userId: 'u_sam' });
-
-    snapshot(owned, [owner, pat]);
-    snapshot(owned, [owner, pat, sam]);
-    expect(refetch).toHaveBeenCalledTimes(2);
-
-    snapshot(owned, [owner, pat, sam]);
-    expect(refetch).toHaveBeenCalledTimes(2);
-  });
-
-  it('never refetches a skipped roster, which still holds its old data', () => {
-    const refetch = vi.fn();
-    contestsApi.useGetRosterQuery.mockReturnValue({
-      data: [{ userId: 'u_owner', fullName: 'Olive Owens' }],
-      currentData: undefined,
-      refetch,
-    });
-    const { snapshot } = renderLive();
-    snapshot(makeContest(), [makeParticipant({ userId: 'u_pat' })]);
-
-    expect(refetch).not.toHaveBeenCalled();
+    snapshot(makeContest(), players);
+    expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', false, players);
     expect(screen.getByTestId('view')).not.toHaveAttribute('data-full-name');
+
+    snapshot(makeContest({ owner: 'u_player' }), players);
+    expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', true, players);
+    expect(screen.getByTestId('view')).toHaveAttribute('data-full-name', 'Pat Player');
   });
 
   it('shows a skeleton until the snapshot arrives', () => {

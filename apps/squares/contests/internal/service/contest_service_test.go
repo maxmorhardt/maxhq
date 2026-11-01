@@ -195,7 +195,9 @@ func TestDeleteContest_Terminal(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).
+	pSvc := mocks.NewParticipantService(t)
+	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	err := contestSvc(repo, pSvc).
 		DeleteContest(context.Background(), uuid.New(), "u")
 	assert.ErrorIs(t, err, errs.ErrContestFinalized)
 }
@@ -204,14 +206,15 @@ func TestDeleteContest_NotFound(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).
+	pSvc := mocks.NewParticipantService(t)
+	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	err := contestSvc(repo, pSvc).
 		DeleteContest(context.Background(), uuid.New(), "u")
 	assert.ErrorIs(t, err, errs.ErrContestNotFound)
 }
 
-func TestDeleteContest_Unauthorized(t *testing.T) {
+func TestDeleteContest_UnauthorizedCallerNeverLocksTheContest(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
-	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	pSvc := mocks.NewParticipantService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
 

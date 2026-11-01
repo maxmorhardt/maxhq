@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
-	"gorm.io/plugin/dbresolver"
 )
 
 type txKey struct{}
@@ -60,20 +59,9 @@ func InTx(ctx context.Context, fn func(tx *gorm.DB) error) error {
 	return TranslateError(fn(state.tx.WithContext(ctx)))
 }
 
-type primaryKey struct{}
-
-// for reads that must see a write that was just committed, which a lagging replica can miss
-func ReadPrimary(ctx context.Context) context.Context {
-	return context.WithValue(ctx, primaryKey{}, true)
-}
-
 func Conn(ctx context.Context, db *gorm.DB) *gorm.DB {
 	if state, ok := ctx.Value(txKey{}).(*txState); ok && state.tx != nil {
 		return state.tx.WithContext(ctx)
-	}
-
-	if ctx.Value(primaryKey{}) != nil {
-		return db.WithContext(ctx).Clauses(dbresolver.Write)
 	}
 
 	return db.WithContext(ctx)

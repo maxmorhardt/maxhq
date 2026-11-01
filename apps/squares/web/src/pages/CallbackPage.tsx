@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate, useSearchParams } from 'react-router';
 import { notifySession } from '../auth/session';
+import { holdTokensUntil } from '../auth/token';
 import AuthLoadingAnimation from '../components/feedback/AuthLoadingAnimation';
 import { useToast } from '../features/toast/useToast';
-import { trackConversion } from '../utils/googleAds';
 
 const MIN_DISPLAY_MS = 1600;
 const OUTRO_DURATION_MS = 350;
@@ -22,7 +22,6 @@ export default function CallbackPage() {
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const savedRedirectPath = useRef(sessionStorage.getItem('auth_redirect_path') || '/contests');
   const hasStartedOutro = useRef(false);
-  const trackedSignIn = useRef(false);
 
   // ensure intro animation always completes before we can exit
   useEffect(() => {
@@ -46,15 +45,11 @@ export default function CallbackPage() {
     }
 
     if (auth.isAuthenticated) {
-      if (!trackedSignIn.current) {
-        trackedSignIn.current = true;
-        trackConversion('signedUp');
-      }
       sessionStorage.removeItem('auth_redirect_path');
       // a fresh sign-in lifts the block a deleted account leaves, before the app makes its first call
-      void notifySession('restore', auth.user?.id_token).then(() =>
-        setPendingPath(savedRedirectPath.current)
-      );
+      const restore = notifySession('restore', auth.user?.id_token);
+      holdTokensUntil(restore);
+      void restore.then(() => setPendingPath(savedRedirectPath.current));
       return;
     }
 

@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { initGoogleAds, trackConversion } from './googleAds';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { initGoogleAds, trackConversion, trackConversionFor } from './googleAds';
 
 const tagScript = () =>
   document.head.querySelector<HTMLScriptElement>('script[src*="googletagmanager.com"]');
@@ -8,6 +8,7 @@ const calls = () => window.dataLayer!.map((entry) => Array.from(entry as ArrayLi
 
 describe('googleAds', () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     tagScript()?.remove();
     delete window.dataLayer;
     delete window.gtag;
@@ -68,8 +69,52 @@ describe('googleAds', () => {
     ]);
   });
 
+  it('swallows a tag that throws', () => {
+    window.gtag = () => {
+      throw new Error('blocked');
+    };
+
+    expect(() => trackConversion('contestCreated')).not.toThrow();
+  });
+
   it('reports nothing where the tag never loaded', () => {
     expect(() => trackConversion('signedUp')).not.toThrow();
     expect(window.dataLayer).toBeUndefined();
+  });
+
+  it('resends a conversion with the same transaction id, which google dedupes on', () => {
+    initGoogleAds('squares.maxhq.io');
+    trackConversionFor('signedUp', 'u_pat');
+    trackConversionFor('signedUp', 'u_pat');
+
+    const conversion = [
+      'event',
+      'conversion',
+      { send_to: 'AW-18549939904/1BJvCNiQlLAdEMC9po1F', transaction_id: 'signedUp:u_pat' },
+    ];
+    expect(calls().filter(([command]) => command === 'event')).toEqual([conversion, conversion]);
+  });
+
+  it('retries after a tag that threw, since nothing marks the conversion as sent', () => {
+    initGoogleAds('squares.maxhq.io');
+    const gtag = window.gtag!;
+    window.gtag = () => {
+      throw new Error('blocked');
+    };
+    trackConversionFor('signedUp', 'u_retry');
+    window.gtag = gtag;
+    trackConversionFor('signedUp', 'u_retry');
+
+    expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_retry' });
+  });
+
+  it('never writes to device storage', () => {
+    initGoogleAds('squares.maxhq.io');
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+
+    trackConversionFor('signedUp', 'u_storage');
+
+    expect(setItem).not.toHaveBeenCalled();
+    expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_storage' });
   });
 });

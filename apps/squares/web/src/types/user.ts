@@ -4,6 +4,7 @@ export interface UserProfile {
   displayName: string;
   defaultInitials: string;
   createdAt: string;
+  signUpId?: string;
 }
 
 export interface UpdateUserProfileRequest {

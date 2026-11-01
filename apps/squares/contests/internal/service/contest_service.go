@@ -288,6 +288,11 @@ func (s *contestService) applyQuarterResults(ctx context.Context, contest *model
 func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error {
 	log := logging.FromContext(ctx)
 
+	if err := s.participantService.Authorize(ctx, contestID, user, ActionDeleteContest); err != nil {
+		log.Warn("unauthorized delete attempt", "contest_id", contestID, "user", user)
+		return errs.ErrUnauthorizedContestDelete
+	}
+
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		contest, err := s.repo.GetByIDForUpdate(ctx, contestID)
 		if err != nil {
@@ -301,11 +306,6 @@ func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID,
 		if contest.Status.IsTerminal() {
 			log.Warn("cannot delete contest in terminal state", "contest_id", contestID, "status", contest.Status)
 			return errs.ErrContestFinalized
-		}
-
-		if err := s.participantService.Authorize(ctx, contestID, user, ActionDeleteContest); err != nil {
-			log.Warn("unauthorized delete attempt", "contest_id", contestID, "user", user)
-			return errs.ErrUnauthorizedContestDelete
 		}
 
 		if err := s.repo.Delete(ctx, contestID); err != nil {

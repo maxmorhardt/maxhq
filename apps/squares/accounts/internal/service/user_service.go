@@ -22,8 +22,11 @@ import (
 // matches how long a deletion blocks the account in redis: longer than any refresh token lives
 const revocationWindow = 91 * 24 * time.Hour
 
+// long enough that a retried or second-device first visit still reports the sign-up; the web dedupes it
+const signUpWindow = 30 * time.Minute
+
 type UserService interface {
-	GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, error)
+	GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, bool, error)
 	UpdateProfile(ctx context.Context, email, initials string) (*model.User, error)
 	DeleteAccount(ctx context.Context, email string) error
 	SignOut(ctx context.Context, email string, issuedAt, expiresAt int64) error
@@ -55,17 +58,23 @@ func NewUserService(
 	}
 }
 
-func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, error) {
+func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, bool, error) {
 	log := logging.FromContext(ctx)
 
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err == nil {
 		log.Info("retrieved user profile")
-		return user, nil
+		return user, isSignUp(user), nil
 	}
 	if !errors.Is(err, database.ErrNotFound) {
 		log.Error("failed to get user", "error", err)
-		return nil, errs.ErrDatabaseUnavailable
+		return nil, false, errs.ErrDatabaseUnavailable
+	}
+
+	deleted, err := s.repo.HasTombstone(ctx, email)
+	if err != nil {
+		log.Error("failed to check for a deleted account", "error", err)
+		return nil, false, errs.ErrDatabaseUnavailable
 	}
 
 	newUser := &model.User{
@@ -74,16 +83,22 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		DefaultInitials: initials.FromName(defaultDisplayName),
 	}
 
-	if summary, activityErr := s.contests.GetUserActivity(ctx, email); activityErr != nil {
+	// a deleted account or earlier contest activity is a returning player; an unknown history isn't counted either
+	switch summary, activityErr := s.contests.GetUserActivity(ctx, email); {
+	case activityErr != nil:
 		log.Warn("could not load first activity for new profile", "error", activityErr)
-	} else if summary.FirstActivity != nil {
+	case summary.FirstActivity != nil:
 		newUser.CreatedAt = *summary.FirstActivity
+	case !deleted:
+		now := time.Now()
+		newUser.SignedUpAt = &now
 	}
 
+	var created bool
 	err = s.tx.Do(ctx, func(ctx context.Context) error {
 		var createErr error
-		user, createErr = s.repo.CreateIfMissing(ctx, newUser)
-		if createErr != nil {
+		user, created, createErr = s.repo.CreateIfMissing(ctx, newUser)
+		if createErr != nil || !created {
 			return createErr
 		}
 
@@ -91,11 +106,19 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	})
 	if err != nil {
 		log.Error("failed to create user", "error", err)
-		return nil, errs.ErrDatabaseUnavailable
+		return nil, false, errs.ErrDatabaseUnavailable
 	}
 
-	log.Info("created user profile")
-	return user, nil
+	if created {
+		log.Info("created user profile")
+	} else {
+		log.Info("retrieved user profile a concurrent visit created")
+	}
+	return user, isSignUp(user), nil
+}
+
+func isSignUp(user *model.User) bool {
+	return user.SignedUpAt != nil && time.Since(*user.SignedUpAt) < signUpWindow
 }
 
 func (s *userService) UpdateProfile(ctx context.Context, email, defaultInitials string) (*model.User, error) {
@@ -192,8 +215,8 @@ func (s *userService) RestoreAccount(ctx context.Context, email string, issuedAt
 		return nil
 	}
 
-	// without the tombstone, a restart cannot put the block back
-	if err := s.repo.DeleteTombstone(ctx, email); err != nil {
+	// a restored tombstone stops a restart from putting the block back
+	if err := s.repo.RestoreTombstone(ctx, email, time.Now()); err != nil {
 		log.Error("failed to clear the tombstone of a restored account", "error", err)
 		return errs.ErrDatabaseUnavailable
 	}

@@ -45,12 +45,17 @@ func TestAccounts_FirstSignInCreatesTheProfileAndPublishesIt(t *testing.T) {
 	resp.Decode(t, &profile)
 	assert.Equal(t, user, profile.Email)
 	assert.NotEmpty(t, profile.DefaultInitials, "initials default from the display name")
+	assert.NotEmpty(t, profile.SignUpID, "the first response marks the sign-up")
 
 	require.Eventually(t, func() bool { return len(userEvents(t, user)) == 1 }, eventually, 100*time.Millisecond)
 	entry := userEvents(t, user)[0]
 	assert.Equal(t, events.UserUpdatedType, entry.Type)
 
-	require.Equal(t, http.StatusOK, testkit.Call(t, replicaB, testkit.As(user), http.MethodGet, "/users/me", nil).Status)
+	again := testkit.Call(t, replicaB, testkit.As(user), http.MethodGet, "/users/me", nil)
+	require.Equal(t, http.StatusOK, again.Status)
+	var second model.UserProfileResponse
+	again.Decode(t, &second)
+	assert.Equal(t, profile.SignUpID, second.SignUpID, "a retried first visit reports the same sign-up, which the web dedupes")
 	time.Sleep(500 * time.Millisecond)
 	assert.Len(t, userEvents(t, user), 1)
 }
@@ -99,7 +104,11 @@ func TestAccounts_DeletionIsBlockedByActiveContestsThenRevokesTheToken(t *testin
 	// only a sign-in after the deletion can restore it, and then the account works again
 	assert.Equal(t, http.StatusForbidden, testkit.Call(t, replicaA, signedIn, http.MethodPost, "/users/me/restore", nil).Status)
 	require.Equal(t, http.StatusNoContent, testkit.Call(t, replicaA, fresh, http.MethodPost, "/users/me/restore", nil).Status)
-	assert.Equal(t, http.StatusOK, testkit.Call(t, replicaB, fresh, http.MethodGet, "/users/me", nil).Status)
+	back := testkit.Call(t, replicaB, fresh, http.MethodGet, "/users/me", nil)
+	require.Equal(t, http.StatusOK, back.Status)
+	var returning model.UserProfileResponse
+	back.Decode(t, &returning)
+	assert.Empty(t, returning.SignUpID, "signing back in after a deletion isn't a new sign-up")
 }
 
 func TestAccounts_SignOutRevokesOnlyThatToken(t *testing.T) {

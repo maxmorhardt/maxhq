@@ -19,12 +19,6 @@ type DatabaseConfig struct {
 	Password     string `env:"DB_PASSWORD,required"`
 	Name         string `env:"DB_NAME,required"`
 	SSLMode      string `env:"DB_SSL_MODE,required"`
-	ReadHost     string `env:"DB_READ_HOST"`
-	ReadPort     int    `env:"DB_READ_PORT"`
-	ReadUser     string `env:"DB_READ_USER"`
-	ReadPassword string `env:"DB_READ_PASSWORD"`
-	ReadName     string `env:"DB_READ_NAME"`
-	ReadSSLMode  string `env:"DB_READ_SSL_MODE"`
 	MaxOpenConns int    `env:"DB_MAX_OPEN_CONNS" envDefault:"20"`
 	MaxIdleConns int    `env:"DB_MAX_IDLE_CONNS" envDefault:"5"`
 }

@@ -326,29 +326,29 @@ func (_c *SquareRepository_CountByOwner_Call) RunAndReturn(run func(context.Cont
 	return _c
 }
 
-// Ghost provides a mock function with given fields: ctx, square
-func (_m *SquareRepository) Ghost(ctx context.Context, square *model.Square) (*model.Square, error) {
-	ret := _m.Called(ctx, square)
+// GhostByOwner provides a mock function with given fields: ctx, contestID, owner
+func (_m *SquareRepository) GhostByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error) {
+	ret := _m.Called(ctx, contestID, owner)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Ghost")
+		panic("no return value specified for GhostByOwner")
 	}
 
-	var r0 *model.Square
+	var r0 []model.Square
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *model.Square) (*model.Square, error)); ok {
-		return rf(ctx, square)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) ([]model.Square, error)); ok {
+		return rf(ctx, contestID, owner)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *model.Square) *model.Square); ok {
-		r0 = rf(ctx, square)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) []model.Square); ok {
+		r0 = rf(ctx, contestID, owner)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Square)
+			r0 = ret.Get(0).([]model.Square)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *model.Square) error); ok {
-		r1 = rf(ctx, square)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, contestID, owner)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -356,31 +356,32 @@ func (_m *SquareRepository) Ghost(ctx context.Context, square *model.Square) (*m
 	return r0, r1
 }
 
-// SquareRepository_Ghost_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Ghost'
-type SquareRepository_Ghost_Call struct {
+// SquareRepository_GhostByOwner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GhostByOwner'
+type SquareRepository_GhostByOwner_Call struct {
 	*mock.Call
 }
 
-// Ghost is a helper method to define mock.On call
+// GhostByOwner is a helper method to define mock.On call
 //   - ctx context.Context
-//   - square *model.Square
-func (_e *SquareRepository_Expecter) Ghost(ctx interface{}, square interface{}) *SquareRepository_Ghost_Call {
-	return &SquareRepository_Ghost_Call{Call: _e.mock.On("Ghost", ctx, square)}
+//   - contestID uuid.UUID
+//   - owner string
+func (_e *SquareRepository_Expecter) GhostByOwner(ctx interface{}, contestID interface{}, owner interface{}) *SquareRepository_GhostByOwner_Call {
+	return &SquareRepository_GhostByOwner_Call{Call: _e.mock.On("GhostByOwner", ctx, contestID, owner)}
 }
 
-func (_c *SquareRepository_Ghost_Call) Run(run func(ctx context.Context, square *model.Square)) *SquareRepository_Ghost_Call {
+func (_c *SquareRepository_GhostByOwner_Call) Run(run func(ctx context.Context, contestID uuid.UUID, owner string)) *SquareRepository_GhostByOwner_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*model.Square))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *SquareRepository_Ghost_Call) Return(_a0 *model.Square, _a1 error) *SquareRepository_Ghost_Call {
+func (_c *SquareRepository_GhostByOwner_Call) Return(_a0 []model.Square, _a1 error) *SquareRepository_GhostByOwner_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SquareRepository_Ghost_Call) RunAndReturn(run func(context.Context, *model.Square) (*model.Square, error)) *SquareRepository_Ghost_Call {
+func (_c *SquareRepository_GhostByOwner_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) ([]model.Square, error)) *SquareRepository_GhostByOwner_Call {
 	_c.Call.Return(run)
 	return _c
 }

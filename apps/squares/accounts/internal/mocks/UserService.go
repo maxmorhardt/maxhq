@@ -70,7 +70,7 @@ func (_c *UserService_DeleteAccount_Call) RunAndReturn(run func(context.Context,
 }
 
 // GetProfile provides a mock function with given fields: ctx, email, defaultDisplayName
-func (_m *UserService) GetProfile(ctx context.Context, email string, defaultDisplayName string) (*model.User, error) {
+func (_m *UserService) GetProfile(ctx context.Context, email string, defaultDisplayName string) (*model.User, bool, error) {
 	ret := _m.Called(ctx, email, defaultDisplayName)
 
 	if len(ret) == 0 {
@@ -78,8 +78,9 @@ func (_m *UserService) GetProfile(ctx context.Context, email string, defaultDisp
 	}
 
 	var r0 *model.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*model.User, error)); ok {
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*model.User, bool, error)); ok {
 		return rf(ctx, email, defaultDisplayName)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) *model.User); ok {
@@ -90,13 +91,19 @@ func (_m *UserService) GetProfile(ctx context.Context, email string, defaultDisp
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) bool); ok {
 		r1 = rf(ctx, email, defaultDisplayName)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, string, string) error); ok {
+		r2 = rf(ctx, email, defaultDisplayName)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // UserService_GetProfile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetProfile'
@@ -119,12 +126,12 @@ func (_c *UserService_GetProfile_Call) Run(run func(ctx context.Context, email s
 	return _c
 }
 
-func (_c *UserService_GetProfile_Call) Return(_a0 *model.User, _a1 error) *UserService_GetProfile_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *UserService_GetProfile_Call) Return(_a0 *model.User, _a1 bool, _a2 error) *UserService_GetProfile_Call {
+	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 
-func (_c *UserService_GetProfile_Call) RunAndReturn(run func(context.Context, string, string) (*model.User, error)) *UserService_GetProfile_Call {
+func (_c *UserService_GetProfile_Call) RunAndReturn(run func(context.Context, string, string) (*model.User, bool, error)) *UserService_GetProfile_Call {
 	_c.Call.Return(run)
 	return _c
 }

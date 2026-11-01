@@ -6,7 +6,7 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 
 ## Required
 
-- **PostgreSQL** - 17+, primary and optional read replica. One database shared by the squares services; this service migrates only its own `accounts` schema at startup (and adopts the pre-split `users`, `deleted_accounts`, and `contact_submissions` tables from `public` on the first start after the split).
+- **PostgreSQL** - 17+. One database shared by the squares services; this service migrates only its own `accounts` schema at startup (and adopts the pre-split `users`, `deleted_accounts`, and `contact_submissions` tables from `public` on the first start after the split).
 - **Valkey** (the `valkey` namespace) - the users stream, the revocation list (written here on deletion and rebuilt from Postgres on every start), and idempotency records.
 - **squares-contests** - its `/internal` routes, at `CONTESTS_INTERNAL_URL` with `INTERNAL_API_TOKEN`.
 - **SMTP** - outbound email for the contact form.
@@ -34,7 +34,6 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | group | keys |
 | --- | --- |
 | database | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL_MODE` |
-| read replica | the same six with a `DB_READ_` prefix (optional) |
 | redis | `REDIS_URL` |
 | service-to-service | `INTERNAL_API_TOKEN` (the same value in contests, accounts, and realtime) |
 | pseudonyms | `PSEUDONYM_KEY`, at least 32 bytes (the same value in contests and accounts; changing it renames every player) |

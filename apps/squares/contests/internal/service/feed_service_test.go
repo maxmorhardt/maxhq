@@ -5,10 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -82,7 +85,6 @@ func TestFeed_CachesUntilInvalidated(t *testing.T) {
 	_, err = feed.List(ctx, "u", filter)
 	require.NoError(t, err)
 
-	time.Sleep(time.Millisecond)
 	feed.InvalidateContest(ctx, contestID)
 	_, err = feed.List(ctx, "u", filter)
 	require.NoError(t, err)
@@ -97,4 +99,40 @@ func TestFeed_InvalidateContestToleratesLookupFailure(t *testing.T) {
 
 func TestFeed_MembersSkipsTheLookupWithoutACache(t *testing.T) {
 	assert.Nil(t, service.NewFeedService(mocks.NewFeedRepository(t), nil).Members(context.Background(), uuid.New()))
+}
+
+func redisCache(t *testing.T) (*miniredis.Miniredis, cache.Cache) {
+	mr := miniredis.RunT(t)
+	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = client.Close() })
+	return mr, cache.NewRedisCache(client, "test")
+}
+
+func TestFeed_InvalidatesEveryMemberAtOnce(t *testing.T) {
+	ctx := context.Background()
+	contestID := uuid.New()
+	members := []string{"u", "", "other"}
+	repo := mocks.NewFeedRepository(t)
+	repo.EXPECT().Members(mock.Anything, contestID).Return(members, nil).Once()
+	repo.EXPECT().List(mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Times(4)
+
+	mr, c := redisCache(t)
+	feed := service.NewFeedService(repo, c)
+	for _, u := range []string{"u", "other"} {
+		_, err := feed.List(ctx, u, &model.ContestFeedFilter{Limit: 20})
+		require.NoError(t, err)
+	}
+
+	feed.InvalidateContest(ctx, contestID)
+	u, err := mr.Get(cache.Key("cache", "test", "feed-generation:u"))
+	require.NoError(t, err)
+	other, err := mr.Get(cache.Key("cache", "test", "feed-generation:other"))
+	require.NoError(t, err)
+	assert.Equal(t, u, other, "one write covers every member")
+	assert.False(t, mr.Exists(cache.Key("cache", "test", "feed-generation:")))
+
+	for _, u := range []string{"u", "other"} {
+		_, err := feed.List(ctx, u, &model.ContestFeedFilter{Limit: 20})
+		require.NoError(t, err)
+	}
 }

@@ -68,48 +68,6 @@ func TestFormatDSN(t *testing.T) {
 	}
 }
 
-func TestValidateReadReplicaConfig(t *testing.T) {
-	complete := config.DatabaseConfig{
-		ReadHost:     "replica",
-		ReadPort:     5432,
-		ReadUser:     "reader",
-		ReadPassword: "secret",
-		ReadName:     "mydb",
-		ReadSSLMode:  "require",
-	}
-
-	tests := []struct {
-		name      string
-		mutate    func(c *config.DatabaseConfig)
-		wantErr   bool
-		wantInMsg string
-	}{
-		{name: "complete config", mutate: func(*config.DatabaseConfig) {}, wantErr: false},
-		{name: "missing port", mutate: func(c *config.DatabaseConfig) { c.ReadPort = 0 }, wantErr: true, wantInMsg: "DB_READ_PORT"},
-		{name: "missing user", mutate: func(c *config.DatabaseConfig) { c.ReadUser = "" }, wantErr: true, wantInMsg: "DB_READ_USER"},
-		{name: "missing password", mutate: func(c *config.DatabaseConfig) { c.ReadPassword = "" }, wantErr: true, wantInMsg: "DB_READ_PASSWORD"},
-		{name: "missing name", mutate: func(c *config.DatabaseConfig) { c.ReadName = "" }, wantErr: true, wantInMsg: "DB_READ_NAME"},
-		{name: "missing ssl mode", mutate: func(c *config.DatabaseConfig) { c.ReadSSLMode = "" }, wantErr: true, wantInMsg: "DB_READ_SSL_MODE"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dbCfg := complete
-			tt.mutate(&dbCfg)
-
-			err := validateReadReplicaConfig(&dbCfg)
-
-			if !tt.wantErr {
-				assert.NoError(t, err)
-				return
-			}
-
-			require.Error(t, err)
-			assert.Contains(t, err.Error(), tt.wantInMsg)
-		})
-	}
-}
-
 func TestClose_NilIsSafe(t *testing.T) {
 	assert.NotPanics(t, func() { Close(nil) })
 }

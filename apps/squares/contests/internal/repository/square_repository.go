@@ -18,8 +18,8 @@ type SquareRepository interface {
 	Claim(ctx context.Context, square *model.Square, value, owner, ownerName string) (*model.Square, error)
 	ClaimRandom(ctx context.Context, contestID uuid.UUID, count int, value, owner, ownerName string) ([]model.Square, error)
 	Clear(ctx context.Context, square *model.Square) (*model.Square, error)
-	Ghost(ctx context.Context, square *model.Square) (*model.Square, error)
 	ClearByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error)
+	GhostByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error)
 	UpdateInitials(ctx context.Context, owner, initials string) ([]model.Square, error)
 }
 
@@ -186,28 +186,6 @@ func (r *squareRepository) Clear(ctx context.Context, square *model.Square) (*mo
 	return square, nil
 }
 
-// in-progress squares keep their value so scoring is unaffected; only the owner identity is dropped
-func (r *squareRepository) Ghost(ctx context.Context, square *model.Square) (*model.Square, error) {
-	err := database.InTx(ctx, func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Square{}).
-			Where("id = ?", square.ID).
-			Updates(map[string]any{
-				"owner":      model.GhostUser,
-				"owner_name": "",
-				"version":    gorm.Expr("version + 1"),
-			}).Error; err != nil {
-			return err
-		}
-
-		return reloadSquare(tx, square)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return square, nil
-}
-
 func (r *squareRepository) ClearByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error) {
 	var clearedSquares []model.Square
 	err := database.InTx(ctx, func(tx *gorm.DB) error {
@@ -241,6 +219,36 @@ func (r *squareRepository) ClearByOwner(ctx context.Context, contestID uuid.UUID
 	})
 
 	return clearedSquares, err
+}
+
+// in-progress squares keep their value so scoring is unaffected; only the owner identity is dropped
+func (r *squareRepository) GhostByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error) {
+	var ghosted []model.Square
+	err := database.InTx(ctx, func(tx *gorm.DB) error {
+		var ids []uuid.UUID
+		if err := tx.Model(&model.Square{}).
+			Where("contest_id = ? AND owner = ?", contestID, owner).
+			Pluck("id", &ids).Error; err != nil {
+			return err
+		}
+		if len(ids) == 0 {
+			return nil
+		}
+
+		if err := tx.Model(&model.Square{}).
+			Where("id IN ?", ids).
+			Updates(map[string]any{
+				"owner":      model.GhostUser,
+				"owner_name": "",
+				"version":    gorm.Expr("version + 1"),
+			}).Error; err != nil {
+			return err
+		}
+
+		return tx.Where("id IN ?", ids).Order("\"row\", col").Find(&ghosted).Error
+	})
+
+	return ghosted, err
 }
 
 func (r *squareRepository) CountByOwner(ctx context.Context, contestID uuid.UUID, owner string) (int, error) {

@@ -48,13 +48,18 @@ func (h *userHandler) GetMe(c *gin.Context) {
 		defaultDisplayName = claims.Name
 	}
 
-	profile, err := h.userService.GetProfile(c.Request.Context(), user, defaultDisplayName)
+	profile, isSignUp, err := h.userService.GetProfile(c.Request.Context(), user, defaultDisplayName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		return
 	}
 
-	c.JSON(http.StatusOK, toProfileResponse(profile))
+	resp := toProfileResponse(profile)
+	// the row id is random and never shown to anyone, so the ads tag can dedupe on it without learning who this is
+	if isSignUp {
+		resp.SignUpID = profile.ID.String()
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 func toProfileResponse(user *model.User) model.UserProfileResponse {

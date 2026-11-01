@@ -15,7 +15,7 @@ created by hand.
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`) |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, and Account Cloudflare Tunnel: Edit, plus `terraform.tfvars` with `dev_ips` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, and Account Cloudflare Tunnel: Edit, plus `terraform.tfvars` with `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 
 In CI, as repository secrets:

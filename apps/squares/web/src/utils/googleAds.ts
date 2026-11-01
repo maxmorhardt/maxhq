@@ -87,6 +87,18 @@ export function initGoogleAds(hostname?: string): void {
 }
 
 // a no-op outside production, where the tag never loads
-export function trackConversion(conversion: Conversion): void {
-  window.gtag?.('event', 'conversion', { send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}` });
+export function trackConversion(conversion: Conversion, transactionId?: string): void {
+  try {
+    window.gtag?.('event', 'conversion', {
+      send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}`,
+      ...(transactionId && { transaction_id: transactionId }),
+    });
+  } catch {
+    // a broken or stubbed tag must not undo the action it reports
+  }
+}
+
+// safe to resend: google drops a repeated transaction id
+export function trackConversionFor(conversion: Conversion, id: string): void {
+  trackConversion(conversion, `${conversion}:${id}`);
 }

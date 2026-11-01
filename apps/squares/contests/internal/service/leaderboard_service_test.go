@@ -179,6 +179,13 @@ func (m *memCache) Set(_ context.Context, key string, value []byte, _ time.Durat
 	return nil
 }
 
+func (m *memCache) SetMany(_ context.Context, keys []string, value []byte, _ time.Duration) error {
+	for _, k := range keys {
+		m.entries[k] = value
+	}
+	return nil
+}
+
 func (m *memCache) Delete(_ context.Context, keys ...string) error {
 	for _, k := range keys {
 		delete(m.entries, k)
