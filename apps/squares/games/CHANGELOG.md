@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.3.1...squares-games/2.3.2) (2026-11-01)
+
+
+### Bug Fixes
+
+* **squares:** count only real sign-ups and read only the primary ([#190](https://github.com/maxmorhardt/maxhq/issues/190)) ([1f09e20](https://github.com/maxmorhardt/maxhq/commit/1f09e209441d8410b82c38f91bbc6ae89f4b9f05))
+
 ## [2.3.1](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.3.0...squares-games/2.3.1) (2026-11-01)
 
 

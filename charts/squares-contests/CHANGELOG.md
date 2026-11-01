@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/maxmorhardt/maxhq/compare/squares-contests-chart/2.2.0...squares-contests-chart/2.2.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **squares:** count only real sign-ups and read only the primary ([#190](https://github.com/maxmorhardt/maxhq/issues/190)) ([1f09e20](https://github.com/maxmorhardt/maxhq/commit/1f09e209441d8410b82c38f91bbc6ae89f4b9f05))
+
 ## [2.2.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests-chart/2.1.0...squares-contests-chart/2.2.0) (2026-11-01)
 
 
