@@ -4,16 +4,13 @@ import AppsPage from './AppsPage';
 import { renderWithProviders } from '../testUtils';
 
 describe('AppsPage', () => {
-  it('renders the page heading and a directory of the apps', () => {
+  it('leads with the only app and says more are coming', () => {
     renderWithProviders(<AppsPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Apps' })).toBeInTheDocument();
-    const directory = screen.getByRole('list', { name: 'Apps' });
-    expect(within(directory).getByRole('link', { name: 'Squares' })).toHaveAttribute(
-      'href',
-      '#squares'
-    );
-    expect(within(directory).getByText('More apps on the way')).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Apps' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Squares' })).toBeInTheDocument();
+    expect(screen.getByText('More apps on the way')).toBeInTheDocument();
   });
 
   it('presents squares with a link out to the live app', () => {

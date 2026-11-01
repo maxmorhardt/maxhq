@@ -27,14 +27,14 @@ const chapters: Chapter[] = [
     id: 'ship',
     icon: <RocketLaunchIcon />,
     title: 'Ship it on merge.',
-    body: 'A merge to main builds an image tagged with its commit, and Argo CD rolls it out to dev. A release tag promotes that same image to production, never rebuilt. Git is the only way anything reaches a cluster.',
+    body: 'Every pull request runs lint, tests, and security scans. Merging builds one image tagged with its commit, and Argo CD rolls it out to dev. A release promotes that exact image to production, never rebuilt, so nothing reaches a cluster except through Git.',
     visual: <PipelineVisual />,
   },
   {
     id: 'run',
     icon: <DnsIcon />,
     title: 'Run it myself.',
-    body: 'Two k3s clusters I provision and operate: dev on Raspberry Pis at home, production on three cloud VPSes, each with a highly available control plane. Envoy Gateway is the single front door, Dex federates sign-in, and CloudNativePG and Valkey hold the state.',
+    body: 'Two k3s clusters I provision and operate: dev on Raspberry Pis at home, production on three cloud VPSes, each with a highly available control plane. Envoy Gateway routes every app and enforces JWT auth and rate limits, Dex federates Google, Microsoft, and GitHub sign-in, and CloudNativePG and Valkey hold the state.',
     visual: <ClusterDiagram />,
   },
 ];
@@ -46,7 +46,7 @@ export default function HomePage() {
     <Box sx={{ overflowX: 'clip' }}>
       <PageMeta
         title="Max Morhardt – Software Engineer"
-        description="Max Morhardt is a Software Engineer at Fidelity Investments specializing in Java, Spring Boot, Go, TypeScript, React, Angular, Kubernetes, Terraform, and AWS."
+        description="Max Morhardt is a Software Engineer at Fidelity Investments building APIs, user interfaces, and cloud infrastructure with Java, Spring Boot, Go, TypeScript, React, Angular, Kubernetes, Terraform, and AWS."
         canonical="https://maxhq.io/"
       />
 
@@ -72,12 +72,12 @@ export default function HomePage() {
           >
             <Box sx={{ position: { lg: 'sticky' }, top: { lg: 120 } }}>
               <RevealSection>
-                <Typography variant="h2">What the day job moved.</Typography>
+                <Typography variant="h2">What the day job covers.</Typography>
               </RevealSection>
               <RevealSection delay={1}>
                 <Typography sx={ledeSx}>
-                  Platform engineering at Fidelity Investments since 2023, on the team that runs
-                  cloud development environments for thousands of users.
+                  Software engineering at Fidelity Investments since 2023, across the whole stack:
+                  the APIs, the interfaces on top, and the infrastructure underneath.
                 </Typography>
               </RevealSection>
               <RevealSection delay={1} sx={{ mt: 3 }}>

@@ -38,7 +38,7 @@ const axisSx = {
   display: 'grid',
   placeItems: 'center',
   fontFamily: fonts.mono,
-  fontSize: '0.78rem',
+  fontSize: { xs: '0.78rem', md: '0.9rem' },
   color: 'text.secondary',
 } as const;
 
@@ -46,10 +46,14 @@ export default function SquaresBoard() {
   const rows = [0, 1, 2, 3, 4];
 
   return (
-    <Box sx={{ width: 'min(340px, 100%)' }}>
+    <Box sx={{ width: { xs: 'min(340px, 100%)', md: 'min(440px, 100%)' } }}>
       <Box
         aria-hidden
-        sx={{ display: 'grid', gridTemplateColumns: '1.3rem repeat(5, 1fr)', gap: '0.4rem' }}
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '1.3rem repeat(5, 1fr)',
+          gap: { xs: '0.4rem', md: '0.55rem' },
+        }}
       >
         {/* corner + away numbers across the top */}
         <Box component="span" sx={{ ...axisSx, color: 'primary.main', opacity: 0.7 }}>
@@ -83,7 +87,7 @@ export default function SquaresBoard() {
                     // fixed radius; the theme's 14px base would make these circles
                     borderRadius: '8px',
                     fontFamily: fonts.mono,
-                    fontSize: '0.62rem',
+                    fontSize: { xs: '0.62rem', md: '0.74rem' },
                     letterSpacing: '0.03em',
                     ...(state === 'winner' && {
                       bgcolor: 'primary.main',

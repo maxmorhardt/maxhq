@@ -1,36 +1,40 @@
 import { Box, Typography } from '@mui/material';
 import RevealSection from '../common/RevealSection';
 
-interface Impact {
-  figure: string;
+interface Area {
+  title: string;
   body: string;
 }
 
-const impacts: Impact[] = [
+const areas: Area[] = [
   {
-    figure: '15 → 2 min',
-    body: 'Cloud IDE spin-up time after driving the move from EC2 to EKS, with infrastructure costs down 20%.',
+    title: 'APIs',
+    body: 'Designing and building services in Java with Spring Boot and in Go, with clear contracts and OpenAPI specs other teams can build against.',
   },
   {
-    figure: '3,000+',
-    body: 'Users across quant development, machine learning, and prototyping, in cloud IDEs on AWS: VS Code, JupyterLab, RStudio, and Airflow.',
+    title: 'Architecture',
+    body: 'Shaping how services, data, and platforms fit together, and planning migrations that move a system forward without breaking the people on it.',
   },
   {
-    figure: '−46%',
-    body: 'Main bundle size after rewriting the Angular frontend from Bootstrap to PrimeNG across 750+ files.',
+    title: 'Interfaces',
+    body: 'Building the Angular and React frontends people use every day, with shared component libraries and fast, accessible pages.',
   },
   {
-    figure: '3 days → 45 min',
-    body: 'Deployment time with a patent-pending tool that turns OpenAPI specs into deployed Spring Boot services.',
+    title: 'Infrastructure',
+    body: 'Running workloads on AWS and Kubernetes, with Terraform, IAM, and CI/CD pipelines that ship on merge.',
+  },
+  {
+    title: 'Observability',
+    body: 'Metrics, logs, traces, and alerts that point at the real problem, and on-call debugging across the whole stack when something breaks.',
   },
 ];
 
 export default function ImpactList() {
   return (
     <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
-      {impacts.map((impact, i) => (
+      {areas.map((area, i) => (
         <RevealSection
-          key={impact.figure}
+          key={area.title}
           component="li"
           delay={Math.min(i, 3) as 0 | 1 | 2 | 3}
           sx={{
@@ -48,13 +52,12 @@ export default function ImpactList() {
               fontWeight: 680,
               letterSpacing: '-0.035em',
               lineHeight: 1.05,
-              fontVariantNumeric: 'tabular-nums',
             }}
           >
-            {impact.figure}
+            {area.title}
           </Typography>
           <Typography sx={{ maxWidth: '52ch', fontSize: { md: '1.08rem' } }}>
-            {impact.body}
+            {area.body}
           </Typography>
         </RevealSection>
       ))}

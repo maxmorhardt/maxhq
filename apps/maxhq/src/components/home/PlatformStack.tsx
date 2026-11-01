@@ -286,7 +286,7 @@ export default function PlatformStack() {
   return (
     <Box
       role="img"
-      aria-label="A platform as a stack of layers: interface, API, infrastructure, and monitoring"
+      aria-label="An app as a stack of layers: interface, API, infrastructure, and monitoring"
       sx={{
         // the gap between layers widens with the hero's scroll progress
         '--gap': 'calc(150px + var(--progress, 0) * 60px)',

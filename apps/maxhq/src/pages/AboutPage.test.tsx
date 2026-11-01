@@ -13,7 +13,7 @@ describe('AboutPage', () => {
   it('renders each labelled row', () => {
     renderWithProviders(<AboutPage />);
 
-    for (const label of ['Experience', 'Project', 'Platform', 'This site', 'Education']) {
+    for (const label of ['Experience', 'Education']) {
       expect(screen.getByRole('heading', { name: label })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: label })).toHaveAttribute(
         'href',
@@ -28,25 +28,5 @@ describe('AboutPage', () => {
     expect(screen.getByRole('heading', { name: 'Fidelity Investments' })).toBeInTheDocument();
     expect(screen.getByText('Software Engineer')).toBeInTheDocument();
     expect(screen.getByText('Associate Software Engineer')).toBeInTheDocument();
-  });
-
-  it('links to the squares project', () => {
-    renderWithProviders(<AboutPage />);
-
-    expect(screen.getByRole('link', { name: 'Live site' })).toHaveAttribute(
-      'href',
-      'https://squares.maxhq.io'
-    );
-    expect(screen.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
-      'href',
-      'https://github.com/maxmorhardt/maxhq/tree/main/apps/squares'
-    );
-  });
-
-  it('describes this site as the react stack it now runs on', () => {
-    renderWithProviders(<AboutPage />);
-
-    expect(screen.getByText('React 19')).toBeInTheDocument();
-    expect(screen.getByText('Material UI')).toBeInTheDocument();
   });
 });
