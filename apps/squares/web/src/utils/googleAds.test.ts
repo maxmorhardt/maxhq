@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { initGoogleAds, trackConversion, trackConversionOnce } from './googleAds';
+import { initGoogleAds, trackConversion, trackConversionFor } from './googleAds';
 
 const tagScript = () =>
   document.head.querySelector<HTMLScriptElement>('script[src*="googletagmanager.com"]');
@@ -82,26 +82,37 @@ describe('googleAds', () => {
     expect(window.dataLayer).toBeUndefined();
   });
 
-  it('reports a conversion once per id, with a transaction id google dedupes on', () => {
+  it('resends a conversion with the same transaction id, which google dedupes on', () => {
     initGoogleAds('squares.maxhq.io');
-    trackConversionOnce('signedUp', 'u_pat');
-    trackConversionOnce('signedUp', 'u_pat');
+    trackConversionFor('signedUp', 'u_pat');
+    trackConversionFor('signedUp', 'u_pat');
 
-    const conversions = calls().filter(([command]) => command === 'event');
-    expect(conversions).toEqual([
-      [
-        'event',
-        'conversion',
-        { send_to: 'AW-18549939904/1BJvCNiQlLAdEMC9po1F', transaction_id: 'signedUp:u_pat' },
-      ],
-    ]);
+    const conversion = [
+      'event',
+      'conversion',
+      { send_to: 'AW-18549939904/1BJvCNiQlLAdEMC9po1F', transaction_id: 'signedUp:u_pat' },
+    ];
+    expect(calls().filter(([command]) => command === 'event')).toEqual([conversion, conversion]);
   });
 
-  it('keeps the dedupe out of device storage', () => {
+  it('retries after a tag that threw, since nothing marks the conversion as sent', () => {
+    initGoogleAds('squares.maxhq.io');
+    const gtag = window.gtag!;
+    window.gtag = () => {
+      throw new Error('blocked');
+    };
+    trackConversionFor('signedUp', 'u_retry');
+    window.gtag = gtag;
+    trackConversionFor('signedUp', 'u_retry');
+
+    expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_retry' });
+  });
+
+  it('never writes to device storage', () => {
     initGoogleAds('squares.maxhq.io');
     const setItem = vi.spyOn(Storage.prototype, 'setItem');
 
-    trackConversionOnce('signedUp', 'u_storage');
+    trackConversionFor('signedUp', 'u_storage');
 
     expect(setItem).not.toHaveBeenCalled();
     expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_storage' });

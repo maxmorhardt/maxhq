@@ -3,7 +3,7 @@ import { makeStore } from '../../app/store';
 import { stubFetch } from '../../test/api';
 import { profileApi } from './api';
 
-const ads = vi.hoisted(() => ({ trackConversionOnce: vi.fn() }));
+const ads = vi.hoisted(() => ({ trackConversionFor: vi.fn() }));
 vi.mock('../../utils/googleAds', () => ads);
 vi.mock('../../auth/token', () => ({
   getIdToken: vi.fn().mockResolvedValue(null),
@@ -13,7 +13,7 @@ vi.mock('../../auth/token', () => ({
 describe('profileApi', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-    ads.trackConversionOnce.mockClear();
+    ads.trackConversionFor.mockClear();
   });
 
   const cases: [string, () => unknown, string, string][] = [
@@ -42,11 +42,11 @@ describe('profileApi', () => {
   it('counts a sign-up only when accounts just created the profile', async () => {
     stubFetch({ userId: 'u_1', signUpId: 's-1' });
     await makeStore().dispatch(profileApi.endpoints.getMyProfile.initiate());
-    expect(ads.trackConversionOnce).toHaveBeenCalledExactlyOnceWith('signedUp', 's-1');
+    expect(ads.trackConversionFor).toHaveBeenCalledExactlyOnceWith('signedUp', 's-1');
 
-    ads.trackConversionOnce.mockClear();
+    ads.trackConversionFor.mockClear();
     stubFetch({ userId: 'u_1' });
     await makeStore().dispatch(profileApi.endpoints.getMyProfile.initiate());
-    expect(ads.trackConversionOnce).not.toHaveBeenCalled();
+    expect(ads.trackConversionFor).not.toHaveBeenCalled();
   });
 });

@@ -98,14 +98,7 @@ export function trackConversion(conversion: Conversion, transactionId?: string):
   }
 }
 
-const reported = new Set<string>();
-
-// once per id per page load; google drops a repeated transaction id from anywhere else
-export function trackConversionOnce(conversion: Conversion, id: string): void {
-  const transactionId = `${conversion}:${id}`;
-  if (reported.has(transactionId)) {
-    return;
-  }
-  reported.add(transactionId);
-  trackConversion(conversion, transactionId);
+// safe to resend: google drops a repeated transaction id
+export function trackConversionFor(conversion: Conversion, id: string): void {
+  trackConversion(conversion, `${conversion}:${id}`);
 }
