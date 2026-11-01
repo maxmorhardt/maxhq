@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -120,11 +121,11 @@ func InvalidateFeeds(feedService service.FeedService) gin.HandlerFunc {
 
 		// the owner or the player leaving is one of the members
 		users := members
-		if users == nil {
-			users = []string{c.GetString(api.UserKey)}
-			if hasContest {
-				users = append(users, feedService.Members(ctx, contestID)...)
-			}
+		if users == nil && hasContest {
+			users = feedService.Members(ctx, contestID)
+		}
+		if caller := c.GetString(api.UserKey); !slices.Contains(users, caller) {
+			users = append(users, caller)
 		}
 		feedService.Invalidate(ctx, users...)
 	}

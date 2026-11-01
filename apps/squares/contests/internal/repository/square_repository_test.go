@@ -159,38 +159,58 @@ func TestSquareRepository_Clear_ContestNoLongerActive(t *testing.T) {
 	require.ErrorIs(t, err, errs.ErrSquareNotEditable)
 }
 
-func TestSquareRepository_Ghost(t *testing.T) {
+func TestSquareRepository_GhostByOwner(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewSquareRepository(gdb)
 
 	contestID := uuid.New()
-	squareID := uuid.New()
+	first, second := uuid.New(), uuid.New()
 	mock.ExpectBegin()
-	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 1))
-	expectSquareReload(mock, squareID, contestID, "AB", model.GhostUser, 4)
+	mock.ExpectQuery(`SELECT "id" FROM "squares" WHERE contest_id = \$1 AND owner = \$2`).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(first).AddRow(second))
+	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 2))
+	mock.ExpectQuery(`SELECT \* FROM "squares" WHERE id IN`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "owner", "value", "version"}).
+			AddRow(first, contestID, model.GhostUser, "AB", 2).
+			AddRow(second, contestID, model.GhostUser, "AB", 2))
 	mock.ExpectCommit()
 
-	sq, err := inTx(gdb, func(ctx context.Context) (*model.Square, error) {
-		return repo.Ghost(ctx, &model.Square{ID: squareID, ContestID: contestID, Value: "AB", Owner: "o"})
-	})
+	squares, err := inTx(gdb, func(ctx context.Context) ([]model.Square, error) { return repo.GhostByOwner(ctx, contestID, "o") })
 
 	require.NoError(t, err)
-	assert.Equal(t, model.GhostUser, sq.Owner)
-	assert.Equal(t, "AB", sq.Value)
+	assert.Len(t, squares, 2)
+	for _, sq := range squares {
+		assert.Equal(t, model.GhostUser, sq.Owner)
+		assert.Equal(t, "AB", sq.Value, "scoring keeps the square's value")
+	}
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestSquareRepository_Ghost_Error(t *testing.T) {
+func TestSquareRepository_GhostByOwner_None(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewSquareRepository(gdb)
 
 	mock.ExpectBegin()
+	mock.ExpectQuery(`SELECT "id" FROM "squares"`).WillReturnRows(sqlmock.NewRows([]string{"id"}))
+	mock.ExpectCommit()
+
+	squares, err := inTx(gdb, func(ctx context.Context) ([]model.Square, error) { return repo.GhostByOwner(ctx, uuid.New(), "o") })
+
+	require.NoError(t, err)
+	assert.Empty(t, squares)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestSquareRepository_GhostByOwner_Error(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewSquareRepository(gdb)
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(`SELECT "id" FROM "squares"`).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uuid.New()))
 	mock.ExpectExec(`UPDATE "squares"`).WillReturnError(errors.New("db"))
 	mock.ExpectRollback()
 
-	_, err := inTx(gdb, func(ctx context.Context) (*model.Square, error) {
-		return repo.Ghost(ctx, &model.Square{ID: uuid.New()})
-	})
+	_, err := inTx(gdb, func(ctx context.Context) ([]model.Square, error) { return repo.GhostByOwner(ctx, uuid.New(), "o") })
 	require.Error(t, err)
 }
 

@@ -93,7 +93,7 @@ func TestInvalidateFeeds_AfterSuccessfulWrite(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewFeedService(t)
 	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"owner", "player@example.com"}).Once()
-	svc.EXPECT().Invalidate(mock.Anything, "owner", "owner", "player@example.com").Once()
+	svc.EXPECT().Invalidate(mock.Anything, "owner", "player@example.com").Once()
 
 	req, _ := http.NewRequest(http.MethodPost, "/contests/"+contestID.String(), http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusOK), req)
@@ -107,6 +107,16 @@ func TestInvalidateFeeds_RemovalReachesTheRemovedPlayer(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusNoContent), req)
+}
+
+func TestInvalidateFeeds_CallerOutsideTheContestIsIncluded(t *testing.T) {
+	contestID := uuid.New()
+	svc := mocks.NewFeedService(t)
+	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"player@example.com"}).Once()
+	svc.EXPECT().Invalidate(mock.Anything, "player@example.com", "owner").Once()
+
+	req, _ := http.NewRequest(http.MethodPost, "/contests/"+contestID.String(), http.NoBody)
+	doRequest(invalidationRouter(svc, http.StatusOK), req)
 }
 
 func TestInvalidateFeeds_SkipsFailedRemoval(t *testing.T) {
