@@ -62,7 +62,10 @@ func Name(displayName string) string {
 	parts := strings.FieldsFunc(full, func(r rune) bool { return unicode.IsSpace(r) || r == ',' })
 	title := ""
 	for len(parts) > 1 && titles[word(parts[0])] {
-		title, parts = parts[0], parts[1:]
+		if title == "" {
+			title = capitalize(parts[0])
+		}
+		parts = parts[1:]
 	}
 	if len(parts) == 0 {
 		return ""
@@ -80,6 +83,11 @@ func Name(displayName string) string {
 		return first + " " + i
 	}
 	return first
+}
+
+func capitalize(s string) string {
+	r, size := utf8.DecodeRuneInString(s)
+	return string(unicode.ToUpper(r)) + s[size:]
 }
 
 func initial(name string) string {

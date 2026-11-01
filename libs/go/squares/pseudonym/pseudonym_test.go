@@ -93,6 +93,8 @@ func TestName(t *testing.T) {
 		"Mrs. Johnson":             "Mrs. J.",
 		"Dr. Morhardt Jr.":         "Dr. M.",
 		"Dr. M.":                   "Dr. M.",
+		"Prof. Dr. Smith":          "Prof. S.",
+		"dr dre":                   "Dr D.",
 		"Dr. 🏈":                    "🏈",
 		"Max,":                     "Max",
 		"Max (Dad)":                "Max D.",

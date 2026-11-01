@@ -103,10 +103,19 @@ func TestInvalidateFeeds_RemovalReachesTheRemovedPlayer(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewFeedService(t)
 	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"owner", "target@example.com"}).Once()
-	svc.EXPECT().Invalidate(mock.Anything, "owner", "target@example.com", "owner").Once()
+	svc.EXPECT().Invalidate(mock.Anything, "owner", "target@example.com").Once()
 
 	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusNoContent), req)
+}
+
+func TestInvalidateFeeds_SkipsFailedRemoval(t *testing.T) {
+	contestID := uuid.New()
+	svc := mocks.NewFeedService(t)
+	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"owner", "target@example.com"}).Once()
+
+	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
+	doRequest(invalidationRouter(svc, http.StatusForbidden), req)
 }
 
 func TestInvalidateFeeds_RemovalFallsBackWhenMembersFail(t *testing.T) {

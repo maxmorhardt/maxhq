@@ -83,19 +83,22 @@ export default function LiveContest({ contestId }: Props) {
   const { data: game } = useGetGameQuery(gameId ?? skipToken);
   useGameStream(game && !isGameOver(game) ? game.id : undefined);
 
-  // only the owner gets full names, refetched when someone joins
-  // currentData, since a skipped query keeps its old data but can't be refetched
+  // currentData: a skipped query keeps its old data but can't be refetched
   const isOwner = !!contest && isMe(viewerId, contest.owner);
   const { currentData: roster, refetch: refetchRoster } = useGetRosterQuery(
     isOwner ? contestId : skipToken
   );
-  const someoneNew =
-    !!roster && participants.some((p) => !roster.some((r) => r.userId === p.userId));
+  const missing = roster
+    ? participants
+        .filter((p) => !roster.some((r) => r.userId === p.userId))
+        .map((p) => p.userId)
+        .join(',')
+    : '';
   useEffect(() => {
-    if (someoneNew) {
+    if (missing) {
       void refetchRoster();
     }
-  }, [someoneNew, refetchRoster]);
+  }, [missing, refetchRoster]);
 
   useEffect(() => {
     if (!winnerFlash) {

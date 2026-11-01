@@ -128,6 +128,26 @@ describe('LiveContest', () => {
     expect(refetch).toHaveBeenCalledOnce();
   });
 
+  it('refetches again when another player joins before the roster catches up', () => {
+    const refetch = vi.fn();
+    contestsApi.useGetRosterQuery.mockReturnValue({
+      currentData: [{ userId: 'u_player', fullName: 'Owen Owner' }],
+      refetch,
+    });
+    const { snapshot } = renderLive();
+    const owned = makeContest({ owner: 'u_player' });
+    const owner = makeParticipant({ userId: 'u_player', role: 'owner' });
+    const pat = makeParticipant({ id: 'p-2', userId: 'u_pat' });
+    const sam = makeParticipant({ id: 'p-3', userId: 'u_sam' });
+
+    snapshot(owned, [owner, pat]);
+    snapshot(owned, [owner, pat, sam]);
+    expect(refetch).toHaveBeenCalledTimes(2);
+
+    snapshot(owned, [owner, pat, sam]);
+    expect(refetch).toHaveBeenCalledTimes(2);
+  });
+
   it('never refetches a skipped roster, which still holds its old data', () => {
     const refetch = vi.fn();
     contestsApi.useGetRosterQuery.mockReturnValue({

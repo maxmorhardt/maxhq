@@ -12,6 +12,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
@@ -88,7 +89,8 @@ func (s *feedService) Members(ctx context.Context, contestID uuid.UUID) []string
 		return nil
 	}
 
-	members, err := s.repo.Members(ctx, contestID)
+	// a lagging replica would miss someone who just joined
+	members, err := s.repo.Members(database.ReadPrimary(ctx), contestID)
 	if err != nil {
 		logging.FromContext(ctx).Warn("failed to load contest members for feed invalidation", "contest_id", contestID, "error", err)
 		return nil
