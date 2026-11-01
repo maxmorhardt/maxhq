@@ -43,7 +43,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.U
 	return user, nil
 }
 
-// a concurrent first visit may have created the row already; whichever insert won is returned, and only it reports created
+// a concurrent first visit may have created the row already; whichever insert won is returned
 func (r *userRepository) CreateIfMissing(ctx context.Context, user *model.User) (*model.User, bool, error) {
 	conn := database.Conn(ctx, r.db)
 

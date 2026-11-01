@@ -86,7 +86,7 @@ export function initGoogleAds(hostname?: string): void {
   document.head.appendChild(script);
 }
 
-// a no-op outside production, where the tag never loads; never throws into the caller's success path
+// a no-op outside production, where the tag never loads
 export function trackConversion(conversion: Conversion): void {
   try {
     window.gtag?.('event', 'conversion', { send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}` });

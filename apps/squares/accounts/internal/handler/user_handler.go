@@ -33,7 +33,7 @@ func NewUserHandler(userService service.UserService) UserHandler {
 }
 
 // @Summary Get the current user's profile
-// @Description Returns the profile of the authenticated user, creating it on first access; isNew is set only on the response that created it
+// @Description Returns the profile of the authenticated user, creating it on first access
 // @Tags users
 // @Produce json
 // @Success 200 {object} model.UserProfileResponse

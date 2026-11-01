@@ -7,7 +7,6 @@ export const profileApi = baseApi.injectEndpoints({
     getMyProfile: build.query<UserProfile, void>({
       query: () => '/users/me',
       providesTags: ['Profile'],
-      // accounts flags only the request that created the profile, so a returning sign-in never counts
       async onQueryStarted(_, { queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;

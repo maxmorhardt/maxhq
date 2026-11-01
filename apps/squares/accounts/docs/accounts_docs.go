@@ -126,7 +126,7 @@ const docTemplateaccounts = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the profile of the authenticated user, creating it on first access; isNew is set only on the response that created it",
+                "description": "Returns the profile of the authenticated user, creating it on first access",
                 "produces": [
                     "application/json"
                 ],
@@ -430,7 +430,6 @@ const docTemplateaccounts = `{
                     "example": "user@example.com"
                 },
                 "isNew": {
-                    "description": "set only on the request that created the profile, so the web counts each sign-up once",
                     "type": "boolean",
                     "example": true
                 },
