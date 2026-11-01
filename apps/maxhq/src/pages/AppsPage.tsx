@@ -10,6 +10,7 @@ import { Fragment, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import AppDirectory from '../components/apps/AppDirectory';
 import AppShowcase, { type AppEntry } from '../components/apps/AppShowcase';
+import MoreAppsStrip from '../components/apps/MoreAppsStrip';
 import SquaresBoard from '../components/apps/SquaresBoard';
 import StepTrack from '../components/apps/StepTrack';
 import PageMeta from '../components/common/PageMeta';
@@ -152,7 +153,7 @@ export default function AppsPage() {
         component="header"
         sx={{
           pt: { xs: 8, md: 12 },
-          pb: { xs: 6, md: 8 },
+          pb: { xs: 5, md: 7 },
           backgroundImage: (theme) =>
             `radial-gradient(50% 60% at 15% 0%, ${primaryTint(theme, 0.14)}, transparent 70%)`,
         }}
@@ -170,9 +171,12 @@ export default function AppsPage() {
             </Typography>
           </RevealSection>
 
-          <Box sx={{ mt: { xs: 5, md: 6 } }}>
-            <AppDirectory apps={apps} />
-          </Box>
+          {/* the showcases below already cover a single app */}
+          {apps.length > 1 && (
+            <Box sx={{ mt: { xs: 5, md: 6 } }}>
+              <AppDirectory apps={apps} />
+            </Box>
+          )}
         </Container>
       </Box>
 
@@ -180,6 +184,7 @@ export default function AppsPage() {
         {apps.map((app, i) => (
           <AppShowcase key={app.id} app={app} flip={i % 2 === 1} />
         ))}
+        {apps.length === 1 && <MoreAppsStrip />}
       </Container>
 
       {/* what signing in shares and what we do with it, kept here for the sign-in providers' app reviews */}
