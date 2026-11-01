@@ -41,6 +41,12 @@ variable "cached_hosts" {
   default     = []
 }
 
+variable "redirect_hosts" {
+  description = "Hosts that Cloudflare redirects to the apex, keeping the path and query"
+  type        = list(string)
+  default     = []
+}
+
 variable "cache_edge_ttl" {
   description = "Seconds Cloudflare keeps cached HTML; the Free plan's minimum is 7200"
   type        = number

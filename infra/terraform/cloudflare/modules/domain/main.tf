@@ -40,6 +40,17 @@ resource "cloudflare_dns_record" "prod" {
   ttl     = 1
 }
 
+resource "cloudflare_dns_record" "redirect" {
+  for_each = toset(var.redirect_hosts)
+
+  zone_id = local.zone_id
+  name    = "${each.key}.${var.domain}"
+  type    = "CNAME"
+  content = var.domain
+  proxied = true
+  ttl     = 1
+}
+
 resource "cloudflare_dns_record" "dev" {
   for_each = local.dev_records
 
@@ -109,6 +120,36 @@ resource "cloudflare_ruleset" "cache" {
             exclude = { all = true }
           }
         }
+      }
+    }
+  }]
+}
+
+# answered at the edge, so these hosts never reach the tunnel
+resource "cloudflare_ruleset" "redirect" {
+  count = length(var.redirect_hosts) > 0 ? 1 : 0
+
+  zone_id = local.zone_id
+  name    = "Redirect to apex"
+  kind    = "zone"
+  phase   = "http_request_dynamic_redirect"
+
+  rules = [{
+    ref         = "redirect_to_apex"
+    description = "Send www and other alias hosts to the apex"
+    expression = format(
+      "(http.host in {%s})",
+      join(" ", [for h in var.redirect_hosts : "\"${h}.${var.domain}\""])
+    )
+    action  = "redirect"
+    enabled = true
+    action_parameters = {
+      from_value = {
+        status_code = 301
+        target_url = {
+          expression = "concat(\"https://${var.domain}\", http.request.uri.path)"
+        }
+        preserve_query_string = true
       }
     }
   }]
