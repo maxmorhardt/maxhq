@@ -22,19 +22,19 @@ const experience: { company: string; roles: Role[] }[] = [
         title: 'Software Engineer',
         period: 'Apr 2024 - Present',
         points: [
-          'Engineer on a platform team provisioning cloud-based IDEs on AWS (VSCode, JupyterLab, RStudio, Airflow) for users across quantitative development, machine learning, and prototyping.',
-          'Drove the migration from EC2 to EKS with async Spring Boot endpoints and Kubernetes Java Client integrations orchestrating pod lifecycle, cutting IDE spin-up time from 15 minutes to 2.',
-          'Building LLM gateway integrations in Go covering multi-provider routing, token-based rate limiting, and per-tenant quotas.',
-          'One of the primary escalation points for platform reliability, on-call in and out of rotation, debugging incidents across EKS, EC2, shared filesystems (S3, EFS, NetApp), Jenkins pipelines, and the frontend.',
-          'Owned self-service EC2 and EKS configuration profiles and bring-your-own IAM role, adopted by over 60% of users.',
-          'Rewrote the Angular frontend from Bootstrap to PrimeNG across 750+ files, split oversized modules into standalone components, consolidated duplicate components and SASS into shared libraries, fixed XSS vulnerabilities, and cut the main bundle size 46%.',
+          'Build full-stack features across Spring Boot APIs, an Angular frontend, and AWS infrastructure for cloud development environments (VS Code, JupyterLab, RStudio, Airflow).',
+          'Designed async Spring Boot APIs and Kubernetes integrations that manage workloads end to end, and led the backend move from EC2 to EKS, making environments start far faster.',
+          'Building Go services for LLM routing, token-based rate limiting, and per-tenant quotas.',
+          'Rewrote the Angular frontend onto PrimeNG, split it into standalone components and shared libraries, fixed XSS vulnerabilities, and made the app much lighter to load.',
+          'Own self-service AWS configuration for EC2, EKS, and bring-your-own IAM roles.',
+          'A primary escalation point on call, debugging incidents across the APIs, the frontend, Kubernetes, storage, and CI/CD pipelines.',
         ],
       },
       {
         title: 'Associate Software Engineer',
         period: 'Jan 2023 - Apr 2024',
         points: [
-          'Led development of a full stack automated deployment tool that ingests OpenAPI specs from SwaggerHub, generates Spring Boot scaffolding, and deploys to Azure Kubernetes Service through a programmatically created Jenkins pipeline, reducing deployment time from 3 days to under 45 minutes.',
+          'Led a full-stack tool that turns OpenAPI specs into Spring Boot services and deploys them to Azure Kubernetes Service through generated Jenkins pipelines, taking deployments from days to minutes.',
           'Mentored two engineering interns through their projects, both of whom received return offers.',
         ],
       },
@@ -49,7 +49,7 @@ function C({ children }: { children: ReactNode }) {
 const sections = [
   { id: 'experience', label: 'Experience' },
   { id: 'project', label: 'Project' },
-  { id: 'platform', label: 'Platform' },
+  { id: 'infrastructure', label: 'Infrastructure' },
   { id: 'this-site', label: 'This site' },
   { id: 'education', label: 'Education' },
 ];
@@ -100,13 +100,13 @@ export default function AboutPage() {
     <Box>
       <PageMeta
         title="About – Max Morhardt"
-        description="About Max Morhardt, Software Engineer at Fidelity Investments building multi-tenant cloud platforms on AWS and EKS, alongside a self-hosted Kubernetes homelab."
+        description="About Max Morhardt, a Software Engineer at Fidelity Investments building APIs, user interfaces, and cloud infrastructure, who also self-hosts the apps on this site on Kubernetes."
         canonical="https://maxhq.io/about"
       />
 
       <PageHeader
         title="About"
-        lede="Software Engineer at Fidelity Investments, working across platform and cloud infrastructure, from API design and Kubernetes orchestration to the front-end interfaces on top."
+        lede="Software Engineer at Fidelity Investments, working across the whole stack: designing APIs and services, building the interfaces on top, and running the cloud infrastructure underneath."
       />
 
       <Container
@@ -187,7 +187,7 @@ export default function AboutPage() {
             <RoleHead title="Squares" meta="Go · React · Kubernetes" />
 
             <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
-              A full-stack real-time football squares platform: four <C>Go</C> and <C>Gin</C>{' '}
+              A full-stack real-time football squares app: four <C>Go</C> and <C>Gin</C>{' '}
               microservices behind a <C>React</C> and <C>TypeScript</C> front end, deployed to my
               self-hosted Kubernetes clusters through GitHub Actions and <C>Argo CD</C>. It
               implements a contest state machine, automated winner calculation, a transactional
@@ -220,7 +220,7 @@ export default function AboutPage() {
             </Box>
           </Row>
 
-          <Row id="platform">
+          <Row id="infrastructure">
             <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
               Everything I build runs on two <C>k3s</C> clusters I provision myself: dev on
               Raspberry Pis at home and production on three cloud VPSes, each with a highly

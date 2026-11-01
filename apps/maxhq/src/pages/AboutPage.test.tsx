@@ -13,7 +13,7 @@ describe('AboutPage', () => {
   it('renders each labelled row', () => {
     renderWithProviders(<AboutPage />);
 
-    for (const label of ['Experience', 'Project', 'Platform', 'This site', 'Education']) {
+    for (const label of ['Experience', 'Project', 'Infrastructure', 'This site', 'Education']) {
       expect(screen.getByRole('heading', { name: label })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: label })).toHaveAttribute(
         'href',

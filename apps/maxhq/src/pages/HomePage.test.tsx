@@ -8,7 +8,7 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Platforms, from the API to the cluster.' })
+      screen.getByRole('heading', { level: 1, name: 'Full stack, from the UI to the cluster.' })
     ).toBeInTheDocument();
     expect(screen.getByText('Max Morhardt')).toBeInTheDocument();
   });
@@ -25,7 +25,7 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     for (const name of [
-      'What the day job moved.',
+      'What the day job covers.',
       'Tools of the trade',
       "Building something? Let's talk.",
     ]) {

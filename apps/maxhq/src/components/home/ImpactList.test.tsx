@@ -4,11 +4,11 @@ import ImpactList from './ImpactList';
 import { renderWithProviders } from '../../testUtils';
 
 describe('ImpactList', () => {
-  it('renders every figure with its context', () => {
+  it('renders every area with its context', () => {
     renderWithProviders(<ImpactList />);
 
-    expect(screen.getAllByRole('listitem')).toHaveLength(4);
-    expect(screen.getByText('15 → 2 min')).toBeInTheDocument();
-    expect(screen.getByText(/Bootstrap to PrimeNG/)).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getByText('Infrastructure')).toBeInTheDocument();
+    expect(screen.getByText(/OpenAPI specs/)).toBeInTheDocument();
   });
 });

@@ -46,7 +46,7 @@ export default function HomePage() {
     <Box sx={{ overflowX: 'clip' }}>
       <PageMeta
         title="Max Morhardt – Software Engineer"
-        description="Max Morhardt is a Software Engineer at Fidelity Investments specializing in Java, Spring Boot, Go, TypeScript, React, Angular, Kubernetes, Terraform, and AWS."
+        description="Max Morhardt is a Software Engineer at Fidelity Investments building APIs, user interfaces, and cloud infrastructure with Java, Spring Boot, Go, TypeScript, React, Angular, Kubernetes, Terraform, and AWS."
         canonical="https://maxhq.io/"
       />
 
@@ -72,12 +72,12 @@ export default function HomePage() {
           >
             <Box sx={{ position: { lg: 'sticky' }, top: { lg: 120 } }}>
               <RevealSection>
-                <Typography variant="h2">What the day job moved.</Typography>
+                <Typography variant="h2">What the day job covers.</Typography>
               </RevealSection>
               <RevealSection delay={1}>
                 <Typography sx={ledeSx}>
-                  Platform engineering at Fidelity Investments since 2023, on the team that runs
-                  cloud development environments for thousands of users.
+                  Software engineering at Fidelity Investments since 2023, across the whole stack:
+                  the APIs, the interfaces on top, and the infrastructure underneath.
                 </Typography>
               </RevealSection>
               <RevealSection delay={1} sx={{ mt: 3 }}>

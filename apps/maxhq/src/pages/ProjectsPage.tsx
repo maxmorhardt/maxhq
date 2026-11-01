@@ -77,7 +77,7 @@ const projects: Project[] = [
 
 const groups = [
   { title: 'Apps', blurb: 'What people use', start: 0, count: 3 },
-  { title: 'Platform', blurb: 'What builds and runs them', start: 3, count: 3 },
+  { title: 'Infrastructure', blurb: 'What builds and runs them', start: 3, count: 3 },
 ];
 
 export default function ProjectsPage() {
@@ -91,7 +91,7 @@ export default function ProjectsPage() {
 
       <PageHeader
         title="Projects"
-        lede="A connected ecosystem of frontends, APIs, and infrastructure I design, build, and self-host. The apps are the surface. Underneath, every project deploys to the same Kubernetes platform that runs this site, sharing sign-on, real-time messaging, and delivery pipelines."
+        lede="A connected ecosystem of frontends, APIs, and infrastructure I design, build, and self-host. The apps are the surface. Underneath, every project deploys to the same Kubernetes clusters that run this site, sharing sign-on, real-time messaging, and delivery pipelines."
       />
 
       <Container maxWidth="lg" sx={{ pb: pageSection.py }}>
