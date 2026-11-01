@@ -12,6 +12,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -30,6 +31,7 @@ func TestSnapshot_ReturnsContestAndParticipantsToViewers(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "C", snap.Contest.Name)
 	assert.Len(t, snap.Participants, 1)
+	assert.Equal(t, pseudonym.Of("v@b.com"), snap.ViewerID, "the page tells which squares are yours without asking accounts")
 }
 
 func TestSnapshot_ReturnsTheRecordedQuarterResults(t *testing.T) {

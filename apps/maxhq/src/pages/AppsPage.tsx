@@ -10,6 +10,7 @@ import { Fragment, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import AppDirectory from '../components/apps/AppDirectory';
 import AppShowcase, { type AppEntry } from '../components/apps/AppShowcase';
+import MoreAppsStrip from '../components/apps/MoreAppsStrip';
 import SquaresBoard from '../components/apps/SquaresBoard';
 import StepTrack from '../components/apps/StepTrack';
 import PageMeta from '../components/common/PageMeta';
@@ -97,12 +98,12 @@ const shared = [
   {
     icon: <BadgeIcon />,
     label: 'Your name',
-    use: 'Shown on the boards, results, and leaderboards you take part in.',
+    use: 'Other players see your first name and last initial on boards, results, and leaderboards. The owner of a contest you join sees your full name.',
   },
   {
     icon: <MailOutlinedIcon />,
     label: 'Your email address',
-    use: 'Identifies your account. Other players see your name, and only the owner of a contest you join can see your email.',
+    use: 'Identifies your account. It is never shown to other players, including contest owners.',
   },
   {
     icon: <FingerprintIcon />,
@@ -152,7 +153,7 @@ export default function AppsPage() {
         component="header"
         sx={{
           pt: { xs: 8, md: 12 },
-          pb: { xs: 6, md: 8 },
+          pb: { xs: 5, md: 7 },
           backgroundImage: (theme) =>
             `radial-gradient(50% 60% at 15% 0%, ${primaryTint(theme, 0.14)}, transparent 70%)`,
         }}
@@ -165,15 +166,17 @@ export default function AppsPage() {
             <Typography
               sx={{ mt: 2.5, maxWidth: '58ch', fontSize: { md: '1.15rem' }, color: 'text.primary' }}
             >
-              maxhq is the home of the web apps Max Morhardt builds and runs. Every one is free,
-              runs in your browser, and uses the same maxhq account, so you sign in once with{' '}
-              {providerNames} and you’re in.
+              Free web apps that run right in your browser. One maxhq account works across all of
+              them, so you sign in once with {providerNames} and you’re in.
             </Typography>
           </RevealSection>
 
-          <Box sx={{ mt: { xs: 5, md: 6 } }}>
-            <AppDirectory apps={apps} />
-          </Box>
+          {/* the showcases below already cover a single app */}
+          {apps.length > 1 && (
+            <Box sx={{ mt: { xs: 5, md: 6 } }}>
+              <AppDirectory apps={apps} />
+            </Box>
+          )}
         </Container>
       </Box>
 
@@ -181,6 +184,7 @@ export default function AppsPage() {
         {apps.map((app, i) => (
           <AppShowcase key={app.id} app={app} flip={i % 2 === 1} />
         ))}
+        {apps.length === 1 && <MoreAppsStrip />}
       </Container>
 
       {/* what signing in shares and what we do with it, kept here for the sign-in providers' app reviews */}

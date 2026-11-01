@@ -2,7 +2,6 @@ import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { fonts, game as palette } from '../../../app/theme';
 import type { LeaderboardEntry } from '../../../types/leaderboard';
-import { leaderboardKey } from '../../../utils/publicName';
 import { stripDangerousChars } from '../../../utils/sanitize';
 import LeaderboardEmptyState from './LeaderboardEmptyState';
 import LeaderboardTableSkeleton from './LeaderboardTableSkeleton';
@@ -10,7 +9,7 @@ import LeaderboardTableSkeleton from './LeaderboardTableSkeleton';
 interface Props {
   entries: LeaderboardEntry[];
   loading: boolean;
-  highlightKey?: string;
+  highlightUserId?: string;
   // the leader's wins, so every bar is measured against first place
   maxWins?: number;
 }
@@ -36,7 +35,7 @@ const headSx = {
 } as const;
 
 // everyone below the podium as a race of bars: each bar runs as far as its wins reach toward the leader's
-export default function LeaderboardTable({ entries, loading, highlightKey, maxWins }: Props) {
+export default function LeaderboardTable({ entries, loading, highlightUserId, maxWins }: Props) {
   if (loading) {
     return <LeaderboardTableSkeleton />;
   }
@@ -71,15 +70,14 @@ export default function LeaderboardTable({ entries, loading, highlightKey, maxWi
         sx={{ listStyle: 'none', m: 0, p: 0, display: 'grid', gap: 1 }}
       >
         {entries.map((entry) => {
-          const isMe =
-            Boolean(highlightKey) && leaderboardKey(entry.rank, entry.displayName) === highlightKey;
+          const isMe = Boolean(highlightUserId) && entry.userId === highlightUserId;
           const name = stripDangerousChars(entry.displayName);
           const reach = Math.max((entry.quarterWins / top) * 100, 6);
 
           return (
             <Box
               component="li"
-              key={`${entry.rank}-${entry.displayName}`}
+              key={entry.userId}
               aria-label={`${entry.rank}. ${name}, ${entry.quarterWins} ${entry.quarterWins === 1 ? 'win' : 'wins'}`}
               sx={{
                 display: 'grid',

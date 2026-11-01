@@ -20,7 +20,7 @@ func TestSmoke(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(rd.Terminate)
 
-	env := append(pg.Env(), "REDIS_URL="+rd.Config.URL, "INTERNAL_API_TOKEN=smoke")
+	env := append(pg.Env(), "REDIS_URL="+rd.Config.URL, "INTERNAL_API_TOKEN=smoke", "PSEUDONYM_KEY=0123456789abcdef0123456789abcdef")
 
 	svc := testkit.StartBinary(t, "../..", "./cmd/contests", env)
 

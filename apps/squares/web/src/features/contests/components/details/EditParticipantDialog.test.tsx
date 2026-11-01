@@ -44,7 +44,7 @@ describe('EditParticipantDialog', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(update).toHaveBeenCalledWith({
       contestId: 'c-1',
-      userId: 'player@x.com',
+      userId: 'u_player',
       request: { role: 'participant', maxSquares: 5 },
     });
     expect(store.getState().toast.messages[0]?.message).toBe('Participant updated');

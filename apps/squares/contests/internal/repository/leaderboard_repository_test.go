@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,14 +17,15 @@ func TestLeaderboardRepository_GetTopWinners_Success(t *testing.T) {
 
 	mock.ExpectQuery(`WITH wins AS`).
 		WillReturnRows(
-			sqlmock.NewRows([]string{"display_name", "quarter_wins", "squares_claimed", "quarters_played"}).
-				AddRow("Max", 12, 48, 40).
-				AddRow("Jordan", 9, 40, 36))
+			sqlmock.NewRows([]string{"user_id", "display_name", "quarter_wins", "squares_claimed", "quarters_played"}).
+				AddRow("max@example.com", "Max", 12, 48, 40).
+				AddRow("jordan@example.com", "Jordan", 9, 40, 36))
 
 	entries, err := repo.GetTopWinners(context.Background(), 25)
 
 	require.NoError(t, err)
 	require.Len(t, entries, 2)
+	assert.Equal(t, "max@example.com", entries[0].UserID)
 	assert.Equal(t, "Max", entries[0].DisplayName)
 	assert.Equal(t, int64(12), entries[0].QuarterWins)
 	assert.Equal(t, int64(48), entries[0].SquaresClaimed)
@@ -65,6 +67,7 @@ func TestLeaderboardRepository_GetUserRank_Ranked(t *testing.T) {
 	repo := NewLeaderboardRepository(gdb)
 
 	mock.ExpectQuery(`WITH wins AS`).
+		WithArgs(model.ContestStatusDeleted, model.GhostUser, "user@example.com").
 		WillReturnRows(sqlmock.NewRows([]string{"total_ranked", "quarter_wins", "rank"}).
 			AddRow(143, 5, 7))
 

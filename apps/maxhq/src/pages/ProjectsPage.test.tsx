@@ -13,7 +13,7 @@ describe('ProjectsPage', () => {
   it('renders the section headings', () => {
     renderWithProviders(<ProjectsPage />);
 
-    for (const name of ['Apps', 'Platform']) {
+    for (const name of ['Apps', 'Infrastructure']) {
       expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
     }
   });

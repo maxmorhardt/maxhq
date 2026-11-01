@@ -1,5 +1,6 @@
 export interface LeaderboardEntry {
   rank: number;
+  userId: string;
   displayName: string;
   quarterWins: number;
   squaresClaimed: number;

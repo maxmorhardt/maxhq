@@ -7,20 +7,20 @@ describe('CodeWindow', () => {
   it('shows the open file as the first tab', () => {
     renderWithProviders(<CodeWindow />);
 
-    expect(screen.getByText('contest_service.go')).toBeInTheDocument();
+    expect(screen.getByText('stream_service.go')).toBeInTheDocument();
   });
 
   it('renders the excerpt with its source line numbers', () => {
     renderWithProviders(<CodeWindow />);
 
-    expect(screen.getByText('PublishSquareUpdate')).toBeInTheDocument();
-    expect(screen.getByText('360')).toBeInTheDocument();
-    expect(screen.getByText('370')).toBeInTheDocument();
+    expect(screen.getAllByText('RecordStreamResume')).toHaveLength(2);
+    expect(screen.getByText('93')).toBeInTheDocument();
+    expect(screen.getByText('106')).toBeInTheDocument();
   });
 
   it('captions what the excerpt shows', () => {
     renderWithProviders(<CodeWindow />);
 
-    expect(screen.getByText(/commit in one transaction/)).toBeInTheDocument();
+    expect(screen.getByText(/fresh snapshot/)).toBeInTheDocument();
   });
 });

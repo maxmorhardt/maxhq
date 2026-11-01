@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,7 +30,8 @@ func (id Identity) Apply(req *http.Request) {
 		return
 	}
 	req.Header.Set(middleware.HeaderAuthEmail, id.Email)
-	req.Header.Set(middleware.HeaderAuthName, "Test "+id.Email)
+	local, _, _ := strings.Cut(id.Email, "@")
+	req.Header.Set(middleware.HeaderAuthName, "Test "+local)
 	req.Header.Set(middleware.HeaderAuthEmailVerified, "true")
 	req.Header.Set(middleware.HeaderAuthIssuedAt, strconv.FormatInt(id.IssuedAt.Unix(), 10))
 	req.Header.Set(middleware.HeaderAuthExpiresAt, strconv.FormatInt(time.Now().Add(time.Hour).Unix(), 10))

@@ -5,6 +5,7 @@ type ContactResponse struct {
 }
 
 type UserProfileResponse struct {
+	UserID          string `json:"userId" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
 	Email           string `json:"email" example:"user@example.com"`
 	DisplayName     string `json:"displayName" example:"Max"`
 	DefaultInitials string `json:"defaultInitials" example:"MM"`

@@ -20,11 +20,10 @@ type ContestSwagger struct {
 	Version        int64           `json:"version"`
 	CreatedAt      time.Time       `json:"createdAt"`
 	UpdatedAt      time.Time       `json:"updatedAt"`
-	CreatedBy      string          `json:"createdBy"`
-	UpdatedBy      string          `json:"updatedBy"`
 }
 
 type ContestSnapshotSwagger struct {
 	Contest      ContestSwagger       `json:"contest"`
 	Participants []ContestParticipant `json:"participants"`
+	ViewerID     string               `json:"viewerId" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
 }

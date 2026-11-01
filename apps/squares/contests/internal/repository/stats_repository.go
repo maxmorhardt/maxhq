@@ -70,7 +70,7 @@ func (r *statsRepository) GetActiveContests(ctx context.Context, email string) (
 	var contests []contracts.UserActiveContest
 
 	if err := database.Conn(ctx, r.db).Raw(
-		`SELECT c.id, c.name, c.owner, CASE WHEN c.owner = ? THEN 'owner' ELSE 'participant' END AS role
+		`SELECT c.id, c.name, CASE WHEN c.owner = ? THEN 'owner' ELSE 'participant' END AS role
 		FROM contests c
 		WHERE c.status NOT IN ?
 		AND (c.owner = ? OR c.id IN (SELECT contest_id FROM contest_participants WHERE user_id = ?))

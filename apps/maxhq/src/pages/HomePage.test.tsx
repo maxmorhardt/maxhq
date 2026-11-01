@@ -25,7 +25,7 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     for (const name of [
-      'What the day job moved.',
+      'What the day job covers.',
       'Tools of the trade',
       "Building something? Let's talk.",
     ]) {

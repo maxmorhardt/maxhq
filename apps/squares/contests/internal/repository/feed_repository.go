@@ -29,13 +29,14 @@ func NewFeedRepository(db *gorm.DB) FeedRepository {
 func (r *feedRepository) List(ctx context.Context, user string, f *model.ContestFeedFilter) ([]model.ContestSummary, error) {
 	q := database.Conn(ctx, r.db).
 		Table("contests c").
-		Select(`c.id, c.name, c.home_team, c.away_team, c.status, c.visibility, c.owner, c.game_id, c.version,
+		Select(`c.id, c.name, c.home_team, c.away_team, c.status, c.visibility, COALESCE(ou.display_name, '') AS owner_name, c.game_id, c.version,
 			c.created_at, c.updated_at, g.game_time, g.period AS game_period, g.home_abbr, g.away_abbr,
 			CASE WHEN c.owner = ? THEN 'owner' ELSE cp.role END AS role,
 			(SELECT count(*) FROM squares s WHERE s.contest_id = c.id AND s.owner <> '') AS claimed_squares,
 			(SELECT count(*) FROM squares s WHERE s.contest_id = c.id AND s.owner = ?) AS my_squares`, user, user).
 		Joins("LEFT JOIN contest_participants cp ON cp.contest_id = c.id AND cp.user_id = ?", user).
 		Joins("LEFT JOIN games g ON g.id = c.game_id").
+		Joins("LEFT JOIN users ou ON ou.email = c.owner").
 		Where("c.status <> ?", model.ContestStatusDeleted)
 
 	switch f.Role {

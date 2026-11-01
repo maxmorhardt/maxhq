@@ -24,7 +24,7 @@ describe('QuarterStrip', () => {
           quarter: 1,
           homeTeamScore: 7,
           awayTeamScore: 3,
-          winner: 'jordan@x.com',
+          winner: 'u_jordan',
           winnerName: 'Jordan',
         }),
         makeQuarterResult({
@@ -32,7 +32,7 @@ describe('QuarterStrip', () => {
           quarter: 2,
           homeTeamScore: 14,
           awayTeamScore: 10,
-          winner: 'player@x.com',
+          winner: 'u_player',
         }),
       ],
     });

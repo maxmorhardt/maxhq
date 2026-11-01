@@ -258,7 +258,7 @@ func (h *eventsHandler) serve(ctx context.Context, w gin.ResponseWriter, sub *se
 				return model.StreamCloseFellBehind
 			}
 
-			if service.RequiresAccessCheck(&event.Envelope, user) && !h.stillAllowed(ctx, contestID, user) {
+			if service.RequiresAccessCheck(&event.Envelope, sub.ViewerID) && !h.stillAllowed(ctx, contestID, user) {
 				revoked, _ := events.NewContestEvent(events.AccessRevokedType, contestID, events.SystemActor, nil)
 				_ = writeEvent(w, event.ID, revoked)
 				w.Flush()

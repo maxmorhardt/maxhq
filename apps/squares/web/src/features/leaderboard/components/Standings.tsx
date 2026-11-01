@@ -1,8 +1,7 @@
 import { Alert, Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { leaderboardKey, toPublicName } from '../../../utils/publicName';
-import { useGetMyProfileQuery } from '../../profile/api';
+import { useUserId } from '../../profile/useUserId';
 import { useGetLeaderboardQuery, useGetMyRankQuery } from '../api';
 import LeaderboardPodium, { PODIUM_SIZE } from './LeaderboardPodium';
 import LeaderboardRankCard from './LeaderboardRankCard';
@@ -18,7 +17,7 @@ export default function Standings({ header }: Props) {
   const signedIn = useAuth().isAuthenticated;
   const { data: entries = [], isLoading, isError } = useGetLeaderboardQuery();
   const myRank = useGetMyRankQuery(undefined, { skip: !signedIn });
-  const { data: profile } = useGetMyProfileQuery(undefined, { skip: !signedIn });
+  const userId = useUserId();
 
   if (isError) {
     return (
@@ -32,12 +31,6 @@ export default function Standings({ header }: Props) {
   const hasPodium = entries.length >= PODIUM_SIZE;
   const podium = hasPodium ? entries.slice(0, PODIUM_SIZE) : [];
   const rest = hasPodium ? entries.slice(PODIUM_SIZE) : entries;
-
-  // the API abbreviates names, so match on the same form plus the rank to tell ties apart
-  const highlightKey =
-    profile && myRank.data?.ranked
-      ? leaderboardKey(myRank.data.rank, toPublicName(profile.displayName))
-      : undefined;
 
   return (
     <>
@@ -63,14 +56,14 @@ export default function Standings({ header }: Props) {
         )}
       </Box>
 
-      {!isLoading && <LeaderboardPodium entries={podium} highlightKey={highlightKey} />}
+      {!isLoading && <LeaderboardPodium entries={podium} highlightUserId={userId} />}
 
       {/* the table carries the loading and empty states; it is skipped when the podium holds everyone */}
       {(isLoading || entries.length === 0 || rest.length > 0) && (
         <LeaderboardTable
           entries={rest}
           loading={isLoading}
-          highlightKey={highlightKey}
+          highlightUserId={userId}
           maxWins={entries[0]?.quarterWins}
         />
       )}

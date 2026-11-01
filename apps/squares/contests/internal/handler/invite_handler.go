@@ -41,6 +41,7 @@ func NewInviteHandler(inviteService service.InviteService) InviteHandler {
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
+// @Failure 429 {object} api.APIError "The contest has the most open invite links allowed, or made the most allowed in a day"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests/{id}/invites [post]
@@ -71,6 +72,10 @@ func (h *inviteHandler) CreateInvite(c *gin.Context) {
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInvalidSquareCount):
 			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
+		case errors.Is(err, errs.ErrInviteLimitReached), errors.Is(err, errs.ErrDailyInviteLimit):
+			c.JSON(http.StatusTooManyRequests, api.NewAPIError(http.StatusTooManyRequests, api.Message(err), c))
+		case errors.Is(err, errs.ErrDatabaseUnavailable):
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		default:
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to create invite", c))
 		}
@@ -138,9 +143,8 @@ func (h *inviteHandler) RedeemInvite(c *gin.Context) {
 	}
 
 	user := c.GetString(api.UserKey)
-	// the name goes out with the join, so the feed can say who arrived without showing an email
 	name := ""
-	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil && claims.Name != user {
+	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil {
 		name = claims.Name
 	}
 	participant, err := h.inviteService.RedeemInvite(c.Request.Context(), token, user, name)

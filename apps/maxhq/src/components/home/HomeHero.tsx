@@ -84,8 +84,8 @@ export default function HomeHero() {
               <Box component="strong" sx={{ color: 'text.primary', fontWeight: 620 }}>
                 Max Morhardt
               </Box>
-              , a software engineer at Fidelity Investments building multi-tenant developer
-              platforms on AWS and EKS. Off the clock I run two Kubernetes clusters of my own, and
+              , a software engineer at Fidelity Investments building APIs, user interfaces, and the
+              cloud infrastructure they run on. I also run two Kubernetes clusters of my own, and
               every app on this site ships to them.
             </Typography>
             <Box

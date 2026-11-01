@@ -34,7 +34,7 @@ func TestCreateContest_Success(t *testing.T) {
 	r.Use(authenticatedMiddleware("owner1"))
 	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "NewContest", MaxSquares: 10, GameID: uuid.NewString()}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Name: "NewContest", MaxSquares: 10, GameID: uuid.NewString()}))
 	assert.Equal(t, http.StatusCreated, w.Code)
 	var resp model.Contest
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
@@ -60,22 +60,20 @@ func TestCreateContest_InvalidBody(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestCreateContest_OwnerMismatch(t *testing.T) {
-	h := NewContestHandler(mocks.NewContestService(t), nil)
-	r := gin.New()
-	r.Use(authenticatedMiddleware("user1"))
-	r.POST("/contests", h.CreateContest)
-
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "someone-else", Name: "Test", MaxSquares: 10, GameID: uuid.NewString()}))
-	assert.Equal(t, http.StatusForbidden, w.Code)
-}
-
 func TestCreateContest_GamePastFirstQuarter(t *testing.T) {
 	createContestErr(t, errs.ErrGamePastFirstQuarter, http.StatusConflict)
 }
 
 func TestCreateContest_GameCanceled(t *testing.T) {
 	createContestErr(t, errs.ErrGameCanceled, http.StatusConflict)
+}
+
+func TestCreateContest_OpenContestLimitReached(t *testing.T) {
+	createContestErr(t, errs.ErrContestLimitReached, http.StatusTooManyRequests)
+}
+
+func TestCreateContest_DailyContestLimitReached(t *testing.T) {
+	createContestErr(t, errs.ErrDailyContestLimit, http.StatusTooManyRequests)
 }
 
 func TestCreateContest_DatabaseUnavailable(t *testing.T) {
@@ -95,7 +93,7 @@ func createContestErr(t *testing.T, svcErr error, wantCode int) {
 	r.Use(authenticatedMiddleware("owner1"))
 	r.POST("/contests", h.CreateContest)
 
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Owner: "owner1", Name: "Test", MaxSquares: 10, GameID: uuid.NewString()}))
+	w := doRequest(r, jsonReq(http.MethodPost, "/contests", model.CreateContestRequest{Name: "Test", MaxSquares: 10, GameID: uuid.NewString()}))
 	assert.Equal(t, wantCode, w.Code)
 }
 

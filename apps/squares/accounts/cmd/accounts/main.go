@@ -12,6 +12,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
 
 // @title           Squares Accounts API
@@ -32,6 +33,11 @@ func main() {
 
 func run() error {
 	cfg, err := config.Load[model.AccountsConfig]()
+	if err != nil {
+		return err
+	}
+
+	err = pseudonym.SetKey(cfg.Pseudonym.Key)
 	if err != nil {
 		return err
 	}

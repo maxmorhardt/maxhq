@@ -20,12 +20,14 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	internalToken = "integration-internal-token"
+	pseudonymKey  = "0123456789abcdef0123456789abcdef"
 	eventually    = 15 * time.Second
 
 	ownerUser  = "owner@squares.test"
@@ -79,6 +81,11 @@ func run(m *testing.M) int {
 		Streams:  config.StreamsConfig{Retention: time.Hour},
 		Internal: config.InternalConfig{Token: internalToken},
 	}
+	err = pseudonym.SetKey(pseudonymKey)
+	if err != nil {
+		slog.Error("pseudonym key", "error", err)
+		return 1
+	}
 	infra, err := bootstrap.Connect(cfg)
 	if err != nil {
 		slog.Error("connect", "error", err)
@@ -126,7 +133,7 @@ func createContest(t *testing.T, owner, name string, maxSquares int) (*model.Con
 func createContestFor(t *testing.T, game *events.Game, owner, name string, maxSquares int, headers ...string) (*model.Contest, testkit.Response) {
 	t.Helper()
 	resp := call(t, testkit.As(owner), http.MethodPost, "/contests", model.CreateContestRequest{
-		Owner: owner, Name: name, MaxSquares: maxSquares, GameID: game.ID.String(),
+		Name: name, MaxSquares: maxSquares, GameID: game.ID.String(),
 	}, headers...)
 	var contest model.Contest
 	if resp.Status == http.StatusCreated {

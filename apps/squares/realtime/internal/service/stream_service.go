@@ -34,6 +34,7 @@ type Event struct {
 type Subscription struct {
 	Snapshot   *contracts.ContestSnapshot
 	SnapshotID string
+	ViewerID   string
 	Events     <-chan Event
 	Stop       func()
 }
@@ -83,7 +84,7 @@ func (s *streamService) Subscribe(ctx context.Context, contestID uuid.UUID, user
 		return nil, errs.ErrContestFinished
 	}
 
-	sub := &Subscription{}
+	sub := &Subscription{ViewerID: snapshot.ViewerID}
 	start := last
 	if start == "" {
 		start = "0-0"
@@ -254,7 +255,7 @@ func isFinished(contest json.RawMessage) bool {
 	return json.Unmarshal(contest, &fields) == nil && fields.Status == contestFinished
 }
 
-func RequiresAccessCheck(event *events.ContestEvent, user string) bool {
+func RequiresAccessCheck(event *events.ContestEvent, viewerID string) bool {
 	if event.Type != events.ContestUpdatedType && event.Type != events.ParticipantRemovedType {
 		return false
 	}
@@ -268,5 +269,6 @@ func RequiresAccessCheck(event *events.ContestEvent, user string) bool {
 	if event.Type == events.ContestUpdatedType {
 		return fields.Visibility == events.ContestVisibilityPrivate
 	}
-	return fields.UserID == user
+	// an unknown viewer is checked on every removal rather than never
+	return viewerID == "" || fields.UserID == viewerID
 }

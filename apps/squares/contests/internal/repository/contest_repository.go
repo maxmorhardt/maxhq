@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -16,6 +17,7 @@ type ContestRepository interface {
 	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error)
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
+	CountByOwner(ctx context.Context, owner string, since time.Time) (model.CreationCounts, error)
 
 	Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error
 	Update(ctx context.Context, contest *model.Contest) error
@@ -75,6 +77,16 @@ func (r *contestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID
 		Where("game_id = ? AND status NOT IN ?", gameID, []model.ContestStatus{model.ContestStatusDeleted, model.ContestStatusFinished}).
 		Pluck("id", &ids).Error
 	return ids, err
+}
+
+func (r *contestRepository) CountByOwner(ctx context.Context, owner string, since time.Time) (model.CreationCounts, error) {
+	var counts model.CreationCounts
+	err := database.Conn(ctx, r.db).
+		Model(&model.Contest{}).
+		Select("COUNT(*) FILTER (WHERE status NOT IN ?) AS open, COUNT(*) FILTER (WHERE created_at > ?) AS recent", terminalStatuses, since).
+		Where("owner = ?", owner).
+		Scan(&counts).Error
+	return counts, err
 }
 
 func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {

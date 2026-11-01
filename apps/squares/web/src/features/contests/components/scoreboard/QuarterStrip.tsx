@@ -65,7 +65,7 @@ export default function QuarterStrip({ contest, game, viewer }: Props) {
       }}
     >
       {quarters(contest, game).map(({ quarter, state, result, score }) => {
-        const mine = !!result && !!viewer.email && result.winner === viewer.email;
+        const mine = !!result && viewer.isMe(result.winner);
         const won = state === 'won';
 
         return (

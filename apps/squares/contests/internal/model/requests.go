@@ -1,7 +1,6 @@
 package model
 
 type CreateContestRequest struct {
-	Owner      string `json:"owner" binding:"required,max=255,safestring"`
 	Name       string `json:"name" binding:"required,max=20,min=1,safestring"`
 	Visibility string `json:"visibility,omitempty" binding:"omitempty,oneof=private public"`
 	MaxSquares int    `json:"maxSquares" binding:"min=0,max=100"`

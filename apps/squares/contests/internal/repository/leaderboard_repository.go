@@ -36,7 +36,8 @@ func (r *leaderboardRepository) GetTopWinners(ctx context.Context, limit int) ([
 	entries := make([]model.LeaderboardEntry, 0, limit)
 
 	if err := database.Conn(ctx, r.db).Raw(winsCTE+`
-		SELECT u.display_name AS display_name,
+		SELECT w.email AS user_id,
+			u.display_name AS display_name,
 			w.quarter_wins AS quarter_wins,
 			COALESCE(sq.squares_claimed, 0) AS squares_claimed,
 			COALESCE(qp.quarters_played, 0) AS quarters_played

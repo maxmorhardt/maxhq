@@ -8,6 +8,8 @@ import (
 	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	mock "github.com/stretchr/testify/mock"
 
+	time "time"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -68,6 +70,64 @@ func (_c *ContestRepository_ApplyQuarterResults_Call) Return(_a0 error) *Contest
 }
 
 func (_c *ContestRepository_ApplyQuarterResults_Call) RunAndReturn(run func(context.Context, *model.Contest, []model.QuarterResult) error) *ContestRepository_ApplyQuarterResults_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CountByOwner provides a mock function with given fields: ctx, owner, since
+func (_m *ContestRepository) CountByOwner(ctx context.Context, owner string, since time.Time) (model.CreationCounts, error) {
+	ret := _m.Called(ctx, owner, since)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountByOwner")
+	}
+
+	var r0 model.CreationCounts
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time) (model.CreationCounts, error)); ok {
+		return rf(ctx, owner, since)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time) model.CreationCounts); ok {
+		r0 = rf(ctx, owner, since)
+	} else {
+		r0 = ret.Get(0).(model.CreationCounts)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, time.Time) error); ok {
+		r1 = rf(ctx, owner, since)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_CountByOwner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountByOwner'
+type ContestRepository_CountByOwner_Call struct {
+	*mock.Call
+}
+
+// CountByOwner is a helper method to define mock.On call
+//   - ctx context.Context
+//   - owner string
+//   - since time.Time
+func (_e *ContestRepository_Expecter) CountByOwner(ctx interface{}, owner interface{}, since interface{}) *ContestRepository_CountByOwner_Call {
+	return &ContestRepository_CountByOwner_Call{Call: _e.mock.On("CountByOwner", ctx, owner, since)}
+}
+
+func (_c *ContestRepository_CountByOwner_Call) Run(run func(ctx context.Context, owner string, since time.Time)) *ContestRepository_CountByOwner_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(time.Time))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_CountByOwner_Call) Return(_a0 model.CreationCounts, _a1 error) *ContestRepository_CountByOwner_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_CountByOwner_Call) RunAndReturn(run func(context.Context, string, time.Time) (model.CreationCounts, error)) *ContestRepository_CountByOwner_Call {
 	_c.Call.Return(run)
 	return _c
 }

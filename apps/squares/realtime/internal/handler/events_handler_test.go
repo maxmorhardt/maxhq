@@ -156,9 +156,9 @@ func TestStreamContest_SubscribeErrors(t *testing.T) {
 func TestStreamContest_RevokesWhenAccessIsLost(t *testing.T) {
 	contestID := uuid.New()
 	ch := make(chan service.Event, 1)
-	ch <- eventOf(t, "3-0", events.ParticipantRemovedType, contestID, events.AccessFields{UserID: "v@b.com"})
+	ch <- eventOf(t, "3-0", events.ParticipantRemovedType, contestID, events.AccessFields{UserID: "u_viewer"})
 	svc := mocks.NewStreamService(t)
-	svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&service.Subscription{Events: ch, Stop: func() {}}, nil)
+	svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&service.Subscription{ViewerID: "u_viewer", Events: ch, Stop: func() {}}, nil)
 	svc.EXPECT().CheckAccess(mock.Anything, contestID, "v@b.com").Return(errs.ErrInsufficientRole)
 
 	w := serve(streamRouter(svc, slowTimers, nil, farFuture()), "/events/contests/"+contestID.String(), nil)

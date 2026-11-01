@@ -49,7 +49,7 @@ func allowAll(t *testing.T, contestID uuid.UUID) *mocks.ContestAccessClient {
 	t.Helper()
 	c := mocks.NewContestAccessClient(t)
 	c.EXPECT().GetSnapshot(mock.Anything, contestID, "v@b.com").
-		Return(&contracts.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`)}, nil).Maybe()
+		Return(&contracts.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`), ViewerID: "u_viewer"}, nil).Maybe()
 	return c
 }
 
@@ -111,6 +111,7 @@ func TestSubscribe_ResumeReplaysOnlyTheGap(t *testing.T) {
 	t.Cleanup(sub.Stop)
 
 	assert.Nil(t, sub.Snapshot, "nothing was lost, so no snapshot")
+	assert.Equal(t, "u_viewer", sub.ViewerID, "a resume still learns who the viewer is from the snapshot")
 	assert.Equal(t, missed1, next(t, sub).ID)
 	assert.Equal(t, missed2, next(t, sub).ID)
 
@@ -251,15 +252,18 @@ func TestRequiresAccessCheck(t *testing.T) {
 		{"made private", events.ContestUpdatedType, `{"visibility":"private"}`, true},
 		{"made public", events.ContestUpdatedType, `{"visibility":"public"}`, false},
 		{"unreadable update", events.ContestUpdatedType, `"oops"`, true},
-		{"viewer removed", events.ParticipantRemovedType, `{"userId":"v@b.com"}`, true},
-		{"someone else removed", events.ParticipantRemovedType, `{"userId":"x@b.com"}`, false},
+		{"viewer removed", events.ParticipantRemovedType, `{"userId":"u_viewer"}`, true},
+		{"someone else removed", events.ParticipantRemovedType, `{"userId":"u_other"}`, false},
 		{"square update", events.SquareUpdatedType, `{"visibility":"private"}`, false},
 	}
 
 	for _, tt := range tests {
 		event := events.ContestEvent{Type: tt.eventType, Data: json.RawMessage(tt.data)}
-		assert.Equal(t, tt.want, service.RequiresAccessCheck(&event, "v@b.com"), tt.name)
+		assert.Equal(t, tt.want, service.RequiresAccessCheck(&event, "u_viewer"), tt.name)
 	}
+
+	removal := events.ContestEvent{Type: events.ParticipantRemovedType, Data: json.RawMessage(`{"userId":"u_other"}`)}
+	assert.True(t, service.RequiresAccessCheck(&removal, ""), "a viewer contests didn't name is checked on every removal")
 }
 
 var watched = uuid.MustParse("7d1b0b2e-5a7c-4c2f-9d63-2f1e8f3a9b10")

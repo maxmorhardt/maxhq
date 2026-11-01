@@ -84,6 +84,9 @@ definitions:
       email:
         example: user@example.com
         type: string
+      userId:
+        example: u_3q2mL0x9VfTzQk1rB7cW8a
+        type: string
     type: object
 info:
   contact: {}

@@ -49,24 +49,22 @@ describe('faro', () => {
     const { initFaro, setFaroUser } = await load();
     initFaro('squares.maxhq.io', URL);
 
-    setFaroUser({ sub: 'u1', email: 'a@example.com', name: 'A' });
-    await vi.waitFor(() =>
-      expect(api.setUser).toHaveBeenCalledWith({ id: 'u1', email: 'a@example.com', username: 'A' })
-    );
+    setFaroUser('u_1');
+    await vi.waitFor(() => expect(api.setUser).toHaveBeenCalledWith({ id: 'u_1' }));
 
     setFaroUser(undefined);
     await vi.waitFor(() => expect(api.resetUser).toHaveBeenCalled());
   });
 
   it('strips invite tokens from everything it sends', async () => {
-    const { redactInviteTokens } = await load();
+    const { redactSecrets } = await load();
     const item = {
       meta: { page: { url: 'https://squares.maxhq.io/join/abc123?x=1' } },
       payload: { name: 'https://api.maxhq.io/squares/invites/abc123/redeem' },
       other: 'https://api.maxhq.io/squares/contests/c1/invites',
     };
 
-    expect(redactInviteTokens(item)).toEqual({
+    expect(redactSecrets(item)).toEqual({
       meta: { page: { url: 'https://squares.maxhq.io/join/:token?x=1' } },
       payload: { name: 'https://api.maxhq.io/squares/invites/:token/redeem' },
       other: 'https://api.maxhq.io/squares/contests/c1/invites',
@@ -74,16 +72,16 @@ describe('faro', () => {
   });
 
   it('keeps a quoted invite url in an error message valid', async () => {
-    const { redactInviteTokens } = await load();
+    const { redactSecrets } = await load();
     const item = { payload: { value: 'Failed to load "https://squares.maxhq.io/join/abc123"' } };
 
-    expect(redactInviteTokens(item)).toEqual({
+    expect(redactSecrets(item)).toEqual({
       payload: { value: 'Failed to load "https://squares.maxhq.io/join/:token"' },
     });
   });
 
   it('keeps the line break after a token in a stack trace', async () => {
-    const { redactInviteTokens } = await load();
+    const { redactSecrets } = await load();
     const item = {
       payload: {
         stack:
@@ -91,7 +89,7 @@ describe('faro', () => {
       },
     };
 
-    expect(redactInviteTokens(item)).toEqual({
+    expect(redactSecrets(item)).toEqual({
       payload: {
         stack:
           'at load (https://squares.maxhq.io/join/:token)\nat next (https://squares.maxhq.io/a.js)',
@@ -99,18 +97,35 @@ describe('faro', () => {
     });
   });
 
+  it('redacts the sign-in callback code and state', async () => {
+    const { redactSecrets } = await load();
+    const item = {
+      meta: { page: { url: 'https://squares.maxhq.io/auth/callback?code=c1&state=s1&iss=i' } },
+      payload: { value: 'Failed "https://squares.maxhq.io/auth/callback?state=s1"' },
+    };
+
+    expect(redactSecrets(item)).toEqual({
+      meta: {
+        page: {
+          url: 'https://squares.maxhq.io/auth/callback?code=:redacted&state=:redacted&iss=i',
+        },
+      },
+      payload: { value: 'Failed "https://squares.maxhq.io/auth/callback?state=:redacted"' },
+    });
+  });
+
   it('redacts before sending', async () => {
-    const { initFaro, redactInviteTokens } = await load();
+    const { initFaro, redactSecrets } = await load();
     initFaro('squares.maxhq.io', URL);
     await vi.dynamicImportSettled();
     expect(initializeFaro).toHaveBeenCalledWith(
-      expect.objectContaining({ beforeSend: redactInviteTokens })
+      expect.objectContaining({ beforeSend: redactSecrets })
     );
   });
 
   it('ignores the user before faro starts', async () => {
     const { setFaroUser } = await load();
-    setFaroUser({ sub: 'u1' });
+    setFaroUser('u_1');
     await Promise.resolve();
     expect(api.setUser).not.toHaveBeenCalled();
   });

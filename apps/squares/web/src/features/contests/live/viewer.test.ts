@@ -1,24 +1,20 @@
-import { describe, expect, it, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { makeContest, makeParticipant, makeSquare } from '../../../test/fixtures';
-import { mockAuth } from '../../../test/auth';
-import { getContestViewer, useContestViewer } from './viewer';
-
-vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+import { getContestViewer } from './viewer';
 
 const contest = makeContest({
-  owner: 'owner@x.com',
+  owner: 'u_owner',
   squares: [
-    makeSquare({ id: 'a', owner: 'player@x.com' }),
-    makeSquare({ id: 'b', owner: 'player@x.com' }),
-    makeSquare({ id: 'c', owner: 'other@x.com' }),
+    makeSquare({ id: 'a', owner: 'u_player' }),
+    makeSquare({ id: 'b', owner: 'u_player' }),
+    makeSquare({ id: 'c', owner: 'u_other' }),
   ],
 });
-const participants = [makeParticipant({ userId: 'player@x.com', maxSquares: 5 })];
+const participants = [makeParticipant({ userId: 'u_player', maxSquares: 5 })];
 
 describe('getContestViewer', () => {
   it('counts a participant’s squares and what they have left', () => {
-    expect(getContestViewer('player@x.com', contest, participants)).toMatchObject({
+    expect(getContestViewer('u_player', contest, participants)).toMatchObject({
       isOwner: false,
       isParticipant: true,
       squaresClaimed: 2,
@@ -27,23 +23,18 @@ describe('getContestViewer', () => {
   });
 
   it('recognises the owner', () => {
-    expect(getContestViewer('owner@x.com', contest, participants).isOwner).toBe(true);
+    expect(getContestViewer('u_owner', contest, participants).isOwner).toBe(true);
   });
 
   it('treats a signed-out or unknown viewer as a spectator', () => {
-    expect(getContestViewer(undefined, contest, participants)).toMatchObject({
+    const viewer = getContestViewer(undefined, contest, participants);
+    expect(viewer).toMatchObject({
       isOwner: false,
       isParticipant: false,
       squaresClaimed: 0,
       squaresLeft: 0,
     });
-  });
-});
-
-describe('useContestViewer', () => {
-  it('uses the signed-in email', () => {
-    mockAuth({ email: 'player@x.com' });
-    const { result } = renderHook(() => useContestViewer(contest, participants));
-    expect(result.current.email).toBe('player@x.com');
+    expect(viewer.isMe(undefined)).toBe(false);
+    expect(viewer.isMe('')).toBe(false);
   });
 });

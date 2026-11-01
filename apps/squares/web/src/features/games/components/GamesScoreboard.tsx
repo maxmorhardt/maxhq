@@ -26,19 +26,71 @@ const gridSx = {
   gap: 1.5,
 } as const;
 
+const weekBarSx = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 2,
+  mb: 3,
+  p: 1,
+  borderRadius: '14px',
+  border: 1,
+  borderColor: 'divider',
+  bgcolor: 'background.paper',
+} as const;
+
+const cardSx = {
+  p: 2,
+  borderRadius: '16px',
+  border: 1,
+  borderColor: 'divider',
+  bgcolor: 'background.paper',
+  display: 'grid',
+  gap: 1.25,
+} as const;
+
+function TeamRowSkeleton() {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Skeleton variant="circular" width={34} height={34} />
+      <Skeleton variant="text" sx={{ flex: 1, maxWidth: 160 }} />
+      <Skeleton variant="text" width={28} height={34} sx={{ ml: 'auto' }} />
+    </Box>
+  );
+}
+
+function ScoreboardSkeleton() {
+  return (
+    <Box data-testid="scoreboard-loading" aria-busy>
+      <Box sx={weekBarSx}>
+        <Skeleton variant="circular" width={40} height={40} />
+        <Box sx={{ display: 'grid', justifyItems: 'center', gap: 0.75 }}>
+          <Skeleton variant="text" width={120} height={28} />
+          <Skeleton variant="text" width={80} height={18} />
+        </Box>
+        <Skeleton variant="circular" width={40} height={40} />
+      </Box>
+      <Skeleton variant="text" width={180} height={24} sx={{ mb: 1.5 }} />
+      <Box sx={gridSx}>
+        {[0, 1, 2, 3].map((i) => (
+          <Box key={i} sx={cardSx}>
+            <Skeleton variant="text" width={90} height={22} />
+            <TeamRowSkeleton />
+            <TeamRowSkeleton />
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
 // one week of NFL games with a way to step through the season; a contest page is where scores update live
 export default function GamesScoreboard() {
   const [week, setWeek] = useState<ScoreboardWeek | undefined>(undefined);
   const { data: board, isLoading, isError, refetch } = useGetScoreboardQuery(week);
 
   if (isLoading) {
-    return (
-      <Box sx={gridSx} data-testid="scoreboard-loading">
-        {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} variant="rounded" height={150} sx={{ borderRadius: '16px' }} />
-        ))}
-      </Box>
-    );
+    return <ScoreboardSkeleton />;
   }
 
   if (isError || !board) {
@@ -56,20 +108,7 @@ export default function GamesScoreboard() {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2,
-          mb: 3,
-          p: 1,
-          borderRadius: '14px',
-          border: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-        }}
-      >
+      <Box sx={weekBarSx}>
         <IconButton
           aria-label="Previous week"
           onClick={() => setWeek(board.previous)}

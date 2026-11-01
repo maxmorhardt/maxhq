@@ -78,7 +78,7 @@ func TestAccounts_DeletionIsBlockedByActiveContestsThenRevokesTheToken(t *testin
 	signedIn := testkit.As(user)
 	require.Equal(t, http.StatusOK, testkit.Call(t, replicaA, signedIn, http.MethodGet, "/users/me", nil).Status)
 
-	contests.setActive(user, contracts.UserActiveContest{ID: "c1", Name: "Live Bowl", Owner: user, Role: "owner"})
+	contests.setActive(user, contracts.UserActiveContest{ID: "c1", Name: "Live Bowl", Role: "owner"})
 	assert.Equal(t, http.StatusConflict, testkit.Call(t, replicaA, signedIn, http.MethodDelete, "/users/me", nil).Status)
 
 	contests.setActive(user)

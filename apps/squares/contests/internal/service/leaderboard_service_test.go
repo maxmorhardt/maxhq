@@ -9,6 +9,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -67,7 +68,7 @@ func TestLeaderboardService_GetLeaderboard_PublishesFirstNameLastInitial(t *test
 	assert.Equal(t, "Max M.", got.Entries[0].DisplayName)
 	assert.Equal(t, "Mary W.", got.Entries[1].DisplayName)
 	assert.Equal(t, "Jordan", got.Entries[2].DisplayName)
-	assert.Equal(t, "max.morhardt", got.Entries[3].DisplayName)
+	assert.Equal(t, "Player", got.Entries[3].DisplayName)
 	assert.Equal(t, "ada L.", got.Entries[4].DisplayName)
 	assert.Equal(t, "Player", got.Entries[5].DisplayName)
 	assert.Equal(t, "Player", got.Entries[6].DisplayName)
@@ -83,6 +84,18 @@ func TestLeaderboardService_GetLeaderboard_NeverPublishesAFullSurname(t *testing
 
 	require.NoError(t, err)
 	assert.NotContains(t, got.Entries[0].DisplayName, "Morhardt")
+}
+
+func TestLeaderboardService_GetLeaderboard_PublishesUserIDsNotEmails(t *testing.T) {
+	repo := mocks.NewLeaderboardRepository(t)
+	repo.EXPECT().GetTopWinners(mock.Anything, 25).Return([]model.LeaderboardEntry{
+		{UserID: "max@example.com", DisplayName: "Max", QuarterWins: 12},
+	}, nil)
+
+	got, err := service.NewLeaderboardService(repo, newMemCache()).GetLeaderboard(context.Background(), 25)
+
+	require.NoError(t, err)
+	assert.Equal(t, pseudonym.Of("max@example.com"), got.Entries[0].UserID)
 }
 
 func TestLeaderboardService_GetLeaderboard_DefaultsLimit(t *testing.T) {
@@ -128,14 +141,14 @@ func TestLeaderboardService_GetLeaderboard_Error(t *testing.T) {
 }
 
 func TestLeaderboardService_GetUserRank_Success(t *testing.T) {
-	want := &model.LeaderboardRankResponse{Rank: 7, TotalRanked: 143, QuarterWins: 5, Ranked: true}
 	repo := mocks.NewLeaderboardRepository(t)
-	repo.EXPECT().GetUserRank(mock.Anything, "user@example.com").Return(want, nil)
+	repo.EXPECT().GetUserRank(mock.Anything, "user@example.com").
+		Return(&model.LeaderboardRankResponse{Rank: 7, TotalRanked: 143, QuarterWins: 5, Ranked: true}, nil)
 
 	got, err := service.NewLeaderboardService(repo, newMemCache()).GetUserRank(context.Background(), "user@example.com")
 
 	require.NoError(t, err)
-	assert.Equal(t, want, got)
+	assert.Equal(t, &model.LeaderboardRankResponse{Rank: 7, TotalRanked: 143, QuarterWins: 5, Ranked: true}, got)
 }
 
 func TestLeaderboardService_GetUserRank_Error(t *testing.T) {

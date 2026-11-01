@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
 import { blockNonIntegerKeys, noNumberSpinners } from '../../../../components/inputs';
 import type { Contest } from '../../../../types/contest';
-import { useGetMyProfileQuery } from '../../../profile/api';
 import { useToast } from '../../../toast/useToast';
 import { useClaimRandomSquaresMutation, useClearMySquaresMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
@@ -20,7 +19,6 @@ interface Props {
 export default function SquareActions({ contest, viewer, emptySquares }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { data: profile } = useGetMyProfileQuery();
   const [claimRandom, { isLoading: claiming }] = useClaimRandomSquaresMutation();
   const [clearMine, { isLoading: clearing }] = useClearMySquaresMutation();
   const [requested, setRequested] = useState(1);
@@ -31,19 +29,17 @@ export default function SquareActions({ contest, viewer, emptySquares }: Props) 
   const randomDisabled = busy || maxFill === 0;
 
   const handleClaimRandom = async () => {
-    // claims use the profile's default initials, so they have to exist first
-    if (!profile?.defaultInitials) {
-      showToast('Set your initials in your profile before claiming a square', 'warning');
-      navigate('/profile');
-      return;
-    }
-
     try {
       const result = await claimRandom({ contestId: contest.id, count }).unwrap();
       if (result.squares.length < count) {
         showToast(`Claimed ${result.squares.length} of ${count} squares`, 'warning');
       }
     } catch (err) {
+      if (errorStatus(err) === 422) {
+        showToast(errorMessage(err, 'Set your initials in your profile first'), 'warning');
+        navigate('/profile');
+        return;
+      }
       showToast(
         errorMessage(err, 'Could not claim squares'),
         errorStatus(err) === 409 ? 'warning' : 'error'

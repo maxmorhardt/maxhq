@@ -59,8 +59,8 @@ func TestStatsRepository_GetUserStats_Error(t *testing.T) {
 
 func TestStatsRepository_GetActiveContests(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`SELECT c.id, c.name, c.owner`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "owner", "role"}).AddRow(uuid.NewString(), "C1", "a@b.com", "owner"))
+	mock.ExpectQuery(`SELECT c.id, c.name, CASE`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "role"}).AddRow(uuid.NewString(), "C1", "owner"))
 
 	active, err := NewStatsRepository(gdb).GetActiveContests(context.Background(), "a@b.com")
 

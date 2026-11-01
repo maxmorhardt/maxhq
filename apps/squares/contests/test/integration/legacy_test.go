@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
+	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -64,7 +65,7 @@ func TestLegacy_ExistingContestsKeepWorking(t *testing.T) {
 	require.Len(t, snap.Contest.Squares, 100)
 	claimed := 0
 	for _, sq := range snap.Contest.Squares {
-		if sq.Owner == legacyUser {
+		if sq.Owner == pseudonym.Of(legacyUser) {
 			claimed++
 			assert.Equal(t, "LG", sq.Value)
 		}

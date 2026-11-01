@@ -7,9 +7,30 @@ import type { LeaderboardEntry } from '../../../types/leaderboard';
 const theme = createTheme({ palette: { mode: 'dark' } });
 
 const entries: LeaderboardEntry[] = [
-  { rank: 1, displayName: 'Max M.', quarterWins: 12, squaresClaimed: 48, quartersPlayed: 48 },
-  { rank: 2, displayName: 'Jordan K.', quarterWins: 9, squaresClaimed: 40, quartersPlayed: 40 },
-  { rank: 3, displayName: 'Sam R.', quarterWins: 1, squaresClaimed: 12, quartersPlayed: 12 },
+  {
+    rank: 1,
+    userId: 'u_max',
+    displayName: 'Max M.',
+    quarterWins: 12,
+    squaresClaimed: 48,
+    quartersPlayed: 48,
+  },
+  {
+    rank: 2,
+    userId: 'u_jordan',
+    displayName: 'Jordan K.',
+    quarterWins: 9,
+    squaresClaimed: 40,
+    quartersPlayed: 40,
+  },
+  {
+    rank: 3,
+    userId: 'u_sam',
+    displayName: 'Sam R.',
+    quarterWins: 1,
+    squaresClaimed: 12,
+    quartersPlayed: 12,
+  },
 ];
 
 function renderPodium(props: Partial<React.ComponentProps<typeof LeaderboardPodium>> = {}) {
@@ -57,13 +78,13 @@ describe('LeaderboardPodium', () => {
   });
 
   it('marks the current user', () => {
-    renderPodium({ highlightKey: '2:Jordan K.' });
+    renderPodium({ highlightUserId: 'u_jordan' });
 
     expect(screen.getByText('You')).toBeInTheDocument();
   });
 
   it('does not mark anyone when the user is absent', () => {
-    renderPodium({ highlightKey: '2:Nobody' });
+    renderPodium({ highlightUserId: 'u_nobody' });
 
     expect(screen.queryByText('You')).not.toBeInTheDocument();
   });
@@ -71,7 +92,14 @@ describe('LeaderboardPodium', () => {
   it('strips dangerous characters from display names', () => {
     renderPodium({
       entries: [
-        { rank: 1, displayName: '<script>', quarterWins: 1, squaresClaimed: 1, quartersPlayed: 4 },
+        {
+          rank: 1,
+          userId: 'u_script',
+          displayName: '<script>',
+          quarterWins: 1,
+          squaresClaimed: 1,
+          quartersPlayed: 4,
+        },
       ],
     });
 
@@ -82,7 +110,14 @@ describe('LeaderboardPodium', () => {
   it('falls back to third-place styling for an unexpected rank', () => {
     renderPodium({
       entries: [
-        { rank: 9, displayName: 'Riley P.', quarterWins: 2, squaresClaimed: 8, quartersPlayed: 8 },
+        {
+          rank: 9,
+          userId: 'u_riley',
+          displayName: 'Riley P.',
+          quarterWins: 2,
+          squaresClaimed: 8,
+          quartersPlayed: 8,
+        },
       ],
     });
 

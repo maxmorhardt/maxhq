@@ -81,6 +81,22 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 		return nil, errs.ErrInvalidSquareCount
 	}
 
+	counts, countErr := s.inviteRepo.CountByContestID(ctx, contestID, time.Now().Add(-model.CreationWindow))
+	if countErr != nil {
+		log.Error("failed to count the contest's invites", "contest_id", contestID, "error", countErr)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+	if counts.Open >= model.MaxOpenInvitesPerContest {
+		log.Warn("open invite limit reached", "contest_id", contestID, "open", counts.Open, "limit", model.MaxOpenInvitesPerContest)
+		metrics.IncLimitReached("open_invites")
+		return nil, errs.ErrInviteLimitReached
+	}
+	if counts.Recent >= model.MaxInvitesPerContestPerDay {
+		log.Warn("daily invite limit reached", "contest_id", contestID, "recent", counts.Recent, "limit", model.MaxInvitesPerContestPerDay)
+		metrics.IncLimitReached("daily_invites")
+		return nil, errs.ErrDailyInviteLimit
+	}
+
 	invite := &model.ContestInvite{
 		ContestID:  contestID,
 		MaxSquares: req.MaxSquares,
@@ -100,7 +116,7 @@ func (s *inviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, r
 	}
 
 	metrics.IncInviteCreated()
-	log.Info("invite created", "invite_id", invite.ID, "contest_id", contestID, "token", invite.Token)
+	log.Info("invite created", "invite_id", invite.ID, "contest_id", contestID)
 	return invite, nil
 }
 
@@ -130,15 +146,25 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
+	var ownerName string
+	owner, err := s.participantRepo.GetByContestAndUser(ctx, invite.ContestID, contest.Owner)
+	switch {
+	case err == nil:
+		ownerName = owner.DisplayName
+	case !errors.Is(err, database.ErrNotFound):
+		log.Error("failed to get the owner for invite preview", "contest_id", invite.ContestID, "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+
 	log.Info("retrieved invite preview", "contest_id", contest.ID)
-	return invitePreview(contest, invite), nil
+	return invitePreview(contest, invite, ownerName), nil
 }
 
-func invitePreview(contest *model.Contest, invite *model.ContestInvite) *model.InvitePreviewResponse {
+func invitePreview(contest *model.Contest, invite *model.ContestInvite, ownerName string) *model.InvitePreviewResponse {
 	preview := &model.InvitePreviewResponse{
 		ContestID:    contest.ID,
 		ContestName:  contest.Name,
-		Owner:        contest.Owner,
+		OwnerName:    ownerName,
 		Role:         string(invite.Role),
 		MaxSquares:   invite.MaxSquares,
 		Status:       contest.Status,
@@ -298,7 +324,7 @@ func (s *inviteService) DeleteInvite(ctx context.Context, contestID, inviteID uu
 		return err
 	}
 
-	if err := s.inviteRepo.Delete(ctx, inviteID); err != nil {
+	if err := s.inviteRepo.Delete(ctx, contestID, inviteID); err != nil {
 		log.Error("failed to delete invite", "invite_id", inviteID, "error", err)
 		return err
 	}

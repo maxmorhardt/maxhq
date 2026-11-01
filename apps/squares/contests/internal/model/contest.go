@@ -9,7 +9,21 @@ import (
 	"gorm.io/gorm"
 )
 
-const MaxContestSquares = 100
+const (
+	MaxContestSquares          = 100
+	MaxOpenContestsPerOwner    = 25
+	MaxOpenInvitesPerContest   = 25
+	MaxContestsPerOwnerPerDay  = 50
+	MaxInvitesPerContestPerDay = 100
+
+	CreationWindow = 24 * time.Hour
+)
+
+// how many of something are still usable, and how many were made within the creation window
+type CreationCounts struct {
+	Open   int
+	Recent int
+}
 
 type ContestVisibility string
 
@@ -36,8 +50,8 @@ type Contest struct {
 	Game      *Game     `json:"-" gorm:"foreignKey:GameID;constraint:OnDelete:SET NULL"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
-	CreatedBy string    `json:"createdBy"`
-	UpdatedBy string    `json:"updatedBy"`
+	CreatedBy string    `json:"-"`
+	UpdatedBy string    `json:"-"`
 }
 
 func (c *Contest) BeforeCreate(tx *gorm.DB) (err error) {
