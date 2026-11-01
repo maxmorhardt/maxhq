@@ -60,10 +60,10 @@ func Name(displayName string) string {
 	return parts[0] + " " + strings.ToUpper(string(last[0])) + "."
 }
 
-// what a contest's managers see so they know who joined; a name that fell back to the email loses the domain
+// what the contest's owner sees; a name that fell back to the email is dropped, since its local part is the email
 func FullName(displayName string) string {
-	if at := strings.Index(displayName, "@"); at >= 0 {
-		displayName = displayName[:at]
+	if strings.Contains(displayName, "@") {
+		return ""
 	}
 	return strings.Join(strings.Fields(displayName), " ")
 }

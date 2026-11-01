@@ -27,7 +27,7 @@ const contest = makeContest({
   homeTeam: 'Lions',
   awayTeam: 'Bears',
   squares: [
-    makeSquare({ id: 'mine', row: 0, col: 0, value: 'ME', owner: 'player@x.com', ownerName: 'Me' }),
+    makeSquare({ id: 'mine', row: 0, col: 0, value: 'ME', owner: 'u_player', ownerName: 'Me' }),
     makeSquare({ id: 'empty', row: 0, col: 1 }),
   ],
   xLabels: [3, 7],

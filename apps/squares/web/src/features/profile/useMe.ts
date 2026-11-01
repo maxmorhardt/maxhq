@@ -4,6 +4,7 @@ import { useGetMyProfileQuery } from './api';
 // contests name players by user id, never by email
 export interface Me {
   userId?: string;
+  isLoading?: boolean;
 }
 
 export function isMe(me: Me, id: string | undefined): boolean {
@@ -12,6 +13,6 @@ export function isMe(me: Me, id: string | undefined): boolean {
 
 export function useMe(): Me {
   const signedIn = useAuth().isAuthenticated;
-  const { data } = useGetMyProfileQuery(undefined, { skip: !signedIn });
-  return { userId: data?.userId };
+  const { data, isLoading } = useGetMyProfileQuery(undefined, { skip: !signedIn });
+  return { userId: data?.userId, isLoading };
 }

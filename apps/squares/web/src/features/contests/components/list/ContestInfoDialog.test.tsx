@@ -20,7 +20,7 @@ const contest: ContestSummary = {
   gameTime: '2026-11-01T18:00:00Z',
   status: 'ACTIVE',
   visibility: 'private',
-  owner: 'owner@x.com',
+  owner: 'u_owner',
   role: 'owner',
   claimedSquares: 42,
   mySquares: 6,

@@ -23,27 +23,27 @@ vi.mock('../LeaveContestDialog', () => ({
 const participants = [
   makeParticipant({
     id: 'o',
-    userId: 'owner@x.com',
+    userId: 'u_owner',
     displayName: 'Olive O.',
     role: 'owner',
     maxSquares: 10,
   }),
   makeParticipant({
     id: 'p',
-    userId: 'player@x.com',
+    userId: 'u_player',
     displayName: 'Pat P.',
     maxSquares: 5,
   }),
   makeParticipant({
     id: 'v',
-    userId: 'viewer@x.com',
+    userId: 'u_viewer',
     displayName: 'Vic V.',
     role: 'viewer',
     maxSquares: 0,
   }),
 ];
 
-const owner = makeViewer({ me: { userId: 'owner@x.com' }, isOwner: true });
+const owner = makeViewer({ me: { userId: 'u_owner' }, isOwner: true });
 
 function renderManager(viewer: ContestViewer = owner, contest: Contest = makeContest()) {
   return renderWithProviders(
@@ -76,7 +76,7 @@ describe('ParticipantsManager', () => {
     expect(screen.queryByText(/@x\.com/)).not.toBeInTheDocument();
     unmount();
 
-    renderManager(makeViewer({ me: { userId: 'viewer@x.com' }, isOwner: false }));
+    renderManager(makeViewer({ me: { userId: 'u_viewer' }, isOwner: false }));
     expect(screen.getByText('Pat P.')).toBeInTheDocument();
     expect(screen.getByText('You')).toBeInTheDocument();
     expect(screen.queryByText(/@x\.com/)).not.toBeInTheDocument();
@@ -86,9 +86,9 @@ describe('ParticipantsManager', () => {
     const refetch = vi.fn();
     api.useGetRosterQuery.mockReturnValue({
       data: [
-        { userId: 'owner@x.com', fullName: 'Olive Owens' },
-        { userId: 'player@x.com', fullName: 'Pat Player' },
-        { userId: 'viewer@x.com', fullName: 'Vic Viewer' },
+        { userId: 'u_owner', fullName: 'Olive Owens' },
+        { userId: 'u_player', fullName: 'Pat Player' },
+        { userId: 'u_viewer', fullName: 'Vic Viewer' },
       ],
       refetch,
     });
@@ -104,7 +104,7 @@ describe('ParticipantsManager', () => {
   it('refetches the roster when someone new joins', () => {
     const refetch = vi.fn();
     api.useGetRosterQuery.mockReturnValue({
-      data: [{ userId: 'owner@x.com', fullName: 'Olive Owens' }],
+      data: [{ userId: 'u_owner', fullName: 'Olive Owens' }],
       refetch,
     });
     renderManager();
@@ -112,7 +112,7 @@ describe('ParticipantsManager', () => {
   });
 
   it('never asks a player for the roster', () => {
-    renderManager(makeViewer({ me: { userId: 'player@x.com' } }));
+    renderManager(makeViewer({ me: { userId: 'u_player' } }));
     expect(api.useGetRosterQuery).toHaveBeenCalledWith(
       'c-1',
       expect.objectContaining({ skip: true })
@@ -121,7 +121,7 @@ describe('ParticipantsManager', () => {
   });
 
   it('recognises the viewer by pseudonym', () => {
-    renderManager(makeViewer({ me: { userId: 'viewer@x.com' }, isOwner: false }));
+    renderManager(makeViewer({ me: { userId: 'u_viewer' }, isOwner: false }));
     expect(screen.getByText('You')).toBeInTheDocument();
   });
 
@@ -141,7 +141,7 @@ describe('ParticipantsManager', () => {
   it('lets the owner edit before kickoff', () => {
     renderManager();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Pat P.' }));
-    expect(screen.getByTestId('edit')).toHaveTextContent('player@x.com');
+    expect(screen.getByTestId('edit')).toHaveTextContent('u_player');
   });
 
   it('lets the owner remove someone after confirming', async () => {
@@ -153,7 +153,7 @@ describe('ParticipantsManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
 
     await waitFor(() =>
-      expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'player@x.com' })
+      expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'u_player' })
     );
     expect(store.getState().toast.messages[0]?.message).toBe('Participant removed');
   });
@@ -174,17 +174,14 @@ describe('ParticipantsManager', () => {
   });
 
   it('lets a participant leave, but not change others', () => {
-    renderManager(makeViewer({ me: { userId: 'player@x.com' } }));
+    renderManager(makeViewer({ me: { userId: 'u_player' } }));
     expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Leave contest' }));
     expect(screen.getByTestId('leave')).toBeInTheDocument();
   });
 
   it('offers nothing once the contest is finished', () => {
-    renderManager(
-      makeViewer({ me: { userId: 'player@x.com' } }),
-      makeContest({ status: 'FINISHED' })
-    );
+    renderManager(makeViewer({ me: { userId: 'u_player' } }), makeContest({ status: 'FINISHED' }));
     expect(screen.queryByRole('button', { name: 'Leave contest' })).not.toBeInTheDocument();
   });
 });

@@ -439,7 +439,7 @@ func TestGetRoster_GivesManagersFullNamesWithoutEmails(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []model.ParticipantIdentity{
 		{UserID: pseudonym.Of("owner@x.com"), FullName: "Olive Owens"},
-		{UserID: pseudonym.Of("target@x.com"), FullName: "target"},
+		{UserID: pseudonym.Of("target@x.com"), FullName: ""},
 	}, got)
 }
 

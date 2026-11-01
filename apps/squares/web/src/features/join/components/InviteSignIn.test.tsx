@@ -18,7 +18,7 @@ const preview: InvitePreviewResponse = {
   contestId: 'c-1',
   contestName: 'Office Pool',
   maxSquares: 10,
-  owner: 'owner@x.com',
+  owner: 'u_owner',
   role: 'participant',
   status: 'ACTIVE',
   claimedSquares: 42,

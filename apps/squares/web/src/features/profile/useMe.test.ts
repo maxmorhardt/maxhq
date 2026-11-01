@@ -22,21 +22,24 @@ describe('isMe', () => {
 describe('useMe', () => {
   it('reads the user id from the profile', () => {
     mockAuth({ email: 'pat@x.com' });
-    vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: { userId: 'u_pat' } } as never);
+    vi.mocked(useGetMyProfileQuery).mockReturnValue({
+      data: { userId: 'u_pat' },
+      isLoading: false,
+    } as never);
 
     const { result } = renderHook(() => useMe());
 
-    expect(result.current).toEqual({ userId: 'u_pat' });
+    expect(result.current).toEqual({ userId: 'u_pat', isLoading: false });
     expect(useGetMyProfileQuery).toHaveBeenCalledWith(undefined, { skip: false });
   });
 
   it('skips the profile when signed out', () => {
     mockAuth();
-    vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: undefined } as never);
+    vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: undefined, isLoading: false } as never);
 
     const { result } = renderHook(() => useMe());
 
-    expect(result.current).toEqual({ userId: undefined });
+    expect(result.current).toEqual({ userId: undefined, isLoading: false });
     expect(useGetMyProfileQuery).toHaveBeenCalledWith(undefined, { skip: true });
   });
 });

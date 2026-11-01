@@ -9,7 +9,7 @@ import SquareDialog from './SquareDialog';
 const api = vi.hoisted(() => ({ useClearSquareMutation: vi.fn() }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 
-const mine = makeSquare({ value: 'ME', owner: 'player@x.com', ownerName: 'Me' });
+const mine = makeSquare({ value: 'ME', owner: 'u_player', ownerName: 'Me' });
 
 function renderDialog(square: Square | null, contest: Contest = makeContest()) {
   const onClose = vi.fn();
@@ -51,7 +51,7 @@ describe('SquareDialog', () => {
   });
 
   it('shows who claimed someone else’s square', () => {
-    renderDialog(makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: 'Ann' }));
+    renderDialog(makeSquare({ value: 'AB', owner: 'u_ann', ownerName: 'Ann' }));
     expect(screen.getByText('Square Details')).toBeInTheDocument();
     expect(screen.getByText('Claimed by Ann')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Clear Square' })).not.toBeInTheDocument();

@@ -56,7 +56,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 		// a first-time player has a name in the players list before claiming or opening their profile
 		for _, p := range snapshot(t, ownerUser, contestID).Participants {
 			if p.UserID == pseudonym.Of(memberUser) {
-				assert.Equal(t, pseudonym.Name("Test "+memberUser), p.DisplayName)
+				assert.Equal(t, "Test M.", p.DisplayName)
 			}
 		}
 	})

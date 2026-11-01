@@ -63,7 +63,7 @@ describe('liveContestSlice stream lifecycle', () => {
 describe('liveContestSlice events', () => {
   it('replaces everything with a snapshot and seeds the feed', () => {
     const state = live(
-      makeContest({ squares: [makeSquare({ value: 'AB', owner: 'ann@x.com', ownerName: 'Ann' })] })
+      makeContest({ squares: [makeSquare({ value: 'AB', owner: 'u_ann', ownerName: 'Ann' })] })
     );
     expect(state.contest?.id).toBe('c-1');
     expect(state.participants).toHaveLength(1);
@@ -110,17 +110,17 @@ describe('liveContestSlice events', () => {
   it('adds, updates, and removes participants', () => {
     let state = receive(
       live(),
-      event('participant.joined', makeParticipant({ id: 'p-2', userId: 'b@x.com' }))
+      event('participant.joined', makeParticipant({ id: 'p-2', userId: 'u_b' }))
     );
     expect(state.participants).toHaveLength(2);
     state = receive(
       state,
-      event('participant.updated', makeParticipant({ id: 'p-2', userId: 'b@x.com', maxSquares: 9 }))
+      event('participant.updated', makeParticipant({ id: 'p-2', userId: 'u_b', maxSquares: 9 }))
     );
     expect(state.participants).toHaveLength(2);
     expect(state.participants.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
-    state = receive(state, event('participant.removed', makeParticipant({ userId: 'b@x.com' })));
-    expect(state.participants.map((p) => p.userId)).toEqual(['player@x.com']);
+    state = receive(state, event('participant.removed', makeParticipant({ userId: 'u_b' })));
+    expect(state.participants.map((p) => p.userId)).toEqual(['u_player']);
   });
 
   it('marks the stream ended when the contest is deleted or access is revoked', () => {
@@ -186,7 +186,7 @@ describe('liveContestSlice write responses', () => {
     expect(state.participants[0].maxSquares).toBe(9);
     state = liveContestReducer(
       state,
-      fulfilled('removeParticipant', undefined, { contestId: 'c-1', userId: 'player@x.com' })
+      fulfilled('removeParticipant', undefined, { contestId: 'c-1', userId: 'u_player' })
     );
     expect(state.participants).toHaveLength(0);
   });

@@ -10,7 +10,7 @@ const result = {
   awayTeamScore: 14,
   winnerRow: 3,
   winnerCol: 5,
-  winner: 'me@x.com',
+  winner: 'u_me',
   winnerName: 'Me',
   createdAt: '',
   updatedAt: '',

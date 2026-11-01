@@ -69,8 +69,8 @@ func TestName(t *testing.T) {
 		"Mary Jane Watson":         "Mary W.",
 		"Jordan":                   "Jordan",
 		"ada lovelace":             "ada L.",
-		"max.morhardt@example.com": "max.morhardt",
-		"Test owner@squares.test":  "Test O.",
+		"max.morhardt@example.com": "",
+		"Test owner@squares.test":  "",
 		"Élodie Ünal":              "Élodie Ü.",
 		"   ":                      "",
 		"@handle":                  "",
@@ -83,6 +83,6 @@ func TestName(t *testing.T) {
 
 func TestFullName(t *testing.T) {
 	assert.Equal(t, "Max Morhardt", FullName("  Max   Morhardt "))
-	assert.Equal(t, "pat.player", FullName("pat.player@example.com"))
+	assert.Equal(t, "", FullName("pat.player@example.com"))
 	assert.Equal(t, "", FullName(""))
 }

@@ -13,8 +13,12 @@ import {
 import LiveContest from './LiveContest';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+const profile = vi.hoisted(() => ({ isLoading: false }));
 vi.mock('../../profile/api', () => ({
-  useGetMyProfileQuery: vi.fn(() => ({ data: { userId: 'player@x.com' } })),
+  useGetMyProfileQuery: vi.fn(() => ({
+    data: profile.isLoading ? undefined : { userId: 'u_player' },
+    isLoading: profile.isLoading,
+  })),
 }));
 const stream = vi.hoisted(() => ({
   onEvent: undefined as ((e: ContestEvent) => void) | undefined,
@@ -73,12 +77,24 @@ describe('LiveContest', () => {
     vi.clearAllMocks();
     games.useGetGameQuery.mockReturnValue({ data: undefined });
     mockAuth({ email: 'player@x.com' });
+    profile.isLoading = false;
   });
 
   it('shows a skeleton until the snapshot arrives', () => {
     const { snapshot } = renderLive();
     expect(screen.queryByTestId('view')).not.toBeInTheDocument();
     snapshot();
+    expect(screen.getByTestId('view')).toBeInTheDocument();
+  });
+
+  it('waits for the profile before showing the board', () => {
+    profile.isLoading = true;
+    const { snapshot, rerender } = renderLive();
+    snapshot();
+    expect(screen.queryByTestId('view')).not.toBeInTheDocument();
+
+    profile.isLoading = false;
+    rerender(<LiveContest contestId="c-1" />);
     expect(screen.getByTestId('view')).toBeInTheDocument();
   });
 
@@ -136,7 +152,7 @@ describe('LiveContest', () => {
   it('flashes the winning square and celebrates the viewer’s win', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByTestId('view')).toHaveTextContent('flash');
     expect(screen.getByText('Your Square Hit')).toBeInTheDocument();
   });
@@ -145,7 +161,7 @@ describe('LiveContest', () => {
     games.useGetGameQuery.mockReturnValue({ data: { homeAbbr: 'NO', awayAbbr: 'PIT' } });
     const { snapshot, emit } = renderLive();
     snapshot(makeContest({ gameId: 'g-1' }));
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByText('PIT')).toBeInTheDocument();
     expect(screen.getByText('NO')).toBeInTheDocument();
   });
@@ -153,7 +169,7 @@ describe('LiveContest', () => {
   it('falls back to away and home while the game is still loading', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'player@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByText('Away')).toBeInTheDocument();
     expect(screen.getByText('Home')).toBeInTheDocument();
   });
@@ -161,14 +177,14 @@ describe('LiveContest', () => {
   it('only celebrates the viewer’s own wins', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'someone@x.com' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_someone' })));
     expect(screen.queryByText('Your Square Hit')).not.toBeInTheDocument();
   });
 
   it('sends a removed viewer away from a private contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'private' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'player@x.com' })));
+    emit(event('participant.removed', makeParticipant({ userId: 'u_player' })));
     expect(navigate).toHaveBeenCalledWith('/contests');
     expect(toasts()[0]?.severity).toBe('warning');
   });
@@ -176,14 +192,14 @@ describe('LiveContest', () => {
   it('lets a removed viewer keep watching a public contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'public' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'player@x.com' })));
+    emit(event('participant.removed', makeParticipant({ userId: 'u_player' })));
     expect(navigate).not.toHaveBeenCalled();
     expect(toasts()[0]?.severity).toBe('info');
   });
 
   it('ignores other people being removed', () => {
     const { emit, toasts } = renderLive();
-    emit(event('participant.removed', makeParticipant({ userId: 'other@x.com' })));
+    emit(event('participant.removed', makeParticipant({ userId: 'u_other' })));
     expect(toasts()).toHaveLength(0);
   });
 });

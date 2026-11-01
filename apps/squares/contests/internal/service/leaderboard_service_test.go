@@ -67,7 +67,7 @@ func TestLeaderboardService_GetLeaderboard_PublishesFirstNameLastInitial(t *test
 	assert.Equal(t, "Max M.", got.Entries[0].DisplayName)
 	assert.Equal(t, "Mary W.", got.Entries[1].DisplayName)
 	assert.Equal(t, "Jordan", got.Entries[2].DisplayName)
-	assert.Equal(t, "max.morhardt", got.Entries[3].DisplayName)
+	assert.Equal(t, "Player", got.Entries[3].DisplayName)
 	assert.Equal(t, "ada L.", got.Entries[4].DisplayName)
 	assert.Equal(t, "Player", got.Entries[5].DisplayName)
 	assert.Equal(t, "Player", got.Entries[6].DisplayName)

@@ -101,6 +101,10 @@ export default function LiveContest({ contestId }: Props) {
     return status === 'failed' ? <ContestError onRetry={resync} /> : <ContestPageSkeleton />;
   }
 
+  if (me.isLoading) {
+    return <ContestPageSkeleton />;
+  }
+
   return (
     <>
       <ContestView
