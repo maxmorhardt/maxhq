@@ -7,6 +7,7 @@ import (
 )
 
 // value receivers on purpose: json skips pointer methods on non-addressable values, which would send emails unmasked
+// every marshal masks, so never cache these types and read them back: owners would come back as user ids and fail auth checks
 
 func (s Square) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
 	type plain Square

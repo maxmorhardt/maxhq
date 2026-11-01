@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -53,25 +54,33 @@ func Of(email string) string {
 
 func Name(displayName string) string {
 	full := FullName(displayName)
-	// "Last, First" puts the surname first
-	if last, first, ok := strings.Cut(full, ","); ok {
+	// "Last, First" puts the surname first, but "First Last, Jr." does not
+	if last, first, ok := strings.Cut(full, ","); ok && !isSuffix(first) {
 		full = first + " " + last
 	}
 
 	parts := strings.FieldsFunc(full, func(r rune) bool { return unicode.IsSpace(r) || r == ',' })
-	switch len(parts) {
-	case 0:
+	if len(parts) == 0 {
 		return ""
-	case 1:
-		return parts[0]
+	}
+	first, rest := parts[0], slices.DeleteFunc(parts[1:], isSuffix)
+	if len(rest) == 0 {
+		return first
 	}
 
-	i := strings.IndexFunc(parts[len(parts)-1], unicode.IsLetter)
+	surname := rest[len(rest)-1]
+	i := strings.IndexFunc(surname, unicode.IsLetter)
 	if i < 0 {
-		return parts[0]
+		return first
 	}
-	initial, _ := utf8.DecodeRuneInString(parts[len(parts)-1][i:])
-	return parts[0] + " " + string(unicode.ToUpper(initial)) + "."
+	initial, _ := utf8.DecodeRuneInString(surname[i:])
+	return first + " " + string(unicode.ToUpper(initial)) + "."
+}
+
+var suffixes = map[string]bool{"jr": true, "sr": true, "ii": true, "iii": true, "iv": true}
+
+func isSuffix(s string) bool {
+	return suffixes[strings.ToLower(strings.Trim(s, " ."))]
 }
 
 func Public(displayName string) string {
