@@ -40,7 +40,6 @@ func TestGetRoster_InvalidContestID(t *testing.T) {
 
 func TestGetRoster_Errors(t *testing.T) {
 	cases := map[error]int{
-		errs.ErrContestNotFound:     http.StatusNotFound,
 		errs.ErrNotParticipant:      http.StatusForbidden,
 		errs.ErrInsufficientRole:    http.StatusForbidden,
 		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,

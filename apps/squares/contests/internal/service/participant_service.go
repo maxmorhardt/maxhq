@@ -122,6 +122,9 @@ func (s *participantService) GetParticipants(ctx context.Context, contestID uuid
 }
 
 func (s *participantService) GetRoster(ctx context.Context, contestID uuid.UUID, user string) ([]model.ParticipantIdentity, error) {
+	// the web refetches as soon as someone joins, which a lagging replica would miss
+	ctx = database.ReadPrimary(ctx)
+
 	if err := s.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
 		return nil, err
 	}

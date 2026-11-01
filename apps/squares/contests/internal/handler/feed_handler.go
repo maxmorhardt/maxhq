@@ -102,15 +102,24 @@ func parseFeedFilter(c *gin.Context) (*model.ContestFeedFilter, error) {
 
 func InvalidateFeeds(feedService service.FeedService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		contestID, err := uuid.Parse(c.Param("id"))
+		hasContest := err == nil
+
+		// a removed player is no longer a member once the write is done
+		var members []string
+		if hasContest && c.Param("userId") != "" {
+			members = feedService.Members(ctx, contestID)
+		}
+
 		c.Next()
 
 		if c.Writer.Status() >= http.StatusBadRequest {
 			return
 		}
 
-		ctx := c.Request.Context()
-		feedService.Invalidate(ctx, c.GetString(api.UserKey), c.Param("userId"))
-		if contestID, err := uuid.Parse(c.Param("id")); err == nil {
+		feedService.Invalidate(ctx, append(members, c.GetString(api.UserKey))...)
+		if hasContest && members == nil {
 			feedService.InvalidateContest(ctx, contestID)
 		}
 	}

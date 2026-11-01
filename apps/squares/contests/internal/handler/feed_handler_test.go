@@ -83,23 +83,44 @@ func TestGetFeed_ServiceError(t *testing.T) {
 
 func invalidationRouter(svc *mocks.FeedService, status int) *gin.Engine {
 	r := gin.New()
-	r.POST("/contests/:id/participants/:userId", authenticatedMiddleware("owner"), InvalidateFeeds(svc), func(c *gin.Context) {
-		c.Status(status)
-	})
+	write := func(c *gin.Context) { c.Status(status) }
+	r.POST("/contests/:id", authenticatedMiddleware("owner"), InvalidateFeeds(svc), write)
+	r.DELETE("/contests/:id/participants/:userId", authenticatedMiddleware("owner"), InvalidateFeeds(svc), write)
 	return r
 }
 
 func TestInvalidateFeeds_AfterSuccessfulWrite(t *testing.T) {
 	contestID := uuid.New()
 	svc := mocks.NewFeedService(t)
-	svc.EXPECT().Invalidate(mock.Anything, "owner", "target").Once()
+	svc.EXPECT().Invalidate(mock.Anything, "owner").Once()
 	svc.EXPECT().InvalidateContest(mock.Anything, contestID).Once()
 
-	req, _ := http.NewRequest(http.MethodPost, "/contests/"+contestID.String()+"/participants/target", http.NoBody)
+	req, _ := http.NewRequest(http.MethodPost, "/contests/"+contestID.String(), http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusOK), req)
 }
 
+func TestInvalidateFeeds_RemovalReachesTheRemovedPlayer(t *testing.T) {
+	contestID := uuid.New()
+	svc := mocks.NewFeedService(t)
+	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"owner", "target@example.com"}).Once()
+	svc.EXPECT().Invalidate(mock.Anything, "owner", "target@example.com", "owner").Once()
+
+	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
+	doRequest(invalidationRouter(svc, http.StatusNoContent), req)
+}
+
+func TestInvalidateFeeds_RemovalFallsBackWhenMembersFail(t *testing.T) {
+	contestID := uuid.New()
+	svc := mocks.NewFeedService(t)
+	svc.EXPECT().Members(mock.Anything, contestID).Return(nil).Once()
+	svc.EXPECT().Invalidate(mock.Anything, "owner").Once()
+	svc.EXPECT().InvalidateContest(mock.Anything, contestID).Once()
+
+	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
+	doRequest(invalidationRouter(svc, http.StatusNoContent), req)
+}
+
 func TestInvalidateFeeds_SkipsFailedWrite(t *testing.T) {
-	req, _ := http.NewRequest(http.MethodPost, "/contests/"+uuid.NewString()+"/participants/target", http.NoBody)
+	req, _ := http.NewRequest(http.MethodPost, "/contests/"+uuid.NewString(), http.NoBody)
 	doRequest(invalidationRouter(mocks.NewFeedService(t), http.StatusConflict), req)
 }

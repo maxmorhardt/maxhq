@@ -94,3 +94,7 @@ func TestFeed_InvalidateContestToleratesLookupFailure(t *testing.T) {
 
 	service.NewFeedService(repo, newMemCache()).InvalidateContest(context.Background(), uuid.New())
 }
+
+func TestFeed_MembersSkipsTheLookupWithoutACache(t *testing.T) {
+	assert.Nil(t, service.NewFeedService(mocks.NewFeedRepository(t), nil).Members(context.Background(), uuid.New()))
+}

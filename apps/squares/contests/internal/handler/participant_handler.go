@@ -36,7 +36,6 @@ func NewParticipantHandler(participantService service.ParticipantService) Partic
 // @Success 200 {array} model.ParticipantIdentity
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
-// @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests/{id}/roster [get]
@@ -51,8 +50,6 @@ func (h *participantHandler) GetRoster(c *gin.Context) {
 	roster, err := h.participantService.GetRoster(c.Request.Context(), contestID, c.GetString(api.UserKey))
 	if err != nil {
 		switch {
-		case errors.Is(err, errs.ErrContestNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:

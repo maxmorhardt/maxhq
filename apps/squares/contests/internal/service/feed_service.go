@@ -22,6 +22,7 @@ const (
 
 type FeedService interface {
 	List(ctx context.Context, user string, f *model.ContestFeedFilter) (*model.ContestFeedResponse, error)
+	Members(ctx context.Context, contestID uuid.UUID) []string
 	Invalidate(ctx context.Context, users ...string)
 	InvalidateContest(ctx context.Context, contestID uuid.UUID)
 }
@@ -82,17 +83,21 @@ func (s *feedService) Invalidate(ctx context.Context, users ...string) {
 	}
 }
 
-func (s *feedService) InvalidateContest(ctx context.Context, contestID uuid.UUID) {
+func (s *feedService) Members(ctx context.Context, contestID uuid.UUID) []string {
 	if s.cache == nil {
-		return
+		return nil
 	}
 
 	members, err := s.repo.Members(ctx, contestID)
 	if err != nil {
 		logging.FromContext(ctx).Warn("failed to load contest members for feed invalidation", "contest_id", contestID, "error", err)
-		return
+		return nil
 	}
-	s.Invalidate(ctx, members...)
+	return members
+}
+
+func (s *feedService) InvalidateContest(ctx context.Context, contestID uuid.UUID) {
+	s.Invalidate(ctx, s.Members(ctx, contestID)...)
 }
 
 func (s *feedService) cacheKey(ctx context.Context, user string, f *model.ContestFeedFilter) (string, error) {
