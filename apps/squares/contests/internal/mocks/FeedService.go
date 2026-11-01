@@ -166,6 +166,55 @@ func (_c *FeedService_List_Call) RunAndReturn(run func(context.Context, string, 
 	return _c
 }
 
+// Members provides a mock function with given fields: ctx, contestID
+func (_m *FeedService) Members(ctx context.Context, contestID uuid.UUID) []string {
+	ret := _m.Called(ctx, contestID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Members")
+	}
+
+	var r0 []string
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []string); ok {
+		r0 = rf(ctx, contestID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	return r0
+}
+
+// FeedService_Members_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Members'
+type FeedService_Members_Call struct {
+	*mock.Call
+}
+
+// Members is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+func (_e *FeedService_Expecter) Members(ctx interface{}, contestID interface{}) *FeedService_Members_Call {
+	return &FeedService_Members_Call{Call: _e.mock.On("Members", ctx, contestID)}
+}
+
+func (_c *FeedService_Members_Call) Run(run func(ctx context.Context, contestID uuid.UUID)) *FeedService_Members_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *FeedService_Members_Call) Return(_a0 []string) *FeedService_Members_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *FeedService_Members_Call) RunAndReturn(run func(context.Context, uuid.UUID) []string) *FeedService_Members_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewFeedService creates a new instance of FeedService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewFeedService(t interface {

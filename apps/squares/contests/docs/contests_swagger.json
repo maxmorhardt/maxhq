@@ -636,12 +636,6 @@
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {

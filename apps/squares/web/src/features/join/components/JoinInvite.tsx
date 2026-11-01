@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { errorMessage, errorStatus } from '../../../api/errors';
 import LoadingScreen from '../../../components/feedback/LoadingScreen';
 import { usePreviewInviteQuery, useRedeemInviteMutation } from '../../contests/api';
+import { trackConversion } from '../../../utils/googleAds';
 import { useToast } from '../../toast/useToast';
 import JoinError from './JoinError';
 
@@ -27,6 +28,7 @@ export default function JoinInvite({ token }: Props) {
     redeemInvite(token)
       .unwrap()
       .then((participant) => {
+        trackConversion('joinedContest');
         showToast('Successfully joined contest!', 'success');
         navigate(`/contests/${participant.contestId}`, { replace: true });
       })

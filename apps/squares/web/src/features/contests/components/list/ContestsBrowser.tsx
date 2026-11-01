@@ -19,6 +19,7 @@ import { useDebouncedValue } from '../../../../hooks/useDebouncedValue';
 import { useInfiniteScroll } from '../../../../hooks/useInfiniteScroll';
 import type { FeedRole, FeedStatus } from '../../../../types/contest';
 import { fonts } from '../../../../app/theme';
+import { useUserId } from '../../../profile/useUserId';
 import { useGetContestFeedInfiniteQuery } from '../../api';
 import ContestsTable from './ContestsTable';
 import ContestsTableSkeleton from './ContestsTableSkeleton';
@@ -92,6 +93,7 @@ export default function ContestsBrowser() {
   const [status, setStatus] = useState<StatusFilter>('all');
   const [searchInput, setSearchInput] = useState('');
   const search = useDebouncedValue(searchInput.trim(), SEARCH_DEBOUNCE_MS);
+  const userId = useUserId();
 
   const { data, error, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useGetContestFeedInfiniteQuery({
@@ -192,6 +194,7 @@ export default function ContestsBrowser() {
         >
           <ContestsTable
             contests={contests}
+            userId={userId}
             emptyTitle={filtered ? 'No contests match these filters' : undefined}
             footer={
               <Box ref={sentinelRef} sx={{ display: 'flex', justifyContent: 'center' }}>

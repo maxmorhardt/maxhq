@@ -10,6 +10,7 @@ import { useGetGameQuery } from '../../games/api';
 import { useGameStream } from '../../games/useGameStream';
 import { isMe } from '../../profile/useUserId';
 import { useToast } from '../../toast/useToast';
+import { useGetRosterQuery } from '../api';
 import type { ContestEvent } from '../live/events';
 import {
   selectLiveActivity,
@@ -82,6 +83,23 @@ export default function LiveContest({ contestId }: Props) {
   const { data: game } = useGetGameQuery(gameId ?? skipToken);
   useGameStream(game && !isGameOver(game) ? game.id : undefined);
 
+  // currentData: a skipped query keeps its old data but can't be refetched
+  const isOwner = !!contest && isMe(viewerId, contest.owner);
+  const { currentData: roster, refetch: refetchRoster } = useGetRosterQuery(
+    isOwner ? contestId : skipToken
+  );
+  const missing = roster
+    ? participants
+        .filter((p) => !roster.some((r) => r.userId === p.userId))
+        .map((p) => p.userId)
+        .join(',')
+    : '';
+  useEffect(() => {
+    if (missing) {
+      void refetchRoster();
+    }
+  }, [missing, refetchRoster]);
+
   useEffect(() => {
     if (!winnerFlash) {
       return;
@@ -109,7 +127,7 @@ export default function LiveContest({ contestId }: Props) {
         game={game}
         participants={participants}
         activity={activity}
-        viewer={getContestViewer(viewerId, contest, participants)}
+        viewer={getContestViewer(viewerId, contest, participants, roster)}
         status={status}
         winnerFlash={winnerFlash}
         onStale={resync}

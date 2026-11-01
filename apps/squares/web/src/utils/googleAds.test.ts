@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { initGoogleAds } from './googleAds';
+import { initGoogleAds, trackConversion } from './googleAds';
 
 const tagScript = () =>
   document.head.querySelector<HTMLScriptElement>('script[src*="googletagmanager.com"]');
@@ -55,5 +55,21 @@ describe('googleAds', () => {
         page_title: 'Squares',
       },
     ]);
+  });
+
+  it('reports a conversion with its label once the tag is loaded', () => {
+    initGoogleAds('squares.maxhq.io');
+    trackConversion('contestCreated');
+
+    expect(calls().at(-1)).toEqual([
+      'event',
+      'conversion',
+      { send_to: 'AW-18549939904/nVsVCNjokbAdEMC9po1F' },
+    ]);
+  });
+
+  it('reports nothing where the tag never loaded', () => {
+    expect(() => trackConversion('signedUp')).not.toThrow();
+    expect(window.dataLayer).toBeUndefined();
   });
 });

@@ -122,6 +122,9 @@ func (s *participantService) GetParticipants(ctx context.Context, contestID uuid
 }
 
 func (s *participantService) GetRoster(ctx context.Context, contestID uuid.UUID, user string) ([]model.ParticipantIdentity, error) {
+	// the web refetches as soon as someone joins, which a lagging replica would miss
+	ctx = database.ReadPrimary(ctx)
+
 	if err := s.Authorize(ctx, contestID, user, ActionManageInvites); err != nil {
 		return nil, err
 	}
@@ -316,7 +319,8 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 }
 
 func (s *participantService) resolveTarget(ctx context.Context, contestID uuid.UUID, target string) (string, error) {
-	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)
+	// the owner can act on a player the moment they join, before a replica has them
+	participants, err := s.participantRepo.GetAllByContestID(database.ReadPrimary(ctx), contestID)
 	if err != nil {
 		logging.FromContext(ctx).Error("failed to get participants to resolve a pseudonym", "contest_id", contestID, "error", err)
 		return "", errs.ErrDatabaseUnavailable

@@ -1,18 +1,15 @@
 import { errorMessage } from '../../../api/errors';
 import ConfirmDialog from '../../../components/feedback/ConfirmDialog';
-import { useUserId } from '../../profile/useUserId';
 import { useRemoveParticipantMutation } from '../api';
 
 interface Props {
   contest: { id: string; name: string } | null;
+  userId: string | undefined;
   onClose: () => void;
   onLeft?: () => void;
-  viewerId?: string;
 }
 
-export default function LeaveContestDialog({ contest, onClose, onLeft, viewerId }: Props) {
-  const myUserId = useUserId();
-  const userId = viewerId ?? myUserId;
+export default function LeaveContestDialog({ contest, userId, onClose, onLeft }: Props) {
   const [removeParticipant, { isLoading, error, reset }] = useRemoveParticipantMutation();
 
   const handleClose = () => {

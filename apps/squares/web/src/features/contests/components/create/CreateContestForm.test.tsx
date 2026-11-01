@@ -14,6 +14,8 @@ vi.mock('../../../games/api', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   ...games,
 }));
+const ads = vi.hoisted(() => ({ trackConversion: vi.fn() }));
+vi.mock('../../../../utils/googleAds', () => ads);
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async () => ({
   ...(await vi.importActual<typeof import('react-router')>('react-router')),
@@ -95,6 +97,7 @@ describe('CreateContestForm', () => {
       maxSquares: 10,
       gameId: 'g-1',
     });
+    expect(ads.trackConversion).toHaveBeenCalledWith('contestCreated');
     expect(nameField()).toHaveValue(' Bowl ');
   });
 

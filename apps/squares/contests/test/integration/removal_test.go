@@ -111,6 +111,31 @@ func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) 
 	}
 }
 
+func TestRemoval_KickedPlayersListDropsTheContest(t *testing.T) {
+	player := "kicked-feed@squares.test"
+	game := seedGame(t)
+	contestID, _ := fullBoardWith(t, &game, player)
+
+	inFeed := func() bool {
+		resp := call(t, testkit.As(player), http.MethodGet, "/contests", nil)
+		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+		var feed model.ContestFeedResponse
+		resp.Decode(t, &feed)
+		for _, c := range feed.Contests {
+			if c.ID == contestID {
+				return true
+			}
+		}
+		return false
+	}
+	require.True(t, inFeed(), "the player's list is now cached with the contest")
+
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
+	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
+
+	assert.False(t, inFeed(), "the kick clears the removed player's cached list")
+}
+
 func TestRemoval_KickAfterKickoffGhostsTheirSquares(t *testing.T) {
 	player := "kicked-late@squares.test"
 	game := seedGame(t)

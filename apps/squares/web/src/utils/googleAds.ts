@@ -3,6 +3,14 @@ import { redactSecrets } from './faro';
 
 const TAG_ID = 'AW-18549939904';
 
+const CONVERSION_LABELS = {
+  contestCreated: 'nVsVCNjokbAdEMC9po1F',
+  joinedContest: 'iYzxCNvokbAdEMC9po1F',
+  signedUp: '1BJvCNiQlLAdEMC9po1F',
+} as const;
+
+export type Conversion = keyof typeof CONVERSION_LABELS;
+
 // the EEA, the UK, and Switzerland, where ad cookies need consent we don't ask for
 const CONSENT_REGIONS = [
   'AT',
@@ -76,4 +84,9 @@ export function initGoogleAds(hostname?: string): void {
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${TAG_ID}`;
   document.head.appendChild(script);
+}
+
+// a no-op outside production, where the tag never loads
+export function trackConversion(conversion: Conversion): void {
+  window.gtag?.('event', 'conversion', { send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}` });
 }

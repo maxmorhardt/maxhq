@@ -6,17 +6,20 @@ import ContestsBrowser, { ContestsBrowserSkeleton } from './ContestsBrowser';
 
 const api = vi.hoisted(() => ({ useGetContestFeedInfiniteQuery: vi.fn() }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
+vi.mock('../../../profile/useUserId', () => ({ useUserId: () => 'u_me' }));
 vi.mock('./ContestsTable', () => ({
   default: ({
     contests,
+    userId,
     emptyTitle,
     footer,
   }: {
     contests: ContestSummary[];
+    userId?: string;
     emptyTitle?: string;
     footer: unknown;
   }) => (
-    <div data-testid="table">
+    <div data-testid="table" data-user-id={userId}>
       {contests.map((c) => c.name).join(',') || emptyTitle || 'empty'}
       {footer as never}
     </div>
@@ -54,6 +57,7 @@ describe('ContestsBrowser', () => {
   it('shows every page of contests', () => {
     renderWithProviders(<ContestsBrowser />);
     expect(screen.getByTestId('table')).toHaveTextContent('Alpha,Beta');
+    expect(screen.getByTestId('table')).toHaveAttribute('data-user-id', 'u_me');
     expect(screen.getByRole('link', { name: 'Create Contest' })).toHaveAttribute(
       'href',
       '/contests/create'

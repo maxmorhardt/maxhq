@@ -9,13 +9,13 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
 import ConfirmDialog from '../../../../components/feedback/ConfirmDialog';
 import type { Contest, Participant, ParticipantRole } from '../../../../types/contest';
 import { isTerminalStatus } from '../../../../utils/contestStatus';
 import { useToast } from '../../../toast/useToast';
-import { useGetRosterQuery, useRemoveParticipantMutation } from '../../api';
+import { useRemoveParticipantMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
 import LeaveContestDialog from '../LeaveContestDialog';
 import EditParticipantDialog from './EditParticipantDialog';
@@ -53,19 +53,6 @@ export default function ParticipantsManager({
   // owners edit only before kickoff, but can remove anyone until the contest is final
   const isOpen = !isTerminalStatus(contest.status);
   const canManage = viewer.isOwner && isOpen;
-
-  const roster = useGetRosterQuery(contest.id, {
-    skip: !open || !viewer.isOwner,
-    refetchOnMountOrArgChange: true,
-  });
-  const fullNames = new Map(roster.data?.map((p) => [p.userId, p.fullName]));
-  const someoneNew = !!roster.data && participants.some((p) => !fullNames.has(p.userId));
-  const { refetch } = roster;
-  useEffect(() => {
-    if (someoneNew) {
-      void refetch();
-    }
-  }, [someoneNew, refetch]);
 
   const closeRemove = () => {
     removal.reset();
@@ -140,13 +127,13 @@ export default function ParticipantsManager({
                       }}
                     />
                   </Box>
-                  {fullNames.get(participant.userId) && (
+                  {viewer.fullName(participant.userId) && (
                     <Typography
                       variant="caption"
                       noWrap
                       sx={{ display: 'block', color: 'rgba(255,255,255,0.5)' }}
                     >
-                      {fullNames.get(participant.userId)}
+                      {viewer.fullName(participant.userId)}
                     </Typography>
                   )}
                   {/* viewers never hold squares, so there is no count to show */}
@@ -238,7 +225,7 @@ export default function ParticipantsManager({
         contest={leaving ? contest : null}
         onClose={() => setLeaving(false)}
         onLeft={onClose}
-        viewerId={viewer.viewerId}
+        userId={viewer.viewerId}
       />
     </>
   );

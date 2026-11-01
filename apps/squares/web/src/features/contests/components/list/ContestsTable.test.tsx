@@ -11,8 +11,6 @@ import { getStatusLabel } from '../../../../utils/contestStatus';
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 
-const me = vi.hoisted(() => ({ userId: 'u_alice' as string | undefined }));
-vi.mock('../../../profile/useUserId', () => ({ useUserId: () => me.userId }));
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, useNavigate: () => mockNavigate };
@@ -61,7 +59,7 @@ function renderTable(props: Partial<ComponentProps<typeof ContestsTable>> = {}) 
     <ThemeProvider theme={theme}>
       <Provider store={store}>
         <MemoryRouter>
-          <ContestsTable contests={[contest]} {...props} />
+          <ContestsTable contests={[contest]} userId="u_alice" {...props} />
         </MemoryRouter>
       </Provider>
     </ThemeProvider>
@@ -71,7 +69,6 @@ function renderTable(props: Partial<ComponentProps<typeof ContestsTable>> = {}) 
 describe('ContestsTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    me.userId = 'u_alice';
   });
 
   it('shows the empty state', () => {
@@ -134,8 +131,7 @@ describe('ContestsTable', () => {
   });
 
   it('hides leave until the user id is known', () => {
-    me.userId = undefined;
-    renderTable({ contests: [joined] });
+    renderTable({ contests: [joined], userId: undefined });
     expect(screen.queryByRole('button', { name: /leave contest/i })).not.toBeInTheDocument();
   });
 

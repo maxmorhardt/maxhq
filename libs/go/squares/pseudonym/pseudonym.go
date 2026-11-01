@@ -60,7 +60,11 @@ func Name(displayName string) string {
 	}
 
 	parts := strings.FieldsFunc(full, func(r rune) bool { return unicode.IsSpace(r) || r == ',' })
+	title := ""
 	for len(parts) > 1 && titles[word(parts[0])] {
+		if title == "" {
+			title = capitalize(parts[0])
+		}
 		parts = parts[1:]
 	}
 	if len(parts) == 0 {
@@ -68,16 +72,31 @@ func Name(displayName string) string {
 	}
 	first, rest := parts[0], slices.DeleteFunc(parts[1:], isSuffix)
 	if len(rest) == 0 {
+		// a title before a single name means it's the surname
+		if i := initial(first); title != "" && i != "" {
+			return title + " " + i
+		}
 		return first
 	}
 
-	surname := rest[len(rest)-1]
-	i := strings.IndexFunc(surname, unicode.IsLetter)
-	if i < 0 {
-		return first
+	if i := initial(rest[len(rest)-1]); i != "" {
+		return first + " " + i
 	}
-	initial, _ := utf8.DecodeRuneInString(surname[i:])
-	return first + " " + string(unicode.ToUpper(initial)) + "."
+	return first
+}
+
+func capitalize(s string) string {
+	r, size := utf8.DecodeRuneInString(s)
+	return string(unicode.ToUpper(r)) + s[size:]
+}
+
+func initial(name string) string {
+	i := strings.IndexFunc(name, unicode.IsLetter)
+	if i < 0 {
+		return ""
+	}
+	r, _ := utf8.DecodeRuneInString(name[i:])
+	return string(unicode.ToUpper(r)) + "."
 }
 
 var (

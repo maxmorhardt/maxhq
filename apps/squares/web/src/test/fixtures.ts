@@ -83,10 +83,11 @@ export function makeViewer({
   viewerId = 'u_player',
   ...overrides
 }: Partial<ContestViewer> = {}): ContestViewer {
-  const { isMe } = getContestViewer(viewerId, makeContest(), []);
+  const { isMe, fullName } = getContestViewer(viewerId, makeContest(), []);
   return {
     viewerId,
     isMe,
+    fullName,
     participant: makeParticipant(),
     isOwner: false,
     isParticipant: true,
