@@ -8,7 +8,7 @@ describe('PrivacyPolicyPage', () => {
     renderWithProviders(<PrivacyPolicyPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toBeInTheDocument();
-    expect(screen.getByText('Last updated: July 12, 2026')).toBeInTheDocument();
+    expect(screen.getByText('Last updated: November 1, 2026')).toBeInTheDocument();
   });
 
   it('renders every numbered section', () => {
