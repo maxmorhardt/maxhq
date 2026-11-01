@@ -259,11 +259,15 @@ func TestRequiresAccessCheck(t *testing.T) {
 
 	for _, tt := range tests {
 		event := events.ContestEvent{Type: tt.eventType, Data: json.RawMessage(tt.data)}
-		assert.Equal(t, tt.want, service.RequiresAccessCheck(&event, "u_viewer"), tt.name)
+		assert.Equal(t, tt.want, service.RequiresAccessCheck(&event, true, "u_viewer"), tt.name)
 	}
 
 	removal := events.ContestEvent{Type: events.ParticipantRemovedType, Data: json.RawMessage(`{"userId":"u_other"}`)}
-	assert.True(t, service.RequiresAccessCheck(&removal, ""), "a viewer contests didn't name is checked on every removal")
+	assert.True(t, service.RequiresAccessCheck(&removal, true, ""), "a viewer contests didn't name is checked on every removal")
+	assert.False(t, service.RequiresAccessCheck(&removal, false, ""), "a signed-out viewer is never checked on a removal")
+
+	private := events.ContestEvent{Type: events.ContestUpdatedType, Data: json.RawMessage(`{"visibility":"private"}`)}
+	assert.True(t, service.RequiresAccessCheck(&private, false, ""), "a signed-out viewer still loses a contest made private")
 }
 
 var watched = uuid.MustParse("7d1b0b2e-5a7c-4c2f-9d63-2f1e8f3a9b10")

@@ -255,7 +255,7 @@ func isFinished(contest json.RawMessage) bool {
 	return json.Unmarshal(contest, &fields) == nil && fields.Status == contestFinished
 }
 
-func RequiresAccessCheck(event *events.ContestEvent, viewerID string) bool {
+func RequiresAccessCheck(event *events.ContestEvent, signedIn bool, viewerID string) bool {
 	if event.Type != events.ContestUpdatedType && event.Type != events.ParticipantRemovedType {
 		return false
 	}
@@ -269,6 +269,6 @@ func RequiresAccessCheck(event *events.ContestEvent, viewerID string) bool {
 	if event.Type == events.ContestUpdatedType {
 		return fields.Visibility == events.ContestVisibilityPrivate
 	}
-	// an unknown viewer is checked on every removal rather than never
-	return viewerID == "" || fields.UserID == viewerID
+	// a signed-out viewer can't be removed; a signed-in one contests didn't name is checked on every removal
+	return signedIn && (viewerID == "" || fields.UserID == viewerID)
 }
