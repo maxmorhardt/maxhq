@@ -74,14 +74,14 @@ func TestAuthenticate_AcceptsGatewayIdentity(t *testing.T) {
 	assert.Equal(t, 1, revocations.calls)
 }
 
-func TestAuthenticate_DefaultsNameToEmail(t *testing.T) {
+func TestAuthenticate_LeavesMissingNameEmpty(t *testing.T) {
 	r, _ := buildRouter(Authenticate(nil))
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, gatewayRequest(func(h http.Header) { h.Del(HeaderAuthName) }))
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "user@example.com|user@example.com", w.Body.String())
+	assert.Equal(t, "user@example.com|", w.Body.String())
 }
 
 func TestAuthenticate_RejectsIncompleteIdentity(t *testing.T) {

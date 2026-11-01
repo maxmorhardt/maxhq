@@ -91,15 +91,10 @@ func claimsFromHeaders(c *gin.Context) (*api.Claims, api.AuthFailureReason) {
 		return nil, api.AuthFailureExpired
 	}
 
-	name := c.GetHeader(HeaderAuthName)
-	if name == "" {
-		name = email
-	}
-
 	return &api.Claims{
 		Email:         email,
 		EmailVerified: true,
-		Name:          name,
+		Name:          c.GetHeader(HeaderAuthName),
 		IssuedAt:      issuedAt,
 		Expire:        expiresAt,
 	}, ""

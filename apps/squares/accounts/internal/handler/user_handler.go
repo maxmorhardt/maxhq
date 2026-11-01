@@ -43,8 +43,8 @@ func NewUserHandler(userService service.UserService) UserHandler {
 func (h *userHandler) GetMe(c *gin.Context) {
 	user := c.GetString(api.UserKey)
 
-	defaultDisplayName := user
-	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil && claims.Name != "" {
+	defaultDisplayName := ""
+	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil {
 		defaultDisplayName = claims.Name
 	}
 
