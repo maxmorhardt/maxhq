@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
+import { MemoryRouter } from 'react-router';
 import { mockAuth } from '../../test/auth';
 import { useGetMyProfileQuery } from './api';
 import { isMe, useUserId } from './useUserId';
@@ -19,12 +21,19 @@ describe('isMe', () => {
   });
 });
 
+const at =
+  (path: string) =>
+  ({ children }: { children: ReactNode }) =>
+    createElement(MemoryRouter, { initialEntries: [path] }, children);
+
 describe('useUserId', () => {
   it('reads the user id from the profile', () => {
     mockAuth({ email: 'pat@x.com' });
     vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: { userId: 'u_pat' } } as never);
 
-    expect(renderHook(() => useUserId()).result.current).toBe('u_pat');
+    expect(renderHook(() => useUserId(), { wrapper: at('/contests') }).result.current).toBe(
+      'u_pat'
+    );
     expect(useGetMyProfileQuery).toHaveBeenCalledWith(undefined, { skip: false });
   });
 
@@ -32,7 +41,15 @@ describe('useUserId', () => {
     mockAuth();
     vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: undefined } as never);
 
-    expect(renderHook(() => useUserId()).result.current).toBeUndefined();
+    expect(renderHook(() => useUserId(), { wrapper: at('/') }).result.current).toBeUndefined();
     expect(useGetMyProfileQuery).toHaveBeenCalledWith(undefined, { skip: true });
+  });
+
+  it('waits for the sign-in callback to lift a deleted account block', () => {
+    mockAuth({ email: 'pat@x.com' });
+    vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: undefined } as never);
+
+    renderHook(() => useUserId(), { wrapper: at('/auth/callback?code=c&state=s') });
+    expect(useGetMyProfileQuery).toHaveBeenLastCalledWith(undefined, { skip: true });
   });
 });

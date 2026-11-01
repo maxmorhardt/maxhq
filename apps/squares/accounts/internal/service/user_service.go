@@ -22,6 +22,9 @@ import (
 // matches how long a deletion blocks the account in redis: longer than any refresh token lives
 const revocationWindow = 91 * 24 * time.Hour
 
+// long enough that a retried or second-device first visit still reports the sign-up; the web dedupes it
+const signUpWindow = 30 * time.Minute
+
 type UserService interface {
 	GetProfile(ctx context.Context, email, defaultDisplayName string) (*model.User, bool, error)
 	UpdateProfile(ctx context.Context, email, initials string) (*model.User, error)
@@ -61,7 +64,7 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err == nil {
 		log.Info("retrieved user profile")
-		return user, false, nil
+		return user, isSignUp(user), nil
 	}
 	if !errors.Is(err, database.ErrNotFound) {
 		log.Error("failed to get user", "error", err)
@@ -84,7 +87,7 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 	err = s.tx.Do(ctx, func(ctx context.Context) error {
 		var createErr error
 		user, created, createErr = s.repo.CreateIfMissing(ctx, newUser)
-		if createErr != nil {
+		if createErr != nil || !created {
 			return createErr
 		}
 
@@ -95,8 +98,17 @@ func (s *userService) GetProfile(ctx context.Context, email, defaultDisplayName 
 		return nil, false, errs.ErrDatabaseUnavailable
 	}
 
-	log.Info("created user profile", "created", created)
-	return user, created, nil
+	if created {
+		log.Info("created user profile")
+	} else {
+		log.Info("retrieved user profile a concurrent visit created")
+	}
+	return user, isSignUp(user), nil
+}
+
+// a profile backdated to earlier contest activity belongs to a returning player
+func isSignUp(user *model.User) bool {
+	return time.Since(user.CreatedAt) < signUpWindow
 }
 
 func (s *userService) UpdateProfile(ctx context.Context, email, defaultInitials string) (*model.User, error) {

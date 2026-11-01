@@ -186,6 +186,48 @@ describe('LiveContest', () => {
     expect(refetch).toHaveBeenCalledTimes(2);
   });
 
+  it('retries a failed roster refetch once', () => {
+    const refetch = vi.fn();
+    const stale = [{ userId: 'u_player', fullName: 'Owen Owner' }];
+    contestsApi.useGetRosterQuery.mockReturnValue({ currentData: stale, refetch });
+    const { snapshot } = renderLive();
+    const owned = makeContest({ owner: 'u_player' });
+    const players = [
+      makeParticipant({ userId: 'u_player', role: 'owner' }),
+      makeParticipant({ id: 'p-2', userId: 'u_pat' }),
+    ];
+
+    snapshot(owned, players);
+    expect(refetch).toHaveBeenCalledOnce();
+
+    contestsApi.useGetRosterQuery.mockReturnValue({ currentData: stale, isError: true, refetch });
+    snapshot(owned, players);
+    snapshot(owned, players);
+    expect(refetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('refetches for a player who leaves and joins again', () => {
+    const refetch = vi.fn();
+    const ownerOnly = [{ userId: 'u_player', fullName: 'Owen Owner' }];
+    const withPat = [...ownerOnly, { userId: 'u_pat', fullName: 'Pat Player' }];
+    contestsApi.useGetRosterQuery.mockReturnValue({ currentData: ownerOnly, refetch });
+    const { snapshot } = renderLive();
+    const owned = makeContest({ owner: 'u_player' });
+    const owner = makeParticipant({ userId: 'u_player', role: 'owner' });
+    const pat = makeParticipant({ id: 'p-2', userId: 'u_pat' });
+
+    snapshot(owned, [owner, pat]);
+    expect(refetch).toHaveBeenCalledOnce();
+
+    contestsApi.useGetRosterQuery.mockReturnValue({ currentData: withPat, refetch });
+    snapshot(owned, [owner, pat]);
+    snapshot(owned, [owner]);
+    contestsApi.useGetRosterQuery.mockReturnValue({ currentData: ownerOnly, refetch });
+    snapshot(owned, [owner]);
+    snapshot(owned, [owner, pat]);
+    expect(refetch).toHaveBeenCalledTimes(2);
+  });
+
   it('never refetches a skipped roster, which still holds its old data', () => {
     const refetch = vi.fn();
     contestsApi.useGetRosterQuery.mockReturnValue({

@@ -87,10 +87,27 @@ export function initGoogleAds(hostname?: string): void {
 }
 
 // a no-op outside production, where the tag never loads
-export function trackConversion(conversion: Conversion): void {
+export function trackConversion(conversion: Conversion, transactionId?: string): void {
   try {
-    window.gtag?.('event', 'conversion', { send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}` });
+    window.gtag?.('event', 'conversion', {
+      send_to: `${TAG_ID}/${CONVERSION_LABELS[conversion]}`,
+      ...(transactionId && { transaction_id: transactionId }),
+    });
   } catch {
     // a broken or stubbed tag must not undo the action it reports
   }
+}
+
+// once per id on this device; google drops a repeated transaction id from anywhere else
+export function trackConversionOnce(conversion: Conversion, id: string): void {
+  const key = `conversion:${conversion}:${id}`;
+  try {
+    if (localStorage.getItem(key)) {
+      return;
+    }
+    localStorage.setItem(key, '1');
+  } catch {
+    // storage is blocked, so only the transaction id dedupes
+  }
+  trackConversion(conversion, `${conversion}:${id}`);
 }

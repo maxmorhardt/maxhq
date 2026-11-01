@@ -1,6 +1,6 @@
 import { baseApi } from '../../api/baseApi';
 import type { UpdateUserProfileRequest, UserProfile, UserStats } from '../../types/user';
-import { trackConversion } from '../../utils/googleAds';
+import { trackConversionOnce } from '../../utils/googleAds';
 
 export const profileApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -11,7 +11,7 @@ export const profileApi = baseApi.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           if (data.isNew) {
-            trackConversion('signedUp');
+            trackConversionOnce('signedUp', data.userId);
           }
         } catch {
           // the query reports its own error

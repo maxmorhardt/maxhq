@@ -55,7 +55,7 @@ func TestAccounts_FirstSignInCreatesTheProfileAndPublishesIt(t *testing.T) {
 	require.Equal(t, http.StatusOK, again.Status)
 	var second model.UserProfileResponse
 	again.Decode(t, &second)
-	assert.False(t, second.IsNew, "later visits are not sign-ups")
+	assert.True(t, second.IsNew, "a retried first visit still reports the sign-up")
 	time.Sleep(500 * time.Millisecond)
 	assert.Len(t, userEvents(t, user), 1)
 }

@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { initGoogleAds, trackConversion } from './googleAds';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { initGoogleAds, trackConversion, trackConversionOnce } from './googleAds';
 
 const tagScript = () =>
   document.head.querySelector<HTMLScriptElement>('script[src*="googletagmanager.com"]');
@@ -11,6 +11,7 @@ describe('googleAds', () => {
     tagScript()?.remove();
     delete window.dataLayer;
     delete window.gtag;
+    localStorage.clear();
     window.history.replaceState(null, '', '/');
   });
 
@@ -79,5 +80,32 @@ describe('googleAds', () => {
   it('reports nothing where the tag never loaded', () => {
     expect(() => trackConversion('signedUp')).not.toThrow();
     expect(window.dataLayer).toBeUndefined();
+  });
+
+  it('reports a conversion once per id, with a transaction id google dedupes on', () => {
+    initGoogleAds('squares.maxhq.io');
+    trackConversionOnce('signedUp', 'u_pat');
+    trackConversionOnce('signedUp', 'u_pat');
+
+    const conversions = calls().filter(([command]) => command === 'event');
+    expect(conversions).toEqual([
+      [
+        'event',
+        'conversion',
+        { send_to: 'AW-18549939904/1BJvCNiQlLAdEMC9po1F', transaction_id: 'signedUp:u_pat' },
+      ],
+    ]);
+  });
+
+  it('still reports when storage is blocked', () => {
+    initGoogleAds('squares.maxhq.io');
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+
+    trackConversionOnce('signedUp', 'u_pat');
+
+    expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_pat' });
+    getItem.mockRestore();
   });
 });

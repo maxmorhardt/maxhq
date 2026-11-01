@@ -88,6 +88,7 @@ export default function LiveContest({ contestId }: Props) {
   const {
     currentData: roster,
     isFetching: rosterFetching,
+    isError: rosterFailed,
     refetch: refetchRoster,
   } = useGetRosterQuery(isOwner ? contestId : skipToken);
   const missing = roster
@@ -96,15 +97,25 @@ export default function LiveContest({ contestId }: Props) {
         .map((p) => p.userId)
         .join(',')
     : '';
-  // rtk drops a refetch while one is in flight, so wait it out and ask once per missing set
-  const rosterRequestedFor = useRef('');
+  // rtk drops a refetch while one is in flight, so wait it out; ask once per missing set, plus one retry if that fails
+  const rosterRequest = useRef({ missing: '', retried: false });
   useEffect(() => {
-    if (!missing || rosterFetching || rosterRequestedFor.current === missing) {
+    if (!missing) {
+      rosterRequest.current = { missing: '', retried: false };
       return;
     }
-    rosterRequestedFor.current = missing;
+    if (rosterFetching) {
+      return;
+    }
+    if (rosterRequest.current.missing !== missing) {
+      rosterRequest.current = { missing, retried: false };
+    } else if (rosterFailed && !rosterRequest.current.retried) {
+      rosterRequest.current.retried = true;
+    } else {
+      return;
+    }
     void refetchRoster();
-  }, [missing, rosterFetching, refetchRoster]);
+  }, [missing, rosterFetching, rosterFailed, refetchRoster]);
 
   useEffect(() => {
     if (!winnerFlash) {

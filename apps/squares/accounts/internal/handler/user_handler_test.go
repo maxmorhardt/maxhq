@@ -50,7 +50,7 @@ func TestGetMe_Success(t *testing.T) {
 	assert.NotContains(t, w.Body.String(), "isNew")
 }
 
-func TestGetMe_MarksTheResponseThatCreatedTheProfile(t *testing.T) {
+func TestGetMe_MarksASignUp(t *testing.T) {
 	svc, r := newUserRouter(t)
 	svc.EXPECT().GetProfile(mock.Anything, "a@b.com", "Test").
 		Return(&model.User{Email: "a@b.com", DisplayName: "Max"}, true, nil)
