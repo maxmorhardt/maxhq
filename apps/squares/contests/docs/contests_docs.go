@@ -605,7 +605,7 @@ const docTemplatecontests = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Full names for the contest's managers, so they know who joined. Other players only ever see short names.",
+                "description": "Full names for the contest's owner, so they know who joined. Other players only ever see short names.",
                 "produces": [
                     "application/json"
                 ],
@@ -1435,9 +1435,6 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "expiresAt": {
                     "type": "string"
                 },
@@ -1474,7 +1471,7 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "displayName": {
-                    "description": "read from contests.users; clients only ever get the short public form",
+                    "description": "read from contests.users, so other players can be shown a name instead of an email",
                     "type": "string"
                 },
                 "id": {
@@ -1582,13 +1579,9 @@ const docTemplatecontests = `{
                     "type": "string",
                     "example": "Sunday Night Squares"
                 },
-                "owner": {
-                    "type": "string",
-                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
-                },
                 "ownerName": {
                     "type": "string",
-                    "example": "Max Morhardt"
+                    "example": "Max M."
                 },
                 "role": {
                     "allOf": [
@@ -1632,9 +1625,6 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "homeTeam": {
                     "type": "string"
                 },
@@ -1663,9 +1653,6 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "version": {
@@ -1784,9 +1771,6 @@ const docTemplatecontests = `{
                 "maxSquares": {
                     "type": "integer"
                 },
-                "owner": {
-                    "type": "string"
-                },
                 "ownerName": {
                     "type": "string"
                 },
@@ -1830,7 +1814,6 @@ const docTemplatecontests = `{
             "type": "object",
             "properties": {
                 "displayName": {
-                    "description": "as the leaderboard shows it, so the client can find its own row",
                     "type": "string",
                     "example": "Max M."
                 },
@@ -1901,9 +1884,6 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "homeTeamScore": {
                     "type": "integer"
                 },
@@ -1914,9 +1894,6 @@ const docTemplatecontests = `{
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "winner": {
@@ -1978,9 +1955,6 @@ const docTemplatecontests = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -1994,9 +1968,6 @@ const docTemplatecontests = `{
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "value": {

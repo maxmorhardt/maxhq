@@ -64,8 +64,6 @@ definitions:
         type: string
       createdAt:
         type: string
-      createdBy:
-        type: string
       expiresAt:
         type: string
       id:
@@ -90,8 +88,8 @@ definitions:
       createdAt:
         type: string
       displayName:
-        description: read from contests.users; clients only ever get the short public
-          form
+        description: read from contests.users, so other players can be shown a name
+          instead of an email
         type: string
       id:
         type: string
@@ -169,11 +167,8 @@ definitions:
       name:
         example: Sunday Night Squares
         type: string
-      owner:
-        example: u_3q2mL0x9VfTzQk1rB7cW8a
-        type: string
       ownerName:
-        example: Max Morhardt
+        example: Max M.
         type: string
       role:
         allOf:
@@ -199,8 +194,6 @@ definitions:
         type: string
       createdAt:
         type: string
-      createdBy:
-        type: string
       homeTeam:
         type: string
       id:
@@ -220,8 +213,6 @@ definitions:
       status:
         type: string
       updatedAt:
-        type: string
-      updatedBy:
         type: string
       version:
         type: integer
@@ -304,8 +295,6 @@ definitions:
         type: string
       maxSquares:
         type: integer
-      owner:
-        type: string
       ownerName:
         type: string
       role:
@@ -336,7 +325,6 @@ definitions:
   model.LeaderboardRankResponse:
     properties:
       displayName:
-        description: as the leaderboard shows it, so the client can find its own row
         example: Max M.
         type: string
       quarterWins:
@@ -386,8 +374,6 @@ definitions:
         type: string
       createdAt:
         type: string
-      createdBy:
-        type: string
       homeTeamScore:
         type: integer
       id:
@@ -395,8 +381,6 @@ definitions:
       quarter:
         type: integer
       updatedAt:
-        type: string
-      updatedBy:
         type: string
       winner:
         type: string
@@ -439,8 +423,6 @@ definitions:
         type: string
       createdAt:
         type: string
-      createdBy:
-        type: string
       id:
         type: string
       owner:
@@ -450,8 +432,6 @@ definitions:
       row:
         type: integer
       updatedAt:
-        type: string
-      updatedBy:
         type: string
       value:
         type: string
@@ -893,8 +873,8 @@ paths:
       - participants
   /contests/{id}/roster:
     get:
-      description: Full names for the contest's managers, so they know who joined.
-        Other players only ever see short names.
+      description: Full names for the contest's owner, so they know who joined. Other
+        players only ever see short names.
       parameters:
       - description: Contest ID
         in: path

@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	MaxContestSquares = 100
-	// caps what one account can create, so a script cannot fill the database
+	MaxContestSquares        = 100
 	MaxOpenContestsPerOwner  = 25
 	MaxOpenInvitesPerContest = 25
 )
@@ -41,8 +40,8 @@ type Contest struct {
 	Game      *Game     `json:"-" gorm:"foreignKey:GameID;constraint:OnDelete:SET NULL"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
-	CreatedBy string    `json:"createdBy"`
-	UpdatedBy string    `json:"updatedBy"`
+	CreatedBy string    `json:"-"`
+	UpdatedBy string    `json:"-"`
 }
 
 func (c *Contest) BeforeCreate(tx *gorm.DB) (err error) {

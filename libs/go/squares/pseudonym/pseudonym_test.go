@@ -81,6 +81,12 @@ func TestName(t *testing.T) {
 	}
 }
 
+func TestPublic(t *testing.T) {
+	assert.Equal(t, "Max M.", Public("Max Morhardt"))
+	assert.Equal(t, Unnamed, Public("pat.player@example.com"))
+	assert.Equal(t, Unnamed, Public(""))
+}
+
 func TestFullName(t *testing.T) {
 	assert.Equal(t, "Max Morhardt", FullName("  Max   Morhardt "))
 	assert.Equal(t, "", FullName("pat.player@example.com"))

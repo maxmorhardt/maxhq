@@ -314,7 +314,6 @@ func (s *participantService) RemoveParticipant(ctx context.Context, contestID uu
 	return nil
 }
 
-// clients name players by user id; this finds the email behind it
 func (s *participantService) resolveTarget(ctx context.Context, contestID uuid.UUID, target string) (string, error) {
 	participants, err := s.participantRepo.GetAllByContestID(ctx, contestID)
 	if err != nil {

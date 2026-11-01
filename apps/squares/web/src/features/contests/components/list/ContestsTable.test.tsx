@@ -38,7 +38,6 @@ const contest: ContestSummary = {
   name: 'Super Bowl LX',
   status: 'ACTIVE',
   visibility: 'public',
-  owner: 'alice',
   role: 'owner',
   homeTeam: 'Chiefs',
   awayTeam: 'Eagles',

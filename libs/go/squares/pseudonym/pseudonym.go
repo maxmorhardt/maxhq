@@ -14,10 +14,8 @@ const (
 	minKeySize = 32
 )
 
-// shown for a player with no name at all
 const Unnamed = "Player"
 
-// shared by every squares service so a player gets the same user id from all of them
 type Config struct {
 	Key string `env:"PSEUDONYM_KEY,required,notEmpty"`
 }
@@ -32,7 +30,7 @@ func SetKey(k string) error {
 	return nil
 }
 
-// the user id clients see in place of an email; anything else (system, ghost, an existing id) passes through
+// anything that isn't an email (system, ghost, an existing id) passes through
 func Of(email string) string {
 	if !strings.Contains(email, "@") {
 		return email
@@ -46,7 +44,6 @@ func Of(email string) string {
 	return prefix + base64.RawURLEncoding.EncodeToString(mac.Sum(nil)[:digestSize])
 }
 
-// what other players see: "First L." or the one word given
 func Name(displayName string) string {
 	parts := strings.Fields(FullName(displayName))
 	switch len(parts) {
@@ -60,7 +57,14 @@ func Name(displayName string) string {
 	return parts[0] + " " + strings.ToUpper(string(last[0])) + "."
 }
 
-// what the contest's owner sees; a name that fell back to the email is dropped, since its local part is the email
+func Public(displayName string) string {
+	if name := Name(displayName); name != "" {
+		return name
+	}
+	return Unnamed
+}
+
+// a name that fell back to the email is dropped, since its local part is the email
 func FullName(displayName string) string {
 	if strings.Contains(displayName, "@") {
 		return ""

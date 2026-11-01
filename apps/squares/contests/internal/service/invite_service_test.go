@@ -226,7 +226,6 @@ func TestGetInvitePreview_Success(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, contestID, got.ContestID)
 	assert.Equal(t, "Pool", got.ContestName)
-	assert.Equal(t, "owner", got.Owner)
 	assert.Equal(t, "Olive Owens", got.OwnerName)
 	assert.Equal(t, model.ContestStatusActive, got.Status)
 	assert.Equal(t, 2, got.ClaimedSquares)

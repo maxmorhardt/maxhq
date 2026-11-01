@@ -20,7 +20,6 @@ const contest: ContestSummary = {
   gameTime: '2026-11-01T18:00:00Z',
   status: 'ACTIVE',
   visibility: 'private',
-  owner: 'u_owner',
   role: 'owner',
   claimedSquares: 42,
   mySquares: 6,
@@ -59,7 +58,7 @@ describe('ContestInfoDialog', () => {
   });
 
   it('names another owner without their email', () => {
-    renderDialog({ role: 'participant', owner: 'u_olive', ownerName: 'Olive O.' });
+    renderDialog({ role: 'participant', ownerName: 'Olive O.' });
     expect(screen.getByText('Olive O.')).toBeInTheDocument();
     expect(screen.queryByText(/u_olive/)).not.toBeInTheDocument();
   });

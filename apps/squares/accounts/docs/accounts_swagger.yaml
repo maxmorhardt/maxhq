@@ -85,7 +85,6 @@ definitions:
         example: user@example.com
         type: string
       userId:
-        description: how contests and streams name this user in place of their email
         example: u_3q2mL0x9VfTzQk1rB7cW8a
         type: string
     type: object

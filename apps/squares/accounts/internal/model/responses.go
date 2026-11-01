@@ -5,7 +5,6 @@ type ContactResponse struct {
 }
 
 type UserProfileResponse struct {
-	// how contests and streams name this user in place of their email
 	UserID          string `json:"userId" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
 	Email           string `json:"email" example:"user@example.com"`
 	DisplayName     string `json:"displayName" example:"Max"`

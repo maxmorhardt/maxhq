@@ -123,7 +123,6 @@ export const contestsApi = baseApi.injectEndpoints({
       invalidatesTags: ['ContestFeed', 'ActiveContests', 'UserStats'],
     }),
 
-    // full names for the owner only; everyone else sees short names
     getRoster: build.query<ParticipantIdentity[], string>({
       query: (contestId) => `/contests/${contestId}/roster`,
     }),

@@ -1,9 +1,8 @@
 package repository
 
 import (
-	"time"
-
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -44,7 +43,6 @@ func (r *inviteRepository) GetAllByContestID(ctx context.Context, contestID uuid
 	return invites, err
 }
 
-// expired and used-up links no longer count against the cap
 func (r *inviteRepository) CountOpenByContestID(ctx context.Context, contestID uuid.UUID) (int, error) {
 	var count int64
 	err := database.Conn(ctx, r.db).

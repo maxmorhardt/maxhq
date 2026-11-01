@@ -15,7 +15,7 @@ type ContestInvite struct {
 	Token      string          `json:"token" gorm:"uniqueIndex;not null"`
 	MaxSquares int             `json:"maxSquares" gorm:"not null"`
 	Role       ParticipantRole `json:"role" gorm:"not null;default:participant"`
-	CreatedBy  string          `json:"createdBy" gorm:"not null"`
+	CreatedBy  string          `json:"-" gorm:"not null"`
 	ExpiresAt  *time.Time      `json:"expiresAt,omitempty"`
 	MaxUses    int             `json:"maxUses" gorm:"not null;default:0"`
 	Uses       int             `json:"uses" gorm:"not null;default:0"`

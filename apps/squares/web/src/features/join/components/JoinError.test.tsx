@@ -27,7 +27,6 @@ function renderComponent(props: React.ComponentProps<typeof JoinError>) {
 const preview = {
   contestId: 'abc',
   contestName: 'Super Bowl Contest',
-  owner: 'u_alice',
   ownerName: 'Alice A.',
   maxSquares: 2,
   role: 'participant',

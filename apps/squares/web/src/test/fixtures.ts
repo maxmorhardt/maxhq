@@ -14,8 +14,6 @@ export function makeSquare(overrides: Partial<Square> = {}): Square {
     version: 1,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
-    createdBy: 'u_owner',
-    updatedBy: 'u_owner',
     ...overrides,
   };
 }
@@ -44,8 +42,6 @@ export function makeContest(overrides: Partial<Contest> = {}, size = 3): Contest
     version: 1,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
-    createdBy: 'u_owner',
-    updatedBy: 'u_owner',
     ...overrides,
   };
 }
@@ -79,8 +75,6 @@ export function makeQuarterResult(overrides: Partial<QuarterResult> = {}): Quart
     winnerName: 'Player',
     createdAt: '2026-01-01T01:00:00Z',
     updatedAt: '2026-01-01T01:00:00Z',
-    createdBy: 'system',
-    updatedBy: 'system',
     ...overrides,
   };
 }

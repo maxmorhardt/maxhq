@@ -22,11 +22,8 @@ export interface Contest {
   version: number;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
 }
 
-// who each player is, for the contest's owner only
 export interface ParticipantIdentity {
   userId: string;
   fullName: string;
@@ -57,8 +54,6 @@ export interface Square {
   claimedAt?: string;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
 }
 
 export type FeedRole = 'owned' | 'joined';
@@ -81,7 +76,6 @@ export interface ContestSummary {
   awayAbbr?: string;
   status: ContestStatus;
   visibility: ContestVisibility;
-  owner: string;
   ownerName?: string;
   role: ParticipantRole;
   gameId?: string;
@@ -112,8 +106,6 @@ export interface QuarterResult {
   winnerName: string;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
 }
 
 export type GameStatus = 'scheduled' | 'in_progress' | 'final' | 'postponed' | 'canceled';
@@ -204,7 +196,6 @@ export interface Participant {
   id: string;
   contestId: string;
   userId: string;
-  // the short public name, like "Pat P."
   displayName: string;
   inviteId: string;
   role: ParticipantRole;
@@ -229,7 +220,6 @@ export interface Invite {
   uses: number;
   expiresAt?: string;
   createdAt: string;
-  createdBy: string;
   updatedAt: string;
 }
 
@@ -244,7 +234,6 @@ export interface InvitePreviewResponse {
   contestId: string;
   contestName: string;
   maxSquares: number;
-  owner: string;
   ownerName?: string;
   role: string;
   status: ContestStatus;

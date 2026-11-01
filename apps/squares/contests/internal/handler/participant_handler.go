@@ -29,7 +29,7 @@ func NewParticipantHandler(participantService service.ParticipantService) Partic
 }
 
 // @Summary Who each player is
-// @Description Full names for the contest's managers, so they know who joined. Other players only ever see short names.
+// @Description Full names for the contest's owner, so they know who joined. Other players only ever see short names.
 // @Tags participants
 // @Produce json
 // @Param id path string true "Contest ID"

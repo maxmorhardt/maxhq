@@ -92,7 +92,7 @@ func createInviteErr(t *testing.T, user string, svcErr error, wantCode int) {
 func TestGetInvitePreview_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
 	svc.EXPECT().GetInvitePreview(mock.Anything, mock.Anything).
-		Return(&model.InvitePreviewResponse{ContestName: "Super Bowl", Owner: "owner1", Role: "participant", MaxSquares: 10}, nil)
+		Return(&model.InvitePreviewResponse{ContestName: "Super Bowl", OwnerName: "Olive O.", Role: "participant", MaxSquares: 10}, nil)
 	h := NewInviteHandler(svc)
 
 	r := gin.New()

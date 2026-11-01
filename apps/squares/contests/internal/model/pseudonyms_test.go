@@ -47,8 +47,8 @@ func TestPseudonyms_NoEmailOrFullNameLeavesTheService(t *testing.T) {
 		"contest":     contest,
 		"snapshot":    ContestSnapshot{Contest: contest, Participants: []ContestParticipant{participant}},
 		"invite":      ContestInvite{CreatedBy: ownerEmail},
-		"feed":        ContestFeedResponse{Contests: []ContestSummary{{Owner: ownerEmail, OwnerName: "Olive Owens"}}},
-		"preview":     &InvitePreviewResponse{Owner: ownerEmail, OwnerName: "Olive Owens"},
+		"feed":        ContestFeedResponse{Contests: []ContestSummary{{OwnerName: "Olive Owens"}}},
+		"preview":     &InvitePreviewResponse{OwnerName: "Olive Owens"},
 		"random":      RandomClaimResponse{Squares: []Square{square}},
 	}
 	for name, payload := range payloads {
@@ -66,7 +66,7 @@ func TestPseudonyms_ReplaceEmailsAndKeepTheRest(t *testing.T) {
 	assert.Equal(t, pseudonym.Of(playerEmail), square["owner"])
 	assert.Equal(t, "Pat P.", square["ownerName"], "other players only get the short name")
 	assert.Equal(t, "PP", square["value"])
-	assert.Equal(t, "system", square["updatedBy"])
+	assert.NotContains(t, square, "updatedBy", "clients never need who last touched a row")
 
 	var ghost map[string]any
 	require.NoError(t, json.Unmarshal([]byte(marshal(t, Square{Owner: GhostUser})), &ghost))
@@ -95,8 +95,7 @@ func TestPseudonyms_ReplaceEmailsAndKeepTheRest(t *testing.T) {
 	assert.Equal(t, pseudonym.Unnamed, unnamed["displayName"])
 
 	var preview map[string]any
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, InvitePreviewResponse{Owner: ownerEmail, OwnerName: "Olive Owens"})), &preview))
-	assert.Equal(t, pseudonym.Of(ownerEmail), preview["owner"])
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, InvitePreviewResponse{OwnerName: "Olive Owens"})), &preview))
 	assert.Equal(t, "Olive O.", preview["ownerName"])
 }
 
@@ -105,10 +104,10 @@ func TestPseudonyms_SurviveACacheRoundTrip(t *testing.T) {
 	usePseudonymKey(t)
 
 	var cached ContestFeedResponse
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestFeedResponse{Contests: []ContestSummary{{Owner: ownerEmail}}})), &cached))
-	require.Equal(t, pseudonym.Of(ownerEmail), cached.Contests[0].Owner)
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestFeedResponse{Contests: []ContestSummary{{OwnerName: "Olive Owens"}}})), &cached))
+	require.Equal(t, "Olive O.", cached.Contests[0].OwnerName)
 
 	var served ContestFeedResponse
 	require.NoError(t, json.Unmarshal([]byte(marshal(t, cached)), &served))
-	assert.Equal(t, pseudonym.Of(ownerEmail), served.Contests[0].Owner)
+	assert.Equal(t, "Olive O.", served.Contests[0].OwnerName)
 }

@@ -54,7 +54,6 @@ export default function ParticipantsManager({
   const isOpen = !isTerminalStatus(contest.status);
   const canManage = viewer.isOwner && isOpen;
 
-  // the owner sees full names so they know who joined; the shared stream only carries short ones
   const roster = useGetRosterQuery(contest.id, {
     skip: !open || !viewer.isOwner,
     refetchOnMountOrArgChange: true,

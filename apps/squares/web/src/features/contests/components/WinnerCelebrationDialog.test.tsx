@@ -14,8 +14,6 @@ const result = {
   winnerName: 'Me',
   createdAt: '',
   updatedAt: '',
-  createdBy: '',
-  updatedBy: '',
 };
 
 describe('WinnerCelebrationDialog', () => {

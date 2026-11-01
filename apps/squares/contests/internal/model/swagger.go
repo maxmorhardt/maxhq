@@ -20,8 +20,6 @@ type ContestSwagger struct {
 	Version        int64           `json:"version"`
 	CreatedAt      time.Time       `json:"createdAt"`
 	UpdatedAt      time.Time       `json:"updatedAt"`
-	CreatedBy      string          `json:"createdBy"`
-	UpdatedBy      string          `json:"updatedBy"`
 }
 
 type ContestSnapshotSwagger struct {

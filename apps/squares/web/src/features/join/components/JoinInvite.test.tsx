@@ -23,7 +23,6 @@ const preview = {
   contestId: 'c-1',
   contestName: 'Office Pool',
   maxSquares: 5,
-  owner: 'u_o',
   role: 'participant',
 };
 

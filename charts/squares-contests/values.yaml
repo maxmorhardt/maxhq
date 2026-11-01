@@ -95,7 +95,7 @@ route:
     enabled: true
     requests: 100
     unit: Second
-    # per client and per gateway replica; the service also caps open contests per owner and open invites per contest
+    # per client and per gateway replica
     rules:
       - path: /contests
         methods: [POST]

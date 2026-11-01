@@ -25,21 +25,39 @@ describe('useMe', () => {
     vi.mocked(useGetMyProfileQuery).mockReturnValue({
       data: { userId: 'u_pat' },
       isLoading: false,
+      isError: false,
     } as never);
 
     const { result } = renderHook(() => useMe());
 
-    expect(result.current).toEqual({ userId: 'u_pat', isLoading: false });
+    expect(result.current).toMatchObject({ userId: 'u_pat', isLoading: false, isError: false });
     expect(useGetMyProfileQuery).toHaveBeenCalledWith(undefined, { skip: false });
   });
 
   it('skips the profile when signed out', () => {
     mockAuth();
-    vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: undefined, isLoading: false } as never);
+    vi.mocked(useGetMyProfileQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    } as never);
 
     const { result } = renderHook(() => useMe());
 
-    expect(result.current).toEqual({ userId: undefined, isLoading: false });
+    expect(result.current).toMatchObject({ userId: undefined, isLoading: false, isError: false });
     expect(useGetMyProfileQuery).toHaveBeenCalledWith(undefined, { skip: true });
+  });
+
+  it('fails only when there is no profile to fall back on', () => {
+    mockAuth({ email: 'pat@x.com' });
+    vi.mocked(useGetMyProfileQuery).mockReturnValue({ data: undefined, isError: true } as never);
+    expect(renderHook(() => useMe()).result.current.isError).toBe(true);
+
+    vi.mocked(useGetMyProfileQuery).mockReturnValue({
+      data: { userId: 'u_pat' },
+      isError: true,
+    } as never);
+    const { result } = renderHook(() => useMe());
+    expect(result.current).toMatchObject({ userId: 'u_pat', isError: false });
   });
 });

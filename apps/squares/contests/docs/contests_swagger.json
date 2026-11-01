@@ -597,7 +597,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Full names for the contest's managers, so they know who joined. Other players only ever see short names.",
+                "description": "Full names for the contest's owner, so they know who joined. Other players only ever see short names.",
                 "produces": [
                     "application/json"
                 ],
@@ -1427,9 +1427,6 @@
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "expiresAt": {
                     "type": "string"
                 },
@@ -1466,7 +1463,7 @@
                     "type": "string"
                 },
                 "displayName": {
-                    "description": "read from contests.users; clients only ever get the short public form",
+                    "description": "read from contests.users, so other players can be shown a name instead of an email",
                     "type": "string"
                 },
                 "id": {
@@ -1574,13 +1571,9 @@
                     "type": "string",
                     "example": "Sunday Night Squares"
                 },
-                "owner": {
-                    "type": "string",
-                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
-                },
                 "ownerName": {
                     "type": "string",
-                    "example": "Max Morhardt"
+                    "example": "Max M."
                 },
                 "role": {
                     "allOf": [
@@ -1624,9 +1617,6 @@
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "homeTeam": {
                     "type": "string"
                 },
@@ -1655,9 +1645,6 @@
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "version": {
@@ -1776,9 +1763,6 @@
                 "maxSquares": {
                     "type": "integer"
                 },
-                "owner": {
-                    "type": "string"
-                },
                 "ownerName": {
                     "type": "string"
                 },
@@ -1822,7 +1806,6 @@
             "type": "object",
             "properties": {
                 "displayName": {
-                    "description": "as the leaderboard shows it, so the client can find its own row",
                     "type": "string",
                     "example": "Max M."
                 },
@@ -1893,9 +1876,6 @@
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "homeTeamScore": {
                     "type": "integer"
                 },
@@ -1906,9 +1886,6 @@
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "winner": {
@@ -1970,9 +1947,6 @@
                 "createdAt": {
                     "type": "string"
                 },
-                "createdBy": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -1986,9 +1960,6 @@
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "updatedBy": {
                     "type": "string"
                 },
                 "value": {

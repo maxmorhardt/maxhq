@@ -64,7 +64,7 @@ func (s *leaderboardService) GetLeaderboard(ctx context.Context, limit int) (*mo
 
 func assignRanks(entries []model.LeaderboardEntry) []model.LeaderboardEntry {
 	for i := range entries {
-		entries[i].DisplayName = publicName(entries[i].DisplayName)
+		entries[i].DisplayName = pseudonym.Public(entries[i].DisplayName)
 
 		if i > 0 && entries[i].QuarterWins == entries[i-1].QuarterWins {
 			entries[i].Rank = entries[i-1].Rank
@@ -77,13 +77,6 @@ func assignRanks(entries []model.LeaderboardEntry) []model.LeaderboardEntry {
 	return entries
 }
 
-func publicName(displayName string) string {
-	if name := pseudonym.Name(displayName); name != "" {
-		return name
-	}
-	return pseudonym.Unnamed
-}
-
 func (s *leaderboardService) GetUserRank(ctx context.Context, email string) (*model.LeaderboardRankResponse, error) {
 	log := logging.FromContext(ctx)
 
@@ -92,7 +85,7 @@ func (s *leaderboardService) GetUserRank(ctx context.Context, email string) (*mo
 		log.Error("failed to get user rank", "error", err)
 		return nil, err
 	}
-	rank.DisplayName = publicName(rank.DisplayName)
+	rank.DisplayName = pseudonym.Public(rank.DisplayName)
 
 	return rank, nil
 }

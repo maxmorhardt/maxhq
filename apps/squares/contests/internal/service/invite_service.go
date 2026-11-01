@@ -164,7 +164,6 @@ func invitePreview(contest *model.Contest, invite *model.ContestInvite, ownerNam
 	preview := &model.InvitePreviewResponse{
 		ContestID:    contest.ID,
 		ContestName:  contest.Name,
-		Owner:        contest.Owner,
 		OwnerName:    ownerName,
 		Role:         string(invite.Role),
 		MaxSquares:   invite.MaxSquares,

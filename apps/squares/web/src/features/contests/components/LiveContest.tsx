@@ -105,6 +105,10 @@ export default function LiveContest({ contestId }: Props) {
     return <ContestPageSkeleton />;
   }
 
+  if (me.isError) {
+    return <ContestError onRetry={() => me.refetch?.()} />;
+  }
+
   return (
     <>
       <ContestView
