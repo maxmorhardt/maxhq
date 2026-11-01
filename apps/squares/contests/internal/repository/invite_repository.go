@@ -43,7 +43,6 @@ func (r *inviteRepository) GetAllByContestID(ctx context.Context, contestID uuid
 	return invites, err
 }
 
-// expired and used-up invites count as recent; a deleted one is gone, so it leaves nothing behind to cap
 func (r *inviteRepository) CountByContestID(ctx context.Context, contestID uuid.UUID, since time.Time) (model.CreationCounts, error) {
 	var counts model.CreationCounts
 	err := database.Conn(ctx, r.db).

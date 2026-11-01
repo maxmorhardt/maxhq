@@ -95,7 +95,6 @@ route:
     enabled: true
     requests: 100
     unit: Second
-    # per client and per gateway replica; the optional query keeps "?x" from slipping past a path match
     rules:
       - path: /contests(\?.*)?
         pathType: RegularExpression

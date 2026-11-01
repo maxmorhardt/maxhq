@@ -21,7 +21,6 @@ export interface LiveContestState {
   contestId: string | null;
   contest: Contest | null;
   participants: Participant[];
-  // contests names the viewer, so the page knows which squares are theirs without accounts
   viewerId: string | undefined;
   activity: ActivityEvent[];
   status: StreamStatus;

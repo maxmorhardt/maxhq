@@ -79,7 +79,6 @@ func (r *contestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID
 	return ids, err
 }
 
-// deleted contests count as recent, so creating and deleting in a loop still runs into the daily cap
 func (r *contestRepository) CountByOwner(ctx context.Context, owner string, since time.Time) (model.CreationCounts, error) {
 	var counts model.CreationCounts
 	err := database.Conn(ctx, r.db).
