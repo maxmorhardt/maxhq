@@ -127,6 +127,11 @@ func TestConn_ReadPrimaryRoutesToTheWriter(t *testing.T) {
 	assert.False(t, onPlain)
 }
 
+func TestReadsPrimary(t *testing.T) {
+	assert.True(t, ReadsPrimary(ReadPrimary(context.Background())))
+	assert.False(t, ReadsPrimary(context.Background()))
+}
+
 func TestAfterCommit_RunsImmediatelyWithoutTransaction(t *testing.T) {
 	called := false
 	AfterCommit(context.Background(), func() { called = true })

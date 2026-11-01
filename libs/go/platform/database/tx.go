@@ -67,12 +67,16 @@ func ReadPrimary(ctx context.Context) context.Context {
 	return context.WithValue(ctx, primaryKey{}, true)
 }
 
+func ReadsPrimary(ctx context.Context) bool {
+	return ctx.Value(primaryKey{}) != nil
+}
+
 func Conn(ctx context.Context, db *gorm.DB) *gorm.DB {
 	if state, ok := ctx.Value(txKey{}).(*txState); ok && state.tx != nil {
 		return state.tx.WithContext(ctx)
 	}
 
-	if ctx.Value(primaryKey{}) != nil {
+	if ReadsPrimary(ctx) {
 		return db.WithContext(ctx).Clauses(dbresolver.Write)
 	}
 

@@ -19,8 +19,8 @@ import (
 const (
 	feedCacheTTL      = 2 * time.Minute
 	feedGenerationTTL = time.Hour
-	// longer than any replica lag, so a reload right after a write sees it
-	feedFreshWindow = 10 * time.Second
+	// how long the people a write was for read their feed from the primary, well past normal replica lag
+	feedPrimaryWindow = time.Minute
 )
 
 type FeedService interface {
@@ -42,14 +42,14 @@ func NewFeedService(repo repository.FeedRepository, c cache.Cache) FeedService {
 
 // cached per user under a generation that every write touching the user bumps
 func (s *feedService) List(ctx context.Context, user string, f *model.ContestFeedFilter) (*model.ContestFeedResponse, error) {
-	key, gen, err := s.cacheKey(ctx, user, f)
+	key, err := s.cacheKey(ctx, user, f)
 	if err != nil {
 		return nil, err
 	}
 
 	return cache.GetOrLoad(ctx, s.cache, "contest_feed", key, feedCacheTTL, func(ctx context.Context) (*model.ContestFeedResponse, error) {
 		// a replica that hasn't applied the write would cache the old list under the new generation
-		if s.invalidatedRecently(gen) {
+		if s.readsPrimary(ctx, user) {
 			ctx = database.ReadPrimary(ctx)
 		}
 
@@ -75,7 +75,12 @@ func (s *feedService) List(ctx context.Context, user string, f *model.ContestFee
 	})
 }
 
+// for the people a write was for, who reload right away; their next load also reads the primary
 func (s *feedService) Invalidate(ctx context.Context, users ...string) {
+	s.invalidate(ctx, true, users...)
+}
+
+func (s *feedService) invalidate(ctx context.Context, primary bool, users ...string) {
 	if s.cache == nil {
 		return
 	}
@@ -87,6 +92,12 @@ func (s *feedService) Invalidate(ctx context.Context, users ...string) {
 		}
 		if err := s.cache.Set(ctx, generationKey(u), gen, feedGenerationTTL); err != nil {
 			logging.FromContext(ctx).Warn("failed to invalidate contest feed", "user", u, "error", err)
+		}
+		if !primary {
+			continue
+		}
+		if err := s.cache.Set(ctx, primaryKey(u), []byte{1}, feedPrimaryWindow); err != nil {
+			logging.FromContext(ctx).Warn("failed to route contest feed to the primary", "user", u, "error", err)
 		}
 	}
 }
@@ -105,32 +116,39 @@ func (s *feedService) Members(ctx context.Context, contestID uuid.UUID) []string
 	return members
 }
 
+// the rest of the contest stays on the replica, since every claim and score update lands here
 func (s *feedService) InvalidateContest(ctx context.Context, contestID uuid.UUID) {
-	s.Invalidate(ctx, s.Members(ctx, contestID)...)
+	s.invalidate(ctx, false, s.Members(ctx, contestID)...)
 }
 
-func (s *feedService) cacheKey(ctx context.Context, user string, f *model.ContestFeedFilter) (key, gen string, err error) {
-	gen = "0"
+func (s *feedService) cacheKey(ctx context.Context, user string, f *model.ContestFeedFilter) (string, error) {
+	gen := "0"
 	if s.cache != nil {
-		if raw, ok, getErr := s.cache.Get(ctx, generationKey(user)); getErr == nil && ok {
+		if raw, ok, err := s.cache.Get(ctx, generationKey(user)); err == nil && ok {
 			gen = string(raw)
 		}
 	}
 
 	filter, err := json.Marshal(f)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	sum := sha256.Sum256(filter)
-	return "feed:" + user + ":" + gen + ":" + hex.EncodeToString(sum[:12]), gen, nil
+	return "feed:" + user + ":" + gen + ":" + hex.EncodeToString(sum[:12]), nil
 }
 
-// the generation is the time of the user's last invalidation
-func (s *feedService) invalidatedRecently(gen string) bool {
-	at, err := strconv.ParseInt(gen, 10, 64)
-	return err == nil && s.now().Sub(time.Unix(0, at)) < feedFreshWindow
+func (s *feedService) readsPrimary(ctx context.Context, user string) bool {
+	if s.cache == nil {
+		return false
+	}
+	_, ok, err := s.cache.Get(ctx, primaryKey(user))
+	return err == nil && ok
 }
 
 func generationKey(user string) string {
 	return "feed-generation:" + user
+}
+
+func primaryKey(user string) string {
+	return "feed-primary:" + user
 }

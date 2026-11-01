@@ -255,48 +255,47 @@ func (s *participantService) UpdateParticipant(ctx context.Context, contestID uu
 
 func (s *participantService) RemoveParticipant(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error {
 	log := logging.FromContext(ctx)
-	// the owner can remove a player the moment they join, before a replica has them or their squares
-	primary := database.ReadPrimary(ctx)
 
-	contest, err := s.contestRepo.GetByID(primary, contestID)
-	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			return errs.ErrContestNotFound
+	err := s.tx.Do(ctx, func(ctx context.Context) error {
+		// the contest lock waits out in-flight claims and blocks new ones and kickoff, so the squares loaded here are final
+		contest, err := s.contestRepo.GetByIDForUpdate(ctx, contestID)
+		if err != nil {
+			if errors.Is(err, database.ErrNotFound) {
+				return errs.ErrContestNotFound
+			}
+			log.Error("failed to get contest", "contest_id", contestID, "error", err)
+			return errs.ErrDatabaseUnavailable
 		}
-		log.Error("failed to get contest", "contest_id", contestID, "error", err)
-		return errs.ErrDatabaseUnavailable
-	}
 
-	if contest.Status.IsTerminal() {
-		log.Warn("cannot remove participant from a finalized contest", "contest_id", contestID, "status", contest.Status)
-		return errs.ErrContestFinalized
-	}
-
-	if targetUserID == pseudonym.Of(user) {
-		targetUserID = user
-	} else {
-		if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
-			return authErr
+		if contest.Status.IsTerminal() {
+			log.Warn("cannot remove participant from a finalized contest", "contest_id", contestID, "status", contest.Status)
+			return errs.ErrContestFinalized
 		}
-		if targetUserID, err = s.resolveTarget(ctx, contestID, targetUserID); err != nil {
-			return err
+
+		if targetUserID == pseudonym.Of(user) {
+			targetUserID = user
+		} else {
+			if authErr := s.Authorize(ctx, contestID, user, ActionManageInvites); authErr != nil {
+				return authErr
+			}
+			if targetUserID, err = s.resolveTarget(ctx, contestID, targetUserID); err != nil {
+				return err
+			}
 		}
-	}
 
-	participant, err := s.participantRepo.GetByContestAndUser(primary, contestID, targetUserID)
-	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			return errs.ErrNotParticipant
+		participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, targetUserID)
+		if err != nil {
+			if errors.Is(err, database.ErrNotFound) {
+				return errs.ErrNotParticipant
+			}
+			log.Error("failed to get participant", "contest_id", contestID, "user_id", targetUserID, "error", err)
+			return errs.ErrDatabaseUnavailable
 		}
-		log.Error("failed to get participant", "contest_id", contestID, "user_id", targetUserID, "error", err)
-		return errs.ErrDatabaseUnavailable
-	}
 
-	if participant.Role == model.ParticipantRoleOwner {
-		return errs.ErrCannotRemoveOwner
-	}
+		if participant.Role == model.ParticipantRoleOwner {
+			return errs.ErrCannotRemoveOwner
+		}
 
-	err = s.tx.Do(ctx, func(ctx context.Context) error {
 		// before kickoff the squares go back to the pool. after kickoff they are ghosted
 		ghost := contest.Status != model.ContestStatusActive
 		if releaseErr := s.releaseParticipantSquares(ctx, contest, targetUserID, ghost); releaseErr != nil {
