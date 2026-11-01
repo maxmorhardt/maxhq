@@ -37,6 +37,7 @@ func NewSquareHandler(squareService service.SquareService) SquareHandler {
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
 // @Failure 409 {object} api.APIError
+// @Failure 422 {object} api.APIError "No default initials are set"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests/{id}/squares/{squareId}/claim [put]
@@ -62,7 +63,9 @@ func (h *squareHandler) ClaimSquare(c *gin.Context) {
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrUnauthorizedSquareEdit):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrMissingInitials), errors.Is(err, errs.ErrSquareTaken):
+		case errors.Is(err, errs.ErrMissingInitials):
+			c.JSON(http.StatusUnprocessableEntity, api.NewAPIError(http.StatusUnprocessableEntity, api.Message(err), c))
+		case errors.Is(err, errs.ErrSquareTaken):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrClaimsNotFound):
 			c.JSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, api.Message(err), c))
@@ -88,6 +91,7 @@ func (h *squareHandler) ClaimSquare(c *gin.Context) {
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 409 {object} api.APIError
+// @Failure 422 {object} api.APIError "No default initials are set"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /contests/{id}/squares/random [post]
@@ -108,7 +112,9 @@ func (h *squareHandler) ClaimRandomSquares(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrSquareNotEditable), errors.Is(err, errs.ErrUnauthorizedSquareEdit), errors.Is(err, errs.ErrNotParticipant):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrMissingInitials), errors.Is(err, errs.ErrNoEmptySquares), errors.Is(err, errs.ErrSquareLimitReached):
+		case errors.Is(err, errs.ErrMissingInitials):
+			c.JSON(http.StatusUnprocessableEntity, api.NewAPIError(http.StatusUnprocessableEntity, api.Message(err), c))
+		case errors.Is(err, errs.ErrNoEmptySquares), errors.Is(err, errs.ErrSquareLimitReached):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		case errors.Is(err, errs.ErrClaimsNotFound):
 			c.JSON(http.StatusUnauthorized, api.NewAPIError(http.StatusUnauthorized, api.Message(err), c))

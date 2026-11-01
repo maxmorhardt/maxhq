@@ -1,13 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { makeContest, makeParticipant, makeSquare } from '../../../test/fixtures';
-import { mockAuth } from '../../../test/auth';
-import { getContestViewer, useContestViewer } from './viewer';
-
-vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
-vi.mock('../../profile/api', () => ({
-  useGetMyProfileQuery: vi.fn(() => ({ data: { userId: 'u_player' } })),
-}));
+import { getContestViewer } from './viewer';
 
 const contest = makeContest({
   owner: 'u_owner',
@@ -43,14 +36,5 @@ describe('getContestViewer', () => {
     });
     expect(viewer.isMe(undefined)).toBe(false);
     expect(viewer.isMe('')).toBe(false);
-  });
-});
-
-describe('useContestViewer', () => {
-  it('uses the signed-in user id from the profile', () => {
-    mockAuth({ email: 'player@x.com' });
-    const { result } = renderHook(() => useContestViewer(contest, participants));
-    expect(result.current.me).toEqual({ userId: 'u_player' });
-    expect(result.current.squaresClaimed).toBe(2);
   });
 });

@@ -790,6 +790,12 @@ const docTemplatecontests = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "422": {
+                        "description": "No default initials are set",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -857,6 +863,12 @@ const docTemplatecontests = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "No default initials are set",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -1508,6 +1520,10 @@ const docTemplatecontests = `{
                     "items": {
                         "$ref": "#/definitions/model.ContestParticipant"
                     }
+                },
+                "viewerId": {
+                    "type": "string",
+                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
                 }
             }
         },

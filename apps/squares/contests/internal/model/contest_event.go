@@ -39,4 +39,5 @@ func NewContestUpdate(contest *Contest) ContestUpdate {
 type ContestSnapshot struct {
 	Contest      *Contest             `json:"contest"`
 	Participants []ContestParticipant `json:"participants"`
+	ViewerID     string               `json:"viewerId"`
 }

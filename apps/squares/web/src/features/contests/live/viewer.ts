@@ -1,5 +1,5 @@
 import type { Contest, Participant } from '../../../types/contest';
-import { isMe, useMe, type Me } from '../../profile/useMe';
+import { isMe, type Me } from '../../profile/useMe';
 
 // who the signed-in user is in this contest, worked out once and passed down
 export interface ContestViewer {
@@ -30,8 +30,4 @@ export function getContestViewer(
     squaresClaimed,
     squaresLeft: Math.max(0, (participant?.maxSquares ?? 0) - squaresClaimed),
   };
-}
-
-export function useContestViewer(contest: Contest, participants: Participant[]): ContestViewer {
-  return getContestViewer(useMe(), contest, participants);
 }

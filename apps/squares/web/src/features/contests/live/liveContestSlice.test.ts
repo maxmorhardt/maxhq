@@ -42,13 +42,22 @@ const fulfilled = (endpointName: string, payload: unknown, originalArgs: unknown
 
 function live(contest = makeContest(), participants = [makeParticipant()]) {
   const opened = liveContestReducer(undefined, streamOpened('c-1'));
-  return receive(opened, event('contest.snapshot', { contest, participants }), 'snap');
+  return receive(
+    opened,
+    event('contest.snapshot', { contest, participants, viewerId: 'u_player' }),
+    'snap'
+  );
 }
 
 describe('liveContestSlice stream lifecycle', () => {
   it('starts clean for each contest and resets on close', () => {
     const state = liveContestReducer(live(), streamOpened('c-2'));
-    expect(state).toMatchObject({ contestId: 'c-2', contest: null, status: 'connecting' });
+    expect(state).toMatchObject({
+      contestId: 'c-2',
+      contest: null,
+      viewerId: undefined,
+      status: 'connecting',
+    });
     expect(liveContestReducer(state, streamClosed()).contestId).toBeNull();
   });
 
@@ -68,6 +77,7 @@ describe('liveContestSlice events', () => {
     expect(state.contest?.id).toBe('c-1');
     expect(state.participants).toHaveLength(1);
     expect(state.activity.map((a) => a.message)).toContain('Ann claimed square (0, 0)');
+    expect(state.viewerId).toBe('u_player');
   });
 
   it('applies newer square versions and ignores older replays', () => {

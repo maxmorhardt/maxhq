@@ -13,14 +13,9 @@ import {
 import LiveContest from './LiveContest';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
-const profile = vi.hoisted(() => ({ isLoading: false, isError: false, refetch: vi.fn() }));
+// accounts is down for every test here: the page must know the viewer from the contest alone
 vi.mock('../../profile/api', () => ({
-  useGetMyProfileQuery: vi.fn(() => ({
-    data: profile.isLoading || profile.isError ? undefined : { userId: 'u_player' },
-    isLoading: profile.isLoading,
-    isError: profile.isError,
-    refetch: profile.refetch,
-  })),
+  useGetMyProfileQuery: vi.fn(() => ({ data: undefined, isLoading: false, isError: true })),
 }));
 const stream = vi.hoisted(() => ({
   onEvent: undefined as ((e: ContestEvent) => void) | undefined,
@@ -63,7 +58,10 @@ function renderLive() {
   const emit = (e: ContestEvent) => act(() => stream.onEvent?.(e));
   const snapshot = (contest = makeContest()) =>
     dispatch(
-      eventReceived({ id: '1', event: event('contest.snapshot', { contest, participants: [] }) })
+      eventReceived({
+        id: '1',
+        event: event('contest.snapshot', { contest, participants: [], viewerId: 'u_player' }),
+      })
     );
   return {
     ...result,
@@ -79,8 +77,6 @@ describe('LiveContest', () => {
     vi.clearAllMocks();
     games.useGetGameQuery.mockReturnValue({ data: undefined });
     mockAuth({ email: 'player@x.com' });
-    profile.isLoading = false;
-    profile.isError = false;
   });
 
   it('shows a skeleton until the snapshot arrives', () => {
@@ -88,26 +84,6 @@ describe('LiveContest', () => {
     expect(screen.queryByTestId('view')).not.toBeInTheDocument();
     snapshot();
     expect(screen.getByTestId('view')).toBeInTheDocument();
-  });
-
-  it('waits for the profile before showing the board', () => {
-    profile.isLoading = true;
-    const { snapshot, rerender } = renderLive();
-    snapshot();
-    expect(screen.queryByTestId('view')).not.toBeInTheDocument();
-
-    profile.isLoading = false;
-    rerender(<LiveContest contestId="c-1" />);
-    expect(screen.getByTestId('view')).toBeInTheDocument();
-  });
-
-  it('offers a retry instead of a board that cannot tell which squares are yours', () => {
-    profile.isError = true;
-    const { snapshot } = renderLive();
-    snapshot();
-    expect(screen.queryByTestId('view')).not.toBeInTheDocument();
-    act(() => screen.getByRole('button', { name: /try again/i }).click());
-    expect(profile.refetch).toHaveBeenCalled();
   });
 
   it('offers a retry when it cannot connect', () => {

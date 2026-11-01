@@ -39,6 +39,20 @@ describe('LeaveContestDialog', () => {
     expect(onLeft).toHaveBeenCalled();
   });
 
+  it('leaves as the viewer the live contest named, without the profile', async () => {
+    const [remove, state] = mockMutation(undefined);
+    api.useRemoveParticipantMutation.mockReturnValue([remove, state]);
+    renderWithProviders(
+      <LeaveContestDialog contest={contest} onClose={vi.fn()} viewerId="u_from_snapshot" />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+
+    await waitFor(() =>
+      expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'u_from_snapshot' })
+    );
+  });
+
   it('shows why leaving failed', () => {
     api.useRemoveParticipantMutation.mockReturnValue(
       mockMutation(undefined, { error: { status: 409, message: 'Game already started' } })

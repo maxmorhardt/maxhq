@@ -7,10 +7,13 @@ interface Props {
   contest: { id: string; name: string } | null;
   onClose: () => void;
   onLeft?: () => void;
+  // the live page already knows the viewer from contests, so it doesn't need the profile
+  viewerId?: string;
 }
 
-export default function LeaveContestDialog({ contest, onClose, onLeft }: Props) {
-  const { userId } = useMe();
+export default function LeaveContestDialog({ contest, onClose, onLeft, viewerId }: Props) {
+  const me = useMe();
+  const userId = viewerId ?? me.userId;
   const [removeParticipant, { isLoading, error, reset }] = useRemoveParticipantMutation();
 
   const handleClose = () => {

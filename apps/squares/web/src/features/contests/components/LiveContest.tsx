@@ -8,13 +8,14 @@ import type { QuarterResult } from '../../../types/contest';
 import { isGameOver } from '../../../utils/game';
 import { useGetGameQuery } from '../../games/api';
 import { useGameStream } from '../../games/useGameStream';
-import { isMe, useMe } from '../../profile/useMe';
+import { isMe } from '../../profile/useMe';
 import { useToast } from '../../toast/useToast';
 import type { ContestEvent } from '../live/events';
 import {
   selectLiveActivity,
   selectLiveContest,
   selectLiveParticipants,
+  selectLiveViewerId,
   selectStreamEnd,
   selectStreamStatus,
 } from '../live/selectors';
@@ -36,7 +37,7 @@ interface Props {
 export default function LiveContest({ contestId }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const me = useMe();
+  const me = { userId: useAppSelector(selectLiveViewerId) };
 
   const contest = useAppSelector(selectLiveContest);
   const participants = useAppSelector(selectLiveParticipants);
@@ -99,14 +100,6 @@ export default function LiveContest({ contestId }: Props) {
 
   if (!contest) {
     return status === 'failed' ? <ContestError onRetry={resync} /> : <ContestPageSkeleton />;
-  }
-
-  if (me.isLoading) {
-    return <ContestPageSkeleton />;
-  }
-
-  if (me.isError) {
-    return <ContestError onRetry={() => me.refetch?.()} />;
   }
 
   return (

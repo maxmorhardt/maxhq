@@ -3,7 +3,6 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
 import type { Contest, Square as SquareModel } from '../../../../types/contest';
-import { useGetMyProfileQuery } from '../../../profile/api';
 import { useToast } from '../../../toast/useToast';
 import { useClaimSquareMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
@@ -39,7 +38,6 @@ const squareGap = 'clamp(2px, 0.9cqw, 8px)';
 export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { data: profile } = useGetMyProfileQuery();
   const [claimSquare] = useClaimSquareMutation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -75,16 +73,14 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
       showToast('Square limit reached', 'warning');
       return;
     }
-    // claims use the profile's default initials, so they have to exist first
-    if (!profile?.defaultInitials) {
-      showToast('Set your initials in your profile before claiming a square', 'warning');
-      navigate('/profile');
-      return;
-    }
-
     try {
       await claimSquare({ contestId: contest.id, squareId: square.id }).unwrap();
     } catch (err) {
+      if (errorStatus(err) === 422) {
+        showToast(errorMessage(err, 'Set your initials in your profile first'), 'warning');
+        navigate('/profile');
+        return;
+      }
       showToast(errorMessage(err, 'Error claiming square'), 'error');
       if (errorStatus(err) === 409) {
         onStale();

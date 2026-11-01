@@ -238,6 +238,7 @@ export default function ParticipantsManager({
         contest={leaving ? contest : null}
         onClose={() => setLeaving(false)}
         onLeft={onClose}
+        viewerId={viewer.me.userId}
       />
     </>
   );
