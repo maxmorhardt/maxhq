@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -21,7 +20,6 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/realtime/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
-	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -155,19 +153,12 @@ func TestStreamContest_SubscribeErrors(t *testing.T) {
 	}
 }
 
-func TestMain(m *testing.M) {
-	if err := pseudonym.SetKey("0123456789abcdef0123456789abcdef"); err != nil {
-		panic(err)
-	}
-	os.Exit(m.Run())
-}
-
 func TestStreamContest_RevokesWhenAccessIsLost(t *testing.T) {
 	contestID := uuid.New()
 	ch := make(chan service.Event, 1)
-	ch <- eventOf(t, "3-0", events.ParticipantRemovedType, contestID, events.AccessFields{UserID: pseudonym.Of("v@b.com")})
+	ch <- eventOf(t, "3-0", events.ParticipantRemovedType, contestID, events.AccessFields{UserID: "u_viewer"})
 	svc := mocks.NewStreamService(t)
-	svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&service.Subscription{Events: ch, Stop: func() {}}, nil)
+	svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&service.Subscription{ViewerID: "u_viewer", Events: ch, Stop: func() {}}, nil)
 	svc.EXPECT().CheckAccess(mock.Anything, contestID, "v@b.com").Return(errs.ErrInsufficientRole)
 
 	w := serve(streamRouter(svc, slowTimers, nil, farFuture()), "/events/contests/"+contestID.String(), nil)

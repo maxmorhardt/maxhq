@@ -33,7 +33,7 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | read replica | the same six with a `DB_READ_` prefix (optional) |
 | redis | `REDIS_URL` |
 | service-to-service | `INTERNAL_API_TOKEN` (the same value in contests, accounts, and realtime) |
-| pseudonyms | `PSEUDONYM_KEY`, at least 32 bytes (the same value in contests, accounts, and realtime; changing it renames every player) |
+| pseudonyms | `PSEUDONYM_KEY`, at least 32 bytes (the same value in contests and accounts; changing it renames every player) |
 | http | `ALLOWED_ORIGINS` |
 
 `REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the gitops repo's `valkey-users` secret.

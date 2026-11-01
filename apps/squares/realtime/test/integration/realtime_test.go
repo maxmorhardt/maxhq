@@ -21,7 +21,6 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/testkit"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/events"
-	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -61,11 +60,6 @@ func run(m *testing.M) int {
 		Contests: model.ContestsConfig{URL: contestsSrv.URL},
 		Stream:   model.StreamConfig{HeartbeatInterval: 25 * time.Second, RevocationInterval: time.Minute},
 	}
-	err = pseudonym.SetKey("0123456789abcdef0123456789abcdef")
-	if err != nil {
-		slog.Error("pseudonym key", "error", err)
-		return 1
-	}
 	infra, err := bootstrap.Connect(cfg)
 	if err != nil {
 		slog.Error("connect", "error", err)
@@ -97,6 +91,12 @@ func (f *fakeContests) setMembers(contestID uuid.UUID, users ...string) {
 	}
 }
 
+// stands in for the user id contests names each viewer by
+func viewerID(user string) string {
+	local, _, _ := strings.Cut(user, "@")
+	return "u_" + local
+}
+
 func (f *fakeContests) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get(middleware.HeaderInternalToken) != internalToken {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -109,8 +109,9 @@ func (f *fakeContests) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	f.mu.Lock()
+	user := r.URL.Query().Get("user")
 	members, ok := f.members[id]
-	allowed := members[r.URL.Query().Get("user")]
+	allowed := members[user]
 	f.mu.Unlock()
 
 	switch {
@@ -119,7 +120,7 @@ func (f *fakeContests) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case !allowed:
 		w.WriteHeader(http.StatusForbidden)
 	default:
-		_, _ = w.Write([]byte(`{"contest":{"id":"` + id.String() + `","name":"Stream Bowl"},"participants":[]}`))
+		_, _ = w.Write([]byte(`{"contest":{"id":"` + id.String() + `","name":"Stream Bowl"},"participants":[],"viewerId":"` + viewerID(user) + `"}`))
 	}
 }
 
@@ -211,7 +212,7 @@ func TestRealtime_RemovedViewerIsRevoked(t *testing.T) {
 	stream.Next(t)
 
 	contests.setMembers(contestID, "owner@squares.test")
-	publish(t, contestID, events.ParticipantRemovedType, events.AccessFields{UserID: pseudonym.Of("kicked@squares.test")})
+	publish(t, contestID, events.ParticipantRemovedType, events.AccessFields{UserID: viewerID("kicked@squares.test")})
 
 	assert.Equal(t, events.AccessRevokedType, stream.Next(t).Kind)
 	assert.True(t, stream.Ended(5*time.Second))
