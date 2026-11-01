@@ -30,7 +30,9 @@ func NewParticipantRepository(db *gorm.DB) ParticipantRepository {
 func (r *participantRepository) GetByContestAndUser(ctx context.Context, contestID uuid.UUID, userID string) (*model.ContestParticipant, error) {
 	var participant model.ContestParticipant
 	err := database.Conn(ctx, r.db).
-		Where("contest_id = ? AND user_id = ?", contestID, userID).
+		Select("contest_participants.*, COALESCE(users.display_name, '') AS display_name").
+		Joins("LEFT JOIN users ON users.email = contest_participants.user_id").
+		Where("contest_participants.contest_id = ? AND contest_participants.user_id = ?", contestID, userID).
 		First(&participant).Error
 	return &participant, database.TranslateError(err)
 }
