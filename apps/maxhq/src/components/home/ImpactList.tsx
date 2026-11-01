@@ -9,11 +9,11 @@ interface Impact {
 const impacts: Impact[] = [
   {
     figure: '15 → 2 min',
-    body: 'Cloud IDE spin-up time after driving the move from EC2 to EKS, with infrastructure costs down 20%.',
+    body: 'Cloud IDE spin-up time after driving the move from EC2 to EKS, for VS Code, JupyterLab, RStudio, and Airflow on AWS.',
   },
   {
-    figure: '3,000+',
-    body: 'Users across quant development, machine learning, and prototyping, in cloud IDEs on AWS: VS Code, JupyterLab, RStudio, and Airflow.',
+    figure: '60%+',
+    body: 'Of users on the self-service EC2 and EKS profiles and bring-your-own IAM roles I owned.',
   },
   {
     figure: '−46%',
@@ -21,7 +21,7 @@ const impacts: Impact[] = [
   },
   {
     figure: '3 days → 45 min',
-    body: 'Deployment time with a patent-pending tool that turns OpenAPI specs into deployed Spring Boot services.',
+    body: 'Deployment time with a tool I led that turns OpenAPI specs into deployed Spring Boot services.',
   },
 ];
 

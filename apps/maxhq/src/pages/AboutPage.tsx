@@ -22,9 +22,9 @@ const experience: { company: string; roles: Role[] }[] = [
         title: 'Software Engineer',
         period: 'Apr 2024 - Present',
         points: [
-          'Engineer on a platform team provisioning cloud-based IDEs on AWS (VSCode, JupyterLab, RStudio, Airflow) for over 3,000 users spanning quantitative development, machine learning, and prototyping.',
-          'Drove the migration from EC2 to EKS with async Spring Boot endpoints and Kubernetes Java Client integrations orchestrating pod lifecycle, cutting IDE spin-up time from 15 minutes to 2 and infrastructure costs by 20%.',
-          'Integrating a new firm-wide AI gateway built on Go and Envoy AI Gateway with an existing org-specific gateway, covering multi-provider LLM routing, token-based rate limiting, and per-tenant quota enforcement.',
+          'Engineer on a platform team provisioning cloud-based IDEs on AWS (VSCode, JupyterLab, RStudio, Airflow) for users across quantitative development, machine learning, and prototyping.',
+          'Drove the migration from EC2 to EKS with async Spring Boot endpoints and Kubernetes Java Client integrations orchestrating pod lifecycle, cutting IDE spin-up time from 15 minutes to 2.',
+          'Building LLM gateway integrations in Go covering multi-provider routing, token-based rate limiting, and per-tenant quotas.',
           'One of the primary escalation points for platform reliability, on-call in and out of rotation, debugging incidents across EKS, EC2, shared filesystems (S3, EFS, NetApp), Jenkins pipelines, and the frontend.',
           'Owned self-service EC2 and EKS configuration profiles and bring-your-own IAM role, adopted by over 60% of users.',
           'Rewrote the Angular frontend from Bootstrap to PrimeNG across 750+ files, split oversized modules into standalone components, consolidated duplicate components and SASS into shared libraries, fixed XSS vulnerabilities, and cut the main bundle size 46%.',
@@ -34,7 +34,7 @@ const experience: { company: string; roles: Role[] }[] = [
         title: 'Associate Software Engineer',
         period: 'Jan 2023 - Apr 2024',
         points: [
-          'Led development of a patent-pending full stack automated deployment tool that ingests OpenAPI specs from SwaggerHub, generates Spring Boot scaffolding, and deploys to Azure Kubernetes Service through a programmatically created Jenkins pipeline, reducing deployment time from 3 days to under 45 minutes.',
+          'Led development of a full stack automated deployment tool that ingests OpenAPI specs from SwaggerHub, generates Spring Boot scaffolding, and deploys to Azure Kubernetes Service through a programmatically created Jenkins pipeline, reducing deployment time from 3 days to under 45 minutes.',
           'Mentored two engineering interns through their projects, both of whom received return offers.',
         ],
       },
