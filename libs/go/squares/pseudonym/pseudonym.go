@@ -60,6 +60,9 @@ func Name(displayName string) string {
 	}
 
 	parts := strings.FieldsFunc(full, func(r rune) bool { return unicode.IsSpace(r) || r == ',' })
+	for len(parts) > 1 && titles[word(parts[0])] {
+		parts = parts[1:]
+	}
 	if len(parts) == 0 {
 		return ""
 	}
@@ -77,10 +80,17 @@ func Name(displayName string) string {
 	return first + " " + string(unicode.ToUpper(initial)) + "."
 }
 
-var suffixes = map[string]bool{"jr": true, "sr": true, "ii": true, "iii": true, "iv": true}
+var (
+	titles   = map[string]bool{"dr": true, "mr": true, "mrs": true, "ms": true, "mx": true, "prof": true}
+	suffixes = map[string]bool{"jr": true, "sr": true, "ii": true, "iii": true, "iv": true, "phd": true, "md": true, "esq": true}
+)
 
 func isSuffix(s string) bool {
-	return suffixes[strings.ToLower(strings.Trim(s, " ."))]
+	return suffixes[word(s)]
+}
+
+func word(s string) string {
+	return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(s)), ".", "")
 }
 
 func Public(displayName string) string {
