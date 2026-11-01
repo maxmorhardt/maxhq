@@ -98,16 +98,14 @@ export function trackConversion(conversion: Conversion, transactionId?: string):
   }
 }
 
-// once per id on this device; google drops a repeated transaction id from anywhere else
+const reported = new Set<string>();
+
+// once per id per page load; google drops a repeated transaction id from anywhere else
 export function trackConversionOnce(conversion: Conversion, id: string): void {
-  const key = `conversion:${conversion}:${id}`;
-  try {
-    if (localStorage.getItem(key)) {
-      return;
-    }
-    localStorage.setItem(key, '1');
-  } catch {
-    // storage is blocked, so only the transaction id dedupes
+  const transactionId = `${conversion}:${id}`;
+  if (reported.has(transactionId)) {
+    return;
   }
-  trackConversion(conversion, `${conversion}:${id}`);
+  reported.add(transactionId);
+  trackConversion(conversion, transactionId);
 }

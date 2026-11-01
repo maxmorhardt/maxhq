@@ -12,7 +12,6 @@ describe('googleAds', () => {
     tagScript()?.remove();
     delete window.dataLayer;
     delete window.gtag;
-    localStorage.clear();
     window.history.replaceState(null, '', '/');
   });
 
@@ -98,14 +97,13 @@ describe('googleAds', () => {
     ]);
   });
 
-  it('still reports when storage is blocked', () => {
+  it('keeps the dedupe out of device storage', () => {
     initGoogleAds('squares.maxhq.io');
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
 
-    trackConversionOnce('signedUp', 'u_pat');
+    trackConversionOnce('signedUp', 'u_storage');
 
-    expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_pat' });
+    expect(setItem).not.toHaveBeenCalled();
+    expect(calls().at(-1)?.[2]).toMatchObject({ transaction_id: 'signedUp:u_storage' });
   });
 });
