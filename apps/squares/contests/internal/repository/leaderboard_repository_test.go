@@ -17,14 +17,15 @@ func TestLeaderboardRepository_GetTopWinners_Success(t *testing.T) {
 
 	mock.ExpectQuery(`WITH wins AS`).
 		WillReturnRows(
-			sqlmock.NewRows([]string{"display_name", "quarter_wins", "squares_claimed", "quarters_played"}).
-				AddRow("Max", 12, 48, 40).
-				AddRow("Jordan", 9, 40, 36))
+			sqlmock.NewRows([]string{"user_id", "display_name", "quarter_wins", "squares_claimed", "quarters_played"}).
+				AddRow("max@example.com", "Max", 12, 48, 40).
+				AddRow("jordan@example.com", "Jordan", 9, 40, 36))
 
 	entries, err := repo.GetTopWinners(context.Background(), 25)
 
 	require.NoError(t, err)
 	require.Len(t, entries, 2)
+	assert.Equal(t, "max@example.com", entries[0].UserID)
 	assert.Equal(t, "Max", entries[0].DisplayName)
 	assert.Equal(t, int64(12), entries[0].QuarterWins)
 	assert.Equal(t, int64(48), entries[0].SquaresClaimed)
@@ -65,15 +66,14 @@ func TestLeaderboardRepository_GetUserRank_Ranked(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewLeaderboardRepository(gdb)
 
-	mock.ExpectQuery(`WITH wins AS .* AS display_name`).
-		WithArgs(model.ContestStatusDeleted, model.GhostUser, "user@example.com", "user@example.com").
-		WillReturnRows(sqlmock.NewRows([]string{"total_ranked", "quarter_wins", "rank", "display_name"}).
-			AddRow(143, 5, 7, "Max Morhardt"))
+	mock.ExpectQuery(`WITH wins AS`).
+		WithArgs(model.ContestStatusDeleted, model.GhostUser, "user@example.com").
+		WillReturnRows(sqlmock.NewRows([]string{"total_ranked", "quarter_wins", "rank"}).
+			AddRow(143, 5, 7))
 
 	rank, err := repo.GetUserRank(context.Background(), "user@example.com")
 
 	require.NoError(t, err)
-	assert.Equal(t, "Max Morhardt", rank.DisplayName)
 	assert.Equal(t, 7, rank.Rank)
 	assert.Equal(t, int64(143), rank.TotalRanked)
 	assert.Equal(t, int64(5), rank.QuarterWins)

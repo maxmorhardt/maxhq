@@ -8,10 +8,17 @@ import Standings from './Standings';
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 const api = vi.hoisted(() => ({ useGetLeaderboardQuery: vi.fn(), useGetMyRankQuery: vi.fn() }));
 vi.mock('../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
+vi.mock('../../profile/useUserId', () => ({ useUserId: () => 'u_ann' }));
 vi.mock('./LeaderboardPodium', () => ({
   PODIUM_SIZE: 3,
-  default: ({ entries, highlightKey }: { entries: LeaderboardEntry[]; highlightKey?: string }) => (
-    <div data-testid="podium" data-highlight={highlightKey}>
+  default: ({
+    entries,
+    highlightUserId,
+  }: {
+    entries: LeaderboardEntry[];
+    highlightUserId?: string;
+  }) => (
+    <div data-testid="podium" data-highlight={highlightUserId}>
       {entries.length}
     </div>
   ),
@@ -26,6 +33,7 @@ vi.mock('./LeaderboardRankCard', () => ({ default: () => <div data-testid="rank"
 const entries = (count: number): LeaderboardEntry[] =>
   Array.from({ length: count }, (_, i) => ({
     rank: i + 1,
+    userId: `u_${i}`,
     displayName: i === 0 ? 'Ann S.' : `Player ${i}`,
     quarterWins: 10 - i,
     squaresClaimed: 0,
@@ -41,7 +49,7 @@ describe('Standings', () => {
       isError: false,
     });
     api.useGetMyRankQuery.mockReturnValue({
-      data: { rank: 1, ranked: true, displayName: 'Ann S.' },
+      data: { rank: 1, ranked: true },
       isLoading: false,
       isError: false,
     });
@@ -55,7 +63,7 @@ describe('Standings', () => {
 
   it('highlights the signed-in player and shows their rank', () => {
     renderWithProviders(<Standings />);
-    expect(screen.getByTestId('podium')).toHaveAttribute('data-highlight', '1:Ann S.');
+    expect(screen.getByTestId('podium')).toHaveAttribute('data-highlight', 'u_ann');
     expect(screen.getByTestId('rank')).toBeInTheDocument();
   });
 

@@ -1,5 +1,6 @@
 export interface LeaderboardEntry {
   rank: number;
+  userId: string;
   displayName: string;
   quarterWins: number;
   squaresClaimed: number;
@@ -15,5 +16,4 @@ export interface LeaderboardRankResponse {
   totalRanked: number;
   quarterWins: number;
   ranked: boolean;
-  displayName: string;
 }

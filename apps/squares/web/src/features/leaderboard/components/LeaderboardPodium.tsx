@@ -4,7 +4,6 @@ import { alpha } from '@mui/material/styles';
 import { popIn } from '../../../components/animations';
 import { easing, fonts, game as palette } from '../../../app/theme';
 import type { LeaderboardEntry } from '../../../types/leaderboard';
-import { leaderboardKey } from '../utils/leaderboardKey';
 import { stripDangerousChars } from '../../../utils/sanitize';
 
 export const PODIUM_SIZE = 3;
@@ -23,11 +22,11 @@ function winRate(entry: LeaderboardEntry) {
 
 interface Props {
   entries: LeaderboardEntry[];
-  highlightKey?: string;
+  highlightUserId?: string;
 }
 
 // the top three as trading cards: the place, the player, and their line of stats
-export default function LeaderboardPodium({ entries, highlightKey }: Props) {
+export default function LeaderboardPodium({ entries, highlightUserId }: Props) {
   if (entries.length === 0) {
     return null;
   }
@@ -48,8 +47,7 @@ export default function LeaderboardPodium({ entries, highlightKey }: Props) {
     >
       {entries.map((entry, i) => {
         const medal = MEDALS[entry.rank] ?? MEDALS[3];
-        const isMe =
-          Boolean(highlightKey) && leaderboardKey(entry.rank, entry.displayName) === highlightKey;
+        const isMe = Boolean(highlightUserId) && entry.userId === highlightUserId;
         const name = stripDangerousChars(entry.displayName);
         const stats = [
           {
@@ -63,7 +61,7 @@ export default function LeaderboardPodium({ entries, highlightKey }: Props) {
         return (
           <Box
             component="li"
-            key={`${entry.rank}-${entry.displayName}`}
+            key={entry.userId}
             sx={{
               position: 'relative',
               overflow: 'hidden',

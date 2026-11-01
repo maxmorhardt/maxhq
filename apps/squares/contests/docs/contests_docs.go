@@ -1823,16 +1823,16 @@ const docTemplatecontests = `{
                 "squaresClaimed": {
                     "type": "integer",
                     "example": 48
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "u_3q2mL0x9VfTzQk1rB7cW8a"
                 }
             }
         },
         "model.LeaderboardRankResponse": {
             "type": "object",
             "properties": {
-                "displayName": {
-                    "type": "string",
-                    "example": "Max M."
-                },
                 "quarterWins": {
                     "type": "integer",
                     "example": 5

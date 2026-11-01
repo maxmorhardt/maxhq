@@ -161,6 +161,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 		resp := call(t, testkit.Anonymous, http.MethodGet, "/leaderboard", nil)
 		require.Equal(t, http.StatusOK, resp.Status)
 		assert.Contains(t, string(resp.Body), "quarterWins")
+		assert.NotContains(t, string(resp.Body), "@", "rows carry user ids, never emails")
 	})
 }
 

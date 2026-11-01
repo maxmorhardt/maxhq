@@ -8,10 +8,31 @@ const theme = createTheme({ palette: { mode: 'dark' } });
 
 // the podium owns ranks 1-3, so the table starts at 4
 const entries: LeaderboardEntry[] = [
-  { rank: 4, displayName: 'Max M.', quarterWins: 12, squaresClaimed: 48, quartersPlayed: 48 },
-  { rank: 5, displayName: 'Jordan K.', quarterWins: 9, squaresClaimed: 40, quartersPlayed: 30 },
+  {
+    rank: 4,
+    userId: 'u_max',
+    displayName: 'Max M.',
+    quarterWins: 12,
+    squaresClaimed: 48,
+    quartersPlayed: 48,
+  },
+  {
+    rank: 5,
+    userId: 'u_jordan',
+    displayName: 'Jordan K.',
+    quarterWins: 9,
+    squaresClaimed: 40,
+    quartersPlayed: 30,
+  },
   // played nothing, so there is no rate to show. values stay distinct from every rank on screen
-  { rank: 6, displayName: 'Sam R.', quarterWins: 0, squaresClaimed: 11, quartersPlayed: 0 },
+  {
+    rank: 6,
+    userId: 'u_sam',
+    displayName: 'Sam R.',
+    quarterWins: 0,
+    squaresClaimed: 11,
+    quartersPlayed: 0,
+  },
 ];
 
 function renderTable(props: Partial<React.ComponentProps<typeof LeaderboardTable>> = {}) {
@@ -65,6 +86,7 @@ describe('LeaderboardTable', () => {
       entries: [
         {
           rank: 1,
+          userId: 'u_script',
           displayName: '<script>x</script>',
           quarterWins: 1,
           squaresClaimed: 1,
@@ -111,13 +133,13 @@ describe('LeaderboardTable', () => {
   });
 
   it('marks the current user', () => {
-    renderTable({ highlightKey: '5:Jordan K.' });
+    renderTable({ highlightUserId: 'u_jordan' });
 
     expect(screen.getByText('You')).toBeInTheDocument();
   });
 
   it('does not mark anyone when the user is absent', () => {
-    renderTable({ highlightKey: '5:Nobody' });
+    renderTable({ highlightUserId: 'u_nobody' });
 
     expect(screen.queryByText('You')).not.toBeInTheDocument();
   });

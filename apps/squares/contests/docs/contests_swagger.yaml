@@ -324,12 +324,12 @@ definitions:
       squaresClaimed:
         example: 48
         type: integer
+      userId:
+        example: u_3q2mL0x9VfTzQk1rB7cW8a
+        type: string
     type: object
   model.LeaderboardRankResponse:
     properties:
-      displayName:
-        example: Max M.
-        type: string
       quarterWins:
         example: 5
         type: integer
