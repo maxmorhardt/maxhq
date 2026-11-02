@@ -9,13 +9,14 @@ const printStyles = (
   <GlobalStyles
     styles={{
       '@media print': {
-        '@page': { size: 'portrait', margin: '0.4in' },
+        // no page margin leaves the browser no room for its date, title, and url lines
+        '@page': { size: 'portrait', margin: 0 },
         'html, body': { colorScheme: 'light', background: '#fff !important' },
         'body *': { background: 'transparent !important', minHeight: '0 !important' },
         'header, footer, .squares-no-print': { display: 'none !important' },
         '.squares-print-page': { padding: '0 !important', maxWidth: 'none !important' },
         '.squares-print-board': {
-          padding: '0 !important',
+          padding: '0.4in !important',
           maxWidth: 'none !important',
           background: '#fff !important',
         },
