@@ -60,18 +60,20 @@ export default function PrintableBoard({ awayTeam, homeTeam }: Props) {
           }}
         >
           {/* the corner, then the boxes for the away team's digits */}
-          <Box sx={{ ...digitCellSx, borderRight: `1px solid ${line}` }} />
-          {cells.map((c) => (
-            <Box
-              key={`top-${c}`}
-              role="columnheader"
-              sx={{
-                ...digitCellSx,
-                borderRight: `1px solid ${line}`,
-                borderBottom: `2px solid ${ink}`,
-              }}
-            />
-          ))}
+          <Box role="row" sx={{ display: 'contents' }}>
+            <Box sx={{ ...digitCellSx, borderRight: `1px solid ${line}` }} />
+            {cells.map((c) => (
+              <Box
+                key={`top-${c}`}
+                role="columnheader"
+                sx={{
+                  ...digitCellSx,
+                  borderRight: `1px solid ${line}`,
+                  borderBottom: `2px solid ${ink}`,
+                }}
+              />
+            ))}
+          </Box>
 
           {cells.map((r) => (
             <Box key={`row-${r}`} role="row" sx={{ display: 'contents' }}>

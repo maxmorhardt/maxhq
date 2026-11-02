@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { fonts } from '../../../app/theme';
 import type { Game, ScoreboardWeek } from '../../../types/contest';
 import { isLive } from '../../../utils/game';
-import { useGetScoreboardQuery } from '../api';
+import { useGetScoreboardQuery, useGetUpcomingGamesQuery } from '../api';
 import CreateContestButton from '../../contests/components/CreateContestButton';
 import GameCard from './GameCard';
 
@@ -89,6 +89,9 @@ function ScoreboardSkeleton() {
 export default function GamesScoreboard() {
   const [week, setWeek] = useState<ScoreboardWeek | undefined>(undefined);
   const { data: board, isLoading, isError, refetch } = useGetScoreboardQuery(week);
+  // only games the create form offers get a start link, so the link always arrives with its game picked
+  const { data: upcoming } = useGetUpcomingGamesQuery();
+  const creatable = new Set(upcoming?.map((game) => game.id));
 
   if (isLoading) {
     return <ScoreboardSkeleton />;
@@ -178,7 +181,7 @@ export default function GamesScoreboard() {
                     key={game.id}
                     game={game}
                     action={
-                      game.status === 'scheduled' ? (
+                      creatable.has(game.id) ? (
                         <CreateContestButton look="link" label="Start a board" gameId={game.id} />
                       ) : undefined
                     }
