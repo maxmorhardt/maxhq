@@ -155,4 +155,27 @@ describe('CreateContestForm', () => {
     fireEvent.keyDown(screen.getByRole('slider', { name: 'Max squares' }), { key: 'ArrowRight' });
     expect(screen.getByText('11 of 100')).toBeInTheDocument();
   });
+
+  it('arrives with the game a link asked for already picked', async () => {
+    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=g-1' });
+    expect(screen.queryByText('No game picked yet')).not.toBeInTheDocument();
+
+    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
+    submit();
+
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith(expect.objectContaining({ gameId: 'g-1' }))
+    );
+  });
+
+  it('asks for a game when the one a link asked for is gone', () => {
+    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=started' });
+    expect(screen.getByText('No game picked yet')).toBeInTheDocument();
+
+    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
+    submit();
+
+    expect(create).not.toHaveBeenCalled();
+    expect(screen.getByText('Pick the game this contest is played on')).toBeInTheDocument();
+  });
 });

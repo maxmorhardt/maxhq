@@ -60,4 +60,10 @@ describe('GameCard', () => {
     expect(screen.getByText('Final')).toBeInTheDocument();
     expect(screen.getByLabelText('Bills score')).toHaveTextContent('23');
   });
+
+  it('shows the action it is given under the teams', () => {
+    renderWithProviders(<GameCard game={game()} action={<button type="button">Start</button>} />);
+
+    expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();
+  });
 });

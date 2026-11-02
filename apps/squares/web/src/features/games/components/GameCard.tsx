@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material';
+import type { ReactNode } from 'react';
 import { alpha } from '@mui/material/styles';
 import { fonts, game as palette } from '../../../app/theme';
 import TeamMark from '../../../components/TeamMark';
@@ -7,6 +8,7 @@ import { gameClock, hasKickedOff, isLive } from '../../../utils/game';
 
 interface Props {
   game: Game;
+  action?: ReactNode;
 }
 
 const QUARTERS = [1, 2, 3, 4];
@@ -77,7 +79,7 @@ function TeamRow({ game, side }: { game: Game; side: 'away' | 'home' }) {
   );
 }
 
-export default function GameCard({ game }: Props) {
+export default function GameCard({ game, action }: Props) {
   const live = isLive(game);
 
   return (
@@ -148,6 +150,19 @@ export default function GameCard({ game }: Props) {
       </Box>
       <TeamRow game={game} side="away" />
       <TeamRow game={game} side="home" />
+      {action && (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            pt: 1,
+            borderTop: 1,
+            borderColor: 'divider',
+          }}
+        >
+          {action}
+        </Box>
+      )}
     </Box>
   );
 }

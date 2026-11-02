@@ -18,7 +18,7 @@ export default function GamesPage() {
       <PageTitle
         align="left"
         title="Games"
-        subtitle="Every NFL game of the season, week by week. These are the scores that call every square."
+        subtitle="Every NFL game of the season, week by week. Pick an upcoming game to start a free squares board for it."
       />
 
       <GamesScoreboard />

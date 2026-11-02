@@ -1,6 +1,7 @@
 import { Container, Typography } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitle from '../components/PageTitle';
+import StartBoardCallout from '../features/contests/components/StartBoardCallout';
 import Standings from '../features/leaderboard/components/Standings';
 
 // matches the number of players the API returns by default
@@ -15,6 +16,7 @@ export default function LeaderboardPage() {
           name="description"
           content="See the top Squares players ranked by all-time quarter wins."
         />
+        <link rel="canonical" href="https://squares.maxhq.io/leaderboard" />
       </Helmet>
 
       <Standings
@@ -30,6 +32,12 @@ export default function LeaderboardPage() {
       <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2.5, textAlign: 'center' }}>
         Win rate is quarter wins over the quarters a player held a square in.
       </Typography>
+
+      <StartBoardCallout
+        message="Want to climb the leaderboard? Run a squares board for this week's game with friends."
+        signedInMessage="Every quarter you win counts here. Start a board for this week's game."
+        sx={{ mt: { xs: 4, md: 5 } }}
+      />
     </Container>
   );
 }

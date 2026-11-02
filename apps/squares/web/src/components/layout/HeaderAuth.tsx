@@ -47,7 +47,8 @@ export default function HeaderAuth({
       {!auth.isAuthenticated ? (
         <Box sx={{ display: 'flex' }}>
           <Button
-            variant="contained"
+            variant="outlined"
+            color="inherit"
             size="small"
             onClick={(e) => setAnchorElSignIn(e.currentTarget)}
             startIcon={<LoginIcon />}

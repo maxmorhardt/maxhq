@@ -1,11 +1,16 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mockAuth } from '../../../test/auth';
 import { renderWithProviders } from '../../../test/render';
 import type { Game } from '../../../types/contest';
 import GamesScoreboard from './GamesScoreboard';
 
-const api = vi.hoisted(() => ({ useGetScoreboardQuery: vi.fn() }));
+const api = vi.hoisted(() => ({
+  useGetScoreboardQuery: vi.fn(),
+  useGetUpcomingGamesQuery: vi.fn(),
+}));
 vi.mock('../api', () => api);
+vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 
 const game = (id: string, gameTime: string, status: Game['status'] = 'scheduled') =>
   ({
@@ -36,6 +41,8 @@ const board = {
 
 describe('GamesScoreboard', () => {
   beforeEach(() => {
+    mockAuth();
+    api.useGetUpcomingGamesQuery.mockReturnValue({ data: [game('b', '2026-10-25T17:00:00Z')] });
     api.useGetScoreboardQuery.mockReturnValue({
       data: board,
       isLoading: false,
@@ -118,5 +125,20 @@ describe('GamesScoreboard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(refetch).toHaveBeenCalled();
+  });
+
+  it('offers a board only for games the create form can pick', () => {
+    renderWithProviders(<GamesScoreboard />);
+
+    const starts = screen.getAllByRole('button', { name: 'Start a board' });
+    expect(starts).toHaveLength(1);
+    expect(starts[0].closest('article')).toBe(screen.getAllByRole('article')[1]);
+  });
+
+  it('offers no boards while the upcoming games are still loading', () => {
+    api.useGetUpcomingGamesQuery.mockReturnValue({ data: undefined });
+    renderWithProviders(<GamesScoreboard />);
+
+    expect(screen.queryByRole('button', { name: 'Start a board' })).not.toBeInTheDocument();
   });
 });

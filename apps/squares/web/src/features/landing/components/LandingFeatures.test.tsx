@@ -10,7 +10,7 @@ describe('LandingFeatures', () => {
     for (const name of [
       'Live on every screen',
       'Real scores, called for you',
-      'Your pool, your rules',
+      'Your board, your rules',
       'Free, with nothing to install',
     ]) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();

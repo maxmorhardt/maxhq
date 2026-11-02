@@ -33,7 +33,7 @@ const application = {
   operatingSystem: 'Any',
   browserRequirements: 'Requires JavaScript',
   description:
-    'Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time.',
+    "Run football squares and Super Bowl squares online. Set up a 10x10 board for any NFL game, share one link, and the live score picks each quarter's square.",
   offers: {
     '@type': 'Offer',
     price: '0',
@@ -70,17 +70,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta property="og:url" content="https://squares.maxhq.io/" />
         <meta property="og:site_name" content="Squares" />
         <meta property="og:locale" content="en_US" />
-        <meta property="og:title" content="Squares – NFL Football Squares Pools" />
+        <meta property="og:title" content="Squares – Football Squares Online" />
         <meta
           property="og:description"
-          content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
+          content="Run football squares and Super Bowl squares online. Set up a 10x10 board for any NFL game, share one link, and the live score picks each quarter's square."
         />
         <meta property="og:image" content="https://squares.maxhq.io/squares_logo.png" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="Squares – NFL Football Squares Pools" />
+        <meta name="twitter:title" content="Squares – Football Squares Online" />
         <meta
           name="twitter:description"
-          content="Create and join NFL football squares pools. Claim squares, track live scores, and compete with friends in real-time."
+          content="Run football squares and Super Bowl squares online. Set up a 10x10 board for any NFL game, share one link, and the live score picks each quarter's square."
         />
         <meta name="twitter:image" content="https://squares.maxhq.io/squares_logo.png" />
         <script

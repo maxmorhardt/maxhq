@@ -1,9 +1,11 @@
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import GridViewIcon from '@mui/icons-material/GridView';
+import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import PrintIcon from '@mui/icons-material/Print';
 import SportsFootballIcon from '@mui/icons-material/SportsFootball';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -16,16 +18,20 @@ import { useState, type MouseEvent } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { easing, fonts, game } from '../../app/theme';
+import CreateContestButton from '../../features/contests/components/CreateContestButton';
+import { useStartContest } from '../../features/contests/useStartContest';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 import { HEADER_HEIGHT } from '../../types/layout';
 import { notifySession } from '../../auth/session';
 
 const pages = [
+  { name: 'Home', icon: <HomeIcon />, navigate: '/' },
   { name: 'Contests', icon: <GridViewIcon />, navigate: '/contests' },
   { name: 'Games', icon: <SportsFootballIcon />, navigate: '/games' },
   { name: 'Leaderboard', icon: <LeaderboardIcon />, navigate: '/leaderboard' },
-  { name: 'Learn More', icon: <InfoIcon />, navigate: '/learn-more' },
+  { name: 'How to Play', icon: <InfoIcon />, navigate: '/learn-more' },
+  { name: 'Printable', icon: <PrintIcon />, navigate: '/printable-football-squares' },
   { name: 'Contact', icon: <ContactSupportIcon />, navigate: '/contact' },
 ];
 
@@ -39,12 +45,9 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { start: startContest, signInDialog } = useStartContest();
   const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
-
-  const visiblePages = auth.isAuthenticated
-    ? pages
-    : pages.filter((page) => page.name !== 'Contests');
 
   const handleOpenNavMenu = (event: MouseEvent<HTMLElement>) => setAnchorElNav(event.currentTarget);
   const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) =>
@@ -105,7 +108,7 @@ export default function Header() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.25,
-                mr: { md: 3 },
+                mr: { lg: 3 },
                 textDecoration: 'none',
               }}
             >
@@ -116,14 +119,14 @@ export default function Header() {
             </Box>
 
             {/* spacer pushes the mobile menu and auth to the right */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'block', md: 'none' } }} />
+            <Box sx={{ flexGrow: 1, display: { xs: 'block', lg: 'none' } }} />
 
             {/* desktop navigation links */}
             <Box
               component="nav"
-              sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 0.5 }}
+              sx={{ flexGrow: 1, display: { xs: 'none', lg: 'flex' }, gap: 0.5 }}
             >
-              {visiblePages.map((page) => {
+              {pages.map((page) => {
                 const active =
                   location.pathname === page.navigate ||
                   location.pathname.startsWith(`${page.navigate}/`);
@@ -165,12 +168,18 @@ export default function Header() {
               })}
             </Box>
 
+            {/* the one action a new visitor came for, on every page */}
+            <Box sx={{ display: { xs: 'none', lg: 'block' }, mr: 0.5 }}>
+              <CreateContestButton look="header" label="New Contest" />
+            </Box>
+
             {/* mobile navigation menu (hamburger, grouped with auth on the right) */}
             <HeaderMenu
               handleOpenNavMenu={handleOpenNavMenu}
               handleCloseNavMenu={handleCloseNavMenu}
               anchorElNav={anchorElNav}
-              pages={visiblePages}
+              pages={pages}
+              onNewContest={startContest}
             />
 
             {/* sign-in button or user menu */}
@@ -185,6 +194,7 @@ export default function Header() {
           </Toolbar>
         </Container>
       </AppBar>
+      {signInDialog}
     </>
   );
 }

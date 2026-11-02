@@ -104,6 +104,9 @@ describe('ContactPage', () => {
       'href',
       '/learn-more'
     );
+    expect(
+      screen.getByRole('link', { name: "Set up a board for this week's game" })
+    ).toHaveAttribute('href', '/contests/create');
   });
 
   it('renders the contact form', () => {

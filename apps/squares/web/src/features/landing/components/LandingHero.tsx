@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { game } from '../../../app/theme';
 import Reveal from '../../../components/Reveal';
 import DemoBoard, { type DemoStage } from './DemoBoard';
-import LandingCreateContestButton from './LandingCreateContestButton';
+import CreateContestButton from '../../contests/components/CreateContestButton';
 
 // when each stage of the opening demo lands, in ms after mount
 const SEQUENCE: [DemoStage, number][] = [
@@ -68,11 +68,11 @@ export default function LandingHero() {
                 mx: { xs: 'auto', md: 0 },
               }}
             >
-              The squares pool,{' '}
+              The easiest way to run{' '}
               <Box component="span" sx={{ color: 'primary.main' }}>
-                live
-              </Box>{' '}
-              on every phone.
+                football squares
+              </Box>
+              .
             </Typography>
           </Reveal>
 
@@ -88,7 +88,7 @@ export default function LandingHero() {
               }}
             >
               Set up a ten by ten board for any NFL game, share one link, and watch the numbers drop
-              and the winners light up for everyone in real time.
+              and each quarter&apos;s square light up for everyone in real time.
             </Typography>
           </Reveal>
 
@@ -102,7 +102,7 @@ export default function LandingHero() {
               justifyContent: { xs: 'center', md: 'flex-start' },
             }}
           >
-            <LandingCreateContestButton />
+            <CreateContestButton />
             <Button
               component={Link}
               to="/learn-more"
@@ -110,7 +110,7 @@ export default function LandingHero() {
               color="inherit"
               size="large"
             >
-              Learn More
+              How to Play
             </Button>
           </Reveal>
 

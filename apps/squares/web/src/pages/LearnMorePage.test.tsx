@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
+import { mockAuth } from '../test/auth';
 import LearnMorePage from './LearnMorePage';
+
+vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -29,6 +32,7 @@ function renderPage() {
 
 describe('LearnMorePage', () => {
   beforeEach(() => {
+    mockAuth();
     vi.stubGlobal(
       'IntersectionObserver',
       class {
@@ -47,38 +51,48 @@ describe('LearnMorePage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders the "Learn More" heading', () => {
+  it('names the page for what people search', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: /learn more/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'How to Play Football Squares' })
+    ).toBeInTheDocument();
   });
 
-  it('renders the "How Squares Work" section', () => {
+  it('walks through all four steps', () => {
     renderPage();
-    expect(screen.getByText('How Squares Work')).toBeInTheDocument();
+    expect(screen.getByText('How Football Squares Works')).toBeInTheDocument();
+    for (const step of [
+      'Set up the board',
+      'Friends claim squares',
+      'Numbers are drawn at kickoff',
+      'The score picks each square',
+    ]) {
+      expect(screen.getByText(step)).toBeInTheDocument();
+    }
   });
 
-  it('renders all three how-it-works steps', () => {
+  it('says plainly that no money is involved', () => {
     renderPage();
-    expect(screen.getByText('Create the Grid')).toBeInTheDocument();
-    expect(screen.getByText('Players Choose Squares')).toBeInTheDocument();
-    expect(screen.getByText('Determine Winners')).toBeInTheDocument();
+    expect(screen.getByText('Free to play, just for fun.')).toBeInTheDocument();
+    expect(screen.getByText('Does Squares involve money or prizes?')).toBeInTheDocument();
+    expect(screen.getByText('Free, with no money involved')).toBeInTheDocument();
   });
 
-  it('renders the Features section', () => {
+  it('offers a way to start a board from the top and the bottom', () => {
     renderPage();
-    expect(screen.getByText('Squares Made Easy')).toBeInTheDocument();
-    expect(screen.getByText('Social & Collaborative')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^create a contest$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start a free board/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /this week's games/i })).toHaveAttribute(
+      'href',
+      '/games'
+    );
   });
 
-  it('renders FAQ questions', () => {
+  it('rewords the bottom pitch for a signed-in player', () => {
+    mockAuth({ email: 'a@x.com' });
     renderPage();
-    expect(screen.getByText('What is Squares?')).toBeInTheDocument();
-    expect(screen.getByText('How do I create a contest?')).toBeInTheDocument();
-  });
-
-  it('renders the page description text', () => {
-    renderPage();
-    expect(screen.getByText(/Discover everything you need to know/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /start a free board/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/ready for the next game/i)).toBeInTheDocument();
   });
 
   it('reveals its sections once they scroll into view', () => {

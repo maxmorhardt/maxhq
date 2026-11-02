@@ -1,4 +1,4 @@
-import { Email, HelpOutlined, Schedule } from '@mui/icons-material';
+import { AddCircleOutlined, Email, HelpOutlined, Schedule } from '@mui/icons-material';
 import { Box, Container } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitle from '../components/PageTitle';
@@ -25,6 +25,12 @@ const contactMethods = [
     title: 'How it works',
     details: 'Rules, scoring, and FAQs',
     href: '/learn-more',
+  },
+  {
+    icon: <AddCircleOutlined />,
+    title: 'Start a contest',
+    details: "Set up a board for this week's game",
+    href: '/contests/create',
   },
 ];
 

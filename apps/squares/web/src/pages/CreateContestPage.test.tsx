@@ -25,6 +25,7 @@ describe('CreateContestPage', () => {
     mockAuth();
     renderWithProviders(<CreateContestPage />);
     expect(screen.queryByTestId('form')).not.toBeInTheDocument();
-    expect(screen.getByText('Sign In Required')).toBeInTheDocument();
+    expect(screen.getByText('Sign in to create your board')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in with microsoft/i })).toBeInTheDocument();
   });
 });

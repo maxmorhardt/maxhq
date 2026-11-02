@@ -1,15 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
 import Footer from './Footer';
-
-const mockNavigate = vi.fn();
-
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual<typeof import('react-router')>('react-router');
-  return { ...actual, useNavigate: () => mockNavigate };
-});
 
 const theme = createTheme();
 
@@ -32,16 +25,15 @@ describe('Footer', () => {
 
   it('renders all navigation links', () => {
     renderFooter();
-    expect(screen.getByText('Learn More')).toBeInTheDocument();
+    expect(screen.getByText('How to Play')).toBeInTheDocument();
     expect(screen.getByText('Contact')).toBeInTheDocument();
     expect(screen.getByText('Privacy')).toBeInTheDocument();
     expect(screen.getByText('Terms')).toBeInTheDocument();
   });
 
-  it('navigates to the correct path when a link is clicked', () => {
+  it('links the site pages with real hrefs crawlers can follow', () => {
     renderFooter();
-    fireEvent.click(screen.getByText('Learn More'));
-    expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
+    expect(screen.getByText('How to Play').closest('a')).toHaveAttribute('href', '/learn-more');
   });
 
   it('links the legal pages to maxhq.io', () => {

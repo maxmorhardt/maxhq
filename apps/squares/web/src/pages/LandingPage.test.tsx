@@ -65,7 +65,7 @@ describe('LandingPage', () => {
 
   it('renders the how-it-works story', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: 'How a pool plays out' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'How a game plays out' })).toBeInTheDocument();
   });
 
   it('renders the features section', () => {

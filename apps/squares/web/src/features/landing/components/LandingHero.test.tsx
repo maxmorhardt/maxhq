@@ -15,14 +15,19 @@ describe('LandingHero', () => {
   it('renders the headline as the page heading', () => {
     renderWithProviders(<LandingHero />);
 
-    expect(screen.getByRole('heading', { level: 1, name: /squares pool/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /the easiest way to run football squares/i })
+    ).toBeInTheDocument();
   });
 
   it('offers to create a contest and to learn the rules', () => {
     renderWithProviders(<LandingHero />);
 
     expect(screen.getByRole('button', { name: /create a contest/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Learn More' })).toHaveAttribute('href', '/learn-more');
+    expect(screen.getByRole('link', { name: 'How to Play' })).toHaveAttribute(
+      'href',
+      '/learn-more'
+    );
   });
 
   it('plays the demo board through to a winner', () => {

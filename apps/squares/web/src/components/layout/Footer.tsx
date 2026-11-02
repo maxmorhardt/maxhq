@@ -1,14 +1,13 @@
 import { Box, Container, Link, Typography } from '@mui/material';
-import { useNavigate } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import { fonts } from '../../app/theme';
 
 export default function Footer() {
-  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
 
   // legal pages are centralized on maxhq.io for all services
   const footerLinks = [
-    { label: 'Learn More', path: '/learn-more' },
+    { label: 'How to Play', path: '/learn-more' },
     { label: 'Contact', path: '/contact' },
     { label: 'Privacy', href: 'https://maxhq.io/privacy-policy' },
     { label: 'Terms', href: 'https://maxhq.io/terms-of-service' },
@@ -52,7 +51,7 @@ export default function Footer() {
                 key={link.label}
                 {...(link.href
                   ? { href: link.href, target: '_blank', rel: 'noreferrer' }
-                  : { onClick: () => link.path && navigate(link.path) })}
+                  : { component: RouterLink, to: link.path })}
                 underline="hover"
                 sx={{
                   color: 'text.secondary',

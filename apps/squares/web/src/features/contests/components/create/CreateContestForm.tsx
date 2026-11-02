@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
 import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
@@ -102,6 +102,7 @@ function GameOption({
 
 export default function CreateContestForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const {
     data: games = [],
     isLoading: gamesLoading,
@@ -112,7 +113,8 @@ export default function CreateContestForm() {
   const [name, setName] = useState('');
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [maxSquares, setMaxSquares] = useState(10);
-  const [gameId, setGameId] = useState('');
+  // a "start a board for this game" link arrives with the game picked
+  const [gameId, setGameId] = useState(() => searchParams.get('game') ?? '');
   const [fieldErrors, setFieldErrors] = useState<{ game?: string; name?: string }>({});
   const [error, setError] = useState('');
 
@@ -140,7 +142,7 @@ export default function CreateContestForm() {
   // every problem shows on its own step; the first one is brought into view and focused
   const validate = () => {
     const errors = {
-      game: gameId ? undefined : 'Pick the game this contest is played on',
+      game: selectedGame ? undefined : 'Pick the game this contest is played on',
       name: name.trim() ? undefined : 'Contest name is required',
     };
 

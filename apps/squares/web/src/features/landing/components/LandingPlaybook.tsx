@@ -13,7 +13,7 @@ interface Step {
 const steps: Step[] = [
   {
     title: 'Set up the board',
-    body: 'Pick one of this week’s NFL games, name the contest, and share the invite link. Private or public, it is your pool.',
+    body: 'Pick one of this week’s NFL games, name the contest, and share the invite link. Private or public, it is your board.',
   },
   {
     title: 'Claim your squares',
@@ -62,7 +62,7 @@ export default function LandingPlaybook() {
       <Container maxWidth="lg">
         <Reveal sx={{ maxWidth: 640, mb: { xs: 4, md: 2 } }}>
           <Typography variant="h2" sx={{ fontSize: 'clamp(2.6rem, 5.6vw, 4.4rem)' }}>
-            How a pool plays out
+            How a game plays out
           </Typography>
           <Typography sx={{ mt: 2, color: 'text.secondary', fontSize: '1.1rem', maxWidth: '48ch' }}>
             Four moments, from the invite link to the winning square.

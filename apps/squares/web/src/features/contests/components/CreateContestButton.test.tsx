@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
-import LandingCreateContestButton from './LandingCreateContestButton';
+import CreateContestButton from './CreateContestButton';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router', async () => {
@@ -23,13 +23,13 @@ function renderButton() {
   return render(
     <ThemeProvider theme={theme}>
       <MemoryRouter>
-        <LandingCreateContestButton />
+        <CreateContestButton />
       </MemoryRouter>
     </ThemeProvider>
   );
 }
 
-describe('LandingCreateContestButton', () => {
+describe('CreateContestButton', () => {
   it('renders the button with text "Create a Contest"', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
@@ -70,5 +70,38 @@ describe('LandingCreateContestButton', () => {
     expect(mockSigninRedirect).toHaveBeenCalledWith({
       extraQueryParams: { connector_id: 'github' },
     });
+    expect(sessionStorage.getItem('auth_redirect_path')).toBe('/contests/create');
+  });
+
+  it('opens the create form on the chosen game', () => {
+    vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true } as unknown as ReturnType<
+      typeof useAuth
+    >);
+    render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter>
+          <CreateContestButton look="link" label="Start a board" gameId="g 1" />
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: /start a board/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/create?game=g%201');
+  });
+
+  it('brings a signed-out visitor back to the chosen game after sign-in', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: false,
+      signinRedirect: mockSigninRedirect,
+    } as unknown as ReturnType<typeof useAuth>);
+    render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter>
+          <CreateContestButton look="header" label="New Contest" gameId="g1" />
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: /new contest/i }));
+    fireEvent.click(screen.getByRole('button', { name: /sign in with google/i }));
+    expect(sessionStorage.getItem('auth_redirect_path')).toBe('/contests/create?game=g1');
   });
 });

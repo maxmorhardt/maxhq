@@ -20,7 +20,7 @@ const features: Feature[] = [
     body: 'Every contest follows a live NFL game: the score updates on its own, and each quarter’s winner is worked out automatically.',
   },
   {
-    title: 'Your pool, your rules',
+    title: 'Your board, your rules',
     body: 'Private or public, invite links with limits and expiry, and a per-person cap on how many squares each player can claim.',
   },
   {

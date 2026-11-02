@@ -57,9 +57,16 @@ describe('Header', () => {
     expect(screen.getByRole('menuitem', { name: /github/i })).toBeInTheDocument();
   });
 
-  it('does not show Contests desktop link when unauthenticated', () => {
+  it('shows Home and Contests to signed-out visitors too', () => {
     renderHeader();
-    expect(screen.queryByRole('link', { name: /contests/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^home$/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /^contests$/i })).toHaveAttribute('href', '/contests');
+  });
+
+  it('asks a signed-out visitor to sign in from the create button', () => {
+    renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: /new contest/i }));
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
   });
 
   it('shows Contests desktop link when authenticated', () => {
@@ -80,11 +87,19 @@ describe('Header', () => {
     expect(screen.getAllByText('Squares')[0].closest('a')).toHaveAttribute('href', '/');
   });
 
-  it('links to /learn-more from the desktop Learn More button', () => {
+  it('links to /learn-more from the desktop How to Play button', () => {
     renderHeader();
-    expect(screen.getByRole('link', { name: /learn more/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /how to play/i })).toHaveAttribute(
       'href',
       '/learn-more'
+    );
+  });
+
+  it('links to the printable board from the nav', () => {
+    renderHeader();
+    expect(screen.getByRole('link', { name: /printable/i })).toHaveAttribute(
+      'href',
+      '/printable-football-squares'
     );
   });
 
@@ -155,9 +170,16 @@ describe('Header', () => {
   it('opens the hamburger menu and links out from a menu item', () => {
     renderHeader();
     fireEvent.click(screen.getByRole('button', { name: /menu/i }));
-    expect(screen.getByRole('menuitem', { name: 'Learn More' })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'How to Play' })).toHaveAttribute(
       'href',
       '/learn-more'
     );
+  });
+
+  it('asks a signed-out visitor to sign in from the menu, like the desktop button', () => {
+    renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: /menu/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New Contest' }));
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
   });
 });

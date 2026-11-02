@@ -37,6 +37,7 @@ describe('ContestPage', () => {
   it('asks a signed-out visitor to sign in', () => {
     mockAuth();
     renderPage();
-    expect(screen.getByText('Sign In Required')).toBeInTheDocument();
+    expect(screen.getByText('Sign in to see this board')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
   });
 });

@@ -5,6 +5,6 @@ export default {
   buildDirectory: 'dist',
   ssr: false,
   async prerender() {
-    return ['/', '/learn-more', '/contact', '/404'];
+    return ['/', '/learn-more', '/printable-football-squares', '/contact', '/404'];
   },
 } satisfies Config;
