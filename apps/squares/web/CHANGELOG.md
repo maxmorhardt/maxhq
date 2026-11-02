@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.7.2...squares/2.8.0) (2026-11-02)
+
+
+### Features
+
+* **squares:** give new visitors a clear path to a free board ([#192](https://github.com/maxmorhardt/maxhq/issues/192)) ([755ff3f](https://github.com/maxmorhardt/maxhq/commit/755ff3f44dad8c4635128d710faeaa1741dc1186))
+
 ## [2.7.2](https://github.com/maxmorhardt/maxhq/compare/squares/2.7.1...squares/2.7.2) (2026-11-01)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.5.1...maxhq/1.6.0) (2026-11-02)
+
+
+### Features
+
+* **squares:** give new visitors a clear path to a free board ([#192](https://github.com/maxmorhardt/maxhq/issues/192)) ([755ff3f](https://github.com/maxmorhardt/maxhq/commit/755ff3f44dad8c4635128d710faeaa1741dc1186))
+
 ## [1.5.1](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.5.0...maxhq/1.5.1) (2026-11-01)
 
 
