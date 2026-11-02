@@ -22,4 +22,13 @@ describe('ContestsPage', () => {
     renderWithProviders(<ContestsPage />);
     expect(screen.getByTestId('skeleton')).toBeInTheDocument();
   });
+
+  it('shows a signed-out visitor what an account gets them', () => {
+    mockAuth();
+    renderWithProviders(<ContestsPage />);
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'All your boards in one place' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
+  });
 });

@@ -13,6 +13,7 @@ const mockPages = [
 ];
 
 const mockCloseNavMenu = vi.fn();
+const mockNewContest = vi.fn();
 
 function renderMenu(overrides?: { anchorElNav?: HTMLElement | null }) {
   return render(
@@ -23,6 +24,7 @@ function renderMenu(overrides?: { anchorElNav?: HTMLElement | null }) {
           handleCloseNavMenu={mockCloseNavMenu}
           anchorElNav={overrides?.anchorElNav ?? null}
           pages={mockPages}
+          onNewContest={mockNewContest}
         />
       </MemoryRouter>
     </ThemeProvider>
@@ -32,6 +34,7 @@ function renderMenu(overrides?: { anchorElNav?: HTMLElement | null }) {
 describe('HeaderMenu', () => {
   beforeEach(() => {
     mockCloseNavMenu.mockClear();
+    mockNewContest.mockClear();
   });
 
   it('renders the hamburger menu button', () => {
@@ -71,5 +74,12 @@ describe('HeaderMenu', () => {
     fireEvent.click(learnMore);
     expect(mockCloseNavMenu).toHaveBeenCalled();
     document.body.removeChild(anchorEl);
+  });
+
+  it('closes the menu and starts a new contest', () => {
+    renderMenu({ anchorElNav: document.body });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New Contest' }));
+    expect(mockCloseNavMenu).toHaveBeenCalled();
+    expect(mockNewContest).toHaveBeenCalled();
   });
 });

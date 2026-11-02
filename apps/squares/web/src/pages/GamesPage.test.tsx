@@ -21,15 +21,10 @@ describe('GamesPage', () => {
     expect(screen.getByTestId('scoreboard')).toBeInTheDocument();
   });
 
-  it('points a signed-out visitor to a free board', () => {
+  it('tells visitors they can start a board from a game', () => {
     renderWithProviders(<GamesPage />);
-    expect(screen.getByRole('heading', { name: 'New to Squares?' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create a contest/i })).toBeInTheDocument();
-  });
-
-  it('leaves the pitch out for a signed-in player', () => {
-    mockAuth({ email: 'a@x.com' });
-    renderWithProviders(<GamesPage />);
-    expect(screen.queryByRole('heading', { name: 'New to Squares?' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/pick an upcoming game to start a free squares board/i)
+    ).toBeInTheDocument();
   });
 });

@@ -65,7 +65,7 @@ describe('Header', () => {
 
   it('asks a signed-out visitor to sign in from the create button', () => {
     renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: /create a contest/i }));
+    fireEvent.click(screen.getByRole('button', { name: /new contest/i }));
     expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
   });
 
@@ -92,6 +92,14 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: /how to play/i })).toHaveAttribute(
       'href',
       '/learn-more'
+    );
+  });
+
+  it('links to the printable board from the nav', () => {
+    renderHeader();
+    expect(screen.getByRole('link', { name: /printable/i })).toHaveAttribute(
+      'href',
+      '/printable-football-squares'
     );
   });
 
@@ -166,9 +174,12 @@ describe('Header', () => {
       'href',
       '/learn-more'
     );
-    expect(screen.getByRole('menuitem', { name: 'Create a Contest' })).toHaveAttribute(
-      'href',
-      '/contests/create'
-    );
+  });
+
+  it('asks a signed-out visitor to sign in from the menu, like the desktop button', () => {
+    renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: /menu/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New Contest' }));
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
   });
 });

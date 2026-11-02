@@ -1,46 +1,55 @@
-import { ArrowForward } from '@mui/icons-material';
+import { Add, ArrowForward } from '@mui/icons-material';
 import { Button, type ButtonProps } from '@mui/material';
-import { useState } from 'react';
-import { useAuth } from 'react-oidc-context';
-import { useNavigate } from 'react-router';
-import SignInDialog from '../../../auth/SignInDialog';
+import { alpha } from '@mui/material/styles';
+import { game } from '../../../app/theme';
+import { useStartContest } from '../useStartContest';
+
+type Look = 'primary' | 'header' | 'link';
 
 interface Props {
-  size?: ButtonProps['size'];
+  look?: Look;
   label?: string;
+  gameId?: string;
 }
 
-// signed-out visitors sign in first and land on the create form
-export default function CreateContestButton({ size = 'large', label = 'Create a Contest' }: Props) {
-  const navigate = useNavigate();
-  const auth = useAuth();
+const looks: Record<Look, ButtonProps> = {
+  primary: { variant: 'contained', size: 'large', endIcon: <ArrowForward /> },
+  header: {
+    size: 'small',
+    startIcon: <Add />,
+    sx: {
+      px: 1.5,
+      color: game.brand,
+      bgcolor: alpha(game.brand, 0.12),
+      border: `1px solid ${alpha(game.brand, 0.32)}`,
+      '&:hover': { bgcolor: alpha(game.brand, 0.2), borderColor: game.brand },
+    },
+  },
+  link: {
+    size: 'small',
+    endIcon: <ArrowForward />,
+    sx: { px: 0.75, color: game.brand, '&:hover': { bgcolor: alpha(game.brand, 0.08) } },
+  },
+};
 
-  const [signInOpen, setSignInOpen] = useState(false);
-
-  const handleClick = () => {
-    if (auth.isAuthenticated) {
-      navigate('/contests/create');
-    } else {
-      setSignInOpen(true);
-    }
-  };
+export default function CreateContestButton({
+  look = 'primary',
+  label = 'Create a Contest',
+  gameId,
+}: Props) {
+  const { start, signInDialog } = useStartContest(gameId);
+  const { sx, ...buttonProps } = looks[look];
 
   return (
     <>
       <Button
-        variant="contained"
-        size={size}
-        onClick={handleClick}
-        endIcon={<ArrowForward />}
-        sx={{ whiteSpace: 'nowrap' }}
+        {...buttonProps}
+        onClick={start}
+        sx={[{ whiteSpace: 'nowrap' }, ...(Array.isArray(sx) ? sx : [sx])]}
       >
         {label}
       </Button>
-      <SignInDialog
-        open={signInOpen}
-        onClose={() => setSignInOpen(false)}
-        redirectPath="/contests/create"
-      />
+      {signInDialog}
     </>
   );
 }

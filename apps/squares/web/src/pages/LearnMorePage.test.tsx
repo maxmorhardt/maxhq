@@ -80,17 +80,19 @@ describe('LearnMorePage', () => {
 
   it('offers a way to start a board from the top and the bottom', () => {
     renderPage();
-    expect(screen.getAllByRole('button', { name: /^create a contest$/i })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: /^create a contest$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start a free board/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /this week's games/i })).toHaveAttribute(
       'href',
       '/games'
     );
   });
 
-  it('keeps the bottom pitch to signed-out visitors', () => {
+  it('rewords the bottom pitch for a signed-in player', () => {
     mockAuth({ email: 'a@x.com' });
     renderPage();
-    expect(screen.getAllByRole('button', { name: /^create a contest$/i })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: /start a free board/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/ready for the next game/i)).toBeInTheDocument();
   });
 
   it('reveals its sections once they scroll into view', () => {

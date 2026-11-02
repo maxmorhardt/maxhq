@@ -5,6 +5,7 @@ import { fonts } from '../../../app/theme';
 import type { Game, ScoreboardWeek } from '../../../types/contest';
 import { isLive } from '../../../utils/game';
 import { useGetScoreboardQuery } from '../api';
+import CreateContestButton from '../../contests/components/CreateContestButton';
 import GameCard from './GameCard';
 
 function byDay(games: Game[]): [string, Game[]][] {
@@ -173,7 +174,15 @@ export default function GamesScoreboard() {
               </Typography>
               <Box sx={gridSx}>
                 {games.map((game) => (
-                  <GameCard key={game.id} game={game} />
+                  <GameCard
+                    key={game.id}
+                    game={game}
+                    action={
+                      game.status === 'scheduled' ? (
+                        <CreateContestButton look="link" label="Start a board" gameId={game.id} />
+                      ) : undefined
+                    }
+                  />
                 ))}
               </Box>
             </Box>

@@ -5,6 +5,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import PrintIcon from '@mui/icons-material/Print';
 import SportsFootballIcon from '@mui/icons-material/SportsFootball';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -18,6 +19,7 @@ import { useAuth } from 'react-oidc-context';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { easing, fonts, game } from '../../app/theme';
 import CreateContestButton from '../../features/contests/components/CreateContestButton';
+import { useStartContest } from '../../features/contests/useStartContest';
 import HeaderAuth from './HeaderAuth';
 import HeaderMenu from './HeaderMenu';
 import { HEADER_HEIGHT } from '../../types/layout';
@@ -29,6 +31,7 @@ const pages = [
   { name: 'Games', icon: <SportsFootballIcon />, navigate: '/games' },
   { name: 'Leaderboard', icon: <LeaderboardIcon />, navigate: '/leaderboard' },
   { name: 'How to Play', icon: <InfoIcon />, navigate: '/learn-more' },
+  { name: 'Printable', icon: <PrintIcon />, navigate: '/printable-football-squares' },
   { name: 'Contact', icon: <ContactSupportIcon />, navigate: '/contact' },
 ];
 
@@ -42,6 +45,7 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { start: startContest, signInDialog } = useStartContest();
   const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
 
@@ -165,8 +169,8 @@ export default function Header() {
             </Box>
 
             {/* the one action a new visitor came for, on every page */}
-            <Box sx={{ display: { xs: 'none', sm: 'block' }, mr: 0.5 }}>
-              <CreateContestButton size="small" />
+            <Box sx={{ display: { xs: 'none', lg: 'block' }, mr: 0.5 }}>
+              <CreateContestButton look="header" label="New Contest" />
             </Box>
 
             {/* mobile navigation menu (hamburger, grouped with auth on the right) */}
@@ -175,6 +179,7 @@ export default function Header() {
               handleCloseNavMenu={handleCloseNavMenu}
               anchorElNav={anchorElNav}
               pages={pages}
+              onNewContest={startContest}
             />
 
             {/* sign-in button or user menu */}
@@ -189,6 +194,7 @@ export default function Header() {
           </Toolbar>
         </Container>
       </AppBar>
+      {signInDialog}
     </>
   );
 }

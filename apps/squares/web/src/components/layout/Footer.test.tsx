@@ -1,15 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
 import Footer from './Footer';
-
-const mockNavigate = vi.fn();
-
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual<typeof import('react-router')>('react-router');
-  return { ...actual, useNavigate: () => mockNavigate };
-});
 
 const theme = createTheme();
 
@@ -38,15 +31,9 @@ describe('Footer', () => {
     expect(screen.getByText('Terms')).toBeInTheDocument();
   });
 
-  it('navigates to the correct path when a link is clicked', () => {
+  it('links the site pages with real hrefs crawlers can follow', () => {
     renderFooter();
-    fireEvent.click(screen.getByText('How to Play'));
-    expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
-  });
-
-  it('says the game involves no money', () => {
-    renderFooter();
-    expect(screen.getByText(/no money changes hands/i)).toBeInTheDocument();
+    expect(screen.getByText('How to Play').closest('a')).toHaveAttribute('href', '/learn-more');
   });
 
   it('links the legal pages to maxhq.io', () => {

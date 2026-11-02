@@ -12,6 +12,7 @@ export default [
   route('profile', 'pages/ProfilePage.tsx'),
   route('contact', 'pages/ContactPage.tsx'),
   route('learn-more', 'pages/LearnMorePage.tsx'),
+  route('printable-football-squares', 'pages/PrintableSquaresPage.tsx'),
   route('404', 'pages/NotFoundPage.tsx', { id: 'prerender-404' }),
   route('*', 'pages/NotFoundPage.tsx'),
 ] satisfies RouteConfig;

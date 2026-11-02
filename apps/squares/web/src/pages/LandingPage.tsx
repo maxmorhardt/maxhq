@@ -10,10 +10,10 @@ export default function LandingPage() {
   return (
     <Box sx={{ overflowX: 'clip' }}>
       <Helmet>
-        <title>Squares – Free Football Squares for NFL Game Day</title>
+        <title>Squares – Football Squares Online</title>
         <meta
           name="description"
-          content="Run a free football squares game for any NFL game. Friends claim squares from their phones and the live score picks each quarter's square. No money involved."
+          content="Run football squares and Super Bowl squares online. Set up a 10x10 board for any NFL game, share one link, and the live score picks each quarter's square."
         />
         <link rel="canonical" href="https://squares.maxhq.io/" />
       </Helmet>

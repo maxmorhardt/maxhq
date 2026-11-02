@@ -7,30 +7,25 @@ import StartBoardCallout from './StartBoardCallout';
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 
 describe('StartBoardCallout', () => {
-  it('gives a signed-out visitor a way to start and learn', () => {
+  it("offers a signed-out visitor a free board in the page's own words", () => {
     mockAuth();
-    renderWithProviders(<StartBoardCallout />);
-
-    expect(screen.getByRole('heading', { name: 'New to Squares?' })).toBeInTheDocument();
-    expect(screen.getByText(/no money involved/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create a contest/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'How to Play' })).toHaveAttribute(
-      'href',
-      '/learn-more'
+    renderWithProviders(
+      <StartBoardCallout message="Ready to play?" signedInMessage="Next game?" />
     );
+
+    expect(screen.getByRole('complementary', { name: 'Start a board' })).toBeInTheDocument();
+    expect(screen.getByText('Ready to play?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start a free board/i })).toBeInTheDocument();
   });
 
-  it('drops the how to play link on the how to play page', () => {
-    mockAuth();
-    renderWithProviders(<StartBoardCallout showHowToPlay={false} />);
-
-    expect(screen.queryByRole('link', { name: 'How to Play' })).not.toBeInTheDocument();
-  });
-
-  it('stays out of the way of a signed-in player', () => {
+  it('speaks to a signed-in player in their own words', () => {
     mockAuth({ email: 'a@x.com' });
-    renderWithProviders(<StartBoardCallout />);
+    renderWithProviders(
+      <StartBoardCallout message="Ready to play?" signedInMessage="Next game?" />
+    );
 
-    expect(screen.queryByRole('heading', { name: 'New to Squares?' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Ready to play?')).not.toBeInTheDocument();
+    expect(screen.getByText('Next game?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^start a board$/i })).toBeInTheDocument();
   });
 });

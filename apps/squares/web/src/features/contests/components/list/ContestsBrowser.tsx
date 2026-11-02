@@ -77,9 +77,18 @@ export function ContestsBrowserSkeleton() {
   return (
     <Box>
       <Hero
-        action={<Skeleton variant="rectangular" width={148} height={40} sx={{ borderRadius: 1 }} />}
+        action={<Skeleton variant="rectangular" width={160} height={37} sx={{ borderRadius: 1 }} />}
       >
-        <Skeleton variant="rectangular" height={40} sx={{ maxWidth: 640, borderRadius: 1 }} />
+        {/* search, then the role and status filters */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+          <Skeleton
+            variant="rectangular"
+            height={40}
+            sx={{ width: { xs: '100%', sm: 320 }, borderRadius: 1 }}
+          />
+          <Skeleton variant="rectangular" width={196} height={40} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width={268} height={40} sx={{ borderRadius: 1 }} />
+        </Box>
       </Hero>
       <Container maxWidth="lg" sx={pageSx}>
         <ContestsTableSkeleton rowCount={4} />

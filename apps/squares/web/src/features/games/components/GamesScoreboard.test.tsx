@@ -1,11 +1,13 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mockAuth } from '../../../test/auth';
 import { renderWithProviders } from '../../../test/render';
 import type { Game } from '../../../types/contest';
 import GamesScoreboard from './GamesScoreboard';
 
 const api = vi.hoisted(() => ({ useGetScoreboardQuery: vi.fn() }));
 vi.mock('../api', () => api);
+vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 
 const game = (id: string, gameTime: string, status: Game['status'] = 'scheduled') =>
   ({
@@ -36,6 +38,7 @@ const board = {
 
 describe('GamesScoreboard', () => {
   beforeEach(() => {
+    mockAuth();
     api.useGetScoreboardQuery.mockReturnValue({
       data: board,
       isLoading: false,
@@ -118,5 +121,11 @@ describe('GamesScoreboard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(refetch).toHaveBeenCalled();
+  });
+
+  it('offers a board only for games that have not kicked off', () => {
+    renderWithProviders(<GamesScoreboard />);
+
+    expect(screen.getAllByRole('button', { name: 'Start a board' })).toHaveLength(2);
   });
 });

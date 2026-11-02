@@ -339,7 +339,11 @@ export default function LearnMorePage() {
 
       {/* the next step once the questions are answered */}
       <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 9 } }}>
-        <StartBoardCallout showHowToPlay={false} sx={{ mt: { xs: 5, md: 7 } }} />
+        <StartBoardCallout
+          message="Ready to play? Set up a free board in a couple of minutes."
+          signedInMessage="Ready for the next game? Start a new board in a couple of minutes."
+          sx={{ mt: { xs: 5, md: 7 } }}
+        />
       </Container>
     </>
   );

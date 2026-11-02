@@ -33,7 +33,11 @@ export default function LeaderboardPage() {
         Win rate is quarter wins over the quarters a player held a square in.
       </Typography>
 
-      <StartBoardCallout sx={{ mt: { xs: 5, md: 7 } }} />
+      <StartBoardCallout
+        message="Want to climb the leaderboard? Run a squares board for this week's game with friends."
+        signedInMessage="Every quarter you win counts here. Start a board for this week's game."
+        sx={{ mt: { xs: 4, md: 5 } }}
+      />
     </Container>
   );
 }

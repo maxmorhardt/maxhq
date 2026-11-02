@@ -13,6 +13,7 @@ interface HeaderMenuProps {
   handleCloseNavMenu: () => void;
   anchorElNav: null | HTMLElement;
   pages: { name: string; icon: JSX.Element; navigate: string }[];
+  onNewContest: () => void;
 }
 
 export default function HeaderMenu({
@@ -20,6 +21,7 @@ export default function HeaderMenu({
   handleCloseNavMenu,
   anchorElNav,
   pages,
+  onNewContest,
 }: HeaderMenuProps) {
   return (
     <Box sx={{ display: { xs: 'flex', lg: 'none' } }}>
@@ -41,16 +43,16 @@ export default function HeaderMenu({
           Menu
         </Typography>
 
-        {/* signed-out visitors get a sign-in prompt on the create page */}
         <MenuItem
-          component={Link}
-          to="/contests/create"
-          onClick={handleCloseNavMenu}
-          sx={{ py: 1.25, color: 'primary.main', textDecoration: 'none', fontWeight: 700 }}
+          onClick={() => {
+            handleCloseNavMenu();
+            onNewContest();
+          }}
+          sx={{ py: 1.25, color: 'primary.main' }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <AddCircleIcon />
-            <Typography sx={{ fontWeight: 700 }}>Create a Contest</Typography>
+            <Typography sx={{ fontWeight: 700 }}>New Contest</Typography>
           </Box>
         </MenuItem>
 

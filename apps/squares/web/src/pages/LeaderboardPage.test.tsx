@@ -26,13 +26,14 @@ describe('LeaderboardPage', () => {
 
   it('points a signed-out visitor to a free board', () => {
     renderWithProviders(<LeaderboardPage />);
-    expect(screen.getByRole('heading', { name: 'New to Squares?' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create a contest/i })).toBeInTheDocument();
+    expect(screen.getByText(/want to climb the leaderboard/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start a free board/i })).toBeInTheDocument();
   });
 
-  it('leaves the pitch out for a signed-in player', () => {
+  it('rewords the pitch for a signed-in player', () => {
     mockAuth({ email: 'a@x.com' });
     renderWithProviders(<LeaderboardPage />);
-    expect(screen.queryByRole('heading', { name: 'New to Squares?' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/want to climb the leaderboard/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/every quarter you win counts here/i)).toBeInTheDocument();
   });
 });

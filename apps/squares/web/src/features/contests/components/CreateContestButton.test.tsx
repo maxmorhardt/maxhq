@@ -73,17 +73,35 @@ describe('CreateContestButton', () => {
     expect(sessionStorage.getItem('auth_redirect_path')).toBe('/contests/create');
   });
 
-  it('takes a custom label', () => {
-    vi.mocked(useAuth).mockReturnValue({ isAuthenticated: false } as unknown as ReturnType<
+  it('opens the create form on the chosen game', () => {
+    vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true } as unknown as ReturnType<
       typeof useAuth
     >);
     render(
       <ThemeProvider theme={theme}>
         <MemoryRouter>
-          <CreateContestButton label="Start a Board" size="small" />
+          <CreateContestButton look="link" label="Start a board" gameId="g 1" />
         </MemoryRouter>
       </ThemeProvider>
     );
-    expect(screen.getByRole('button', { name: /start a board/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /start a board/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/contests/create?game=g%201');
+  });
+
+  it('brings a signed-out visitor back to the chosen game after sign-in', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: false,
+      signinRedirect: mockSigninRedirect,
+    } as unknown as ReturnType<typeof useAuth>);
+    render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter>
+          <CreateContestButton look="header" label="New Contest" gameId="g1" />
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: /new contest/i }));
+    fireEvent.click(screen.getByRole('button', { name: /sign in with google/i }));
+    expect(sessionStorage.getItem('auth_redirect_path')).toBe('/contests/create?game=g1');
   });
 });
