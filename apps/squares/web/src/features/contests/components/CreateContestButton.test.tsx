@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
-import LandingCreateContestButton from './LandingCreateContestButton';
+import CreateContestButton from './CreateContestButton';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router', async () => {
@@ -23,13 +23,13 @@ function renderButton() {
   return render(
     <ThemeProvider theme={theme}>
       <MemoryRouter>
-        <LandingCreateContestButton />
+        <CreateContestButton />
       </MemoryRouter>
     </ThemeProvider>
   );
 }
 
-describe('LandingCreateContestButton', () => {
+describe('CreateContestButton', () => {
   it('renders the button with text "Create a Contest"', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
@@ -70,5 +70,20 @@ describe('LandingCreateContestButton', () => {
     expect(mockSigninRedirect).toHaveBeenCalledWith({
       extraQueryParams: { connector_id: 'github' },
     });
+    expect(sessionStorage.getItem('auth_redirect_path')).toBe('/contests/create');
+  });
+
+  it('takes a custom label', () => {
+    vi.mocked(useAuth).mockReturnValue({ isAuthenticated: false } as unknown as ReturnType<
+      typeof useAuth
+    >);
+    render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter>
+          <CreateContestButton label="Start a Board" size="small" />
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('button', { name: /start a board/i })).toBeInTheDocument();
   });
 });

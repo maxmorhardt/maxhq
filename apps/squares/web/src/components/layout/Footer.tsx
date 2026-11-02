@@ -8,7 +8,7 @@ export default function Footer() {
 
   // legal pages are centralized on maxhq.io for all services
   const footerLinks = [
-    { label: 'Learn More', path: '/learn-more' },
+    { label: 'How to Play', path: '/learn-more' },
     { label: 'Contact', path: '/contact' },
     { label: 'Privacy', href: 'https://maxhq.io/privacy-policy' },
     { label: 'Terms', href: 'https://maxhq.io/terms-of-service' },
@@ -67,6 +67,17 @@ export default function Footer() {
             ))}
           </Box>
         </Box>
+        <Typography
+          variant="body2"
+          sx={{
+            pb: { xs: 3, sm: 4 },
+            mt: -1,
+            color: 'text.secondary',
+            textAlign: { xs: 'center', sm: 'left' },
+          }}
+        >
+          Squares is free to play. No money changes hands, and there are no prizes.
+        </Typography>
       </Container>
     </Box>
   );

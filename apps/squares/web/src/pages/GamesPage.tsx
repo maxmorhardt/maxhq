@@ -1,6 +1,7 @@
 import { Container } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitle from '../components/PageTitle';
+import StartBoardCallout from '../features/contests/components/StartBoardCallout';
 import GamesScoreboard from '../features/games/components/GamesScoreboard';
 
 export default function GamesPage() {
@@ -20,6 +21,8 @@ export default function GamesPage() {
         title="Games"
         subtitle="Every NFL game of the season, week by week. These are the scores that call every square."
       />
+
+      <StartBoardCallout sx={{ mb: { xs: 4, md: 5 } }} />
 
       <GamesScoreboard />
     </Container>

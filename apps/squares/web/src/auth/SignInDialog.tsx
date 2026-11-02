@@ -1,20 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import GoogleIcon from '@mui/icons-material/Google';
-import MicrosoftIcon from '@mui/icons-material/Microsoft';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  Link,
-  Typography,
-} from '@mui/material';
-import { useAuth } from 'react-oidc-context';
-import { signInWithProvider, type OIDCProvider } from './oidc';
+import { Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import SignInOptions from './SignInOptions';
 
 interface SignInDialogProps {
   open: boolean;
@@ -23,13 +9,6 @@ interface SignInDialogProps {
 }
 
 export default function SignInDialog({ open, onClose, redirectPath }: SignInDialogProps) {
-  const auth = useAuth();
-
-  const handleSignIn = (provider: OIDCProvider) => {
-    onClose();
-    signInWithProvider(auth, provider, redirectPath);
-  };
-
   return (
     <Dialog
       open={open}
@@ -48,63 +27,8 @@ export default function SignInDialog({ open, onClose, redirectPath }: SignInDial
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pb: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 0.5 }}>
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<GoogleIcon />}
-            onClick={() => handleSignIn('google')}
-            sx={{ justifyContent: 'flex-start', px: 2, py: 1 }}
-          >
-            Sign in with Google
-          </Button>
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<MicrosoftIcon />}
-            onClick={() => handleSignIn('microsoft')}
-            sx={{ justifyContent: 'flex-start', px: 2, py: 1 }}
-          >
-            Sign in with Microsoft
-          </Button>
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<GitHubIcon />}
-            onClick={() => handleSignIn('github')}
-            sx={{ justifyContent: 'flex-start', px: 2, py: 1 }}
-          >
-            Sign in with GitHub
-          </Button>
-        </Box>
-        <Divider sx={{ my: 1.5 }} />
-        <Typography
-          variant="caption"
-          sx={{ display: 'block', color: 'text.secondary', maxWidth: 280 }}
-        >
-          By signing in, you agree to our{' '}
-          <Link
-            href="https://maxhq.io/terms-of-service"
-            target="_blank"
-            rel="noreferrer"
-            color="inherit"
-            underline="always"
-          >
-            terms of service
-          </Link>{' '}
-          and{' '}
-          <Link
-            href="https://maxhq.io/privacy-policy"
-            target="_blank"
-            rel="noreferrer"
-            color="inherit"
-            underline="always"
-          >
-            privacy policy
-          </Link>
-          .
-        </Typography>
+      <DialogContent sx={{ pb: 2, pt: '4px !important' }}>
+        <SignInOptions redirectPath={redirectPath} onSelect={onClose} />
       </DialogContent>
     </Dialog>
   );

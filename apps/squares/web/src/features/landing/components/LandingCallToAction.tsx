@@ -1,6 +1,6 @@
 import { Box, Container, Typography } from '@mui/material';
 import Reveal from '../../../components/Reveal';
-import LandingCreateContestButton from './LandingCreateContestButton';
+import CreateContestButton from '../../contests/components/CreateContestButton';
 
 export default function LandingCallToAction() {
   return (
@@ -43,7 +43,7 @@ export default function LandingCallToAction() {
           </Typography>
         </Reveal>
         <Reveal delay={200} sx={{ mt: 4.5 }}>
-          <LandingCreateContestButton />
+          <CreateContestButton />
         </Reveal>
       </Container>
     </Box>

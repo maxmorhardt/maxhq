@@ -19,6 +19,6 @@ describe('ProfilePage', () => {
   it('asks a signed-out visitor to sign in', () => {
     mockAuth();
     renderWithProviders(<ProfilePage />);
-    expect(screen.getByText('Sign In Required')).toBeInTheDocument();
+    expect(screen.getByText('Sign in to see your profile')).toBeInTheDocument();
   });
 });

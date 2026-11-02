@@ -24,7 +24,7 @@ const apps: AppEntry[] = [
     tagline: 'Football squares for the whole party',
     icon: <Box component="img" src="/apps/squares.svg" alt="" sx={{ width: 28, height: 28 }} />,
     description:
-      'The classic Super Bowl pool, online. One person sets up the board, everyone claims their squares from their phone, and the live score calls the winner every quarter.',
+      'The classic Super Bowl party game, online and free. One person sets up the board, everyone claims their squares from their phone, and the live score calls the winner every quarter.',
     href: 'https://squares.maxhq.io',
     status: 'Live',
     cta: 'Play Squares',
@@ -59,7 +59,7 @@ const apps: AppEntry[] = [
             steps={[
               {
                 title: 'Set up the board',
-                body: 'Create a pool for an upcoming NFL game and share the link with everyone playing.',
+                body: 'Create a board for an upcoming NFL game and share the link with everyone playing.',
               },
               {
                 title: 'Friends claim squares',

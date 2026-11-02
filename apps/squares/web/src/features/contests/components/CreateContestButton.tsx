@@ -1,11 +1,17 @@
 import { ArrowForward } from '@mui/icons-material';
-import { Button } from '@mui/material';
+import { Button, type ButtonProps } from '@mui/material';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 import SignInDialog from '../../../auth/SignInDialog';
 
-export default function LandingCreateContestButton() {
+interface Props {
+  size?: ButtonProps['size'];
+  label?: string;
+}
+
+// signed-out visitors sign in first and land on the create form
+export default function CreateContestButton({ size = 'large', label = 'Create a Contest' }: Props) {
   const navigate = useNavigate();
   const auth = useAuth();
 
@@ -21,8 +27,14 @@ export default function LandingCreateContestButton() {
 
   return (
     <>
-      <Button variant="contained" size="large" onClick={handleClick} endIcon={<ArrowForward />}>
-        Create a Contest
+      <Button
+        variant="contained"
+        size={size}
+        onClick={handleClick}
+        endIcon={<ArrowForward />}
+        sx={{ whiteSpace: 'nowrap' }}
+      >
+        {label}
       </Button>
       <SignInDialog
         open={signInOpen}

@@ -32,7 +32,7 @@ describe('Footer', () => {
 
   it('renders all navigation links', () => {
     renderFooter();
-    expect(screen.getByText('Learn More')).toBeInTheDocument();
+    expect(screen.getByText('How to Play')).toBeInTheDocument();
     expect(screen.getByText('Contact')).toBeInTheDocument();
     expect(screen.getByText('Privacy')).toBeInTheDocument();
     expect(screen.getByText('Terms')).toBeInTheDocument();
@@ -40,8 +40,13 @@ describe('Footer', () => {
 
   it('navigates to the correct path when a link is clicked', () => {
     renderFooter();
-    fireEvent.click(screen.getByText('Learn More'));
+    fireEvent.click(screen.getByText('How to Play'));
     expect(mockNavigate).toHaveBeenCalledWith('/learn-more');
+  });
+
+  it('says the game involves no money', () => {
+    renderFooter();
+    expect(screen.getByText(/no money changes hands/i)).toBeInTheDocument();
   });
 
   it('links the legal pages to maxhq.io', () => {

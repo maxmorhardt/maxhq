@@ -15,7 +15,9 @@ describe('LandingHero', () => {
   it('renders the headline as the page heading', () => {
     renderWithProviders(<LandingHero />);
 
-    expect(screen.getByRole('heading', { level: 1, name: /squares pool/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /football squares/i })
+    ).toBeInTheDocument();
   });
 
   it('offers to create a contest and to learn the rules', () => {

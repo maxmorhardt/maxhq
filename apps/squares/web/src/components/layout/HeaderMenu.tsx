@@ -1,3 +1,4 @@
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -21,7 +22,7 @@ export default function HeaderMenu({
   pages,
 }: HeaderMenuProps) {
   return (
-    <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+    <Box sx={{ display: { xs: 'flex', lg: 'none' } }}>
       <IconButton size="large" aria-label="menu" onClick={handleOpenNavMenu} color="inherit">
         <MenuIcon />
       </IconButton>
@@ -33,12 +34,25 @@ export default function HeaderMenu({
         open={Boolean(anchorElNav)}
         onClose={handleCloseNavMenu}
         disableScrollLock
-        sx={{ display: { xs: 'block', md: 'none' } }}
+        sx={{ display: { xs: 'block', lg: 'none' } }}
         slotProps={{ paper: { sx: { mt: 1, minWidth: 220, borderRadius: 2 } } }}
       >
         <Typography variant="subtitle2" sx={{ px: 2, pt: 1, pb: 0.5, fontWeight: 700 }}>
           Menu
         </Typography>
+
+        {/* signed-out visitors get a sign-in prompt on the create page */}
+        <MenuItem
+          component={Link}
+          to="/contests/create"
+          onClick={handleCloseNavMenu}
+          sx={{ py: 1.25, color: 'primary.main', textDecoration: 'none', fontWeight: 700 }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <AddCircleIcon />
+            <Typography sx={{ fontWeight: 700 }}>Create a Contest</Typography>
+          </Box>
+        </MenuItem>
 
         {pages.map((page) => (
           <MenuItem

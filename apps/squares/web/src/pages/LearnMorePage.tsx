@@ -1,6 +1,9 @@
-import { DeviceHub, People, Security, Sports, Timeline, Tune } from '@mui/icons-material';
-import { Box, Container, Typography } from '@mui/material';
+import { DeviceHub, MoneyOff, People, Sports, Timeline, Tune } from '@mui/icons-material';
+import { Box, Button, Container, Paper, Typography } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router';
+import CreateContestButton from '../features/contests/components/CreateContestButton';
+import StartBoardCallout from '../features/contests/components/StartBoardCallout';
 import LearnFAQs from '../features/learn/components/LearnFAQs';
 import LearnFeatureCard from '../features/learn/components/LearnFeatureCard';
 import LearnHowItWorksCard from '../features/learn/components/LearnHowItWorksCard';
@@ -10,108 +13,124 @@ export default function LearnMorePage() {
   const howItWorksSteps = [
     {
       stepNumber: 1,
-      title: 'Create the Grid',
+      title: 'Set up the board',
       description:
-        'Set up a 10x10 grid with 100 squares. Each square represents a potential winning combination.',
+        "Pick an upcoming NFL game and create a 10x10 board. One team's score runs across the top and the other's down the side.",
     },
     {
       stepNumber: 2,
-      title: 'Players Choose Squares',
+      title: 'Friends claim squares',
       description:
-        'Participants select their squares by clicking on the grid. Each square can only be claimed once.',
+        'Share one invite link. Everyone signs in from their phone and claims squares, up to the limit you set.',
     },
     {
       stepNumber: 3,
-      title: 'Determine Winners',
+      title: 'Numbers are drawn at kickoff',
       description:
-        "Winners are determined by the last digit of each team's score at the end of each quarter.",
+        'When the game starts, the board locks and every row and column gets a random digit from 0 to 9.',
+    },
+    {
+      stepNumber: 4,
+      title: 'The score picks each square',
+      description:
+        "At the end of every quarter, the last digit of each team's score points to one square, and Squares highlights it for everyone.",
     },
   ];
 
   const featuresList = [
     {
-      icon: <Sports />,
-      title: 'Squares Made Easy',
+      icon: <DeviceHub />,
+      title: 'Nothing to install',
       description:
-        'Create and manage squares games with just a few clicks. Perfect for Super Bowl parties, playoff games, or any sports event.',
-    },
-    {
-      icon: <People />,
-      title: 'Social & Collaborative',
-      description:
-        'Share your contests with friends and family. Players can join with a simple link - all participants need accounts to join.',
+        'Everyone plays in the browser on their phone, tablet, or computer. There is no app to download.',
     },
     {
       icon: <Timeline />,
-      title: 'Real-time Updates',
+      title: 'Live scores, called for you',
       description:
-        'See changes instantly as players fill out squares. Live synchronization ensures everyone sees the latest game state.',
+        "Every board follows a real NFL game. Each quarter's square lights up the moment the quarter ends, with no score checking or spreadsheets.",
     },
     {
-      icon: <Security />,
-      title: 'Secure & Reliable',
+      icon: <People />,
+      title: 'One link to invite everyone',
       description:
-        'Your contests are protected with modern security practices. Data is encrypted and safely stored in the cloud.',
-    },
-    {
-      icon: <DeviceHub />,
-      title: 'Cross-Platform',
-      description:
-        'Works seamlessly on desktop, tablet, and mobile devices. Responsive design ensures a great experience everywhere.',
+        'Drop a single invite link in the group chat. Limit it by uses or time, or invite people as viewers who just follow along.',
     },
     {
       icon: <Tune />,
-      title: 'Your Pool, Your Rules',
+      title: 'Your board, your rules',
       description:
-        'Make a contest private or public, set how many squares each player can claim, and limit invite links by uses or time.',
+        'Make a board private or public, and set how many squares each player can claim.',
+    },
+    {
+      icon: <Sports />,
+      title: 'Made for game day',
+      description:
+        'Super Bowl parties, Thanksgiving games, office get-togethers, or any NFL Sunday with friends and family.',
+    },
+    {
+      icon: <MoneyOff />,
+      title: 'Free, with no money involved',
+      description:
+        'Squares is free and just for fun. It never asks for a payment, and there are no entry fees or prizes.',
     },
   ];
 
   const faqs = [
     {
-      question: 'What is Squares?',
+      question: 'What is football squares?',
       answer:
-        "Squares (also called Super Bowl squares) is a popular pool game. Players claim squares in a 10x10 grid, and winners are decided by the last digit of each team's score at the end of every quarter.",
+        "Football squares, often called Super Bowl squares, is a classic game-day game. Players claim squares on a 10x10 grid, and at the end of every quarter the last digit of each team's score picks one square. Squares runs the whole board for you online.",
+    },
+    {
+      question: 'Does Squares involve money or prizes?',
+      answer:
+        'No. Squares is free to play and just for fun. The app never asks for or handles payments, and there are no entry fees, buy-ins, or prizes. You can run as many boards as you like at no cost.',
     },
     {
       question: 'How do I create a contest?',
       answer:
-        'Click "Create Contest", pick one of the upcoming NFL games, and give it a short name. Then set the contest to private or public, pick how many squares you want to claim, and invite others to fill out the rest of the grid.',
+        'Click "Create a Contest" and sign in with Google, Microsoft, or GitHub. Pick one of the upcoming NFL games, give the board a short name, choose private or public, set how many squares you want to claim, and share the invite link.',
+    },
+    {
+      question: 'Can I use it for Super Bowl squares?',
+      answer:
+        'Yes. When the game is on the schedule, create a board for it the same way as any other game and share the link with your party.',
+    },
+    {
+      question: 'How is each quarter decided?',
+      answer:
+        "By the last digit of each team's score at the end of the quarter. For example, if the score is Home 14, Away 7, the highlighted square sits where the home team's 4 column meets the away team's 7 row. Squares works this out from the live score automatically.",
     },
     {
       question: 'Where do the scores come from?',
       answer:
-        'Every contest is linked to a live NFL game. The score updates on its own as the game is played, the board locks and the numbers are drawn at kickoff, and each quarter winner is calculated for you the moment the quarter ends.',
+        'Every contest is linked to a live NFL game. The score updates on its own as the game is played, the board locks and the numbers are drawn at kickoff, and each quarter is decided the moment it ends.',
     },
     {
       question: 'How do I invite people to my contest?',
       answer:
-        'Open your contest and select "Invite Links". Pick a role (participant or viewer) and, for participants, how many squares each person can claim. You can optionally limit how many times a link is used and set it to expire after a number of minutes. Generate the link, share it, and anyone who opens it can sign in and join.',
+        'Open your contest and select "Invite Links". Pick a role (participant or viewer) and, for participants, how many squares each person can claim. You can limit how many times a link is used and set it to expire. Share the link, and anyone who opens it can sign in and join.',
     },
     {
       question: 'How do I manage participants and their roles?',
       answer:
-        'Participants can claim squares up to their per-person limit, while viewers follow along in real time without claiming any. As the owner, open the "Participants" panel while the contest is active to change someone\'s role, adjust how many squares they can claim, or remove them. Removing a participant clears their claimed squares so others can take them.',
+        'Participants can claim squares up to their per-person limit, while viewers follow along in real time without claiming any. As the owner, open the "Participants" panel while the contest is active to change someone\'s role, adjust how many squares they can claim, or remove them. Removing a participant clears their squares so others can take them.',
     },
     {
       question: "What's the difference between a private and public contest?",
       answer:
-        "A private contest is invite-only and hidden from anyone who isn't part of it. A public contest can be viewed by anyone with the link, but only people you've invited can actually claim squares.",
+        "A private contest is invite-only and hidden from anyone who isn't part of it. A public contest can be viewed by anyone with the link, but only people you've invited can claim squares.",
+    },
+    {
+      question: 'Do I need an account, and how do I sign in?',
+      answer:
+        "Yes, everyone needs an account to join a contest and claim squares. You sign in with your Google, Microsoft, or GitHub account, so there's no separate password to remember, and signing in with the same email always brings you back to the same account.",
     },
     {
       question: 'How do I change my square initials?',
       answer:
         'Go to your Profile and edit your Default Initials, up to three letters or numbers. They appear on every square you claim, and updating them refreshes your squares in any active contests automatically.',
-    },
-    {
-      question: 'Do I need an account, and how do I sign in?',
-      answer:
-        "Yes, everyone needs an account to join a contest and claim squares. You sign in with your Google, Microsoft, or GitHub account, so there's no separate password to remember. Your email is your identity across the platform, so signing in with the same email always brings you back to the same account and history.",
-    },
-    {
-      question: 'How are winners determined?',
-      answer:
-        "Winners are decided by the last digit of each team's score at the end of each quarter. For example, if the score is Home 14, Away 7, the winning square sits where the home team's 4 column meets the away team's 7 row. The app calculates this automatically from the live score.",
     },
     {
       question: 'How do I leave a contest?',
@@ -128,11 +147,6 @@ export default function LearnMorePage() {
       answer:
         'Use the Contact page to send us a message, or email support@maxhq.io directly. We typically respond within a week.',
     },
-    {
-      question: 'Is it free to use?',
-      answer:
-        'Yes. Creating and managing contests is completely free, with no hidden fees or premium tiers, so you can run unlimited contests at no cost.',
-    },
   ];
 
   return (
@@ -141,7 +155,7 @@ export default function LearnMorePage() {
         <title>How to Play Football Squares – Squares</title>
         <meta
           name="description"
-          content="Learn how NFL football squares pools work. Create a grid, claim squares, and win based on live game scores."
+          content="Learn how to play football squares: set up a 10x10 board, share one link, and the live NFL score picks each quarter's square. Free to play, with no money involved."
         />
         <link rel="canonical" href="https://squares.maxhq.io/learn-more" />
         <script type="application/ld+json">
@@ -162,8 +176,8 @@ export default function LearnMorePage() {
       {/* header */}
       <Container maxWidth="lg" sx={{ pt: { xs: 7, md: 11 }, pb: { xs: 6, md: 9 } }}>
         <Reveal>
-          <Typography variant="h1" sx={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)' }}>
-            Learn More
+          <Typography variant="h1" sx={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)', maxWidth: '14ch' }}>
+            How to Play Football Squares
           </Typography>
         </Reveal>
         <Reveal delay={100}>
@@ -176,9 +190,37 @@ export default function LearnMorePage() {
               lineHeight: 1.65,
             }}
           >
-            Discover everything you need to know about creating and managing squares games. From
-            basic concepts to advanced features, we&apos;ve got you covered.
+            Football squares is a classic game-day game for watching NFL games with friends. Here is
+            how it works, and how to run your own board on Squares in a couple of minutes.
           </Typography>
+        </Reveal>
+        <Reveal delay={200} sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+          <CreateContestButton />
+          <Button component={Link} to="/games" variant="outlined" color="inherit" size="large">
+            See This Week&apos;s Games
+          </Button>
+        </Reveal>
+        <Reveal delay={300}>
+          <Paper
+            variant="outlined"
+            sx={{
+              mt: 4,
+              p: 2.5,
+              maxWidth: 640,
+              display: 'flex',
+              gap: 2,
+              alignItems: 'flex-start',
+              borderRadius: '14px',
+            }}
+          >
+            <MoneyOff sx={{ color: 'primary.main', mt: '2px' }} />
+            <Typography sx={{ color: 'text.secondary' }}>
+              <Box component="strong" sx={{ color: 'text.primary' }}>
+                Free to play, just for fun.
+              </Box>{' '}
+              Squares never asks for or handles money. There are no entry fees, payments, or prizes.
+            </Typography>
+          </Paper>
         </Reveal>
       </Container>
 
@@ -199,7 +241,7 @@ export default function LearnMorePage() {
               variant="h2"
               sx={{ fontSize: 'clamp(2.2rem, 4.4vw, 3.2rem)', mb: { xs: 4, md: 6 } }}
             >
-              How Squares Work
+              How Football Squares Works
             </Typography>
           </Reveal>
           <Box
@@ -209,7 +251,7 @@ export default function LearnMorePage() {
               p: 0,
               listStyle: 'none',
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
               gap: { xs: 2, md: 3 },
             }}
           >
@@ -232,7 +274,7 @@ export default function LearnMorePage() {
         </Container>
       </Box>
 
-      {/* platform features */}
+      {/* why squares */}
       <Box component="section" sx={{ py: { xs: 6, md: 9 } }}>
         <Container maxWidth="lg">
           <Reveal>
@@ -240,7 +282,7 @@ export default function LearnMorePage() {
               variant="h2"
               sx={{ fontSize: 'clamp(2.2rem, 4.4vw, 3.2rem)', mb: { xs: 3, md: 5 } }}
             >
-              Platform Features
+              Why Run Your Board on Squares
             </Typography>
           </Reveal>
           <Box
@@ -294,6 +336,11 @@ export default function LearnMorePage() {
           </Box>
         </Container>
       </Box>
+
+      {/* the next step once the questions are answered */}
+      <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 9 } }}>
+        <StartBoardCallout showHowToPlay={false} sx={{ mt: { xs: 5, md: 7 } }} />
+      </Container>
     </>
   );
 }

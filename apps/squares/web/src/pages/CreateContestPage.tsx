@@ -3,6 +3,7 @@ import { Box, Button, Container, Skeleton } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router';
 import RequireAuth from '../auth/RequireAuth';
+import SignInPrompt from '../auth/SignInPrompt';
 import PageTitle from '../components/PageTitle';
 import CreateContestForm from '../features/contests/components/create/CreateContestForm';
 
@@ -36,6 +37,12 @@ export default function CreateContestPage() {
             <Skeleton variant="rounded" height={520} sx={{ borderRadius: '18px' }} />
             <Skeleton variant="rounded" height={360} sx={{ borderRadius: '18px' }} />
           </Box>
+        }
+        unauthenticated={
+          <SignInPrompt
+            title="Sign in to create your board"
+            description="It's free, takes a few seconds, and there's no money involved. You'll come right back here to pick your game."
+          />
         }
       >
         <CreateContestForm />
