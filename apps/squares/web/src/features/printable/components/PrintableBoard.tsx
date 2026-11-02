@@ -34,7 +34,9 @@ export default function PrintableBoard({ awayTeam, homeTeam }: Props) {
         printColorAdjust: 'exact',
       }}
     >
-      <Typography sx={{ ...labelSx, mb: 1, textAlign: 'center' }}>{awayTeam || 'Away'}</Typography>
+      <Typography sx={{ ...labelSx, mb: 1, textAlign: 'center' }}>
+        {awayTeam || '\u00A0'}
+      </Typography>
 
       <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1 }}>
         <Typography
@@ -45,7 +47,7 @@ export default function PrintableBoard({ awayTeam, homeTeam }: Props) {
             textAlign: 'center',
           }}
         >
-          {homeTeam || 'Home'}
+          {homeTeam || '\u00A0'}
         </Typography>
 
         <Box
