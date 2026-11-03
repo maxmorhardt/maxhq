@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/maxmorhardt/maxhq/compare/squares-games-chart/2.1.1...squares-games-chart/2.2.0) (2026-11-03)
+
+
+### Features
+
+* **squares:** browse the schedule by week when creating a contest ([#197](https://github.com/maxmorhardt/maxhq/issues/197)) ([be07762](https://github.com/maxmorhardt/maxhq/commit/be0776273029224705beecabb7703be3d8059e3b))
+
 ## [2.1.1](https://github.com/maxmorhardt/maxhq/compare/squares-games-chart/2.1.0...squares-games-chart/2.1.1) (2026-11-01)
 
 

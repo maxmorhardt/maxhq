@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.3.2...squares-games/2.4.0) (2026-11-03)
+
+
+### Features
+
+* **squares:** browse the schedule by week when creating a contest ([#197](https://github.com/maxmorhardt/maxhq/issues/197)) ([be07762](https://github.com/maxmorhardt/maxhq/commit/be0776273029224705beecabb7703be3d8059e3b))
+
 ## [2.3.2](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.3.1...squares-games/2.3.2) (2026-11-01)
 
 
