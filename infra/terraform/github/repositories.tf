@@ -31,7 +31,6 @@ locals {
 
     "workflows" = {
       checks = ["pr-title", "Lint"]
-      # callers pin a release by commit and version
       immutable_tags = true
     }
   }

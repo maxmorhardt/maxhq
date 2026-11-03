@@ -49,7 +49,6 @@ env:
   CONTESTS_INTERNAL_URL: http://squares-contests:8080
   SSE_HEARTBEAT_INTERVAL: 25s
   SSE_REVOCATION_INTERVAL: 5m
-  # per pod, so the real ceiling is this times the replica count
   SSE_MAX_STREAMS_PER_CLIENT: "20"
 
 resources:
