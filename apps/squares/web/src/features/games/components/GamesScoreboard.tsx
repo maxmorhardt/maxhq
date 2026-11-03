@@ -1,5 +1,4 @@
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { Box, Button, Chip, IconButton, Skeleton, Typography } from '@mui/material';
+import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
 import { useState } from 'react';
 import { fonts } from '../../../app/theme';
 import type { ScoreboardWeek } from '../../../types/contest';
@@ -7,24 +6,12 @@ import { canStartBoard, gamesByDay, isLive } from '../../../utils/game';
 import { useGetScoreboardQuery } from '../api';
 import CreateContestButton from '../../contests/components/CreateContestButton';
 import GameCard from './GameCard';
+import WeekBar, { WeekBarSkeleton } from './WeekBar';
 
 const gridSx = {
   display: 'grid',
   gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
   gap: 1.5,
-} as const;
-
-const weekBarSx = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 2,
-  mb: 3,
-  p: 1,
-  borderRadius: '14px',
-  border: 1,
-  borderColor: 'divider',
-  bgcolor: 'background.paper',
 } as const;
 
 const cardSx = {
@@ -50,14 +37,7 @@ function TeamRowSkeleton() {
 function ScoreboardSkeleton() {
   return (
     <Box data-testid="scoreboard-loading" aria-busy>
-      <Box sx={weekBarSx}>
-        <Skeleton variant="circular" width={40} height={40} />
-        <Box sx={{ display: 'grid', justifyItems: 'center', gap: 0.75 }}>
-          <Skeleton variant="text" width={120} height={28} />
-          <Skeleton variant="text" width={80} height={18} />
-        </Box>
-        <Skeleton variant="circular" width={40} height={40} />
-      </Box>
+      <WeekBarSkeleton />
       <Skeleton variant="text" width={180} height={24} sx={{ mb: 1.5 }} />
       <Box sx={gridSx}>
         {[0, 1, 2, 3].map((i) => (
@@ -96,46 +76,20 @@ export default function GamesScoreboard() {
 
   return (
     <Box>
-      <Box sx={weekBarSx}>
-        <IconButton
-          aria-label="Previous week"
-          onClick={() => setWeek(board.previous)}
-          disabled={!board.previous}
-        >
-          <ChevronLeft />
-        </IconButton>
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography
-            component="h2"
-            sx={{
-              fontFamily: fonts.display,
-              fontWeight: 800,
-              fontSize: '1.5rem',
-              textTransform: 'uppercase',
-              lineHeight: 1,
-            }}
-          >
-            {board.label || 'This Week'}
-          </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mt: 0.75 }}>
-            {board.season ? (
-              <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                {board.season} season
-              </Typography>
-            ) : null}
+      <WeekBar
+        label={board.label}
+        previous={board.previous}
+        next={board.next}
+        onWeek={setWeek}
+        detail={
+          <>
+            {board.season ? <span>{board.season} season</span> : null}
             {live > 0 && (
               <Chip size="small" color="error" label={`${live} live`} sx={{ height: 20 }} />
             )}
-          </Box>
-        </Box>
-        <IconButton
-          aria-label="Next week"
-          onClick={() => setWeek(board.next)}
-          disabled={!board.next}
-        >
-          <ChevronRight />
-        </IconButton>
-      </Box>
+          </>
+        }
+      />
 
       {board.games.length === 0 ? (
         <Typography sx={{ color: 'text.secondary', textAlign: 'center', py: 6 }}>

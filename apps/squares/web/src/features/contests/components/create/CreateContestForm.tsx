@@ -9,19 +9,25 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
-import { fonts, game as palette } from '../../../../app/theme';
+import { fonts } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
 import { skipToken } from '@reduxjs/toolkit/query';
-import type { ContestVisibility, Game, ScoreboardWeek } from '../../../../types/contest';
+import type {
+  ContestVisibility,
+  Game,
+  ScoreboardQuery,
+  ScoreboardWeek,
+} from '../../../../types/contest';
 import { canStartBoard, formatKickoff } from '../../../../utils/game';
+import { isUuid } from '../../../../utils/ids';
 import { stripDangerousChars } from '../../../../utils/sanitize';
 import { useGetGameQuery, useGetScoreboardQuery } from '../../../games/api';
 import { useCreateContestMutation } from '../../api';
 import FormSection from './FormSection';
+import { optionSx } from './optionSx';
 import WeekGamePicker from './WeekGamePicker';
 import { trackConversion } from '../../../../utils/googleAds';
 
@@ -47,57 +53,43 @@ const visibilityOptions: {
   },
 ];
 
-const optionSx = (selected: boolean) => ({
-  position: 'relative',
-  display: 'flex',
-  textAlign: 'left',
-  // ButtonBase centers its content, which shifts a card whose text is shorter than the card
-  justifyContent: 'flex-start',
-  alignItems: 'flex-start',
-  gap: 1.5,
-  width: '100%',
-  p: 1.75,
-  borderRadius: '14px',
-  border: 1,
-  borderColor: selected ? 'primary.main' : 'divider',
-  bgcolor: selected ? alpha(palette.brand, 0.1) : 'background.default',
-  transition: 'border-color 160ms, background-color 160ms',
-  '&:hover': { borderColor: selected ? 'primary.main' : palette.lineStrong },
-});
-
 export default function CreateContestForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   // a "start a board for this game" link arrives with the game picked, while it can still be picked
-  const requestedId = searchParams.get('game');
+  const linkParam = searchParams.get('game');
+  const requestedId = linkParam && isUuid(linkParam) ? linkParam : null;
   const { data: requested, isLoading: requestedLoading } = useGetGameQuery(
     requestedId ?? skipToken
   );
-  const requestedGame = requested && canStartBoard(requested) ? requested : undefined;
 
-  // the picker opens on the week of the next kickoff, so a spent week hands over by itself
-  const [week, setWeek] = useState<ScoreboardWeek | undefined>(undefined);
-  const shownWeek = week ?? requestedGame ?? { upcoming: true as const };
+  // judged once, when it loads, so it stays picked through kickoff like a game picked by hand
+  const [linked, setLinked] = useState<Game | null>();
+  if (linked === undefined && requested) {
+    setLinked(canStartBoard(requested) ? requested : null);
+  }
+
+  // the picker opens on the linked game's week, else the next kickoff's, so a spent week hands over by itself
+  const [week, setWeek] = useState<ScoreboardWeek>();
+  const openingWeek: ScoreboardQuery =
+    linked && linked.week > 0
+      ? { season: linked.season, seasonType: linked.seasonType, week: linked.week }
+      : { upcoming: true };
   const {
     data: board,
     isLoading: boardLoading,
     isFetching: boardFetching,
     isError: boardFailed,
     refetch: refetchBoard,
-  } = useGetScoreboardQuery(
-    'upcoming' in shownWeek
-      ? shownWeek
-      : { season: shownWeek.season, seasonType: shownWeek.seasonType, week: shownWeek.week },
-    { skip: requestedLoading }
-  );
+  } = useGetScoreboardQuery(week ?? openingWeek, { skip: requestedLoading });
   const [createContest, { isLoading: creating }] = useCreateContestMutation();
 
   const [name, setName] = useState('');
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [maxSquares, setMaxSquares] = useState(10);
   // undefined until the player picks, so a linked game stays picked until then
-  const [picked, setPicked] = useState<Game | null | undefined>(undefined);
+  const [picked, setPicked] = useState<Game | null>();
   const [fieldErrors, setFieldErrors] = useState<{ game?: string; name?: string }>({});
   const [error, setError] = useState('');
 
@@ -105,7 +97,7 @@ export default function CreateContestForm() {
   const nameSection = useRef<HTMLElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
 
-  const selectedGame = picked === undefined ? requestedGame : picked;
+  const selectedGame = picked === undefined ? (linked ?? undefined) : picked;
 
   const pickGame = (game: Game) => {
     setPicked(game);
@@ -202,6 +194,7 @@ export default function CreateContestForm() {
             onRetry={() => void refetchBoard()}
             onSelect={pickGame}
             onWeek={setWeek}
+            onReset={week ? () => setWeek(undefined) : undefined}
           />
         </FormSection>
 

@@ -15,6 +15,7 @@ import (
 )
 
 type GameHandler interface {
+	GetUpcoming(c *gin.Context)
 	GetScoreboard(c *gin.Context)
 	GetGame(c *gin.Context)
 }
@@ -29,8 +30,29 @@ func NewGameHandler(gameService service.GameService) GameHandler {
 	}
 }
 
+// @Summary Get upcoming games (deprecated)
+// @Description Returns the games of the next kickoff's week that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.
+// @Tags games
+// @Produce json
+// @Success 200 {array} model.Game
+// @Failure 500 {object} api.APIError
+// @Deprecated
+// @Router /games/upcoming [get]
+func (h *gameHandler) GetUpcoming(c *gin.Context) {
+	log := logging.FromGin(c)
+
+	games, err := h.gameService.GetUpcoming(c.Request.Context())
+	if err != nil {
+		log.Error("failed to get upcoming games", "error", err)
+		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get upcoming games", c))
+		return
+	}
+
+	c.JSON(http.StatusOK, games)
+}
+
 // @Summary Get the scoreboard
-// @Description Returns one week of NFL games with their scores, by quarter. Without parameters it returns the week of the game nearest to now; pass season, seasonType, and week together to pick another.
+// @Description Returns one week of NFL games with their scores, by quarter. Without parameters it returns the current week from ESPN's calendar; pass upcoming=true for the week of the next game that has not kicked off, or season, seasonType, and week together to pick another.
 // @Tags games
 // @Produce json
 // @Param season query int false "Season year"

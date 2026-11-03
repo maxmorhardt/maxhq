@@ -47,6 +47,7 @@ func TestNew_WiresTheGameRoutes(t *testing.T) {
 		paths = append(paths, route.Method+" "+route.Path)
 	}
 	assert.Contains(t, paths, "GET /games/scoreboard")
+	assert.Contains(t, paths, "GET /games/upcoming", "kept for web builds that predate the week picker")
 	assert.Contains(t, paths, "GET /games/:id")
 }
 

@@ -6,6 +6,7 @@ import (
 )
 
 func Register(r *gin.Engine, h handler.GameHandler) {
+	r.GET("/games/upcoming", h.GetUpcoming)
 	r.GET("/games/scoreboard", h.GetScoreboard)
 	r.GET("/games/:id", h.GetGame)
 }

@@ -90,12 +90,37 @@ describe('WeekGamePicker', () => {
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
   });
 
-  it('offers a retry when the week fails', () => {
+  it('offers a retry when the week fails, and a way back once the player has moved', () => {
     const onRetry = vi.fn();
-    renderWithProviders(<WeekGamePicker {...props} failed onRetry={onRetry} />);
-
+    const onReset = vi.fn();
+    const { rerender } = renderWithProviders(
+      <WeekGamePicker {...props} failed onRetry={onRetry} />
+    );
+    expect(screen.queryByRole('button', { name: 'Back to this week' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRetry).toHaveBeenCalled();
+
+    rerender(<WeekGamePicker {...props} failed onRetry={onRetry} onReset={onReset} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Back to this week' }));
+    expect(onReset).toHaveBeenCalled();
+  });
+
+  it('keeps a picked game picked after it kicks off', () => {
+    renderWithProviders(<WeekGamePicker {...props} selectedId="done" />);
+
+    const done = screen.getByRole('radio', { name: 'Away done @ Home done' });
+    expect(done).toHaveAttribute('aria-checked', 'true');
+    expect(done).not.toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByText('Final')).not.toBeInTheDocument();
+  });
+
+  it('says when every game in the week has kicked off', () => {
+    const spent = { ...board, games: [board.games[0]] };
+    const { rerender } = renderWithProviders(<WeekGamePicker {...props} board={spent} />);
+    expect(screen.getByText(/Pick one from a later week/)).toBeInTheDocument();
+
+    rerender(<WeekGamePicker {...props} board={{ ...spent, next: undefined }} />);
+    expect(screen.getByText(/No games are open right now/)).toBeInTheDocument();
   });
 
   it('explains a week with no games yet', () => {

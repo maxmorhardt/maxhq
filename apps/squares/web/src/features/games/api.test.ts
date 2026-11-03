@@ -42,4 +42,10 @@ describe('gamesApi', () => {
     await makeStore().dispatch(gamesApi.endpoints.getGame.initiate('g-1'));
     expect(fetch.lastRequest()).toMatchObject({ method: 'GET', path: '/games/g-1' });
   });
+
+  it('keeps a game id inside its own path segment', async () => {
+    const fetch = stubFetch({});
+    await makeStore().dispatch(gamesApi.endpoints.getGame.initiate('../accounts'));
+    expect(fetch.lastRequest().path).toBe('/games/..%2Faccounts');
+  });
 });

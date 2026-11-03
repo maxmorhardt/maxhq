@@ -9,7 +9,7 @@ export const gamesApi = baseApi.injectEndpoints({
     }),
 
     getGame: build.query<Game, string>({
-      query: (id) => `/games/${id}`,
+      query: (id) => `/games/${encodeURIComponent(id)}`,
     }),
   }),
 });

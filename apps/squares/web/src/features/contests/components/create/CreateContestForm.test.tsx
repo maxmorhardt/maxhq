@@ -59,6 +59,9 @@ const board: Scoreboard = {
 
 const lastScoreboardArgs = () => games.useGetScoreboardQuery.mock.lastCall;
 
+const LINKED = '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001';
+const linkTo = (id: string) => ({ route: `/contests/create?game=${id}` });
+
 describe('CreateContestForm', () => {
   let create: ReturnType<typeof vi.fn>;
   const refetch = vi.fn();
@@ -246,8 +249,8 @@ describe('CreateContestForm', () => {
 
   it('arrives with the game a link asked for already picked, on its week', async () => {
     games.useGetGameQuery.mockReturnValue({ data: game, isLoading: false });
-    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=g-1' });
-    expect(games.useGetGameQuery).toHaveBeenCalledWith('g-1');
+    renderWithProviders(<CreateContestForm />, linkTo(LINKED));
+    expect(games.useGetGameQuery).toHaveBeenCalledWith(LINKED);
     expect(lastScoreboardArgs()?.[0]).toEqual({ season: 2026, seasonType: 2, week: 10 });
     expect(screen.getByRole('radio', { name: 'Bears @ Lions' })).toHaveAttribute(
       'aria-checked',
@@ -262,15 +265,52 @@ describe('CreateContestForm', () => {
     );
   });
 
+  it('keeps a linked game picked after it kicks off, like one picked by hand', () => {
+    games.useGetGameQuery.mockReturnValue({ data: game, isLoading: false });
+    renderWithProviders(<CreateContestForm />, linkTo(LINKED));
+
+    const now = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(game.gameTime) + 60_000);
+    fireEvent.change(nameField(), { target: { value: 'Bowl' } });
+
+    expect(screen.queryByText('No game picked yet')).not.toBeInTheDocument();
+    expect(lastScoreboardArgs()?.[0]).toEqual({ season: 2026, seasonType: 2, week: 10 });
+    now.mockRestore();
+  });
+
+  it('never asks for a linked id that is not a uuid', () => {
+    renderWithProviders(<CreateContestForm />, linkTo('..%2F..%2Faccounts%2Fusers%2Fme'));
+    expect(games.useGetGameQuery).not.toHaveBeenCalledWith(expect.any(String));
+    expect(lastScoreboardArgs()?.[0]).toEqual({ upcoming: true });
+  });
+
+  it('opens on the upcoming week when the linked game has no week number', () => {
+    games.useGetGameQuery.mockReturnValue({ data: { ...game, week: 0 }, isLoading: false });
+    renderWithProviders(<CreateContestForm />, linkTo(LINKED));
+    expect(lastScoreboardArgs()?.[0]).toEqual({ upcoming: true });
+    expect(screen.queryByText('No game picked yet')).not.toBeInTheDocument();
+  });
+
   it('waits for the linked game before choosing a week', () => {
     games.useGetGameQuery.mockReturnValue({ data: undefined, isLoading: true });
-    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=g-1' });
+    renderWithProviders(<CreateContestForm />, linkTo(LINKED));
     expect(lastScoreboardArgs()?.[1]).toEqual({ skip: true });
+  });
+
+  it('goes back to the opening week when another week fails to load', () => {
+    renderWithProviders(<CreateContestForm />);
+    games.useGetScoreboardQuery.mockReturnValue({ data: undefined, isError: true, refetch });
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+
+    games.useGetScoreboardQuery.mockReturnValue({ data: board, isLoading: false, refetch });
+    fireEvent.click(screen.getByRole('button', { name: 'Back to this week' }));
+
+    expect(lastScoreboardArgs()?.[0]).toEqual({ upcoming: true });
+    expect(screen.getByRole('heading', { name: 'Week 10' })).toBeInTheDocument();
   });
 
   it('asks for a game when the one a link asked for has kicked off', () => {
     games.useGetGameQuery.mockReturnValue({ data: finished, isLoading: false });
-    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=g-0' });
+    renderWithProviders(<CreateContestForm />, linkTo('0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0000'));
     expect(lastScoreboardArgs()?.[0]).toEqual({ upcoming: true });
     expect(screen.getByText('No game picked yet')).toBeInTheDocument();
 

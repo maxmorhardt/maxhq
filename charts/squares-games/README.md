@@ -7,7 +7,7 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 ## Required
 
 - **PostgreSQL** - 17+. One database shared by the squares services; this service migrates only its own `games` schema at startup (and adopts the pre-split `games` and `game_scores` tables from `public` on the first start after the split).
-- **Valkey** (the `valkey` namespace) - the games stream and the scoreboard and game caches.
+- **Valkey** (the `valkey` namespace) - the games stream and the scoreboard, game, and next-kickoff caches.
 - **ESPN** - `site.api.espn.com`, public and unauthenticated.
 - **Envoy Gateway** - the `maxhq` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/gateway`), because the service trusts them.
 - **Dex** - `squares` and `squares-mobile` clients at `login.maxhq.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxhq.io/keys`.
@@ -18,7 +18,8 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 
 | Path under `api.maxhq.io/squares` | |
 | --- | --- |
-| `/games/scoreboard` | one week of games with their scores by quarter, the week's name from ESPN's calendar, and the calendar weeks before and after it (the current week unless `season`, `seasonType`, and `week` pick another); public |
+| `/games/scoreboard` | one week of games with their scores by quarter, the week's name from ESPN's calendar, and the calendar weeks before and after it (the current week unless `season`, `seasonType`, and `week` pick another, or `upcoming=true` asks for the week of the next game that has not kicked off, cached in Valkey); public |
+| `/games/upcoming` | deprecated: the games of the next kickoff's week that have not kicked off, for web builds that predate the week picker; public |
 | `/games/{id}` | one game with its status, score, and points by quarter; public |
 | `/swagger/games` | the API reference |
 

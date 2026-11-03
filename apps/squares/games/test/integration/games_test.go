@@ -52,6 +52,10 @@ func TestGames_ScheduleIsIngestedAndPublished(t *testing.T) {
 	upcoming := testkit.Call(t, gamesURL, testkit.Anonymous, http.MethodGet, "/games/scoreboard?upcoming=true", nil)
 	require.Equal(t, http.StatusOK, upcoming.Status)
 	assert.Contains(t, string(upcoming.Body), "401-sched", "the next kickoff's week is the one a contest can start in")
+
+	legacy := testkit.Call(t, gamesURL, testkit.As("fan@squares.test"), http.MethodGet, "/games/upcoming", nil)
+	require.Equal(t, http.StatusOK, legacy.Status, "web builds that predate the week picker still load games")
+	assert.Contains(t, string(legacy.Body), "401-sched")
 }
 
 func TestGames_LiveScoresArePublishedOncePerChange(t *testing.T) {

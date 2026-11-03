@@ -9,7 +9,7 @@
     "paths": {
         "/games/scoreboard": {
             "get": {
-                "description": "Returns one week of NFL games with their scores, by quarter. Without parameters it returns the week of the game nearest to now; pass season, seasonType, and week together to pick another.",
+                "description": "Returns one week of NFL games with their scores, by quarter. Without parameters it returns the current week from ESPN's calendar; pass upcoming=true for the week of the next game that has not kicked off, or season, seasonType, and week together to pick another.",
                 "produces": [
                     "application/json"
                 ],
@@ -54,6 +54,36 @@
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/upcoming": {
+            "get": {
+                "description": "Returns the games of the next kickoff's week that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Get upcoming games (deprecated)",
+                "deprecated": true,
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Game"
+                            }
                         }
                     },
                     "500": {

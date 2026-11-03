@@ -5,14 +5,13 @@ import SignInPrompt from '../auth/SignInPrompt';
 import NotFoundError from '../components/errors/NotFoundError';
 import ContestPageSkeleton from '../features/contests/components/ContestPageSkeleton';
 import LiveContest from '../features/contests/components/LiveContest';
-
-const CONTEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { isUuid } from '../utils/ids';
 
 export default function ContestPage() {
   const { id = '' } = useParams<{ id: string }>();
 
   // an id that cannot be a contest is answered at once instead of asking the server
-  if (!CONTEST_ID.test(id)) {
+  if (!isUuid(id)) {
     return <NotFoundError />;
   }
 

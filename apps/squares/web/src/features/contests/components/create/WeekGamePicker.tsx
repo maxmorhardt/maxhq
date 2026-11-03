@@ -1,7 +1,6 @@
-import { CheckCircle, ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { Box, Button, ButtonBase, IconButton, Skeleton, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import { fonts, game as palette } from '../../../../app/theme';
+import { CheckCircle } from '@mui/icons-material';
+import { Box, Button, ButtonBase, Skeleton, Typography } from '@mui/material';
+import { fonts } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
 import type { Game, Scoreboard, ScoreboardWeek } from '../../../../types/contest';
 import {
@@ -11,6 +10,8 @@ import {
   gamesByDay,
   startBlockedReason,
 } from '../../../../utils/game';
+import WeekBar, { WeekBarSkeleton } from '../../../games/components/WeekBar';
+import { optionSx } from './optionSx';
 
 interface Props {
   board?: Scoreboard;
@@ -22,27 +23,9 @@ interface Props {
   onRetry: () => void;
   onSelect: (game: Game) => void;
   onWeek: (week: ScoreboardWeek) => void;
+  // set once the player has stepped away from the week the picker opened on
+  onReset?: () => void;
 }
-
-const optionSx = (selected: boolean, blocked: boolean) => ({
-  position: 'relative',
-  display: 'flex',
-  flexDirection: 'column',
-  textAlign: 'left',
-  // ButtonBase centers its content, which shifts a card whose text is shorter than the card
-  justifyContent: 'flex-start',
-  alignItems: 'flex-start',
-  gap: 1.25,
-  width: '100%',
-  p: 1.75,
-  borderRadius: '14px',
-  border: 1,
-  borderColor: selected ? 'primary.main' : 'divider',
-  bgcolor: selected ? alpha(palette.brand, 0.1) : 'background.default',
-  opacity: blocked ? 0.5 : 1,
-  transition: 'border-color 160ms, background-color 160ms',
-  '&:hover': { borderColor: selected ? 'primary.main' : blocked ? 'divider' : palette.lineStrong },
-});
 
 function GameOption({
   game,
@@ -53,7 +36,8 @@ function GameOption({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const blocked = !canStartBoard(game);
+  // the picked game stays picked even if it kicks off while the form is open; the server has a grace period
+  const blocked = !selected && !canStartBoard(game);
 
   return (
     <ButtonBase
@@ -65,7 +49,7 @@ function GameOption({
       }
       disabled={blocked}
       onClick={onSelect}
-      sx={optionSx(selected, blocked)}
+      sx={{ ...optionSx(selected, blocked), flexDirection: 'column', gap: 1.25 }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
         <TeamMark abbr={game.awayAbbr} name={game.awayTeam} size={34} />
@@ -126,6 +110,8 @@ const gridSx = {
   gap: 1.25,
 } as const;
 
+const noteSx = { color: 'text.secondary', fontSize: '0.9rem', textAlign: 'center', py: 3 } as const;
+
 export default function WeekGamePicker({
   board,
   loading,
@@ -136,11 +122,12 @@ export default function WeekGamePicker({
   onRetry,
   onSelect,
   onWeek,
+  onReset,
 }: Props) {
   if (loading) {
     return (
-      <Box>
-        <Skeleton variant="rounded" height={52} sx={{ borderRadius: '14px', mb: 2 }} />
+      <Box aria-busy>
+        <WeekBarSkeleton compact />
         <Box sx={gridSx}>
           {[0, 1, 2, 3].map((i) => (
             <Skeleton key={i} variant="rounded" height={104} sx={{ borderRadius: '14px' }} />
@@ -153,10 +140,15 @@ export default function WeekGamePicker({
   if (failed || !board) {
     return (
       <Box role="alert" sx={{ textAlign: 'center', py: 3 }}>
-        <Typography sx={{ fontWeight: 600 }}>Games are unavailable right now.</Typography>
-        <Button onClick={onRetry} sx={{ mt: 1 }}>
-          Try again
-        </Button>
+        <Typography sx={{ fontWeight: 600 }}>This week&apos;s games didn&apos;t load.</Typography>
+        <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+          <Button onClick={onRetry}>Try again</Button>
+          {onReset && (
+            <Button onClick={onReset} color="inherit">
+              Back to this week
+            </Button>
+          )}
+        </Box>
       </Box>
     );
   }
@@ -165,104 +157,74 @@ export default function WeekGamePicker({
 
   return (
     <Box>
-      {/* the week being browsed, with the weeks either side */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 1,
-          mb: 2,
-          p: 0.75,
-          borderRadius: '14px',
-          border: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.default',
-        }}
-      >
-        <IconButton
-          aria-label="Previous week"
-          onClick={() => board.previous && onWeek(board.previous)}
-          disabled={!board.previous || refreshing}
-        >
-          <ChevronLeft />
-        </IconButton>
-        <Box sx={{ textAlign: 'center', minWidth: 0 }}>
-          <Typography
-            component="h3"
-            sx={{
-              fontFamily: fonts.display,
-              fontWeight: 800,
-              fontSize: '1.25rem',
-              textTransform: 'uppercase',
-              lineHeight: 1,
-            }}
-          >
-            {board.label || 'This Week'}
-          </Typography>
-          <Typography sx={{ mt: 0.5, color: 'text.secondary', fontSize: '0.8rem' }}>
-            {[weekDates(board.games), `${open} open`].filter(Boolean).join(' · ')}
-          </Typography>
-        </Box>
-        <IconButton
-          aria-label="Next week"
-          onClick={() => board.next && onWeek(board.next)}
-          disabled={!board.next || refreshing}
-        >
-          <ChevronRight />
-        </IconButton>
-      </Box>
+      <WeekBar
+        compact
+        label={board.label}
+        previous={board.previous}
+        next={board.next}
+        onWeek={onWeek}
+        disabled={refreshing}
+        detail={[weekDates(board.games), `${open} open`].filter(Boolean).join(' · ')}
+      />
 
       {board.games.length === 0 ? (
-        <Typography
-          sx={{ color: 'text.secondary', fontSize: '0.9rem', textAlign: 'center', py: 3 }}
-        >
+        <Typography sx={noteSx}>
           No games scheduled this week yet. New games appear as the NFL schedule is published.
         </Typography>
       ) : (
-        <Box
-          role="radiogroup"
-          aria-label="Game"
-          aria-invalid={invalid}
-          aria-busy={refreshing}
-          sx={{
-            display: 'grid',
-            gap: 2,
-            maxHeight: { sm: 440 },
-            overflowY: 'auto',
-            pr: { sm: 0.5 },
-            opacity: refreshing ? 0.6 : 1,
-            transition: 'opacity 160ms',
-          }}
-        >
-          {gamesByDay(board.games).map(([day, games]) => (
-            <Box key={day} component="section" aria-label={day}>
-              <Typography
-                sx={{
-                  mb: 1,
-                  fontFamily: fonts.display,
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: 'text.secondary',
-                }}
-              >
-                {day}
-              </Typography>
-              <Box sx={gridSx}>
-                {games.map((game) => (
-                  <GameOption
-                    key={game.id}
-                    game={game}
-                    selected={game.id === selectedId}
-                    onSelect={() => onSelect(game)}
-                  />
-                ))}
+        <>
+          {/* every game in the week has kicked off, which is also how the offseason looks */}
+          {open === 0 && (
+            <Typography sx={{ ...noteSx, py: 0, pb: 2 }}>
+              {board.next
+                ? 'Every game this week has kicked off. Pick one from a later week.'
+                : 'No games are open right now. New games appear as the NFL schedule is published.'}
+            </Typography>
+          )}
+          <Box
+            role="radiogroup"
+            aria-label="Game"
+            aria-invalid={invalid}
+            aria-busy={refreshing}
+            sx={{
+              display: 'grid',
+              gap: 2,
+              maxHeight: { sm: 440 },
+              overflowY: 'auto',
+              pr: { sm: 0.5 },
+              opacity: refreshing ? 0.6 : 1,
+              transition: 'opacity 160ms',
+            }}
+          >
+            {gamesByDay(board.games).map(([day, games]) => (
+              <Box key={day} component="section" aria-label={day}>
+                <Typography
+                  sx={{
+                    mb: 1,
+                    fontFamily: fonts.display,
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: 'text.secondary',
+                  }}
+                >
+                  {day}
+                </Typography>
+                <Box sx={gridSx}>
+                  {games.map((game) => (
+                    <GameOption
+                      key={game.id}
+                      game={game}
+                      selected={game.id === selectedId}
+                      onSelect={() => onSelect(game)}
+                    />
+                  ))}
+                </Box>
               </Box>
-            </Box>
-          ))}
-        </Box>
+            ))}
+          </Box>
+        </>
       )}
     </Box>
   );

@@ -220,6 +220,59 @@ func TestGameService_GetUpcomingScoreboard_NextKickoffsWeek(t *testing.T) {
 	assert.Equal(t, week, board.Week)
 }
 
+func TestGameService_GetUpcomingScoreboard_CachesTheWeekUntilAGameChanges(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 12}
+	gameID := uuid.New()
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().NextKickoffWeek(mock.Anything).Return(&week, nil).Times(2)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
+	g.EXPECT().Upsert(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, game *model.Game) { game.ID = gameID }).Return(true, nil).Once()
+	g.EXPECT().GetByID(mock.Anything, gameID).Return(&model.Game{ID: gameID}, nil)
+	ob := mocks.NewOutbox(t)
+	ob.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	svc := gameSvc(t, g, ob)
+
+	for range 2 {
+		_, err := svc.GetUpcomingScoreboard(context.Background())
+		require.NoError(t, err)
+	}
+
+	_, err := svc.Ingest(context.Background(), []model.ESPNGame{{ESPNID: "1", State: "in"}})
+	require.NoError(t, err)
+
+	_, err = svc.GetUpcomingScoreboard(context.Background())
+	require.NoError(t, err, "a changed game drops the cached week, so a kickoff moves it on")
+}
+
+func TestGameService_GetUpcoming_OnlyGamesThatHaveNotKickedOff(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 12}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().NextKickoffWeek(mock.Anything).Return(&week, nil)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{
+		{ESPNID: "done", Status: model.GameStatusFinal, GameTime: time.Now().Add(-4 * time.Hour)},
+		{ESPNID: "late", Status: model.GameStatusScheduled, GameTime: time.Now().Add(-time.Minute)},
+		{ESPNID: "open", Status: model.GameStatusScheduled, GameTime: time.Now().Add(time.Hour)},
+	}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
+
+	games, err := gameSvc(t, g, nil).GetUpcoming(context.Background())
+
+	require.NoError(t, err)
+	require.Len(t, games, 1)
+	assert.Equal(t, "open", games[0].ESPNID)
+}
+
+func TestGameService_GetUpcoming_DBError(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().NextKickoffWeek(mock.Anything).Return(nil, errors.New("db"))
+
+	_, err := gameSvc(t, g, nil).GetUpcoming(context.Background())
+
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}
+
 func TestGameService_GetUpcomingScoreboard_FallsBackToTheCurrentWeek(t *testing.T) {
 	week := model.Week{Season: 2026, SeasonType: 3, Week: 5}
 	g := mocks.NewGameRepository(t)
