@@ -77,8 +77,7 @@ export default function CreateContestForm() {
       ? { season: linked.season, seasonType: linked.seasonType, week: linked.week }
       : { upcoming: true };
   const {
-    data: board,
-    isLoading: boardLoading,
+    currentData: board,
     isFetching: boardFetching,
     isError: boardFailed,
     refetch: refetchBoard,
@@ -109,7 +108,9 @@ export default function CreateContestForm() {
     section?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
     if (field === 'game') {
       section
-        ?.querySelector<HTMLElement>('[role="radio"]:not([aria-disabled="true"])')
+        ?.querySelector<HTMLElement>(
+          '[role="radio"]:not([aria-disabled="true"]):not([aria-checked="true"])'
+        )
         ?.focus({ preventScroll: true });
     } else {
       nameInput.current?.focus({ preventScroll: true });
@@ -186,8 +187,8 @@ export default function CreateContestForm() {
         >
           <WeekGamePicker
             board={board}
-            loading={requestedLoading || boardLoading}
-            refreshing={boardFetching && !boardLoading}
+            loading={requestedLoading || (boardFetching && !board)}
+            refreshing={boardFetching && !!board}
             failed={boardFailed}
             invalid={Boolean(fieldErrors.game)}
             selectedId={selectedGame?.id}

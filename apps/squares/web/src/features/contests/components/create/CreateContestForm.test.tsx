@@ -70,8 +70,7 @@ describe('CreateContestForm', () => {
     vi.clearAllMocks();
     mockAuth({ email: 'owner@x.com' });
     games.useGetScoreboardQuery.mockReturnValue({
-      data: board,
-      isLoading: false,
+      currentData: board,
       isFetching: false,
       isError: false,
       refetch,
@@ -152,6 +151,11 @@ describe('CreateContestForm', () => {
   });
 
   it('drops the game and asks for another when it is past the first quarter', async () => {
+    const other = { ...game, id: 'g-2', homeTeam: 'Seahawks', awayTeam: 'Rams' };
+    games.useGetScoreboardQuery.mockReturnValue({
+      currentData: { ...board, games: [finished, game, other] },
+      refetch,
+    });
     api.useCreateContestMutation.mockReturnValue(
       mockMutation({ error: { status: 409, message: 'That game is past the first quarter' } })
     );
@@ -161,9 +165,11 @@ describe('CreateContestForm', () => {
     submit();
 
     expect(await screen.findByText('That game is past the first quarter')).toBeInTheDocument();
-    const option = screen.getByRole('radio', { name: 'Bears @ Lions' });
-    expect(option).toHaveAttribute('aria-checked', 'false');
-    expect(option).toHaveFocus();
+    expect(screen.getByRole('radio', { name: 'Bears @ Lions' })).toHaveAttribute(
+      'aria-checked',
+      'false'
+    );
+    expect(screen.getByRole('radio', { name: 'Rams @ Seahawks' })).toHaveFocus();
     expect(refetch).toHaveBeenCalled();
     expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
     expect(screen.getAllByRole('alert')).toHaveLength(1);
@@ -171,8 +177,7 @@ describe('CreateContestForm', () => {
 
   it('explains a week with no games yet', () => {
     games.useGetScoreboardQuery.mockReturnValue({
-      data: { ...board, games: [] },
-      isLoading: false,
+      currentData: { ...board, games: [] },
     });
     renderWithProviders(<CreateContestForm />);
     expect(screen.getByText(/No games scheduled this week yet/)).toBeInTheDocument();
@@ -180,7 +185,7 @@ describe('CreateContestForm', () => {
   });
 
   it('waits for the week to load', () => {
-    games.useGetScoreboardQuery.mockReturnValue({ data: undefined, isLoading: true });
+    games.useGetScoreboardQuery.mockReturnValue({ currentData: undefined, isFetching: true });
     renderWithProviders(<CreateContestForm />);
     expect(screen.queryByRole('radiogroup', { name: 'Game' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next week' })).not.toBeInTheDocument();
@@ -218,8 +223,7 @@ describe('CreateContestForm', () => {
     pickGame();
 
     games.useGetScoreboardQuery.mockReturnValue({
-      data: { ...board, week: 11, label: 'Week 11', games: [] },
-      isLoading: false,
+      currentData: { ...board, week: 11, label: 'Week 11', games: [] },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
 
@@ -228,7 +232,7 @@ describe('CreateContestForm', () => {
   });
 
   it('offers a retry when the week fails to load', () => {
-    games.useGetScoreboardQuery.mockReturnValue({ data: undefined, isError: true, refetch });
+    games.useGetScoreboardQuery.mockReturnValue({ currentData: undefined, isError: true, refetch });
     renderWithProviders(<CreateContestForm />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
@@ -298,14 +302,28 @@ describe('CreateContestForm', () => {
 
   it('goes back to the opening week when another week fails to load', () => {
     renderWithProviders(<CreateContestForm />);
-    games.useGetScoreboardQuery.mockReturnValue({ data: undefined, isError: true, refetch });
+    games.useGetScoreboardQuery.mockReturnValue({ currentData: undefined, isError: true, refetch });
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
 
-    games.useGetScoreboardQuery.mockReturnValue({ data: board, isLoading: false, refetch });
+    games.useGetScoreboardQuery.mockReturnValue({ currentData: board, refetch });
     fireEvent.click(screen.getByRole('button', { name: 'Back to this week' }));
 
     expect(lastScoreboardArgs()?.[0]).toEqual({ upcoming: true });
     expect(screen.getByRole('heading', { name: 'Week 10' })).toBeInTheDocument();
+  });
+
+  it('shows placeholders, not the last week, while a week loads', () => {
+    renderWithProviders(<CreateContestForm />);
+    games.useGetScoreboardQuery.mockReturnValue({
+      data: board,
+      currentData: undefined,
+      isFetching: true,
+      refetch,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+
+    expect(screen.queryByRole('heading', { name: 'Week 10' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'Game' })).not.toBeInTheDocument();
   });
 
   it('asks for a game when the one a link asked for has kicked off', () => {

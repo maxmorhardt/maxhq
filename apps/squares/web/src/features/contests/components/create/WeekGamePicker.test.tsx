@@ -59,6 +59,20 @@ describe('WeekGamePicker', () => {
     expect(onSelect).toHaveBeenCalledWith(board.games[1]);
   });
 
+  it('offers a game postponed before kickoff and says so', () => {
+    const onSelect = vi.fn();
+    const postponed = game('moved', at(-30), 'postponed');
+    renderWithProviders(
+      <WeekGamePicker {...props} board={{ ...board, games: [postponed] }} onSelect={onSelect} />
+    );
+
+    const option = screen.getByRole('radio', { name: 'Away moved @ Home moved, Postponed' });
+    expect(option).toHaveAttribute('aria-disabled', 'false');
+    fireEvent.click(option);
+    expect(onSelect).toHaveBeenCalledWith(postponed);
+    expect(screen.getByText(/1 open/)).toBeInTheDocument();
+  });
+
   it('marks the picked game', () => {
     renderWithProviders(<WeekGamePicker {...props} selectedId="later" />);
 

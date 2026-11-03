@@ -75,7 +75,7 @@ const docTemplategames = `{
         },
         "/games/upcoming": {
             "get": {
-                "description": "Returns the games of the next kickoff's week that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.",
+                "description": "Returns the games of the next kickoff's week and the week after that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.",
                 "produces": [
                     "application/json"
                 ],

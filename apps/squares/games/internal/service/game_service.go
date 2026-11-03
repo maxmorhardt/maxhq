@@ -105,18 +105,26 @@ func (s *gameService) GetUpcomingScoreboard(ctx context.Context) (*model.Scorebo
 	return s.GetScoreboard(ctx, week)
 }
 
-// the games of the next kickoff's week that have not kicked off, for web builds that predate the week picker
+// the open games of the next kickoff's week and the one after, close to the old two-week list, for web builds that predate the week picker
 func (s *gameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
 	board, err := s.GetUpcomingScoreboard(ctx)
 	if err != nil {
 		return nil, err
 	}
+	games := board.Games
+	if board.Next != nil {
+		after, err := s.GetScoreboard(ctx, board.Next)
+		if err != nil {
+			return nil, err
+		}
+		games = append(append(make([]model.Game, 0, len(games)+len(after.Games)), games...), after.Games...)
+	}
 
 	now := time.Now()
-	open := make([]model.Game, 0, len(board.Games))
-	for i := range board.Games {
-		if board.Games[i].Status == model.GameStatusScheduled && board.Games[i].GameTime.After(now) {
-			open = append(open, board.Games[i])
+	open := make([]model.Game, 0, len(games))
+	for i := range games {
+		if games[i].Status == model.GameStatusScheduled && games[i].GameTime.After(now) {
+			open = append(open, games[i])
 		}
 	}
 	return open, nil
@@ -194,7 +202,10 @@ func (s *gameService) Ingest(ctx context.Context, games []model.ESPNGame) (int, 
 		newScores += created
 		if stored != nil {
 			stale[gameKey(stored.ID)] = true
-			stale[nextKickoffCacheKey] = true
+			// a live game's score can't move the next kickoff; its kickoff reaches the cache within its ttl
+			if stored.Status != model.GameStatusInProgress {
+				stale[nextKickoffCacheKey] = true
+			}
 			stale[scoreboardKey(model.Week{Season: stored.Season, SeasonType: stored.SeasonType, Week: stored.Week})] = true
 		}
 	}

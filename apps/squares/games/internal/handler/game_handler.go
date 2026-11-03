@@ -31,7 +31,7 @@ func NewGameHandler(gameService service.GameService) GameHandler {
 }
 
 // @Summary Get upcoming games (deprecated)
-// @Description Returns the games of the next kickoff's week that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.
+// @Description Returns the games of the next kickoff's week and the week after that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.
 // @Tags games
 // @Produce json
 // @Success 200 {array} model.Game

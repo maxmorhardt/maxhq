@@ -94,8 +94,9 @@ route:
     requests: 100
     unit: Second
 
+# every games route is public, so no token check by default
 auth:
-  enabled: true
+  enabled: false
   issuer: https://login.maxhq.io
   jwksURI: https://login.maxhq.io/keys
   audiences:

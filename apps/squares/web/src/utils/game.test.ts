@@ -129,23 +129,32 @@ describe('canStartBoard', () => {
   const now = Date.parse('2026-11-08T17:00:00Z');
 
   it('allows a scheduled game that has not kicked off', () => {
-    expect(canStartBoard({ status: 'scheduled', gameTime: '2026-11-08T18:00:00Z' }, now)).toBe(
-      true
-    );
+    expect(
+      canStartBoard({ status: 'scheduled', period: 0, gameTime: '2026-11-08T18:00:00Z' }, now)
+    ).toBe(true);
   });
 
   it('refuses a game past its kickoff, even before espn marks it live', () => {
-    expect(canStartBoard({ status: 'scheduled', gameTime: '2026-11-08T16:59:00Z' }, now)).toBe(
-      false
-    );
+    expect(
+      canStartBoard({ status: 'scheduled', period: 0, gameTime: '2026-11-08T16:59:00Z' }, now)
+    ).toBe(false);
   });
 
-  it.each(['in_progress', 'final', 'postponed', 'canceled'] as const)(
-    'refuses a %s game',
-    (status) => {
-      expect(canStartBoard({ status, gameTime: '2026-11-09T18:00:00Z' }, now)).toBe(false);
-    }
-  );
+  it('allows a game postponed before kickoff, whatever its old kickoff time', () => {
+    expect(
+      canStartBoard({ status: 'postponed', period: 0, gameTime: '2026-11-01T18:00:00Z' }, now)
+    ).toBe(true);
+  });
+
+  it('refuses a game postponed partway through', () => {
+    expect(
+      canStartBoard({ status: 'postponed', period: 2, gameTime: '2026-11-09T18:00:00Z' }, now)
+    ).toBe(false);
+  });
+
+  it.each(['in_progress', 'final', 'canceled'] as const)('refuses a %s game', (status) => {
+    expect(canStartBoard({ status, period: 0, gameTime: '2026-11-09T18:00:00Z' }, now)).toBe(false);
+  });
 });
 
 describe('startBlockedReason', () => {

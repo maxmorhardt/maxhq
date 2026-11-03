@@ -40,8 +40,7 @@ describe('GamesScoreboard', () => {
   beforeEach(() => {
     mockAuth();
     api.useGetScoreboardQuery.mockReturnValue({
-      data: board,
-      isLoading: false,
+      currentData: board,
       isError: false,
       refetch: vi.fn(),
     });
@@ -82,8 +81,7 @@ describe('GamesScoreboard', () => {
 
   it('stops where the calendar ends', () => {
     api.useGetScoreboardQuery.mockReturnValue({
-      data: { ...board, label: 'Super Bowl', previous: undefined, next: undefined },
-      isLoading: false,
+      currentData: { ...board, label: 'Super Bowl', previous: undefined, next: undefined },
       isError: false,
       refetch: vi.fn(),
     });
@@ -96,8 +94,7 @@ describe('GamesScoreboard', () => {
 
   it('says when there are no games', () => {
     api.useGetScoreboardQuery.mockReturnValue({
-      data: { season: 0, seasonType: 0, week: 0, label: '', games: [] },
-      isLoading: false,
+      currentData: { season: 0, seasonType: 0, week: 0, label: '', games: [] },
       isError: false,
       refetch: vi.fn(),
     });
@@ -108,7 +105,7 @@ describe('GamesScoreboard', () => {
   });
 
   it('shows placeholders while loading', () => {
-    api.useGetScoreboardQuery.mockReturnValue({ isLoading: true });
+    api.useGetScoreboardQuery.mockReturnValue({ isFetching: true });
     renderWithProviders(<GamesScoreboard />);
 
     expect(screen.getByTestId('scoreboard-loading')).toBeInTheDocument();
@@ -116,7 +113,7 @@ describe('GamesScoreboard', () => {
 
   it('offers a retry when the scores fail to load', () => {
     const refetch = vi.fn();
-    api.useGetScoreboardQuery.mockReturnValue({ isLoading: false, isError: true, refetch });
+    api.useGetScoreboardQuery.mockReturnValue({ isError: true, refetch });
     renderWithProviders(<GamesScoreboard />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
@@ -126,7 +123,7 @@ describe('GamesScoreboard', () => {
   it('offers a board only on games that have not kicked off', () => {
     const later = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
     api.useGetScoreboardQuery.mockReturnValue({
-      data: {
+      currentData: {
         ...board,
         games: [
           game('live', new Date(Date.now() - 60 * 60 * 1000).toISOString(), 'in_progress'),
@@ -134,7 +131,6 @@ describe('GamesScoreboard', () => {
           game('next', later),
         ],
       },
-      isLoading: false,
       isError: false,
       refetch: vi.fn(),
     });

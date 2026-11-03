@@ -41,7 +41,6 @@ export function WeekBarSkeleton({ compact = false }: { compact?: boolean }) {
   );
 }
 
-// the week being shown, with steps to the calendar weeks either side
 export default function WeekBar({
   label,
   detail,

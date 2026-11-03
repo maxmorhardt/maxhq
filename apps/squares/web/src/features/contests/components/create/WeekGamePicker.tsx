@@ -10,6 +10,7 @@ import {
   gamesByDay,
   startBlockedReason,
 } from '../../../../utils/game';
+import DayHeading from '../../../games/components/DayHeading';
 import WeekBar, { WeekBarSkeleton } from '../../../games/components/WeekBar';
 import { optionSx } from './optionSx';
 
@@ -38,15 +39,14 @@ function GameOption({
 }) {
   // the picked game stays picked even if it kicks off while the form is open; the server has a grace period
   const blocked = !selected && !canStartBoard(game);
+  const tag = blocked ? startBlockedReason(game) : game.status === 'postponed' ? 'Postponed' : '';
 
   return (
     <ButtonBase
       role="radio"
       aria-checked={selected}
       aria-disabled={blocked}
-      aria-label={
-        blocked ? `${formatMatchup(game)}, ${startBlockedReason(game)}` : formatMatchup(game)
-      }
+      aria-label={tag ? `${formatMatchup(game)}, ${tag}` : formatMatchup(game)}
       disabled={blocked}
       onClick={onSelect}
       sx={{ ...optionSx(selected, blocked), flexDirection: 'column', gap: 1.25 }}
@@ -57,28 +57,14 @@ function GameOption({
           @
         </Typography>
         <TeamMark abbr={game.homeAbbr} name={game.homeTeam} size={34} />
-        {selected && <CheckCircle color="primary" sx={{ ml: 'auto', fontSize: '1.2rem' }} />}
-        {blocked && (
-          <Typography
-            component="span"
-            sx={{
-              ml: 'auto',
-              px: 1,
-              py: 0.25,
-              borderRadius: 999,
-              border: 1,
-              borderColor: 'divider',
-              fontFamily: fonts.display,
-              fontWeight: 700,
-              fontSize: '0.72rem',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: 'text.secondary',
-            }}
-          >
-            {startBlockedReason(game)}
-          </Typography>
-        )}
+        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 0.75 }}>
+          {tag && (
+            <Typography component="span" sx={tagSx}>
+              {tag}
+            </Typography>
+          )}
+          {selected && <CheckCircle color="primary" sx={{ fontSize: '1.2rem' }} />}
+        </Box>
       </Box>
       <Box>
         <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', lineHeight: 1.3 }}>
@@ -92,7 +78,6 @@ function GameOption({
   );
 }
 
-// the first and last game days of the week, like "Nov 5 – Nov 9"
 function weekDates(games: Game[]): string {
   if (games.length === 0) {
     return '';
@@ -103,6 +88,20 @@ function weekDates(games: Game[]): string {
   const last = day(games[games.length - 1].gameTime);
   return first === last ? first : `${first} – ${last}`;
 }
+
+const tagSx = {
+  px: 1,
+  py: 0.25,
+  borderRadius: 999,
+  border: 1,
+  borderColor: 'divider',
+  fontFamily: fonts.display,
+  fontWeight: 700,
+  fontSize: '0.72rem',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: 'text.secondary',
+} as const;
 
 const gridSx = {
   display: 'grid',
@@ -198,19 +197,7 @@ export default function WeekGamePicker({
           >
             {gamesByDay(board.games).map(([day, games]) => (
               <Box key={day} component="section" aria-label={day}>
-                <Typography
-                  sx={{
-                    mb: 1,
-                    fontFamily: fonts.display,
-                    fontWeight: 700,
-                    fontSize: '0.82rem',
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color: 'text.secondary',
-                  }}
-                >
-                  {day}
-                </Typography>
+                <DayHeading day={day} compact />
                 <Box sx={gridSx}>
                   {games.map((game) => (
                     <GameOption

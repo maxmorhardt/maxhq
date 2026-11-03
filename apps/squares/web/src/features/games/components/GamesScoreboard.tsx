@@ -1,10 +1,10 @@
 import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
 import { useState } from 'react';
-import { fonts } from '../../../app/theme';
 import type { ScoreboardWeek } from '../../../types/contest';
 import { canStartBoard, gamesByDay, isLive } from '../../../utils/game';
 import { useGetScoreboardQuery } from '../api';
 import CreateContestButton from '../../contests/components/CreateContestButton';
+import DayHeading from './DayHeading';
 import GameCard from './GameCard';
 import WeekBar, { WeekBarSkeleton } from './WeekBar';
 
@@ -55,9 +55,9 @@ function ScoreboardSkeleton() {
 // one week of NFL games with a way to step through the season; a contest page is where scores update live
 export default function GamesScoreboard() {
   const [week, setWeek] = useState<ScoreboardWeek | undefined>(undefined);
-  const { data: board, isLoading, isError, refetch } = useGetScoreboardQuery(week);
+  const { currentData: board, isFetching, isError, refetch } = useGetScoreboardQuery(week);
 
-  if (isLoading) {
+  if (isFetching && !board) {
     return <ScoreboardSkeleton />;
   }
 
@@ -99,20 +99,7 @@ export default function GamesScoreboard() {
         <Box sx={{ display: 'grid', gap: 3.5 }}>
           {gamesByDay(board.games).map(([day, games]) => (
             <Box key={day} component="section" aria-label={day}>
-              <Typography
-                component="h3"
-                sx={{
-                  mb: 1.5,
-                  fontFamily: fonts.display,
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: 'text.secondary',
-                }}
-              >
-                {day}
-              </Typography>
+              <DayHeading day={day} />
               <Box sx={gridSx}>
                 {games.map((game) => (
                   <GameCard

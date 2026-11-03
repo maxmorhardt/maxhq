@@ -60,9 +60,13 @@ export const isGameOver = (game: Pick<Game, 'status'>) =>
 export const hasKickedOff = (game: Pick<Game, 'status' | 'period'>) =>
   game.status !== 'scheduled' && game.period > 0;
 
-// a board can only be started on a game that hasn't kicked off, even if espn hasn't noticed yet
-export const canStartBoard = (game: Pick<Game, 'status' | 'gameTime'>, now = Date.now()) =>
-  game.status === 'scheduled' && Date.parse(game.gameTime) > now;
+// a board needs a game that hasn't kicked off, even if espn hasn't noticed yet, or one postponed before it did
+export const canStartBoard = (
+  game: Pick<Game, 'status' | 'gameTime' | 'period'>,
+  now = Date.now()
+) =>
+  (game.status === 'scheduled' && Date.parse(game.gameTime) > now) ||
+  (game.status === 'postponed' && game.period === 0);
 
 // why a game can't be picked: its clock, or that it has kicked off
 export function startBlockedReason(
@@ -71,7 +75,6 @@ export function startBlockedReason(
   return game.status === 'scheduled' ? 'Kicked off' : gameClock(game);
 }
 
-// games in kickoff order, grouped under a day heading
 export function gamesByDay(games: Game[]): [string, Game[]][] {
   const days = new Map<string, Game[]>();
   for (const game of games) {
