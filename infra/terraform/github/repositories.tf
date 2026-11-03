@@ -10,6 +10,8 @@ locals {
         development = { approval = false }
         production  = { approval = true }
       }
+      # libs/go versions are cached forever by the go module proxy
+      immutable_tags = true
     }
 
     "gitops" = {
@@ -28,7 +30,8 @@ locals {
     }
 
     "workflows" = {
-      checks = ["pr-title", "Lint"]
+      checks         = ["pr-title", "Lint"]
+      immutable_tags = true
     }
   }
 }
@@ -40,4 +43,5 @@ module "rulesets" {
   repository      = each.key
   required_checks = each.value.checks
   bypass_actors   = try(each.value.bypass_actors, [])
+  immutable_tags  = try(each.value.immutable_tags, false)
 }

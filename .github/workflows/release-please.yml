@@ -12,4 +12,5 @@ permissions:
 jobs:
   release-please:
     uses: maxmorhardt/workflows/.github/workflows/release-please.yml@main
-    secrets: inherit
+    secrets:
+      release_please_token: ${{ secrets.RELEASE_PLEASE_TOKEN }}

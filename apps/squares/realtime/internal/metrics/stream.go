@@ -23,6 +23,14 @@ var (
 		[]string{"result"},
 	)
 
+	sseStreamsRefusedTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "sse_streams_refused_total",
+			Help: "Total number of streams refused because the viewer already held the limit, by stream",
+		},
+		[]string{"stream"},
+	)
+
 	sseStreamResumesTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "sse_stream_resumes_total",
@@ -74,6 +82,7 @@ func init() {
 	prometheus.MustRegister(
 		sseStreamsActive,
 		sseStreamsTotal,
+		sseStreamsRefusedTotal,
 		sseStreamResumesTotal,
 		sseStreamClosesTotal,
 		sseStreamDuration,
@@ -85,6 +94,10 @@ func init() {
 
 func RecordStreamResult(result model.StreamResult) {
 	sseStreamsTotal.WithLabelValues(string(result)).Inc()
+}
+
+func IncStreamRefused(kind model.StreamKind) {
+	sseStreamsRefusedTotal.WithLabelValues(string(kind)).Inc()
 }
 
 func RecordStreamResume(replayed bool) {

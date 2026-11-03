@@ -84,12 +84,23 @@ func TestAuthenticate_LeavesMissingNameEmpty(t *testing.T) {
 	assert.Equal(t, "user@example.com|", w.Body.String())
 }
 
+func TestAuthenticate_LowercasesEmail(t *testing.T) {
+	r, _ := buildRouter(Authenticate(nil))
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, gatewayRequest(func(h http.Header) { h.Set(HeaderAuthEmail, " User@Example.COM ") }))
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "user@example.com|Test User", w.Body.String())
+}
+
 func TestAuthenticate_RejectsIncompleteIdentity(t *testing.T) {
 	tests := []struct {
 		name   string
 		mutate func(h http.Header)
 	}{
 		{"missing email", func(h http.Header) { h.Del(HeaderAuthEmail) }},
+		{"blank email", func(h http.Header) { h.Set(HeaderAuthEmail, "  ") }},
 		{"unverified email", func(h http.Header) { h.Set(HeaderAuthEmailVerified, "false") }},
 		{"garbled verification", func(h http.Header) { h.Set(HeaderAuthEmailVerified, "maybe") }},
 		{"missing iat", func(h http.Header) { h.Del(HeaderAuthIssuedAt) }},

@@ -9,6 +9,14 @@ const (
 	StreamResultUnauthorized StreamResult = "unauthorized"
 	StreamResultUnavailable  StreamResult = "unavailable"
 	StreamResultFinished     StreamResult = "finished"
+	StreamResultTooMany      StreamResult = "too_many"
+)
+
+type StreamKind string
+
+const (
+	StreamKindContest StreamKind = "contest"
+	StreamKindGame    StreamKind = "game"
 )
 
 type StreamCloseReason string

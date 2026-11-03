@@ -10,7 +10,7 @@ Monorepo for everything served under `maxhq.io`: the apps, their Helm charts, an
 | [`apps/squares/games`](apps/squares/games) | Squares schedule and live scores | `maxmorhardt/squares-games` |
 | [`apps/squares/accounts`](apps/squares/accounts) | Squares profiles and contact form | `maxmorhardt/squares-accounts` |
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
-| [`libs`](libs) | Go libraries shared by the services (`platform`, `squares`) | - |
+| [`libs/go`](libs) | Go module shared by the services (`platform`, `squares`), released as `libs/go/v<version>` | - |
 | [`charts`](charts) | Helm chart for each app and the gateway | - |
 | [`infra/terraform`](infra/terraform/README.md) | AWS backups, Cloudflare DNS, GitHub rulesets and environments | - |
 | [`infra/k3s`](infra/k3s/README.md) | Node bootstrap and the k3s runbook | - |
@@ -56,13 +56,13 @@ One release pull request covers every app with pending changes. Pull requests ar
 
 ## CI
 
-[`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs` tests every Go service, a changed chart is linted and rendered, and a change under `infra/terraform` plans every module. `CI Complete` is the single required check. [`cd-terraform.yml`](.github/workflows/cd-terraform.yml) applies Terraform on merge.
+[`ci.yml`](.github/workflows/ci.yml) runs on pull requests and only builds what changed; a change under `libs/go` tests the libraries, a changed chart is linted and rendered, and a change under `infra/terraform` plans every module. `CI Complete` is the single required check. [`cd-terraform.yml`](.github/workflows/cd-terraform.yml) applies Terraform on merge.
 
-All Go code is one module: [`go.mod`](go.mod) at the root, so every service and library shares one set of dependency versions.
+Each Go service is its own module, and [`libs/go`](libs/go/go.mod) is another. A `libs/go` release tags `libs/go/v<version>`; Renovate then bumps it in every service's `go.mod` as a `fix(deps)` PR, so each service releases with it, the same way any other dependency bump releases a service. To try an unreleased library change in a service locally, use a workspace, which is gitignored: `go work init ./libs/go ./apps/squares/contests`.
 
 ## Git hooks
 
-[`.githooks/pre-commit`](.githooks/pre-commit) runs each UI's own lint-staged when its files are staged, and gofmt on staged Go files. When `libs/go` is staged it runs [`.githooks/stamp-libs`](.githooks/stamp-libs), which writes the staged `libs/go` tree hash to every squares service's `libs.stamp`, so release-please releases them; CI fails a `libs/go` change without them. `pnpm install` in either UI turns it on (`git config core.hooksPath .githooks`); there is no npm project at the root.
+[`.githooks/pre-commit`](.githooks/pre-commit) runs each UI's own lint-staged when its files are staged, and gofmt on staged Go files. `pnpm install` in either UI turns it on (`git config core.hooksPath .githooks`); there is no npm project at the root.
 
 ## Licenses
 

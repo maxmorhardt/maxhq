@@ -86,6 +86,8 @@ func TestRevocations_RedisErrors(t *testing.T) {
 	assert.Error(t, err)
 	_, err = store.Restore(ctx, "a@x.com", 1)
 	assert.Error(t, err)
+	_, err = LowercaseSessionRevocations(ctx, client)
+	assert.Error(t, err)
 }
 
 func TestRevocations_RestoreRejectsAGarbledEntry(t *testing.T) {
@@ -95,4 +97,30 @@ func TestRevocations_RestoreRejectsAGarbledEntry(t *testing.T) {
 
 	_, err := store.Restore(context.Background(), "a@x.com", time.Now().Unix())
 	assert.Error(t, err)
+}
+
+func TestLowercaseSessionRevocations_KeepsMixedCaseSignOutsInForce(t *testing.T) {
+	mr, client := newRedis(t)
+	store := NewRevocationStore(client)
+	ctx := context.Background()
+	expires := time.Now().Add(time.Hour).Unix()
+
+	require.NoError(t, store.RevokeSession(ctx, "Max@X.com", 100, expires))
+	require.NoError(t, store.RevokeSession(ctx, "kept@x.com", 200, expires))
+	require.NoError(t, store.Revoke(ctx, "Gone@X.com", time.Now()))
+
+	moved, err := LowercaseSessionRevocations(ctx, client)
+	require.NoError(t, err)
+	assert.Equal(t, 1, moved)
+
+	revoked, err := store.IsSessionRevoked(ctx, "max@x.com", 100)
+	require.NoError(t, err)
+	assert.True(t, revoked, "a sign-out made under the mixed-case email still holds")
+	assert.Greater(t, mr.TTL("squares:revoked-session:max@x.com:100"), 50*time.Minute, "and keeps its expiry")
+	assert.True(t, mr.Exists("squares:revoked-session:kept@x.com:200"))
+	assert.True(t, mr.Exists("squares:revoked:Gone@X.com"), "account blocks are re-seeded from the database instead")
+
+	again, err := LowercaseSessionRevocations(ctx, client)
+	require.NoError(t, err)
+	assert.Zero(t, again)
 }

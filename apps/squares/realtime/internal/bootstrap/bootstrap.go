@@ -47,11 +47,11 @@ func New(cfg *model.RealtimeConfig, infra *server.Infra, shutdown <-chan struct{
 		revocations,
 	)
 
-	engine := server.NewEngine(cfg.Server)
+	engine := server.NewEngine(&cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
 		"redis": server.RedisCheck(infra.Redis),
 	}), Service)
-	routes.Register(engine, handler.NewEventsHandler(streams, cfg.Stream, shutdown), middleware.Authenticate(revocations))
+	routes.Register(engine, handler.NewEventsHandler(streams, service.NewStreamLimiter(cfg.Stream.MaxContestPerUser), service.NewStreamLimiter(cfg.Stream.MaxGamePerIP), cfg.Stream, shutdown), middleware.Authenticate(revocations))
 
 	return &App{Engine: engine, cfg: cfg, infra: infra, hub: hub}
 }
@@ -65,12 +65,12 @@ func (a *App) Run(ctx context.Context) error {
 
 	a.Start(ctx)
 
-	if metricsSrv := server.StartMetricsServer(a.cfg.Server); metricsSrv != nil {
+	if metricsSrv := server.StartMetricsServer(&a.cfg.Server); metricsSrv != nil {
 		defer func() { _ = metricsSrv.Close() }()
 	}
 
 	// no write timeout: streams stay open for as long as the viewer's token is valid
-	err := server.Serve(ctx, server.NewHTTPServer(a.cfg.Server, a.Engine, 0))
+	err := server.Serve(ctx, server.NewHTTPServer(&a.cfg.Server, a.Engine, 0))
 	slog.Info("realtime service stopped")
 	return err
 }

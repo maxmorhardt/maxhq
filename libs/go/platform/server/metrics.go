@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func StartMetricsServer(cfg config.ServerConfig) *http.Server {
+func StartMetricsServer(cfg *config.ServerConfig) *http.Server {
 	if !cfg.MetricsEnabled {
 		slog.Info("metrics disabled")
 		return nil

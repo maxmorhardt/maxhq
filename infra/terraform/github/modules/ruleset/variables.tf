@@ -35,3 +35,9 @@ variable "merge_methods" {
   type        = list(string)
   default     = ["squash"]
 }
+
+variable "immutable_tags" {
+  description = "Block moving or deleting tags; release tags are consumed by version, so one must never change"
+  type        = bool
+  default     = false
+}

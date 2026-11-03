@@ -1,9 +1,0 @@
-#!/bin/sh
-set -e
-
-stamp=$(git write-tree --prefix=libs/go/)
-for cmd in apps/squares/*/cmd; do
-  svc=${cmd%/cmd}
-  echo "$stamp" > "$svc/libs.stamp"
-  git add "$svc/libs.stamp"
-done

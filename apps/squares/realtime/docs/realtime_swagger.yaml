@@ -82,6 +82,10 @@ paths:
           description: The contest is finished; read it from /contests/{id} instead
           schema:
             $ref: '#/definitions/api.APIError'
+        "429":
+          description: Too many streams open for this viewer
+          schema:
+            $ref: '#/definitions/api.APIError'
         "503":
           description: Service Unavailable
           schema:
@@ -121,6 +125,10 @@ paths:
             type: string
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "429":
+          description: Too many streams open from this address
           schema:
             $ref: '#/definitions/api.APIError'
         "503":

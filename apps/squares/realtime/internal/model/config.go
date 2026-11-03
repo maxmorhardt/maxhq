@@ -21,4 +21,6 @@ type ContestsConfig struct {
 type StreamConfig struct {
 	HeartbeatInterval  time.Duration `env:"SSE_HEARTBEAT_INTERVAL" envDefault:"25s"`
 	RevocationInterval time.Duration `env:"SSE_REVOCATION_INTERVAL" envDefault:"5m"`
+	MaxContestPerUser  int           `env:"SSE_MAX_CONTEST_STREAMS_PER_USER" envDefault:"20"`
+	MaxGamePerIP       int           `env:"SSE_MAX_GAME_STREAMS_PER_IP" envDefault:"100"`
 }

@@ -82,6 +82,12 @@ const docTemplaterealtime = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "429": {
+                        "description": "Too many streams open for this viewer",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
@@ -131,6 +137,12 @@ const docTemplaterealtime = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many streams open from this address",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }

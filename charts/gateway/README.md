@@ -35,3 +35,7 @@ would not do it: ServiceLB's hostPort is NAT'd past ufw's input rules.
 ## Header stripping
 
 The `ClientTrafficPolicy` removes `strippedRequestHeaders` from every request before any filter runs. Apps (squares) trust `X-Auth-*` headers that only a `SecurityPolicy` jwt filter sets, so a client must never be able to send them. Keep this list in step with the `claimToHeaders` in the `squares-*` charts' `values.yaml`.
+
+## Client IP
+
+`trustedCIDRs` is the pod network that cloudflared reaches the proxy from, so Envoy takes the client IP from the rightmost `X-Forwarded-For` entry outside it, the one Cloudflare appends. The squares charts set `TRUSTED_PROXIES` to the same range so the services resolve the same client IP; keep the two in step.

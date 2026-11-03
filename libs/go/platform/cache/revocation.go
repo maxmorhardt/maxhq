@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -98,4 +99,22 @@ func (s *redisRevocationStore) IsRevoked(ctx context.Context, email string, issu
 func (s *redisRevocationStore) IsSessionRevoked(ctx context.Context, email string, issuedAt int64) (bool, error) {
 	n, err := s.client.Exists(ctx, sessionKey(email, issuedAt)).Result()
 	return n > 0, err
+}
+
+func LowercaseSessionRevocations(ctx context.Context, client *redis.Client) (int, error) {
+	moved := 0
+	iter := client.Scan(ctx, 0, Key("revoked-session", "*"), 100).Iterator()
+	for iter.Next(ctx) {
+		key := iter.Val()
+		lower := strings.ToLower(key)
+		if lower == key {
+			continue
+		}
+
+		if err := client.Rename(ctx, key, lower).Err(); err != nil {
+			return moved, err
+		}
+		moved++
+	}
+	return moved, iter.Err()
 }

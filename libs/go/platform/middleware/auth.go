@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -70,7 +71,7 @@ func authenticate(revocations revocationCheck) gin.HandlerFunc {
 }
 
 func claimsFromHeaders(c *gin.Context) (*api.Claims, api.AuthFailureReason) {
-	email := c.GetHeader(HeaderAuthEmail)
+	email := strings.ToLower(strings.TrimSpace(c.GetHeader(HeaderAuthEmail)))
 	if email == "" {
 		return nil, api.AuthFailureMissingHeader
 	}

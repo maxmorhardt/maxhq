@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/netip"
 	"testing"
 	"time"
 
@@ -67,4 +68,23 @@ func TestLoad_SplitsAllowedOrigins(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, []string{"https://a.test", "https://b.test"}, cfg.Server.AllowedOrigins)
+}
+
+func TestLoad_ParsesTrustedProxies(t *testing.T) {
+	setEnv(t)
+	t.Setenv("TRUSTED_PROXIES", "10.42.0.0/16,fd00::/8")
+
+	cfg, err := Load[testConfig]()
+
+	require.NoError(t, err)
+	assert.Equal(t, []netip.Prefix{netip.MustParsePrefix("10.42.0.0/16"), netip.MustParsePrefix("fd00::/8")}, cfg.Server.TrustedProxies)
+}
+
+func TestLoad_RejectsAnInvalidTrustedProxy(t *testing.T) {
+	setEnv(t)
+	t.Setenv("TRUSTED_PROXIES", "10.42.0.0")
+
+	_, err := Load[testConfig]()
+
+	assert.Error(t, err)
 }

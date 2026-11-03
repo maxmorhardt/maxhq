@@ -40,3 +40,15 @@ func TestLegacy_ExistingTombstonesRevokeTokens(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaA, stale, http.MethodGet, "/users/me", nil).Status)
 }
+
+func TestLegacy_EmailsAreLowercased(t *testing.T) {
+	resp := testkit.Call(t, replicaA, testkit.As("MIXED@squares.test"), http.MethodGet, "/users/me", nil)
+	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+
+	var profile model.UserProfileResponse
+	resp.Decode(t, &profile)
+	assert.Equal(t, "MC", profile.DefaultInitials, "the stored profile, found whatever case the token carries")
+
+	stale := testkit.Identity{Email: "gone.mixed@squares.test", IssuedAt: time.Now().Add(-2 * time.Hour)}
+	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaA, stale, http.MethodGet, "/users/me", nil).Status)
+}

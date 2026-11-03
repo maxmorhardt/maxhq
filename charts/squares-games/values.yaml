@@ -46,6 +46,7 @@ image:
 secretName: ''
 
 env:
+  TRUSTED_PROXIES: 10.42.0.0/16
   SCORES_ENABLED: 'true'
 
 resources:

@@ -46,9 +46,12 @@ image:
 secretName: ''
 
 env:
+  TRUSTED_PROXIES: 10.42.0.0/16
   CONTESTS_INTERNAL_URL: http://squares-contests:8080
   SSE_HEARTBEAT_INTERVAL: 25s
   SSE_REVOCATION_INTERVAL: 5m
+  SSE_MAX_CONTEST_STREAMS_PER_USER: "20"
+  SSE_MAX_GAME_STREAMS_PER_IP: "100"
 
 resources:
   limits:

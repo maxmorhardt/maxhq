@@ -6,20 +6,18 @@ ARG TARGETARCH
 
 RUN apk add --no-cache make
 
-WORKDIR /src
+WORKDIR /src/${SERVICE}
 
-COPY go.mod go.sum ./
+COPY ${SERVICE}/go.mod ${SERVICE}/go.sum ./
 RUN go mod download
 
-COPY libs libs
-COPY apps/squares/service.mk apps/squares/migrate.mk apps/squares/
-COPY apps/squares/${SERVICE} apps/squares/${SERVICE}
+COPY service.mk migrate.mk /src/
+COPY ${SERVICE} .
 
-WORKDIR /src/apps/squares/${SERVICE}
 ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
 RUN make build OUT=bin/service BUILD_FLAGS="-a" LDFLAGS="-s -w"
 
-FROM alpine:3.24
+FROM gcr.io/distroless/static-debian13:nonroot
 
 ARG SERVICE
 
@@ -32,17 +30,8 @@ ENV GIN_MODE="release"
 
 WORKDIR /app
 
-RUN addgroup -g 1000 squares && \
-    adduser -D -u 1000 -G squares squares
-
-COPY --from=build --chown=squares:squares /src/apps/squares/${SERVICE}/bin/service ./service
-
-RUN apk upgrade --no-cache && \
-    apk add --no-cache ca-certificates && \
-    chmod +x service
-
-USER squares
+COPY --from=build /src/${SERVICE}/bin/service ./service
 
 EXPOSE 8080
 
-CMD ["./service"]
+ENTRYPOINT ["/app/service"]

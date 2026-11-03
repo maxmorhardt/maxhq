@@ -25,6 +25,8 @@ import (
 const (
 	clientRetry = 3 * time.Second
 
+	streamsRetryAfter = "30"
+
 	HeaderLastEventID = "Last-Event-ID"
 	queryLastEventID  = "lastEventId"
 )
@@ -35,13 +37,15 @@ type EventsHandler interface {
 }
 
 type eventsHandler struct {
-	streams  service.StreamService
-	cfg      model.StreamConfig
-	shutdown <-chan struct{}
+	streams   service.StreamService
+	users     service.StreamLimiter
+	addresses service.StreamLimiter
+	cfg       model.StreamConfig
+	shutdown  <-chan struct{}
 }
 
-func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdown <-chan struct{}) EventsHandler {
-	return &eventsHandler{streams: svc, cfg: cfg, shutdown: shutdown}
+func NewEventsHandler(svc service.StreamService, users, addresses service.StreamLimiter, cfg model.StreamConfig, shutdown <-chan struct{}) EventsHandler {
+	return &eventsHandler{streams: svc, users: users, addresses: addresses, cfg: cfg, shutdown: shutdown}
 }
 
 // @Summary Stream contest events
@@ -56,6 +60,7 @@ func NewEventsHandler(svc service.StreamService, cfg model.StreamConfig, shutdow
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
 // @Failure 410 {object} api.APIError "The contest is finished; read it from /contests/{id} instead"
+// @Failure 429 {object} api.APIError "Too many streams open for this viewer"
 // @Failure 503 {object} api.APIError
 // @Security BearerAuth
 // @Router /events/contests/{id} [get]
@@ -75,6 +80,13 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	}
 
 	user := c.GetString(api.UserKey)
+	release, ok := h.reserve(c, h.users, model.StreamKindContest, user)
+	if !ok {
+		metrics.RecordStreamResult(model.StreamResultTooMany)
+		return
+	}
+	defer release()
+
 	claims := api.ClaimsFromContext(c.Request.Context())
 	log = log.With("contest_id", contestID)
 	ctx := logging.NewContext(c.Request.Context(), log)
@@ -128,6 +140,7 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 // @Param lastEventId query string false "Same as the Last-Event-ID header, for clients that cannot set headers"
 // @Success 200 {string} string "text/event-stream; each data line is a JSON game update"
 // @Failure 400 {object} api.APIError
+// @Failure 429 {object} api.APIError "Too many streams open from this address"
 // @Failure 503 {object} api.APIError
 // @Router /events/games/{id} [get]
 func (h *eventsHandler) StreamGame(c *gin.Context) {
@@ -143,6 +156,12 @@ func (h *eventsHandler) StreamGame(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Invalid Last-Event-ID", c))
 		return
 	}
+
+	release, ok := h.reserve(c, h.addresses, model.StreamKindGame, c.ClientIP())
+	if !ok {
+		return
+	}
+	defer release()
 
 	log = log.With("game_id", gameID)
 	ctx := logging.NewContext(c.Request.Context(), log)
@@ -196,6 +215,17 @@ func startStream(w gin.ResponseWriter) {
 	// keeps proxies from buffering the stream until it ends
 	w.Header().Set("X-Accel-Buffering", "no")
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *eventsHandler) reserve(c *gin.Context, limiter service.StreamLimiter, kind model.StreamKind, key string) (func(), bool) {
+	release, ok := limiter.Acquire(key)
+	if !ok {
+		metrics.IncStreamRefused(kind)
+		logging.FromGin(c).Warn("refusing a stream over the per-client limit", "stream", kind)
+		c.Header("Retry-After", streamsRetryAfter)
+		c.JSON(http.StatusTooManyRequests, api.NewAPIError(http.StatusTooManyRequests, "Too many live updates open at once. Close a tab and try again", c))
+	}
+	return release, ok
 }
 
 func (h *eventsHandler) rejectSubscribe(c *gin.Context, err error) {

@@ -61,7 +61,7 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 	)
 	contactService := service.NewContactService(repository.NewContactRepository(db), cfg.SMTP, cfg.Turnstile)
 
-	engine := server.NewEngine(cfg.Server)
+	engine := server.NewEngine(&cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
 		"database": server.DatabaseCheck(db),
 	}), Service)
@@ -79,6 +79,12 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 }
 
 func (a *App) Start(ctx context.Context) {
+	if moved, err := cache.LowercaseSessionRevocations(ctx, a.infra.Redis); err != nil {
+		slog.Error("failed to lowercase sign-out revocations on startup", "error", err)
+	} else if moved > 0 {
+		slog.Info("lowercased sign-out revocations", "count", moved)
+	}
+
 	// a redis that lost its data must not let deleted accounts back in
 	if err := a.userService.SyncRevocations(ctx); err != nil {
 		slog.Error("failed to sync revocations on startup", "error", err)
@@ -92,11 +98,11 @@ func (a *App) Run(ctx context.Context) error {
 
 	a.Start(ctx)
 
-	if metricsSrv := server.StartMetricsServer(a.cfg.Server); metricsSrv != nil {
+	if metricsSrv := server.StartMetricsServer(&a.cfg.Server); metricsSrv != nil {
 		defer func() { _ = metricsSrv.Close() }()
 	}
 
-	err := server.Serve(ctx, server.NewHTTPServer(a.cfg.Server, a.Engine, writeTimeout))
+	err := server.Serve(ctx, server.NewHTTPServer(&a.cfg.Server, a.Engine, writeTimeout))
 	slog.Info("accounts service stopped")
 	return err
 }

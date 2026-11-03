@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"strings"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func (testDoc) ReadDoc() string { return `{"swagger":"2.0"}` }
 
 func TestNewEngine_AppliesSharedMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	r := NewEngine(config.ServerConfig{AllowedOrigins: []string{"http://allowed.com"}, MetricsEnabled: true})
+	r := NewEngine(&config.ServerConfig{AllowedOrigins: []string{"http://allowed.com"}, MetricsEnabled: true})
 	r.GET("/x", func(c *gin.Context) { c.Status(http.StatusOK) })
 
 	req := httptest.NewRequest(http.MethodGet, "/x", http.NoBody)
@@ -32,6 +33,29 @@ func TestNewEngine_AppliesSharedMiddleware(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "http://allowed.com", w.Header().Get("Access-Control-Allow-Origin"))
+}
+
+func TestNewEngine_TakesTheClientIPFromTrustedProxiesOnly(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	clientIP := func(cfg *config.ServerConfig, remote, xff string) string {
+		r := NewEngine(cfg)
+		r.GET("/ip", func(c *gin.Context) { c.String(http.StatusOK, c.ClientIP()) })
+		req := httptest.NewRequest(http.MethodGet, "/ip", http.NoBody)
+		req.RemoteAddr = remote
+		req.Header.Set("X-Forwarded-For", xff)
+		req.Header.Set("X-Real-IP", "7.7.7.7")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w.Body.String()
+	}
+	pods := &config.ServerConfig{TrustedProxies: []netip.Prefix{netip.MustParsePrefix("10.42.0.0/16")}}
+
+	assert.Equal(t, "203.0.113.7", clientIP(pods, "10.42.1.5:4000", "6.6.6.6, 203.0.113.7, 10.42.3.9"),
+		"the rightmost address the proxies didn't add, not the client's own leftmost entry")
+	assert.Equal(t, "198.51.100.2", clientIP(pods, "198.51.100.2:4000", "6.6.6.6"),
+		"a peer outside the trusted ranges can't name its own address")
+	assert.Equal(t, "10.42.1.5", clientIP(&config.ServerConfig{}, "10.42.1.5:4000", "6.6.6.6"),
+		"with no trusted proxies the peer is the client")
 }
 
 func TestRegisterRootRoutes(t *testing.T) {
@@ -73,7 +97,7 @@ func TestServe_ShutsDownWhenContextEnds(t *testing.T) {
 	port := listener.Addr().(*net.TCPAddr).Port
 	require.NoError(t, listener.Close())
 
-	srv := NewHTTPServer(config.ServerConfig{Host: "127.0.0.1", Port: port}, http.NotFoundHandler(), 0)
+	srv := NewHTTPServer(&config.ServerConfig{Host: "127.0.0.1", Port: port}, http.NotFoundHandler(), 0)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	done := make(chan error, 1)
@@ -97,7 +121,7 @@ func TestServe_ShutsDownWhenContextEnds(t *testing.T) {
 }
 
 func TestServe_ReturnsListenErrors(t *testing.T) {
-	srv := NewHTTPServer(config.ServerConfig{Port: -1}, http.NotFoundHandler(), time.Second)
+	srv := NewHTTPServer(&config.ServerConfig{Port: -1}, http.NotFoundHandler(), time.Second)
 
 	assert.Error(t, Serve(context.Background(), srv))
 }
