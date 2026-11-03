@@ -7,6 +7,7 @@ COVER_TOOL  ?= github.com/vladopajic/go-test-coverage/v2@v2.18.8
 SWAG        := go run github.com/swaggo/swag/cmd/swag@v1.16.6
 MOCKERY     := go run github.com/vektra/mockery/v2@v2.53.8
 RACE        ?=
+LIBS_GO      = $(shell GOWORK=off go list -m -f '{{.Dir}}' github.com/maxmorhardt/maxhq/libs/go)
 BUILD_FLAGS ?=
 LDFLAGS     ?=
 
@@ -75,7 +76,7 @@ mocks: ## Regenerate testify mocks
 
 .PHONY: swag
 swag: ## Regenerate the swagger docs
-	$(SWAG) init --quiet -g main.go -d ./cmd/$(SERVICE),./internal/handler,../../../libs/go/platform/server \
+	$(SWAG) init --quiet -g main.go -d ./cmd/$(SERVICE),./internal/handler,$(LIBS_GO)/platform/server \
 		--parseDependency --instanceName $(SERVICE) -o docs
 
 .PHONY: swag-check

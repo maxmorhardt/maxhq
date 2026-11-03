@@ -1,37 +1,26 @@
-CREATE TEMP TABLE identities AS
-SELECT DISTINCT email FROM (
-    SELECT email FROM users
-    UNION SELECT user_id FROM contest_participants
-    UNION SELECT owner FROM contests
-    UNION SELECT created_by FROM contests
-    UNION SELECT updated_by FROM contests
-    UNION SELECT owner FROM squares
-    UNION SELECT created_by FROM squares
-    UNION SELECT updated_by FROM squares
-    UNION SELECT winner FROM quarter_results
-    UNION SELECT created_by FROM quarter_results
-    UNION SELECT updated_by FROM quarter_results
-    UNION SELECT created_by FROM contest_invites
-) found (email)
-WHERE email LIKE '%@%';
+UPDATE users SET email = lower(email)
+WHERE id IN (
+    SELECT DISTINCT ON (lower(u.email)) u.id FROM users u
+    WHERE u.email <> lower(u.email)
+      AND NOT EXISTS (SELECT 1 FROM users o WHERE o.email = lower(u.email))
+    ORDER BY lower(u.email), u.created_at NULLS LAST
+);
 
-CREATE TEMP TABLE lowercased AS
-SELECT min(email) AS email FROM identities
-GROUP BY lower(email)
-HAVING count(*) = 1 AND min(email) <> lower(min(email));
+UPDATE contest_participants SET user_id = lower(user_id)
+WHERE id IN (
+    SELECT DISTINCT ON (p.contest_id, lower(p.user_id)) p.id FROM contest_participants p
+    WHERE p.user_id <> lower(p.user_id)
+      AND NOT EXISTS (SELECT 1 FROM contest_participants o WHERE o.contest_id = p.contest_id AND o.user_id = lower(p.user_id))
+    ORDER BY p.contest_id, lower(p.user_id), p.joined_at NULLS LAST
+);
 
-UPDATE users SET email = lower(email) WHERE email IN (SELECT email FROM lowercased);
-UPDATE contest_participants SET user_id = lower(user_id) WHERE user_id IN (SELECT email FROM lowercased);
-UPDATE contests SET owner = lower(owner) WHERE owner IN (SELECT email FROM lowercased);
-UPDATE contests SET created_by = lower(created_by) WHERE created_by IN (SELECT email FROM lowercased);
-UPDATE contests SET updated_by = lower(updated_by) WHERE updated_by IN (SELECT email FROM lowercased);
-UPDATE squares SET owner = lower(owner) WHERE owner IN (SELECT email FROM lowercased);
-UPDATE squares SET created_by = lower(created_by) WHERE created_by IN (SELECT email FROM lowercased);
-UPDATE squares SET updated_by = lower(updated_by) WHERE updated_by IN (SELECT email FROM lowercased);
-UPDATE quarter_results SET winner = lower(winner) WHERE winner IN (SELECT email FROM lowercased);
-UPDATE quarter_results SET created_by = lower(created_by) WHERE created_by IN (SELECT email FROM lowercased);
-UPDATE quarter_results SET updated_by = lower(updated_by) WHERE updated_by IN (SELECT email FROM lowercased);
-UPDATE contest_invites SET created_by = lower(created_by) WHERE created_by IN (SELECT email FROM lowercased);
-
-DROP TABLE lowercased;
-DROP TABLE identities;
+UPDATE contests SET owner = lower(owner) WHERE owner LIKE '%@%' AND owner <> lower(owner);
+UPDATE contests SET created_by = lower(created_by) WHERE created_by LIKE '%@%' AND created_by <> lower(created_by);
+UPDATE contests SET updated_by = lower(updated_by) WHERE updated_by LIKE '%@%' AND updated_by <> lower(updated_by);
+UPDATE squares SET owner = lower(owner) WHERE owner LIKE '%@%' AND owner <> lower(owner);
+UPDATE squares SET created_by = lower(created_by) WHERE created_by LIKE '%@%' AND created_by <> lower(created_by);
+UPDATE squares SET updated_by = lower(updated_by) WHERE updated_by LIKE '%@%' AND updated_by <> lower(updated_by);
+UPDATE quarter_results SET winner = lower(winner) WHERE winner LIKE '%@%' AND winner <> lower(winner);
+UPDATE quarter_results SET created_by = lower(created_by) WHERE created_by LIKE '%@%' AND created_by <> lower(created_by);
+UPDATE quarter_results SET updated_by = lower(updated_by) WHERE updated_by LIKE '%@%' AND updated_by <> lower(updated_by);
+UPDATE contest_invites SET created_by = lower(created_by) WHERE created_by LIKE '%@%' AND created_by <> lower(created_by);

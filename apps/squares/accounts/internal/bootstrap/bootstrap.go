@@ -79,6 +79,12 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 }
 
 func (a *App) Start(ctx context.Context) {
+	if moved, err := cache.LowercaseSessionRevocations(ctx, a.infra.Redis); err != nil {
+		slog.Error("failed to lowercase sign-out revocations on startup", "error", err)
+	} else if moved > 0 {
+		slog.Info("lowercased sign-out revocations", "count", moved)
+	}
+
 	// a redis that lost its data must not let deleted accounts back in
 	if err := a.userService.SyncRevocations(ctx); err != nil {
 		slog.Error("failed to sync revocations on startup", "error", err)

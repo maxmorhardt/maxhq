@@ -9,6 +9,13 @@
       "groupName": "libs/go",
       "minimumReleaseAge": "0 days",
       "semanticCommitType": "fix"
+    },
+    {
+      "description": "services move only between libs/go releases, never to an untagged commit",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["github.com/maxmorhardt/maxhq/libs/go"],
+      "matchUpdateTypes": ["digest"],
+      "enabled": false
     }
   ],
   "customManagers": [

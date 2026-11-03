@@ -251,7 +251,6 @@ func TestDeleteAccount_RedisFailureStillSucceeds(t *testing.T) {
 func TestSyncRevocations(t *testing.T) {
 	deletedAt := time.Now().Add(-time.Hour)
 	d := newUserDeps(t)
-	d.revocations.EXPECT().LowercaseKeys(mock.Anything).Return(2, nil).Once()
 	d.repo.EXPECT().TombstonesSince(mock.Anything, mock.Anything).Return([]repository.Tombstone{{Email: "a@b.com", DeletedAt: deletedAt}}, nil)
 	d.revocations.EXPECT().Revoke(mock.Anything, "a@b.com", deletedAt).Return(nil).Once()
 
@@ -260,16 +259,10 @@ func TestSyncRevocations(t *testing.T) {
 
 func TestSyncRevocations_Errors(t *testing.T) {
 	d := newUserDeps(t)
-	d.revocations.EXPECT().LowercaseKeys(mock.Anything).Return(0, errors.New("redis"))
-	assert.Error(t, d.svc().SyncRevocations(context.Background()))
-
-	d = newUserDeps(t)
-	d.revocations.EXPECT().LowercaseKeys(mock.Anything).Return(0, nil)
 	d.repo.EXPECT().TombstonesSince(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 	assert.Error(t, d.svc().SyncRevocations(context.Background()))
 
 	d = newUserDeps(t)
-	d.revocations.EXPECT().LowercaseKeys(mock.Anything).Return(0, nil)
 	d.repo.EXPECT().TombstonesSince(mock.Anything, mock.Anything).Return([]repository.Tombstone{{Email: "a@b.com"}}, nil)
 	d.revocations.EXPECT().Revoke(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("redis"))
 	assert.Error(t, d.svc().SyncRevocations(context.Background()))

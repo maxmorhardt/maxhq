@@ -138,62 +138,6 @@ func (_c *RevocationStore_IsSessionRevoked_Call) RunAndReturn(run func(context.C
 	return _c
 }
 
-// LowercaseKeys provides a mock function with given fields: ctx
-func (_m *RevocationStore) LowercaseKeys(ctx context.Context) (int, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for LowercaseKeys")
-	}
-
-	var r0 int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (int, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(int)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// RevocationStore_LowercaseKeys_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LowercaseKeys'
-type RevocationStore_LowercaseKeys_Call struct {
-	*mock.Call
-}
-
-// LowercaseKeys is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *RevocationStore_Expecter) LowercaseKeys(ctx interface{}) *RevocationStore_LowercaseKeys_Call {
-	return &RevocationStore_LowercaseKeys_Call{Call: _e.mock.On("LowercaseKeys", ctx)}
-}
-
-func (_c *RevocationStore_LowercaseKeys_Call) Run(run func(ctx context.Context)) *RevocationStore_LowercaseKeys_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *RevocationStore_LowercaseKeys_Call) Return(_a0 int, _a1 error) *RevocationStore_LowercaseKeys_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *RevocationStore_LowercaseKeys_Call) RunAndReturn(run func(context.Context) (int, error)) *RevocationStore_LowercaseKeys_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Restore provides a mock function with given fields: ctx, email, issuedAt
 func (_m *RevocationStore) Restore(ctx context.Context, email string, issuedAt int64) (bool, error) {
 	ret := _m.Called(ctx, email, issuedAt)

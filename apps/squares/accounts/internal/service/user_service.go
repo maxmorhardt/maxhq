@@ -228,15 +228,6 @@ func (s *userService) RestoreAccount(ctx context.Context, email string, issuedAt
 func (s *userService) SyncRevocations(ctx context.Context) error {
 	log := logging.FromContext(ctx)
 
-	moved, err := s.revocations.LowercaseKeys(ctx)
-	if err != nil {
-		log.Error("failed to lowercase revocation keys", "error", err)
-		return err
-	}
-	if moved > 0 {
-		log.Info("lowercased revocation keys", "count", moved)
-	}
-
 	tombstones, err := s.repo.TombstonesSince(ctx, time.Now().Add(-revocationWindow))
 	if err != nil {
 		log.Error("failed to load tombstones", "error", err)
