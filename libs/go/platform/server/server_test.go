@@ -34,6 +34,20 @@ func TestNewEngine_AppliesSharedMiddleware(t *testing.T) {
 	assert.Equal(t, "http://allowed.com", w.Header().Get("Access-Control-Allow-Origin"))
 }
 
+func TestNewEngine_TakesTheClientIPFromTheGateway(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := NewEngine(config.ServerConfig{})
+	r.GET("/ip", func(c *gin.Context) { c.String(http.StatusOK, c.ClientIP()) })
+
+	req := httptest.NewRequest(http.MethodGet, "/ip", http.NoBody)
+	req.Header.Set("X-Forwarded-For", "6.6.6.6, 203.0.113.7")
+	req.Header.Set(HeaderExternalAddress, "203.0.113.7")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, "203.0.113.7", w.Body.String(), "not the spoofable leftmost X-Forwarded-For entry")
+}
+
 func TestRegisterRootRoutes(t *testing.T) {
 	swag.Register("server-test", testDoc{})
 	gin.SetMode(gin.TestMode)

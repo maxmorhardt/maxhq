@@ -40,8 +40,13 @@ func InitLogger(service string) {
 	slog.SetDefault(logger)
 }
 
+// envoy sets it to the client address it trusted from X-Forwarded-For, whose leftmost entry the client controls;
+// the gateway strips any copy a client sends
+const HeaderExternalAddress = "X-Envoy-External-Address"
+
 func NewEngine(cfg config.ServerConfig) *gin.Engine {
 	r := gin.New()
+	r.TrustedPlatform = HeaderExternalAddress
 
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestSizeLimitMiddleware())
