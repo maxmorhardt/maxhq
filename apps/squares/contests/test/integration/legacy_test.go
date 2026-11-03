@@ -90,6 +90,9 @@ func TestLegacy_EmailsAreLowercased(t *testing.T) {
 	var twins int
 	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.users WHERE lower(email) = 'twin@squares.test'`).Scan(&twins))
 	assert.Equal(t, 2, twins, "a case-only twin is left alone rather than merged")
+	var twinOwner string
+	require.NoError(t, rawDB.QueryRow(`SELECT owner FROM contests.squares WHERE contest_id = $1 AND "row" = 0 AND col = 2`, legacyContestID).Scan(&twinOwner))
+	assert.Equal(t, "Twin@Squares.Test", twinOwner, "and so are the twin's squares")
 
 	resp := call(t, testkit.As("Mixed@Squares.Test"), http.MethodGet, "/contests", nil)
 	require.Equal(t, http.StatusOK, resp.Status)

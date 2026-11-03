@@ -78,7 +78,6 @@ SELECT gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', r, c,
        '', now(), now()
 FROM generate_series(0, 9) AS r, generate_series(0, 9) AS c;
 
--- identities stored before emails were lowercased, including a case-only twin of an existing user
 INSERT INTO users (id, email, display_name, default_initials, created_at, updated_at) VALUES
     ('0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0004', 'Mixed@Squares.Test', 'Mixed Case', 'MC', now(), now()),
     ('0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0005', 'twin@squares.test', 'Twin Lower', 'TL', now(), now()),
@@ -91,3 +90,6 @@ VALUES (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'Mixed@Square
 
 UPDATE squares SET value = 'MC', owner = 'Mixed@Squares.Test'
 WHERE contest_id = '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001' AND "row" = 0 AND col = 1;
+
+UPDATE squares SET value = 'TU', owner = 'Twin@Squares.Test'
+WHERE contest_id = '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001' AND "row" = 0 AND col = 2;

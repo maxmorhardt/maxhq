@@ -46,6 +46,7 @@ image:
 secretName: ''
 
 env:
+  TRUSTED_PROXIES: 10.42.0.0/16
   CONTESTS_INTERNAL_URL: http://squares-contests:8080
 
 resources:

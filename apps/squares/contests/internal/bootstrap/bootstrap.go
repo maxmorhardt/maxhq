@@ -77,7 +77,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	gameSyncService := service.NewGameSyncService(gameRepo, contestRepo, contestService, tx, feedService)
 	snapshotService := service.NewSnapshotService(contestRepo, participantService)
 
-	engine := server.NewEngine(cfg.Server)
+	engine := server.NewEngine(&cfg.Server)
 	server.RegisterValidation("contestname", util.ValidateContestName)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
 		"database": server.DatabaseCheck(db),
@@ -124,11 +124,11 @@ func (a *App) Run(ctx context.Context) error {
 
 	a.Start(ctx)
 
-	if metricsSrv := server.StartMetricsServer(a.cfg.Server); metricsSrv != nil {
+	if metricsSrv := server.StartMetricsServer(&a.cfg.Server); metricsSrv != nil {
 		defer func() { _ = metricsSrv.Close() }()
 	}
 
-	err := server.Serve(ctx, server.NewHTTPServer(a.cfg.Server, a.Engine, writeTimeout))
+	err := server.Serve(ctx, server.NewHTTPServer(&a.cfg.Server, a.Engine, writeTimeout))
 	slog.Info("contests service stopped")
 	return err
 }

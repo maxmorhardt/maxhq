@@ -37,14 +37,15 @@ type EventsHandler interface {
 }
 
 type eventsHandler struct {
-	streams  service.StreamService
-	limiter  service.StreamLimiter
-	cfg      model.StreamConfig
-	shutdown <-chan struct{}
+	streams   service.StreamService
+	users     service.StreamLimiter
+	addresses service.StreamLimiter
+	cfg       model.StreamConfig
+	shutdown  <-chan struct{}
 }
 
-func NewEventsHandler(svc service.StreamService, limiter service.StreamLimiter, cfg model.StreamConfig, shutdown <-chan struct{}) EventsHandler {
-	return &eventsHandler{streams: svc, limiter: limiter, cfg: cfg, shutdown: shutdown}
+func NewEventsHandler(svc service.StreamService, users, addresses service.StreamLimiter, cfg model.StreamConfig, shutdown <-chan struct{}) EventsHandler {
+	return &eventsHandler{streams: svc, users: users, addresses: addresses, cfg: cfg, shutdown: shutdown}
 }
 
 // @Summary Stream contest events
@@ -79,7 +80,7 @@ func (h *eventsHandler) StreamContest(c *gin.Context) {
 	}
 
 	user := c.GetString(api.UserKey)
-	release, ok := h.reserve(c, "user:"+user)
+	release, ok := h.reserve(c, h.users, model.StreamKindContest, user)
 	if !ok {
 		metrics.RecordStreamResult(model.StreamResultTooMany)
 		return
@@ -156,7 +157,7 @@ func (h *eventsHandler) StreamGame(c *gin.Context) {
 		return
 	}
 
-	release, ok := h.reserve(c, "ip:"+c.ClientIP())
+	release, ok := h.reserve(c, h.addresses, model.StreamKindGame, c.ClientIP())
 	if !ok {
 		return
 	}
@@ -216,11 +217,11 @@ func startStream(w gin.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// streams are held open for hours, so the gateway's per-request rate limit doesn't bound how many one client keeps
-func (h *eventsHandler) reserve(c *gin.Context, key string) (func(), bool) {
-	release, ok := h.limiter.Acquire(key)
+func (h *eventsHandler) reserve(c *gin.Context, limiter service.StreamLimiter, kind model.StreamKind, key string) (func(), bool) {
+	release, ok := limiter.Acquire(key)
 	if !ok {
-		logging.FromGin(c).Warn("refusing a stream over the per-client limit", "limit", h.cfg.MaxPerClient)
+		metrics.IncStreamRefused(kind)
+		logging.FromGin(c).Warn("refusing a stream over the per-client limit", "stream", kind)
 		c.Header("Retry-After", streamsRetryAfter)
 		c.JSON(http.StatusTooManyRequests, api.NewAPIError(http.StatusTooManyRequests, "Too many live updates open at once. Close a tab and try again", c))
 	}

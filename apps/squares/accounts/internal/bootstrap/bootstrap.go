@@ -61,7 +61,7 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 	)
 	contactService := service.NewContactService(repository.NewContactRepository(db), cfg.SMTP, cfg.Turnstile)
 
-	engine := server.NewEngine(cfg.Server)
+	engine := server.NewEngine(&cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
 		"database": server.DatabaseCheck(db),
 	}), Service)
@@ -92,11 +92,11 @@ func (a *App) Run(ctx context.Context) error {
 
 	a.Start(ctx)
 
-	if metricsSrv := server.StartMetricsServer(a.cfg.Server); metricsSrv != nil {
+	if metricsSrv := server.StartMetricsServer(&a.cfg.Server); metricsSrv != nil {
 		defer func() { _ = metricsSrv.Close() }()
 	}
 
-	err := server.Serve(ctx, server.NewHTTPServer(a.cfg.Server, a.Engine, writeTimeout))
+	err := server.Serve(ctx, server.NewHTTPServer(&a.cfg.Server, a.Engine, writeTimeout))
 	slog.Info("accounts service stopped")
 	return err
 }

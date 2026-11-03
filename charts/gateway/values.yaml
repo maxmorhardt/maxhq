@@ -14,7 +14,6 @@ strippedRequestHeaders:
   - X-Auth-Iat
   - X-Auth-Exp
   - X-Internal-Token
-  - X-Envoy-External-Address
 
 proxy:
   replicas: 2

@@ -12,6 +12,13 @@ const (
 	StreamResultTooMany      StreamResult = "too_many"
 )
 
+type StreamKind string
+
+const (
+	StreamKindContest StreamKind = "contest"
+	StreamKindGame    StreamKind = "game"
+)
+
 type StreamCloseReason string
 
 const (

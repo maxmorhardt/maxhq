@@ -168,8 +168,8 @@ github.com/mattn/go-isatty v0.0.23 h1:cYwCQTQf3HB6xUC+BtyCLZNr7IzbOmoZbmssVNzSyi
 github.com/mattn/go-isatty v0.0.23/go.mod h1:nMCL3Zebbrt45jsMDgnfIwz6ydEQApk5oEI3HqDio6A=
 github.com/mattn/go-sqlite3 v1.14.22 h1:2gZY6PC6kBnID23Tichd1K+Z0oS6nE/XwU+Vz/5o4kU=
 github.com/mattn/go-sqlite3 v1.14.22/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
-github.com/maxmorhardt/maxhq/libs/go v0.0.0-20261103184657-a887fcc9685d h1:g/Wp74Dom6z7xXE9JKazegG11vLfZslQ1n7PqAS0opA=
-github.com/maxmorhardt/maxhq/libs/go v0.0.0-20261103184657-a887fcc9685d/go.mod h1:Huuv1ujPbfASTqGVA/KDVulvb4aIrRCpLpiSGE2qe5o=
+github.com/maxmorhardt/maxhq/libs/go v0.0.0-20261103200951-a96395e55e4b h1:R1xxMYbqiPb27E9svIkKatl8UbH321K85eX5jq5+EVQ=
+github.com/maxmorhardt/maxhq/libs/go v0.0.0-20261103200951-a96395e55e4b/go.mod h1:Huuv1ujPbfASTqGVA/KDVulvb4aIrRCpLpiSGE2qe5o=
 github.com/mdelapenya/tlscert v0.2.0 h1:7H81W6Z/4weDvZBNOfQte5GpIMo0lGYEeWbkGp5LJHI=
 github.com/mdelapenya/tlscert v0.2.0/go.mod h1:O4njj3ELLnJjGdkN7M/vIVCpZ+Cf0L6muqOG4tLSl8o=
 github.com/microsoft/go-mssqldb v1.7.2 h1:CHkFJiObW7ItKTJfHo1QX7QBBD1iV+mn1eOyRP3b/PA=

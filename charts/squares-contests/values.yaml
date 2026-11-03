@@ -45,7 +45,8 @@ image:
 
 secretName: ''
 
-env: {}
+env:
+  TRUSTED_PROXIES: 10.42.0.0/16
 
 resources:
   limits:
