@@ -1,15 +1,17 @@
 package config
 
 import (
+	"net/netip"
 	"time"
 )
 
 type ServerConfig struct {
-	Host           string   `env:"SERVER_HOST"`
-	Port           int      `env:"SERVER_PORT" envDefault:"8080"`
-	MetricsEnabled bool     `env:"METRICS_ENABLED" envDefault:"false"`
-	MetricsPort    int      `env:"METRICS_PORT" envDefault:"9090"`
-	AllowedOrigins []string `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000" envSeparator:","`
+	Host           string         `env:"SERVER_HOST"`
+	Port           int            `env:"SERVER_PORT" envDefault:"8080"`
+	MetricsEnabled bool           `env:"METRICS_ENABLED" envDefault:"false"`
+	MetricsPort    int            `env:"METRICS_PORT" envDefault:"9090"`
+	AllowedOrigins []string       `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000" envSeparator:","`
+	TrustedProxies []netip.Prefix `env:"TRUSTED_PROXIES" envSeparator:","`
 }
 
 type DatabaseConfig struct {

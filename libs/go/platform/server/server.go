@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -40,13 +41,12 @@ func InitLogger(service string) {
 	slog.SetDefault(logger)
 }
 
-// envoy sets it to the client address it trusted from X-Forwarded-For, whose leftmost entry the client controls;
-// the gateway strips any copy a client sends
-const HeaderExternalAddress = "X-Envoy-External-Address"
-
-func NewEngine(cfg config.ServerConfig) *gin.Engine {
+func NewEngine(cfg *config.ServerConfig) *gin.Engine {
 	r := gin.New()
-	r.TrustedPlatform = HeaderExternalAddress
+	r.RemoteIPHeaders = []string{"X-Forwarded-For"}
+	if err := r.SetTrustedProxies(prefixStrings(cfg.TrustedProxies)); err != nil {
+		panic(err)
+	}
 
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestSizeLimitMiddleware())
@@ -60,7 +60,15 @@ func NewEngine(cfg config.ServerConfig) *gin.Engine {
 	return r
 }
 
-func NewHTTPServer(cfg config.ServerConfig, handler http.Handler, writeTimeout time.Duration) *http.Server {
+func prefixStrings(prefixes []netip.Prefix) []string {
+	out := make([]string, 0, len(prefixes))
+	for _, p := range prefixes {
+		out = append(out, p.String())
+	}
+	return out
+}
+
+func NewHTTPServer(cfg *config.ServerConfig, handler http.Handler, writeTimeout time.Duration) *http.Server {
 	return &http.Server{
 		Addr:              net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)),
 		Handler:           handler,

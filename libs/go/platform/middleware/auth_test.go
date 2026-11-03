@@ -26,6 +26,8 @@ func (f *fakeRevocations) Restore(context.Context, string, int64) (bool, error) 
 
 func (f *fakeRevocations) RevokeSession(context.Context, string, int64, int64) error { return nil }
 
+func (f *fakeRevocations) LowercaseKeys(context.Context) (int, error) { return 0, nil }
+
 func (f *fakeRevocations) IsRevoked(context.Context, string, int64) (bool, error) {
 	f.calls++
 	return f.revoked || f.sessionRevoked, f.err

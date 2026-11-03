@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -24,6 +25,7 @@ type RevocationStore interface {
 	IsRevoked(ctx context.Context, email string, issuedAt int64) (bool, error)
 	// checks only the token itself, for the one request that may restore a blocked account
 	IsSessionRevoked(ctx context.Context, email string, issuedAt int64) (bool, error)
+	LowercaseKeys(ctx context.Context) (int, error)
 }
 
 type redisRevocationStore struct {
@@ -98,4 +100,33 @@ func (s *redisRevocationStore) IsRevoked(ctx context.Context, email string, issu
 func (s *redisRevocationStore) IsSessionRevoked(ctx context.Context, email string, issuedAt int64) (bool, error) {
 	n, err := s.client.Exists(ctx, sessionKey(email, issuedAt)).Result()
 	return n > 0, err
+}
+
+func (s *redisRevocationStore) LowercaseKeys(ctx context.Context) (int, error) {
+	moved := 0
+	for _, pattern := range []string{accountKey("*"), Key("revoked-session", "*")} {
+		iter := s.client.Scan(ctx, 0, pattern, 100).Iterator()
+		for iter.Next(ctx) {
+			key := iter.Val()
+			lower := strings.ToLower(key)
+			if lower == key {
+				continue
+			}
+
+			renamed, err := s.client.RenameNX(ctx, key, lower).Result()
+			if err != nil {
+				return moved, err
+			}
+			if !renamed {
+				if err := s.client.Del(ctx, key).Err(); err != nil {
+					return moved, err
+				}
+			}
+			moved++
+		}
+		if err := iter.Err(); err != nil {
+			return moved, err
+		}
+	}
+	return moved, nil
 }
