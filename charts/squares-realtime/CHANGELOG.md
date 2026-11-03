@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/maxmorhardt/maxhq/compare/squares-realtime-chart/2.1.0...squares-realtime-chart/2.2.0) (2026-11-03)
+
+
+### Features
+
+* **repo:** give each squares service its own go module ([#200](https://github.com/maxmorhardt/maxhq/issues/200)) ([a9e10a2](https://github.com/maxmorhardt/maxhq/commit/a9e10a221037c1a9be68ef3b947d96ac256cc5d0))
+
 ## [2.1.0](https://github.com/maxmorhardt/maxhq/compare/squares-realtime-chart/2.0.1...squares-realtime-chart/2.1.0) (2026-10-31)
 
 

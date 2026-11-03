@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.5.2...squares-contests/2.6.0) (2026-11-03)
+
+
+### Features
+
+* **repo:** give each squares service its own go module ([#200](https://github.com/maxmorhardt/maxhq/issues/200)) ([a9e10a2](https://github.com/maxmorhardt/maxhq/commit/a9e10a221037c1a9be68ef3b947d96ac256cc5d0))
+
 ## [2.5.2](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.5.1...squares-contests/2.5.2) (2026-11-01)
 
 
