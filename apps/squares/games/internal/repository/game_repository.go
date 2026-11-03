@@ -12,15 +12,12 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const upcomingWindow = 14 * 24 * time.Hour
-
 // ESPN keeps a game pre for a few minutes past its listed kickoff, and a postponed one indefinitely
 const lateKickoffWindow = 4 * time.Hour
 
 type GameRepository interface {
 	Upsert(ctx context.Context, game *model.Game) (changed bool, err error)
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Game, error)
-	GetUpcoming(ctx context.Context) ([]model.Game, error)
 	CurrentWeek(ctx context.Context) (*model.Week, error)
 	GetWeek(ctx context.Context, week model.Week) ([]model.Game, error)
 
@@ -32,6 +29,7 @@ type GameRepository interface {
 
 	HasLiveGame(ctx context.Context) (bool, error)
 	NextKickoff(ctx context.Context) (time.Time, error)
+	NextKickoffWeek(ctx context.Context) (*model.Week, error)
 }
 
 type gameRepository struct {
@@ -82,30 +80,6 @@ func (r *gameRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Game
 		Preload("Scores", func(db *gorm.DB) *gorm.DB { return db.Order("quarter ASC") }).
 		First(&game, "id = ?", id).Error
 	return &game, database.TranslateError(err)
-}
-
-func (r *gameRepository) GetUpcoming(ctx context.Context) ([]model.Game, error) {
-	now := time.Now()
-	conn := database.Conn(ctx, r.db)
-
-	var nextKickoff []time.Time
-	if err := conn.Model(&model.Game{}).
-		Where("status = ? AND game_time > ?", model.GameStatusScheduled, now).
-		Order("game_time ASC").Limit(1).
-		Pluck("game_time", &nextKickoff).Error; err != nil {
-		return nil, err
-	}
-	if len(nextKickoff) == 0 {
-		return []model.Game{}, nil
-	}
-
-	var games []model.Game
-	err := conn.
-		Where("status = ? AND game_time > ? AND game_time <= ?",
-			model.GameStatusScheduled, now, nextKickoff[0].Add(upcomingWindow)).
-		Order("game_time ASC").
-		Find(&games).Error
-	return games, err
 }
 
 // the week running now, else the last one that ended (keeps the Super Bowl up all offseason); with no calendar, the nearest game's week
@@ -218,6 +192,21 @@ func (r *gameRepository) NextKickoff(ctx context.Context) (time.Time, error) {
 		return time.Time{}, err
 	}
 	return kickoff[0], nil
+}
+
+// the week of the next game that has not kicked off, nil when none is scheduled
+func (r *gameRepository) NextKickoffWeek(ctx context.Context) (*model.Week, error) {
+	var next []model.Game
+	err := database.Conn(ctx, r.db).Model(&model.Game{}).
+		Select("season", "season_type", "week").
+		Where("status = ? AND game_time > ?", model.GameStatusScheduled, time.Now()).
+		Order("game_time ASC").Limit(1).
+		Find(&next).Error
+	if err != nil || len(next) == 0 {
+		return nil, err
+	}
+
+	return &model.Week{Season: next[0].Season, SeasonType: next[0].SeasonType, Week: next[0].Week}, nil
 }
 
 func (r *gameRepository) UpsertScore(ctx context.Context, score *model.GameScore) (bool, error) {

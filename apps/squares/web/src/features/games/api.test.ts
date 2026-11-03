@@ -30,13 +30,22 @@ describe('gamesApi', () => {
     expect(fetch.lastRequest().url.searchParams.get('week')).toBe('2');
   });
 
-  it('fetches the upcoming games and a single game', async () => {
-    const fetch = stubFetch([]);
-    const store = makeStore();
-    await store.dispatch(gamesApi.endpoints.getUpcomingGames.initiate());
-    expect(fetch.lastRequest()).toMatchObject({ method: 'GET', path: '/games/upcoming' });
+  it('asks for the week of the next kickoff', async () => {
+    const fetch = stubFetch({ games: [] });
+    await makeStore().dispatch(gamesApi.endpoints.getScoreboard.initiate({ upcoming: true }));
+    expect(fetch.lastRequest()).toMatchObject({ method: 'GET', path: '/games/scoreboard' });
+    expect(fetch.lastRequest().url.searchParams.get('upcoming')).toBe('true');
+  });
 
-    await store.dispatch(gamesApi.endpoints.getGame.initiate('g-1'));
+  it('fetches a single game', async () => {
+    const fetch = stubFetch({});
+    await makeStore().dispatch(gamesApi.endpoints.getGame.initiate('g-1'));
     expect(fetch.lastRequest()).toMatchObject({ method: 'GET', path: '/games/g-1' });
+  });
+
+  it('keeps a game id inside its own path segment', async () => {
+    const fetch = stubFetch({});
+    await makeStore().dispatch(gamesApi.endpoints.getGame.initiate('../accounts'));
+    expect(fetch.lastRequest().path).toBe('/games/..%2Faccounts');
   });
 });

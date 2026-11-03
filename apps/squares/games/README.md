@@ -12,8 +12,8 @@ The NFL schedule and live scores, polled from ESPN. It follows the current score
 
 | Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
-| `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
-| `/games/scoreboard` | one week of games with their scores by quarter, the week's name from ESPN's calendar, and the calendar weeks before and after it (the current week unless `season`, `seasonType`, and `week` pick another); public |
+| `/games/scoreboard` | one week of games with their scores by quarter, the week's name from ESPN's calendar, and the calendar weeks before and after it (the current week unless `season`, `seasonType`, and `week` pick another, or `upcoming=true` asks for the week of the next game that has not kicked off, cached in Valkey); public |
+| `/games/upcoming` | deprecated: the games of the next kickoff's week and the week after that have not kicked off, for web builds that predate the week picker; public |
 | `/games/{id}` | one game with its status, score, and points by quarter; public |
 
 ## Events

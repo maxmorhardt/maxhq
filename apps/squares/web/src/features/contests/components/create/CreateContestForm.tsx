@@ -1,4 +1,4 @@
-import { CheckCircle, Lock, Public } from '@mui/icons-material';
+import { Lock, Public } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -9,18 +9,26 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
-import { fonts, game as palette } from '../../../../app/theme';
+import { fonts } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
-import type { ContestVisibility, Game } from '../../../../types/contest';
-import { formatKickoff, formatMatchup } from '../../../../utils/game';
+import { skipToken } from '@reduxjs/toolkit/query';
+import type {
+  ContestVisibility,
+  Game,
+  ScoreboardQuery,
+  ScoreboardWeek,
+} from '../../../../types/contest';
+import { canStartBoard, formatKickoff } from '../../../../utils/game';
+import { isUuid } from '../../../../utils/ids';
 import { stripDangerousChars } from '../../../../utils/sanitize';
-import { useGetUpcomingGamesQuery } from '../../../games/api';
+import { useGetGameQuery, useGetScoreboardQuery } from '../../../games/api';
 import { useCreateContestMutation } from '../../api';
 import FormSection from './FormSection';
+import { optionSx } from './optionSx';
+import WeekGamePicker from './WeekGamePicker';
 import { trackConversion } from '../../../../utils/googleAds';
 
 const NAME_MAX_LENGTH = 20;
@@ -45,76 +53,42 @@ const visibilityOptions: {
   },
 ];
 
-const optionSx = (selected: boolean) => ({
-  position: 'relative',
-  display: 'flex',
-  textAlign: 'left',
-  // ButtonBase centers its content, which shifts a card whose text is shorter than the card
-  justifyContent: 'flex-start',
-  alignItems: 'flex-start',
-  gap: 1.5,
-  width: '100%',
-  p: 1.75,
-  borderRadius: '14px',
-  border: 1,
-  borderColor: selected ? 'primary.main' : 'divider',
-  bgcolor: selected ? alpha(palette.brand, 0.1) : 'background.default',
-  transition: 'border-color 160ms, background-color 160ms',
-  '&:hover': { borderColor: selected ? 'primary.main' : palette.lineStrong },
-});
-
-function GameOption({
-  game,
-  selected,
-  onSelect,
-}: {
-  game: Game;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <ButtonBase
-      role="radio"
-      aria-checked={selected}
-      aria-label={formatMatchup(game)}
-      onClick={onSelect}
-      sx={{ ...optionSx(selected), flexDirection: 'column', gap: 1.25 }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-        <TeamMark abbr={game.awayAbbr} name={game.awayTeam} size={34} />
-        <Typography sx={{ color: 'text.secondary', fontFamily: fonts.display, fontWeight: 700 }}>
-          @
-        </Typography>
-        <TeamMark abbr={game.homeAbbr} name={game.homeTeam} size={34} />
-        {selected && <CheckCircle color="primary" sx={{ ml: 'auto', fontSize: '1.2rem' }} />}
-      </Box>
-      <Box>
-        <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', lineHeight: 1.3 }}>
-          {formatMatchup(game)}
-        </Typography>
-        <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem', mt: 0.25 }}>
-          {formatKickoff(game.gameTime)}
-        </Typography>
-      </Box>
-    </ButtonBase>
-  );
-}
-
 export default function CreateContestForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // a "start a board for this game" link arrives with the game picked, while it can still be picked
+  const linkParam = searchParams.get('game');
+  const requestedId = linkParam && isUuid(linkParam) ? linkParam : null;
+  const { data: requested, isLoading: requestedLoading } = useGetGameQuery(
+    requestedId ?? skipToken
+  );
+
+  // judged once, when it loads, so it stays picked through kickoff like a game picked by hand
+  const [linked, setLinked] = useState<Game | null>();
+  if (linked === undefined && requested) {
+    setLinked(canStartBoard(requested) ? requested : null);
+  }
+
+  // the picker opens on the linked game's week, else the next kickoff's, so a spent week hands over by itself
+  const [week, setWeek] = useState<ScoreboardWeek>();
+  const openingWeek: ScoreboardQuery =
+    linked && linked.week > 0
+      ? { season: linked.season, seasonType: linked.seasonType, week: linked.week }
+      : { upcoming: true };
   const {
-    data: games = [],
-    isLoading: gamesLoading,
-    refetch: refetchGames,
-  } = useGetUpcomingGamesQuery();
+    currentData: board,
+    isFetching: boardFetching,
+    isError: boardFailed,
+    refetch: refetchBoard,
+  } = useGetScoreboardQuery(week ?? openingWeek, { skip: requestedLoading });
   const [createContest, { isLoading: creating }] = useCreateContestMutation();
 
   const [name, setName] = useState('');
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [maxSquares, setMaxSquares] = useState(10);
-  // a "start a board for this game" link arrives with the game picked
-  const [gameId, setGameId] = useState(() => searchParams.get('game') ?? '');
+  // undefined until the player picks, so a linked game stays picked until then
+  const [picked, setPicked] = useState<Game | null>();
   const [fieldErrors, setFieldErrors] = useState<{ game?: string; name?: string }>({});
   const [error, setError] = useState('');
 
@@ -122,10 +96,10 @@ export default function CreateContestForm() {
   const nameSection = useRef<HTMLElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
 
-  const selectedGame = games.find((g) => g.id === gameId);
+  const selectedGame = picked === undefined ? (linked ?? undefined) : picked;
 
   const pickGame = (game: Game) => {
-    setGameId(game.id);
+    setPicked(game);
     setFieldErrors((errors) => ({ ...errors, game: undefined }));
   };
 
@@ -133,7 +107,11 @@ export default function CreateContestForm() {
     const section = field === 'game' ? gameSection.current : nameSection.current;
     section?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
     if (field === 'game') {
-      section?.querySelector<HTMLElement>('[role="radio"]')?.focus({ preventScroll: true });
+      section
+        ?.querySelector<HTMLElement>(
+          '[role="radio"]:not([aria-disabled="true"]):not([aria-checked="true"])'
+        )
+        ?.focus({ preventScroll: true });
     } else {
       nameInput.current?.focus({ preventScroll: true });
     }
@@ -158,7 +136,7 @@ export default function CreateContestForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!validate()) {
+    if (!validate() || !selectedGame) {
       return;
     }
 
@@ -168,50 +146,22 @@ export default function CreateContestForm() {
         name: name.trim(),
         visibility,
         maxSquares,
-        gameId,
+        gameId: selectedGame.id,
       }).unwrap();
       trackConversion('contestCreated');
       navigate(`/contests/${contest.id}`);
     } catch (err) {
       // the form sat open until the game was past the first quarter
       if (errorStatus(err) === 409) {
-        setGameId('');
+        setPicked(null);
         setFieldErrors({ game: errorMessage(err, 'That game is past the first quarter') });
         focusField('game');
-        void refetchGames();
+        void refetchBoard();
         return;
       }
       setError(errorMessage(err, 'Error creating contest'));
     }
   };
-
-  const gamePicker = gamesLoading ? (
-    <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-      <CircularProgress size={22} />
-    </Box>
-  ) : games.length > 0 ? (
-    <Box
-      role="radiogroup"
-      aria-label="Game"
-      aria-invalid={Boolean(fieldErrors.game)}
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-        gap: 1.25,
-        maxHeight: { sm: 360 },
-        overflowY: 'auto',
-        pr: { sm: 0.5 },
-      }}
-    >
-      {games.map((g) => (
-        <GameOption key={g.id} game={g} selected={g.id === gameId} onSelect={() => pickGame(g)} />
-      ))}
-    </Box>
-  ) : (
-    <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
-      No upcoming games available yet. New games appear here as the NFL schedule is published.
-    </Typography>
-  );
 
   return (
     <Box
@@ -233,9 +183,20 @@ export default function CreateContestForm() {
           step={1}
           error={fieldErrors.game}
           title="Pick the game"
-          description="The contest starts at kickoff, and every quarter winner comes from the live score."
+          description="Browse the schedule week by week. The contest starts at kickoff, and every quarter winner comes from the live score."
         >
-          {gamePicker}
+          <WeekGamePicker
+            board={board}
+            loading={requestedLoading || (boardFetching && !board)}
+            refreshing={boardFetching && !!board}
+            failed={boardFailed}
+            invalid={Boolean(fieldErrors.game)}
+            selectedId={selectedGame?.id}
+            onRetry={() => void refetchBoard()}
+            onSelect={pickGame}
+            onWeek={setWeek}
+            onReset={week ? () => setWeek(undefined) : undefined}
+          />
         </FormSection>
 
         <FormSection

@@ -146,6 +146,9 @@ export interface ScoreboardWeek {
   week: number;
 }
 
+// a week by number, or the week of the next game that hasn't kicked off
+export type ScoreboardQuery = ScoreboardWeek | { upcoming: true };
+
 export interface Scoreboard extends ScoreboardWeek {
   // espn name for the week, like "Week 7" or "Wild Card"
   label: string;

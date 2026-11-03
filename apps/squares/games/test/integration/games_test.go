@@ -45,9 +45,17 @@ func TestGames_ScheduleIsIngestedAndPublished(t *testing.T) {
 	assert.Equal(t, events.GameStatusScheduled, game.Status)
 	assert.True(t, game.GameTime.Equal(kickoff))
 
-	resp := testkit.Call(t, gamesURL, testkit.As("fan@squares.test"), http.MethodGet, "/games/upcoming", nil)
+	resp := testkit.Call(t, gamesURL, testkit.Anonymous, http.MethodGet, "/games/"+game.ID.String(), nil)
 	require.Equal(t, http.StatusOK, resp.Status)
 	assert.Contains(t, string(resp.Body), "401-sched")
+
+	upcoming := testkit.Call(t, gamesURL, testkit.Anonymous, http.MethodGet, "/games/scoreboard?upcoming=true", nil)
+	require.Equal(t, http.StatusOK, upcoming.Status)
+	assert.Contains(t, string(upcoming.Body), "401-sched", "the next kickoff's week is the one a contest can start in")
+
+	legacy := testkit.Call(t, gamesURL, testkit.As("fan@squares.test"), http.MethodGet, "/games/upcoming", nil)
+	require.Equal(t, http.StatusOK, legacy.Status, "web builds that predate the week picker still load games")
+	assert.Contains(t, string(legacy.Body), "401-sched")
 }
 
 func TestGames_LiveScoresArePublishedOncePerChange(t *testing.T) {
@@ -88,12 +96,6 @@ func TestGames_LiveScoresArePublishedOncePerChange(t *testing.T) {
 	before := countFor()
 	time.Sleep(time.Second)
 	assert.Equal(t, before, countFor())
-}
-
-func TestGames_RequiresGatewayIdentity(t *testing.T) {
-	resp := testkit.Call(t, gamesURL, testkit.Anonymous, http.MethodGet, "/games/upcoming", nil)
-
-	assert.Equal(t, http.StatusUnauthorized, resp.Status)
 }
 
 func TestGames_OutboxIsDrained(t *testing.T) {

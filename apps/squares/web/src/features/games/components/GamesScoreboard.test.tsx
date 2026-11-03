@@ -5,10 +5,7 @@ import { renderWithProviders } from '../../../test/render';
 import type { Game } from '../../../types/contest';
 import GamesScoreboard from './GamesScoreboard';
 
-const api = vi.hoisted(() => ({
-  useGetScoreboardQuery: vi.fn(),
-  useGetUpcomingGamesQuery: vi.fn(),
-}));
+const api = vi.hoisted(() => ({ useGetScoreboardQuery: vi.fn() }));
 vi.mock('../api', () => api);
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 
@@ -42,10 +39,8 @@ const board = {
 describe('GamesScoreboard', () => {
   beforeEach(() => {
     mockAuth();
-    api.useGetUpcomingGamesQuery.mockReturnValue({ data: [game('b', '2026-10-25T17:00:00Z')] });
     api.useGetScoreboardQuery.mockReturnValue({
-      data: board,
-      isLoading: false,
+      currentData: board,
       isError: false,
       refetch: vi.fn(),
     });
@@ -86,8 +81,7 @@ describe('GamesScoreboard', () => {
 
   it('stops where the calendar ends', () => {
     api.useGetScoreboardQuery.mockReturnValue({
-      data: { ...board, label: 'Super Bowl', previous: undefined, next: undefined },
-      isLoading: false,
+      currentData: { ...board, label: 'Super Bowl', previous: undefined, next: undefined },
       isError: false,
       refetch: vi.fn(),
     });
@@ -100,8 +94,7 @@ describe('GamesScoreboard', () => {
 
   it('says when there are no games', () => {
     api.useGetScoreboardQuery.mockReturnValue({
-      data: { season: 0, seasonType: 0, week: 0, label: '', games: [] },
-      isLoading: false,
+      currentData: { season: 0, seasonType: 0, week: 0, label: '', games: [] },
       isError: false,
       refetch: vi.fn(),
     });
@@ -112,7 +105,7 @@ describe('GamesScoreboard', () => {
   });
 
   it('shows placeholders while loading', () => {
-    api.useGetScoreboardQuery.mockReturnValue({ isLoading: true });
+    api.useGetScoreboardQuery.mockReturnValue({ isFetching: true });
     renderWithProviders(<GamesScoreboard />);
 
     expect(screen.getByTestId('scoreboard-loading')).toBeInTheDocument();
@@ -120,25 +113,31 @@ describe('GamesScoreboard', () => {
 
   it('offers a retry when the scores fail to load', () => {
     const refetch = vi.fn();
-    api.useGetScoreboardQuery.mockReturnValue({ isLoading: false, isError: true, refetch });
+    api.useGetScoreboardQuery.mockReturnValue({ isError: true, refetch });
     renderWithProviders(<GamesScoreboard />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(refetch).toHaveBeenCalled();
   });
 
-  it('offers a board only for games the create form can pick', () => {
+  it('offers a board only on games that have not kicked off', () => {
+    const later = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+    api.useGetScoreboardQuery.mockReturnValue({
+      currentData: {
+        ...board,
+        games: [
+          game('live', new Date(Date.now() - 60 * 60 * 1000).toISOString(), 'in_progress'),
+          game('late', new Date(Date.now() - 5 * 60 * 1000).toISOString()),
+          game('next', later),
+        ],
+      },
+      isError: false,
+      refetch: vi.fn(),
+    });
     renderWithProviders(<GamesScoreboard />);
 
     const starts = screen.getAllByRole('button', { name: 'Start a board' });
     expect(starts).toHaveLength(1);
-    expect(starts[0].closest('article')).toBe(screen.getAllByRole('article')[1]);
-  });
-
-  it('offers no boards while the upcoming games are still loading', () => {
-    api.useGetUpcomingGamesQuery.mockReturnValue({ data: undefined });
-    renderWithProviders(<GamesScoreboard />);
-
-    expect(screen.queryByRole('button', { name: 'Start a board' })).not.toBeInTheDocument();
+    expect(starts[0].closest('article')).toHaveAccessibleName('Away next at Home next');
   });
 });

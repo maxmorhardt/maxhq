@@ -171,7 +171,8 @@ paths:
   /games/scoreboard:
     get:
       description: Returns one week of NFL games with their scores, by quarter. Without
-        parameters it returns the week of the game nearest to now; pass season, seasonType,
+        parameters it returns the current week from ESPN's calendar; pass upcoming=true
+        for the week of the next game that has not kicked off, or season, seasonType,
         and week together to pick another.
       parameters:
       - description: Season year
@@ -186,6 +187,10 @@ paths:
         in: query
         name: week
         type: integer
+      - description: Return the week of the next game that has not kicked off
+        in: query
+        name: upcoming
+        type: boolean
       produces:
       - application/json
       responses:
@@ -206,8 +211,10 @@ paths:
       - games
   /games/upcoming:
     get:
-      description: Returns NFL games available to link a contest to when creating
-        one
+      deprecated: true
+      description: Returns the games of the next kickoff's week and the week after
+        that have not kicked off. Kept for web builds that predate the week picker;
+        use /games/scoreboard?upcoming=true.
       produces:
       - application/json
       responses:
@@ -221,9 +228,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Get upcoming games
+      summary: Get upcoming games (deprecated)
       tags:
       - games
   /health/live:

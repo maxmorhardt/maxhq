@@ -30,13 +30,13 @@ func NewGameHandler(gameService service.GameService) GameHandler {
 	}
 }
 
-// @Summary Get upcoming games
-// @Description Returns NFL games available to link a contest to when creating one
+// @Summary Get upcoming games (deprecated)
+// @Description Returns the games of the next kickoff's week and the week after that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.
 // @Tags games
 // @Produce json
 // @Success 200 {array} model.Game
 // @Failure 500 {object} api.APIError
-// @Security BearerAuth
+// @Deprecated
 // @Router /games/upcoming [get]
 func (h *gameHandler) GetUpcoming(c *gin.Context) {
 	log := logging.FromGin(c)
@@ -52,12 +52,13 @@ func (h *gameHandler) GetUpcoming(c *gin.Context) {
 }
 
 // @Summary Get the scoreboard
-// @Description Returns one week of NFL games with their scores, by quarter. Without parameters it returns the week of the game nearest to now; pass season, seasonType, and week together to pick another.
+// @Description Returns one week of NFL games with their scores, by quarter. Without parameters it returns the current week from ESPN's calendar; pass upcoming=true for the week of the next game that has not kicked off, or season, seasonType, and week together to pick another.
 // @Tags games
 // @Produce json
 // @Param season query int false "Season year"
 // @Param seasonType query int false "1 preseason, 2 regular season, 3 postseason"
 // @Param week query int false "Week of the season phase"
+// @Param upcoming query bool false "Return the week of the next game that has not kicked off"
 // @Success 200 {object} model.Scoreboard
 // @Failure 400 {object} api.APIError
 // @Failure 500 {object} api.APIError
@@ -71,7 +72,13 @@ func (h *gameHandler) GetScoreboard(c *gin.Context) {
 		return
 	}
 
-	scoreboard, err := h.gameService.GetScoreboard(c.Request.Context(), week)
+	var scoreboard *model.Scoreboard
+	var err error
+	if week == nil && c.Query("upcoming") == "true" {
+		scoreboard, err = h.gameService.GetUpcomingScoreboard(c.Request.Context())
+	} else {
+		scoreboard, err = h.gameService.GetScoreboard(c.Request.Context(), week)
+	}
 	if err != nil {
 		log.Error("failed to get scoreboard", "error", err)
 		c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get scoreboard", c))

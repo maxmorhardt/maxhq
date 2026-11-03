@@ -45,10 +45,6 @@ func TestSmoke(t *testing.T) {
 			Paths map[string]json.RawMessage `json:"paths"`
 		}
 		resp.Decode(t, &spec)
-		assert.Contains(t, spec.Paths, "/games/upcoming")
-	})
-
-	t.Run("rejects requests without the gateway's identity", func(t *testing.T) {
-		assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, svc.URL, testkit.Anonymous, http.MethodGet, "/games/upcoming", nil).Status)
+		assert.Contains(t, spec.Paths, "/games/scoreboard")
 	})
 }

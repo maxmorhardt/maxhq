@@ -15,6 +15,19 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+func scoreboardRouter(svc *mocks.GameService) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/games/scoreboard", NewGameHandler(svc).GetScoreboard)
+	return r
+}
+
+func getScoreboard(svc *mocks.GameService, target string) *httptest.ResponseRecorder {
+	w := httptest.NewRecorder()
+	scoreboardRouter(svc).ServeHTTP(w, httptest.NewRequest(http.MethodGet, target, http.NoBody))
+	return w
+}
+
 func upcomingRouter(svc *mocks.GameService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -43,19 +56,6 @@ func TestGetUpcoming_Error(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
-func scoreboardRouter(svc *mocks.GameService) *gin.Engine {
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	r.GET("/games/scoreboard", NewGameHandler(svc).GetScoreboard)
-	return r
-}
-
-func getScoreboard(svc *mocks.GameService, target string) *httptest.ResponseRecorder {
-	w := httptest.NewRecorder()
-	scoreboardRouter(svc).ServeHTTP(w, httptest.NewRequest(http.MethodGet, target, http.NoBody))
-	return w
-}
-
 func TestGetScoreboard_CurrentWeek(t *testing.T) {
 	svc := mocks.NewGameService(t)
 	svc.EXPECT().GetScoreboard(mock.Anything, (*model.Week)(nil)).
@@ -74,6 +74,32 @@ func TestGetScoreboard_ChosenWeek(t *testing.T) {
 		Return(&model.Scoreboard{}, nil)
 
 	assert.Equal(t, http.StatusOK, getScoreboard(svc, "/games/scoreboard?season=2026&seasonType=3&week=2").Code)
+}
+
+func TestGetScoreboard_UpcomingWeek(t *testing.T) {
+	svc := mocks.NewGameService(t)
+	svc.EXPECT().GetUpcomingScoreboard(mock.Anything).
+		Return(&model.Scoreboard{Week: model.Week{Season: 2026, SeasonType: 2, Week: 12}}, nil)
+
+	w := getScoreboard(svc, "/games/scoreboard?upcoming=true")
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"week":12`)
+}
+
+func TestGetScoreboard_ChosenWeekWinsOverUpcoming(t *testing.T) {
+	svc := mocks.NewGameService(t)
+	svc.EXPECT().GetScoreboard(mock.Anything, &model.Week{Season: 2026, SeasonType: 2, Week: 3}).
+		Return(&model.Scoreboard{}, nil)
+
+	assert.Equal(t, http.StatusOK, getScoreboard(svc, "/games/scoreboard?season=2026&seasonType=2&week=3&upcoming=true").Code)
+}
+
+func TestGetScoreboard_UpcomingError(t *testing.T) {
+	svc := mocks.NewGameService(t)
+	svc.EXPECT().GetUpcomingScoreboard(mock.Anything).Return(nil, errors.New("db"))
+
+	assert.Equal(t, http.StatusInternalServerError, getScoreboard(svc, "/games/scoreboard?upcoming=true").Code)
 }
 
 func TestGetScoreboard_BadWeek(t *testing.T) {

@@ -16,7 +16,6 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
-	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
 )
@@ -66,7 +65,7 @@ func New(cfg *model.GamesConfig, infra *server.Infra) *App {
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
 		"database": server.DatabaseCheck(db),
 	}), Service)
-	routes.Register(engine, handler.NewGameHandler(gameService), middleware.Authenticate(cache.NewRevocationStore(infra.Redis)))
+	routes.Register(engine, handler.NewGameHandler(gameService))
 
 	var runner worker.Runner
 	if cfg.Worker.Enabled {

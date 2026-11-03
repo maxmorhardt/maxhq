@@ -2,15 +2,14 @@
 
 Published to `oci://ghcr.io/maxmorhardt/charts/squares-games`, released as `squares-games-chart/<version>`; Argo CD Applications in `gitops` pin the version.
 
-The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, SecurityPolicy, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, and PrometheusRule.
+The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, BackendTrafficPolicy, NetworkPolicy, ServiceMonitor, and PrometheusRule.
 
 ## Required
 
 - **PostgreSQL** - 17+. One database shared by the squares services; this service migrates only its own `games` schema at startup (and adopts the pre-split `games` and `game_scores` tables from `public` on the first start after the split).
-- **Valkey** (the `valkey` namespace) - the games stream, the upcoming-games cache, and the revocation list.
+- **Valkey** (the `valkey` namespace) - the games stream and the scoreboard, game, and next-kickoff caches.
 - **ESPN** - `site.api.espn.com`, public and unauthenticated.
-- **Envoy Gateway** - the `maxhq` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Its `ClientTrafficPolicy` must strip client-sent `X-Auth-*` and `X-Internal-Token` headers (see `charts/gateway`), because the service trusts them.
-- **Dex** - `squares` and `squares-mobile` clients at `login.maxhq.io`. The chart's `SecurityPolicy` validates tokens against `https://login.maxhq.io/keys`.
+- **Envoy Gateway** - the `maxhq` Gateway in `envoy-gateway-system` (HTTPRoute parentRef). Every route is public and the service reads no identity headers, so it needs no Dex client. `auth.enabled: true` adds a `SecurityPolicy` that checks Dex tokens against `auth.jwksURI`.
 - **NetworkPolicy enforcement** - k3s enforces NetworkPolicy with its embedded controller. The policy admits app traffic only from `envoy-gateway-system` and metrics only from `monitoring`.
 - **TLS** and **DNS** - `api.maxhq.io` on the gateway, TLS terminated there.
 
@@ -18,8 +17,8 @@ The `squares-games` service: one Deployment, Service, HPA, PDB, HTTPRoute, Secur
 
 | Path under `api.maxhq.io/squares` | |
 | --- | --- |
-| `/games/upcoming` | the next slate of games a contest can be linked to, cached in Valkey |
-| `/games/scoreboard` | one week of games with their scores by quarter, the week's name from ESPN's calendar, and the calendar weeks before and after it (the current week unless `season`, `seasonType`, and `week` pick another); public |
+| `/games/scoreboard` | one week of games with their scores by quarter, the week's name from ESPN's calendar, and the calendar weeks before and after it (the current week unless `season`, `seasonType`, and `week` pick another, or `upcoming=true` asks for the week of the next game that has not kicked off, cached in Valkey); public |
+| `/games/upcoming` | deprecated: the games of the next kickoff's week and the week after that have not kicked off, for web builds that predate the week picker; public |
 | `/games/{id}` | one game with its status, score, and points by quarter; public |
 | `/swagger/games` | the API reference |
 

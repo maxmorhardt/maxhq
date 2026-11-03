@@ -17,7 +17,7 @@ const docTemplategames = `{
     "paths": {
         "/games/scoreboard": {
             "get": {
-                "description": "Returns one week of NFL games with their scores, by quarter. Without parameters it returns the week of the game nearest to now; pass season, seasonType, and week together to pick another.",
+                "description": "Returns one week of NFL games with their scores, by quarter. Without parameters it returns the current week from ESPN's calendar; pass upcoming=true for the week of the next game that has not kicked off, or season, seasonType, and week together to pick another.",
                 "produces": [
                     "application/json"
                 ],
@@ -42,6 +42,12 @@ const docTemplategames = `{
                         "type": "integer",
                         "description": "Week of the season phase",
                         "name": "week",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return the week of the next game that has not kicked off",
+                        "name": "upcoming",
                         "in": "query"
                     }
                 ],
@@ -69,19 +75,15 @@ const docTemplategames = `{
         },
         "/games/upcoming": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns NFL games available to link a contest to when creating one",
+                "description": "Returns the games of the next kickoff's week and the week after that have not kicked off. Kept for web builds that predate the week picker; use /games/scoreboard?upcoming=true.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "games"
                 ],
-                "summary": "Get upcoming games",
+                "summary": "Get upcoming games (deprecated)",
+                "deprecated": true,
                 "responses": {
                     "200": {
                         "description": "OK",
