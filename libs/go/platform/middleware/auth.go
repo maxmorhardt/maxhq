@@ -71,7 +71,6 @@ func authenticate(revocations revocationCheck) gin.HandlerFunc {
 }
 
 func claimsFromHeaders(c *gin.Context) (*api.Claims, api.AuthFailureReason) {
-	// providers disagree on case, so one person must not become two users
 	email := strings.ToLower(strings.TrimSpace(c.GetHeader(HeaderAuthEmail)))
 	if email == "" {
 		return nil, api.AuthFailureMissingHeader
