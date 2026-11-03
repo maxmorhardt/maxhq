@@ -60,6 +60,31 @@ export const isGameOver = (game: Pick<Game, 'status'>) =>
 export const hasKickedOff = (game: Pick<Game, 'status' | 'period'>) =>
   game.status !== 'scheduled' && game.period > 0;
 
+// a board can only be started on a game that hasn't kicked off, even if espn hasn't noticed yet
+export const canStartBoard = (game: Pick<Game, 'status' | 'gameTime'>, now = Date.now()) =>
+  game.status === 'scheduled' && Date.parse(game.gameTime) > now;
+
+// why a game can't be picked: its clock, or that it has kicked off
+export function startBlockedReason(
+  game: Pick<Game, 'status' | 'period' | 'gameTime' | 'scores'>
+): string {
+  return game.status === 'scheduled' ? 'Kicked off' : gameClock(game);
+}
+
+// games in kickoff order, grouped under a day heading
+export function gamesByDay(games: Game[]): [string, Game[]][] {
+  const days = new Map<string, Game[]>();
+  for (const game of games) {
+    const day = new Date(game.gameTime).toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+    days.set(day, [...(days.get(day) ?? []), game]);
+  }
+  return [...days.entries()];
+}
+
 // the score as the scoreboard should show it: the live game, else the last recorded quarter
 export function currentScore(
   contest: Contest,

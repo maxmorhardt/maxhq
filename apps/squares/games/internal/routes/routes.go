@@ -5,8 +5,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/games/internal/handler"
 )
 
-func Register(r *gin.Engine, h handler.GameHandler, auth gin.HandlerFunc) {
-	r.GET("/games/upcoming", auth, h.GetUpcoming)
+func Register(r *gin.Engine, h handler.GameHandler) {
 	r.GET("/games/scoreboard", h.GetScoreboard)
 	r.GET("/games/:id", h.GetGame)
 }

@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockAuth, mockMutation } from '../../../../test/auth';
 import { makeContest } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
-import type { Game } from '../../../../types/contest';
+import type { Game, Scoreboard } from '../../../../types/contest';
 import CreateContestForm from './CreateContestForm';
 
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
 const api = vi.hoisted(() => ({ useCreateContestMutation: vi.fn() }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
-const games = vi.hoisted(() => ({ useGetUpcomingGamesQuery: vi.fn() }));
+const games = vi.hoisted(() => ({ useGetScoreboardQuery: vi.fn(), useGetGameQuery: vi.fn() }));
 vi.mock('../../../games/api', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   ...games,
@@ -29,7 +29,35 @@ const game = {
   homeAbbr: 'DET',
   awayAbbr: 'CHI',
   gameTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  status: 'scheduled',
+  season: 2026,
+  seasonType: 2,
+  week: 10,
 } as Game;
+
+const finished = {
+  ...game,
+  id: 'g-0',
+  homeTeam: 'Packers',
+  awayTeam: 'Vikings',
+  homeAbbr: 'GB',
+  awayAbbr: 'MIN',
+  gameTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+  status: 'final',
+  period: 4,
+} as Game;
+
+const board: Scoreboard = {
+  season: 2026,
+  seasonType: 2,
+  week: 10,
+  label: 'Week 10',
+  previous: { season: 2026, seasonType: 2, week: 9 },
+  next: { season: 2026, seasonType: 2, week: 11 },
+  games: [finished, game],
+};
+
+const lastScoreboardArgs = () => games.useGetScoreboardQuery.mock.lastCall;
 
 describe('CreateContestForm', () => {
   let create: ReturnType<typeof vi.fn>;
@@ -38,7 +66,14 @@ describe('CreateContestForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth({ email: 'owner@x.com' });
-    games.useGetUpcomingGamesQuery.mockReturnValue({ data: [game], isLoading: false, refetch });
+    games.useGetScoreboardQuery.mockReturnValue({
+      data: board,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch,
+    });
+    games.useGetGameQuery.mockReturnValue({ data: undefined, isLoading: false });
     const [trigger, state] = mockMutation(makeContest({ id: 'new' }));
     create = trigger;
     api.useCreateContestMutation.mockReturnValue([trigger, state]);
@@ -131,17 +166,70 @@ describe('CreateContestForm', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(1);
   });
 
-  it('explains when there are no games to pick', () => {
-    games.useGetUpcomingGamesQuery.mockReturnValue({ data: [], isLoading: false });
+  it('explains a week with no games yet', () => {
+    games.useGetScoreboardQuery.mockReturnValue({
+      data: { ...board, games: [] },
+      isLoading: false,
+    });
     renderWithProviders(<CreateContestForm />);
-    expect(screen.getByText(/No upcoming games available/)).toBeInTheDocument();
+    expect(screen.getByText(/No games scheduled this week yet/)).toBeInTheDocument();
     expect(screen.getByText('No game picked yet')).toBeInTheDocument();
   });
 
-  it('waits for games to load', () => {
-    games.useGetUpcomingGamesQuery.mockReturnValue({ data: undefined, isLoading: true });
+  it('waits for the week to load', () => {
+    games.useGetScoreboardQuery.mockReturnValue({ data: undefined, isLoading: true });
     renderWithProviders(<CreateContestForm />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'Game' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Next week' })).not.toBeInTheDocument();
+  });
+
+  it('opens on the week of the next kickoff', () => {
+    renderWithProviders(<CreateContestForm />);
+    expect(lastScoreboardArgs()).toEqual([{ upcoming: true }, { skip: false }]);
+    expect(screen.getByRole('heading', { name: 'Week 10' })).toBeInTheDocument();
+    expect(screen.getByText(/1 open/)).toBeInTheDocument();
+  });
+
+  it('shows games that have kicked off but never picks them', () => {
+    renderWithProviders(<CreateContestForm />);
+    const option = screen.getByRole('radio', { name: 'Vikings @ Packers, Final' });
+    expect(option).toHaveAttribute('aria-disabled', 'true');
+
+    fireEvent.click(option);
+    expect(option).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByText('No game picked yet')).toBeInTheDocument();
+  });
+
+  it('steps through the weeks either side', () => {
+    renderWithProviders(<CreateContestForm />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(lastScoreboardArgs()?.[0]).toEqual({ season: 2026, seasonType: 2, week: 11 });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
+    expect(lastScoreboardArgs()?.[0]).toEqual({ season: 2026, seasonType: 2, week: 9 });
+  });
+
+  it('keeps the picked game while browsing other weeks', () => {
+    renderWithProviders(<CreateContestForm />);
+    pickGame();
+
+    games.useGetScoreboardQuery.mockReturnValue({
+      data: { ...board, week: 11, label: 'Week 11', games: [] },
+      isLoading: false,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+
+    expect(screen.getByRole('heading', { name: 'Week 11' })).toBeInTheDocument();
+    expect(screen.queryByText('No game picked yet')).not.toBeInTheDocument();
+  });
+
+  it('offers a retry when the week fails to load', () => {
+    games.useGetScoreboardQuery.mockReturnValue({ data: undefined, isError: true, refetch });
+    renderWithProviders(<CreateContestForm />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it('goes back to the list on cancel', () => {
@@ -156,9 +244,15 @@ describe('CreateContestForm', () => {
     expect(screen.getByText('11 of 100')).toBeInTheDocument();
   });
 
-  it('arrives with the game a link asked for already picked', async () => {
+  it('arrives with the game a link asked for already picked, on its week', async () => {
+    games.useGetGameQuery.mockReturnValue({ data: game, isLoading: false });
     renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=g-1' });
-    expect(screen.queryByText('No game picked yet')).not.toBeInTheDocument();
+    expect(games.useGetGameQuery).toHaveBeenCalledWith('g-1');
+    expect(lastScoreboardArgs()?.[0]).toEqual({ season: 2026, seasonType: 2, week: 10 });
+    expect(screen.getByRole('radio', { name: 'Bears @ Lions' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
 
     fireEvent.change(nameField(), { target: { value: 'Bowl' } });
     submit();
@@ -168,8 +262,16 @@ describe('CreateContestForm', () => {
     );
   });
 
-  it('asks for a game when the one a link asked for is gone', () => {
-    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=started' });
+  it('waits for the linked game before choosing a week', () => {
+    games.useGetGameQuery.mockReturnValue({ data: undefined, isLoading: true });
+    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=g-1' });
+    expect(lastScoreboardArgs()?.[1]).toEqual({ skip: true });
+  });
+
+  it('asks for a game when the one a link asked for has kicked off', () => {
+    games.useGetGameQuery.mockReturnValue({ data: finished, isLoading: false });
+    renderWithProviders(<CreateContestForm />, { route: '/contests/create?game=g-0' });
+    expect(lastScoreboardArgs()?.[0]).toEqual({ upcoming: true });
     expect(screen.getByText('No game picked yet')).toBeInTheDocument();
 
     fireEvent.change(nameField(), { target: { value: 'Bowl' } });

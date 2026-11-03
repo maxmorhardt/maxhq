@@ -20,10 +20,6 @@ import (
 )
 
 const (
-	upcomingCacheName = "upcoming_games"
-	upcomingCacheKey  = "all"
-	upcomingCacheTTL  = 60 * time.Second
-
 	// ingest drops the entries a write touches, so these only bound how stale a missed drop can get
 	scoreboardCacheName = "scoreboard"
 	scoreboardCacheTTL  = 5 * time.Minute
@@ -41,8 +37,8 @@ func gameKey(id uuid.UUID) string {
 }
 
 type GameService interface {
-	GetUpcoming(ctx context.Context) ([]model.Game, error)
 	GetScoreboard(ctx context.Context, week *model.Week) (*model.Scoreboard, error)
+	GetUpcomingScoreboard(ctx context.Context) (*model.Scoreboard, error)
 	GetGame(ctx context.Context, id uuid.UUID) (*model.Game, error)
 	SaveCalendar(ctx context.Context, weeks []model.SeasonWeek) error
 	Ingest(ctx context.Context, games []model.ESPNGame) (newScores int, err error)
@@ -63,18 +59,6 @@ func NewGameService(gameRepo repository.GameRepository, tx database.Transactor, 
 		outbox:   outbox,
 		cache:    c,
 	}
-}
-
-func (s *gameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
-	log := logging.FromContext(ctx)
-
-	games, err := cache.GetOrLoad(ctx, s.cache, upcomingCacheName, upcomingCacheKey, upcomingCacheTTL, s.gameRepo.GetUpcoming)
-	if err != nil {
-		log.Error("failed to get upcoming games", "error", err)
-		return nil, errs.ErrDatabaseUnavailable
-	}
-
-	return games, nil
 }
 
 // a nil week means the current one; live scores reach the page between refreshes over the games stream
@@ -103,6 +87,17 @@ func (s *gameService) GetScoreboard(ctx context.Context, week *model.Week) (*mod
 	}
 
 	return board, nil
+}
+
+// the week a new contest can be started in: the next kickoff's, or the current one once the season is over
+func (s *gameService) GetUpcomingScoreboard(ctx context.Context) (*model.Scoreboard, error) {
+	week, err := s.gameRepo.NextKickoffWeek(ctx)
+	if err != nil {
+		logging.FromContext(ctx).Error("failed to find the next kickoff's week", "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+
+	return s.GetScoreboard(ctx, week)
 }
 
 // a week's games, named and placed by ESPN's calendar when it lists the week
@@ -176,7 +171,6 @@ func (s *gameService) Ingest(ctx context.Context, games []model.ESPNGame) (int, 
 
 		newScores += created
 		if stored != nil {
-			stale[upcomingCacheKey] = true
 			stale[gameKey(stored.ID)] = true
 			stale[scoreboardKey(model.Week{Season: stored.Season, SeasonType: stored.SeasonType, Week: stored.Week})] = true
 		}

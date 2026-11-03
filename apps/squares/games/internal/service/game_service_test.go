@@ -61,28 +61,6 @@ func gameSvc(t *testing.T, g *mocks.GameRepository, ob *mocks.Outbox) service.Ga
 	return service.NewGameService(g, passTx(), ob, &memCache{entries: map[string][]byte{}})
 }
 
-func TestGameService_GetUpcoming_CachesResult(t *testing.T) {
-	g := mocks.NewGameRepository(t)
-	g.EXPECT().GetUpcoming(mock.Anything).Return([]model.Game{{ESPNID: "1"}, {ESPNID: "2"}}, nil).Once()
-
-	svc := gameSvc(t, g, nil)
-	first, err := svc.GetUpcoming(context.Background())
-	require.NoError(t, err)
-	second, err := svc.GetUpcoming(context.Background())
-	require.NoError(t, err)
-
-	assert.Len(t, first, 2)
-	assert.Equal(t, first, second)
-}
-
-func TestGameService_GetUpcoming_DBError(t *testing.T) {
-	g := mocks.NewGameRepository(t)
-	g.EXPECT().GetUpcoming(mock.Anything).Return(nil, errors.New("boom"))
-
-	_, err := gameSvc(t, g, nil).GetUpcoming(context.Background())
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
 func TestGameService_Ingest_UnchangedGamePublishesNothing(t *testing.T) {
 	g := mocks.NewGameRepository(t)
 	g.EXPECT().Upsert(mock.Anything, mock.Anything).Return(false, nil).Once()
@@ -189,30 +167,6 @@ func TestGameService_Activity_Errors(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
-func TestGameService_Ingest_ChangedGameRefreshesTheUpcomingList(t *testing.T) {
-	gameID := uuid.New()
-	g := mocks.NewGameRepository(t)
-	g.EXPECT().GetUpcoming(mock.Anything).Return([]model.Game{}, nil).Once()
-	g.EXPECT().Upsert(mock.Anything, mock.Anything).
-		Run(func(_ context.Context, game *model.Game) { game.ID = gameID }).Return(true, nil).Once()
-	g.EXPECT().GetByID(mock.Anything, gameID).Return(&model.Game{ID: gameID}, nil)
-	g.EXPECT().GetUpcoming(mock.Anything).Return([]model.Game{{ID: gameID}}, nil).Once()
-	ob := mocks.NewOutbox(t)
-	ob.EXPECT().Add(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	svc := gameSvc(t, g, ob)
-
-	before, err := svc.GetUpcoming(context.Background())
-	require.NoError(t, err)
-	assert.Empty(t, before)
-
-	_, err = svc.Ingest(context.Background(), []model.ESPNGame{{ESPNID: "1", State: "pre"}})
-	require.NoError(t, err)
-
-	after, err := svc.GetUpcoming(context.Background())
-	require.NoError(t, err)
-	assert.Len(t, after, 1, "the cached list was dropped when the game arrived")
-}
-
 func TestGameService_GetScoreboard_CurrentWeek(t *testing.T) {
 	week := model.Week{Season: 2026, SeasonType: 2, Week: 7}
 	g := mocks.NewGameRepository(t)
@@ -251,6 +205,42 @@ func TestGameService_GetScoreboard_ChosenWeek(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, week, board.Week)
+}
+
+func TestGameService_GetUpcomingScoreboard_NextKickoffsWeek(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 2, Week: 12}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().NextKickoffWeek(mock.Anything).Return(&week, nil)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{{ESPNID: "1"}}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
+
+	board, err := gameSvc(t, g, nil).GetUpcomingScoreboard(context.Background())
+
+	require.NoError(t, err)
+	assert.Equal(t, week, board.Week)
+}
+
+func TestGameService_GetUpcomingScoreboard_FallsBackToTheCurrentWeek(t *testing.T) {
+	week := model.Week{Season: 2026, SeasonType: 3, Week: 5}
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().NextKickoffWeek(mock.Anything).Return(nil, nil)
+	g.EXPECT().CurrentWeek(mock.Anything).Return(&week, nil)
+	g.EXPECT().GetWeek(mock.Anything, week).Return([]model.Game{}, nil)
+	g.EXPECT().GetSeasonWeek(mock.Anything, week).Return(nil, nil).Maybe()
+
+	board, err := gameSvc(t, g, nil).GetUpcomingScoreboard(context.Background())
+
+	require.NoError(t, err)
+	assert.Equal(t, week, board.Week, "with nothing scheduled, the season's last week stays up")
+}
+
+func TestGameService_GetUpcomingScoreboard_DBError(t *testing.T) {
+	g := mocks.NewGameRepository(t)
+	g.EXPECT().NextKickoffWeek(mock.Anything).Return(nil, errors.New("db"))
+
+	_, err := gameSvc(t, g, nil).GetUpcomingScoreboard(context.Background())
+
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
 func TestGameService_GetScoreboard_Errors(t *testing.T) {

@@ -2,8 +2,6 @@ package bootstrap
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -38,15 +36,18 @@ func testInfra(t *testing.T) *server.Infra {
 	return &server.Infra{DB: db, Redis: redis.NewClient(&redis.Options{Addr: mr.Addr()})}
 }
 
-func TestNew_WiresUpcomingBehindAuth(t *testing.T) {
+func TestNew_WiresTheGameRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	app := New(&model.GamesConfig{}, testInfra(t))
 
 	assert.Nil(t, app.runner, "a disabled worker is never started")
 
-	w := httptest.NewRecorder()
-	app.Engine.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/games/upcoming", http.NoBody))
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	paths := make([]string, 0, len(app.Engine.Routes()))
+	for _, route := range app.Engine.Routes() {
+		paths = append(paths, route.Method+" "+route.Path)
+	}
+	assert.Contains(t, paths, "GET /games/scoreboard")
+	assert.Contains(t, paths, "GET /games/:id")
 }
 
 func TestNew_BuildsWorkerWhenEnabled(t *testing.T) {

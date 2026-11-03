@@ -35,6 +35,12 @@
                         "description": "Week of the season phase",
                         "name": "week",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return the week of the next game that has not kicked off",
+                        "name": "upcoming",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -48,40 +54,6 @@
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/games/upcoming": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns NFL games available to link a contest to when creating one",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "games"
-                ],
-                "summary": "Get upcoming games",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Game"
-                            }
                         }
                     },
                     "500": {

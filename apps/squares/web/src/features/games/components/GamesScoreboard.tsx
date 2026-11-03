@@ -2,24 +2,11 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { Box, Button, Chip, IconButton, Skeleton, Typography } from '@mui/material';
 import { useState } from 'react';
 import { fonts } from '../../../app/theme';
-import type { Game, ScoreboardWeek } from '../../../types/contest';
-import { isLive } from '../../../utils/game';
-import { useGetScoreboardQuery, useGetUpcomingGamesQuery } from '../api';
+import type { ScoreboardWeek } from '../../../types/contest';
+import { canStartBoard, gamesByDay, isLive } from '../../../utils/game';
+import { useGetScoreboardQuery } from '../api';
 import CreateContestButton from '../../contests/components/CreateContestButton';
 import GameCard from './GameCard';
-
-function byDay(games: Game[]): [string, Game[]][] {
-  const days = new Map<string, Game[]>();
-  for (const game of games) {
-    const day = new Date(game.gameTime).toLocaleDateString(undefined, {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-    days.set(day, [...(days.get(day) ?? []), game]);
-  }
-  return [...days.entries()];
-}
 
 const gridSx = {
   display: 'grid',
@@ -89,9 +76,6 @@ function ScoreboardSkeleton() {
 export default function GamesScoreboard() {
   const [week, setWeek] = useState<ScoreboardWeek | undefined>(undefined);
   const { data: board, isLoading, isError, refetch } = useGetScoreboardQuery(week);
-  // only games the create form offers get a start link, so the link always arrives with its game picked
-  const { data: upcoming } = useGetUpcomingGamesQuery();
-  const creatable = new Set(upcoming?.map((game) => game.id));
 
   if (isLoading) {
     return <ScoreboardSkeleton />;
@@ -159,7 +143,7 @@ export default function GamesScoreboard() {
         </Typography>
       ) : (
         <Box sx={{ display: 'grid', gap: 3.5 }}>
-          {byDay(board.games).map(([day, games]) => (
+          {gamesByDay(board.games).map(([day, games]) => (
             <Box key={day} component="section" aria-label={day}>
               <Typography
                 component="h3"
@@ -181,7 +165,7 @@ export default function GamesScoreboard() {
                     key={game.id}
                     game={game}
                     action={
-                      creatable.has(game.id) ? (
+                      canStartBoard(game) ? (
                         <CreateContestButton look="link" label="Start a board" gameId={game.id} />
                       ) : undefined
                     }

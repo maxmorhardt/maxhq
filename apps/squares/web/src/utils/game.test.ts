@@ -2,15 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { makeContest, makeQuarterResult } from '../test/fixtures';
 import type { Game, GameScore } from '../types/contest';
 import {
+  canStartBoard,
   currentScore,
   formatKickoff,
   formatMatchup,
   gameClock,
+  gamesByDay,
   hasKickedOff,
   isGameOver,
   isHalftime,
   isLive,
   kickoffParts,
+  startBlockedReason,
 } from './game';
 
 const scored = (...quarters: number[]) => quarters.map((quarter) => ({ quarter }) as GameScore);
@@ -119,5 +122,60 @@ describe('kickoffParts', () => {
     expect(formatKickoff('2026-10-25T17:00:00Z')).toBe(`${day} · ${time}`);
     expect(day).not.toContain(':');
     expect(time).toMatch(/\d:\d\d/);
+  });
+});
+
+describe('canStartBoard', () => {
+  const now = Date.parse('2026-11-08T17:00:00Z');
+
+  it('allows a scheduled game that has not kicked off', () => {
+    expect(canStartBoard({ status: 'scheduled', gameTime: '2026-11-08T18:00:00Z' }, now)).toBe(
+      true
+    );
+  });
+
+  it('refuses a game past its kickoff, even before espn marks it live', () => {
+    expect(canStartBoard({ status: 'scheduled', gameTime: '2026-11-08T16:59:00Z' }, now)).toBe(
+      false
+    );
+  });
+
+  it.each(['in_progress', 'final', 'postponed', 'canceled'] as const)(
+    'refuses a %s game',
+    (status) => {
+      expect(canStartBoard({ status, gameTime: '2026-11-09T18:00:00Z' }, now)).toBe(false);
+    }
+  );
+});
+
+describe('startBlockedReason', () => {
+  it('says a scheduled game has kicked off', () => {
+    expect(startBlockedReason({ status: 'scheduled', period: 0, gameTime: '', scores: [] })).toBe(
+      'Kicked off'
+    );
+  });
+
+  it('shows the clock for any other game', () => {
+    expect(startBlockedReason({ status: 'final', period: 4, gameTime: '', scores: [] })).toBe(
+      'Final'
+    );
+    expect(startBlockedReason({ status: 'postponed', period: 0, gameTime: '', scores: [] })).toBe(
+      'Postponed'
+    );
+  });
+});
+
+describe('gamesByDay', () => {
+  it('groups games under their day in kickoff order', () => {
+    const games = [
+      { id: 'a', gameTime: '2026-11-08T18:00:00Z' },
+      { id: 'b', gameTime: '2026-11-08T21:25:00Z' },
+      { id: 'c', gameTime: '2026-11-10T01:15:00Z' },
+    ] as Game[];
+
+    const days = gamesByDay(games);
+    expect(days).toHaveLength(2);
+    expect(days[0][1].map((g) => g.id)).toEqual(['a', 'b']);
+    expect(days[1][1].map((g) => g.id)).toEqual(['c']);
   });
 });

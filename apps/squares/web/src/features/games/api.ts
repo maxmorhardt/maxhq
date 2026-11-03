@@ -1,16 +1,11 @@
 import { baseApi } from '../../api/baseApi';
-import type { Game, Scoreboard, ScoreboardWeek } from '../../types/contest';
+import type { Game, Scoreboard, ScoreboardQuery } from '../../types/contest';
 
 export const gamesApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     // no week means the current one
-    getScoreboard: build.query<Scoreboard, ScoreboardWeek | undefined>({
+    getScoreboard: build.query<Scoreboard, ScoreboardQuery | undefined>({
       query: (week) => ({ url: '/games/scoreboard', params: week }),
-    }),
-
-    // the games a new contest can be played on
-    getUpcomingGames: build.query<Game[], void>({
-      query: () => '/games/upcoming',
     }),
 
     getGame: build.query<Game, string>({
@@ -19,4 +14,4 @@ export const gamesApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetScoreboardQuery, useGetUpcomingGamesQuery, useGetGameQuery } = gamesApi;
+export const { useGetScoreboardQuery, useGetGameQuery } = gamesApi;

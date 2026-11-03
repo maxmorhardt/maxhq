@@ -198,24 +198,24 @@ func (_c *GameService_GetScoreboard_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
-// GetUpcoming provides a mock function with given fields: ctx
-func (_m *GameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
+// GetUpcomingScoreboard provides a mock function with given fields: ctx
+func (_m *GameService) GetUpcomingScoreboard(ctx context.Context) (*model.Scoreboard, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetUpcoming")
+		panic("no return value specified for GetUpcomingScoreboard")
 	}
 
-	var r0 []model.Game
+	var r0 *model.Scoreboard
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]model.Game, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) (*model.Scoreboard, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []model.Game); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) *model.Scoreboard); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Game)
+			r0 = ret.Get(0).(*model.Scoreboard)
 		}
 	}
 
@@ -228,30 +228,30 @@ func (_m *GameService) GetUpcoming(ctx context.Context) ([]model.Game, error) {
 	return r0, r1
 }
 
-// GameService_GetUpcoming_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUpcoming'
-type GameService_GetUpcoming_Call struct {
+// GameService_GetUpcomingScoreboard_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUpcomingScoreboard'
+type GameService_GetUpcomingScoreboard_Call struct {
 	*mock.Call
 }
 
-// GetUpcoming is a helper method to define mock.On call
+// GetUpcomingScoreboard is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *GameService_Expecter) GetUpcoming(ctx interface{}) *GameService_GetUpcoming_Call {
-	return &GameService_GetUpcoming_Call{Call: _e.mock.On("GetUpcoming", ctx)}
+func (_e *GameService_Expecter) GetUpcomingScoreboard(ctx interface{}) *GameService_GetUpcomingScoreboard_Call {
+	return &GameService_GetUpcomingScoreboard_Call{Call: _e.mock.On("GetUpcomingScoreboard", ctx)}
 }
 
-func (_c *GameService_GetUpcoming_Call) Run(run func(ctx context.Context)) *GameService_GetUpcoming_Call {
+func (_c *GameService_GetUpcomingScoreboard_Call) Run(run func(ctx context.Context)) *GameService_GetUpcomingScoreboard_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *GameService_GetUpcoming_Call) Return(_a0 []model.Game, _a1 error) *GameService_GetUpcoming_Call {
+func (_c *GameService_GetUpcomingScoreboard_Call) Return(_a0 *model.Scoreboard, _a1 error) *GameService_GetUpcomingScoreboard_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *GameService_GetUpcoming_Call) RunAndReturn(run func(context.Context) ([]model.Game, error)) *GameService_GetUpcoming_Call {
+func (_c *GameService_GetUpcomingScoreboard_Call) RunAndReturn(run func(context.Context) (*model.Scoreboard, error)) *GameService_GetUpcomingScoreboard_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -34,7 +34,7 @@ func TestLegacy_ExistingGamesAreStillServed(t *testing.T) {
 	require.NoError(t, rawDB.QueryRow(`SELECT espn_id FROM games.games WHERE id = '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0002'`).Scan(&espnID))
 	assert.Equal(t, "legacy-401", espnID)
 
-	resp := testkit.Call(t, gamesURL, testkit.As("fan@squares.test"), http.MethodGet, "/games/upcoming", nil)
+	resp := testkit.Call(t, gamesURL, testkit.Anonymous, http.MethodGet, "/games/0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0002", nil)
 	require.Equal(t, http.StatusOK, resp.Status)
 	assert.Contains(t, string(resp.Body), "legacy-401")
 }

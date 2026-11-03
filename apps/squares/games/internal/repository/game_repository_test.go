@@ -115,34 +115,6 @@ func TestGameRepository_GetByID(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGameRepository_GetUpcoming(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewGameRepository(gdb)
-
-	mock.ExpectQuery(`SELECT "game_time" FROM "games"`).
-		WillReturnRows(sqlmock.NewRows([]string{"game_time"}).AddRow(time.Now().Add(24 * time.Hour)))
-	mock.ExpectQuery(`SELECT \* FROM "games"`).
-		WillReturnRows(sqlmock.NewRows([]string{"espn_id"}).AddRow("1").AddRow("2"))
-
-	games, err := repo.GetUpcoming(context.Background())
-	require.NoError(t, err)
-	assert.Len(t, games, 2)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGameRepository_GetUpcoming_NoScheduledGames(t *testing.T) {
-	gdb, mock := newMockDB(t)
-	repo := NewGameRepository(gdb)
-
-	mock.ExpectQuery(`SELECT "game_time" FROM "games"`).
-		WillReturnRows(sqlmock.NewRows([]string{"game_time"}))
-
-	games, err := repo.GetUpcoming(context.Background())
-	require.NoError(t, err)
-	assert.Empty(t, games)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestGameRepository_HasLiveGame(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewGameRepository(gdb)
@@ -215,6 +187,33 @@ func TestGameRepository_NextKickoff_None(t *testing.T) {
 	got, err := repo.NextKickoff(context.Background())
 	require.NoError(t, err)
 	assert.True(t, got.IsZero())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGameRepository_NextKickoffWeek(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	mock.ExpectQuery(`SELECT "season","season_type","week" FROM "games" WHERE status = \$1 AND game_time > \$2 ORDER BY game_time ASC LIMIT \$3`).
+		WithArgs(string(model.GameStatusScheduled), sqlmock.AnyArg(), 1).
+		WillReturnRows(sqlmock.NewRows([]string{"season", "season_type", "week"}).AddRow(2026, 2, 12))
+
+	got, err := repo.NextKickoffWeek(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, &model.Week{Season: 2026, SeasonType: 2, Week: 12}, got)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGameRepository_NextKickoffWeek_None(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewGameRepository(gdb)
+
+	mock.ExpectQuery(`SELECT "season","season_type","week" FROM "games"`).
+		WillReturnRows(sqlmock.NewRows([]string{"season", "season_type", "week"}))
+
+	got, err := repo.NextKickoffWeek(context.Background())
+	require.NoError(t, err)
+	assert.Nil(t, got)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
