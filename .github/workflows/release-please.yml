@@ -11,6 +11,6 @@ permissions:
 
 jobs:
   release-please:
-    uses: maxmorhardt/workflows/.github/workflows/release-please.yml@main
+    uses: maxmorhardt/workflows/.github/workflows/release-please.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
     secrets:
       release_please_token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
