@@ -58,7 +58,7 @@ jobs:
   promote:
     needs: parse
     if: needs.parse.outputs.kind == 'image'
-    uses: maxmorhardt/workflows/.github/workflows/cd-promote.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-promote.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       app_name: ${{ needs.parse.outputs.app }}
       path_filters: ${{ needs.parse.outputs.filters }}
@@ -69,7 +69,7 @@ jobs:
 
   image-deploy:
     needs: [parse, promote]
-    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       environment: prod
       app: ${{ needs.parse.outputs.app }}
@@ -82,7 +82,7 @@ jobs:
   chart-publish:
     needs: parse
     if: needs.parse.outputs.kind == 'chart'
-    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       chart: charts/${{ needs.parse.outputs.app }}
@@ -90,7 +90,7 @@ jobs:
 
   chart-deploy:
     needs: [parse, chart-publish]
-    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       environment: prod
       app: ${{ needs.parse.outputs.app }}
