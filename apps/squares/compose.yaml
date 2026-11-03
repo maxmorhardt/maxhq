@@ -53,8 +53,7 @@ services:
   contests:
     <<: *service
     build:
-      context: ../..
-      dockerfile: apps/squares/Dockerfile
+      context: .
       args:
         SERVICE: contests
     environment: *env
@@ -62,8 +61,7 @@ services:
   games:
     <<: *service
     build:
-      context: ../..
-      dockerfile: apps/squares/Dockerfile
+      context: .
       args:
         SERVICE: games
     environment: *env
@@ -71,8 +69,7 @@ services:
   accounts:
     <<: *service
     build:
-      context: ../..
-      dockerfile: apps/squares/Dockerfile
+      context: .
       args:
         SERVICE: accounts
     environment:
@@ -89,8 +86,7 @@ services:
   realtime:
     <<: *service
     build:
-      context: ../..
-      dockerfile: apps/squares/Dockerfile
+      context: .
       args:
         SERVICE: realtime
     environment: *env

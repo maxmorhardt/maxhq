@@ -9,6 +9,7 @@ coverage
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+go.work
 go.work.sum
 
 # infra

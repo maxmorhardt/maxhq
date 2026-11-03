@@ -34,4 +34,4 @@ would not do it: ServiceLB's hostPort is NAT'd past ufw's input rules.
 
 ## Header stripping
 
-The `ClientTrafficPolicy` removes `strippedRequestHeaders` from every request before any filter runs. Apps (squares) trust `X-Auth-*` headers that only a `SecurityPolicy` jwt filter sets, so a client must never be able to send them. Keep this list in step with the `claimToHeaders` in the `squares-*` charts' `values.yaml`.
+The `ClientTrafficPolicy` removes `strippedRequestHeaders` from every request before any filter runs. Apps (squares) trust `X-Auth-*` headers that only a `SecurityPolicy` jwt filter sets, so a client must never be able to send them. Keep this list in step with the `claimToHeaders` in the `squares-*` charts' `values.yaml`. The Go services also take the client IP from `X-Envoy-External-Address`, which Envoy sets itself, so a client-sent copy is stripped too.

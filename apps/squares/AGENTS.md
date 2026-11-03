@@ -11,8 +11,8 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `games/` - ESPN schedule and live scores. Owns the `games` schema.
   - `accounts/` - profiles, account deletion, the contact form. Owns the `accounts` schema.
   - `realtime/` - server-sent events for one contest, and a public stream of live game scores, both resumable with `Last-Event-ID`. Owns no data.
-- Each service is a package tree in the repo's single Go module (root `go.mod`), with its own image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>`), Argo CD Application, and release-please component. Its Helm chart is `charts/squares-<service>`. A service never imports another service's packages; Go's `internal` rule enforces it.
-- Shared code lives in two library packages in the same module:
+- Each service is its own Go module (`apps/squares/<service>/go.mod`), with its own image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>` and `apps/squares` as the context), Argo CD Application, and release-please component. Its Helm chart is `charts/squares-<service>`. A service never imports another service's packages; Go's `internal` rule enforces it.
+- Shared code lives in the `libs/go` module, which each service requires at a released version:
   - `libs/go/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
   - `libs/go/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
 - Everything sits behind the `maxhq` Envoy Gateway at `api.maxhq.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
@@ -27,7 +27,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `users` - accounts. Read by contests.
 - Consumers keep their position in their own schema (`stream_offsets`), handle entries in order, and retry a failing entry with backoff before moving on. A handler must tolerate seeing an entry again after a crash. A payload that can never decode is logged and skipped.
 - Synchronous calls between services are limited to two internal reads on contests (`/internal/contests/:id/snapshot` for realtime, `/internal/users/:email/activity` for accounts), guarded by `X-Internal-Token` and a NetworkPolicy, and made through `httpclient.Internal`, which retries network errors and 5xx. Keep it that way.
-- Changing a payload in `libs/go/squares` is a contract change: keep it backwards compatible (add fields, never rename or retype), and land the writer and every reader in the same PR.
+- Changing a payload in `libs/go/squares` is a contract change: keep it backwards compatible (add fields, never rename or retype), because services move to a new `libs/go` version one at a time.
 
 ## Core Principles
 
@@ -62,7 +62,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 - Avoid comments unless the code is genuinely non-obvious.
 - A new mutating route goes behind both `Auth` and `Idempotent` in that service's `routes.go`.
 - The service's chart is `charts/squares-<service>`, whose `README.md` lists every secret key and setting. A change that needs a new env var, port, route, or secret key changes the chart in the same PR; the chart releases as `squares-<service>-chart`.
-- A change to `libs/*` triggers CI for every service. Run the affected services' tests before committing.
+- A service sees a `libs/go` change only once it is released and bumped in the service's `go.mod`. To try one before then, use a local workspace (`go work init ../../../libs/go .` from the service; `go.work` is gitignored) and run the service's tests against it.
 
 ## Testing Guidance
 
@@ -79,7 +79,7 @@ Conventional commits, enforced on PR titles and consumed by release-please. The 
 
 - `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime` - one service.
 - `squares` - the web app.
-- A change to `libs/go` releases every service: the pre-commit hook restamps each service's `libs.stamp` (see `libs/AGENTS.md`). `go.mod` and `go.sum` updates from Renovate release nothing; they ship with each service's next release.
+- A `libs/go` change releases `libs/go`. Renovate then opens one `fix(deps)` PR bumping it in every service's `go.mod`, which releases each service, as its other `go.mod` bumps do.
 
 Examples:
 

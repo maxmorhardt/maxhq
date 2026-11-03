@@ -35,6 +35,12 @@
       "component": "squares-realtime",
       "changelog-path": "CHANGELOG.md"
     },
+    "libs/go": {
+      "release-type": "go",
+      "component": "libs/go",
+      "include-v-in-tag": true,
+      "changelog-path": "CHANGELOG.md"
+    },
     "charts/maxhq": {
       "release-type": "helm",
       "component": "maxhq-chart",

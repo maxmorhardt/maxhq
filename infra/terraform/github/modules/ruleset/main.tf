@@ -47,3 +47,24 @@ resource "github_repository_ruleset" "main" {
     }
   }
 }
+
+resource "github_repository_ruleset" "tags" {
+  count       = var.immutable_tags ? 1 : 0
+  name        = "tags"
+  repository  = var.repository
+  target      = "tag"
+  enforcement = "active"
+
+  conditions {
+    ref_name {
+      include = ["~ALL"]
+      exclude = []
+    }
+  }
+
+  rules {
+    deletion         = true
+    update           = true
+    non_fast_forward = true
+  }
+}

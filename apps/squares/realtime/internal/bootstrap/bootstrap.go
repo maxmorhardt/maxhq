@@ -51,7 +51,7 @@ func New(cfg *model.RealtimeConfig, infra *server.Infra, shutdown <-chan struct{
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
 		"redis": server.RedisCheck(infra.Redis),
 	}), Service)
-	routes.Register(engine, handler.NewEventsHandler(streams, cfg.Stream, shutdown), middleware.Authenticate(revocations))
+	routes.Register(engine, handler.NewEventsHandler(streams, service.NewStreamLimiter(cfg.Stream.MaxPerClient), cfg.Stream, shutdown), middleware.Authenticate(revocations))
 
 	return &App{Engine: engine, cfg: cfg, infra: infra, hub: hub}
 }

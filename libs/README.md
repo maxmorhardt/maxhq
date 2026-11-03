@@ -1,6 +1,6 @@
 # Go libraries
 
-Shared code for the Go services in this repo. These packages are not released on their own: they're part of the repo's single Go module, so a library change ships with the next release of each service that uses it.
+Shared code for the Go services in this repo, as one module (`github.com/maxmorhardt/maxhq/libs/go`) released on its own as `libs/go/v<version>`. Each service requires a released version in its own `go.mod`, and Renovate bumps it after every release, which releases the services in turn.
 
 | Library | Package | What it holds |
 | --- | --- | --- |

@@ -35,7 +35,7 @@ func streamRouter(svc service.StreamService, cfg model.StreamConfig, shutdown <-
 		api.SetContextValue(c, api.ClaimsKey, &api.Claims{Email: "v@b.com", IssuedAt: 1, Expire: expire})
 		c.Next()
 	})
-	r.GET("/events/contests/:id", NewEventsHandler(svc, cfg, shutdown).StreamContest)
+	r.GET("/events/contests/:id", NewEventsHandler(svc, service.NewStreamLimiter(0), cfg, shutdown).StreamContest)
 	return r
 }
 
@@ -261,7 +261,7 @@ func TestStreamContest_EndsWhenTheViewerFallsBehind(t *testing.T) {
 func gamesRouter(svc service.StreamService, cfg model.StreamConfig, shutdown <-chan struct{}) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.GET("/events/games/:id", NewEventsHandler(svc, cfg, shutdown).StreamGame)
+	r.GET("/events/games/:id", NewEventsHandler(svc, service.NewStreamLimiter(0), cfg, shutdown).StreamGame)
 	return r
 }
 
@@ -307,4 +307,43 @@ func TestStreamGame_HeartbeatsUntilShutdown(t *testing.T) {
 	w := serve(gamesRouter(svc, model.StreamConfig{HeartbeatInterval: 5 * time.Millisecond, RevocationInterval: time.Hour}, shutdown), gamePath, nil)
 
 	assert.Contains(t, w.Body.String(), ": ping\n\n")
+}
+
+func TestStreams_RefuseAClientOverTheLimit(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	limiter := service.NewStreamLimiter(1)
+	_, ok := limiter.Acquire("user:v@b.com")
+	require.True(t, ok)
+	_, ok = limiter.Acquire("ip:203.0.113.7")
+	require.True(t, ok)
+
+	h := NewEventsHandler(mocks.NewStreamService(t), limiter, slowTimers, nil)
+	r := gin.New()
+	r.TrustedPlatform = "X-Envoy-External-Address"
+	r.GET("/events/contests/:id", func(c *gin.Context) {
+		api.SetContextValue(c, api.UserKey, "v@b.com")
+		c.Next()
+	}, h.StreamContest)
+	r.GET("/events/games/:id", h.StreamGame)
+
+	contest := serve(r, "/events/contests/"+uuid.NewString(), nil)
+	assert.Equal(t, http.StatusTooManyRequests, contest.Code)
+	assert.Equal(t, "30", contest.Header().Get("Retry-After"))
+
+	game := serve(r, gamePath, http.Header{"X-Envoy-External-Address": {"203.0.113.7"}})
+	assert.Equal(t, http.StatusTooManyRequests, game.Code)
+}
+
+func TestStreams_FreeTheirSlotWhenTheyClose(t *testing.T) {
+	ch := make(chan service.Event)
+	close(ch)
+	svc := mocks.NewStreamService(t)
+	svc.EXPECT().SubscribeGame(mock.Anything, gameID, "").Return(&service.Subscription{Events: ch, Stop: func() {}}, nil).Twice()
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/events/games/:id", NewEventsHandler(svc, service.NewStreamLimiter(1), slowTimers, nil).StreamGame)
+
+	assert.Equal(t, http.StatusOK, serve(r, gamePath, nil).Code)
+	assert.Equal(t, http.StatusOK, serve(r, gamePath, nil).Code, "the first stream's slot was released when it ended")
 }

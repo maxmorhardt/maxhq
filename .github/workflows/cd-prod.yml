@@ -44,7 +44,7 @@ jobs:
           case "$app" in
             maxhq) filters=maxhq ;;
             squares) filters=squares_web ;;
-            squares-*) filters="${app#squares-} go_libs squares_build" ;;
+            squares-*) filters="${app#squares-} squares_build" ;;
           esac
           {
             echo "kind=$kind"
@@ -63,7 +63,9 @@ jobs:
       app_name: ${{ needs.parse.outputs.app }}
       path_filters: ${{ needs.parse.outputs.filters }}
       target_tag: ${{ needs.parse.outputs.version }}
-    secrets: inherit
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
   image-deploy:
     needs: [parse, promote]
@@ -72,7 +74,8 @@ jobs:
       environment: prod
       app: ${{ needs.parse.outputs.app }}
       image_tag: ${{ needs.parse.outputs.version }}
-    secrets: inherit
+    secrets:
+      gitops_token: ${{ secrets.GITOPS_TOKEN }}
 
   # chart releases
 
@@ -92,4 +95,5 @@ jobs:
       environment: prod
       app: ${{ needs.parse.outputs.app }}
       chart_version: ${{ needs.parse.outputs.version }}
-    secrets: inherit
+    secrets:
+      gitops_token: ${{ secrets.GITOPS_TOKEN }}

@@ -77,3 +77,17 @@ SELECT gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', r, c,
        CASE WHEN r = 0 AND c = 0 THEN 'legacy@squares.test' ELSE '' END,
        '', now(), now()
 FROM generate_series(0, 9) AS r, generate_series(0, 9) AS c;
+
+-- identities stored before emails were lowercased, including a case-only twin of an existing user
+INSERT INTO users (id, email, display_name, default_initials, created_at, updated_at) VALUES
+    ('0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0004', 'Mixed@Squares.Test', 'Mixed Case', 'MC', now(), now()),
+    ('0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0005', 'twin@squares.test', 'Twin Lower', 'TL', now(), now()),
+    ('0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0006', 'Twin@Squares.Test', 'Twin Upper', 'TU', now(), now());
+
+INSERT INTO deleted_accounts (email, deleted_at) VALUES ('Gone.Mixed@Squares.Test', now() - interval '1 hour');
+
+INSERT INTO contest_participants (id, contest_id, user_id, role, max_squares, joined_at, created_at, updated_at)
+VALUES (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'Mixed@Squares.Test', 'participant', 5, now(), now(), now());
+
+UPDATE squares SET value = 'MC', owner = 'Mixed@Squares.Test'
+WHERE contest_id = '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001' AND "row" = 0 AND col = 1;

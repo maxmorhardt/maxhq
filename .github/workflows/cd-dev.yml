@@ -6,10 +6,7 @@ on:
       - main
     paths:
       - 'apps/**'
-      - 'libs/**'
       - 'charts/**'
-      - 'go.mod'
-      - 'go.sum'
   workflow_dispatch:
 
 permissions:
@@ -62,7 +59,7 @@ jobs:
         id: services
         env:
           CHANGED: ${{ steps.filter.outputs.changes }}
-          ALL: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.go_libs == 'true' || steps.filter.outputs.squares_build == 'true' }}
+          ALL: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.squares_build == 'true' }}
         run: |
           all='["contests","games","accounts","realtime"]'
           if [ "$ALL" = "true" ]; then
@@ -100,7 +97,8 @@ jobs:
       app: ${{ matrix.chart }}
       environment: dev
       chart_version: ${{ needs.changes.outputs.chart_version }}
-    secrets: inherit
+    secrets:
+      gitops_token: ${{ secrets.GITOPS_TOKEN }}
 
   # maxhq
 
@@ -124,7 +122,9 @@ jobs:
       artifact_name: dist-maxhq
       artifact_path: apps/maxhq/dist
       push: true
-    secrets: inherit
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
   maxhq-deploy:
     needs: [changes, maxhq-docker]
@@ -135,7 +135,8 @@ jobs:
       app: maxhq
       environment: dev
       image_tag: ${{ needs.changes.outputs.tag }}
-    secrets: inherit
+    secrets:
+      gitops_token: ${{ secrets.GITOPS_TOKEN }}
 
   # squares web
 
@@ -159,7 +160,9 @@ jobs:
       artifact_name: dist-squares
       artifact_path: apps/squares/web/dist
       push: true
-    secrets: inherit
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
   squares-web-deploy:
     needs: [changes, squares-web-docker]
@@ -170,7 +173,8 @@ jobs:
       app: squares
       environment: dev
       image_tag: ${{ needs.changes.outputs.tag }}
-    secrets: inherit
+    secrets:
+      gitops_token: ${{ secrets.GITOPS_TOKEN }}
 
   # squares services
 
@@ -186,11 +190,12 @@ jobs:
       repository: ${{ github.repository }}
       app_name: squares-${{ matrix.service }}
       app_version: ${{ needs.changes.outputs.tag }}
-      context: .
-      dockerfile: apps/squares/Dockerfile
+      context: apps/squares
       build_args: SERVICE=${{ matrix.service }}
       push: true
-    secrets: inherit
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
   squares-service-deploy:
     needs: [changes, squares-service-docker]
@@ -206,4 +211,5 @@ jobs:
       app: squares-${{ matrix.service }}
       environment: dev
       image_tag: ${{ needs.changes.outputs.tag }}
-    secrets: inherit
+    secrets:
+      gitops_token: ${{ secrets.GITOPS_TOKEN }}

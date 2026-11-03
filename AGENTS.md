@@ -12,14 +12,14 @@
 
 - `apps/maxhq/` - portfolio site (React Router, prerendered).
 - `apps/squares/web/` - squares frontend (React Router SPA).
-- `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each has its own image, chart, and release. `apps/squares/AGENTS.md` has the rules they share.
-- `libs/go/` - Go libraries the services share: `platform` (infrastructure) and `squares` (the contract between the squares services). Not released on their own.
+- `apps/squares/{contests,games,accounts,realtime}/` - the squares backend services. Each is its own Go module with its own image, chart, and release. `apps/squares/AGENTS.md` has the rules they share.
+- `libs/go/` - the Go module the services share (`github.com/maxmorhardt/maxhq/libs/go`): `platform` (infrastructure) and `squares` (the contract between the squares services). Released on its own as `libs/go/v<version>`; each service requires a released version.
 - `charts/<name>/` - one self-contained Helm chart per app, plus `gateway` (Gateway API infrastructure and prod's cloudflared, not an app). Each chart is its own release (`<chart>-chart`), published to `oci://ghcr.io/maxmorhardt/charts`.
 - `infra/terraform/` - the resources Argo CD cannot reach: the S3 backup bucket and its IAM identity, Cloudflare DNS for every domain, and GitHub rulesets and deployment environments. See `infra/terraform/README.md`.
 - `infra/k3s/` - node bootstrap over SSH (`bootstrap/main.py`) and the k3s runbook.
 - `infra/cloudflare-maintenance/` - Cloudflare Worker serving a maintenance page during planned outages. Deployed with wrangler.
 - `.github/workflows/` - `ci.yml` (path-filtered PR checks), `cd-dev.yml` (merge-driven build and deploy to dev; run it by hand to redeploy every app), `cd-prod.yml` (tag-driven promotion of dev's image and deploy to prod), `cd-terraform.yml` (applies `infra/terraform/` on merge, plans it weekly for drift), `release-please.yml`, `pr-title.yml`. `ci.yml` and `cd-dev.yml` share their path filters from `.github/path-filters.yml`.
-- `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt, and `stamp-libs` when `libs/go` is staged. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
+- `.githooks/` - the repo's one pre-commit hook: each UI's lint-staged plus gofmt. Each UI's `prepare` script enables it. Each UI is its own pnpm project with its own lockfile; there is no npm project at the root.
 
 ## Core Principles
 
@@ -30,7 +30,7 @@
    - Tags are `<component>/<version>`. Pushing one runs `cd-prod.yml` for that component only.
    - Never hand-edit `.release-please-manifest.json`, `CHANGELOG.md`, or a chart's `version`.
 3. Apps stay independent
-   - No app imports from another app's directory. All Go code is one module (`github.com/maxmorhardt/maxhq`, root `go.mod`); shared code lives in `libs`.
+   - No app imports from another app's directory. Shared Go code lives in `libs/go`, which services take only as a released version in their own `go.mod`, never through a `replace`.
 4. Git is the only source of truth for the cluster
    - Nothing here runs `helm install` or `kubectl apply`. CI commits version bumps to `gitops` and Argo CD reconciles.
 5. Terraform is applied, not reconciled
@@ -59,7 +59,7 @@
 
 Conventional commits, enforced on PR titles and consumed by release-please. **Scope is the component**, so release-please can attribute the change, though the files touched are what decide which package releases.
 
-- Scopes: `maxhq`, `squares`, `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime`, a chart name for chart-only changes, `terraform`, `k3s`, `cloudflare-maintenance`, `ci`, `repo`.
+- Scopes: `maxhq`, `squares`, `squares-contests`, `squares-games`, `squares-accounts`, `squares-realtime`, `libs`, a chart name for chart-only changes, `terraform`, `k3s`, `cloudflare-maintenance`, `ci`, `repo`.
 - Examples: `feat(squares-realtime): resume streams with last-event-id`, `fix(squares): reconnect after token refresh`, `chore(terraform): import the bucket policy`, `ci: test every go service on library changes`.
 
 ## Non-Goals for Routine Changes
