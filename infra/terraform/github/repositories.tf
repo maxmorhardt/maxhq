@@ -30,7 +30,7 @@ locals {
     }
 
     "workflows" = {
-      checks = ["pr-title", "Lint"]
+      checks         = ["pr-title", "Lint"]
       immutable_tags = true
     }
   }
