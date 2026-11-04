@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         module: [aws, cloudflare, github]
-    uses: maxmorhardt/workflows/.github/workflows/cd-terraform.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-terraform.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       working_directory: infra/terraform/${{ matrix.module }}
@@ -36,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         module: [aws, cloudflare, github]
-    uses: maxmorhardt/workflows/.github/workflows/validate-terraform.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/validate-terraform.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       working_directory: infra/terraform/${{ matrix.module }}

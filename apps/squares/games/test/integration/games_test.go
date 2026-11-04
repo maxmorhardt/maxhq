@@ -32,7 +32,7 @@ func latestGameEvent(t *testing.T, espnID string) *events.Game {
 }
 
 func TestGames_ScheduleIsIngestedAndPublished(t *testing.T) {
-	kickoff := time.Now().Add(48 * time.Hour).Truncate(time.Minute)
+	kickoff := time.Now().Add(24 * time.Hour).Truncate(time.Minute)
 	espn.set(fakeGame{ID: "401-sched", Kickoff: kickoff, State: "pre", Home: "Lions", Away: "Bears"})
 
 	var game *events.Game

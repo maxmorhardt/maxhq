@@ -77,7 +77,7 @@ jobs:
       fail-fast: false
       matrix:
         chart: ${{ fromJSON(needs.changes.outputs.charts) }}
-    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/ci-helm.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       chart: charts/${{ matrix.chart }}
@@ -92,7 +92,7 @@ jobs:
         chart: ${{ fromJSON(needs.changes.outputs.charts) }}
     concurrency:
       group: cd-dev-${{ matrix.chart }}
-    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       app: ${{ matrix.chart }}
       environment: dev
@@ -105,7 +105,7 @@ jobs:
   maxhq-node:
     needs: changes
     if: needs.changes.outputs.maxhq == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       app_name: maxhq
@@ -113,7 +113,7 @@ jobs:
 
   maxhq-docker:
     needs: [changes, maxhq-node]
-    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       app_name: maxhq
@@ -130,7 +130,7 @@ jobs:
     needs: [changes, maxhq-docker]
     concurrency:
       group: cd-dev-maxhq
-    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       app: maxhq
       environment: dev
@@ -143,7 +143,7 @@ jobs:
   squares-web-node:
     needs: changes
     if: needs.changes.outputs.squares_web == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       app_name: squares
@@ -151,7 +151,7 @@ jobs:
 
   squares-web-docker:
     needs: [changes, squares-web-node]
-    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       app_name: squares
@@ -168,7 +168,7 @@ jobs:
     needs: [changes, squares-web-docker]
     concurrency:
       group: cd-dev-squares
-    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       app: squares
       environment: dev
@@ -185,7 +185,7 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
-    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       repository: ${{ github.repository }}
       app_name: squares-${{ matrix.service }}
@@ -206,7 +206,7 @@ jobs:
         service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
     concurrency:
       group: cd-dev-squares-${{ matrix.service }}
-    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@dac448224959fd2d228c0cd48f32df322b1df532 # main
+    uses: maxmorhardt/workflows/.github/workflows/cd-argocd.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
     with:
       app: squares-${{ matrix.service }}
       environment: dev
