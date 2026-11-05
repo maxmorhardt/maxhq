@@ -4,21 +4,21 @@ import { mockMutation } from '../../../test/auth';
 import { renderWithProviders } from '../../../test/render';
 import LeaveContestDialog from './LeaveContestDialog';
 
-const api = vi.hoisted(() => ({ useRemoveParticipantMutation: vi.fn() }));
+const api = vi.hoisted(() => ({ useRemovePlayerMutation: vi.fn() }));
 vi.mock('../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 
 const contest = { id: 'c-1', name: 'Test Bowl' };
 
 describe('LeaveContestDialog', () => {
   it('renders nothing without a contest', () => {
-    api.useRemoveParticipantMutation.mockReturnValue(mockMutation(undefined));
+    api.useRemovePlayerMutation.mockReturnValue(mockMutation(undefined));
     renderWithProviders(<LeaveContestDialog contest={null} userId="u_me" onClose={vi.fn()} />);
     expect(screen.queryByText('Leave Contest')).not.toBeInTheDocument();
   });
 
   it('removes the signed-in user and closes', async () => {
     const [remove, state] = mockMutation(undefined);
-    api.useRemoveParticipantMutation.mockReturnValue([remove, state]);
+    api.useRemovePlayerMutation.mockReturnValue([remove, state]);
     const onClose = vi.fn();
     const onLeft = vi.fn();
     renderWithProviders(
@@ -35,7 +35,7 @@ describe('LeaveContestDialog', () => {
 
   it('does nothing until the user id is known', () => {
     const [remove, state] = mockMutation(undefined);
-    api.useRemoveParticipantMutation.mockReturnValue([remove, state]);
+    api.useRemovePlayerMutation.mockReturnValue([remove, state]);
     renderWithProviders(
       <LeaveContestDialog contest={contest} userId={undefined} onClose={vi.fn()} />
     );
@@ -46,7 +46,7 @@ describe('LeaveContestDialog', () => {
   });
 
   it('shows why leaving failed', () => {
-    api.useRemoveParticipantMutation.mockReturnValue(
+    api.useRemovePlayerMutation.mockReturnValue(
       mockMutation(undefined, { error: { status: 409, message: 'Game already started' } })
     );
     renderWithProviders(<LeaveContestDialog contest={contest} userId="u_me" onClose={vi.fn()} />);
@@ -55,7 +55,7 @@ describe('LeaveContestDialog', () => {
 
   it('stays open when the request fails', async () => {
     const [remove, state] = mockMutation({ error: { status: 500, message: 'x' } });
-    api.useRemoveParticipantMutation.mockReturnValue([remove, state]);
+    api.useRemovePlayerMutation.mockReturnValue([remove, state]);
     const onClose = vi.fn();
     renderWithProviders(<LeaveContestDialog contest={contest} userId="u_me" onClose={onClose} />);
 

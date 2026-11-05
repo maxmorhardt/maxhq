@@ -1,9 +1,9 @@
 import { act, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockAuth } from '../../../test/auth';
-import { makeContest, makeParticipant, makeQuarterResult } from '../../../test/fixtures';
+import { makeContest, makePlayer, makeQuarterResult } from '../../../test/fixtures';
 import { renderWithProviders } from '../../../test/render';
-import type { Participant } from '../../../types/contest';
+import type { Player } from '../../../types/contest';
 import type { ContestEvent } from '../live/events';
 import {
   eventReceived,
@@ -68,11 +68,11 @@ function renderLive() {
       result.store.dispatch(action);
     });
   const emit = (e: ContestEvent) => act(() => stream.onEvent?.(e));
-  const snapshot = (contest = makeContest(), participants: Participant[] = []) =>
+  const snapshot = (contest = makeContest(), players: Player[] = []) =>
     dispatch(
       eventReceived({
         id: '1',
-        event: event('contest.snapshot', { contest, participants, viewerId: 'u_participant' }),
+        event: event('contest.snapshot', { contest, participants: players, viewerId: 'u_player' }),
       })
     );
   return {
@@ -89,21 +89,21 @@ describe('LiveContest', () => {
     vi.clearAllMocks();
     games.useGetGameQuery.mockReturnValue({ data: undefined });
     roster.useContestRoster.mockReturnValue(undefined);
-    mockAuth({ email: 'participant@x.com' });
+    mockAuth({ email: 'player@x.com' });
   });
 
   it('gives only the owner full names', () => {
     roster.useContestRoster.mockImplementation((_id: string, isOwner: boolean) =>
       isOwner ? [{ userId: 'u_pat', fullName: 'Pat Parker' }] : undefined
     );
-    const participants = [makeParticipant({ userId: 'u_pat' })];
+    const players = [makePlayer({ userId: 'u_pat' })];
     const { snapshot } = renderLive();
-    snapshot(makeContest(), participants);
-    expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', false, participants);
+    snapshot(makeContest(), players);
+    expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', false, players);
     expect(screen.getByTestId('view')).not.toHaveAttribute('data-full-name');
 
-    snapshot(makeContest({ owner: 'u_participant' }), participants);
-    expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', true, participants);
+    snapshot(makeContest({ owner: 'u_player' }), players);
+    expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', true, players);
     expect(screen.getByTestId('view')).toHaveAttribute('data-full-name', 'Pat Parker');
   });
 
@@ -168,7 +168,7 @@ describe('LiveContest', () => {
   it('flashes the winning square and celebrates the viewer’s win', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_participant' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByTestId('view')).toHaveTextContent('flash');
     expect(screen.getByText('Your Square Hit')).toBeInTheDocument();
   });
@@ -177,7 +177,7 @@ describe('LiveContest', () => {
     games.useGetGameQuery.mockReturnValue({ data: { homeAbbr: 'NO', awayAbbr: 'PIT' } });
     const { snapshot, emit } = renderLive();
     snapshot(makeContest({ gameId: 'g-1' }));
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_participant' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByText('PIT')).toBeInTheDocument();
     expect(screen.getByText('NO')).toBeInTheDocument();
   });
@@ -185,7 +185,7 @@ describe('LiveContest', () => {
   it('falls back to away and home while the game is still loading', () => {
     const { snapshot, emit } = renderLive();
     snapshot();
-    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_participant' })));
+    emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_player' })));
     expect(screen.getByText('Away')).toBeInTheDocument();
     expect(screen.getByText('Home')).toBeInTheDocument();
   });
@@ -200,7 +200,7 @@ describe('LiveContest', () => {
   it('sends a removed viewer away from a private contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'private' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'u_participant' })));
+    emit(event('participant.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).toHaveBeenCalledWith('/contests');
     expect(toasts()[0]?.severity).toBe('warning');
   });
@@ -208,14 +208,14 @@ describe('LiveContest', () => {
   it('lets a removed viewer keep watching a public contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'public' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'u_participant' })));
+    emit(event('participant.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).not.toHaveBeenCalled();
     expect(toasts()[0]?.severity).toBe('info');
   });
 
   it('ignores other people being removed', () => {
     const { emit, toasts } = renderLive();
-    emit(event('participant.removed', makeParticipant({ userId: 'u_other' })));
+    emit(event('participant.removed', makePlayer({ userId: 'u_other' })));
     expect(toasts()).toHaveLength(0);
   });
 });

@@ -95,7 +95,7 @@ export default function InviteLinkDialog({ open, onClose, contest }: Props) {
             ) : (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', lineHeight: 1.5 }}>
                 Anyone with this link can join. They start with no squares, and you give them
-                squares in Participants.
+                squares in Players.
               </Typography>
             )}
 

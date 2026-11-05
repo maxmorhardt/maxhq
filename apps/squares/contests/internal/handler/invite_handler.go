@@ -53,7 +53,7 @@ func (h *inviteHandler) GetInviteLink(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrContestNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole):
+		case errors.Is(err, errs.ErrNotPlayer), errors.Is(err, errs.ErrInsufficientRole):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
 			log.Error("failed to get invite link", "error", err)
@@ -90,7 +90,7 @@ func (h *inviteHandler) ResetInviteLink(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrContestNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrContestFinalized):
+		case errors.Is(err, errs.ErrNotPlayer), errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrContestFinalized):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
 			log.Error("failed to reset invite link", "error", err)
@@ -130,11 +130,11 @@ func (h *inviteHandler) GetInvitePreview(c *gin.Context) {
 }
 
 // @Summary Join a contest with its invite link
-// @Description The signed-in user joins as a participant with no squares; the owner gives them squares afterwards
+// @Description The signed-in user joins as a player with no squares; the owner gives them squares afterwards
 // @Tags invites
 // @Produce json
 // @Param token path string true "Invite token"
-// @Success 201 {object} model.ContestParticipant
+// @Success 201 {object} model.ContestPlayer
 // @Failure 403 {object} api.APIError "The contest is finished, or the owner removed this user"
 // @Failure 404 {object} api.APIError
 // @Failure 409 {object} api.APIError
@@ -149,14 +149,14 @@ func (h *inviteHandler) JoinContest(c *gin.Context) {
 		name = claims.Name
 	}
 
-	participant, err := h.inviteService.Join(c.Request.Context(), c.Param("token"), c.GetString(api.UserKey), name)
+	player, err := h.inviteService.Join(c.Request.Context(), c.Param("token"), c.GetString(api.UserKey), name)
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
 		case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrBannedFromContest):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrAlreadyParticipant):
+		case errors.Is(err, errs.ErrAlreadyPlayer):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
 		default:
 			log.Error("failed to join contest", "error", err)
@@ -165,5 +165,5 @@ func (h *inviteHandler) JoinContest(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, participant)
+	c.JSON(http.StatusCreated, player)
 }

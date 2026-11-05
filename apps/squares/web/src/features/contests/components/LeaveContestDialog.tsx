@@ -1,6 +1,6 @@
 import { errorMessage } from '../../../api/errors';
 import ConfirmDialog from '../../../components/feedback/ConfirmDialog';
-import { useRemoveParticipantMutation } from '../api';
+import { useRemovePlayerMutation } from '../api';
 
 interface Props {
   contest: { id: string; name: string } | null;
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function LeaveContestDialog({ contest, userId, onClose, onLeft }: Props) {
-  const [removeParticipant, { isLoading, error, reset }] = useRemoveParticipantMutation();
+  const [removePlayer, { isLoading, error, reset }] = useRemovePlayerMutation();
 
   const handleClose = () => {
     reset();
@@ -23,7 +23,7 @@ export default function LeaveContestDialog({ contest, userId, onClose, onLeft }:
     }
 
     try {
-      await removeParticipant({ contestId: contest.id, userId }).unwrap();
+      await removePlayer({ contestId: contest.id, userId }).unwrap();
       onLeft?.();
       handleClose();
     } catch {

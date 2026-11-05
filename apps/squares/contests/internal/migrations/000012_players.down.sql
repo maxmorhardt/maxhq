@@ -16,7 +16,14 @@ CREATE TABLE IF NOT EXISTS contest_invites (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_contest_invites_token ON contest_invites (token);
 CREATE INDEX IF NOT EXISTS idx_contest_invites_contest_id ON contest_invites (contest_id);
 
-ALTER TABLE contest_participants ADD COLUMN IF NOT EXISTS invite_id uuid;
-
 DROP INDEX IF EXISTS idx_contests_invite_token;
 ALTER TABLE contests DROP COLUMN IF EXISTS invite_token;
+
+ALTER TABLE contest_players ADD COLUMN IF NOT EXISTS invite_id uuid;
+UPDATE contest_players SET role = 'participant' WHERE role = 'player';
+
+ALTER INDEX IF EXISTS idx_contest_players_contest_user RENAME TO idx_contest_participants_contest_user;
+ALTER INDEX IF EXISTS idx_contest_players_user_id RENAME TO idx_contest_participants_user_id;
+ALTER INDEX IF EXISTS idx_contest_players_contest_id RENAME TO idx_contest_participants_contest_id;
+ALTER TABLE contest_players RENAME CONSTRAINT contest_players_pkey TO contest_participants_pkey;
+ALTER TABLE contest_players RENAME TO contest_participants;

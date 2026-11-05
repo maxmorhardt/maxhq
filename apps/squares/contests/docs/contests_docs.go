@@ -178,7 +178,7 @@ const docTemplatecontests = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the contest and its participants if the user may view it, in the shape of the stream's ` + "`" + `contest.snapshot` + "`" + `. For contests that are over, which have nothing left to stream.",
+                "description": "Returns the contest and its players if the user may view it, in the shape of the stream's ` + "`" + `contest.snapshot` + "`" + `. For contests that are over, which have nothing left to stream.",
                 "produces": [
                     "application/json"
                 ],
@@ -294,7 +294,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "participants"
+                    "players"
                 ],
                 "summary": "Who is banned from a contest",
                 "parameters": [
@@ -346,7 +346,7 @@ const docTemplatecontests = `{
                 ],
                 "description": "The owner lets a removed person rejoin with the invite link",
                 "tags": [
-                    "participants"
+                    "players"
                 ],
                 "summary": "Unban someone from a contest",
                 "parameters": [
@@ -512,14 +512,14 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/participants/allot": {
+        "/contests/{id}/players/allot": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "The owner gives every participant who has no squares the same number. Nothing changes if that would give out more than 100 squares in total.",
+                "description": "The owner gives every player who has no squares the same number. Nothing changes if that would give out more than 100 squares in total.",
                 "consumes": [
                     "application/json"
                 ],
@@ -527,7 +527,7 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "participants"
+                    "players"
                 ],
                 "summary": "Give squares to everyone without any",
                 "parameters": [
@@ -539,7 +539,7 @@ const docTemplatecontests = `{
                         "required": true
                     },
                     {
-                        "description": "Squares for each participant without any",
+                        "description": "Squares for each player without any",
                         "name": "allotment",
                         "in": "body",
                         "required": true,
@@ -554,7 +554,7 @@ const docTemplatecontests = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.ContestParticipant"
+                                "$ref": "#/definitions/model.ContestPlayer"
                             }
                         }
                     },
@@ -585,18 +585,18 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "/contests/{id}/participants/{userId}": {
+        "/contests/{id}/players/{userId}": {
             "delete": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "The owner removes a participant, who is banned from rejoining until the owner unbans them, or a participant leaves on their own and can rejoin. Their squares are freed before kickoff and ghosted after. The owner cannot be removed.",
+                "description": "The owner removes a player, who is banned from rejoining until the owner unbans them, or a player leaves on their own and can rejoin. Their squares are freed before kickoff and ghosted after. The owner cannot be removed.",
                 "tags": [
-                    "participants"
+                    "players"
                 ],
-                "summary": "Remove a participant from a contest",
+                "summary": "Remove a player from a contest",
                 "parameters": [
                     {
                         "type": "string",
@@ -649,7 +649,7 @@ const docTemplatecontests = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "The owner sets how many squares a participant can claim. Lowering it below what they hold frees that many of their squares at random. The board never gives out more than 100 squares in total.",
+                "description": "The owner sets how many squares a player can claim. Lowering it below what they hold frees that many of their squares at random. The board never gives out more than 100 squares in total.",
                 "consumes": [
                     "application/json"
                 ],
@@ -657,9 +657,9 @@ const docTemplatecontests = `{
                     "application/json"
                 ],
                 "tags": [
-                    "participants"
+                    "players"
                 ],
-                "summary": "Set a participant's square limit",
+                "summary": "Set a player's square limit",
                 "parameters": [
                     {
                         "type": "string",
@@ -677,11 +677,11 @@ const docTemplatecontests = `{
                     },
                     {
                         "description": "The new square limit",
-                        "name": "participant",
+                        "name": "player",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UpdateParticipantRequest"
+                            "$ref": "#/definitions/model.UpdatePlayerRequest"
                         }
                     }
                 ],
@@ -689,7 +689,7 @@ const docTemplatecontests = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.ContestParticipant"
+                            "$ref": "#/definitions/model.ContestPlayer"
                         }
                     },
                     "400": {
@@ -726,14 +726,14 @@ const docTemplatecontests = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Full names for the contest's owner, so they know who joined. Other participants only ever see short names.",
+                "description": "Full names for the contest's owner, so they know who joined. Other players only ever see short names.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "participants"
+                    "players"
                 ],
-                "summary": "Who each participant is",
+                "summary": "Who each player is",
                 "parameters": [
                     {
                         "type": "string",
@@ -749,7 +749,7 @@ const docTemplatecontests = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.ParticipantIdentity"
+                                "$ref": "#/definitions/model.PlayerIdentity"
                             }
                         }
                     },
@@ -1117,7 +1117,7 @@ const docTemplatecontests = `{
         },
         "/internal/contests/{id}/snapshot": {
             "get": {
-                "description": "Returns the contest and its participants if the given user may view it. Called by the realtime service.",
+                "description": "Returns the contest and its players if the given user may view it. Called by the realtime service.",
                 "produces": [
                     "application/json"
                 ],
@@ -1272,7 +1272,7 @@ const docTemplatecontests = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "The signed-in user joins as a participant with no squares; the owner gives them squares afterwards",
+                "description": "The signed-in user joins as a player with no squares; the owner gives them squares afterwards",
                 "produces": [
                     "application/json"
                 ],
@@ -1293,7 +1293,7 @@ const docTemplatecontests = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/model.ContestParticipant"
+                            "$ref": "#/definitions/model.ContestPlayer"
                         }
                     },
                     "403": {
@@ -1325,7 +1325,7 @@ const docTemplatecontests = `{
         },
         "/leaderboard": {
             "get": {
-                "description": "Returns participants ranked by quarter wins. Display names only, no emails",
+                "description": "Returns players ranked by quarter wins. Display names only, no emails",
                 "produces": [
                     "application/json"
                 ],
@@ -1336,7 +1336,7 @@ const docTemplatecontests = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Number of participants to return (1-100, default 10)",
+                        "description": "Number of players to return (1-100, default 10)",
                         "name": "limit",
                         "in": "query"
                     }
@@ -1370,7 +1370,7 @@ const docTemplatecontests = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the authenticated user's rank, total ranked participants, and quarter wins",
+                "description": "Returns the authenticated user's rank, total ranked players, and quarter wins",
                 "produces": [
                     "application/json"
                 ],
@@ -1577,7 +1577,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "model.ContestParticipant": {
+        "model.ContestPlayer": {
             "type": "object",
             "properties": {
                 "contestId": {
@@ -1587,7 +1587,7 @@ const docTemplatecontests = `{
                     "type": "string"
                 },
                 "displayName": {
-                    "description": "read from contests.users, so other participants can be shown a name instead of an email",
+                    "description": "read from contests.users, so other players can be shown a name instead of an email",
                     "type": "string"
                 },
                 "id": {
@@ -1600,7 +1600,7 @@ const docTemplatecontests = `{
                     "type": "integer"
                 },
                 "role": {
-                    "$ref": "#/definitions/model.ParticipantRole"
+                    "$ref": "#/definitions/model.PlayerRole"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -1616,10 +1616,10 @@ const docTemplatecontests = `{
                 "contest": {
                     "$ref": "#/definitions/model.ContestSwagger"
                 },
-                "participants": {
+                "players": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.ContestParticipant"
+                        "$ref": "#/definitions/model.ContestPlayer"
                     }
                 },
                 "viewerId": {
@@ -1703,7 +1703,7 @@ const docTemplatecontests = `{
                 "role": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/model.ParticipantRole"
+                            "$ref": "#/definitions/model.PlayerRole"
                         }
                     ],
                     "example": "owner"
@@ -1937,7 +1937,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "model.ParticipantIdentity": {
+        "model.PlayerIdentity": {
             "type": "object",
             "properties": {
                 "fullName": {
@@ -1950,15 +1950,15 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "model.ParticipantRole": {
+        "model.PlayerRole": {
             "type": "string",
             "enum": [
                 "owner",
-                "participant"
+                "player"
             ],
             "x-enum-varnames": [
-                "ParticipantRoleOwner",
-                "ParticipantRoleParticipant"
+                "PlayerRoleOwner",
+                "PlayerRolePlayer"
             ]
         },
         "model.QuarterResult": {
@@ -2084,7 +2084,7 @@ const docTemplatecontests = `{
                 }
             }
         },
-        "model.UpdateParticipantRequest": {
+        "model.UpdatePlayerRequest": {
             "type": "object",
             "required": [
                 "maxSquares"
@@ -2140,7 +2140,7 @@ var SwaggerInfocontests = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Squares Contests API",
-	Description:      "Contests, squares, participants, invites, leaderboard, and stats for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.",
+	Description:      "Contests, squares, players, invites, leaderboard, and stats for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.",
 	InfoInstanceName: "contests",
 	SwaggerTemplate:  docTemplatecontests,
 	LeftDelim:        "{{",

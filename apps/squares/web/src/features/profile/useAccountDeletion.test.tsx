@@ -16,7 +16,7 @@ vi.mock('./api', async (importOriginal) => ({ ...(await importOriginal<object>()
 const contests = vi.hoisted(() => ({
   useGetActiveContestsQuery: vi.fn(),
   useDeleteContestMutation: vi.fn(),
-  useRemoveParticipantMutation: vi.fn(),
+  useRemovePlayerMutation: vi.fn(),
 }));
 vi.mock('../contests/api', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -49,7 +49,7 @@ describe('useAccountDeletion', () => {
     contests.useGetActiveContestsQuery.mockReturnValue({ data: [], isError: false, refetch });
     api.useDeleteMyAccountMutation.mockReturnValue(mockMutation(undefined));
     contests.useDeleteContestMutation.mockReturnValue(mockMutation(undefined));
-    contests.useRemoveParticipantMutation.mockReturnValue(mockMutation(undefined));
+    contests.useRemovePlayerMutation.mockReturnValue(mockMutation(undefined));
   });
 
   it('only checks active contests once the dialog opens', () => {
@@ -70,7 +70,7 @@ describe('useAccountDeletion', () => {
     const [deleteContest, deleteState] = mockMutation(undefined);
     const [leave, leaveState] = mockMutation(undefined);
     contests.useDeleteContestMutation.mockReturnValue([deleteContest, deleteState]);
-    contests.useRemoveParticipantMutation.mockReturnValue([leave, leaveState]);
+    contests.useRemovePlayerMutation.mockReturnValue([leave, leaveState]);
     const { result } = setup();
 
     await act(() => result.current.dialogProps.onDeleteContest('c-1'));

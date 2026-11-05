@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func contestSvc(repo *mocks.ContestRepository, pSvc *mocks.ParticipantService) service.ContestService {
+func contestSvc(repo *mocks.ContestRepository, pSvc *mocks.PlayerService) service.ContestService {
 	return service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), pSvc)
 }
 
@@ -31,11 +31,11 @@ func passTx() *mocks.Transactor {
 
 func anyEvents() *mocks.ContestEventPublisher {
 	m := &mocks.ContestEventPublisher{}
-	for _, method := range []string{"PublishSquareUpdate", "PublishContestUpdate", "PublishQuarterResult", "PublishContestDeleted", "PublishParticipantRemoved", "PublishParticipantUpdated"} {
+	for _, method := range []string{"PublishSquareUpdate", "PublishContestUpdate", "PublishQuarterResult", "PublishContestDeleted", "PublishPlayerRemoved", "PublishPlayerUpdated"} {
 		m.On(method, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 	}
 	m.On("PublishContestDeleted", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
-	m.On("PublishParticipantJoined", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	m.On("PublishPlayerJoined", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 	return m
 }
 
@@ -46,12 +46,12 @@ func anyUser() *mocks.UserRepository {
 	return m
 }
 
-func contestSvcWithGame(repo *mocks.ContestRepository, gameRepo *mocks.GameSyncRepository, pSvc *mocks.ParticipantService) service.ContestService {
+func contestSvcWithGame(repo *mocks.ContestRepository, gameRepo *mocks.GameSyncRepository, pSvc *mocks.PlayerService) service.ContestService {
 	return service.NewContestService(repo, gameRepo, passTx(), anyEvents(), pSvc)
 }
 
-func okAuth(t *testing.T) *mocks.ParticipantService {
-	m := mocks.NewParticipantService(t)
+func okAuth(t *testing.T) *mocks.PlayerService {
+	m := mocks.NewPlayerService(t)
 	m.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 	return m
 }
@@ -70,7 +70,7 @@ func TestCreateContest_WithGame(t *testing.T) {
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
-	got, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+	got, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", Visibility: "public", MaxSquares: 10, GameID: gameID.String()}, "o")
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestVisibilityPublic, got.Visibility)
@@ -88,7 +88,7 @@ func TestCreateContest_OpenContestLimitReached(t *testing.T) {
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
-	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
 	assert.ErrorIs(t, err, errs.ErrContestLimitReached)
 }
@@ -102,7 +102,7 @@ func TestCreateContest_DailyContestLimitReached(t *testing.T) {
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
-	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
 	assert.ErrorIs(t, err, errs.ErrDailyContestLimit)
 }
@@ -114,7 +114,7 @@ func TestCreateContest_CountError(t *testing.T) {
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
-	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
@@ -122,7 +122,7 @@ func TestCreateContest_CountError(t *testing.T) {
 func TestCreateContest_InvalidGameID(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 
-	_, err := contestSvc(repo, mocks.NewParticipantService(t)).
+	_, err := contestSvc(repo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: "nope"}, "o")
 	assert.ErrorIs(t, err, errs.ErrGameNotFound)
 }
@@ -133,7 +133,7 @@ func TestCreateContest_GameLookupError(t *testing.T) {
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(nil, errors.New("db"))
 
-	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
@@ -144,7 +144,7 @@ func TestCreateContest_GameNotFound(t *testing.T) {
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(nil, database.ErrNotFound)
 
-	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
 	assert.ErrorIs(t, err, errs.ErrGameNotFound)
 }
@@ -174,7 +174,7 @@ func TestCreateContest_UntilTheFirstQuarterEnds(t *testing.T) {
 			repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		}
 
-		_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+		_, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 			CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", GameID: gameID.String()}, "o")
 		if tc.want == nil {
 			assert.NoError(t, err, "%s period %d", tc.status, tc.period)
@@ -195,7 +195,7 @@ func TestDeleteContest_Terminal(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
 
-	pSvc := mocks.NewParticipantService(t)
+	pSvc := mocks.NewPlayerService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	err := contestSvc(repo, pSvc).
 		DeleteContest(context.Background(), uuid.New(), "u")
@@ -206,7 +206,7 @@ func TestDeleteContest_NotFound(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 
-	pSvc := mocks.NewParticipantService(t)
+	pSvc := mocks.NewPlayerService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	err := contestSvc(repo, pSvc).
 		DeleteContest(context.Background(), uuid.New(), "u")
@@ -215,7 +215,7 @@ func TestDeleteContest_NotFound(t *testing.T) {
 
 func TestDeleteContest_UnauthorizedCallerNeverLocksTheContest(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
-	pSvc := mocks.NewParticipantService(t)
+	pSvc := mocks.NewPlayerService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
 
 	err := contestSvc(repo, pSvc).
@@ -227,7 +227,7 @@ func TestDeleteContest_Success(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	repo.EXPECT().Delete(mock.Anything, mock.Anything).Return(nil)
-	pSvc := mocks.NewParticipantService(t)
+	pSvc := mocks.NewPlayerService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err := contestSvc(repo, pSvc).
@@ -243,7 +243,7 @@ func TestCreateContest_RepoError(t *testing.T) {
 	gameRepo := mocks.NewGameSyncRepository(t)
 	gameRepo.EXPECT().GetByID(mock.Anything, gameID).Return(upcomingGame(gameID), nil)
 
-	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewParticipantService(t)).
+	_, err := contestSvcWithGame(repo, gameRepo, mocks.NewPlayerService(t)).
 		CreateContest(context.Background(), &model.CreateContestRequest{Name: "n", MaxSquares: 10, GameID: gameID.String()}, "o")
 	assert.Error(t, err)
 }
@@ -257,7 +257,7 @@ func TestApplyQuarterResult_StepsStatusAndStamps(t *testing.T) {
 	}
 	repo.EXPECT().ApplyQuarterResults(mock.Anything, contest, mock.Anything).Return(nil)
 
-	got, err := contestSvc(repo, mocks.NewParticipantService(t)).
+	got, err := contestSvc(repo, mocks.NewPlayerService(t)).
 		ApplyQuarterResult(context.Background(), contest, 1, 17, 23)
 
 	require.NoError(t, err)
@@ -278,7 +278,7 @@ func TestApplyQuarterResult_FinishPublishesContestUpdate(t *testing.T) {
 	quarter := pub.EXPECT().PublishQuarterResult(mock.Anything, contest.ID, "system", mock.Anything).Return(nil).Call
 	pub.EXPECT().PublishContestUpdate(mock.Anything, contest.ID, "system", contest).Return(nil).NotBefore(quarter)
 
-	_, err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), pub, mocks.NewParticipantService(t)).
+	_, err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), pub, mocks.NewPlayerService(t)).
 		ApplyQuarterResult(context.Background(), contest, 4, 17, 23)
 
 	require.NoError(t, err)
@@ -288,7 +288,7 @@ func TestApplyQuarterResult_FinishPublishesContestUpdate(t *testing.T) {
 func TestApplyQuarterResult_InvalidQuarter(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 
-	_, err := contestSvc(repo, mocks.NewParticipantService(t)).
+	_, err := contestSvc(repo, mocks.NewPlayerService(t)).
 		ApplyQuarterResult(context.Background(), &model.Contest{ID: uuid.New()}, 5, 17, 23)
 
 	assert.ErrorIs(t, err, errs.ErrInvalidQuarter)
@@ -299,7 +299,7 @@ func TestApplyQuarterResult_WinnerNotDeterminable(t *testing.T) {
 	unlocked, err := json.Marshal([]int8{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1})
 	require.NoError(t, err)
 
-	_, err = contestSvc(repo, mocks.NewParticipantService(t)).
+	_, err = contestSvc(repo, mocks.NewPlayerService(t)).
 		ApplyQuarterResult(context.Background(), &model.Contest{ID: uuid.New(), XLabels: unlocked, YLabels: unlocked}, 1, 17, 23)
 
 	assert.ErrorIs(t, err, errs.ErrWinnerNotDeterminable)
@@ -318,7 +318,7 @@ func TestFinalizeFromScores_RecordsEveryQuarter(t *testing.T) {
 			persisted = results
 		}).Return(nil)
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).
+	err := contestSvc(repo, mocks.NewPlayerService(t)).
 		FinalizeFromScores(context.Background(), contest, []model.GameScore{
 			{Quarter: 1, HomeScore: 7, AwayScore: 3},
 			{Quarter: 4, HomeScore: 21, AwayScore: 17},
@@ -336,7 +336,7 @@ func TestFinalizeFromScores_ApplyError(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().ApplyQuarterResults(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db"))
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).
+	err := contestSvc(repo, mocks.NewPlayerService(t)).
 		FinalizeFromScores(context.Background(), &model.Contest{ID: uuid.New()}, nil)
 
 	assert.Error(t, err)
@@ -346,7 +346,7 @@ func TestDeleteContest_RepoError(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 	repo.EXPECT().Delete(mock.Anything, mock.Anything).Return(errors.New("db"))
-	pSvc := mocks.NewParticipantService(t)
+	pSvc := mocks.NewPlayerService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err := contestSvc(repo, pSvc).DeleteContest(context.Background(), uuid.New(), "u")
@@ -358,7 +358,7 @@ func TestAutoStart(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, contest).Return(nil)
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).AutoStart(context.Background(), contest)
+	err := contestSvc(repo, mocks.NewPlayerService(t)).AutoStart(context.Background(), contest)
 
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestStatusQ1, contest.Status)
@@ -369,7 +369,7 @@ func TestAutoStart_UpdateFails(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errs.ErrVersionConflict)
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).
+	err := contestSvc(repo, mocks.NewPlayerService(t)).
 		AutoStart(context.Background(), &model.Contest{ID: uuid.New(), Status: model.ContestStatusActive})
 
 	assert.ErrorIs(t, err, errs.ErrVersionConflict)
@@ -381,7 +381,7 @@ func TestFinishCanceled_KeepsTheBoardAsItStands(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, contest).Return(nil)
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).FinishCanceled(context.Background(), contest)
+	err := contestSvc(repo, mocks.NewPlayerService(t)).FinishCanceled(context.Background(), contest)
 
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
@@ -393,7 +393,7 @@ func TestFinishCanceled_UpdateFails(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errs.ErrVersionConflict)
 
-	err := contestSvc(repo, mocks.NewParticipantService(t)).
+	err := contestSvc(repo, mocks.NewPlayerService(t)).
 		FinishCanceled(context.Background(), &model.Contest{ID: uuid.New(), Status: model.ContestStatusActive})
 
 	assert.ErrorIs(t, err, errs.ErrVersionConflict)

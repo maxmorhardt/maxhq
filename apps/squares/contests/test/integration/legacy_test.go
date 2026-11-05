@@ -26,10 +26,13 @@ func tableExists(t *testing.T, qualified string) bool {
 }
 
 func TestLegacy_ContestTablesMoveIntoTheContestsSchema(t *testing.T) {
-	for _, table := range []string{"contests", "squares", "quarter_results", "contest_participants"} {
+	for _, table := range []string{"contests", "squares", "quarter_results"} {
 		assert.True(t, tableExists(t, "contests."+table), table)
 		assert.False(t, tableExists(t, "public."+table), "public."+table+" is gone")
 	}
+	assert.True(t, tableExists(t, "contests.contest_players"), "contest_participants is renamed to contest_players")
+	assert.False(t, tableExists(t, "contests.contest_participants"))
+	assert.False(t, tableExists(t, "public.contest_participants"))
 	assert.False(t, tableExists(t, "contests.contest_invites"), "one invite link per contest replaced the invites table")
 	assert.False(t, tableExists(t, "public.contest_invites"))
 	for _, table := range []string{"contests.outbox", "contests.stream_offsets", "contests.users", "contests.games", "contests.game_scores", "contests.contest_bans"} {
@@ -82,23 +85,23 @@ func TestLegacy_ExistingContestsKeepWorking(t *testing.T) {
 	}
 }
 
-func TestLegacy_ExistingContestsGetAnInviteLinkAndViewersBecomeParticipants(t *testing.T) {
+func TestLegacy_ExistingContestsGetAnInviteLinkAndViewersBecomePlayers(t *testing.T) {
 	var token string
 	require.NoError(t, rawDB.QueryRow(`SELECT invite_token FROM contests.contests WHERE id = $1`, legacyContestID).Scan(&token))
 	assert.Len(t, token, 64)
 
 	var role string
 	var maxSquares int
-	require.NoError(t, rawDB.QueryRow(`SELECT role, max_squares FROM contests.contest_participants WHERE user_id = 'viewer@squares.test'`).Scan(&role, &maxSquares))
-	assert.Equal(t, "participant", role)
+	require.NoError(t, rawDB.QueryRow(`SELECT role, max_squares FROM contests.contest_players WHERE user_id = 'viewer@squares.test'`).Scan(&role, &maxSquares))
+	assert.Equal(t, "player", role)
 	assert.Zero(t, maxSquares)
 }
 
 func TestLegacy_EmailsAreLowercased(t *testing.T) {
-	var participant, owner string
-	require.NoError(t, rawDB.QueryRow(`SELECT user_id FROM contests.contest_participants WHERE contest_id = $1 AND role = 'participant'`, legacyContestID).Scan(&participant))
+	var player, owner string
+	require.NoError(t, rawDB.QueryRow(`SELECT user_id FROM contests.contest_players WHERE contest_id = $1 AND role = 'player'`, legacyContestID).Scan(&player))
 	require.NoError(t, rawDB.QueryRow(`SELECT owner FROM contests.squares WHERE contest_id = $1 AND "row" = 0 AND col = 1`, legacyContestID).Scan(&owner))
-	assert.Equal(t, "mixed@squares.test", participant)
+	assert.Equal(t, "mixed@squares.test", player)
 	assert.Equal(t, "mixed@squares.test", owner)
 
 	var twins int

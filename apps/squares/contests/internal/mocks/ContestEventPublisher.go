@@ -121,17 +121,17 @@ func (_c *ContestEventPublisher_PublishContestUpdate_Call) RunAndReturn(run func
 	return _c
 }
 
-// PublishParticipantJoined provides a mock function with given fields: ctx, contestID, participant
-func (_m *ContestEventPublisher) PublishParticipantJoined(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error {
-	ret := _m.Called(ctx, contestID, participant)
+// PublishPlayerJoined provides a mock function with given fields: ctx, contestID, player
+func (_m *ContestEventPublisher) PublishPlayerJoined(ctx context.Context, contestID uuid.UUID, player *model.ContestPlayer) error {
+	ret := _m.Called(ctx, contestID, player)
 
 	if len(ret) == 0 {
-		panic("no return value specified for PublishParticipantJoined")
+		panic("no return value specified for PublishPlayerJoined")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.ContestParticipant) error); ok {
-		r0 = rf(ctx, contestID, participant)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.ContestPlayer) error); ok {
+		r0 = rf(ctx, contestID, player)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -139,47 +139,47 @@ func (_m *ContestEventPublisher) PublishParticipantJoined(ctx context.Context, c
 	return r0
 }
 
-// ContestEventPublisher_PublishParticipantJoined_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishParticipantJoined'
-type ContestEventPublisher_PublishParticipantJoined_Call struct {
+// ContestEventPublisher_PublishPlayerJoined_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishPlayerJoined'
+type ContestEventPublisher_PublishPlayerJoined_Call struct {
 	*mock.Call
 }
 
-// PublishParticipantJoined is a helper method to define mock.On call
+// PublishPlayerJoined is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contestID uuid.UUID
-//   - participant *model.ContestParticipant
-func (_e *ContestEventPublisher_Expecter) PublishParticipantJoined(ctx interface{}, contestID interface{}, participant interface{}) *ContestEventPublisher_PublishParticipantJoined_Call {
-	return &ContestEventPublisher_PublishParticipantJoined_Call{Call: _e.mock.On("PublishParticipantJoined", ctx, contestID, participant)}
+//   - player *model.ContestPlayer
+func (_e *ContestEventPublisher_Expecter) PublishPlayerJoined(ctx interface{}, contestID interface{}, player interface{}) *ContestEventPublisher_PublishPlayerJoined_Call {
+	return &ContestEventPublisher_PublishPlayerJoined_Call{Call: _e.mock.On("PublishPlayerJoined", ctx, contestID, player)}
 }
 
-func (_c *ContestEventPublisher_PublishParticipantJoined_Call) Run(run func(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant)) *ContestEventPublisher_PublishParticipantJoined_Call {
+func (_c *ContestEventPublisher_PublishPlayerJoined_Call) Run(run func(ctx context.Context, contestID uuid.UUID, player *model.ContestPlayer)) *ContestEventPublisher_PublishPlayerJoined_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(*model.ContestParticipant))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(*model.ContestPlayer))
 	})
 	return _c
 }
 
-func (_c *ContestEventPublisher_PublishParticipantJoined_Call) Return(_a0 error) *ContestEventPublisher_PublishParticipantJoined_Call {
+func (_c *ContestEventPublisher_PublishPlayerJoined_Call) Return(_a0 error) *ContestEventPublisher_PublishPlayerJoined_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *ContestEventPublisher_PublishParticipantJoined_Call) RunAndReturn(run func(context.Context, uuid.UUID, *model.ContestParticipant) error) *ContestEventPublisher_PublishParticipantJoined_Call {
+func (_c *ContestEventPublisher_PublishPlayerJoined_Call) RunAndReturn(run func(context.Context, uuid.UUID, *model.ContestPlayer) error) *ContestEventPublisher_PublishPlayerJoined_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// PublishParticipantRemoved provides a mock function with given fields: ctx, contestID, updatedBy, participant
-func (_m *ContestEventPublisher) PublishParticipantRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error {
-	ret := _m.Called(ctx, contestID, updatedBy, participant)
+// PublishPlayerRemoved provides a mock function with given fields: ctx, contestID, updatedBy, player
+func (_m *ContestEventPublisher) PublishPlayerRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error {
+	ret := _m.Called(ctx, contestID, updatedBy, player)
 
 	if len(ret) == 0 {
-		panic("no return value specified for PublishParticipantRemoved")
+		panic("no return value specified for PublishPlayerRemoved")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, *model.ContestParticipant) error); ok {
-		r0 = rf(ctx, contestID, updatedBy, participant)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, *model.ContestPlayer) error); ok {
+		r0 = rf(ctx, contestID, updatedBy, player)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -187,48 +187,48 @@ func (_m *ContestEventPublisher) PublishParticipantRemoved(ctx context.Context, 
 	return r0
 }
 
-// ContestEventPublisher_PublishParticipantRemoved_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishParticipantRemoved'
-type ContestEventPublisher_PublishParticipantRemoved_Call struct {
+// ContestEventPublisher_PublishPlayerRemoved_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishPlayerRemoved'
+type ContestEventPublisher_PublishPlayerRemoved_Call struct {
 	*mock.Call
 }
 
-// PublishParticipantRemoved is a helper method to define mock.On call
+// PublishPlayerRemoved is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contestID uuid.UUID
 //   - updatedBy string
-//   - participant *model.ContestParticipant
-func (_e *ContestEventPublisher_Expecter) PublishParticipantRemoved(ctx interface{}, contestID interface{}, updatedBy interface{}, participant interface{}) *ContestEventPublisher_PublishParticipantRemoved_Call {
-	return &ContestEventPublisher_PublishParticipantRemoved_Call{Call: _e.mock.On("PublishParticipantRemoved", ctx, contestID, updatedBy, participant)}
+//   - player *model.ContestPlayer
+func (_e *ContestEventPublisher_Expecter) PublishPlayerRemoved(ctx interface{}, contestID interface{}, updatedBy interface{}, player interface{}) *ContestEventPublisher_PublishPlayerRemoved_Call {
+	return &ContestEventPublisher_PublishPlayerRemoved_Call{Call: _e.mock.On("PublishPlayerRemoved", ctx, contestID, updatedBy, player)}
 }
 
-func (_c *ContestEventPublisher_PublishParticipantRemoved_Call) Run(run func(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant)) *ContestEventPublisher_PublishParticipantRemoved_Call {
+func (_c *ContestEventPublisher_PublishPlayerRemoved_Call) Run(run func(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer)) *ContestEventPublisher_PublishPlayerRemoved_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(*model.ContestParticipant))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(*model.ContestPlayer))
 	})
 	return _c
 }
 
-func (_c *ContestEventPublisher_PublishParticipantRemoved_Call) Return(_a0 error) *ContestEventPublisher_PublishParticipantRemoved_Call {
+func (_c *ContestEventPublisher_PublishPlayerRemoved_Call) Return(_a0 error) *ContestEventPublisher_PublishPlayerRemoved_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *ContestEventPublisher_PublishParticipantRemoved_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, *model.ContestParticipant) error) *ContestEventPublisher_PublishParticipantRemoved_Call {
+func (_c *ContestEventPublisher_PublishPlayerRemoved_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, *model.ContestPlayer) error) *ContestEventPublisher_PublishPlayerRemoved_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// PublishParticipantUpdated provides a mock function with given fields: ctx, contestID, updatedBy, participant
-func (_m *ContestEventPublisher) PublishParticipantUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error {
-	ret := _m.Called(ctx, contestID, updatedBy, participant)
+// PublishPlayerUpdated provides a mock function with given fields: ctx, contestID, updatedBy, player
+func (_m *ContestEventPublisher) PublishPlayerUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error {
+	ret := _m.Called(ctx, contestID, updatedBy, player)
 
 	if len(ret) == 0 {
-		panic("no return value specified for PublishParticipantUpdated")
+		panic("no return value specified for PublishPlayerUpdated")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, *model.ContestParticipant) error); ok {
-		r0 = rf(ctx, contestID, updatedBy, participant)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, *model.ContestPlayer) error); ok {
+		r0 = rf(ctx, contestID, updatedBy, player)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -236,33 +236,33 @@ func (_m *ContestEventPublisher) PublishParticipantUpdated(ctx context.Context, 
 	return r0
 }
 
-// ContestEventPublisher_PublishParticipantUpdated_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishParticipantUpdated'
-type ContestEventPublisher_PublishParticipantUpdated_Call struct {
+// ContestEventPublisher_PublishPlayerUpdated_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishPlayerUpdated'
+type ContestEventPublisher_PublishPlayerUpdated_Call struct {
 	*mock.Call
 }
 
-// PublishParticipantUpdated is a helper method to define mock.On call
+// PublishPlayerUpdated is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contestID uuid.UUID
 //   - updatedBy string
-//   - participant *model.ContestParticipant
-func (_e *ContestEventPublisher_Expecter) PublishParticipantUpdated(ctx interface{}, contestID interface{}, updatedBy interface{}, participant interface{}) *ContestEventPublisher_PublishParticipantUpdated_Call {
-	return &ContestEventPublisher_PublishParticipantUpdated_Call{Call: _e.mock.On("PublishParticipantUpdated", ctx, contestID, updatedBy, participant)}
+//   - player *model.ContestPlayer
+func (_e *ContestEventPublisher_Expecter) PublishPlayerUpdated(ctx interface{}, contestID interface{}, updatedBy interface{}, player interface{}) *ContestEventPublisher_PublishPlayerUpdated_Call {
+	return &ContestEventPublisher_PublishPlayerUpdated_Call{Call: _e.mock.On("PublishPlayerUpdated", ctx, contestID, updatedBy, player)}
 }
 
-func (_c *ContestEventPublisher_PublishParticipantUpdated_Call) Run(run func(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant)) *ContestEventPublisher_PublishParticipantUpdated_Call {
+func (_c *ContestEventPublisher_PublishPlayerUpdated_Call) Run(run func(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer)) *ContestEventPublisher_PublishPlayerUpdated_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(*model.ContestParticipant))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(*model.ContestPlayer))
 	})
 	return _c
 }
 
-func (_c *ContestEventPublisher_PublishParticipantUpdated_Call) Return(_a0 error) *ContestEventPublisher_PublishParticipantUpdated_Call {
+func (_c *ContestEventPublisher_PublishPlayerUpdated_Call) Return(_a0 error) *ContestEventPublisher_PublishPlayerUpdated_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *ContestEventPublisher_PublishParticipantUpdated_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, *model.ContestParticipant) error) *ContestEventPublisher_PublishParticipantUpdated_Call {
+func (_c *ContestEventPublisher_PublishPlayerUpdated_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, *model.ContestPlayer) error) *ContestEventPublisher_PublishPlayerUpdated_Call {
 	_c.Call.Return(run)
 	return _c
 }

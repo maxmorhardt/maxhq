@@ -66,27 +66,27 @@ describe('contestsApi', () => {
     ['previewInvite', () => endpoints.previewInvite.initiate('t'), 'GET', '/invites/t'],
     ['joinContest', () => endpoints.joinContest.initiate('t'), 'POST', '/invites/t/join'],
     [
-      'updateParticipant',
-      () => endpoints.updateParticipant.initiate({ contestId: 'c', userId: 'u', maxSquares: 2 }),
+      'updatePlayer',
+      () => endpoints.updatePlayer.initiate({ contestId: 'c', userId: 'u', maxSquares: 2 }),
       'PATCH',
-      '/contests/c/participants/u',
+      '/contests/c/players/u',
     ],
     [
       'allotSquares',
       () => endpoints.allotSquares.initiate({ contestId: 'c', maxSquares: 3 }),
       'POST',
-      '/contests/c/participants/allot',
+      '/contests/c/players/allot',
     ],
     [
-      'removeParticipant',
-      () => endpoints.removeParticipant.initiate({ contestId: 'c', userId: 'u' }),
+      'removePlayer',
+      () => endpoints.removePlayer.initiate({ contestId: 'c', userId: 'u' }),
       'DELETE',
-      '/contests/c/participants/u',
+      '/contests/c/players/u',
     ],
     ['getBans', () => endpoints.getBans.initiate('c'), 'GET', '/contests/c/bans'],
     [
-      'unbanParticipant',
-      () => endpoints.unbanParticipant.initiate({ contestId: 'c', userId: 'u' }),
+      'unbanPlayer',
+      () => endpoints.unbanPlayer.initiate({ contestId: 'c', userId: 'u' }),
       'DELETE',
       '/contests/c/bans/u',
     ],
@@ -111,7 +111,7 @@ describe('contestsApi', () => {
 
   it('sends the new square limit as the body', async () => {
     await store.dispatch(
-      endpoints.updateParticipant.initiate({ contestId: 'c', userId: 'u', maxSquares: 0 })
+      endpoints.updatePlayer.initiate({ contestId: 'c', userId: 'u', maxSquares: 0 })
     );
     expect(await fetch.lastRequest().request.json()).toEqual({ maxSquares: 0 });
   });

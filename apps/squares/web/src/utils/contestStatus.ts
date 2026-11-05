@@ -11,7 +11,7 @@ export const statusOptions: StatusOption[] = [
   {
     value: 'ACTIVE',
     label: 'Open',
-    description: 'Participants can join and fill squares',
+    description: 'Players can join and fill squares',
     color: '#4caf50',
   },
   {

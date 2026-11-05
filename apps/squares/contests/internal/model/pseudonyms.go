@@ -12,7 +12,7 @@ import (
 func (s Square) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
 	type plain Square
 	p := plain(s)
-	p.OwnerName = participantName(p.Owner, p.OwnerName)
+	p.OwnerName = playerName(p.Owner, p.OwnerName)
 	p.Owner = pseudonym.Of(p.Owner)
 	return json.Marshal(p)
 }
@@ -27,15 +27,15 @@ func (c Contest) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam:
 func (q QuarterResult) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
 	type plain QuarterResult
 	p := plain(q)
-	p.WinnerName = participantName(p.Winner, p.WinnerName)
+	p.WinnerName = playerName(p.Winner, p.WinnerName)
 	p.Winner = pseudonym.Of(p.Winner)
 	return json.Marshal(p)
 }
 
-func (cp ContestParticipant) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
-	type plain ContestParticipant
+func (cp ContestPlayer) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
+	type plain ContestPlayer
 	p := plain(cp)
-	p.DisplayName = participantName(p.UserID, p.DisplayName)
+	p.DisplayName = playerName(p.UserID, p.DisplayName)
 	p.UserID = pseudonym.Of(p.UserID)
 	return json.Marshal(p)
 }
@@ -62,7 +62,7 @@ func (r InvitePreviewResponse) MarshalJSON() ([]byte, error) { //nolint:gocritic
 	return json.Marshal(p)
 }
 
-func participantName(user, displayName string) string {
+func playerName(user, displayName string) string {
 	if user == "" || user == GhostUser {
 		return ""
 	}

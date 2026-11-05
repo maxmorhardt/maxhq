@@ -1,5 +1,5 @@
 import { getContestViewer, type ContestViewer } from '../features/contests/live/viewer';
-import type { Contest, Participant, QuarterResult, Square } from '../types/contest';
+import type { Contest, Player, QuarterResult, Square } from '../types/contest';
 
 export function makeSquare(overrides: Partial<Square> = {}): Square {
   return {
@@ -45,13 +45,13 @@ export function makeContest(overrides: Partial<Contest> = {}, size = 3): Contest
   };
 }
 
-export function makeParticipant(overrides: Partial<Participant> = {}): Participant {
+export function makePlayer(overrides: Partial<Player> = {}): Player {
   return {
     id: 'p-1',
     contestId: 'c-1',
-    userId: 'u_participant',
+    userId: 'u_player',
     displayName: 'Pat P.',
-    role: 'participant',
+    role: 'player',
     maxSquares: 5,
     joinedAt: '2026-01-01T00:00:00Z',
     createdAt: '2026-01-01T00:00:00Z',
@@ -69,7 +69,7 @@ export function makeQuarterResult(overrides: Partial<QuarterResult> = {}): Quart
     awayTeamScore: 3,
     winnerRow: 1,
     winnerCol: 2,
-    winner: 'u_participant',
+    winner: 'u_player',
     winnerName: 'Player',
     createdAt: '2026-01-01T01:00:00Z',
     updatedAt: '2026-01-01T01:00:00Z',
@@ -79,7 +79,7 @@ export function makeQuarterResult(overrides: Partial<QuarterResult> = {}): Quart
 
 // pass viewerId to sign in as someone else; isMe follows it
 export function makeViewer({
-  viewerId = 'u_participant',
+  viewerId = 'u_player',
   ...overrides
 }: Partial<ContestViewer> = {}): ContestViewer {
   const { isMe, fullName } = getContestViewer(viewerId, makeContest(), []);
@@ -87,9 +87,9 @@ export function makeViewer({
     viewerId,
     isMe,
     fullName,
-    participant: makeParticipant(),
+    player: makePlayer(),
     isOwner: false,
-    isParticipant: true,
+    isPlayer: true,
     squaresClaimed: 0,
     squaresLeft: 5,
     ...overrides,

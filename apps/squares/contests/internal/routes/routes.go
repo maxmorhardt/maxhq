@@ -9,7 +9,7 @@ type Handlers struct {
 	Contest     handler.ContestHandler
 	Square      handler.SquareHandler
 	Feed        handler.FeedHandler
-	Participant handler.ParticipantHandler
+	Player      handler.PlayerHandler
 	Invite      handler.InviteHandler
 	Leaderboard handler.LeaderboardHandler
 	Stats       handler.StatsHandler
@@ -38,12 +38,12 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	contests.DELETE("/:id/squares/claims", write(h.Square.ClearMySquares)...)
 	contests.DELETE("/:id/squares/:squareId/claim", write(h.Square.ClearSquare)...)
 
-	contests.GET("/:id/roster", g.Auth, h.Participant.GetRoster)
-	contests.POST("/:id/participants/allot", write(h.Participant.AllotSquares)...)
-	contests.PATCH("/:id/participants/:userId", write(h.Participant.UpdateParticipant)...)
-	contests.DELETE("/:id/participants/:userId", write(h.Participant.RemoveParticipant)...)
-	contests.GET("/:id/bans", g.Auth, h.Participant.GetBans)
-	contests.DELETE("/:id/bans/:userId", write(h.Participant.Unban)...)
+	contests.GET("/:id/roster", g.Auth, h.Player.GetRoster)
+	contests.POST("/:id/players/allot", write(h.Player.AllotSquares)...)
+	contests.PATCH("/:id/players/:userId", write(h.Player.UpdatePlayer)...)
+	contests.DELETE("/:id/players/:userId", write(h.Player.RemovePlayer)...)
+	contests.GET("/:id/bans", g.Auth, h.Player.GetBans)
+	contests.DELETE("/:id/bans/:userId", write(h.Player.Unban)...)
 
 	contests.GET("/:id/invite", g.Auth, h.Invite.GetInviteLink)
 	contests.POST("/:id/invite/reset", write(h.Invite.ResetInviteLink)...)

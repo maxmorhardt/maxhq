@@ -39,11 +39,11 @@ describe('DeleteAccountDialog', () => {
     expect(props.onRetry).toHaveBeenCalled();
   });
 
-  it('lists blocking contests with owner delete and participant leave actions', () => {
+  it('lists blocking contests with owner delete and player leave actions', () => {
     const props = baseProps();
     const active: BlockingContest[] = [
       { id: 'c1', name: 'pool', role: 'owner' },
-      { id: 'c2', name: 'office', role: 'participant' },
+      { id: 'c2', name: 'office', role: 'player' },
     ];
     render(<DeleteAccountDialog {...props} activeContests={active} />);
 

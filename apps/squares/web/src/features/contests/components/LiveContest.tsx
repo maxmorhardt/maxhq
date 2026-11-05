@@ -14,7 +14,7 @@ import type { ContestEvent } from '../live/events';
 import {
   selectLiveActivity,
   selectLiveContest,
-  selectLiveParticipants,
+  selectLivePlayers,
   selectLiveViewerId,
   selectStreamEnd,
   selectStreamStatus,
@@ -41,7 +41,7 @@ export default function LiveContest({ contestId }: Props) {
   const viewerId = useAppSelector(selectLiveViewerId);
 
   const contest = useAppSelector(selectLiveContest);
-  const participants = useAppSelector(selectLiveParticipants);
+  const players = useAppSelector(selectLivePlayers);
   const activity = useAppSelector(selectLiveActivity);
   const status = useAppSelector(selectStreamStatus);
   const ended = useAppSelector(selectStreamEnd);
@@ -84,7 +84,7 @@ export default function LiveContest({ contestId }: Props) {
   useGameStream(game && !isGameOver(game) ? game.id : undefined);
 
   const isOwner = !!contest && isMe(viewerId, contest.owner);
-  const roster = useContestRoster(contestId, isOwner, participants);
+  const roster = useContestRoster(contestId, isOwner, players);
 
   useEffect(() => {
     if (!winnerFlash) {
@@ -111,9 +111,9 @@ export default function LiveContest({ contestId }: Props) {
       <ContestView
         contest={contest}
         game={game}
-        participants={participants}
+        players={players}
         activity={activity}
-        viewer={getContestViewer(viewerId, contest, participants, roster)}
+        viewer={getContestViewer(viewerId, contest, players, roster)}
         status={status}
         winnerFlash={winnerFlash}
         onStale={resync}

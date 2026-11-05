@@ -18,11 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSnapshot_ReturnsContestAndParticipantsToViewers(t *testing.T) {
+func TestSnapshot_ReturnsContestAndPlayersToViewers(t *testing.T) {
 	contestID := uuid.New()
-	pSvc := mocks.NewParticipantService(t)
+	pSvc := mocks.NewPlayerService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, contestID, "v@b.com", service.ActionView).Return(nil)
-	pSvc.EXPECT().GetParticipants(mock.Anything, contestID).Return([]model.ContestParticipant{{UserID: "o"}}, nil)
+	pSvc.EXPECT().GetPlayers(mock.Anything, contestID).Return([]model.ContestPlayer{{UserID: "o"}}, nil)
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByID(mock.Anything, contestID).Return(&model.Contest{ID: contestID, Name: "C"}, nil)
 
@@ -30,16 +30,16 @@ func TestSnapshot_ReturnsContestAndParticipantsToViewers(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "C", snap.Contest.Name)
-	assert.Len(t, snap.Participants, 1)
+	assert.Len(t, snap.Players, 1)
 	assert.Equal(t, pseudonym.Of("v@b.com"), snap.ViewerID, "the page tells which squares are yours without asking accounts")
 }
 
 func TestSnapshot_ReturnsTheRecordedQuarterResults(t *testing.T) {
 	contestID := uuid.New()
 	recorded := model.QuarterResult{ID: uuid.New(), Quarter: 1, HomeTeamScore: 10, WinnerName: "Casey", CreatedAt: time.Date(2026, 10, 23, 1, 5, 0, 0, time.UTC)}
-	pSvc := mocks.NewParticipantService(t)
+	pSvc := mocks.NewPlayerService(t)
 	pSvc.EXPECT().Authorize(mock.Anything, contestID, "v@b.com", service.ActionView).Return(nil)
-	pSvc.EXPECT().GetParticipants(mock.Anything, contestID).Return(nil, nil)
+	pSvc.EXPECT().GetPlayers(mock.Anything, contestID).Return(nil, nil)
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().GetByID(mock.Anything, contestID).Return(&model.Contest{
 		ID:             contestID,
@@ -60,13 +60,13 @@ func TestSnapshot_AuthorizationOutcomes(t *testing.T) {
 		want    error
 	}{
 		{"missing contest", errs.ErrContestNotFound, errs.ErrContestNotFound},
-		{"not a participant", errs.ErrNotParticipant, errs.ErrInsufficientRole},
+		{"not a player", errs.ErrNotPlayer, errs.ErrInsufficientRole},
 		{"database down", errs.ErrDatabaseUnavailable, errs.ErrDatabaseUnavailable},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pSvc := mocks.NewParticipantService(t)
+			pSvc := mocks.NewPlayerService(t)
 			pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, service.ActionView).Return(tt.authErr)
 
 			_, err := service.NewSnapshotService(mocks.NewContestRepository(t), pSvc).GetSnapshot(context.Background(), uuid.New(), "v@b.com")
@@ -93,7 +93,7 @@ func TestSnapshot_LoadErrors(t *testing.T) {
 	repo = mocks.NewContestRepository(t)
 	repo.EXPECT().GetByID(mock.Anything, contestID).Return(&model.Contest{ID: contestID}, nil)
 	pSvc = okAuth(t)
-	pSvc.EXPECT().GetParticipants(mock.Anything, contestID).Return(nil, errs.ErrDatabaseUnavailable)
+	pSvc.EXPECT().GetPlayers(mock.Anything, contestID).Return(nil, errs.ErrDatabaseUnavailable)
 	_, err = service.NewSnapshotService(repo, pSvc).GetSnapshot(context.Background(), contestID, "v")
 	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }

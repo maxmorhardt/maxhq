@@ -12,43 +12,41 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
-import type { Participant } from '../../../../types/contest';
+import type { Player } from '../../../../types/contest';
 import { useToast } from '../../../toast/useToast';
-import { useUpdateParticipantMutation } from '../../api';
+import { useUpdatePlayerMutation } from '../../api';
 
 interface Props {
   contestId: string;
-  participant: Participant | null;
+  player: Player | null;
   claimed: number;
   maxAllowed: number;
   onClose: () => void;
 }
 
-export default function EditParticipantDialog({ participant, ...props }: Props) {
-  // remounting per participant resets the form to their current values
-  return participant ? (
-    <EditParticipantForm key={participant.id} participant={participant} {...props} />
-  ) : null;
+export default function EditPlayerDialog({ player, ...props }: Props) {
+  // remounting per player resets the form to their current values
+  return player ? <EditPlayerForm key={player.id} player={player} {...props} /> : null;
 }
 
-function EditParticipantForm({
+function EditPlayerForm({
   contestId,
-  participant,
+  player,
   claimed,
   maxAllowed,
   onClose,
-}: Omit<Props, 'participant'> & { participant: Participant }) {
+}: Omit<Props, 'player'> & { player: Player }) {
   const { showToast } = useToast();
-  const [updateParticipant, { isLoading, isError, error }] = useUpdateParticipantMutation();
-  const [maxSquares, setMaxSquares] = useState(participant.maxSquares);
+  const [updatePlayer, { isLoading, isError, error }] = useUpdatePlayerMutation();
+  const [maxSquares, setMaxSquares] = useState(player.maxSquares);
 
   const freed = Math.max(0, claimed - maxSquares);
   const left = maxAllowed - maxSquares;
 
   const handleSave = async () => {
     try {
-      await updateParticipant({ contestId, userId: participant.userId, maxSquares }).unwrap();
-      showToast('Participant updated', 'success');
+      await updatePlayer({ contestId, userId: player.userId, maxSquares }).unwrap();
+      showToast('Player updated', 'success');
       onClose();
     } catch {
       // the save button turns into a retry
@@ -68,7 +66,7 @@ function EditParticipantForm({
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
-        <Typography sx={{ mb: 2, fontWeight: 600 }}>{participant.displayName}</Typography>
+        <Typography sx={{ mb: 2, fontWeight: 600 }}>{player.displayName}</Typography>
 
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           Max Squares: {maxSquares}
@@ -95,7 +93,7 @@ function EditParticipantForm({
 
         {isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {errorMessage(error, 'Failed to update participant')}
+            {errorMessage(error, 'Failed to update player')}
           </Alert>
         )}
       </DialogContent>
@@ -105,7 +103,7 @@ function EditParticipantForm({
           variant="contained"
           color={isError ? 'error' : freed > 0 ? 'warning' : 'primary'}
           onClick={handleSave}
-          disabled={isLoading || maxSquares === participant.maxSquares}
+          disabled={isLoading || maxSquares === player.maxSquares}
           startIcon={isError ? <ErrorOutlineOutlined /> : undefined}
         >
           {isError ? 'Failed, Retry' : freed > 0 ? `Save and Free ${freed}` : 'Save'}

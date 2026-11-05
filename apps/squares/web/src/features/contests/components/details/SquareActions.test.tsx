@@ -33,7 +33,7 @@ describe('SquareActions', () => {
     api.useClearMySquaresMutation.mockReturnValue(mockMutation([]));
   });
 
-  it('starts a participant at every square they have left', async () => {
+  it('starts a player at every square they have left', async () => {
     const [claim, state] = mockMutation({ squares: [makeSquare()], requested: 5 });
     api.useClaimRandomSquaresMutation.mockReturnValue([claim, state]);
     renderActions();

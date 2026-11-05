@@ -21,7 +21,7 @@ interface Props {
 
 const roleLabel: Record<ContestSummary['role'], string> = {
   owner: 'Owner',
-  participant: 'Joined',
+  player: 'Joined',
 };
 
 function StatusPill({

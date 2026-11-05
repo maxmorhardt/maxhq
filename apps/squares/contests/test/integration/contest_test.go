@@ -55,8 +55,8 @@ func TestContest_FullLifecycle(t *testing.T) {
 		resp := call(t, testkit.As(memberUser), http.MethodPost, "/invites/"+token+"/join", nil)
 		require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 
-		// a first-time participant has a name in the participants list before claiming or opening their profile
-		for _, p := range snapshot(t, ownerUser, contestID).Participants {
+		// a first-time player has a name in the players list before claiming or opening their profile
+		for _, p := range snapshot(t, ownerUser, contestID).Players {
 			if p.UserID == pseudonym.Of(memberUser) {
 				assert.Equal(t, "Test M.", p.DisplayName)
 				assert.Zero(t, p.MaxSquares)
@@ -82,7 +82,7 @@ func TestContest_FullLifecycle(t *testing.T) {
 	t.Run("member fills half the grid and the owner the rest", func(t *testing.T) {
 		snap := snapshot(t, ownerUser, contestID)
 		require.Len(t, snap.Contest.Squares, 100)
-		require.Len(t, snap.Participants, 2)
+		require.Len(t, snap.Players, 2)
 
 		for i, sq := range snap.Contest.Squares {
 			claimer := ownerUser

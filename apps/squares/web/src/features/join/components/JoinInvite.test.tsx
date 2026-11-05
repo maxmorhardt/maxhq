@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockMutation } from '../../../test/auth';
-import { makeParticipant } from '../../../test/fixtures';
+import { makePlayer } from '../../../test/fixtures';
 import { renderWithProviders } from '../../../test/render';
 import JoinInvite from './JoinInvite';
 
@@ -30,7 +30,7 @@ describe('JoinInvite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.usePreviewInviteQuery.mockReturnValue({ data: preview, error: undefined });
-    api.useJoinContestMutation.mockReturnValue(mockMutation(makeParticipant({ contestId: 'c-1' })));
+    api.useJoinContestMutation.mockReturnValue(mockMutation(makePlayer({ contestId: 'c-1' })));
   });
 
   it('joins and opens the contest', async () => {

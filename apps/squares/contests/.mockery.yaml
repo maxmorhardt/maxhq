@@ -17,7 +17,7 @@ packages:
     interfaces:
       ContestRepository:
       FeedRepository:
-      ParticipantRepository:
+      PlayerRepository:
       BanRepository:
       StatsRepository:
       LeaderboardRepository:
@@ -29,7 +29,7 @@ packages:
       ContestService:
       FeedService:
       ContestEventPublisher:
-      ParticipantService:
+      PlayerService:
       InviteService:
       StatsService:
       LeaderboardService:

@@ -18,18 +18,18 @@ type SnapshotService interface {
 }
 
 type snapshotService struct {
-	contestRepo        repository.ContestRepository
-	participantService ParticipantService
+	contestRepo   repository.ContestRepository
+	playerService PlayerService
 }
 
-func NewSnapshotService(contestRepo repository.ContestRepository, participantService ParticipantService) SnapshotService {
-	return &snapshotService{contestRepo: contestRepo, participantService: participantService}
+func NewSnapshotService(contestRepo repository.ContestRepository, playerService PlayerService) SnapshotService {
+	return &snapshotService{contestRepo: contestRepo, playerService: playerService}
 }
 
 func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, user string) (*model.ContestSnapshot, error) {
 	log := logging.FromContext(ctx)
 
-	if err := s.participantService.Authorize(ctx, contestID, user, ActionView); err != nil {
+	if err := s.playerService.Authorize(ctx, contestID, user, ActionView); err != nil {
 		if errors.Is(err, errs.ErrContestNotFound) || errors.Is(err, errs.ErrDatabaseUnavailable) {
 			return nil, err
 		}
@@ -46,10 +46,10 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	participants, err := s.participantService.GetParticipants(ctx, contestID)
+	players, err := s.playerService.GetPlayers(ctx, contestID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &model.ContestSnapshot{Contest: contest, Participants: participants, ViewerID: pseudonym.Of(user)}, nil
+	return &model.ContestSnapshot{Contest: contest, Players: players, ViewerID: pseudonym.Of(user)}, nil
 }

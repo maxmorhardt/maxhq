@@ -11,7 +11,7 @@ interface Props {
   sx?: SxProps<Theme>;
 }
 
-// a quiet next step on an inner page, worded for newcomers (often from an ad) and for participants
+// a quiet next step on an inner page, worded for newcomers (often from an ad) and for players
 export default function StartBoardCallout({ message, signedInMessage, sx }: Props) {
   const auth = useAuth();
   const signedIn = auth.isAuthenticated;

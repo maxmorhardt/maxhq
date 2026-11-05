@@ -49,7 +49,7 @@ const joined: ContestSummary = {
   ...contest,
   id: 'c-2',
   name: 'Office Pool',
-  role: 'participant',
+  role: 'player',
   mySquares: 5,
 };
 

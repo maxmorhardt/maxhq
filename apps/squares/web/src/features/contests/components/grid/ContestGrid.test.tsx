@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockMutation } from '../../../../test/auth';
 import {
   makeContest,
-  makeParticipant,
+  makePlayer,
   makeQuarterResult,
   makeSquare,
   makeViewer,
@@ -33,7 +33,7 @@ const contest = makeContest({
       row: 0,
       col: 0,
       value: 'ME',
-      owner: 'u_participant',
+      owner: 'u_player',
       ownerName: 'Me',
     }),
     makeSquare({ id: 'empty', row: 0, col: 1 }),
@@ -99,7 +99,7 @@ describe('ContestGrid', () => {
 
   it('stops spectators from claiming', () => {
     const { cells, toasts } = renderGrid({
-      viewer: makeViewer({ isParticipant: false, participant: undefined }),
+      viewer: makeViewer({ isPlayer: false, player: undefined }),
     });
     fireEvent.click(cells()[1]);
     expect(toasts()[0]?.message).toBe(
@@ -108,16 +108,16 @@ describe('ContestGrid', () => {
     expect(claim).not.toHaveBeenCalled();
   });
 
-  it('stops a participant the owner has not given squares yet', () => {
+  it('stops a player the owner has not given squares yet', () => {
     const { cells, toasts } = renderGrid({
-      viewer: makeViewer({ participant: makeParticipant({ maxSquares: 0 }), squaresLeft: 0 }),
+      viewer: makeViewer({ player: makePlayer({ maxSquares: 0 }), squaresLeft: 0 }),
     });
     fireEvent.click(cells()[1]);
     expect(toasts()[0]?.message).toBe('The owner hasn’t given you any squares yet');
     expect(claim).not.toHaveBeenCalled();
   });
 
-  it('stops a participant at their limit', () => {
+  it('stops a player at their limit', () => {
     const { cells, toasts } = renderGrid({ viewer: makeViewer({ squaresLeft: 0 }) });
     fireEvent.click(cells()[1]);
     expect(toasts()[0]?.message).toBe('Square limit reached');

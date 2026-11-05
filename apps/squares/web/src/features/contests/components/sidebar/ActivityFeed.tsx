@@ -27,8 +27,8 @@ const eventIcons: Record<ActivityEventType, { icon: ReactNode; color: string }> 
   quarter_winner: { icon: <EmojiEvents sx={iconSx} />, color: 'secondary.main' },
   contest_started: { icon: <PlayArrow sx={iconSx} />, color: 'warning.main' },
   contest_status: { icon: <Sync sx={iconSx} />, color: 'text.secondary' },
-  participant_added: { icon: <PersonAdd sx={iconSx} />, color: 'success.main' },
-  participant_removed: { icon: <PersonRemove sx={iconSx} />, color: 'error.main' },
+  player_added: { icon: <PersonAdd sx={iconSx} />, color: 'success.main' },
+  player_removed: { icon: <PersonRemove sx={iconSx} />, color: 'error.main' },
 };
 
 function formatTime(timestamp: string): string {

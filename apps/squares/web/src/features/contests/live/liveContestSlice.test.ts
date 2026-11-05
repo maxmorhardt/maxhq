@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  makeContest,
-  makeParticipant,
-  makeQuarterResult,
-  makeSquare,
-} from '../../../test/fixtures';
+import { makeContest, makePlayer, makeQuarterResult, makeSquare } from '../../../test/fixtures';
 import type { Contest } from '../../../types/contest';
 import type { ContestEvent } from './events';
 import {
@@ -40,11 +35,11 @@ const fulfilled = (endpointName: string, payload: unknown, originalArgs: unknown
   },
 });
 
-function live(contest = makeContest(), participants = [makeParticipant()]) {
+function live(contest = makeContest(), players = [makePlayer()]) {
   const opened = liveContestReducer(undefined, streamOpened('c-1'));
   return receive(
     opened,
-    event('contest.snapshot', { contest, participants, viewerId: 'u_participant' }),
+    event('contest.snapshot', { contest, participants: players, viewerId: 'u_player' }),
     'snap'
   );
 }
@@ -75,9 +70,9 @@ describe('liveContestSlice events', () => {
       makeContest({ squares: [makeSquare({ value: 'AB', owner: 'u_ann', ownerName: 'Ann' })] })
     );
     expect(state.contest?.id).toBe('c-1');
-    expect(state.participants).toHaveLength(1);
+    expect(state.players).toHaveLength(1);
     expect(state.activity.map((a) => a.message)).toContain('Ann claimed square (0, 0)');
-    expect(state.viewerId).toBe('u_participant');
+    expect(state.viewerId).toBe('u_player');
   });
 
   it('applies newer square versions and ignores older replays', () => {
@@ -117,20 +112,20 @@ describe('liveContestSlice events', () => {
     expect(state.contest?.status).toBe('Q2');
   });
 
-  it('adds, updates, and removes participants', () => {
+  it('adds, updates, and removes players', () => {
     let state = receive(
       live(),
-      event('participant.joined', makeParticipant({ id: 'p-2', userId: 'u_b' }))
+      event('participant.joined', makePlayer({ id: 'p-2', userId: 'u_b' }))
     );
-    expect(state.participants).toHaveLength(2);
+    expect(state.players).toHaveLength(2);
     state = receive(
       state,
-      event('participant.updated', makeParticipant({ id: 'p-2', userId: 'u_b', maxSquares: 9 }))
+      event('participant.updated', makePlayer({ id: 'p-2', userId: 'u_b', maxSquares: 9 }))
     );
-    expect(state.participants).toHaveLength(2);
-    expect(state.participants.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
-    state = receive(state, event('participant.removed', makeParticipant({ userId: 'u_b' })));
-    expect(state.participants.map((p) => p.userId)).toEqual(['u_participant']);
+    expect(state.players).toHaveLength(2);
+    expect(state.players.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
+    state = receive(state, event('participant.removed', makePlayer({ userId: 'u_b' })));
+    expect(state.players.map((p) => p.userId)).toEqual(['u_player']);
   });
 
   it('marks the stream ended when the contest is deleted or access is revoked', () => {
@@ -148,7 +143,7 @@ describe('liveContestSlice events', () => {
 describe('liveContestSlice contest read', () => {
   const read = (contestId: string, status: Contest['status']) => ({
     type: 'api/executeQuery/fulfilled',
-    payload: { contest: makeContest({ status }), participants: [makeParticipant()] },
+    payload: { contest: makeContest({ status }), participants: [makePlayer()] },
     meta: {
       arg: { type: 'query', endpointName: 'getContest', originalArgs: contestId },
       requestId: 'r',
@@ -160,7 +155,7 @@ describe('liveContestSlice contest read', () => {
     const opened = liveContestReducer(undefined, streamOpened('c-1'));
     const state = liveContestReducer(opened, read('c-1', 'FINISHED'));
     expect(state.contest?.status).toBe('FINISHED');
-    expect(state.participants).toHaveLength(1);
+    expect(state.players).toHaveLength(1);
   });
 
   it('ignores a read of another contest', () => {
@@ -188,16 +183,16 @@ describe('liveContestSlice write responses', () => {
     expect(state.contest?.squares[0].value).toBe('');
   });
 
-  it('applies participant edits and removals', () => {
+  it('applies player edits and removals', () => {
     let state = liveContestReducer(
       live(),
-      fulfilled('updateParticipant', makeParticipant({ maxSquares: 9 }))
+      fulfilled('updatePlayer', makePlayer({ maxSquares: 9 }))
     );
-    expect(state.participants[0].maxSquares).toBe(9);
+    expect(state.players[0].maxSquares).toBe(9);
     state = liveContestReducer(
       state,
-      fulfilled('removeParticipant', undefined, { contestId: 'c-1', userId: 'u_participant' })
+      fulfilled('removePlayer', undefined, { contestId: 'c-1', userId: 'u_player' })
     );
-    expect(state.participants).toHaveLength(0);
+    expect(state.players).toHaveLength(0);
   });
 });

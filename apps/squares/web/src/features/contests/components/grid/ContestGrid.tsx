@@ -66,15 +66,15 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
       return;
     }
 
-    if (!viewer.isParticipant && !viewer.isOwner) {
+    if (!viewer.isPlayer && !viewer.isOwner) {
       showToast(WATCHING_MESSAGE, 'info');
       return;
     }
-    if (!viewer.isOwner && viewer.participant?.maxSquares === 0) {
+    if (!viewer.isOwner && viewer.player?.maxSquares === 0) {
       showToast('The owner hasn’t given you any squares yet', 'info');
       return;
     }
-    if (viewer.participant && viewer.squaresLeft === 0) {
+    if (viewer.player && viewer.squaresLeft === 0) {
       showToast('Square limit reached', 'warning');
       return;
     }

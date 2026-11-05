@@ -153,8 +153,8 @@ func inviteToken(t *testing.T, owner string, contestID uuid.UUID) string {
 
 func setSquares(t *testing.T, owner, user string, contestID uuid.UUID, maxSquares int) testkit.Response {
 	t.Helper()
-	return call(t, testkit.As(owner), http.MethodPatch, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(user)),
-		model.UpdateParticipantRequest{MaxSquares: &maxSquares})
+	return call(t, testkit.As(owner), http.MethodPatch, fmt.Sprintf("/contests/%s/players/%s", contestID, pseudonym.Of(user)),
+		model.UpdatePlayerRequest{MaxSquares: &maxSquares})
 }
 
 // joins with the contest's invite link, then the owner gives the newcomer their squares

@@ -110,7 +110,7 @@ func (h *squareHandler) ClaimRandomSquares(c *gin.Context) {
 	resp, err := h.squareService.ClaimRandom(c.Request.Context(), contestID, req.Count, c.GetString(api.UserKey))
 	if err != nil {
 		switch {
-		case errors.Is(err, errs.ErrSquareNotEditable), errors.Is(err, errs.ErrUnauthorizedSquareEdit), errors.Is(err, errs.ErrNotParticipant):
+		case errors.Is(err, errs.ErrSquareNotEditable), errors.Is(err, errs.ErrUnauthorizedSquareEdit), errors.Is(err, errs.ErrNotPlayer):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrMissingInitials):
 			c.JSON(http.StatusUnprocessableEntity, api.NewAPIError(http.StatusUnprocessableEntity, api.Message(err), c))

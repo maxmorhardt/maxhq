@@ -1,4 +1,4 @@
-import type { Contest, Participant, ParticipantIdentity } from '../../../types/contest';
+import type { Contest, Player, PlayerIdentity } from '../../../types/contest';
 import { isMe } from '../../profile/useUserId';
 
 // who the signed-in user is in this contest, worked out once and passed down
@@ -6,9 +6,9 @@ export interface ContestViewer {
   viewerId: string | undefined;
   isMe: (id: string | undefined) => boolean;
   fullName: (id: string | undefined) => string | undefined;
-  participant: Participant | undefined;
+  player: Player | undefined;
   isOwner: boolean;
-  isParticipant: boolean;
+  isPlayer: boolean;
   squaresClaimed: number;
   squaresLeft: number;
 }
@@ -16,11 +16,11 @@ export interface ContestViewer {
 export function getContestViewer(
   viewerId: string | undefined,
   contest: Contest,
-  participants: Participant[],
-  roster: ParticipantIdentity[] = []
+  players: Player[],
+  roster: PlayerIdentity[] = []
 ): ContestViewer {
   const mine = (id: string | undefined) => isMe(viewerId, id);
-  const participant = participants.find((p) => mine(p.userId));
+  const player = players.find((p) => mine(p.userId));
   const squaresClaimed = contest.squares.filter((s) => mine(s.owner)).length;
   const fullNames = new Map(roster.map((p) => [p.userId, p.fullName]));
 
@@ -28,10 +28,10 @@ export function getContestViewer(
     viewerId,
     isMe: mine,
     fullName: (id) => (id ? fullNames.get(id) : undefined),
-    participant,
+    player,
     isOwner: mine(contest.owner),
-    isParticipant: !!participant,
+    isPlayer: !!player,
     squaresClaimed,
-    squaresLeft: Math.max(0, (participant?.maxSquares ?? 0) - squaresClaimed),
+    squaresLeft: Math.max(0, (player?.maxSquares ?? 0) - squaresClaimed),
   };
 }

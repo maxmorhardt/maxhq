@@ -60,7 +60,7 @@ export default function LearnMorePage() {
       icon: <Tune />,
       title: 'Your board, your rules',
       description:
-        'Make a board private or public, and set how many squares each participant can claim.',
+        'Make a board private or public, and set how many squares each player can claim.',
     },
     {
       icon: <Sports />,
@@ -113,9 +113,9 @@ export default function LearnMorePage() {
         'Open your contest and select "Invite" to share or copy its invite link. Anyone who opens it can sign in and join with no squares, then you give them squares. If the link ends up somewhere it shouldn\'t, reset it and the old one stops working.',
     },
     {
-      question: 'How do I manage participants and their squares?',
+      question: 'How do I manage players and their squares?',
       answer:
-        'As the owner, open the "Participants" panel before kickoff to set how many squares each person can claim, or give everyone without squares the same number at once. The board never gives out more than 100. Lowering someone below what they hold frees that many of their squares at random. Removing someone frees their squares and bans them from rejoining until you unban them in the same panel.',
+        'As the owner, open the "Players" panel before kickoff to set how many squares each person can claim, or give everyone without squares the same number at once. The board never gives out more than 100. Lowering someone below what they hold frees that many of their squares at random. Removing someone frees their squares and bans them from rejoining until you unban them in the same panel.',
     },
     {
       question: "What's the difference between a private and public contest?",
@@ -135,7 +135,7 @@ export default function LearnMorePage() {
     {
       question: 'How do I leave a contest?',
       answer:
-        'Open the contest\'s "Participants" panel and use the leave option next to your name, or use the leave action in the "Joined Contests" table on your Contests page. Owners can\'t leave their own contest and would delete it instead. Leaving frees up any squares you had claimed.',
+        'Open the contest\'s "Players" panel and use the leave option next to your name, or use the leave action in the "Joined Contests" table on your Contests page. Owners can\'t leave their own contest and would delete it instead. Leaving frees up any squares you had claimed.',
     },
     {
       question: 'How do I delete my account?',

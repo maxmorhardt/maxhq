@@ -45,7 +45,7 @@ func TestGetInviteLink_InvalidContestID(t *testing.T) {
 func TestGetInviteLink_Errors(t *testing.T) {
 	cases := map[error]int{
 		errs.ErrContestNotFound:     http.StatusNotFound,
-		errs.ErrNotParticipant:      http.StatusForbidden,
+		errs.ErrNotPlayer:           http.StatusForbidden,
 		errs.ErrInsufficientRole:    http.StatusForbidden,
 		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
 	}
@@ -76,7 +76,7 @@ func TestResetInviteLink_InvalidContestID(t *testing.T) {
 func TestResetInviteLink_Errors(t *testing.T) {
 	cases := map[error]int{
 		errs.ErrContestNotFound:     http.StatusNotFound,
-		errs.ErrNotParticipant:      http.StatusForbidden,
+		errs.ErrNotPlayer:           http.StatusForbidden,
 		errs.ErrInsufficientRole:    http.StatusForbidden,
 		errs.ErrContestFinalized:    http.StatusForbidden,
 		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
@@ -119,7 +119,7 @@ func TestGetInvitePreview_Errors(t *testing.T) {
 func TestJoinContest_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
 	svc.EXPECT().Join(mock.Anything, "valid-token", "user1", mock.Anything).
-		Return(&model.ContestParticipant{ID: uuid.New(), UserID: "user1", Role: model.ParticipantRoleParticipant}, nil)
+		Return(&model.ContestPlayer{ID: uuid.New(), UserID: "user1", Role: model.PlayerRolePlayer}, nil)
 
 	w := doRequest(inviteRouter(svc, "user1"), jsonReq(http.MethodPost, "/invites/valid-token/join", nil))
 	assert.Equal(t, http.StatusCreated, w.Code)
@@ -130,7 +130,7 @@ func TestJoinContest_Errors(t *testing.T) {
 		errs.ErrInviteNotFound:      http.StatusNotFound,
 		errs.ErrContestFinalized:    http.StatusForbidden,
 		errs.ErrBannedFromContest:   http.StatusForbidden,
-		errs.ErrAlreadyParticipant:  http.StatusConflict,
+		errs.ErrAlreadyPlayer:       http.StatusConflict,
 		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
 	}
 	for svcErr, want := range cases {

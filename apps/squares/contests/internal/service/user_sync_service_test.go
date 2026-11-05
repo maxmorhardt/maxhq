@@ -73,12 +73,12 @@ func TestUserSync_ApplyUserUpdated_Errors(t *testing.T) {
 func TestUserSync_ApplyUserDeleted_BroadcastsWhatItFreed(t *testing.T) {
 	contestID := uuid.New()
 	square := model.Square{ID: uuid.New(), ContestID: contestID}
-	member := model.ContestParticipant{ContestID: contestID, UserID: "a@b.com"}
+	member := model.ContestPlayer{ContestID: contestID, UserID: "a@b.com"}
 	users := mocks.NewUserRepository(t)
-	users.EXPECT().Scrub(mock.Anything, "a@b.com").Return([]model.Square{square}, []model.ContestParticipant{member}, nil)
+	users.EXPECT().Scrub(mock.Anything, "a@b.com").Return([]model.Square{square}, []model.ContestPlayer{member}, nil)
 	pub := mocks.NewContestEventPublisher(t)
 	pub.EXPECT().PublishSquareUpdate(mock.Anything, contestID, "system", &square).Return(nil).Once()
-	pub.EXPECT().PublishParticipantRemoved(mock.Anything, contestID, "system", &member).Return(nil).Once()
+	pub.EXPECT().PublishPlayerRemoved(mock.Anything, contestID, "system", &member).Return(nil).Once()
 
 	err := service.NewUserSyncService(users, mocks.NewSquareRepository(t), passTx(), pub).
 		ApplyUserDeleted(context.Background(), &events.UserDeleted{Email: "a@b.com"})

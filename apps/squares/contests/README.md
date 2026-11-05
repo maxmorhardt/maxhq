@@ -8,12 +8,12 @@
 
 ## Overview
 
-Contests, squares, participants, invites, the leaderboard, and stats. One of the squares backend services; see [../README.md](../README.md) for how they fit together.
+Contests, squares, players, invites, the leaderboard, and stats. One of the squares backend services; see [../README.md](../README.md) for how they fit together.
 
 | Path (behind `api.maxhq.io/squares`) | |
 | --- | --- |
 | `GET /contests` | the caller's owned and joined contests, newest first, cursor paginated, filtered by `role`, `status` (`open`, `live`, `active`, `finished`), and `search` |
-| `/contests/**` | create, edit, and delete contests (each linked to a live NFL game); claim, clear, and randomly fill squares; the owner reads or resets the invite link, sets each participant's squares, removes (and bans) participants, and unbans them |
+| `/contests/**` | create, edit, and delete contests (each linked to a live NFL game); claim, clear, and randomly fill squares; the owner reads or resets the invite link, sets each player's squares, removes (and bans) players, and unbans them |
 | `/invites/**` | preview a contest from its invite link, and join it with no squares |
 | `/leaderboard`, `/stats` | public stats, cached in Valkey |
 | `/leaderboard/me`, `/stats/me` | the signed-in user's rank and contest stats |

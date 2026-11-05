@@ -32,7 +32,7 @@ func TestLeaderboardService_GetLeaderboard_AssignsRanks(t *testing.T) {
 	assert.Equal(t, 3, got.Entries[2].Rank)
 }
 
-func TestLeaderboardService_GetLeaderboard_TiedParticipantsShareRank(t *testing.T) {
+func TestLeaderboardService_GetLeaderboard_TiedPlayersShareRank(t *testing.T) {
 	repo := mocks.NewLeaderboardRepository(t)
 	repo.EXPECT().GetTopWinners(mock.Anything, 25).Return([]model.LeaderboardEntry{
 		{DisplayName: "Max", QuarterWins: 10},

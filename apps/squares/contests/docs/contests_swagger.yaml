@@ -79,15 +79,15 @@ definitions:
       nextCursor:
         type: string
     type: object
-  model.ContestParticipant:
+  model.ContestPlayer:
     properties:
       contestId:
         type: string
       createdAt:
         type: string
       displayName:
-        description: read from contests.users, so other participants can be shown
-          a name instead of an email
+        description: read from contests.users, so other players can be shown a name
+          instead of an email
         type: string
       id:
         type: string
@@ -96,7 +96,7 @@ definitions:
       maxSquares:
         type: integer
       role:
-        $ref: '#/definitions/model.ParticipantRole'
+        $ref: '#/definitions/model.PlayerRole'
       updatedAt:
         type: string
       userId:
@@ -106,9 +106,9 @@ definitions:
     properties:
       contest:
         $ref: '#/definitions/model.ContestSwagger'
-      participants:
+      players:
         items:
-          $ref: '#/definitions/model.ContestParticipant'
+          $ref: '#/definitions/model.ContestPlayer'
         type: array
       viewerId:
         example: u_3q2mL0x9VfTzQk1rB7cW8a
@@ -171,7 +171,7 @@ definitions:
         type: string
       role:
         allOf:
-        - $ref: '#/definitions/model.ParticipantRole'
+        - $ref: '#/definitions/model.PlayerRole'
         example: owner
       status:
         allOf:
@@ -327,7 +327,7 @@ definitions:
           $ref: '#/definitions/model.LeaderboardEntry'
         type: array
     type: object
-  model.ParticipantIdentity:
+  model.PlayerIdentity:
     properties:
       fullName:
         example: Max Morhardt
@@ -336,14 +336,14 @@ definitions:
         example: u_3q2mL0x9VfTzQk1rB7cW8a
         type: string
     type: object
-  model.ParticipantRole:
+  model.PlayerRole:
     enum:
     - owner
-    - participant
+    - player
     type: string
     x-enum-varnames:
-    - ParticipantRoleOwner
-    - ParticipantRoleParticipant
+    - PlayerRoleOwner
+    - PlayerRolePlayer
   model.QuarterResult:
     properties:
       awayTeamScore:
@@ -428,7 +428,7 @@ definitions:
         example: 12
         type: integer
     type: object
-  model.UpdateParticipantRequest:
+  model.UpdatePlayerRequest:
     properties:
       maxSquares:
         example: 10
@@ -458,9 +458,8 @@ definitions:
     type: object
 info:
   contact: {}
-  description: Contests, squares, participants, invites, leaderboard, and stats for
-    squares.maxhq.io. Served under /squares behind the gateway, which validates the
-    bearer token.
+  description: Contests, squares, players, invites, leaderboard, and stats for squares.maxhq.io.
+    Served under /squares behind the gateway, which validates the bearer token.
   title: Squares Contests API
   version: 1.0.0
 paths:
@@ -606,8 +605,8 @@ paths:
       tags:
       - contests
     get:
-      description: Returns the contest and its participants if the user may view it,
-        in the shape of the stream's `contest.snapshot`. For contests that are over,
+      description: Returns the contest and its players if the user may view it, in
+        the shape of the stream's `contest.snapshot`. For contests that are over,
         which have nothing left to stream.
       parameters:
       - description: Contest ID
@@ -678,7 +677,7 @@ paths:
       - BearerAuth: []
       summary: Who is banned from a contest
       tags:
-      - participants
+      - players
   /contests/{id}/bans/{userId}:
     delete:
       description: The owner lets a removed person rejoin with the invite link
@@ -716,7 +715,7 @@ paths:
       - BearerAuth: []
       summary: Unban someone from a contest
       tags:
-      - participants
+      - players
   /contests/{id}/invite:
     get:
       description: The owner reads the token of the contest's one invite link
@@ -791,12 +790,11 @@ paths:
       summary: Reset a contest's invite link
       tags:
       - invites
-  /contests/{id}/participants/{userId}:
+  /contests/{id}/players/{userId}:
     delete:
-      description: The owner removes a participant, who is banned from rejoining until
-        the owner unbans them, or a participant leaves on their own and can rejoin.
-        Their squares are freed before kickoff and ghosted after. The owner cannot
-        be removed.
+      description: The owner removes a player, who is banned from rejoining until
+        the owner unbans them, or a player leaves on their own and can rejoin. Their
+        squares are freed before kickoff and ghosted after. The owner cannot be removed.
       parameters:
       - description: Contest ID
         in: path
@@ -829,14 +827,14 @@ paths:
             $ref: '#/definitions/api.APIError'
       security:
       - BearerAuth: []
-      summary: Remove a participant from a contest
+      summary: Remove a player from a contest
       tags:
-      - participants
+      - players
     patch:
       consumes:
       - application/json
-      description: The owner sets how many squares a participant can claim. Lowering
-        it below what they hold frees that many of their squares at random. The board
+      description: The owner sets how many squares a player can claim. Lowering it
+        below what they hold frees that many of their squares at random. The board
         never gives out more than 100 squares in total.
       parameters:
       - description: Contest ID
@@ -851,17 +849,17 @@ paths:
         type: string
       - description: The new square limit
         in: body
-        name: participant
+        name: player
         required: true
         schema:
-          $ref: '#/definitions/model.UpdateParticipantRequest'
+          $ref: '#/definitions/model.UpdatePlayerRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.ContestParticipant'
+            $ref: '#/definitions/model.ContestPlayer'
         "400":
           description: Bad Request
           schema:
@@ -880,14 +878,14 @@ paths:
             $ref: '#/definitions/api.APIError'
       security:
       - BearerAuth: []
-      summary: Set a participant's square limit
+      summary: Set a player's square limit
       tags:
-      - participants
-  /contests/{id}/participants/allot:
+      - players
+  /contests/{id}/players/allot:
     post:
       consumes:
       - application/json
-      description: The owner gives every participant who has no squares the same number.
+      description: The owner gives every player who has no squares the same number.
         Nothing changes if that would give out more than 100 squares in total.
       parameters:
       - description: Contest ID
@@ -895,7 +893,7 @@ paths:
         name: id
         required: true
         type: string
-      - description: Squares for each participant without any
+      - description: Squares for each player without any
         in: body
         name: allotment
         required: true
@@ -908,7 +906,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.ContestParticipant'
+              $ref: '#/definitions/model.ContestPlayer'
             type: array
         "400":
           description: Bad Request
@@ -930,11 +928,11 @@ paths:
       - BearerAuth: []
       summary: Give squares to everyone without any
       tags:
-      - participants
+      - players
   /contests/{id}/roster:
     get:
       description: Full names for the contest's owner, so they know who joined. Other
-        participants only ever see short names.
+        players only ever see short names.
       parameters:
       - description: Contest ID
         in: path
@@ -948,7 +946,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.ParticipantIdentity'
+              $ref: '#/definitions/model.PlayerIdentity'
             type: array
         "400":
           description: Bad Request
@@ -964,9 +962,9 @@ paths:
             $ref: '#/definitions/api.APIError'
       security:
       - BearerAuth: []
-      summary: Who each participant is
+      summary: Who each player is
       tags:
-      - participants
+      - players
   /contests/{id}/squares/{squareId}/claim:
     delete:
       consumes:
@@ -1194,8 +1192,8 @@ paths:
       - health
   /internal/contests/{id}/snapshot:
     get:
-      description: Returns the contest and its participants if the given user may
-        view it. Called by the realtime service.
+      description: Returns the contest and its players if the given user may view
+        it. Called by the realtime service.
       parameters:
       - description: Contest ID
         in: path
@@ -1296,8 +1294,8 @@ paths:
       - invites
   /invites/{token}/join:
     post:
-      description: The signed-in user joins as a participant with no squares; the
-        owner gives them squares afterwards
+      description: The signed-in user joins as a player with no squares; the owner
+        gives them squares afterwards
       parameters:
       - description: Invite token
         in: path
@@ -1310,7 +1308,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/model.ContestParticipant'
+            $ref: '#/definitions/model.ContestPlayer'
         "403":
           description: The contest is finished, or the owner removed this user
           schema:
@@ -1334,10 +1332,10 @@ paths:
       - invites
   /leaderboard:
     get:
-      description: Returns participants ranked by quarter wins. Display names only,
-        no emails
+      description: Returns players ranked by quarter wins. Display names only, no
+        emails
       parameters:
-      - description: Number of participants to return (1-100, default 10)
+      - description: Number of players to return (1-100, default 10)
         in: query
         name: limit
         type: integer
@@ -1361,8 +1359,8 @@ paths:
       - leaderboard
   /leaderboard/me:
     get:
-      description: Returns the authenticated user's rank, total ranked participants,
-        and quarter wins
+      description: Returns the authenticated user's rank, total ranked players, and
+        quarter wins
       produces:
       - application/json
       responses:

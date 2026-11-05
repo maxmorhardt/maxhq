@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { makeContest, makeParticipant, makeSquare, makeViewer } from '../../../../test/fixtures';
+import { makeContest, makePlayer, makeSquare, makeViewer } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
-import type { Contest, Game, Participant } from '../../../../types/contest';
+import type { Contest, Game, Player } from '../../../../types/contest';
 import type { ContestViewer } from '../../live/viewer';
 import ContestDetails from './ContestDetails';
 
@@ -14,19 +14,19 @@ const fullGrid = (overrides: Partial<Contest> = {}) =>
     ...overrides,
   });
 
-const spectator = makeViewer({ isParticipant: false, participant: undefined, squaresLeft: 0 });
+const spectator = makeViewer({ isPlayer: false, player: undefined, squaresLeft: 0 });
 
-const ownerEntry = makeParticipant({ id: 'o', userId: 'u_owner', role: 'owner', maxSquares: 50 });
-const owner = makeViewer({ viewerId: 'u_owner', isOwner: true, participant: ownerEntry });
+const ownerEntry = makePlayer({ id: 'o', userId: 'u_owner', role: 'owner', maxSquares: 50 });
+const owner = makeViewer({ viewerId: 'u_owner', isOwner: true, player: ownerEntry });
 
 function renderDetails(
   contest: Contest,
   viewer: ContestViewer = makeViewer(),
   game?: Game,
-  participants: Participant[] = []
+  players: Player[] = []
 ) {
   return renderWithProviders(
-    <ContestDetails contest={contest} game={game} participants={participants} viewer={viewer} />
+    <ContestDetails contest={contest} game={game} players={players} viewer={viewer} />
   );
 }
 
@@ -73,10 +73,10 @@ describe('ContestDetails', () => {
     expect(screen.queryByText('Your squares')).not.toBeInTheDocument();
   });
 
-  it('tells a participant with no squares to wait for the owner', () => {
+  it('tells a player with no squares to wait for the owner', () => {
     renderDetails(
       makeContest(),
-      makeViewer({ participant: makeParticipant({ maxSquares: 0 }), squaresLeft: 0 })
+      makeViewer({ player: makePlayer({ maxSquares: 0 }), squaresLeft: 0 })
     );
     expect(screen.getByText(/The owner hasn't given you any squares yet/)).toBeInTheDocument();
     expect(screen.queryByTestId('square-actions')).not.toBeInTheDocument();
@@ -91,27 +91,27 @@ describe('ContestDetails', () => {
 
   it('tells the owner who is still waiting for squares', () => {
     const waiting = [
-      makeParticipant({ id: 'a', userId: 'u_a', maxSquares: 0 }),
-      makeParticipant({ id: 'b', userId: 'u_b', maxSquares: 0 }),
+      makePlayer({ id: 'a', userId: 'u_a', maxSquares: 0 }),
+      makePlayer({ id: 'b', userId: 'u_b', maxSquares: 0 }),
     ];
     renderDetails(board(), owner, undefined, [ownerEntry, ...waiting]);
-    expect(screen.getByRole('status')).toHaveTextContent('2 participants have no squares yet.');
+    expect(screen.getByRole('status')).toHaveTextContent('2 players have no squares yet.');
 
     renderDetails(board(), owner, undefined, [ownerEntry, waiting[0]]);
-    expect(screen.getAllByRole('status')[1]).toHaveTextContent('1 participant has no squares yet.');
+    expect(screen.getAllByRole('status')[1]).toHaveTextContent('1 player has no squares yet.');
   });
 
   it('tells the owner when squares are left unassigned', () => {
-    const pat = makeParticipant({ maxSquares: 49 });
+    const pat = makePlayer({ maxSquares: 49 });
     renderDetails(board(), owner, undefined, [ownerEntry, pat]);
     expect(screen.getByRole('status')).toHaveTextContent('1 square isn’t given to anyone');
 
-    renderDetails(board(), owner, undefined, [ownerEntry, makeParticipant({ maxSquares: 40 })]);
+    renderDetails(board(), owner, undefined, [ownerEntry, makePlayer({ maxSquares: 40 })]);
     expect(screen.getAllByRole('status')[1]).toHaveTextContent('10 squares aren’t given to anyone');
   });
 
   it('has nothing to warn about once every square is given out, or the board is full', () => {
-    renderDetails(board(), owner, undefined, [ownerEntry, makeParticipant({ maxSquares: 50 })]);
+    renderDetails(board(), owner, undefined, [ownerEntry, makePlayer({ maxSquares: 50 })]);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
 
     renderDetails(fullGrid(), owner, undefined, [ownerEntry]);

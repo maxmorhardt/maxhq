@@ -7,7 +7,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 - Product: a real-time football squares pool at `squares.maxhq.io`.
 - Applications under `apps/squares/`:
   - `web/` - the React frontend.
-  - `contests/` - contests, squares, participants, invites, leaderboard, stats. Owns the `contests` schema plus local copies of users and games.
+  - `contests/` - contests, squares, players, invites, leaderboard, stats. Owns the `contests` schema plus local copies of users and games.
   - `games/` - ESPN schedule and live scores. Owns the `games` schema.
   - `accounts/` - profiles, account deletion, the contact form. Owns the `accounts` schema.
   - `realtime/` - server-sent events for one contest, and a public stream of live game scores, both resumable with `Last-Event-ID`. Owns no data.

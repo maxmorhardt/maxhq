@@ -27,11 +27,11 @@ type ContestService interface {
 }
 
 type contestService struct {
-	repo               repository.ContestRepository
-	gameRepo           repository.GameSyncRepository
-	tx                 database.Transactor
-	events             ContestEventPublisher
-	participantService ParticipantService
+	repo          repository.ContestRepository
+	gameRepo      repository.GameSyncRepository
+	tx            database.Transactor
+	events        ContestEventPublisher
+	playerService PlayerService
 }
 
 func NewContestService(
@@ -39,14 +39,14 @@ func NewContestService(
 	gameRepo repository.GameSyncRepository,
 	tx database.Transactor,
 	events ContestEventPublisher,
-	participantService ParticipantService,
+	playerService PlayerService,
 ) ContestService {
 	return &contestService{
-		repo:               repo,
-		gameRepo:           gameRepo,
-		tx:                 tx,
-		events:             events,
-		participantService: participantService,
+		repo:          repo,
+		gameRepo:      gameRepo,
+		tx:            tx,
+		events:        events,
+		playerService: playerService,
 	}
 }
 
@@ -113,20 +113,20 @@ func (s *contestService) CreateContest(ctx context.Context, req *model.CreateCon
 		Status:     model.ContestStatusActive,
 	}
 
-	ownerParticipant := &model.ContestParticipant{
+	ownerPlayer := &model.ContestPlayer{
 		UserID:     user,
-		Role:       model.ParticipantRoleOwner,
+		Role:       model.PlayerRoleOwner,
 		MaxSquares: req.MaxSquares,
 	}
 	if err := s.tx.Do(ctx, func(ctx context.Context) error {
-		return s.repo.Create(ctx, &contest, ownerParticipant)
+		return s.repo.Create(ctx, &contest, ownerPlayer)
 	}); err != nil {
-		log.Error("failed to create contest with owner participant", "error", err)
+		log.Error("failed to create contest with owner player", "error", err)
 		return nil, err
 	}
 
 	metrics.IncContestCreated()
-	metrics.IncParticipantJoined(string(model.ParticipantRoleOwner))
+	metrics.IncPlayerJoined(string(model.PlayerRoleOwner))
 	log.Info("created contest", "name", req.Name, "contest_id", contest.ID)
 	return &contest, nil
 }
@@ -288,7 +288,7 @@ func (s *contestService) applyQuarterResults(ctx context.Context, contest *model
 func (s *contestService) DeleteContest(ctx context.Context, contestID uuid.UUID, user string) error {
 	log := logging.FromContext(ctx)
 
-	if err := s.participantService.Authorize(ctx, contestID, user, ActionDeleteContest); err != nil {
+	if err := s.playerService.Authorize(ctx, contestID, user, ActionDeleteContest); err != nil {
 		log.Warn("unauthorized delete attempt", "contest_id", contestID, "user", user)
 		return errs.ErrUnauthorizedContestDelete
 	}

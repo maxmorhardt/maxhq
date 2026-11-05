@@ -13,7 +13,7 @@ type RandomClaimRequest struct {
 	Count int `json:"count" binding:"required,min=1,max=100" example:"5"`
 }
 
-type UpdateParticipantRequest struct {
+type UpdatePlayerRequest struct {
 	MaxSquares *int `json:"maxSquares" binding:"required,min=0,max=100" example:"10"`
 }
 

@@ -18,31 +18,31 @@ import (
 )
 
 type inviteDeps struct {
-	contests     *mocks.ContestRepository
-	participants *mocks.ParticipantRepository
-	bans         *mocks.BanRepository
-	users        *mocks.UserRepository
-	authz        *mocks.ParticipantService
-	events       *mocks.ContestEventPublisher
+	contests *mocks.ContestRepository
+	players  *mocks.PlayerRepository
+	bans     *mocks.BanRepository
+	users    *mocks.UserRepository
+	authz    *mocks.PlayerService
+	events   *mocks.ContestEventPublisher
 }
 
 func newInviteDeps(t *testing.T) *inviteDeps {
 	return &inviteDeps{
-		contests:     mocks.NewContestRepository(t),
-		participants: mocks.NewParticipantRepository(t),
-		bans:         mocks.NewBanRepository(t),
-		users:        anyUser(),
-		authz:        mocks.NewParticipantService(t),
-		events:       anyEvents(),
+		contests: mocks.NewContestRepository(t),
+		players:  mocks.NewPlayerRepository(t),
+		bans:     mocks.NewBanRepository(t),
+		users:    anyUser(),
+		authz:    mocks.NewPlayerService(t),
+		events:   anyEvents(),
 	}
 }
 
 func (d *inviteDeps) svc() service.InviteService {
-	return service.NewInviteService(d.contests, d.participants, d.bans, d.users, d.authz, passTx(), d.events)
+	return service.NewInviteService(d.contests, d.players, d.bans, d.users, d.authz, passTx(), d.events)
 }
 
 func (d *inviteDeps) owner() {
-	d.authz.EXPECT().Authorize(mock.Anything, mock.Anything, "owner", service.ActionManageParticipants).Return(nil)
+	d.authz.EXPECT().Authorize(mock.Anything, mock.Anything, "owner", service.ActionManagePlayers).Return(nil)
 }
 
 func TestGetInviteLink_Success(t *testing.T) {
@@ -59,7 +59,7 @@ func TestGetInviteLink_Success(t *testing.T) {
 func TestGetInviteLink_Failures(t *testing.T) {
 	d := newInviteDeps(t)
 	d.authz.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
-	_, err := d.svc().GetInviteLink(context.Background(), uuid.New(), "participant")
+	_, err := d.svc().GetInviteLink(context.Background(), uuid.New(), "player")
 	assert.ErrorIs(t, err, errs.ErrInsufficientRole)
 
 	for repoErr, want := range map[error]error{database.ErrNotFound: errs.ErrContestNotFound, errors.New("db"): errs.ErrDatabaseUnavailable} {
@@ -132,7 +132,7 @@ func TestGetInvitePreview_Success(t *testing.T) {
 		Squares: []model.Square{{Owner: "a"}, {Owner: "b"}, {}},
 		Game:    &model.Game{HomeAbbr: "DET", AwayAbbr: "CHI", GameTime: kickoff},
 	}, nil)
-	d.participants.EXPECT().GetByContestAndUser(mock.Anything, contestID, "owner").Return(&model.ContestParticipant{UserID: "owner", DisplayName: "Olive Owens"}, nil)
+	d.players.EXPECT().GetByContestAndUser(mock.Anything, contestID, "owner").Return(&model.ContestPlayer{UserID: "owner", DisplayName: "Olive Owens"}, nil)
 
 	got, err := d.svc().GetInvitePreview(context.Background(), "tok")
 	require.NoError(t, err)
@@ -150,7 +150,7 @@ func TestGetInvitePreview_Success(t *testing.T) {
 func TestGetInvitePreview_OwnerMissingLeavesTheNameOut(t *testing.T) {
 	d := newInviteDeps(t)
 	d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
-	d.participants.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(nil, database.ErrNotFound)
+	d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(nil, database.ErrNotFound)
 
 	got, err := d.svc().GetInvitePreview(context.Background(), "tok")
 	require.NoError(t, err)
@@ -171,7 +171,7 @@ func TestGetInvitePreview_Failures(t *testing.T) {
 		}, errs.ErrDatabaseUnavailable},
 		"owner lookup": {func(d *inviteDeps) {
 			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
-			d.participants.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+			d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 		}, errs.ErrDatabaseUnavailable},
 	}
 	for name, tc := range cases {
@@ -187,15 +187,15 @@ func TestJoin_JoinsWithNoSquares(t *testing.T) {
 	contestID := uuid.New()
 	d.contests.EXPECT().GetByInviteToken(mock.Anything, "tok").Return(&model.Contest{ID: contestID, Status: model.ContestStatusActive}, nil)
 	d.bans.EXPECT().Exists(mock.Anything, contestID, "pat@x.com").Return(false, nil)
-	d.participants.EXPECT().Create(mock.Anything, mock.MatchedBy(func(p *model.ContestParticipant) bool {
-		return p.ContestID == contestID && p.UserID == "pat@x.com" && p.Role == model.ParticipantRoleParticipant && p.MaxSquares == 0
+	d.players.EXPECT().Create(mock.Anything, mock.MatchedBy(func(p *model.ContestPlayer) bool {
+		return p.ContestID == contestID && p.UserID == "pat@x.com" && p.Role == model.PlayerRolePlayer && p.MaxSquares == 0
 	})).Return(nil)
 	d.events = mocks.NewContestEventPublisher(t)
-	d.events.EXPECT().PublishParticipantJoined(mock.Anything, contestID, mock.Anything).Return(nil).Once()
+	d.events.EXPECT().PublishPlayerJoined(mock.Anything, contestID, mock.Anything).Return(nil).Once()
 
-	got, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat Participant")
+	got, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat Player")
 	require.NoError(t, err)
-	assert.Equal(t, "Pat Participant", got.DisplayName)
+	assert.Equal(t, "Pat Player", got.DisplayName)
 	assert.Equal(t, 0, got.MaxSquares)
 }
 
@@ -203,7 +203,7 @@ func TestJoin_AfterKickoffJoinsToWatch(t *testing.T) {
 	d := newInviteDeps(t)
 	d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ3}, nil)
 	d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-	d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+	d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 
 	_, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat")
 	require.NoError(t, err)
@@ -232,26 +232,26 @@ func TestJoin_Failures(t *testing.T) {
 		"already in": {func(d *inviteDeps) {
 			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(database.ErrDuplicate)
-		}, errs.ErrAlreadyParticipant},
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(database.ErrDuplicate)
+		}, errs.ErrAlreadyPlayer},
 		"create": {func(d *inviteDeps) {
 			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(assert.AnError)
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(assert.AnError)
 		}, assert.AnError},
 		"profile": {func(d *inviteDeps) {
 			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 			d.users = mocks.NewUserRepository(t)
 			d.users.EXPECT().GetOrCreate(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, assert.AnError)
 		}, assert.AnError},
 		"event": {func(d *inviteDeps) {
 			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 			d.events = mocks.NewContestEventPublisher(t)
-			d.events.EXPECT().PublishParticipantJoined(mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
+			d.events.EXPECT().PublishPlayerJoined(mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
 		}, assert.AnError},
 	}
 	for name, tc := range cases {

@@ -18,19 +18,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// a full board on a scheduled game, split between the owner and one participant; returns the participant's squares
-func fullBoardWith(t *testing.T, game *events.Game, participant string) (contestID uuid.UUID, theirs map[uuid.UUID]string) {
+// a full board on a scheduled game, split between the owner and one player; returns the player's squares
+func fullBoardWith(t *testing.T, game *events.Game, player string) (contestID uuid.UUID, theirs map[uuid.UUID]string) {
 	t.Helper()
 	contest, resp := createContestFor(t, game, ownerUser, "Removal "+uuid.NewString()[:8], 50)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 
-	join(t, ownerUser, participant, contest.ID, 50)
+	join(t, ownerUser, player, contest.ID, 50)
 
 	squares := snapshot(t, ownerUser, contest.ID).Contest.Squares
 	for i := range squares {
 		claimer := ownerUser
 		if i%2 == 0 {
-			claimer = participant
+			claimer = player
 		}
 		claim(t, claimer, contest.ID, squares[i].ID)
 	}
@@ -38,7 +38,7 @@ func fullBoardWith(t *testing.T, game *events.Game, participant string) (contest
 	theirs = map[uuid.UUID]string{}
 	squares = snapshot(t, ownerUser, contest.ID).Contest.Squares
 	for i := range squares {
-		if squares[i].Owner == pseudonym.Of(participant) {
+		if squares[i].Owner == pseudonym.Of(player) {
 			theirs[squares[i].ID] = squares[i].Value
 		}
 	}
@@ -73,12 +73,12 @@ func squaresOf(t *testing.T, contestID uuid.UUID, ids map[uuid.UUID]string) []mo
 }
 
 func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) {
-	participant := "kicked-early@squares.test"
+	player := "kicked-early@squares.test"
 	game := seedGame(t)
-	contestID, theirs := fullBoardWith(t, &game, participant)
+	contestID, theirs := fullBoardWith(t, &game, player)
 
-	// clients name participants by pseudonym
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(participant)), nil)
+	// clients name players by pseudonym
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/players/%s", contestID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	snap := snapshot(t, ownerUser, contestID)
@@ -105,13 +105,13 @@ func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) 
 	}
 }
 
-func TestRemoval_KickedParticipantsListDropsTheContest(t *testing.T) {
-	participant := "kicked-feed@squares.test"
+func TestRemoval_KickedPlayersListDropsTheContest(t *testing.T) {
+	player := "kicked-feed@squares.test"
 	game := seedGame(t)
-	contestID, _ := fullBoardWith(t, &game, participant)
+	contestID, _ := fullBoardWith(t, &game, player)
 
 	inFeed := func() bool {
-		resp := call(t, testkit.As(participant), http.MethodGet, "/contests", nil)
+		resp := call(t, testkit.As(player), http.MethodGet, "/contests", nil)
 		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
 		var feed model.ContestFeedResponse
 		resp.Decode(t, &feed)
@@ -122,21 +122,21 @@ func TestRemoval_KickedParticipantsListDropsTheContest(t *testing.T) {
 		}
 		return false
 	}
-	require.True(t, inFeed(), "the participant's list is now cached with the contest")
+	require.True(t, inFeed(), "the player's list is now cached with the contest")
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(participant)), nil)
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/players/%s", contestID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
-	assert.False(t, inFeed(), "the kick clears the removed participant's cached list")
+	assert.False(t, inFeed(), "the kick clears the removed player's cached list")
 }
 
 func TestRemoval_KickAfterKickoffGhostsTheirSquares(t *testing.T) {
-	participant := "kicked-late@squares.test"
+	player := "kicked-late@squares.test"
 	game := seedGame(t)
-	contestID, theirs := fullBoardWith(t, &game, participant)
+	contestID, theirs := fullBoardWith(t, &game, player)
 	kickoff(t, &game, contestID)
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(participant)), nil)
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/players/%s", contestID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	for _, sq := range squaresOf(t, contestID, theirs) {
@@ -146,18 +146,18 @@ func TestRemoval_KickAfterKickoffGhostsTheirSquares(t *testing.T) {
 }
 
 func TestRemoval_AccountDeletionFreesOpenBoardsAndGhostsStartedOnes(t *testing.T) {
-	participant := "deleted-participant@squares.test"
+	player := "deleted-player@squares.test"
 	openGame := seedGame(t)
-	openID, openSquares := fullBoardWith(t, &openGame, participant)
+	openID, openSquares := fullBoardWith(t, &openGame, player)
 	startedGame := seedGame(t)
-	startedID, startedSquares := fullBoardWith(t, &startedGame, participant)
+	startedID, startedSquares := fullBoardWith(t, &startedGame, player)
 	kickoff(t, &startedGame, startedID)
 
-	// the accounts service blocks this while the participant is in live contests; this covers the race past that check
-	publish(t, events.UsersStream, events.UserDeletedType, events.UserDeleted{Email: participant, DeletedAt: time.Now()})
+	// the accounts service blocks this while the player is in live contests; this covers the race past that check
+	publish(t, events.UsersStream, events.UserDeletedType, events.UserDeleted{Email: player, DeletedAt: time.Now()})
 	require.Eventually(t, func() bool {
 		var users int
-		err := rawDB.QueryRow(`SELECT COUNT(*) FROM contests.users WHERE email = $1`, participant).Scan(&users)
+		err := rawDB.QueryRow(`SELECT COUNT(*) FROM contests.users WHERE email = $1`, player).Scan(&users)
 		return err == nil && users == 0
 	}, eventually, 200*time.Millisecond, "the deleted user is scrubbed")
 
@@ -172,28 +172,28 @@ func TestRemoval_AccountDeletionFreesOpenBoardsAndGhostsStartedOnes(t *testing.T
 	}
 
 	var leftover int
-	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.squares WHERE owner = $1`, participant).Scan(&leftover))
+	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.squares WHERE owner = $1`, player).Scan(&leftover))
 	assert.Zero(t, leftover)
 }
 
-func TestRemoval_EditedAndRemovedParticipantsKeepTheirNames(t *testing.T) {
-	participant := "named@squares.test"
+func TestRemoval_EditedAndRemovedPlayersKeepTheirNames(t *testing.T) {
+	player := "named@squares.test"
 	game := seedGame(t)
 	contest, resp := createContestFor(t, &game, ownerUser, "Names "+uuid.NewString()[:8], 50)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-	join(t, ownerUser, participant, contest.ID, 10)
+	join(t, ownerUser, player, contest.ID, 10)
 
-	path := fmt.Sprintf("/contests/%s/participants/%s", contest.ID, pseudonym.Of(participant))
-	resp = setSquares(t, ownerUser, participant, contest.ID, 5)
+	path := fmt.Sprintf("/contests/%s/players/%s", contest.ID, pseudonym.Of(player))
+	resp = setSquares(t, ownerUser, player, contest.ID, 5)
 	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
-	var updated model.ContestParticipant
+	var updated model.ContestPlayer
 	resp.Decode(t, &updated)
-	assert.Equal(t, "Test N.", updated.DisplayName, "every viewer's participant list takes this entry as is")
+	assert.Equal(t, "Test N.", updated.DisplayName, "every viewer's player list takes this entry as is")
 
 	resp = call(t, testkit.As(ownerUser), http.MethodDelete, path, nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
-	var removed model.ContestParticipant
+	var removed model.ContestPlayer
 	require.Eventually(t, func() bool {
 		entries, err := streams.Range(context.Background(), rdb, events.ContestStream(contest.ID), "", 100)
 		require.NoError(t, err)

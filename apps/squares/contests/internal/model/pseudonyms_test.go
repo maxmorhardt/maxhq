@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	ownerEmail       = "owner@example.com"
-	participantEmail = "participant@example.com"
+	ownerEmail  = "owner@example.com"
+	playerEmail = "player@example.com"
 )
 
 func usePseudonymKey(t *testing.T) {
@@ -31,24 +31,24 @@ func TestPseudonyms_NoEmailOrFullNameLeavesTheService(t *testing.T) {
 	usePseudonymKey(t)
 
 	// a name falls back to the email when the token carries none
-	square := Square{Owner: participantEmail, OwnerName: participantEmail, CreatedBy: ownerEmail, UpdatedBy: participantEmail}
-	result := QuarterResult{Winner: participantEmail, WinnerName: participantEmail, CreatedBy: "system", UpdatedBy: ownerEmail}
-	participant := ContestParticipant{UserID: participantEmail, DisplayName: participantEmail}
+	square := Square{Owner: playerEmail, OwnerName: playerEmail, CreatedBy: ownerEmail, UpdatedBy: playerEmail}
+	result := QuarterResult{Winner: playerEmail, WinnerName: playerEmail, CreatedBy: "system", UpdatedBy: ownerEmail}
+	player := ContestPlayer{UserID: playerEmail, DisplayName: playerEmail}
 	contest := &Contest{
-		Owner: ownerEmail, CreatedBy: ownerEmail, UpdatedBy: participantEmail,
+		Owner: ownerEmail, CreatedBy: ownerEmail, UpdatedBy: playerEmail,
 		Squares:        []Square{square},
 		QuarterResults: []QuarterResult{result},
 	}
 
 	payloads := map[string]any{
-		"square":      square,
-		"result":      &result,
-		"participant": participant,
-		"contest":     contest,
-		"snapshot":    ContestSnapshot{Contest: contest, Participants: []ContestParticipant{participant}},
-		"feed":        ContestFeedResponse{Contests: []ContestSummary{{OwnerName: "Olive Owens"}}},
-		"preview":     &InvitePreviewResponse{OwnerName: "Olive Owens"},
-		"random":      RandomClaimResponse{Squares: []Square{square}},
+		"square":   square,
+		"result":   &result,
+		"player":   player,
+		"contest":  contest,
+		"snapshot": ContestSnapshot{Contest: contest, Players: []ContestPlayer{player}},
+		"feed":     ContestFeedResponse{Contests: []ContestSummary{{OwnerName: "Olive Owens"}}},
+		"preview":  &InvitePreviewResponse{OwnerName: "Olive Owens"},
+		"random":   RandomClaimResponse{Squares: []Square{square}},
 	}
 	for name, payload := range payloads {
 		out := marshal(t, payload)
@@ -61,9 +61,9 @@ func TestPseudonyms_ReplaceEmailsAndKeepTheRest(t *testing.T) {
 	usePseudonymKey(t)
 
 	var square map[string]any
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, Square{ID: uuid.New(), Owner: participantEmail, OwnerName: "Pat Parker", Value: "PP", UpdatedBy: "system"})), &square))
-	assert.Equal(t, pseudonym.Of(participantEmail), square["owner"])
-	assert.Equal(t, "Pat P.", square["ownerName"], "other participants only get the short name")
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, Square{ID: uuid.New(), Owner: playerEmail, OwnerName: "Pat Parker", Value: "PP", UpdatedBy: "system"})), &square))
+	assert.Equal(t, pseudonym.Of(playerEmail), square["owner"])
+	assert.Equal(t, "Pat P.", square["ownerName"], "other players only get the short name")
 	assert.Equal(t, "PP", square["value"])
 	assert.NotContains(t, square, "updatedBy", "clients never need who last touched a row")
 
@@ -77,20 +77,20 @@ func TestPseudonyms_ReplaceEmailsAndKeepTheRest(t *testing.T) {
 	assert.Equal(t, "", empty["ownerName"])
 
 	var nameless map[string]any
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, Square{Owner: participantEmail})), &nameless))
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, Square{Owner: playerEmail})), &nameless))
 	assert.Equal(t, pseudonym.Unnamed, nameless["ownerName"])
 
 	var result map[string]any
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, QuarterResult{Winner: participantEmail})), &result))
-	assert.Equal(t, pseudonym.Of(participantEmail), result["winner"])
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, QuarterResult{Winner: playerEmail})), &result))
+	assert.Equal(t, pseudonym.Of(playerEmail), result["winner"])
 
-	var participant map[string]any
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestParticipant{UserID: participantEmail, DisplayName: "Pat Parker"})), &participant))
-	assert.Equal(t, pseudonym.Of(participantEmail), participant["userId"])
-	assert.Equal(t, "Pat P.", participant["displayName"])
+	var player map[string]any
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestPlayer{UserID: playerEmail, DisplayName: "Pat Parker"})), &player))
+	assert.Equal(t, pseudonym.Of(playerEmail), player["userId"])
+	assert.Equal(t, "Pat P.", player["displayName"])
 
 	var unnamed map[string]any
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestParticipant{UserID: participantEmail})), &unnamed))
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestPlayer{UserID: playerEmail})), &unnamed))
 	assert.Equal(t, pseudonym.Unnamed, unnamed["displayName"])
 
 	var preview map[string]any
@@ -98,8 +98,8 @@ func TestPseudonyms_ReplaceEmailsAndKeepTheRest(t *testing.T) {
 	assert.Equal(t, "Olive O.", preview["ownerName"])
 
 	var ban map[string]any
-	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestBan{UserID: participantEmail, DisplayName: "Pat Parker"})), &ban))
-	assert.Equal(t, pseudonym.Of(participantEmail), ban["userId"])
+	require.NoError(t, json.Unmarshal([]byte(marshal(t, ContestBan{UserID: playerEmail, DisplayName: "Pat Parker"})), &ban))
+	assert.Equal(t, pseudonym.Of(playerEmail), ban["userId"])
 	assert.Equal(t, "Pat Parker", ban["displayName"], "only the owner lists bans, so they get the full name")
 	assert.NotContains(t, ban, "contestId")
 }

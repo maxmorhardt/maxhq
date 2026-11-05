@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function WatchingBanner({ contest, viewer }: Props) {
-  if (viewer.isOwner || viewer.isParticipant || isTerminalStatus(contest.status)) {
+  if (viewer.isOwner || viewer.isPlayer || isTerminalStatus(contest.status)) {
     return null;
   }
 

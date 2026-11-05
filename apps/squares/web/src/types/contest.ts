@@ -4,7 +4,7 @@ export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 
 
 export type ContestVisibility = 'public' | 'private';
 
-export type ParticipantRole = 'owner' | 'participant';
+export type PlayerRole = 'owner' | 'player';
 
 export interface Contest {
   id: string;
@@ -24,7 +24,7 @@ export interface Contest {
   updatedAt: string;
 }
 
-export interface ParticipantIdentity {
+export interface PlayerIdentity {
   userId: string;
   fullName: string;
 }
@@ -77,7 +77,7 @@ export interface ContestSummary {
   status: ContestStatus;
   visibility: ContestVisibility;
   ownerName?: string;
-  role: ParticipantRole;
+  role: PlayerRole;
   gameId?: string;
   gameTime?: string;
   // the quarter the game is in, which runs behind status through the break after a quarter pays out
@@ -165,8 +165,8 @@ export type ActivityEventType =
   | 'quarter_winner'
   | 'contest_started'
   | 'contest_status'
-  | 'participant_added'
-  | 'participant_removed';
+  | 'player_added'
+  | 'player_removed';
 
 export interface ActivityEvent {
   id: string;
@@ -192,16 +192,16 @@ export type ContestUpdate = Pick<
 
 export interface ContestSnapshot {
   contest: Contest;
-  participants: Participant[];
+  participants: Player[];
   viewerId: string;
 }
 
-export interface Participant {
+export interface Player {
   id: string;
   contestId: string;
   userId: string;
   displayName: string;
-  role: ParticipantRole;
+  role: PlayerRole;
   maxSquares: number;
   joinedAt: string;
   createdAt: string;

@@ -144,23 +144,23 @@ func (_c *InviteService_GetInvitePreview_Call) RunAndReturn(run func(context.Con
 }
 
 // Join provides a mock function with given fields: ctx, token, user, displayName
-func (_m *InviteService) Join(ctx context.Context, token string, user string, displayName string) (*model.ContestParticipant, error) {
+func (_m *InviteService) Join(ctx context.Context, token string, user string, displayName string) (*model.ContestPlayer, error) {
 	ret := _m.Called(ctx, token, user, displayName)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Join")
 	}
 
-	var r0 *model.ContestParticipant
+	var r0 *model.ContestPlayer
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*model.ContestParticipant, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*model.ContestPlayer, error)); ok {
 		return rf(ctx, token, user, displayName)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *model.ContestParticipant); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *model.ContestPlayer); ok {
 		r0 = rf(ctx, token, user, displayName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.ContestParticipant)
+			r0 = ret.Get(0).(*model.ContestPlayer)
 		}
 	}
 
@@ -194,12 +194,12 @@ func (_c *InviteService_Join_Call) Run(run func(ctx context.Context, token strin
 	return _c
 }
 
-func (_c *InviteService_Join_Call) Return(_a0 *model.ContestParticipant, _a1 error) *InviteService_Join_Call {
+func (_c *InviteService_Join_Call) Return(_a0 *model.ContestPlayer, _a1 error) *InviteService_Join_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *InviteService_Join_Call) RunAndReturn(run func(context.Context, string, string, string) (*model.ContestParticipant, error)) *InviteService_Join_Call {
+func (_c *InviteService_Join_Call) RunAndReturn(run func(context.Context, string, string, string) (*model.ContestPlayer, error)) *InviteService_Join_Call {
 	_c.Call.Return(run)
 	return _c
 }

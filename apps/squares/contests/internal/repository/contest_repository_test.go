@@ -198,11 +198,11 @@ func TestContestRepository_Create(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "contests"`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(`INSERT INTO "squares"`).WillReturnResult(sqlmock.NewResult(1, 100))
-	mock.ExpectExec(`INSERT INTO "contest_participants"`).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`INSERT INTO "contest_players"`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	err := inTxErr(gdb, func(ctx context.Context) error {
-		return repo.Create(ctx, &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestParticipant{UserID: "owner"})
+		return repo.Create(ctx, &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestPlayer{UserID: "owner"})
 	})
 	require.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -217,7 +217,7 @@ func TestContestRepository_Create_Error(t *testing.T) {
 	mock.ExpectRollback()
 
 	err := inTxErr(gdb, func(ctx context.Context) error {
-		return repo.Create(ctx, &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestParticipant{UserID: "owner"})
+		return repo.Create(ctx, &model.Contest{ID: uuid.New(), Name: "C1"}, &model.ContestPlayer{UserID: "owner"})
 	})
 	require.Error(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

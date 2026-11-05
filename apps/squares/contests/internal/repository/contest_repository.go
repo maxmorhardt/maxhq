@@ -21,7 +21,7 @@ type ContestRepository interface {
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
 	CountByOwner(ctx context.Context, owner string, since time.Time) (model.CreationCounts, error)
 
-	Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error
+	Create(ctx context.Context, contest *model.Contest, owner *model.ContestPlayer) error
 	Update(ctx context.Context, contest *model.Contest) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	ResetInviteToken(ctx context.Context, id uuid.UUID) (string, error)
@@ -105,7 +105,7 @@ func (r *contestRepository) CountByOwner(ctx context.Context, owner string, sinc
 	return counts, err
 }
 
-func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {
+func (r *contestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestPlayer) error {
 	return database.InTx(ctx, func(tx *gorm.DB) error {
 		contest.Version = 1
 		if err := tx.Create(contest).Error; err != nil {

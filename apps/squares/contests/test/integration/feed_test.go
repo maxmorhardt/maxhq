@@ -47,7 +47,7 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 		assert.Equal(t, names[0], second.Contests[0].Name)
 
 		for _, c := range append(first.Contests, second.Contests...) {
-			assert.Equal(t, model.ParticipantRoleOwner, c.Role)
+			assert.Equal(t, model.PlayerRoleOwner, c.Role)
 		}
 	})
 
@@ -55,7 +55,7 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 		got := feed(t, member, nil)
 		require.Len(t, got.Contests, 1)
 		assert.Equal(t, joined.ID, got.Contests[0].ID)
-		assert.Equal(t, model.ParticipantRoleParticipant, got.Contests[0].Role)
+		assert.Equal(t, model.PlayerRolePlayer, got.Contests[0].Role)
 
 		assert.Len(t, feed(t, member, url.Values{"role": {"joined"}}).Contests, 1)
 		assert.Empty(t, feed(t, member, url.Values{"role": {"owned"}}).Contests)

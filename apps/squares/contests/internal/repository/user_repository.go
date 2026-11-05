@@ -13,7 +13,7 @@ import (
 type UserRepository interface {
 	GetOrCreate(ctx context.Context, email, defaultDisplayName, defaultInitials string) (*model.User, error)
 	Upsert(ctx context.Context, user *model.User) error
-	Scrub(ctx context.Context, email string) (released []model.Square, removed []model.ContestParticipant, err error)
+	Scrub(ctx context.Context, email string) (released []model.Square, removed []model.ContestPlayer, err error)
 }
 
 type userRepository struct {
@@ -61,9 +61,9 @@ func (r *userRepository) Upsert(ctx context.Context, user *model.User) error {
 }
 
 // returns what live viewers need to hear about: the squares released in unfinished contests and the memberships removed
-func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestParticipant, error) {
+func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestPlayer, error) {
 	var released []model.Square
-	var removed []model.ContestParticipant
+	var removed []model.ContestPlayer
 	err := database.InTx(ctx, func(tx *gorm.DB) error {
 		if err := tx.Model(&released).Clauses(clause.Returning{}).
 			Where("owner = ? AND contest_id IN (?)", email,
@@ -72,7 +72,7 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 			return err
 		}
 
-		// a started board keeps its squares whole, as when a participant is removed mid-game
+		// a started board keeps its squares whole, as when a player is removed mid-game
 		var ghosted []model.Square
 		if err := tx.Model(&ghosted).Clauses(clause.Returning{}).
 			Where("owner = ? AND contest_id IN (?)", email,

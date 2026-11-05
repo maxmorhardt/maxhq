@@ -7,23 +7,19 @@ import ContestActionIcons from './ContestActionIcons';
 vi.mock('./InviteLinkDialog', () => ({
   default: ({ open }: { open: boolean }) => (open ? <div data-testid="invite" /> : null),
 }));
-vi.mock('./ParticipantsManager', () => ({
-  default: ({ open }: { open: boolean }) => (open ? <div data-testid="participants" /> : null),
+vi.mock('./PlayersManager', () => ({
+  default: ({ open }: { open: boolean }) => (open ? <div data-testid="players" /> : null),
 }));
 
 const renderIcons = (isOwner: boolean) =>
   renderWithProviders(
-    <ContestActionIcons
-      contest={makeContest()}
-      participants={[]}
-      viewer={makeViewer({ isOwner })}
-    />
+    <ContestActionIcons contest={makeContest()} players={[]} viewer={makeViewer({ isOwner })} />
   );
 
 describe('ContestActionIcons', () => {
-  it('shows participants and how to play to everyone', () => {
+  it('shows players and how to play to everyone', () => {
     renderIcons(false);
-    expect(screen.getByRole('button', { name: 'Participants' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Players' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'How to play' })).toHaveAttribute(
       'href',
       '/learn-more'
@@ -37,9 +33,9 @@ describe('ContestActionIcons', () => {
     expect(screen.getByTestId('invite')).toBeInTheDocument();
   });
 
-  it('opens the participant list', () => {
+  it('opens the player list', () => {
     renderIcons(false);
-    fireEvent.click(screen.getByRole('button', { name: 'Participants' }));
-    expect(screen.getByTestId('participants')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Players' }));
+    expect(screen.getByTestId('players')).toBeInTheDocument();
   });
 });

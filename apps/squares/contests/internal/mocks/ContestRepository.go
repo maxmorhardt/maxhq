@@ -133,7 +133,7 @@ func (_c *ContestRepository_CountByOwner_Call) RunAndReturn(run func(context.Con
 }
 
 // Create provides a mock function with given fields: ctx, contest, owner
-func (_m *ContestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error {
+func (_m *ContestRepository) Create(ctx context.Context, contest *model.Contest, owner *model.ContestPlayer) error {
 	ret := _m.Called(ctx, contest, owner)
 
 	if len(ret) == 0 {
@@ -141,7 +141,7 @@ func (_m *ContestRepository) Create(ctx context.Context, contest *model.Contest,
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *model.Contest, *model.ContestParticipant) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *model.Contest, *model.ContestPlayer) error); ok {
 		r0 = rf(ctx, contest, owner)
 	} else {
 		r0 = ret.Error(0)
@@ -158,14 +158,14 @@ type ContestRepository_Create_Call struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contest *model.Contest
-//   - owner *model.ContestParticipant
+//   - owner *model.ContestPlayer
 func (_e *ContestRepository_Expecter) Create(ctx interface{}, contest interface{}, owner interface{}) *ContestRepository_Create_Call {
 	return &ContestRepository_Create_Call{Call: _e.mock.On("Create", ctx, contest, owner)}
 }
 
-func (_c *ContestRepository_Create_Call) Run(run func(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant)) *ContestRepository_Create_Call {
+func (_c *ContestRepository_Create_Call) Run(run func(ctx context.Context, contest *model.Contest, owner *model.ContestPlayer)) *ContestRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*model.Contest), args[2].(*model.ContestParticipant))
+		run(args[0].(context.Context), args[1].(*model.Contest), args[2].(*model.ContestPlayer))
 	})
 	return _c
 }
@@ -175,7 +175,7 @@ func (_c *ContestRepository_Create_Call) Return(_a0 error) *ContestRepository_Cr
 	return _c
 }
 
-func (_c *ContestRepository_Create_Call) RunAndReturn(run func(context.Context, *model.Contest, *model.ContestParticipant) error) *ContestRepository_Create_Call {
+func (_c *ContestRepository_Create_Call) RunAndReturn(run func(context.Context, *model.Contest, *model.ContestPlayer) error) *ContestRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }

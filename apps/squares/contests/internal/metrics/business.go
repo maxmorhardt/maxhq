@@ -42,18 +42,18 @@ var (
 		[]string{"limit"},
 	)
 
-	participantsJoinedTotal = prometheus.NewCounterVec(
+	playersJoinedTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "participants_joined_total",
-			Help: "Total number of participants joined a contest by role",
+			Name: "players_joined_total",
+			Help: "Total number of players joined a contest by role",
 		},
 		[]string{"role"},
 	)
 
-	participantsRemovedTotal = prometheus.NewCounter(
+	playersRemovedTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: "participants_removed_total",
-			Help: "Total number of participants removed from a contest",
+			Name: "players_removed_total",
+			Help: "Total number of players removed from a contest",
 		},
 	)
 
@@ -79,8 +79,8 @@ func init() {
 		contestsStartedTotal,
 		quarterResultsRecordedTotal,
 		limitsReachedTotal,
-		participantsJoinedTotal,
-		participantsRemovedTotal,
+		playersJoinedTotal,
+		playersRemovedTotal,
 		squaresClaimedTotal,
 		squaresClearedTotal,
 	)
@@ -106,12 +106,12 @@ func IncLimitReached(limit string) {
 	limitsReachedTotal.WithLabelValues(limit).Inc()
 }
 
-func IncParticipantJoined(role string) {
-	participantsJoinedTotal.WithLabelValues(role).Inc()
+func IncPlayerJoined(role string) {
+	playersJoinedTotal.WithLabelValues(role).Inc()
 }
 
-func IncParticipantRemoved() {
-	participantsRemovedTotal.Inc()
+func IncPlayerRemoved() {
+	playersRemovedTotal.Inc()
 }
 
 func IncSquareClaimed() {

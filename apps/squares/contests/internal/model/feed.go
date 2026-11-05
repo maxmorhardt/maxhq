@@ -81,7 +81,7 @@ type ContestSummary struct {
 	Status         ContestStatus     `json:"status" example:"ACTIVE"`
 	Visibility     ContestVisibility `json:"visibility" example:"private"`
 	OwnerName      string            `json:"ownerName,omitempty" example:"Max M."`
-	Role           ParticipantRole   `json:"role" example:"owner"`
+	Role           PlayerRole        `json:"role" example:"owner"`
 	GameID         *uuid.UUID        `json:"gameId,omitempty"`
 	GameTime       *time.Time        `json:"gameTime,omitempty"`
 	GamePeriod     int               `json:"gamePeriod,omitempty" example:"2"`

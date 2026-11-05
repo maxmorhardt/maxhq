@@ -27,7 +27,7 @@ function renderBoard(contest: Contest, viewer = makeViewer(), withGame?: Game) {
     <ContestScoreboard
       contest={contest}
       game={withGame}
-      participants={[]}
+      players={[]}
       viewer={viewer}
       status="live"
       onRetry={vi.fn()}
@@ -67,7 +67,7 @@ describe('ContestScoreboard', () => {
   it('falls back to the contest teams and status without a game', () => {
     renderBoard(
       makeContest({ status: 'FINISHED' }),
-      makeViewer({ isParticipant: false, participant: undefined })
+      makeViewer({ isPlayer: false, player: undefined })
     );
     expect(screen.getByText('Away')).toBeInTheDocument();
     expect(screen.getByText('Final')).toBeInTheDocument();

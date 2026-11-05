@@ -107,7 +107,7 @@ func InvalidateFeeds(feedService service.FeedService) gin.HandlerFunc {
 		contestID, err := uuid.Parse(c.Param("id"))
 		hasContest := err == nil
 
-		// a removed participant is no longer a member once the write is done
+		// a removed player is no longer a member once the write is done
 		var members []string
 		if hasContest && c.Param("userId") != "" {
 			members = feedService.Members(ctx, contestID)
@@ -119,7 +119,7 @@ func InvalidateFeeds(feedService service.FeedService) gin.HandlerFunc {
 			return
 		}
 
-		// the owner or the participant leaving is one of the members
+		// the owner or the player leaving is one of the members
 		users := members
 		if users == nil && hasContest {
 			users = feedService.Members(ctx, contestID)

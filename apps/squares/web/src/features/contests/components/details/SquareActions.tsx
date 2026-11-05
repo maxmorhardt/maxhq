@@ -15,7 +15,7 @@ interface Props {
   emptySquares: number;
 }
 
-// the fill-phase actions a participant has: claim random squares, or give back their own
+// the fill-phase actions a player has: claim random squares, or give back their own
 export default function SquareActions({ contest, viewer, emptySquares }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();

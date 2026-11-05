@@ -89,14 +89,14 @@ func TestUserRepository_Scrub(t *testing.T) {
 	for range 9 {
 		mock.ExpectExec(`UPDATE "(squares|quarter_results|contests)" SET`).WillReturnResult(sqlmock.NewResult(0, 0))
 	}
-	mock.ExpectQuery(`DELETE FROM "contest_participants" WHERE user_id = \$1 RETURNING \*`).
+	mock.ExpectQuery(`DELETE FROM "contest_players" WHERE user_id = \$1 RETURNING \*`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "user_id"}).AddRow(uuid.New(), contestID, "a@b.com"))
 	mock.ExpectExec(`DELETE FROM "contest_bans" WHERE user_id = \$1`).WithArgs("a@b.com").WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectExec(`DELETE FROM "users"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
 	var released []model.Square
-	var removed []model.ContestParticipant
+	var removed []model.ContestPlayer
 	require.NoError(t, inTxErr(gdb, func(ctx context.Context) error {
 		var err error
 		released, removed, err = NewUserRepository(gdb).Scrub(ctx, "a@b.com")

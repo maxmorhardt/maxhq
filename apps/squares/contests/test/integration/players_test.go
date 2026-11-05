@@ -21,28 +21,28 @@ func joinWith(t *testing.T, user, token string) testkit.Response {
 
 func allot(t *testing.T, owner string, contestID uuid.UUID, maxSquares int) testkit.Response {
 	t.Helper()
-	return call(t, testkit.As(owner), http.MethodPost, "/contests/"+contestID.String()+"/participants/allot",
+	return call(t, testkit.As(owner), http.MethodPost, "/contests/"+contestID.String()+"/players/allot",
 		model.AllotSquaresRequest{MaxSquares: maxSquares})
 }
 
 func allocated(t *testing.T, contestID uuid.UUID) int {
 	t.Helper()
 	var total int
-	require.NoError(t, rawDB.QueryRow(`SELECT COALESCE(SUM(max_squares), 0) FROM contests.contest_participants WHERE contest_id = $1`, contestID).Scan(&total))
+	require.NoError(t, rawDB.QueryRow(`SELECT COALESCE(SUM(max_squares), 0) FROM contests.contest_players WHERE contest_id = $1`, contestID).Scan(&total))
 	return total
 }
 
-func TestParticipants_RemovalBansUntilTheOwnerUnbans(t *testing.T) {
-	const owner, participant = "ban-owner@squares.test", "banned@squares.test"
+func TestPlayers_RemovalBansUntilTheOwnerUnbans(t *testing.T) {
+	const owner, player = "ban-owner@squares.test", "banned@squares.test"
 	contest, resp := createContest(t, owner, "Bans", 10)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 	token := inviteToken(t, owner, contest.ID)
-	join(t, owner, participant, contest.ID, 5)
+	join(t, owner, player, contest.ID, 5)
 
-	resp = call(t, testkit.As(owner), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contest.ID, pseudonym.Of(participant)), nil)
+	resp = call(t, testkit.As(owner), http.MethodDelete, fmt.Sprintf("/contests/%s/players/%s", contest.ID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
-	resp = joinWith(t, participant, token)
+	resp = joinWith(t, player, token)
 	assert.Equal(t, http.StatusForbidden, resp.Status, "the same link can't get them back in")
 
 	resp = call(t, testkit.As(owner), http.MethodGet, "/contests/"+contest.ID.String()+"/bans", nil)
@@ -50,49 +50,49 @@ func TestParticipants_RemovalBansUntilTheOwnerUnbans(t *testing.T) {
 	var bans []model.ContestBan
 	resp.Decode(t, &bans)
 	require.Len(t, bans, 1)
-	assert.Equal(t, pseudonym.Of(participant), bans[0].UserID)
+	assert.Equal(t, pseudonym.Of(player), bans[0].UserID)
 	assert.NotContains(t, string(resp.Body), "@")
 
-	resp = call(t, testkit.As(participant), http.MethodGet, "/contests/"+contest.ID.String()+"/bans", nil)
+	resp = call(t, testkit.As(player), http.MethodGet, "/contests/"+contest.ID.String()+"/bans", nil)
 	assert.Equal(t, http.StatusForbidden, resp.Status, "only the owner sees who is banned")
 
-	resp = call(t, testkit.As(owner), http.MethodDelete, fmt.Sprintf("/contests/%s/bans/%s", contest.ID, pseudonym.Of(participant)), nil)
+	resp = call(t, testkit.As(owner), http.MethodDelete, fmt.Sprintf("/contests/%s/bans/%s", contest.ID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
-	resp = joinWith(t, participant, token)
+	resp = joinWith(t, player, token)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-	var rejoined model.ContestParticipant
+	var rejoined model.ContestPlayer
 	resp.Decode(t, &rejoined)
 	assert.Zero(t, rejoined.MaxSquares, "a rejoin starts from nothing again")
 }
 
-func TestParticipants_LeavingNeverBans(t *testing.T) {
-	const owner, participant = "leave-owner@squares.test", "leaver@squares.test"
+func TestPlayers_LeavingNeverBans(t *testing.T) {
+	const owner, player = "leave-owner@squares.test", "leaver@squares.test"
 	contest, resp := createContest(t, owner, "Leaving", 10)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-	join(t, owner, participant, contest.ID, 5)
+	join(t, owner, player, contest.ID, 5)
 
-	resp = call(t, testkit.As(participant), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contest.ID, pseudonym.Of(participant)), nil)
+	resp = call(t, testkit.As(player), http.MethodDelete, fmt.Sprintf("/contests/%s/players/%s", contest.ID, pseudonym.Of(player)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
-	resp = joinWith(t, participant, inviteToken(t, owner, contest.ID))
+	resp = joinWith(t, player, inviteToken(t, owner, contest.ID))
 	assert.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 }
 
-func TestParticipants_LoweringALimitFreesTheirSquaresAtRandom(t *testing.T) {
-	const owner, participant = "trim-owner@squares.test", "trimmed@squares.test"
+func TestPlayers_LoweringALimitFreesTheirSquaresAtRandom(t *testing.T) {
+	const owner, player = "trim-owner@squares.test", "trimmed@squares.test"
 	contest, resp := createContest(t, owner, "Trim", 50)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-	join(t, owner, participant, contest.ID, 10)
-	require.Equal(t, http.StatusOK, randomClaim(t, participant, contest.ID.String(), 10).Status)
+	join(t, owner, player, contest.ID, 10)
+	require.Equal(t, http.StatusOK, randomClaim(t, player, contest.ID.String(), 10).Status)
 
-	resp = setSquares(t, owner, participant, contest.ID, 4)
+	resp = setSquares(t, owner, player, contest.ID, 4)
 	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
 
 	var held, open int
 	for _, sq := range snapshot(t, owner, contest.ID).Contest.Squares {
 		switch sq.Owner {
-		case pseudonym.Of(participant):
+		case pseudonym.Of(player):
 			held++
 		case "":
 			open++
@@ -102,7 +102,7 @@ func TestParticipants_LoweringALimitFreesTheirSquaresAtRandom(t *testing.T) {
 	assert.Equal(t, 96, open, "the six freed squares go back on the board")
 }
 
-func TestParticipants_AllotGivesEveryoneWithoutSquaresTheSameNumber(t *testing.T) {
+func TestPlayers_AllotGivesEveryoneWithoutSquaresTheSameNumber(t *testing.T) {
 	const owner = "allot-owner@squares.test"
 	contest, resp := createContest(t, owner, "Allot", 70)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
@@ -117,7 +117,7 @@ func TestParticipants_AllotGivesEveryoneWithoutSquaresTheSameNumber(t *testing.T
 
 	resp = allot(t, owner, contest.ID, 10)
 	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
-	var allotted []model.ContestParticipant
+	var allotted []model.ContestPlayer
 	resp.Decode(t, &allotted)
 	assert.Len(t, allotted, 3)
 	assert.Equal(t, 100, allocated(t, contest.ID))
@@ -126,7 +126,7 @@ func TestParticipants_AllotGivesEveryoneWithoutSquaresTheSameNumber(t *testing.T
 	assert.Equal(t, http.StatusBadRequest, allot(t, owner, contest.ID, 1).Status)
 }
 
-func TestParticipants_ConcurrentRaisesNeverOversellTheBoard(t *testing.T) {
+func TestPlayers_ConcurrentRaisesNeverOversellTheBoard(t *testing.T) {
 	const owner = "race-owner@squares.test"
 	contest, resp := createContest(t, owner, "Race", 0)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))

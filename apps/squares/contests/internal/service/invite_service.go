@@ -18,41 +18,41 @@ type InviteService interface {
 	GetInviteLink(ctx context.Context, contestID uuid.UUID, user string) (*model.InviteLinkResponse, error)
 	ResetInviteLink(ctx context.Context, contestID uuid.UUID, user string) (*model.InviteLinkResponse, error)
 	GetInvitePreview(ctx context.Context, token string) (*model.InvitePreviewResponse, error)
-	Join(ctx context.Context, token, user, displayName string) (*model.ContestParticipant, error)
+	Join(ctx context.Context, token, user, displayName string) (*model.ContestPlayer, error)
 }
 
 type inviteService struct {
-	contestRepo        repository.ContestRepository
-	participantRepo    repository.ParticipantRepository
-	banRepo            repository.BanRepository
-	userRepo           repository.UserRepository
-	participantService ParticipantService
-	tx                 database.Transactor
-	events             ContestEventPublisher
+	contestRepo   repository.ContestRepository
+	playerRepo    repository.PlayerRepository
+	banRepo       repository.BanRepository
+	userRepo      repository.UserRepository
+	playerService PlayerService
+	tx            database.Transactor
+	events        ContestEventPublisher
 }
 
 func NewInviteService(
 	contestRepo repository.ContestRepository,
-	participantRepo repository.ParticipantRepository,
+	playerRepo repository.PlayerRepository,
 	banRepo repository.BanRepository,
 	userRepo repository.UserRepository,
-	participantService ParticipantService,
+	playerService PlayerService,
 	tx database.Transactor,
 	events ContestEventPublisher,
 ) InviteService {
 	return &inviteService{
-		contestRepo:        contestRepo,
-		participantRepo:    participantRepo,
-		banRepo:            banRepo,
-		userRepo:           userRepo,
-		participantService: participantService,
-		tx:                 tx,
-		events:             events,
+		contestRepo:   contestRepo,
+		playerRepo:    playerRepo,
+		banRepo:       banRepo,
+		userRepo:      userRepo,
+		playerService: playerService,
+		tx:            tx,
+		events:        events,
 	}
 }
 
 func (s *inviteService) GetInviteLink(ctx context.Context, contestID uuid.UUID, user string) (*model.InviteLinkResponse, error) {
-	if err := s.participantService.Authorize(ctx, contestID, user, ActionManageParticipants); err != nil {
+	if err := s.playerService.Authorize(ctx, contestID, user, ActionManagePlayers); err != nil {
 		return nil, err
 	}
 
@@ -71,7 +71,7 @@ func (s *inviteService) GetInviteLink(ctx context.Context, contestID uuid.UUID, 
 func (s *inviteService) ResetInviteLink(ctx context.Context, contestID uuid.UUID, user string) (*model.InviteLinkResponse, error) {
 	log := logging.FromContext(ctx)
 
-	if err := s.participantService.Authorize(ctx, contestID, user, ActionManageParticipants); err != nil {
+	if err := s.playerService.Authorize(ctx, contestID, user, ActionManagePlayers); err != nil {
 		return nil, err
 	}
 
@@ -111,7 +111,7 @@ func (s *inviteService) GetInvitePreview(ctx context.Context, token string) (*mo
 	}
 
 	var ownerName string
-	owner, err := s.participantRepo.GetByContestAndUser(ctx, contest.ID, contest.Owner)
+	owner, err := s.playerRepo.GetByContestAndUser(ctx, contest.ID, contest.Owner)
 	switch {
 	case err == nil:
 		ownerName = owner.DisplayName
@@ -148,7 +148,7 @@ func invitePreview(contest *model.Contest, ownerName string) *model.InvitePrevie
 	return preview
 }
 
-func (s *inviteService) Join(ctx context.Context, token, user, displayName string) (*model.ContestParticipant, error) {
+func (s *inviteService) Join(ctx context.Context, token, user, displayName string) (*model.ContestPlayer, error) {
 	log := logging.FromContext(ctx)
 
 	contest, err := s.contestByToken(ctx, token)
@@ -171,37 +171,37 @@ func (s *inviteService) Join(ctx context.Context, token, user, displayName strin
 		return nil, errs.ErrBannedFromContest
 	}
 
-	participant := &model.ContestParticipant{
+	player := &model.ContestPlayer{
 		ContestID:   contest.ID,
 		UserID:      user,
 		DisplayName: displayName,
-		Role:        model.ParticipantRoleParticipant,
+		Role:        model.PlayerRolePlayer,
 	}
 
 	err = s.tx.Do(ctx, func(ctx context.Context) error {
-		if createErr := s.participantRepo.Create(ctx, participant); createErr != nil {
+		if createErr := s.playerRepo.Create(ctx, player); createErr != nil {
 			return createErr
 		}
 
-		// a first-time participant may join before accounts has published their profile, so the participants list needs a name now
+		// a first-time player may join before accounts has published their profile, so the players list needs a name now
 		if _, seedErr := s.userRepo.GetOrCreate(ctx, user, displayName, initials.FromName(displayName)); seedErr != nil {
 			return seedErr
 		}
 
-		return s.events.PublishParticipantJoined(ctx, contest.ID, participant)
+		return s.events.PublishPlayerJoined(ctx, contest.ID, player)
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrDuplicate) {
-			log.Warn("user already a participant", "contest_id", contest.ID, "user", user)
-			return nil, errs.ErrAlreadyParticipant
+			log.Warn("user already a player", "contest_id", contest.ID, "user", user)
+			return nil, errs.ErrAlreadyPlayer
 		}
 		log.Error("failed to join contest", "contest_id", contest.ID, "user", user, "error", err)
 		return nil, err
 	}
 
-	metrics.IncParticipantJoined(string(model.ParticipantRoleParticipant))
+	metrics.IncPlayerJoined(string(model.PlayerRolePlayer))
 	log.Info("joined contest", "contest_id", contest.ID, "user", user)
-	return participant, nil
+	return player, nil
 }
 
 func (s *inviteService) contestByToken(ctx context.Context, token string) (*model.Contest, error) {

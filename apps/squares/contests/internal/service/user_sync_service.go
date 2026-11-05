@@ -74,7 +74,7 @@ func (s *userSyncService) ApplyUserDeleted(ctx context.Context, event *events.Us
 
 	var cleared int
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
-		squares, participants, err := s.userRepo.Scrub(ctx, event.Email)
+		squares, players, err := s.userRepo.Scrub(ctx, event.Email)
 		if err != nil {
 			return err
 		}
@@ -85,8 +85,8 @@ func (s *userSyncService) ApplyUserDeleted(ctx context.Context, event *events.Us
 				return err
 			}
 		}
-		for i := range participants {
-			if err := s.events.PublishParticipantRemoved(ctx, participants[i].ContestID, systemUser, &participants[i]); err != nil {
+		for i := range players {
+			if err := s.events.PublishPlayerRemoved(ctx, players[i].ContestID, systemUser, &players[i]); err != nil {
 				return err
 			}
 		}

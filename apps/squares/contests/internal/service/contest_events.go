@@ -15,9 +15,9 @@ type ContestEventPublisher interface {
 	PublishContestUpdate(ctx context.Context, contestID uuid.UUID, updatedBy string, contest *model.Contest) error
 	PublishQuarterResult(ctx context.Context, contestID uuid.UUID, updatedBy string, quarterResult *model.QuarterResult) error
 	PublishContestDeleted(ctx context.Context, contestID uuid.UUID, updatedBy string) error
-	PublishParticipantRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error
-	PublishParticipantJoined(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error
-	PublishParticipantUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error
+	PublishPlayerRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error
+	PublishPlayerJoined(ctx context.Context, contestID uuid.UUID, player *model.ContestPlayer) error
+	PublishPlayerUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error
 }
 
 type contestEventPublisher struct {
@@ -44,16 +44,16 @@ func (p *contestEventPublisher) PublishContestDeleted(ctx context.Context, conte
 	return p.publish(ctx, events.ContestDeletedType, contestID, updatedBy, nil)
 }
 
-func (p *contestEventPublisher) PublishParticipantRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error {
-	return p.publish(ctx, events.ParticipantRemovedType, contestID, updatedBy, participant)
+func (p *contestEventPublisher) PublishPlayerRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error {
+	return p.publish(ctx, events.ParticipantRemovedType, contestID, updatedBy, player)
 }
 
-func (p *contestEventPublisher) PublishParticipantJoined(ctx context.Context, contestID uuid.UUID, participant *model.ContestParticipant) error {
-	return p.publish(ctx, events.ParticipantJoinedType, contestID, participant.UserID, participant)
+func (p *contestEventPublisher) PublishPlayerJoined(ctx context.Context, contestID uuid.UUID, player *model.ContestPlayer) error {
+	return p.publish(ctx, events.ParticipantJoinedType, contestID, player.UserID, player)
 }
 
-func (p *contestEventPublisher) PublishParticipantUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, participant *model.ContestParticipant) error {
-	return p.publish(ctx, events.ParticipantUpdatedType, contestID, updatedBy, participant)
+func (p *contestEventPublisher) PublishPlayerUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error {
+	return p.publish(ctx, events.ParticipantUpdatedType, contestID, updatedBy, player)
 }
 
 func (p *contestEventPublisher) publish(ctx context.Context, eventType string, contestID uuid.UUID, updatedBy string, data any) error {

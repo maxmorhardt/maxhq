@@ -6,7 +6,7 @@ import type { Contest } from '../../../types/contest';
 import type { ContestViewer } from '../live/viewer';
 import WatchingBanner from './WatchingBanner';
 
-const spectator = makeViewer({ isParticipant: false, participant: undefined, squaresLeft: 0 });
+const spectator = makeViewer({ isPlayer: false, player: undefined, squaresLeft: 0 });
 
 const renderBanner = (
   viewer: ContestViewer,
@@ -21,11 +21,11 @@ describe('WatchingBanner', () => {
     );
   });
 
-  it('stays out of the way of participants and the owner', () => {
+  it('stays out of the way of players and the owner', () => {
     renderBanner(makeViewer());
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
 
-    renderBanner(makeViewer({ isOwner: true, isParticipant: false }));
+    renderBanner(makeViewer({ isOwner: true, isPlayer: false }));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 

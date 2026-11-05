@@ -24,8 +24,8 @@ func expectSquareReload(mock sqlmock.Sqlmock, squareID, contestID uuid.UUID, val
 			AddRow(squareID, contestID, value, owner, owner, version))
 }
 
-func expectClaimParticipantLock(mock sqlmock.Sqlmock, contestID uuid.UUID, maxSquares int) {
-	mock.ExpectQuery(`SELECT \* FROM "contest_participants".*FOR UPDATE`).
+func expectClaimPlayerLock(mock sqlmock.Sqlmock, contestID uuid.UUID, maxSquares int) {
+	mock.ExpectQuery(`SELECT \* FROM "contest_players".*FOR UPDATE`).
 		WithArgs(contestID, "owner", 1).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "user_id", "max_squares"}).
 			AddRow(uuid.New(), contestID, "owner", maxSquares))
@@ -39,7 +39,7 @@ func TestSquareRepository_Claim(t *testing.T) {
 	squareID := uuid.New()
 	mock.ExpectBegin()
 	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	expectClaimParticipantLock(mock, contestID, 5)
+	expectClaimPlayerLock(mock, contestID, 5)
 	mock.ExpectExec(`UPDATE "squares" SET .*"version"=version \+ 1`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
 		WithArgs(contestID, "owner", "").
@@ -84,7 +84,7 @@ func TestSquareRepository_Claim_LostRace(t *testing.T) {
 	contestID := uuid.New()
 	mock.ExpectBegin()
 	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	expectClaimParticipantLock(mock, contestID, 5)
+	expectClaimPlayerLock(mock, contestID, 5)
 	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectRollback()
 
@@ -104,7 +104,7 @@ func TestSquareRepository_Claim_OverLimit(t *testing.T) {
 	contestID := uuid.New()
 	mock.ExpectBegin()
 	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
-	expectClaimParticipantLock(mock, contestID, 3)
+	expectClaimPlayerLock(mock, contestID, 3)
 	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "squares"`).
 		WithArgs(contestID, "owner", "").

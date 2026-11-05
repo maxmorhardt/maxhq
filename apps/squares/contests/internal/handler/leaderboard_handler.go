@@ -26,10 +26,10 @@ func NewLeaderboardHandler(leaderboardService service.LeaderboardService) Leader
 }
 
 // @Summary Get the all-time leaderboard
-// @Description Returns participants ranked by quarter wins. Display names only, no emails
+// @Description Returns players ranked by quarter wins. Display names only, no emails
 // @Tags leaderboard
 // @Produce json
-// @Param limit query int false "Number of participants to return (1-100, default 10)"
+// @Param limit query int false "Number of players to return (1-100, default 10)"
 // @Success 200 {object} model.LeaderboardResponse
 // @Failure 400 {object} api.APIError
 // @Failure 500 {object} api.APIError
@@ -59,7 +59,7 @@ func (h *leaderboardHandler) GetLeaderboard(c *gin.Context) {
 }
 
 // @Summary Get the current user's leaderboard rank
-// @Description Returns the authenticated user's rank, total ranked participants, and quarter wins
+// @Description Returns the authenticated user's rank, total ranked players, and quarter wins
 // @Tags leaderboard
 // @Produce json
 // @Security BearerAuth

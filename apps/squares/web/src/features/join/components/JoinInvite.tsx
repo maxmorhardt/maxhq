@@ -11,7 +11,7 @@ interface Props {
   token: string;
 }
 
-// joins as soon as the link checks out, then sends the new participant to the contest
+// joins as soon as the link checks out, then sends the new player to the contest
 export default function JoinInvite({ token }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -27,13 +27,13 @@ export default function JoinInvite({ token }: Props) {
 
     joinContest(token)
       .unwrap()
-      .then((participant) => {
+      .then((player) => {
         trackConversion('joinedContest');
         showToast(`You joined ${preview.contestName}. The owner will give you squares.`, 'success');
-        navigate(`/contests/${participant.contestId}`, { replace: true });
+        navigate(`/contests/${player.contestId}`, { replace: true });
       })
       .catch((err: unknown) => {
-        // already a participant, so the link has nothing left to do
+        // already a player, so the link has nothing left to do
         if (errorStatus(err) === 409) {
           navigate(`/contests/${preview.contestId}`, { replace: true });
         }

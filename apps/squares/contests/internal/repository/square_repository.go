@@ -58,11 +58,11 @@ func (r *squareRepository) Claim(ctx context.Context, square *model.Square, valu
 			return err
 		}
 
-		// lock the participant row so this user's concurrent claims serialize and the limit below holds
-		var participant model.ContestParticipant
+		// lock the player row so this user's concurrent claims serialize and the limit below holds
+		var player model.ContestPlayer
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("contest_id = ? AND user_id = ?", square.ContestID, owner).
-			First(&participant).Error; err != nil {
+			First(&player).Error; err != nil {
 			return err
 		}
 
@@ -90,7 +90,7 @@ func (r *squareRepository) Claim(ctx context.Context, square *model.Square, valu
 			Count(&claimed).Error; err != nil {
 			return err
 		}
-		if claimed > int64(participant.MaxSquares) {
+		if claimed > int64(player.MaxSquares) {
 			return errs.ErrSquareLimitReached
 		}
 
@@ -111,10 +111,10 @@ func (r *squareRepository) ClaimRandom(ctx context.Context, contestID uuid.UUID,
 			return err
 		}
 
-		var participant model.ContestParticipant
+		var player model.ContestPlayer
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("contest_id = ? AND user_id = ?", contestID, owner).
-			First(&participant).Error; err != nil {
+			First(&player).Error; err != nil {
 			return err
 		}
 
@@ -124,7 +124,7 @@ func (r *squareRepository) ClaimRandom(ctx context.Context, contestID uuid.UUID,
 			Count(&held).Error; err != nil {
 			return err
 		}
-		remaining := participant.MaxSquares - int(held)
+		remaining := player.MaxSquares - int(held)
 		if remaining <= 0 {
 			return errs.ErrSquareLimitReached
 		}

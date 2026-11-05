@@ -59,7 +59,7 @@ type InviteLinkResponse struct {
 	Token string `json:"token" example:"9f2c4e1a7b3d5f6e8a0c2e4f6a8b0d1c3e5f7a9b1d3f5a7c9e1b3d5f7a9c1e3"`
 }
 
-type ParticipantIdentity struct {
+type PlayerIdentity struct {
 	UserID   string `json:"userId" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
 	FullName string `json:"fullName" example:"Max Morhardt"`
 }

@@ -15,30 +15,30 @@ import { useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
 import ConfirmDialog from '../../../../components/feedback/ConfirmDialog';
 import { blockNonIntegerKeys, noNumberSpinners } from '../../../../components/inputs';
-import type { Contest, Participant, ParticipantRole } from '../../../../types/contest';
+import type { Contest, Player, PlayerRole } from '../../../../types/contest';
 import { isTerminalStatus } from '../../../../utils/contestStatus';
 import { useToast } from '../../../toast/useToast';
 import {
   useAllotSquaresMutation,
   useGetBansQuery,
-  useRemoveParticipantMutation,
-  useUnbanParticipantMutation,
+  useRemovePlayerMutation,
+  useUnbanPlayerMutation,
 } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
 import LeaveContestDialog from '../LeaveContestDialog';
-import EditParticipantDialog from './EditParticipantDialog';
+import EditPlayerDialog from './EditPlayerDialog';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   contest: Contest;
-  participants: Participant[];
+  players: Player[];
   viewer: ContestViewer;
 }
 
-const roleColor: Record<ParticipantRole, string> = {
+const roleColor: Record<PlayerRole, string> = {
   owner: '#f7c948',
-  participant: '#5aa9ff',
+  player: '#5aa9ff',
 };
 
 const rowSx = {
@@ -58,20 +58,14 @@ const sectionLabelSx = { color: 'text.secondary', fontSize: '0.8rem', fontWeight
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-export default function ParticipantsManager({
-  open,
-  onClose,
-  contest,
-  participants,
-  viewer,
-}: Props) {
+export default function PlayersManager({ open, onClose, contest, players, viewer }: Props) {
   const { showToast } = useToast();
-  const [removeParticipant, removal] = useRemoveParticipantMutation();
+  const [removePlayer, removal] = useRemovePlayerMutation();
   const [allotSquares, allotment] = useAllotSquaresMutation();
-  const [unban, unbanning] = useUnbanParticipantMutation();
+  const [unban, unbanning] = useUnbanPlayerMutation();
 
-  const [editing, setEditing] = useState<Participant | null>(null);
-  const [removing, setRemoving] = useState<Participant | null>(null);
+  const [editing, setEditing] = useState<Player | null>(null);
+  const [removing, setRemoving] = useState<Player | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [allotCount, setAllotCount] = useState<number | null>(null);
 
@@ -85,9 +79,9 @@ export default function ParticipantsManager({
   const totalSquares = contest.squares.length;
   const claimedBy = (userId: string) => contest.squares.filter((s) => s.owner === userId).length;
   const claimed = contest.squares.filter((s) => s.value.trim() !== '').length;
-  const allocated = participants.reduce((sum, p) => sum + p.maxSquares, 0);
+  const allocated = players.reduce((sum, p) => sum + p.maxSquares, 0);
   const unallocated = Math.max(0, totalSquares - allocated);
-  const waiting = participants.filter((p) => p.role === 'participant' && p.maxSquares === 0);
+  const waiting = players.filter((p) => p.role === 'player' && p.maxSquares === 0);
   const fairShare = waiting.length ? Math.floor(unallocated / waiting.length) : 0;
   const count = Math.min(Math.max(allotCount ?? Math.min(5, fairShare), 1), Math.max(fairShare, 1));
 
@@ -101,8 +95,8 @@ export default function ParticipantsManager({
       return;
     }
     try {
-      await removeParticipant({ contestId: contest.id, userId: removing.userId }).unwrap();
-      showToast('Participant removed', 'success');
+      await removePlayer({ contestId: contest.id, userId: removing.userId }).unwrap();
+      showToast('Player removed', 'success');
       closeRemove();
     } catch {
       // the error renders in the dialog
@@ -112,10 +106,7 @@ export default function ParticipantsManager({
   const handleAllot = async () => {
     try {
       const given = await allotSquares({ contestId: contest.id, maxSquares: count }).unwrap();
-      showToast(
-        `Gave ${plural(count, 'square')} to ${plural(given.length, 'participant')}`,
-        'success'
-      );
+      showToast(`Gave ${plural(count, 'square')} to ${plural(given.length, 'player')}`, 'success');
       setAllotCount(null);
     } catch (err) {
       showToast(errorMessage(err, 'Could not give out squares'), 'error');
@@ -135,7 +126,7 @@ export default function ParticipantsManager({
     <>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pr: 6 }}>
-          Participants
+          Players
           <IconButton
             aria-label="Close dialog"
             onClick={onClose}
@@ -160,7 +151,7 @@ export default function ParticipantsManager({
             {canEdit && waiting.length > 0 && (
               <Box sx={{ ...rowSx, flexWrap: 'wrap', borderColor: 'primary.main' }}>
                 <Typography sx={{ fontSize: '0.85rem', flex: '1 1 200px' }}>
-                  {plural(waiting.length, 'participant')} {waiting.length === 1 ? 'has' : 'have'} no
+                  {plural(waiting.length, 'player')} {waiting.length === 1 ? 'has' : 'have'} no
                   squares yet.
                   {fairShare === 0 && ' Lower someone’s squares to make room first.'}
                 </Typography>
@@ -191,11 +182,11 @@ export default function ParticipantsManager({
               </Box>
             )}
 
-            {participants.map((participant) => {
-              const held = claimedBy(participant.userId);
-              const noSquares = participant.role !== 'owner' && participant.maxSquares === 0;
+            {players.map((player) => {
+              const held = claimedBy(player.userId);
+              const noSquares = player.role !== 'owner' && player.maxSquares === 0;
               return (
-                <Box key={participant.id} sx={rowSx}>
+                <Box key={player.id} sx={rowSx}>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                       <Typography
@@ -203,13 +194,13 @@ export default function ParticipantsManager({
                         noWrap
                         sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}
                       >
-                        {viewer.isMe(participant.userId) ? 'You' : participant.displayName}
+                        {viewer.isMe(player.userId) ? 'You' : player.displayName}
                       </Typography>
                       <Chip
-                        label={participant.role}
+                        label={player.role}
                         size="small"
                         sx={{
-                          bgcolor: roleColor[participant.role],
+                          bgcolor: roleColor[player.role],
                           color: '#000',
                           fontWeight: 600,
                           fontSize: '0.65rem',
@@ -218,17 +209,17 @@ export default function ParticipantsManager({
                         }}
                       />
                     </Box>
-                    {viewer.fullName(participant.userId) && (
+                    {viewer.fullName(player.userId) && (
                       <Typography
                         variant="caption"
                         noWrap
                         sx={{ display: 'block', color: 'rgba(255,255,255,0.5)' }}
                       >
-                        {viewer.fullName(participant.userId)}
+                        {viewer.fullName(player.userId)}
                       </Typography>
                     )}
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                      {noSquares ? 'No squares yet' : `${held}/${participant.maxSquares} squares`}
+                      {noSquares ? 'No squares yet' : `${held}/${player.maxSquares} squares`}
                     </Typography>
                   </Box>
 
@@ -237,21 +228,21 @@ export default function ParticipantsManager({
                       {canEdit && (
                         <Tooltip title="Edit squares">
                           <IconButton
-                            aria-label={`Edit ${participant.displayName}`}
+                            aria-label={`Edit ${player.displayName}`}
                             size="small"
-                            onClick={() => setEditing(participant)}
+                            onClick={() => setEditing(player)}
                             sx={{ color: 'rgba(255,255,255,0.6)' }}
                           >
                             <Edit fontSize="small" />
                           </IconButton>
                         </Tooltip>
                       )}
-                      {participant.role !== 'owner' && (
+                      {player.role !== 'owner' && (
                         <Tooltip title="Remove">
                           <IconButton
-                            aria-label={`Remove ${participant.displayName}`}
+                            aria-label={`Remove ${player.displayName}`}
                             size="small"
-                            onClick={() => setRemoving(participant)}
+                            onClick={() => setRemoving(player)}
                             sx={actionSx}
                           >
                             <Close fontSize="small" />
@@ -262,7 +253,7 @@ export default function ParticipantsManager({
                   )}
 
                   {/* anyone but the owner can leave until the contest is final */}
-                  {isOpen && viewer.isMe(participant.userId) && participant.role !== 'owner' && (
+                  {isOpen && viewer.isMe(player.userId) && player.role !== 'owner' && (
                     <Tooltip title="Leave contest">
                       <IconButton
                         aria-label="Leave contest"
@@ -278,12 +269,12 @@ export default function ParticipantsManager({
               );
             })}
 
-            {participants.length === 0 && (
+            {players.length === 0 && (
               <Typography
                 variant="body2"
                 sx={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', py: 2 }}
               >
-                No participants yet
+                No players yet
               </Typography>
             )}
 
@@ -293,13 +284,13 @@ export default function ParticipantsManager({
                 {bans.map((ban) => (
                   <Box key={ban.userId} sx={rowSx}>
                     <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>
-                      {ban.displayName || 'Unnamed participant'}
+                      {ban.displayName || 'Unnamed player'}
                     </Typography>
                     <Button
                       size="small"
                       onClick={() => handleUnban(ban.userId)}
                       disabled={unbanning.isLoading}
-                      aria-label={`Unban ${ban.displayName || 'participant'}`}
+                      aria-label={`Unban ${ban.displayName || 'player'}`}
                     >
                       Unban
                     </Button>
@@ -311,9 +302,9 @@ export default function ParticipantsManager({
         </DialogContent>
       </Dialog>
 
-      <EditParticipantDialog
+      <EditPlayerDialog
         contestId={contest.id}
-        participant={editing}
+        player={editing}
         claimed={editing ? claimedBy(editing.userId) : 0}
         maxAllowed={editing ? Math.min(totalSquares, editing.maxSquares + unallocated) : 0}
         onClose={() => setEditing(null)}
@@ -321,12 +312,12 @@ export default function ParticipantsManager({
 
       <ConfirmDialog
         open={!!removing}
-        title="Remove Participant"
+        title="Remove Player"
         confirmLabel="Remove"
         onConfirm={handleRemove}
         onClose={closeRemove}
         loading={removal.isLoading}
-        error={removal.error ? errorMessage(removal.error, 'Failed to remove participant') : null}
+        error={removal.error ? errorMessage(removal.error, 'Failed to remove player') : null}
       >
         Remove <strong>{removing?.displayName}</strong>? They lose their squares and can&apos;t
         rejoin with the invite link until you unban them.
