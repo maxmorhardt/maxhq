@@ -3,7 +3,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { MemoryRouter } from 'react-router';
 import JoinError from './JoinError';
-import type { InvitePreviewResponse } from '../../../types/contest';
 
 const mockNavigate = vi.fn();
 
@@ -12,74 +11,30 @@ vi.mock('react-router', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-const theme = createTheme();
-
-function renderComponent(props: React.ComponentProps<typeof JoinError>) {
+function renderComponent(message: string) {
   return render(
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={createTheme()}>
       <MemoryRouter>
-        <JoinError {...props} />
+        <JoinError message={message} />
       </MemoryRouter>
     </ThemeProvider>
   );
 }
 
-const preview = {
-  contestId: 'abc',
-  contestName: 'Super Bowl Contest',
-  ownerName: 'Alice A.',
-  maxSquares: 2,
-  role: 'participant',
-} as InvitePreviewResponse;
-
 describe('JoinError', () => {
-  describe('error variant', () => {
-    it('renders the Unable to Join heading', () => {
-      renderComponent({ variant: 'error', message: 'Invite not found' });
-      expect(screen.getByText('Unable to Join')).toBeInTheDocument();
-    });
-
-    it('renders the error message', () => {
-      renderComponent({ variant: 'error', message: 'This invite has expired' });
-      expect(screen.getByText('This invite has expired')).toBeInTheDocument();
-    });
-
-    it('falls back to a default message when none is given', () => {
-      renderComponent({ variant: 'error' });
-      expect(screen.getByText('This invite link is invalid or expired')).toBeInTheDocument();
-    });
+  it('shows why the link failed', () => {
+    renderComponent('the owner removed you from this contest');
+    expect(screen.getByText('Unable to Join')).toBeInTheDocument();
+    expect(screen.getByText('the owner removed you from this contest')).toBeInTheDocument();
   });
 
-  describe('no-squares variant', () => {
-    it('renders the No Squares Available heading', () => {
-      renderComponent({ variant: 'no-squares' });
-      expect(screen.getByText('No Squares Available')).toBeInTheDocument();
-    });
-
-    it('names the contest in the description when preview is provided', () => {
-      renderComponent({ variant: 'no-squares', preview });
-      expect(screen.getByText('Super Bowl Contest')).toBeInTheDocument();
-    });
-
-    it('falls back to "this contest" in the description when preview is null', () => {
-      renderComponent({ variant: 'no-squares', preview: null });
-      expect(screen.queryByText('Super Bowl Contest')).not.toBeInTheDocument();
-      expect(screen.getByText('this contest')).toBeInTheDocument();
-    });
-
-    it('names the owner in the hint when preview is provided', () => {
-      renderComponent({ variant: 'no-squares', preview });
-      expect(screen.getByText(/Ask Alice A\. to lower/)).toBeInTheDocument();
-    });
-
-    it('falls back to the contest owner in the hint when preview is null', () => {
-      renderComponent({ variant: 'no-squares', preview: null });
-      expect(screen.getByText(/Ask the contest owner to lower/)).toBeInTheDocument();
-    });
+  it('explains that a reset link stops working', () => {
+    renderComponent('gone');
+    expect(screen.getByText(/stops working when the owner resets it/)).toBeInTheDocument();
   });
 
   it('navigates to /contests when My Contests is clicked', () => {
-    renderComponent({ variant: 'error', message: 'Invite not found' });
+    renderComponent('gone');
     fireEvent.click(screen.getByRole('button', { name: /my contests/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/contests');
   });

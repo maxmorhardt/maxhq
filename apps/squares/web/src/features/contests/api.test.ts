@@ -56,41 +56,39 @@ describe('contestsApi', () => {
       'DELETE',
       '/contests/c/squares/claims',
     ],
-    ['getInvites', () => endpoints.getInvites.initiate('c'), 'GET', '/contests/c/invites'],
+    ['getInviteLink', () => endpoints.getInviteLink.initiate('c'), 'GET', '/contests/c/invite'],
     [
-      'createInvite',
-      () =>
-        endpoints.createInvite.initiate({
-          contestId: 'c',
-          request: { maxSquares: 1, role: 'participant' },
-        }),
+      'resetInviteLink',
+      () => endpoints.resetInviteLink.initiate('c'),
       'POST',
-      '/contests/c/invites',
-    ],
-    [
-      'deleteInvite',
-      () => endpoints.deleteInvite.initiate({ contestId: 'c', inviteId: 'i' }),
-      'DELETE',
-      '/contests/c/invites/i',
+      '/contests/c/invite/reset',
     ],
     ['previewInvite', () => endpoints.previewInvite.initiate('t'), 'GET', '/invites/t'],
-    ['redeemInvite', () => endpoints.redeemInvite.initiate('t'), 'POST', '/invites/t/redeem'],
+    ['joinContest', () => endpoints.joinContest.initiate('t'), 'POST', '/invites/t/join'],
     [
       'updateParticipant',
-      () =>
-        endpoints.updateParticipant.initiate({
-          contestId: 'c',
-          userId: 'u',
-          request: { maxSquares: 2 },
-        }),
+      () => endpoints.updateParticipant.initiate({ contestId: 'c', userId: 'u', maxSquares: 2 }),
       'PATCH',
       '/contests/c/participants/u',
+    ],
+    [
+      'allotSquares',
+      () => endpoints.allotSquares.initiate({ contestId: 'c', maxSquares: 3 }),
+      'POST',
+      '/contests/c/participants/allot',
     ],
     [
       'removeParticipant',
       () => endpoints.removeParticipant.initiate({ contestId: 'c', userId: 'u' }),
       'DELETE',
       '/contests/c/participants/u',
+    ],
+    ['getBans', () => endpoints.getBans.initiate('c'), 'GET', '/contests/c/bans'],
+    [
+      'unbanParticipant',
+      () => endpoints.unbanParticipant.initiate({ contestId: 'c', userId: 'u' }),
+      'DELETE',
+      '/contests/c/bans/u',
     ],
   ];
 
@@ -109,6 +107,23 @@ describe('contestsApi', () => {
       endpoints.getContestFeed.initiate({ role: 'owned' }, { direction: 'forward' })
     );
     expect(fetch.lastRequest().url.searchParams.get('cursor')).toBe('next');
+  });
+
+  it('sends the new square limit as the body', async () => {
+    await store.dispatch(
+      endpoints.updateParticipant.initiate({ contestId: 'c', userId: 'u', maxSquares: 0 })
+    );
+    expect(await fetch.lastRequest().request.json()).toEqual({ maxSquares: 0 });
+  });
+
+  it('puts a reset link straight into the cached invite link', async () => {
+    fetch = stubFetch({ token: 'old' });
+    await store.dispatch(endpoints.getInviteLink.initiate('c'));
+    fetch = stubFetch({ token: 'fresh' });
+    await store.dispatch(endpoints.resetInviteLink.initiate('c'));
+    await vi.waitFor(() =>
+      expect(endpoints.getInviteLink.select('c')(store.getState()).data).toEqual({ token: 'fresh' })
+    );
   });
 
   it('lists active contests from the feed', async () => {

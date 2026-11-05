@@ -41,8 +41,8 @@ export default function LeaveContestDialog({ contest, userId, onClose, onLeft }:
       loading={isLoading}
       error={error ? errorMessage(error, 'Failed to leave the contest. Please try again.') : null}
     >
-      Are you sure you want to leave <strong>{contest?.name}</strong>? You'll be removed from the
-      contest and will need a new invite to rejoin.
+      Are you sure you want to leave <strong>{contest?.name}</strong>? Your squares go back on the
+      board. You can rejoin later with the invite link, starting with no squares.
     </ConfirmDialog>
   );
 }

@@ -75,7 +75,7 @@ describe('ContestInfoDialog', () => {
     expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: 'c-1' }));
   });
 
-  it('offers no delete to players or on finished contests', () => {
+  it('offers no delete to participants or on finished contests', () => {
     renderDialog({ role: 'participant' });
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });

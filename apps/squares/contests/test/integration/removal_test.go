@@ -18,25 +18,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// a full board on a scheduled game, split between the owner and one player; returns the player's squares
-func fullBoardWith(t *testing.T, game *events.Game, player string) (contestID uuid.UUID, theirs map[uuid.UUID]string) {
+// a full board on a scheduled game, split between the owner and one participant; returns the participant's squares
+func fullBoardWith(t *testing.T, game *events.Game, participant string) (contestID uuid.UUID, theirs map[uuid.UUID]string) {
 	t.Helper()
 	contest, resp := createContestFor(t, game, ownerUser, "Removal "+uuid.NewString()[:8], 50)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 
-	resp = call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contest.ID.String()+"/invites",
-		model.CreateInviteRequest{MaxSquares: 50, Role: "participant"})
-	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-	var invite model.ContestInvite
-	resp.Decode(t, &invite)
-	resp = call(t, testkit.As(player), http.MethodPost, "/invites/"+invite.Token+"/redeem", nil)
-	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	join(t, ownerUser, participant, contest.ID, 50)
 
 	squares := snapshot(t, ownerUser, contest.ID).Contest.Squares
 	for i := range squares {
 		claimer := ownerUser
 		if i%2 == 0 {
-			claimer = player
+			claimer = participant
 		}
 		claim(t, claimer, contest.ID, squares[i].ID)
 	}
@@ -44,7 +38,7 @@ func fullBoardWith(t *testing.T, game *events.Game, player string) (contestID uu
 	theirs = map[uuid.UUID]string{}
 	squares = snapshot(t, ownerUser, contest.ID).Contest.Squares
 	for i := range squares {
-		if squares[i].Owner == pseudonym.Of(player) {
+		if squares[i].Owner == pseudonym.Of(participant) {
 			theirs[squares[i].ID] = squares[i].Value
 		}
 	}
@@ -79,12 +73,12 @@ func squaresOf(t *testing.T, contestID uuid.UUID, ids map[uuid.UUID]string) []mo
 }
 
 func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) {
-	player := "kicked-early@squares.test"
+	participant := "kicked-early@squares.test"
 	game := seedGame(t)
-	contestID, theirs := fullBoardWith(t, &game, player)
+	contestID, theirs := fullBoardWith(t, &game, participant)
 
-	// clients name players by pseudonym
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
+	// clients name participants by pseudonym
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(participant)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	snap := snapshot(t, ownerUser, contestID)
@@ -111,13 +105,13 @@ func TestRemoval_KickFromAFullBoardBeforeKickoffFreesTheirSquares(t *testing.T) 
 	}
 }
 
-func TestRemoval_KickedPlayersListDropsTheContest(t *testing.T) {
-	player := "kicked-feed@squares.test"
+func TestRemoval_KickedParticipantsListDropsTheContest(t *testing.T) {
+	participant := "kicked-feed@squares.test"
 	game := seedGame(t)
-	contestID, _ := fullBoardWith(t, &game, player)
+	contestID, _ := fullBoardWith(t, &game, participant)
 
 	inFeed := func() bool {
-		resp := call(t, testkit.As(player), http.MethodGet, "/contests", nil)
+		resp := call(t, testkit.As(participant), http.MethodGet, "/contests", nil)
 		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
 		var feed model.ContestFeedResponse
 		resp.Decode(t, &feed)
@@ -128,21 +122,21 @@ func TestRemoval_KickedPlayersListDropsTheContest(t *testing.T) {
 		}
 		return false
 	}
-	require.True(t, inFeed(), "the player's list is now cached with the contest")
+	require.True(t, inFeed(), "the participant's list is now cached with the contest")
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(participant)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
-	assert.False(t, inFeed(), "the kick clears the removed player's cached list")
+	assert.False(t, inFeed(), "the kick clears the removed participant's cached list")
 }
 
 func TestRemoval_KickAfterKickoffGhostsTheirSquares(t *testing.T) {
-	player := "kicked-late@squares.test"
+	participant := "kicked-late@squares.test"
 	game := seedGame(t)
-	contestID, theirs := fullBoardWith(t, &game, player)
+	contestID, theirs := fullBoardWith(t, &game, participant)
 	kickoff(t, &game, contestID)
 
-	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(player)), nil)
+	resp := call(t, testkit.As(ownerUser), http.MethodDelete, fmt.Sprintf("/contests/%s/participants/%s", contestID, pseudonym.Of(participant)), nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))
 
 	for _, sq := range squaresOf(t, contestID, theirs) {
@@ -152,18 +146,18 @@ func TestRemoval_KickAfterKickoffGhostsTheirSquares(t *testing.T) {
 }
 
 func TestRemoval_AccountDeletionFreesOpenBoardsAndGhostsStartedOnes(t *testing.T) {
-	player := "deleted-player@squares.test"
+	participant := "deleted-participant@squares.test"
 	openGame := seedGame(t)
-	openID, openSquares := fullBoardWith(t, &openGame, player)
+	openID, openSquares := fullBoardWith(t, &openGame, participant)
 	startedGame := seedGame(t)
-	startedID, startedSquares := fullBoardWith(t, &startedGame, player)
+	startedID, startedSquares := fullBoardWith(t, &startedGame, participant)
 	kickoff(t, &startedGame, startedID)
 
-	// the accounts service blocks this while the player is in live contests; this covers the race past that check
-	publish(t, events.UsersStream, events.UserDeletedType, events.UserDeleted{Email: player, DeletedAt: time.Now()})
+	// the accounts service blocks this while the participant is in live contests; this covers the race past that check
+	publish(t, events.UsersStream, events.UserDeletedType, events.UserDeleted{Email: participant, DeletedAt: time.Now()})
 	require.Eventually(t, func() bool {
 		var users int
-		err := rawDB.QueryRow(`SELECT COUNT(*) FROM contests.users WHERE email = $1`, player).Scan(&users)
+		err := rawDB.QueryRow(`SELECT COUNT(*) FROM contests.users WHERE email = $1`, participant).Scan(&users)
 		return err == nil && users == 0
 	}, eventually, 200*time.Millisecond, "the deleted user is scrubbed")
 
@@ -178,30 +172,23 @@ func TestRemoval_AccountDeletionFreesOpenBoardsAndGhostsStartedOnes(t *testing.T
 	}
 
 	var leftover int
-	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.squares WHERE owner = $1`, player).Scan(&leftover))
+	require.NoError(t, rawDB.QueryRow(`SELECT COUNT(*) FROM contests.squares WHERE owner = $1`, participant).Scan(&leftover))
 	assert.Zero(t, leftover)
 }
 
-func TestRemoval_EditedAndRemovedPlayersKeepTheirNames(t *testing.T) {
-	player := "named@squares.test"
+func TestRemoval_EditedAndRemovedParticipantsKeepTheirNames(t *testing.T) {
+	participant := "named@squares.test"
 	game := seedGame(t)
 	contest, resp := createContestFor(t, &game, ownerUser, "Names "+uuid.NewString()[:8], 50)
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-	resp = call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contest.ID.String()+"/invites",
-		model.CreateInviteRequest{MaxSquares: 10, Role: "participant"})
-	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-	var invite model.ContestInvite
-	resp.Decode(t, &invite)
-	resp = call(t, testkit.As(player), http.MethodPost, "/invites/"+invite.Token+"/redeem", nil)
-	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	join(t, ownerUser, participant, contest.ID, 10)
 
-	path := fmt.Sprintf("/contests/%s/participants/%s", contest.ID, pseudonym.Of(player))
-	maxSquares := 5
-	resp = call(t, testkit.As(ownerUser), http.MethodPatch, path, model.UpdateParticipantRequest{MaxSquares: &maxSquares})
+	path := fmt.Sprintf("/contests/%s/participants/%s", contest.ID, pseudonym.Of(participant))
+	resp = setSquares(t, ownerUser, participant, contest.ID, 5)
 	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
 	var updated model.ContestParticipant
 	resp.Decode(t, &updated)
-	assert.Equal(t, "Test N.", updated.DisplayName, "every viewer's player list takes this entry as is")
+	assert.Equal(t, "Test N.", updated.DisplayName, "every viewer's participant list takes this entry as is")
 
 	resp = call(t, testkit.As(ownerUser), http.MethodDelete, path, nil)
 	require.Equal(t, http.StatusNoContent, resp.Status, string(resp.Body))

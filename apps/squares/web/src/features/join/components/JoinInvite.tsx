@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { errorMessage, errorStatus } from '../../../api/errors';
 import LoadingScreen from '../../../components/feedback/LoadingScreen';
-import { usePreviewInviteQuery, useRedeemInviteMutation } from '../../contests/api';
+import { useJoinContestMutation, usePreviewInviteQuery } from '../../contests/api';
 import { trackConversion } from '../../../utils/googleAds';
 import { useToast } from '../../toast/useToast';
 import JoinError from './JoinError';
@@ -11,50 +11,39 @@ interface Props {
   token: string;
 }
 
-// redeems the invite as soon as it checks out, then sends the new participant to the contest
+// joins as soon as the link checks out, then sends the new participant to the contest
 export default function JoinInvite({ token }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { data: preview, error: previewError } = usePreviewInviteQuery(token);
-  const [redeemInvite, { error: redeemError }] = useRedeemInviteMutation();
-  const redeemed = useRef(false);
+  const [joinContest, { error: joinError }] = useJoinContestMutation();
+  const joined = useRef(false);
 
   useEffect(() => {
-    if (!preview || redeemed.current) {
+    if (!preview || joined.current) {
       return;
     }
-    redeemed.current = true;
+    joined.current = true;
 
-    redeemInvite(token)
+    joinContest(token)
       .unwrap()
       .then((participant) => {
         trackConversion('joinedContest');
-        showToast('Successfully joined contest!', 'success');
+        showToast(`You joined ${preview.contestName}. The owner will give you squares.`, 'success');
         navigate(`/contests/${participant.contestId}`, { replace: true });
       })
       .catch((err: unknown) => {
-        // already a participant, so the invite has nothing left to do
+        // already a participant, so the link has nothing left to do
         if (errorStatus(err) === 409) {
           navigate(`/contests/${preview.contestId}`, { replace: true });
-          return;
         }
-        showToast(errorMessage(err, 'Failed to join contest'), 'error');
       });
-  }, [preview, token, redeemInvite, navigate, showToast]);
+  }, [preview, token, joinContest, navigate, showToast]);
 
-  const error = previewError ?? (errorStatus(redeemError) === 409 ? undefined : redeemError);
-
-  if (errorStatus(error) === 422) {
-    return <JoinError variant="no-squares" preview={preview} />;
-  }
+  const error = previewError ?? (errorStatus(joinError) === 409 ? undefined : joinError);
 
   if (error) {
-    return (
-      <JoinError
-        variant="error"
-        message={errorMessage(error, 'This invite link is invalid or expired')}
-      />
-    );
+    return <JoinError message={errorMessage(error, 'This invite link doesn’t work anymore')} />;
   }
 
   if (!preview) {

@@ -6,18 +6,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
-	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/api"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
 )
 
 type InviteHandler interface {
-	CreateInvite(c *gin.Context)
+	GetInviteLink(c *gin.Context)
+	ResetInviteLink(c *gin.Context)
 	GetInvitePreview(c *gin.Context)
-	RedeemInvite(c *gin.Context)
-	GetInvites(c *gin.Context)
-	DeleteInvite(c *gin.Context)
+	JoinContest(c *gin.Context)
 }
 
 type inviteHandler struct {
@@ -30,22 +28,19 @@ func NewInviteHandler(inviteService service.InviteService) InviteHandler {
 	}
 }
 
-// @Summary Create an invite link for a contest
-// @Description Owner creates an invite link with specified role and square limit
+// @Summary Get a contest's invite link
+// @Description The owner reads the token of the contest's one invite link
 // @Tags invites
-// @Accept json
 // @Produce json
 // @Param id path string true "Contest ID"
-// @Param invite body model.CreateInviteRequest true "Invite details"
-// @Success 201 {object} model.ContestInvite
+// @Success 200 {object} model.InviteLinkResponse
 // @Failure 400 {object} api.APIError
 // @Failure 403 {object} api.APIError
 // @Failure 404 {object} api.APIError
-// @Failure 429 {object} api.APIError "The contest has the most open invite links allowed, or made the most allowed in a day"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /contests/{id}/invites [post]
-func (h *inviteHandler) CreateInvite(c *gin.Context) {
+// @Router /contests/{id}/invite [get]
+func (h *inviteHandler) GetInviteLink(c *gin.Context) {
 	log := logging.FromGin(c)
 
 	contestID, ok := api.PathUUID(c, "id")
@@ -53,64 +48,77 @@ func (h *inviteHandler) CreateInvite(c *gin.Context) {
 		return
 	}
 
-	var req model.CreateInviteRequest
-	if bindErr := c.ShouldBindJSON(&req); bindErr != nil {
-		log.Warn("failed to bind create invite json", "error", bindErr)
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(errs.ErrInvalidRequestBody), c))
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-	invite, err := h.inviteService.CreateInvite(c.Request.Context(), contestID, &req, user)
+	link, err := h.inviteService.GetInviteLink(c.Request.Context(), contestID, c.GetString(api.UserKey))
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrContestNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestFinalized):
+		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrInvalidSquareCount):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		case errors.Is(err, errs.ErrInviteLimitReached), errors.Is(err, errs.ErrDailyInviteLimit):
-			c.JSON(http.StatusTooManyRequests, api.NewAPIError(http.StatusTooManyRequests, api.Message(err), c))
-		case errors.Is(err, errs.ErrDatabaseUnavailable):
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, api.Message(err), c))
 		default:
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to create invite", c))
+			log.Error("failed to get invite link", "error", err)
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get invite link", c))
 		}
 		return
 	}
 
-	c.JSON(http.StatusCreated, invite)
+	c.JSON(http.StatusOK, link)
+}
+
+// @Summary Reset a contest's invite link
+// @Description The owner replaces the invite link, so the old one stops working
+// @Tags invites
+// @Produce json
+// @Param id path string true "Contest ID"
+// @Success 200 {object} model.InviteLinkResponse
+// @Failure 400 {object} api.APIError
+// @Failure 403 {object} api.APIError
+// @Failure 404 {object} api.APIError
+// @Failure 500 {object} api.APIError
+// @Security BearerAuth
+// @Router /contests/{id}/invite/reset [post]
+func (h *inviteHandler) ResetInviteLink(c *gin.Context) {
+	log := logging.FromGin(c)
+
+	contestID, ok := api.PathUUID(c, "id")
+	if !ok {
+		return
+	}
+
+	link, err := h.inviteService.ResetInviteLink(c.Request.Context(), contestID, c.GetString(api.UserKey))
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrContestNotFound):
+			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
+		case errors.Is(err, errs.ErrNotParticipant), errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrContestFinalized):
+			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
+		default:
+			log.Error("failed to reset invite link", "error", err)
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to reset invite link", c))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, link)
 }
 
 // @Summary Preview an invite link
-// @Description Returns contest name and invite details without authentication
+// @Description Returns the contest an invite link joins, without authentication
 // @Tags invites
 // @Produce json
 // @Param token path string true "Invite token"
 // @Success 200 {object} model.InvitePreviewResponse
-// @Failure 400 {object} api.APIError
 // @Failure 404 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Router /invites/{token} [get]
 func (h *inviteHandler) GetInvitePreview(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	token := c.Param("token")
-	if token == "" {
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Token is required", c))
-		return
-	}
-
-	preview, err := h.inviteService.GetInvitePreview(c.Request.Context(), token)
+	preview, err := h.inviteService.GetInvitePreview(c.Request.Context(), c.Param("token"))
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrInviteExpired), errors.Is(err, errs.ErrInviteMaxUsesReached):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
 		default:
 			log.Error("failed to get invite preview", "error", err)
 			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get invite", c))
@@ -121,131 +129,41 @@ func (h *inviteHandler) GetInvitePreview(c *gin.Context) {
 	c.JSON(http.StatusOK, preview)
 }
 
-// @Summary Redeem an invite link
-// @Description Authenticated user joins a contest via invite token
+// @Summary Join a contest with its invite link
+// @Description The signed-in user joins as a participant with no squares; the owner gives them squares afterwards
 // @Tags invites
 // @Produce json
 // @Param token path string true "Invite token"
 // @Success 201 {object} model.ContestParticipant
-// @Failure 400 {object} api.APIError
+// @Failure 403 {object} api.APIError "The contest is finished, or the owner removed this user"
 // @Failure 404 {object} api.APIError
 // @Failure 409 {object} api.APIError
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
-// @Router /invites/{token}/redeem [post]
-func (h *inviteHandler) RedeemInvite(c *gin.Context) {
+// @Router /invites/{token}/join [post]
+func (h *inviteHandler) JoinContest(c *gin.Context) {
 	log := logging.FromGin(c)
 
-	token := c.Param("token")
-	if token == "" {
-		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, "Token is required", c))
-		return
-	}
-
-	user := c.GetString(api.UserKey)
 	name := ""
 	if claims := api.ClaimsFromContext(c.Request.Context()); claims != nil {
 		name = claims.Name
 	}
-	participant, err := h.inviteService.RedeemInvite(c.Request.Context(), token, user, name)
+
+	participant, err := h.inviteService.Join(c.Request.Context(), c.Param("token"), c.GetString(api.UserKey), name)
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrInviteExpired), errors.Is(err, errs.ErrInviteMaxUsesReached):
-			c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestFinalized):
+		case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrBannedFromContest):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrAlreadyParticipant):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))
-		case errors.Is(err, errs.ErrNotEnoughSquares):
-			c.JSON(http.StatusUnprocessableEntity, api.NewAPIError(http.StatusUnprocessableEntity, api.Message(err), c))
 		default:
-			log.Error("failed to redeem invite", "error", err)
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to redeem invite", c))
+			log.Error("failed to join contest", "error", err)
+			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to join contest", c))
 		}
 		return
 	}
 
 	c.JSON(http.StatusCreated, participant)
-}
-
-// @Summary Get all invites for a contest
-// @Description Owner gets all invite links for a contest
-// @Tags invites
-// @Produce json
-// @Param id path string true "Contest ID"
-// @Success 200 {array} model.ContestInvite
-// @Failure 403 {object} api.APIError
-// @Failure 404 {object} api.APIError
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/{id}/invites [get]
-func (h *inviteHandler) GetInvites(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestID, ok := api.PathUUID(c, "id")
-	if !ok {
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-	invites, err := h.inviteService.GetInvitesByContestID(c.Request.Context(), contestID, user)
-	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrContestNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		default:
-			log.Error("failed to get invites", "error", err)
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to get invites", c))
-		}
-		return
-	}
-
-	c.JSON(http.StatusOK, invites)
-}
-
-// @Summary Delete an invite link
-// @Description Owner deletes an invite link
-// @Tags invites
-// @Param id path string true "Contest ID"
-// @Param inviteId path string true "Invite ID"
-// @Success 204
-// @Failure 403 {object} api.APIError
-// @Failure 404 {object} api.APIError
-// @Failure 500 {object} api.APIError
-// @Security BearerAuth
-// @Router /contests/{id}/invites/{inviteId} [delete]
-func (h *inviteHandler) DeleteInvite(c *gin.Context) {
-	log := logging.FromGin(c)
-
-	contestID, ok := api.PathUUID(c, "id")
-	if !ok {
-		return
-	}
-
-	inviteID, ok := api.PathUUID(c, "inviteId")
-	if !ok {
-		return
-	}
-
-	user := c.GetString(api.UserKey)
-	if err := h.inviteService.DeleteInvite(c.Request.Context(), contestID, inviteID, user); err != nil {
-		switch {
-		case errors.Is(err, errs.ErrContestNotFound):
-			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestFinalized):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrInsufficientRole):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		default:
-			log.Error("failed to delete invite", "error", err)
-			c.JSON(http.StatusInternalServerError, api.NewAPIError(http.StatusInternalServerError, "Failed to delete invite", c))
-		}
-		return
-	}
-
-	c.Status(http.StatusNoContent)
 }

@@ -32,7 +32,7 @@ describe('QuarterStrip', () => {
           quarter: 2,
           homeTeamScore: 14,
           awayTeamScore: 10,
-          winner: 'u_player',
+          winner: 'u_participant',
         }),
       ],
     });

@@ -15,6 +15,8 @@ import (
 type ContestRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error)
+	GetByInviteToken(ctx context.Context, token string) (*model.Contest, error)
+	GetInviteToken(ctx context.Context, id uuid.UUID) (string, error)
 	GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error)
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
 	CountByOwner(ctx context.Context, owner string, since time.Time) (model.CreationCounts, error)
@@ -22,6 +24,7 @@ type ContestRepository interface {
 	Create(ctx context.Context, contest *model.Contest, owner *model.ContestParticipant) error
 	Update(ctx context.Context, contest *model.Contest) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	ResetInviteToken(ctx context.Context, id uuid.UUID) (string, error)
 	ApplyQuarterResults(ctx context.Context, contest *model.Contest, results []model.QuarterResult) error
 }
 
@@ -38,15 +41,27 @@ func NewContestRepository(db *gorm.DB) ContestRepository {
 }
 
 func (r *contestRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Contest, error) {
-	return r.getByID(database.Conn(ctx, r.db), id)
+	return r.get(database.Conn(ctx, r.db), "id = ?", id)
 }
 
 // locks the contest row until the caller's transaction ends, so state checks and the write that follows cannot interleave with square edits
 func (r *contestRepository) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error) {
-	return r.getByID(database.Conn(ctx, r.db).Clauses(clause.Locking{Strength: "UPDATE"}), id)
+	return r.get(database.Conn(ctx, r.db).Clauses(clause.Locking{Strength: "UPDATE"}), "id = ?", id)
 }
 
-func (r *contestRepository) getByID(db *gorm.DB, id uuid.UUID) (*model.Contest, error) {
+func (r *contestRepository) GetByInviteToken(ctx context.Context, token string) (*model.Contest, error) {
+	return r.get(database.Conn(ctx, r.db), "invite_token = ?", token)
+}
+
+func (r *contestRepository) GetInviteToken(ctx context.Context, id uuid.UUID) (string, error) {
+	var contest model.Contest
+	err := database.Conn(ctx, r.db).
+		Select("invite_token").
+		First(&contest, "id = ? AND status != ?", id, model.ContestStatusDeleted).Error
+	return contest.InviteToken, database.TranslateError(err)
+}
+
+func (r *contestRepository) get(db *gorm.DB, query string, arg any) (*model.Contest, error) {
 	var contest model.Contest
 	err := db.
 		Preload("Squares").
@@ -56,7 +71,8 @@ func (r *contestRepository) getByID(db *gorm.DB, id uuid.UUID) (*model.Contest, 
 		Preload("Game.Scores", func(db *gorm.DB) *gorm.DB {
 			return db.Order("quarter ASC")
 		}).
-		First(&contest, "id = ? AND status != ?", id, model.ContestStatusDeleted).Error
+		Where(query, arg).
+		First(&contest, "status != ?", model.ContestStatusDeleted).Error
 
 	return &contest, database.TranslateError(err)
 }
@@ -130,7 +146,7 @@ func saveContest(db *gorm.DB, contest *model.Contest) error {
 	res := db.Model(contest).
 		Where("version = ?", expected).
 		Select("*").
-		Omit(clause.Associations, "id", "created_at", "created_by").
+		Omit(clause.Associations, "id", "invite_token", "created_at", "created_by").
 		Updates(contest)
 	if res.Error != nil {
 		contest.Version = expected
@@ -152,6 +168,25 @@ func (r *contestRepository) Delete(ctx context.Context, id uuid.UUID) error {
 			"status":  model.ContestStatusDeleted,
 			"version": gorm.Expr("version + 1"),
 		}).Error
+}
+
+func (r *contestRepository) ResetInviteToken(ctx context.Context, id uuid.UUID) (string, error) {
+	token, err := model.NewInviteToken()
+	if err != nil {
+		return "", err
+	}
+
+	res := database.Conn(ctx, r.db).
+		Model(&model.Contest{}).
+		Where("id = ? AND status != ?", id, model.ContestStatusDeleted).
+		Update("invite_token", token)
+	if res.Error != nil {
+		return "", res.Error
+	}
+	if res.RowsAffected == 0 {
+		return "", database.ErrNotFound
+	}
+	return token, nil
 }
 
 func (r *contestRepository) ApplyQuarterResults(ctx context.Context, contest *model.Contest, results []model.QuarterResult) error {

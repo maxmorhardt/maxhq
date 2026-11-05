@@ -1,10 +1,10 @@
-import { Groups, Link as LinkIcon, School } from '@mui/icons-material';
+import { Groups, PersonAdd, School } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { Contest, Participant } from '../../../../types/contest';
 import type { ContestViewer } from '../../live/viewer';
-import InviteManager from './InviteManager';
+import InviteLinkDialog from './InviteLinkDialog';
 import ParticipantsManager from './ParticipantsManager';
 
 interface Props {
@@ -25,7 +25,7 @@ const actionSx = {
 const labelSx = { display: { xs: 'none', sm: 'inline' } };
 
 export default function ContestActionIcons({ contest, participants, viewer }: Props) {
-  const [dialog, setDialog] = useState<'invites' | 'participants' | null>(null);
+  const [dialog, setDialog] = useState<'invite' | 'participants' | null>(null);
   const close = () => setDialog(null);
 
   return (
@@ -33,16 +33,13 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
       <Box sx={{ display: 'flex', gap: 1 }}>
         {viewer.isOwner && (
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
-            aria-label="Invite links"
-            onClick={() => setDialog('invites')}
-            startIcon={<LinkIcon />}
-            sx={actionSx}
+            onClick={() => setDialog('invite')}
+            startIcon={<PersonAdd />}
+            sx={{ px: 1.5 }}
           >
-            <Box component="span" sx={labelSx}>
-              Invite
-            </Box>
+            Invite
           </Button>
         )}
         <Button
@@ -54,7 +51,7 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
           sx={actionSx}
         >
           <Box component="span" sx={labelSx}>
-            Players
+            Participants
           </Box>
         </Button>
         <Button
@@ -73,7 +70,7 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
       </Box>
 
       {viewer.isOwner && (
-        <InviteManager open={dialog === 'invites'} onClose={close} contest={contest} />
+        <InviteLinkDialog open={dialog === 'invite'} onClose={close} contest={contest} />
       )}
       <ParticipantsManager
         open={dialog === 'participants'}

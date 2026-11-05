@@ -24,12 +24,7 @@ func TestRandomClaim_FillsWithinLimitsWithoutOverlap(t *testing.T) {
 	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 	id := contest.ID.String()
 
-	invite := call(t, testkit.As(owner), http.MethodPost, "/contests/"+id+"/invites",
-		model.CreateInviteRequest{MaxSquares: 50, Role: "participant"})
-	require.Equal(t, http.StatusCreated, invite.Status, string(invite.Body))
-	var inv model.ContestInvite
-	invite.Decode(t, &inv)
-	require.Equal(t, http.StatusCreated, call(t, testkit.As(member), http.MethodPost, "/invites/"+inv.Token+"/redeem", nil).Status)
+	join(t, owner, member, contest.ID, 50)
 
 	t.Run("claims the requested number of empty squares", func(t *testing.T) {
 		resp := randomClaim(t, owner, id, 5)

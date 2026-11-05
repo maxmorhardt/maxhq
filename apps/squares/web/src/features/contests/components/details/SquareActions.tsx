@@ -21,10 +21,13 @@ export default function SquareActions({ contest, viewer, emptySquares }: Props) 
   const { showToast } = useToast();
   const [claimRandom, { isLoading: claiming }] = useClaimRandomSquaresMutation();
   const [clearMine, { isLoading: clearing }] = useClearMySquaresMutation();
-  const [requested, setRequested] = useState(1);
+  const [requested, setRequested] = useState<number | null>(null);
 
   const maxFill = Math.min(viewer.squaresLeft, emptySquares);
-  const count = Math.min(Math.max(requested, 1), Math.max(maxFill, 1));
+  const count = Math.min(
+    Math.max(requested ?? (viewer.isOwner ? 1 : maxFill), 1),
+    Math.max(maxFill, 1)
+  );
   const busy = claiming || clearing;
   const randomDisabled = busy || maxFill === 0;
 

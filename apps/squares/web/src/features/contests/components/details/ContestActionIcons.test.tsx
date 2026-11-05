@@ -4,8 +4,8 @@ import { makeContest, makeViewer } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
 import ContestActionIcons from './ContestActionIcons';
 
-vi.mock('./InviteManager', () => ({
-  default: ({ open }: { open: boolean }) => (open ? <div data-testid="invites" /> : null),
+vi.mock('./InviteLinkDialog', () => ({
+  default: ({ open }: { open: boolean }) => (open ? <div data-testid="invite" /> : null),
 }));
 vi.mock('./ParticipantsManager', () => ({
   default: ({ open }: { open: boolean }) => (open ? <div data-testid="participants" /> : null),
@@ -28,13 +28,13 @@ describe('ContestActionIcons', () => {
       'href',
       '/learn-more'
     );
-    expect(screen.queryByRole('button', { name: 'Invite links' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Invite' })).not.toBeInTheDocument();
   });
 
-  it('lets the owner manage invites', () => {
+  it('gives the owner an invite button that opens the link', () => {
     renderIcons(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Invite links' }));
-    expect(screen.getByTestId('invites')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
+    expect(screen.getByTestId('invite')).toBeInTheDocument();
   });
 
   it('opens the participant list', () => {

@@ -24,7 +24,7 @@ interface Props {
   onRetry: () => void;
   onSelect: (game: Game) => void;
   onWeek: (week: ScoreboardWeek) => void;
-  // set once the player has stepped away from the week the picker opened on
+  // set once the owner has stepped away from the week the picker opened on
   onReset?: () => void;
 }
 

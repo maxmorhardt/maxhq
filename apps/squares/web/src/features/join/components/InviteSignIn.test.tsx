@@ -17,8 +17,6 @@ vi.mock('../../contests/api', async (importOriginal) => ({
 const preview: InvitePreviewResponse = {
   contestId: 'c-1',
   contestName: 'Office Pool',
-  maxSquares: 10,
-  role: 'participant',
   status: 'ACTIVE',
   claimedSquares: 42,
   totalSquares: 100,
@@ -54,7 +52,11 @@ describe('InviteSignIn', () => {
     expect(screen.getByText('Bears at Lions')).toBeInTheDocument();
     expect(screen.getByText(`Kickoff ${formatKickoff(preview.gameTime!)}`)).toBeInTheDocument();
     expect(screen.getByText(/42/)).toHaveTextContent('42/100 claimed');
-    expect(screen.getByText('You can claim up to 10 of the 58 open squares.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '58 of 100 squares are still open. You join with none, and the owner gives you yours.'
+      )
+    ).toBeInTheDocument();
   });
 
   it('says when the board is full or the game has started', () => {

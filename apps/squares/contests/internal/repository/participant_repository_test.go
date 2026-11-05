@@ -6,6 +6,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +40,7 @@ func TestParticipantRepository_GetAllByContestID(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Len(t, ps, 2)
-	assert.Equal(t, "Ann Smith", ps[0].DisplayName, "each participant carries the name other players see")
+	assert.Equal(t, "Ann Smith", ps[0].DisplayName, "each participant carries the name other participants see")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -68,5 +69,19 @@ func TestParticipantRepository_Delete(t *testing.T) {
 	err := repo.Delete(context.Background(), uuid.New(), "u1")
 
 	require.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestParticipantRepository_Create(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewParticipantRepository(gdb)
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`INSERT INTO "contest_participants"`).WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	p := &model.ContestParticipant{ContestID: uuid.New(), UserID: "u1", Role: model.ParticipantRoleParticipant}
+	require.NoError(t, repo.Create(context.Background(), p))
+	assert.NotEqual(t, uuid.Nil, p.ID)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

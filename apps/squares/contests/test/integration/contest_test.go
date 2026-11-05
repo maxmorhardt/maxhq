@@ -32,33 +32,51 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, resp.Status)
 	})
 
-	var inviteToken string
-	t.Run("owner creates an invite", func(t *testing.T) {
-		resp := call(t, testkit.As(ownerUser), http.MethodPost, "/contests/"+contestID.String()+"/invites",
-			model.CreateInviteRequest{MaxSquares: 50, Role: "participant"})
-		require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
-		var invite model.ContestInvite
-		resp.Decode(t, &invite)
-		inviteToken = invite.Token
+	var token string
+	t.Run("only the owner reads the invite link", func(t *testing.T) {
+		token = inviteToken(t, ownerUser, contestID)
+		assert.Len(t, token, 64)
+
+		snap := call(t, testkit.As(ownerUser), http.MethodGet, "/contests/"+contestID.String(), nil)
+		assert.NotContains(t, string(snap.Body), token, "the contest itself never carries the link")
+
+		resp := call(t, testkit.As(memberUser), http.MethodGet, "/contests/"+contestID.String()+"/invite", nil)
+		assert.Equal(t, http.StatusForbidden, resp.Status)
 	})
 
 	t.Run("anyone can preview the invite", func(t *testing.T) {
-		resp := call(t, testkit.Anonymous, http.MethodGet, "/invites/"+inviteToken, nil)
+		resp := call(t, testkit.Anonymous, http.MethodGet, "/invites/"+token, nil)
 		require.Equal(t, http.StatusOK, resp.Status)
 		assert.Contains(t, string(resp.Body), "Super Bowl")
 		assert.NotContains(t, string(resp.Body), "@", "the owner is named, never emailed")
 	})
 
-	t.Run("member redeems the invite", func(t *testing.T) {
-		resp := call(t, testkit.As(memberUser), http.MethodPost, "/invites/"+inviteToken+"/redeem", nil)
+	t.Run("member joins with no squares", func(t *testing.T) {
+		resp := call(t, testkit.As(memberUser), http.MethodPost, "/invites/"+token+"/join", nil)
 		require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
 
-		// a first-time player has a name in the players list before claiming or opening their profile
+		// a first-time participant has a name in the participants list before claiming or opening their profile
 		for _, p := range snapshot(t, ownerUser, contestID).Participants {
 			if p.UserID == pseudonym.Of(memberUser) {
 				assert.Equal(t, "Test M.", p.DisplayName)
+				assert.Zero(t, p.MaxSquares)
 			}
 		}
+
+		sq := snapshot(t, memberUser, contestID).Contest.Squares[0]
+		resp = call(t, testkit.As(memberUser), http.MethodPut, fmt.Sprintf("/contests/%s/squares/%s/claim", contestID, sq.ID), nil)
+		assert.Equal(t, http.StatusBadRequest, resp.Status, "nothing to claim until the owner gives out squares")
+
+		resp = call(t, testkit.As(memberUser), http.MethodPost, "/invites/"+token+"/join", nil)
+		assert.Equal(t, http.StatusConflict, resp.Status, "joining twice is refused")
+	})
+
+	t.Run("the owner can't give out more than 100 squares", func(t *testing.T) {
+		resp := setSquares(t, ownerUser, memberUser, contestID, 51)
+		assert.Equal(t, http.StatusBadRequest, resp.Status, "the owner already holds 50")
+
+		resp = setSquares(t, ownerUser, memberUser, contestID, 50)
+		require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
 	})
 
 	t.Run("member fills half the grid and the owner the rest", func(t *testing.T) {

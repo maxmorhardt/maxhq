@@ -33,12 +33,7 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 	}
 	joined, _ := createContest(t, owner, "Feed Joined", 10)
 
-	invite := call(t, testkit.As(owner), http.MethodPost, "/contests/"+joined.ID.String()+"/invites",
-		model.CreateInviteRequest{MaxSquares: 10, Role: "participant"})
-	require.Equal(t, http.StatusCreated, invite.Status, string(invite.Body))
-	var inv model.ContestInvite
-	invite.Decode(t, &inv)
-	require.Equal(t, http.StatusCreated, call(t, testkit.As(member), http.MethodPost, "/invites/"+inv.Token+"/redeem", nil).Status)
+	join(t, owner, member, joined.ID, 10)
 
 	t.Run("owner pages through every contest newest first", func(t *testing.T) {
 		first := feed(t, owner, url.Values{"limit": {"3"}})

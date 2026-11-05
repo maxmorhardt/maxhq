@@ -125,7 +125,7 @@ describe('describeEvent', () => {
     expect(ownerLabel('ghost', '')).toBe('ghost');
   });
 
-  it('skips new initials on a held square and a departed player kept in play', () => {
+  it('skips new initials on a held square and a departed participant kept in play', () => {
     const renamed = event(
       'square.updated',
       makeSquare({ row: 1, col: 2, value: 'XY', owner: 'u_ann', ownerName: 'Ann' })

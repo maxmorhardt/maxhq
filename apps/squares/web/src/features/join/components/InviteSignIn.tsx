@@ -65,7 +65,7 @@ function whatToExpect(preview: InvitePreviewResponse): string {
   if (open <= 0) {
     return 'The board is full and locked, so you can join to watch the game.';
   }
-  return `You can claim up to ${preview.maxSquares} of the ${open} open squares.`;
+  return `${open} of ${preview.totalSquares} squares are still open. You join with none, and the owner gives you yours.`;
 }
 
 function ContestHeading({ preview }: { preview: InvitePreviewResponse }) {
@@ -171,12 +171,7 @@ export default function InviteSignIn({ token }: Props) {
   const { data: preview, error, isLoading } = usePreviewInviteQuery(token);
 
   if (error) {
-    return (
-      <JoinError
-        variant="error"
-        message={errorMessage(error, 'This invite link is invalid or expired')}
-      />
-    );
+    return <JoinError message={errorMessage(error, 'This invite link doesn’t work anymore')} />;
   }
 
   const signIn = (provider: OIDCProvider) => signInWithProvider(auth, provider);

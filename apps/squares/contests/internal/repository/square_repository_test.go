@@ -321,3 +321,29 @@ func TestSquareRepository_UpdateInitials_Error(t *testing.T) {
 
 	require.Error(t, err)
 }
+
+func TestSquareRepository_ClearRandomByOwner(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewSquareRepository(gdb)
+
+	contestID := uuid.New()
+	freed := uuid.New()
+	mock.ExpectBegin()
+	expectActiveContestLock(mock, contestID, model.ContestStatusActive)
+	mock.ExpectQuery(`SELECT "id" FROM "squares" WHERE contest_id = \$1 AND owner = \$2 ORDER BY random\(\) LIMIT \$3`).
+		WithArgs(contestID, "o", 3).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(freed))
+	mock.ExpectExec(`UPDATE "squares"`).WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectQuery(`SELECT \* FROM "squares" WHERE id IN`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "owner", "value", "version"}).AddRow(freed, contestID, "", "", 2))
+	mock.ExpectCommit()
+
+	squares, err := inTx(gdb, func(ctx context.Context) ([]model.Square, error) {
+		return repo.ClearRandomByOwner(ctx, contestID, "o", 3)
+	})
+
+	require.NoError(t, err)
+	require.Len(t, squares, 1)
+	assert.Empty(t, squares[0].Owner)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

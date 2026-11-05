@@ -24,29 +24,29 @@ func (_m *InviteService) EXPECT() *InviteService_Expecter {
 	return &InviteService_Expecter{mock: &_m.Mock}
 }
 
-// CreateInvite provides a mock function with given fields: ctx, contestID, req, user
-func (_m *InviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, req *model.CreateInviteRequest, user string) (*model.ContestInvite, error) {
-	ret := _m.Called(ctx, contestID, req, user)
+// GetInviteLink provides a mock function with given fields: ctx, contestID, user
+func (_m *InviteService) GetInviteLink(ctx context.Context, contestID uuid.UUID, user string) (*model.InviteLinkResponse, error) {
+	ret := _m.Called(ctx, contestID, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CreateInvite")
+		panic("no return value specified for GetInviteLink")
 	}
 
-	var r0 *model.ContestInvite
+	var r0 *model.InviteLinkResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.CreateInviteRequest, string) (*model.ContestInvite, error)); ok {
-		return rf(ctx, contestID, req, user)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (*model.InviteLinkResponse, error)); ok {
+		return rf(ctx, contestID, user)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *model.CreateInviteRequest, string) *model.ContestInvite); ok {
-		r0 = rf(ctx, contestID, req, user)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) *model.InviteLinkResponse); ok {
+		r0 = rf(ctx, contestID, user)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.ContestInvite)
+			r0 = ret.Get(0).(*model.InviteLinkResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, *model.CreateInviteRequest, string) error); ok {
-		r1 = rf(ctx, contestID, req, user)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, contestID, user)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -54,82 +54,32 @@ func (_m *InviteService) CreateInvite(ctx context.Context, contestID uuid.UUID, 
 	return r0, r1
 }
 
-// InviteService_CreateInvite_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateInvite'
-type InviteService_CreateInvite_Call struct {
+// InviteService_GetInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetInviteLink'
+type InviteService_GetInviteLink_Call struct {
 	*mock.Call
 }
 
-// CreateInvite is a helper method to define mock.On call
+// GetInviteLink is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contestID uuid.UUID
-//   - req *model.CreateInviteRequest
 //   - user string
-func (_e *InviteService_Expecter) CreateInvite(ctx interface{}, contestID interface{}, req interface{}, user interface{}) *InviteService_CreateInvite_Call {
-	return &InviteService_CreateInvite_Call{Call: _e.mock.On("CreateInvite", ctx, contestID, req, user)}
+func (_e *InviteService_Expecter) GetInviteLink(ctx interface{}, contestID interface{}, user interface{}) *InviteService_GetInviteLink_Call {
+	return &InviteService_GetInviteLink_Call{Call: _e.mock.On("GetInviteLink", ctx, contestID, user)}
 }
 
-func (_c *InviteService_CreateInvite_Call) Run(run func(ctx context.Context, contestID uuid.UUID, req *model.CreateInviteRequest, user string)) *InviteService_CreateInvite_Call {
+func (_c *InviteService_GetInviteLink_Call) Run(run func(ctx context.Context, contestID uuid.UUID, user string)) *InviteService_GetInviteLink_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(*model.CreateInviteRequest), args[3].(string))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *InviteService_CreateInvite_Call) Return(_a0 *model.ContestInvite, _a1 error) *InviteService_CreateInvite_Call {
+func (_c *InviteService_GetInviteLink_Call) Return(_a0 *model.InviteLinkResponse, _a1 error) *InviteService_GetInviteLink_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *InviteService_CreateInvite_Call) RunAndReturn(run func(context.Context, uuid.UUID, *model.CreateInviteRequest, string) (*model.ContestInvite, error)) *InviteService_CreateInvite_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// DeleteInvite provides a mock function with given fields: ctx, contestID, inviteID, user
-func (_m *InviteService) DeleteInvite(ctx context.Context, contestID uuid.UUID, inviteID uuid.UUID, user string) error {
-	ret := _m.Called(ctx, contestID, inviteID, user)
-
-	if len(ret) == 0 {
-		panic("no return value specified for DeleteInvite")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, string) error); ok {
-		r0 = rf(ctx, contestID, inviteID, user)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// InviteService_DeleteInvite_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteInvite'
-type InviteService_DeleteInvite_Call struct {
-	*mock.Call
-}
-
-// DeleteInvite is a helper method to define mock.On call
-//   - ctx context.Context
-//   - contestID uuid.UUID
-//   - inviteID uuid.UUID
-//   - user string
-func (_e *InviteService_Expecter) DeleteInvite(ctx interface{}, contestID interface{}, inviteID interface{}, user interface{}) *InviteService_DeleteInvite_Call {
-	return &InviteService_DeleteInvite_Call{Call: _e.mock.On("DeleteInvite", ctx, contestID, inviteID, user)}
-}
-
-func (_c *InviteService_DeleteInvite_Call) Run(run func(ctx context.Context, contestID uuid.UUID, inviteID uuid.UUID, user string)) *InviteService_DeleteInvite_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *InviteService_DeleteInvite_Call) Return(_a0 error) *InviteService_DeleteInvite_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *InviteService_DeleteInvite_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID, string) error) *InviteService_DeleteInvite_Call {
+func (_c *InviteService_GetInviteLink_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (*model.InviteLinkResponse, error)) *InviteService_GetInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -193,72 +143,12 @@ func (_c *InviteService_GetInvitePreview_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
-// GetInvitesByContestID provides a mock function with given fields: ctx, contestID, user
-func (_m *InviteService) GetInvitesByContestID(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestInvite, error) {
-	ret := _m.Called(ctx, contestID, user)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetInvitesByContestID")
-	}
-
-	var r0 []model.ContestInvite
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) ([]model.ContestInvite, error)); ok {
-		return rf(ctx, contestID, user)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) []model.ContestInvite); ok {
-		r0 = rf(ctx, contestID, user)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.ContestInvite)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
-		r1 = rf(ctx, contestID, user)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// InviteService_GetInvitesByContestID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetInvitesByContestID'
-type InviteService_GetInvitesByContestID_Call struct {
-	*mock.Call
-}
-
-// GetInvitesByContestID is a helper method to define mock.On call
-//   - ctx context.Context
-//   - contestID uuid.UUID
-//   - user string
-func (_e *InviteService_Expecter) GetInvitesByContestID(ctx interface{}, contestID interface{}, user interface{}) *InviteService_GetInvitesByContestID_Call {
-	return &InviteService_GetInvitesByContestID_Call{Call: _e.mock.On("GetInvitesByContestID", ctx, contestID, user)}
-}
-
-func (_c *InviteService_GetInvitesByContestID_Call) Run(run func(ctx context.Context, contestID uuid.UUID, user string)) *InviteService_GetInvitesByContestID_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *InviteService_GetInvitesByContestID_Call) Return(_a0 []model.ContestInvite, _a1 error) *InviteService_GetInvitesByContestID_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *InviteService_GetInvitesByContestID_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) ([]model.ContestInvite, error)) *InviteService_GetInvitesByContestID_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// RedeemInvite provides a mock function with given fields: ctx, token, user, displayName
-func (_m *InviteService) RedeemInvite(ctx context.Context, token string, user string, displayName string) (*model.ContestParticipant, error) {
+// Join provides a mock function with given fields: ctx, token, user, displayName
+func (_m *InviteService) Join(ctx context.Context, token string, user string, displayName string) (*model.ContestParticipant, error) {
 	ret := _m.Called(ctx, token, user, displayName)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RedeemInvite")
+		panic("no return value specified for Join")
 	}
 
 	var r0 *model.ContestParticipant
@@ -283,33 +173,93 @@ func (_m *InviteService) RedeemInvite(ctx context.Context, token string, user st
 	return r0, r1
 }
 
-// InviteService_RedeemInvite_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RedeemInvite'
-type InviteService_RedeemInvite_Call struct {
+// InviteService_Join_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Join'
+type InviteService_Join_Call struct {
 	*mock.Call
 }
 
-// RedeemInvite is a helper method to define mock.On call
+// Join is a helper method to define mock.On call
 //   - ctx context.Context
 //   - token string
 //   - user string
 //   - displayName string
-func (_e *InviteService_Expecter) RedeemInvite(ctx interface{}, token interface{}, user interface{}, displayName interface{}) *InviteService_RedeemInvite_Call {
-	return &InviteService_RedeemInvite_Call{Call: _e.mock.On("RedeemInvite", ctx, token, user, displayName)}
+func (_e *InviteService_Expecter) Join(ctx interface{}, token interface{}, user interface{}, displayName interface{}) *InviteService_Join_Call {
+	return &InviteService_Join_Call{Call: _e.mock.On("Join", ctx, token, user, displayName)}
 }
 
-func (_c *InviteService_RedeemInvite_Call) Run(run func(ctx context.Context, token string, user string, displayName string)) *InviteService_RedeemInvite_Call {
+func (_c *InviteService_Join_Call) Run(run func(ctx context.Context, token string, user string, displayName string)) *InviteService_Join_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *InviteService_RedeemInvite_Call) Return(_a0 *model.ContestParticipant, _a1 error) *InviteService_RedeemInvite_Call {
+func (_c *InviteService_Join_Call) Return(_a0 *model.ContestParticipant, _a1 error) *InviteService_Join_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *InviteService_RedeemInvite_Call) RunAndReturn(run func(context.Context, string, string, string) (*model.ContestParticipant, error)) *InviteService_RedeemInvite_Call {
+func (_c *InviteService_Join_Call) RunAndReturn(run func(context.Context, string, string, string) (*model.ContestParticipant, error)) *InviteService_Join_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ResetInviteLink provides a mock function with given fields: ctx, contestID, user
+func (_m *InviteService) ResetInviteLink(ctx context.Context, contestID uuid.UUID, user string) (*model.InviteLinkResponse, error) {
+	ret := _m.Called(ctx, contestID, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetInviteLink")
+	}
+
+	var r0 *model.InviteLinkResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (*model.InviteLinkResponse, error)); ok {
+		return rf(ctx, contestID, user)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) *model.InviteLinkResponse); ok {
+		r0 = rf(ctx, contestID, user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.InviteLinkResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, contestID, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InviteService_ResetInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetInviteLink'
+type InviteService_ResetInviteLink_Call struct {
+	*mock.Call
+}
+
+// ResetInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - user string
+func (_e *InviteService_Expecter) ResetInviteLink(ctx interface{}, contestID interface{}, user interface{}) *InviteService_ResetInviteLink_Call {
+	return &InviteService_ResetInviteLink_Call{Call: _e.mock.On("ResetInviteLink", ctx, contestID, user)}
+}
+
+func (_c *InviteService_ResetInviteLink_Call) Run(run func(ctx context.Context, contestID uuid.UUID, user string)) *InviteService_ResetInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *InviteService_ResetInviteLink_Call) Return(_a0 *model.InviteLinkResponse, _a1 error) *InviteService_ResetInviteLink_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *InviteService_ResetInviteLink_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (*model.InviteLinkResponse, error)) *InviteService_ResetInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }

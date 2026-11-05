@@ -6,6 +6,7 @@ import type { Contest, Square as SquareModel } from '../../../../types/contest';
 import { useToast } from '../../../toast/useToast';
 import { useClaimSquareMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
+import { WATCHING_MESSAGE } from '../../watching';
 import { fonts, game } from '../../../../app/theme';
 import Square from './Square';
 import SquareDialog from './SquareDialog';
@@ -66,7 +67,11 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
     }
 
     if (!viewer.isParticipant && !viewer.isOwner) {
-      showToast('You need to be a participant to claim squares', 'info');
+      showToast(WATCHING_MESSAGE, 'info');
+      return;
+    }
+    if (!viewer.isOwner && viewer.participant?.maxSquares === 0) {
+      showToast('The owner hasn’t given you any squares yet', 'info');
       return;
     }
     if (viewer.participant && viewer.squaresLeft === 0) {

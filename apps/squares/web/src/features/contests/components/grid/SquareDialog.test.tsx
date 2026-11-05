@@ -9,7 +9,7 @@ import SquareDialog from './SquareDialog';
 const api = vi.hoisted(() => ({ useClearSquareMutation: vi.fn() }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 
-const mine = makeSquare({ value: 'ME', owner: 'u_player', ownerName: 'Me' });
+const mine = makeSquare({ value: 'ME', owner: 'u_participant', ownerName: 'Me' });
 
 function renderDialog(square: Square | null, contest: Contest = makeContest()) {
   const onClose = vi.fn();

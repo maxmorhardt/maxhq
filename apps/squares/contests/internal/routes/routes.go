@@ -39,16 +39,18 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	contests.DELETE("/:id/squares/:squareId/claim", write(h.Square.ClearSquare)...)
 
 	contests.GET("/:id/roster", g.Auth, h.Participant.GetRoster)
+	contests.POST("/:id/participants/allot", write(h.Participant.AllotSquares)...)
 	contests.PATCH("/:id/participants/:userId", write(h.Participant.UpdateParticipant)...)
 	contests.DELETE("/:id/participants/:userId", write(h.Participant.RemoveParticipant)...)
+	contests.GET("/:id/bans", g.Auth, h.Participant.GetBans)
+	contests.DELETE("/:id/bans/:userId", write(h.Participant.Unban)...)
 
-	contests.POST("/:id/invites", write(h.Invite.CreateInvite)...)
-	contests.GET("/:id/invites", g.Auth, h.Invite.GetInvites)
-	contests.DELETE("/:id/invites/:inviteId", write(h.Invite.DeleteInvite)...)
+	contests.GET("/:id/invite", g.Auth, h.Invite.GetInviteLink)
+	contests.POST("/:id/invite/reset", write(h.Invite.ResetInviteLink)...)
 
 	invites := r.Group("/invites")
 	invites.GET("/:token", h.Invite.GetInvitePreview)
-	invites.POST("/:token/redeem", write(h.Invite.RedeemInvite)...)
+	invites.POST("/:token/join", write(h.Invite.JoinContest)...)
 
 	r.GET("/leaderboard", h.Leaderboard.GetLeaderboard)
 	r.GET("/leaderboard/me", g.Auth, h.Leaderboard.GetMyRank)

@@ -18,7 +18,7 @@ describe('StartBoardCallout', () => {
     expect(screen.getByRole('button', { name: /start a free board/i })).toBeInTheDocument();
   });
 
-  it('speaks to a signed-in player in their own words', () => {
+  it('speaks to a signed-in participant in their own words', () => {
     mockAuth({ email: 'a@x.com' });
     renderWithProviders(
       <StartBoardCallout message="Ready to play?" signedInMessage="Next game?" />

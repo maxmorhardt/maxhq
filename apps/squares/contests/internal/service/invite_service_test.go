@@ -17,237 +17,124 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateInvite_ContestNotFound(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-
-	_, err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{}, "u")
-	assert.ErrorIs(t, err, errs.ErrContestNotFound)
+type inviteDeps struct {
+	contests     *mocks.ContestRepository
+	participants *mocks.ParticipantRepository
+	bans         *mocks.BanRepository
+	users        *mocks.UserRepository
+	authz        *mocks.ParticipantService
+	events       *mocks.ContestEventPublisher
 }
 
-func inviteSvc(inv *mocks.InviteRepository, p *mocks.ParticipantRepository, c *mocks.ContestRepository, pSvc *mocks.ParticipantService) service.InviteService {
-	return service.NewInviteService(inv, p, c, anyUser(), pSvc, passTx(), anyEvents())
+func newInviteDeps(t *testing.T) *inviteDeps {
+	return &inviteDeps{
+		contests:     mocks.NewContestRepository(t),
+		participants: mocks.NewParticipantRepository(t),
+		bans:         mocks.NewBanRepository(t),
+		users:        anyUser(),
+		authz:        mocks.NewParticipantService(t),
+		events:       anyEvents(),
+	}
 }
 
-func TestCreateInvite_DBError(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("boom"))
-
-	_, err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{}, "u")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+func (d *inviteDeps) svc() service.InviteService {
+	return service.NewInviteService(d.contests, d.participants, d.bans, d.users, d.authz, passTx(), d.events)
 }
 
-func TestCreateInvite_Terminal(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
-
-	_, err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{}, "u")
-	assert.ErrorIs(t, err, errs.ErrContestFinalized)
+func (d *inviteDeps) owner() {
+	d.authz.EXPECT().Authorize(mock.Anything, mock.Anything, "owner", service.ActionManageParticipants).Return(nil)
 }
 
-func TestCreateInvite_Unauthorized(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
+func TestGetInviteLink_Success(t *testing.T) {
+	d := newInviteDeps(t)
+	d.owner()
+	contestID := uuid.New()
+	d.contests.EXPECT().GetInviteToken(mock.Anything, contestID).Return("tok", nil)
 
-	_, err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{}, "u")
+	got, err := d.svc().GetInviteLink(context.Background(), contestID, "owner")
+	require.NoError(t, err)
+	assert.Equal(t, "tok", got.Token)
+}
+
+func TestGetInviteLink_Failures(t *testing.T) {
+	d := newInviteDeps(t)
+	d.authz.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
+	_, err := d.svc().GetInviteLink(context.Background(), uuid.New(), "participant")
 	assert.ErrorIs(t, err, errs.ErrInsufficientRole)
+
+	for repoErr, want := range map[error]error{database.ErrNotFound: errs.ErrContestNotFound, errors.New("db"): errs.ErrDatabaseUnavailable} {
+		d := newInviteDeps(t)
+		d.owner()
+		d.contests.EXPECT().GetInviteToken(mock.Anything, mock.Anything).Return("", repoErr)
+		_, err := d.svc().GetInviteLink(context.Background(), uuid.New(), "owner")
+		assert.ErrorIs(t, err, want)
+	}
 }
 
-func TestCreateInvite_RepoCreateFails(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, nil)
-	inv.EXPECT().Create(mock.Anything, mock.Anything).Return(errors.New("db write failed"))
+func TestResetInviteLink_Success(t *testing.T) {
+	d := newInviteDeps(t)
+	d.owner()
+	contestID := uuid.New()
+	d.contests.EXPECT().GetByID(mock.Anything, contestID).Return(&model.Contest{Status: model.ContestStatusQ2}, nil)
+	d.contests.EXPECT().ResetInviteToken(mock.Anything, contestID).Return("fresh", nil)
 
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant"}, "u")
-	require.Error(t, err)
-}
-
-func TestCreateInvite_ParticipantZeroSquares(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	_, err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 0, Role: "participant"}, "u")
-	assert.ErrorIs(t, err, errs.ErrInvalidSquareCount)
-}
-
-func TestCreateInvite_ViewerForcesZeroSquares(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, nil)
-	inv.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
-
-	got, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 50, Role: "viewer"}, "owner")
+	got, err := d.svc().ResetInviteLink(context.Background(), contestID, "owner")
 	require.NoError(t, err)
-	assert.Equal(t, model.ParticipantRoleViewer, got.Role)
-	assert.Equal(t, 0, got.MaxSquares)
+	assert.Equal(t, "fresh", got.Token, "a link can be reset mid-game, since late joiners only watch")
 }
 
-func TestCreateInvite_Success(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, nil)
-	inv.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
-
-	got, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant", ExpiresIn: 60}, "owner")
-	require.NoError(t, err)
-	assert.Equal(t, model.ParticipantRole("participant"), got.Role)
-	assert.NotNil(t, got.ExpiresAt)
-}
-
-func TestCreateInvite_OpenInviteLimitReached(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{Open: model.MaxOpenInvitesPerContest}, nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant"}, "owner")
-	assert.ErrorIs(t, err, errs.ErrInviteLimitReached)
-}
-
-func TestCreateInvite_DailyInviteLimitReached(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.MatchedBy(func(since time.Time) bool {
-		return time.Since(since).Round(time.Minute) == model.CreationWindow
-	})).Return(model.CreationCounts{Open: 1, Recent: model.MaxInvitesPerContestPerDay}, nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant"}, "owner")
-	assert.ErrorIs(t, err, errs.ErrDailyInviteLimit)
-}
-
-func TestCreateInvite_CountError(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().CountByContestID(mock.Anything, mock.Anything, mock.Anything).Return(model.CreationCounts{}, errors.New("db"))
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		CreateInvite(context.Background(), uuid.New(), &model.CreateInviteRequest{MaxSquares: 5, Role: "participant"}, "owner")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestGetInvitePreview_NotFound(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		GetInvitePreview(context.Background(), "tok")
-	assert.ErrorIs(t, err, errs.ErrInviteNotFound)
-}
-
-func TestGetInvitePreview_DBError(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		GetInvitePreview(context.Background(), "tok")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestGetInvitePreview_Expired(t *testing.T) {
-	past := time.Now().Add(-time.Hour)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ExpiresAt: &past}, nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		GetInvitePreview(context.Background(), "tok")
-	assert.ErrorIs(t, err, errs.ErrInviteExpired)
-}
-
-func TestGetInvitePreview_MaxUsesReached(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{MaxUses: 1, Uses: 1}, nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		GetInvitePreview(context.Background(), "tok")
-	assert.ErrorIs(t, err, errs.ErrInviteMaxUsesReached)
-}
-
-func TestGetInvitePreview_ContestFetchFails(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: uuid.New()}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		GetInvitePreview(context.Background(), "tok")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestGetInvitePreview_OwnerLookupError(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{Role: model.ParticipantRoleParticipant}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(nil, errors.New("db"))
-
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).GetInvitePreview(context.Background(), "tok")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestGetInvitePreview_OwnerMissingLeavesTheNameOut(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{Role: model.ParticipantRoleParticipant}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(nil, database.ErrNotFound)
-
-	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).GetInvitePreview(context.Background(), "tok")
-	require.NoError(t, err)
-	assert.Empty(t, got.OwnerName)
+func TestResetInviteLink_Failures(t *testing.T) {
+	cases := map[string]struct {
+		setup func(d *inviteDeps)
+		want  error
+	}{
+		"unauthorized": {func(d *inviteDeps) {
+			d.authz.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
+		}, errs.ErrInsufficientRole},
+		"contest missing": {func(d *inviteDeps) {
+			d.owner()
+			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+		}, errs.ErrContestNotFound},
+		"contest lookup": {func(d *inviteDeps) {
+			d.owner()
+			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
+		"finished": {func(d *inviteDeps) {
+			d.owner()
+			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
+		}, errs.ErrContestFinalized},
+		"deleted meanwhile": {func(d *inviteDeps) {
+			d.owner()
+			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+			d.contests.EXPECT().ResetInviteToken(mock.Anything, mock.Anything).Return("", database.ErrNotFound)
+		}, errs.ErrContestNotFound},
+		"reset": {func(d *inviteDeps) {
+			d.owner()
+			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+			d.contests.EXPECT().ResetInviteToken(mock.Anything, mock.Anything).Return("", errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
+	}
+	for name, tc := range cases {
+		d := newInviteDeps(t)
+		tc.setup(d)
+		_, err := d.svc().ResetInviteLink(context.Background(), uuid.New(), "owner")
+		assert.ErrorIs(t, err, tc.want, name)
+	}
 }
 
 func TestGetInvitePreview_Success(t *testing.T) {
+	d := newInviteDeps(t)
 	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, Role: model.ParticipantRoleParticipant, MaxSquares: 5}, nil)
-	c := mocks.NewContestRepository(t)
 	kickoff := time.Date(2026, 10, 25, 17, 0, 0, 0, time.UTC)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{
+	d.contests.EXPECT().GetByInviteToken(mock.Anything, "tok").Return(&model.Contest{
 		ID: contestID, Name: "Pool", Owner: "owner", Status: model.ContestStatusActive,
 		HomeTeam: "Lions", AwayTeam: "Bears",
 		Squares: []model.Square{{Owner: "a"}, {Owner: "b"}, {}},
 		Game:    &model.Game{HomeAbbr: "DET", AwayAbbr: "CHI", GameTime: kickoff},
 	}, nil)
+	d.participants.EXPECT().GetByContestAndUser(mock.Anything, contestID, "owner").Return(&model.ContestParticipant{UserID: "owner", DisplayName: "Olive Owens"}, nil)
 
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, contestID, "owner").Return(&model.ContestParticipant{UserID: "owner", DisplayName: "Olive Owens"}, nil)
-
-	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
-		GetInvitePreview(context.Background(), "tok")
+	got, err := d.svc().GetInvitePreview(context.Background(), "tok")
 	require.NoError(t, err)
 	assert.Equal(t, contestID, got.ContestID)
 	assert.Equal(t, "Pool", got.ContestName)
@@ -260,270 +147,117 @@ func TestGetInvitePreview_Success(t *testing.T) {
 	assert.Equal(t, &kickoff, got.GameTime)
 }
 
-func TestRedeemInvite_DBError(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+func TestGetInvitePreview_OwnerMissingLeavesTheNameOut(t *testing.T) {
+	d := newInviteDeps(t)
+	d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
+	d.participants.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner").Return(nil, database.ErrNotFound)
 
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestRedeemInvite_Expired(t *testing.T) {
-	past := time.Now().Add(-time.Hour)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ExpiresAt: &past}, nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrInviteExpired)
-}
-
-func TestRedeemInvite_MaxUsesReached(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{MaxUses: 2, Uses: 2}, nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrInviteMaxUsesReached)
-}
-
-func TestRedeemInvite_ContestTerminal(t *testing.T) {
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrContestFinalized)
-}
-
-func TestRedeemInvite_AlreadyParticipant(t *testing.T) {
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(&model.ContestParticipant{}, nil)
-
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrAlreadyParticipant)
-}
-
-func TestRedeemInvite_ParticipantCheckDBError(t *testing.T) {
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
-
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestRedeemInvite_GetTotalAllocatedSquaresError(t *testing.T) {
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, MaxSquares: 10}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, errors.New("db error"))
-
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestRedeemInvite_NotEnoughSquares(t *testing.T) {
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, MaxSquares: 50}, nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(60, nil)
-
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, errs.ErrNotEnoughSquares)
-}
-
-func TestRedeemInvite_RepoFails(t *testing.T) {
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, MaxSquares: 10}, nil)
-	inv.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("tx failed"))
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
-
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).
-		RedeemInvite(context.Background(), "tok", "u", "")
-	require.Error(t, err)
-}
-
-func redeemConflict(t *testing.T, repoErr, want error) {
-	t.Helper()
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, MaxSquares: 10}, nil)
-	inv.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(repoErr)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
-
-	_, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
-	assert.ErrorIs(t, err, want)
-}
-
-func TestRedeemInvite_PoolFilledConcurrently(t *testing.T) {
-	redeemConflict(t, errs.ErrNotEnoughSquares, errs.ErrNotEnoughSquares)
-}
-
-func TestRedeemInvite_UsesExhaustedConcurrently(t *testing.T) {
-	redeemConflict(t, errs.ErrInviteMaxUsesReached, errs.ErrInviteMaxUsesReached)
-}
-
-func TestRedeemInvite_JoinedConcurrently(t *testing.T) {
-	redeemConflict(t, database.ErrDuplicate, errs.ErrAlreadyParticipant)
-}
-
-func TestRedeemInvite_Success(t *testing.T) {
-	contestID := uuid.New()
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: contestID, Role: model.ParticipantRoleParticipant, MaxSquares: 10}, nil)
-	inv.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
-
-	got, err := inviteSvc(inv, p, c, mocks.NewParticipantService(t)).RedeemInvite(context.Background(), "tok", "u", "")
+	got, err := d.svc().GetInvitePreview(context.Background(), "tok")
 	require.NoError(t, err)
-	assert.Equal(t, "u", got.UserID)
-	assert.Equal(t, 10, got.MaxSquares)
+	assert.Empty(t, got.OwnerName)
+	assert.Nil(t, got.GameTime)
 }
 
-func redeemableInvite(t *testing.T) (*mocks.InviteRepository, *mocks.ParticipantRepository, *mocks.ContestRepository) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetByToken(mock.Anything, mock.Anything).Return(&model.ContestInvite{ContestID: uuid.New(), Role: model.ParticipantRoleParticipant, MaxSquares: 10}, nil)
-	inv.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	p := mocks.NewParticipantRepository(t)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
-	return inv, p, c
+func TestGetInvitePreview_Failures(t *testing.T) {
+	cases := map[string]struct {
+		setup func(d *inviteDeps)
+		want  error
+	}{
+		"unknown token": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+		}, errs.ErrInviteNotFound},
+		"token lookup": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
+		"owner lookup": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Owner: "owner"}, nil)
+			d.participants.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
+	}
+	for name, tc := range cases {
+		d := newInviteDeps(t)
+		tc.setup(d)
+		_, err := d.svc().GetInvitePreview(context.Background(), "tok")
+		assert.ErrorIs(t, err, tc.want, name)
+	}
 }
 
-func TestRedeemInvite_SeedsThePlayersName(t *testing.T) {
-	inv, p, c := redeemableInvite(t)
-	users := mocks.NewUserRepository(t)
-	users.EXPECT().GetOrCreate(mock.Anything, "u@b.com", "Jordan Lee", "JL").Return(&model.User{Email: "u@b.com"}, nil).Once()
+func TestJoin_JoinsWithNoSquares(t *testing.T) {
+	d := newInviteDeps(t)
+	contestID := uuid.New()
+	d.contests.EXPECT().GetByInviteToken(mock.Anything, "tok").Return(&model.Contest{ID: contestID, Status: model.ContestStatusActive}, nil)
+	d.bans.EXPECT().Exists(mock.Anything, contestID, "pat@x.com").Return(false, nil)
+	d.participants.EXPECT().Create(mock.Anything, mock.MatchedBy(func(p *model.ContestParticipant) bool {
+		return p.ContestID == contestID && p.UserID == "pat@x.com" && p.Role == model.ParticipantRoleParticipant && p.MaxSquares == 0
+	})).Return(nil)
+	d.events = mocks.NewContestEventPublisher(t)
+	d.events.EXPECT().PublishParticipantJoined(mock.Anything, contestID, mock.Anything).Return(nil).Once()
 
-	_, err := service.NewInviteService(inv, p, c, users, mocks.NewParticipantService(t), passTx(), anyEvents()).
-		RedeemInvite(context.Background(), "tok", "u@b.com", "Jordan Lee")
+	got, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat Participant")
+	require.NoError(t, err)
+	assert.Equal(t, "Pat Participant", got.DisplayName)
+	assert.Equal(t, 0, got.MaxSquares)
+}
+
+func TestJoin_AfterKickoffJoinsToWatch(t *testing.T) {
+	d := newInviteDeps(t)
+	d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ3}, nil)
+	d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+	d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+
+	_, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat")
 	require.NoError(t, err)
 }
 
-func TestRedeemInvite_SeedFailureFailsTheJoin(t *testing.T) {
-	inv, p, c := redeemableInvite(t)
-	users := mocks.NewUserRepository(t)
-	users.EXPECT().GetOrCreate(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db"))
-
-	_, err := service.NewInviteService(inv, p, c, users, mocks.NewParticipantService(t), passTx(), mocks.NewContestEventPublisher(t)).
-		RedeemInvite(context.Background(), "tok", "u@b.com", "Jordan Lee")
-	assert.Error(t, err)
-}
-
-func TestGetInvitesByContestID_Success(t *testing.T) {
-	want := []model.ContestInvite{{Token: "t1"}}
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(want, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	got, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), pSvc).
-		GetInvitesByContestID(context.Background(), uuid.New(), "owner")
-	require.NoError(t, err)
-	assert.Equal(t, want, got)
-}
-
-func TestGetInvitesByContestID_RepoError(t *testing.T) {
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	_, err := inviteSvc(inv, mocks.NewParticipantRepository(t), mocks.NewContestRepository(t), pSvc).
-		GetInvitesByContestID(context.Background(), uuid.New(), "owner")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestDeleteInvite_Terminal(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
-
-	err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		DeleteInvite(context.Background(), uuid.New(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrContestFinalized)
-}
-
-func TestDeleteInvite_DBError(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
-
-	err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, mocks.NewParticipantService(t)).
-		DeleteInvite(context.Background(), uuid.New(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
-}
-
-func TestDeleteInvite_AuthorizeFails(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
-
-	err := inviteSvc(mocks.NewInviteRepository(t), mocks.NewParticipantRepository(t), c, pSvc).
-		DeleteInvite(context.Background(), uuid.New(), uuid.New(), "u")
-	assert.ErrorIs(t, err, errs.ErrInsufficientRole)
-}
-
-func TestDeleteInvite_RepoDeleteFails(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().Delete(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("db error"))
-
-	err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		DeleteInvite(context.Background(), uuid.New(), uuid.New(), "u")
-	require.Error(t, err)
-}
-
-func TestDeleteInvite_Success(t *testing.T) {
-	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
-	pSvc := mocks.NewParticipantService(t)
-	pSvc.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	inv := mocks.NewInviteRepository(t)
-	inv.EXPECT().Delete(mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	err := inviteSvc(inv, mocks.NewParticipantRepository(t), c, pSvc).
-		DeleteInvite(context.Background(), uuid.New(), uuid.New(), "u")
-	require.NoError(t, err)
+func TestJoin_Failures(t *testing.T) {
+	active := &model.Contest{Status: model.ContestStatusActive}
+	cases := map[string]struct {
+		setup func(d *inviteDeps)
+		want  error
+	}{
+		"unknown token": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+		}, errs.ErrInviteNotFound},
+		"finished": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
+		}, errs.ErrContestFinalized},
+		"banned": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+		}, errs.ErrBannedFromContest},
+		"ban lookup": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
+		"already in": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(database.ErrDuplicate)
+		}, errs.ErrAlreadyParticipant},
+		"create": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(assert.AnError)
+		}, assert.AnError},
+		"profile": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+			d.users = mocks.NewUserRepository(t)
+			d.users.EXPECT().GetOrCreate(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, assert.AnError)
+		}, assert.AnError},
+		"event": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			d.participants.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+			d.events = mocks.NewContestEventPublisher(t)
+			d.events.EXPECT().PublishParticipantJoined(mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
+		}, assert.AnError},
+	}
+	for name, tc := range cases {
+		d := newInviteDeps(t)
+		tc.setup(d)
+		_, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat")
+		assert.ErrorIs(t, err, tc.want, name)
+	}
 }

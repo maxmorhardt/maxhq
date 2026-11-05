@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,283 +16,128 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateInvite_Success(t *testing.T) {
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().CreateInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(&model.ContestInvite{ID: uuid.New(), Token: "abc123"}, nil)
+func inviteRouter(svc *mocks.InviteService, user string) *gin.Engine {
 	h := NewInviteHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/invites", h.CreateInvite)
-
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/invites", uuid.New()), model.CreateInviteRequest{MaxSquares: 10, Role: "participant"}))
-	assert.Equal(t, http.StatusCreated, w.Code)
-	var resp model.ContestInvite
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, "abc123", resp.Token)
-}
-
-func TestCreateInvite_InvalidContestID(t *testing.T) {
-	h := NewInviteHandler(mocks.NewInviteService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/invites", h.CreateInvite)
-
-	w := doRequest(r, jsonReq(http.MethodPost, "/contests/bad/invites", model.CreateInviteRequest{MaxSquares: 10, Role: "participant"}))
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestCreateInvite_InvalidBody(t *testing.T) {
-	h := NewInviteHandler(mocks.NewInviteService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.POST("/contests/:id/invites", h.CreateInvite)
-
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/contests/%s/invites", uuid.New()), bytes.NewReader([]byte(`{bad`)))
-	req.Header.Set("Content-Type", "application/json")
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestCreateInvite_Forbidden(t *testing.T) {
-	createInviteErr(t, "stranger", errs.ErrInsufficientRole, http.StatusForbidden)
-}
-func TestCreateInvite_NotFound(t *testing.T) {
-	createInviteErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
-}
-func TestCreateInvite_OpenInviteLimitReached(t *testing.T) {
-	createInviteErr(t, "owner1", errs.ErrInviteLimitReached, http.StatusTooManyRequests)
-}
-func TestCreateInvite_DailyInviteLimitReached(t *testing.T) {
-	createInviteErr(t, "owner1", errs.ErrDailyInviteLimit, http.StatusTooManyRequests)
-}
-func TestCreateInvite_InvalidSquareCount(t *testing.T) {
-	createInviteErr(t, "owner1", errs.ErrInvalidSquareCount, http.StatusBadRequest)
-}
-func TestCreateInvite_DatabaseUnavailable(t *testing.T) {
-	createInviteErr(t, "owner1", errs.ErrDatabaseUnavailable, http.StatusInternalServerError)
-}
-func TestCreateInvite_InternalError(t *testing.T) {
-	createInviteErr(t, "owner1", assert.AnError, http.StatusInternalServerError)
-}
-
-func createInviteErr(t *testing.T, user string, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().CreateInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewInviteHandler(svc)
-
 	r := gin.New()
 	r.Use(authenticatedMiddleware(user))
-	r.POST("/contests/:id/invites", h.CreateInvite)
+	r.GET("/contests/:id/invite", h.GetInviteLink)
+	r.POST("/contests/:id/invite/reset", h.ResetInviteLink)
+	r.GET("/invites/:token", h.GetInvitePreview)
+	r.POST("/invites/:token/join", h.JoinContest)
+	return r
+}
 
-	w := doRequest(r, jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/invites", uuid.New()), model.CreateInviteRequest{MaxSquares: 10, Role: "participant"}))
-	assert.Equal(t, wantCode, w.Code)
+func TestGetInviteLink_Success(t *testing.T) {
+	contestID := uuid.New()
+	svc := mocks.NewInviteService(t)
+	svc.EXPECT().GetInviteLink(mock.Anything, contestID, "owner1").Return(&model.InviteLinkResponse{Token: "abc123"}, nil)
+
+	w := doRequest(inviteRouter(svc, "owner1"), jsonReq(http.MethodGet, fmt.Sprintf("/contests/%s/invite", contestID), nil))
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, `{"token":"abc123"}`, w.Body.String())
+}
+
+func TestGetInviteLink_InvalidContestID(t *testing.T) {
+	w := doRequest(inviteRouter(mocks.NewInviteService(t), "owner1"), jsonReq(http.MethodGet, "/contests/bad/invite", nil))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestGetInviteLink_Errors(t *testing.T) {
+	cases := map[error]int{
+		errs.ErrContestNotFound:     http.StatusNotFound,
+		errs.ErrNotParticipant:      http.StatusForbidden,
+		errs.ErrInsufficientRole:    http.StatusForbidden,
+		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
+	}
+	for svcErr, want := range cases {
+		svc := mocks.NewInviteService(t)
+		svc.EXPECT().GetInviteLink(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
+
+		w := doRequest(inviteRouter(svc, "owner1"), jsonReq(http.MethodGet, fmt.Sprintf("/contests/%s/invite", uuid.New()), nil))
+		assert.Equal(t, want, w.Code, svcErr.Error())
+	}
+}
+
+func TestResetInviteLink_Success(t *testing.T) {
+	contestID := uuid.New()
+	svc := mocks.NewInviteService(t)
+	svc.EXPECT().ResetInviteLink(mock.Anything, contestID, "owner1").Return(&model.InviteLinkResponse{Token: "fresh"}, nil)
+
+	w := doRequest(inviteRouter(svc, "owner1"), jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/invite/reset", contestID), nil))
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, `{"token":"fresh"}`, w.Body.String())
+}
+
+func TestResetInviteLink_InvalidContestID(t *testing.T) {
+	w := doRequest(inviteRouter(mocks.NewInviteService(t), "owner1"), jsonReq(http.MethodPost, "/contests/bad/invite/reset", nil))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestResetInviteLink_Errors(t *testing.T) {
+	cases := map[error]int{
+		errs.ErrContestNotFound:     http.StatusNotFound,
+		errs.ErrNotParticipant:      http.StatusForbidden,
+		errs.ErrInsufficientRole:    http.StatusForbidden,
+		errs.ErrContestFinalized:    http.StatusForbidden,
+		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
+	}
+	for svcErr, want := range cases {
+		svc := mocks.NewInviteService(t)
+		svc.EXPECT().ResetInviteLink(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
+
+		w := doRequest(inviteRouter(svc, "owner1"), jsonReq(http.MethodPost, fmt.Sprintf("/contests/%s/invite/reset", uuid.New()), nil))
+		assert.Equal(t, want, w.Code, svcErr.Error())
+	}
 }
 
 func TestGetInvitePreview_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
-	svc.EXPECT().GetInvitePreview(mock.Anything, mock.Anything).
-		Return(&model.InvitePreviewResponse{ContestName: "Super Bowl", OwnerName: "Olive O.", Role: "participant", MaxSquares: 10}, nil)
-	h := NewInviteHandler(svc)
+	svc.EXPECT().GetInvitePreview(mock.Anything, "abc123").
+		Return(&model.InvitePreviewResponse{ContestName: "Super Bowl", OwnerName: "Olive O."}, nil)
 
-	r := gin.New()
-	r.GET("/invites/:token", h.GetInvitePreview)
-
-	req, _ := http.NewRequest(http.MethodGet, "/invites/abc123", http.NoBody)
-	w := doRequest(r, req)
+	w := doRequest(inviteRouter(svc, ""), jsonReq(http.MethodGet, "/invites/abc123", nil))
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp model.InvitePreviewResponse
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "Super Bowl", resp.ContestName)
 }
 
-func TestGetInvitePreview_NotFound(t *testing.T) {
-	getInvitePreviewErr(t, errs.ErrInviteNotFound, http.StatusNotFound)
-}
-func TestGetInvitePreview_Expired(t *testing.T) {
-	getInvitePreviewErr(t, errs.ErrInviteExpired, http.StatusBadRequest)
-}
-func TestGetInvitePreview_MaxUsesReached(t *testing.T) {
-	getInvitePreviewErr(t, errs.ErrInviteMaxUsesReached, http.StatusBadRequest)
-}
-func TestGetInvitePreview_InternalError(t *testing.T) {
-	getInvitePreviewErr(t, assert.AnError, http.StatusInternalServerError)
+func TestGetInvitePreview_Errors(t *testing.T) {
+	cases := map[error]int{
+		errs.ErrInviteNotFound:      http.StatusNotFound,
+		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
+	}
+	for svcErr, want := range cases {
+		svc := mocks.NewInviteService(t)
+		svc.EXPECT().GetInvitePreview(mock.Anything, mock.Anything).Return(nil, svcErr)
+
+		w := doRequest(inviteRouter(svc, ""), jsonReq(http.MethodGet, "/invites/tok", nil))
+		assert.Equal(t, want, w.Code, svcErr.Error())
+	}
 }
 
-func getInvitePreviewErr(t *testing.T, svcErr error, wantCode int) {
-	t.Helper()
+func TestJoinContest_Success(t *testing.T) {
 	svc := mocks.NewInviteService(t)
-	svc.EXPECT().GetInvitePreview(mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewInviteHandler(svc)
-
-	r := gin.New()
-	r.GET("/invites/:token", h.GetInvitePreview)
-
-	req, _ := http.NewRequest(http.MethodGet, "/invites/tok", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestRedeemInvite_Success(t *testing.T) {
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	svc.EXPECT().Join(mock.Anything, "valid-token", "user1", mock.Anything).
 		Return(&model.ContestParticipant{ID: uuid.New(), UserID: "user1", Role: model.ParticipantRoleParticipant}, nil)
-	h := NewInviteHandler(svc)
 
-	r := gin.New()
-	r.Use(authenticatedMiddleware("user1"))
-	r.POST("/invites/:token/redeem", h.RedeemInvite)
-
-	req, _ := http.NewRequest(http.MethodPost, "/invites/valid-token/redeem", http.NoBody)
-	w := doRequest(r, req)
+	w := doRequest(inviteRouter(svc, "user1"), jsonReq(http.MethodPost, "/invites/valid-token/join", nil))
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
-func TestRedeemInvite_NotFound(t *testing.T) {
-	redeemInviteErr(t, errs.ErrInviteNotFound, http.StatusNotFound)
-}
-func TestRedeemInvite_AlreadyParticipant(t *testing.T) {
-	redeemInviteErr(t, errs.ErrAlreadyParticipant, http.StatusConflict)
-}
-func TestRedeemInvite_Expired(t *testing.T) {
-	redeemInviteErr(t, errs.ErrInviteExpired, http.StatusBadRequest)
-}
-func TestRedeemInvite_MaxUsesReached(t *testing.T) {
-	redeemInviteErr(t, errs.ErrInviteMaxUsesReached, http.StatusBadRequest)
-}
-func TestRedeemInvite_NotEnoughSquares(t *testing.T) {
-	redeemInviteErr(t, errs.ErrNotEnoughSquares, http.StatusUnprocessableEntity)
-}
-func TestRedeemInvite_InternalError(t *testing.T) {
-	redeemInviteErr(t, assert.AnError, http.StatusInternalServerError)
-}
+func TestJoinContest_Errors(t *testing.T) {
+	cases := map[error]int{
+		errs.ErrInviteNotFound:      http.StatusNotFound,
+		errs.ErrContestFinalized:    http.StatusForbidden,
+		errs.ErrBannedFromContest:   http.StatusForbidden,
+		errs.ErrAlreadyParticipant:  http.StatusConflict,
+		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
+	}
+	for svcErr, want := range cases {
+		svc := mocks.NewInviteService(t)
+		svc.EXPECT().Join(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
 
-func redeemInviteErr(t *testing.T, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().RedeemInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewInviteHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("user1"))
-	r.POST("/invites/:token/redeem", h.RedeemInvite)
-
-	req, _ := http.NewRequest(http.MethodPost, "/invites/tok/redeem", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestGetInvites_Success(t *testing.T) {
-	contestID := uuid.New()
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().GetInvitesByContestID(mock.Anything, mock.Anything, mock.Anything).
-		Return([]model.ContestInvite{{ID: uuid.New(), ContestID: contestID, Token: "tok1"}}, nil)
-	h := NewInviteHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/:id/invites", h.GetInvites)
-
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/contests/%s/invites", contestID), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp []model.ContestInvite
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Len(t, resp, 1)
-}
-
-func TestGetInvites_InvalidContestID(t *testing.T) {
-	h := NewInviteHandler(mocks.NewInviteService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.GET("/contests/:id/invites", h.GetInvites)
-
-	req, _ := http.NewRequest(http.MethodGet, "/contests/bad/invites", http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestGetInvites_Forbidden(t *testing.T) {
-	getInvitesErr(t, "stranger", errs.ErrInsufficientRole, http.StatusForbidden)
-}
-func TestGetInvites_NotFound(t *testing.T) {
-	getInvitesErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
-}
-func TestGetInvites_InternalError(t *testing.T) {
-	getInvitesErr(t, "owner1", assert.AnError, http.StatusInternalServerError)
-}
-
-func getInvitesErr(t *testing.T, user string, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().GetInvitesByContestID(mock.Anything, mock.Anything, mock.Anything).Return(nil, svcErr)
-	h := NewInviteHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware(user))
-	r.GET("/contests/:id/invites", h.GetInvites)
-
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/contests/%s/invites", uuid.New()), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, wantCode, w.Code)
-}
-
-func TestDeleteInvite_Success(t *testing.T) {
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().DeleteInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	h := NewInviteHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.DELETE("/contests/:id/invites/:inviteId", h.DeleteInvite)
-
-	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/contests/%s/invites/%s", uuid.New(), uuid.New()), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusNoContent, w.Code)
-}
-
-func TestDeleteInvite_InvalidContestID(t *testing.T) {
-	deleteInviteBadID(t, fmt.Sprintf("/contests/bad/invites/%s", uuid.New()))
-}
-func TestDeleteInvite_InvalidInviteID(t *testing.T) {
-	deleteInviteBadID(t, fmt.Sprintf("/contests/%s/invites/bad", uuid.New()))
-}
-
-func deleteInviteBadID(t *testing.T, target string) {
-	t.Helper()
-	h := NewInviteHandler(mocks.NewInviteService(t))
-	r := gin.New()
-	r.Use(authenticatedMiddleware("owner1"))
-	r.DELETE("/contests/:id/invites/:inviteId", h.DeleteInvite)
-
-	req, _ := http.NewRequest(http.MethodDelete, target, http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestDeleteInvite_Forbidden(t *testing.T) {
-	deleteInviteErr(t, "stranger", errs.ErrInsufficientRole, http.StatusForbidden)
-}
-func TestDeleteInvite_NotFound(t *testing.T) {
-	deleteInviteErr(t, "owner1", errs.ErrContestNotFound, http.StatusNotFound)
-}
-func TestDeleteInvite_InternalError(t *testing.T) {
-	deleteInviteErr(t, "owner1", assert.AnError, http.StatusInternalServerError)
-}
-
-func deleteInviteErr(t *testing.T, user string, svcErr error, wantCode int) {
-	t.Helper()
-	svc := mocks.NewInviteService(t)
-	svc.EXPECT().DeleteInvite(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(svcErr)
-	h := NewInviteHandler(svc)
-
-	r := gin.New()
-	r.Use(authenticatedMiddleware(user))
-	r.DELETE("/contests/:id/invites/:inviteId", h.DeleteInvite)
-
-	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/contests/%s/invites/%s", uuid.New(), uuid.New()), http.NoBody)
-	w := doRequest(r, req)
-	assert.Equal(t, wantCode, w.Code)
+		w := doRequest(inviteRouter(svc, "user1"), jsonReq(http.MethodPost, "/invites/tok/join", nil))
+		assert.Equal(t, want, w.Code, svcErr.Error())
+	}
 }

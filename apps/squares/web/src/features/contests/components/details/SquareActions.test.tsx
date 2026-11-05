@@ -33,15 +33,35 @@ describe('SquareActions', () => {
     api.useClearMySquaresMutation.mockReturnValue(mockMutation([]));
   });
 
-  it('claims the chosen number of random squares', async () => {
-    const [claim, state] = mockMutation({ squares: [makeSquare(), makeSquare()], requested: 2 });
+  it('starts a participant at every square they have left', async () => {
+    const [claim, state] = mockMutation({ squares: [makeSquare()], requested: 5 });
     api.useClaimRandomSquaresMutation.mockReturnValue([claim, state]);
     renderActions();
 
-    fireEvent.click(screen.getByRole('button', { name: 'increase square count' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Randomly Select 2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Randomly Select 5' }));
 
-    await waitFor(() => expect(claim).toHaveBeenCalledWith({ contestId: 'c-1', count: 2 }));
+    await waitFor(() => expect(claim).toHaveBeenCalledWith({ contestId: 'c-1', count: 5 }));
+  });
+
+  it('starts the owner at one square, since they often hold some back', () => {
+    renderActions(makeViewer({ isOwner: true, squaresLeft: 25 }));
+    expect(screen.getByRole('button', { name: 'Randomly Select Square' })).toBeInTheDocument();
+  });
+
+  it('claims the chosen number of random squares', async () => {
+    const [claim, state] = mockMutation({ squares: [makeSquare(), makeSquare()], requested: 4 });
+    api.useClaimRandomSquaresMutation.mockReturnValue([claim, state]);
+    renderActions();
+
+    fireEvent.click(screen.getByRole('button', { name: 'decrease square count' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Randomly Select 4' }));
+
+    await waitFor(() => expect(claim).toHaveBeenCalledWith({ contestId: 'c-1', count: 4 }));
+  });
+
+  it('never starts above the open squares', () => {
+    renderActions(makeViewer({ squaresLeft: 5 }), 3);
+    expect(screen.getByRole('button', { name: 'Randomly Select 3' })).toBeInTheDocument();
   });
 
   it('caps the count at what is left and steps back down', () => {
@@ -68,7 +88,7 @@ describe('SquareActions', () => {
       mockMutation({ error: { status: 422, message: 'Set your initials' } })
     );
     renderActions();
-    fireEvent.click(screen.getByRole('button', { name: 'Randomly Select Square' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Randomly Select 5' }));
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/profile'));
   });
 
@@ -77,7 +97,7 @@ describe('SquareActions', () => {
       mockMutation({ error: { status: 409, message: 'Grid changed' } })
     );
     const { toasts } = renderActions();
-    fireEvent.click(screen.getByRole('button', { name: 'Randomly Select Square' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Randomly Select 5' }));
     await waitFor(() =>
       expect(toasts()[0]).toMatchObject({ message: 'Grid changed', severity: 'warning' })
     );

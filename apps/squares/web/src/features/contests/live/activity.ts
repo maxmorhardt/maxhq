@@ -78,7 +78,7 @@ export function describeEvent(
       if (value.trim() === '') {
         return entry('square_cleared', `Square (${row}, ${col}) was cleared`);
       }
-      // new initials on a held square, or a departed player's square kept in play, are not claims
+      // new initials on a held square, or a departed participant's square kept in play, are not claims
       const held = before.square && before.square.value.trim() !== '';
       if (owner === GHOST_USER || (held && before.square?.owner === owner)) {
         return null;

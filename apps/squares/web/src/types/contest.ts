@@ -4,7 +4,7 @@ export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 
 
 export type ContestVisibility = 'public' | 'private';
 
-export type ParticipantRole = 'owner' | 'participant' | 'viewer';
+export type ParticipantRole = 'owner' | 'participant';
 
 export interface Contest {
   id: string;
@@ -201,7 +201,6 @@ export interface Participant {
   contestId: string;
   userId: string;
   displayName: string;
-  inviteId: string;
   role: ParticipantRole;
   maxSquares: number;
   joinedAt: string;
@@ -209,37 +208,20 @@ export interface Participant {
   updatedAt: string;
 }
 
-export interface UpdateParticipantRequest {
-  role?: ParticipantRole;
-  maxSquares?: number;
+export interface ContestBan {
+  userId: string;
+  displayName: string;
+  bannedAt: string;
 }
 
-export interface Invite {
-  id: string;
-  contestId: string;
+export interface InviteLink {
   token: string;
-  maxSquares: number;
-  role: ParticipantRole;
-  maxUses?: number;
-  uses: number;
-  expiresAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateInviteRequest {
-  maxSquares: number;
-  role: ParticipantRole;
-  maxUses?: number;
-  expiresIn?: number;
 }
 
 export interface InvitePreviewResponse {
   contestId: string;
   contestName: string;
-  maxSquares: number;
   ownerName?: string;
-  role: string;
   status: ContestStatus;
   claimedSquares: number;
   totalSquares: number;

@@ -8,8 +8,9 @@ export const baseApi = createApi({
   refetchOnReconnect: true,
   tagTypes: [
     'ActiveContests',
+    'Bans',
     'ContestFeed',
-    'Invites',
+    'InviteLink',
     'Leaderboard',
     'MyRank',
     'Profile',

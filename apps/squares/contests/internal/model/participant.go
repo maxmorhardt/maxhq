@@ -12,18 +12,16 @@ type ParticipantRole string
 const (
 	ParticipantRoleOwner       ParticipantRole = "owner"
 	ParticipantRoleParticipant ParticipantRole = "participant"
-	ParticipantRoleViewer      ParticipantRole = "viewer"
 )
 
 type ContestParticipant struct {
 	ID        uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
 	ContestID uuid.UUID `json:"contestId" gorm:"type:uuid;index;not null"`
 	UserID    string    `json:"userId" gorm:"not null;index"`
-	// read from contests.users, so other players can be shown a name instead of an email
+	// read from contests.users, so other participants can be shown a name instead of an email
 	DisplayName string          `json:"displayName,omitempty" gorm:"->;-:migration"`
 	Role        ParticipantRole `json:"role" gorm:"not null"`
 	MaxSquares  int             `json:"maxSquares" gorm:"not null;default:0"`
-	InviteID    *uuid.UUID      `json:"inviteId,omitempty" gorm:"type:uuid"`
 	JoinedAt    time.Time       `json:"joinedAt"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	UpdatedAt   time.Time       `json:"updatedAt"`

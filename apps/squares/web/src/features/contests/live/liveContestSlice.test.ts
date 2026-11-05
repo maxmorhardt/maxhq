@@ -44,7 +44,7 @@ function live(contest = makeContest(), participants = [makeParticipant()]) {
   const opened = liveContestReducer(undefined, streamOpened('c-1'));
   return receive(
     opened,
-    event('contest.snapshot', { contest, participants, viewerId: 'u_player' }),
+    event('contest.snapshot', { contest, participants, viewerId: 'u_participant' }),
     'snap'
   );
 }
@@ -77,7 +77,7 @@ describe('liveContestSlice events', () => {
     expect(state.contest?.id).toBe('c-1');
     expect(state.participants).toHaveLength(1);
     expect(state.activity.map((a) => a.message)).toContain('Ann claimed square (0, 0)');
-    expect(state.viewerId).toBe('u_player');
+    expect(state.viewerId).toBe('u_participant');
   });
 
   it('applies newer square versions and ignores older replays', () => {
@@ -130,7 +130,7 @@ describe('liveContestSlice events', () => {
     expect(state.participants).toHaveLength(2);
     expect(state.participants.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
     state = receive(state, event('participant.removed', makeParticipant({ userId: 'u_b' })));
-    expect(state.participants.map((p) => p.userId)).toEqual(['u_player']);
+    expect(state.participants.map((p) => p.userId)).toEqual(['u_participant']);
   });
 
   it('marks the stream ended when the contest is deleted or access is revoked', () => {
@@ -196,7 +196,7 @@ describe('liveContestSlice write responses', () => {
     expect(state.participants[0].maxSquares).toBe(9);
     state = liveContestReducer(
       state,
-      fulfilled('removeParticipant', undefined, { contestId: 'c-1', userId: 'u_player' })
+      fulfilled('removeParticipant', undefined, { contestId: 'c-1', userId: 'u_participant' })
     );
     expect(state.participants).toHaveLength(0);
   });

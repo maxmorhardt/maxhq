@@ -26,6 +26,67 @@ func (_m *ParticipantService) EXPECT() *ParticipantService_Expecter {
 	return &ParticipantService_Expecter{mock: &_m.Mock}
 }
 
+// AllotSquares provides a mock function with given fields: ctx, contestID, maxSquares, user
+func (_m *ParticipantService) AllotSquares(ctx context.Context, contestID uuid.UUID, maxSquares int, user string) ([]model.ContestParticipant, error) {
+	ret := _m.Called(ctx, contestID, maxSquares, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AllotSquares")
+	}
+
+	var r0 []model.ContestParticipant
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, string) ([]model.ContestParticipant, error)); ok {
+		return rf(ctx, contestID, maxSquares, user)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, string) []model.ContestParticipant); ok {
+		r0 = rf(ctx, contestID, maxSquares, user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ContestParticipant)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, int, string) error); ok {
+		r1 = rf(ctx, contestID, maxSquares, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ParticipantService_AllotSquares_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AllotSquares'
+type ParticipantService_AllotSquares_Call struct {
+	*mock.Call
+}
+
+// AllotSquares is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - maxSquares int
+//   - user string
+func (_e *ParticipantService_Expecter) AllotSquares(ctx interface{}, contestID interface{}, maxSquares interface{}, user interface{}) *ParticipantService_AllotSquares_Call {
+	return &ParticipantService_AllotSquares_Call{Call: _e.mock.On("AllotSquares", ctx, contestID, maxSquares, user)}
+}
+
+func (_c *ParticipantService_AllotSquares_Call) Run(run func(ctx context.Context, contestID uuid.UUID, maxSquares int, user string)) *ParticipantService_AllotSquares_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(int), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *ParticipantService_AllotSquares_Call) Return(_a0 []model.ContestParticipant, _a1 error) *ParticipantService_AllotSquares_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ParticipantService_AllotSquares_Call) RunAndReturn(run func(context.Context, uuid.UUID, int, string) ([]model.ContestParticipant, error)) *ParticipantService_AllotSquares_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Authorize provides a mock function with given fields: ctx, contestID, userID, act
 func (_m *ParticipantService) Authorize(ctx context.Context, contestID uuid.UUID, userID string, act service.Action) error {
 	ret := _m.Called(ctx, contestID, userID, act)
@@ -71,6 +132,66 @@ func (_c *ParticipantService_Authorize_Call) Return(_a0 error) *ParticipantServi
 }
 
 func (_c *ParticipantService_Authorize_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, service.Action) error) *ParticipantService_Authorize_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetBans provides a mock function with given fields: ctx, contestID, user
+func (_m *ParticipantService) GetBans(ctx context.Context, contestID uuid.UUID, user string) ([]model.ContestBan, error) {
+	ret := _m.Called(ctx, contestID, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBans")
+	}
+
+	var r0 []model.ContestBan
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) ([]model.ContestBan, error)); ok {
+		return rf(ctx, contestID, user)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) []model.ContestBan); ok {
+		r0 = rf(ctx, contestID, user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ContestBan)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, contestID, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ParticipantService_GetBans_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetBans'
+type ParticipantService_GetBans_Call struct {
+	*mock.Call
+}
+
+// GetBans is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - user string
+func (_e *ParticipantService_Expecter) GetBans(ctx interface{}, contestID interface{}, user interface{}) *ParticipantService_GetBans_Call {
+	return &ParticipantService_GetBans_Call{Call: _e.mock.On("GetBans", ctx, contestID, user)}
+}
+
+func (_c *ParticipantService_GetBans_Call) Run(run func(ctx context.Context, contestID uuid.UUID, user string)) *ParticipantService_GetBans_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *ParticipantService_GetBans_Call) Return(_a0 []model.ContestBan, _a1 error) *ParticipantService_GetBans_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ParticipantService_GetBans_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) ([]model.ContestBan, error)) *ParticipantService_GetBans_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -243,9 +364,58 @@ func (_c *ParticipantService_RemoveParticipant_Call) RunAndReturn(run func(conte
 	return _c
 }
 
-// UpdateParticipant provides a mock function with given fields: ctx, contestID, targetUserID, req, user
-func (_m *ParticipantService) UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string) (*model.ContestParticipant, error) {
-	ret := _m.Called(ctx, contestID, targetUserID, req, user)
+// Unban provides a mock function with given fields: ctx, contestID, targetUserID, user
+func (_m *ParticipantService) Unban(ctx context.Context, contestID uuid.UUID, targetUserID string, user string) error {
+	ret := _m.Called(ctx, contestID, targetUserID, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Unban")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, string) error); ok {
+		r0 = rf(ctx, contestID, targetUserID, user)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ParticipantService_Unban_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Unban'
+type ParticipantService_Unban_Call struct {
+	*mock.Call
+}
+
+// Unban is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - targetUserID string
+//   - user string
+func (_e *ParticipantService_Expecter) Unban(ctx interface{}, contestID interface{}, targetUserID interface{}, user interface{}) *ParticipantService_Unban_Call {
+	return &ParticipantService_Unban_Call{Call: _e.mock.On("Unban", ctx, contestID, targetUserID, user)}
+}
+
+func (_c *ParticipantService_Unban_Call) Run(run func(ctx context.Context, contestID uuid.UUID, targetUserID string, user string)) *ParticipantService_Unban_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *ParticipantService_Unban_Call) Return(_a0 error) *ParticipantService_Unban_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ParticipantService_Unban_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, string) error) *ParticipantService_Unban_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateParticipant provides a mock function with given fields: ctx, contestID, targetUserID, maxSquares, user
+func (_m *ParticipantService) UpdateParticipant(ctx context.Context, contestID uuid.UUID, targetUserID string, maxSquares int, user string) (*model.ContestParticipant, error) {
+	ret := _m.Called(ctx, contestID, targetUserID, maxSquares, user)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateParticipant")
@@ -253,19 +423,19 @@ func (_m *ParticipantService) UpdateParticipant(ctx context.Context, contestID u
 
 	var r0 *model.ContestParticipant
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, *model.UpdateParticipantRequest, string) (*model.ContestParticipant, error)); ok {
-		return rf(ctx, contestID, targetUserID, req, user)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, int, string) (*model.ContestParticipant, error)); ok {
+		return rf(ctx, contestID, targetUserID, maxSquares, user)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, *model.UpdateParticipantRequest, string) *model.ContestParticipant); ok {
-		r0 = rf(ctx, contestID, targetUserID, req, user)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, int, string) *model.ContestParticipant); ok {
+		r0 = rf(ctx, contestID, targetUserID, maxSquares, user)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ContestParticipant)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string, *model.UpdateParticipantRequest, string) error); ok {
-		r1 = rf(ctx, contestID, targetUserID, req, user)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string, int, string) error); ok {
+		r1 = rf(ctx, contestID, targetUserID, maxSquares, user)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -282,15 +452,15 @@ type ParticipantService_UpdateParticipant_Call struct {
 //   - ctx context.Context
 //   - contestID uuid.UUID
 //   - targetUserID string
-//   - req *model.UpdateParticipantRequest
+//   - maxSquares int
 //   - user string
-func (_e *ParticipantService_Expecter) UpdateParticipant(ctx interface{}, contestID interface{}, targetUserID interface{}, req interface{}, user interface{}) *ParticipantService_UpdateParticipant_Call {
-	return &ParticipantService_UpdateParticipant_Call{Call: _e.mock.On("UpdateParticipant", ctx, contestID, targetUserID, req, user)}
+func (_e *ParticipantService_Expecter) UpdateParticipant(ctx interface{}, contestID interface{}, targetUserID interface{}, maxSquares interface{}, user interface{}) *ParticipantService_UpdateParticipant_Call {
+	return &ParticipantService_UpdateParticipant_Call{Call: _e.mock.On("UpdateParticipant", ctx, contestID, targetUserID, maxSquares, user)}
 }
 
-func (_c *ParticipantService_UpdateParticipant_Call) Run(run func(ctx context.Context, contestID uuid.UUID, targetUserID string, req *model.UpdateParticipantRequest, user string)) *ParticipantService_UpdateParticipant_Call {
+func (_c *ParticipantService_UpdateParticipant_Call) Run(run func(ctx context.Context, contestID uuid.UUID, targetUserID string, maxSquares int, user string)) *ParticipantService_UpdateParticipant_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(*model.UpdateParticipantRequest), args[4].(string))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(int), args[4].(string))
 	})
 	return _c
 }
@@ -300,7 +470,7 @@ func (_c *ParticipantService_UpdateParticipant_Call) Return(_a0 *model.ContestPa
 	return _c
 }
 
-func (_c *ParticipantService_UpdateParticipant_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, *model.UpdateParticipantRequest, string) (*model.ContestParticipant, error)) *ParticipantService_UpdateParticipant_Call {
+func (_c *ParticipantService_UpdateParticipant_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, int, string) (*model.ContestParticipant, error)) *ParticipantService_UpdateParticipant_Call {
 	_c.Call.Return(run)
 	return _c
 }

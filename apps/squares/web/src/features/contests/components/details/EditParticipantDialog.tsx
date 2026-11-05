@@ -6,73 +6,48 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Slider,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import type {
-  Participant,
-  ParticipantRole,
-  UpdateParticipantRequest,
-} from '../../../../types/contest';
 import { errorMessage } from '../../../../api/errors';
+import type { Participant } from '../../../../types/contest';
 import { useToast } from '../../../toast/useToast';
 import { useUpdateParticipantMutation } from '../../api';
 
 interface Props {
   contestId: string;
   participant: Participant | null;
+  claimed: number;
+  maxAllowed: number;
   onClose: () => void;
 }
 
-// owners keep their role and may hold zero squares; viewers hold none; participants at least one
-function buildRequest(
-  participant: Participant,
-  role: ParticipantRole,
-  maxSquares: number
-): UpdateParticipantRequest {
-  if (participant.role === 'owner') {
-    return { maxSquares };
-  }
-  return role === 'viewer' ? { role, maxSquares: 0 } : { role, maxSquares };
-}
-
-export default function EditParticipantDialog({ contestId, participant, onClose }: Props) {
+export default function EditParticipantDialog({ participant, ...props }: Props) {
   // remounting per participant resets the form to their current values
   return participant ? (
-    <EditParticipantForm
-      key={participant.id}
-      contestId={contestId}
-      participant={participant}
-      onClose={onClose}
-    />
+    <EditParticipantForm key={participant.id} participant={participant} {...props} />
   ) : null;
 }
 
 function EditParticipantForm({
   contestId,
   participant,
+  claimed,
+  maxAllowed,
   onClose,
-}: Props & { participant: Participant }) {
+}: Omit<Props, 'participant'> & { participant: Participant }) {
   const { showToast } = useToast();
   const [updateParticipant, { isLoading, isError, error }] = useUpdateParticipantMutation();
-  const [role, setRole] = useState<ParticipantRole>(participant.role);
   const [maxSquares, setMaxSquares] = useState(participant.maxSquares);
 
-  const isOwner = participant.role === 'owner';
+  const freed = Math.max(0, claimed - maxSquares);
+  const left = maxAllowed - maxSquares;
 
   const handleSave = async () => {
     try {
-      await updateParticipant({
-        contestId,
-        userId: participant.userId,
-        request: buildRequest(participant, role, maxSquares),
-      }).unwrap();
+      await updateParticipant({ contestId, userId: participant.userId, maxSquares }).unwrap();
       showToast('Participant updated', 'success');
       onClose();
     } catch {
@@ -83,7 +58,7 @@ function EditParticipantForm({
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
-        Edit Participant
+        Edit Squares
         <IconButton
           aria-label="Close dialog"
           onClick={onClose}
@@ -95,41 +70,27 @@ function EditParticipantForm({
       <DialogContent sx={{ pt: 2 }}>
         <Typography sx={{ mb: 2, fontWeight: 600 }}>{participant.displayName}</Typography>
 
-        {!isOwner && (
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-            <InputLabel>Role</InputLabel>
-            <Select
-              value={role}
-              label="Role"
-              onChange={(e) => {
-                const next = e.target.value as ParticipantRole;
-                setRole(next);
-                // participants need at least one square
-                if (next === 'participant' && maxSquares < 1) {
-                  setMaxSquares(1);
-                }
-              }}
-            >
-              <MenuItem value="participant">Participant</MenuItem>
-              <MenuItem value="viewer">Viewer</MenuItem>
-            </Select>
-          </FormControl>
-        )}
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          Max Squares: {maxSquares}
+        </Typography>
+        <Slider
+          value={maxSquares}
+          onChange={(_, value) => setMaxSquares(value)}
+          min={0}
+          max={maxAllowed}
+          valueLabelDisplay="auto"
+          size="small"
+          slotProps={{ input: { 'aria-label': 'Max squares' } }}
+        />
+        <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+          {left === 1 ? '1 square' : `${left} squares`} left to give out
+        </Typography>
 
-        {role !== 'viewer' && (
-          <>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 0.5 }}>
-              Max Squares: {maxSquares}
-            </Typography>
-            <Slider
-              value={maxSquares}
-              onChange={(_, value) => setMaxSquares(value)}
-              min={isOwner ? 0 : 1}
-              max={100}
-              valueLabelDisplay="auto"
-              size="small"
-            />
-          </>
+        {freed > 0 && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            {freed === 1 ? '1 of their squares' : `${freed} of their squares`} will be freed at
+            random. They hold {claimed} right now.
+          </Alert>
         )}
 
         {isError && (
@@ -142,12 +103,12 @@ function EditParticipantForm({
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
-          color={isError ? 'error' : 'primary'}
+          color={isError ? 'error' : freed > 0 ? 'warning' : 'primary'}
           onClick={handleSave}
-          disabled={isLoading}
+          disabled={isLoading || maxSquares === participant.maxSquares}
           startIcon={isError ? <ErrorOutlineOutlined /> : undefined}
         >
-          {isError ? 'Failed, Retry' : 'Save'}
+          {isError ? 'Failed, Retry' : freed > 0 ? `Save and Free ${freed}` : 'Save'}
         </Button>
       </DialogActions>
     </Dialog>

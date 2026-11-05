@@ -126,12 +126,12 @@ func TestFeedRepository_Members(t *testing.T) {
 	contestID := uuid.New()
 	mock.ExpectQuery(`SELECT user_id FROM contest_participants WHERE contest_id = \$1 UNION SELECT owner FROM contests WHERE id = \$2`).
 		WithArgs(contestID, contestID).
-		WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow("owner@b.com").AddRow("player@b.com"))
+		WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow("owner@b.com").AddRow("participant@b.com"))
 
 	members, err := repo.Members(context.Background(), contestID)
 
 	require.NoError(t, err)
-	assert.ElementsMatch(t, []string{"owner@b.com", "player@b.com"}, members)
+	assert.ElementsMatch(t, []string{"owner@b.com", "participant@b.com"}, members)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

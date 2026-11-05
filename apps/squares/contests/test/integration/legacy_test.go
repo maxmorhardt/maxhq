@@ -26,11 +26,13 @@ func tableExists(t *testing.T, qualified string) bool {
 }
 
 func TestLegacy_ContestTablesMoveIntoTheContestsSchema(t *testing.T) {
-	for _, table := range []string{"contests", "squares", "quarter_results", "contest_participants", "contest_invites"} {
+	for _, table := range []string{"contests", "squares", "quarter_results", "contest_participants"} {
 		assert.True(t, tableExists(t, "contests."+table), table)
 		assert.False(t, tableExists(t, "public."+table), "public."+table+" is gone")
 	}
-	for _, table := range []string{"contests.outbox", "contests.stream_offsets", "contests.users", "contests.games", "contests.game_scores"} {
+	assert.False(t, tableExists(t, "contests.contest_invites"), "one invite link per contest replaced the invites table")
+	assert.False(t, tableExists(t, "public.contest_invites"))
+	for _, table := range []string{"contests.outbox", "contests.stream_offsets", "contests.users", "contests.games", "contests.game_scores", "contests.contest_bans"} {
 		assert.True(t, tableExists(t, table), table)
 	}
 
@@ -78,6 +80,18 @@ func TestLegacy_ExistingContestsKeepWorking(t *testing.T) {
 			break
 		}
 	}
+}
+
+func TestLegacy_ExistingContestsGetAnInviteLinkAndViewersBecomeParticipants(t *testing.T) {
+	var token string
+	require.NoError(t, rawDB.QueryRow(`SELECT invite_token FROM contests.contests WHERE id = $1`, legacyContestID).Scan(&token))
+	assert.Len(t, token, 64)
+
+	var role string
+	var maxSquares int
+	require.NoError(t, rawDB.QueryRow(`SELECT role, max_squares FROM contests.contest_participants WHERE user_id = 'viewer@squares.test'`).Scan(&role, &maxSquares))
+	assert.Equal(t, "participant", role)
+	assert.Zero(t, maxSquares)
 }
 
 func TestLegacy_EmailsAreLowercased(t *testing.T) {

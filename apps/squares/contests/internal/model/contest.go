@@ -1,6 +1,8 @@
 package model
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,11 +12,9 @@ import (
 )
 
 const (
-	MaxContestSquares          = 100
-	MaxOpenContestsPerOwner    = 25
-	MaxOpenInvitesPerContest   = 25
-	MaxContestsPerOwnerPerDay  = 50
-	MaxInvitesPerContestPerDay = 100
+	MaxContestSquares         = 100
+	MaxOpenContestsPerOwner   = 25
+	MaxContestsPerOwnerPerDay = 50
 
 	CreationWindow = 24 * time.Hour
 )
@@ -46,6 +46,7 @@ type Contest struct {
 	Status         ContestStatus     `json:"status" gorm:"not null;default:ACTIVE"`
 	Version        int64             `json:"version" gorm:"not null;default:1"`
 	GameID         *uuid.UUID        `json:"gameId,omitempty" gorm:"type:uuid;index"`
+	InviteToken    string            `json:"-" gorm:"uniqueIndex;not null"`
 	// scoring reads contests' copy of the game; clients get the game itself from the games API
 	Game      *Game     `json:"-" gorm:"foreignKey:GameID;constraint:OnDelete:SET NULL"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -57,6 +58,11 @@ type Contest struct {
 func (c *Contest) BeforeCreate(tx *gorm.DB) (err error) {
 	if c.ID == uuid.Nil {
 		c.ID = uuid.New()
+	}
+	if c.InviteToken == "" {
+		if c.InviteToken, err = NewInviteToken(); err != nil {
+			return err
+		}
 	}
 
 	if user, ok := tx.Statement.Context.Value(api.UserKey).(string); ok {
@@ -73,4 +79,12 @@ func (c *Contest) BeforeUpdate(tx *gorm.DB) (err error) {
 	}
 
 	return
+}
+
+func NewInviteToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

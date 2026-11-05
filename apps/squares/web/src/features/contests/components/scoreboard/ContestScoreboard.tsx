@@ -121,7 +121,7 @@ export default function ContestScoreboard({
   const score = currentScore(contest, game);
   const live = isLive(game);
   const clock = game ? gameClock(game) : getStatusLabel(contest.status);
-  const role = viewer.isOwner ? 'Owner' : viewer.isParticipant ? 'Player' : 'Watching';
+  const role = viewer.isOwner ? 'Owner' : viewer.isParticipant ? 'Participant' : 'Watching';
 
   return (
     <Box

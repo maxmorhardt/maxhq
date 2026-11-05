@@ -6,7 +6,7 @@ import { contestsApi, useGetRosterQuery } from './api';
 
 const RETRY_MS = 5_000;
 
-// full names for the owner, refreshed whenever the stream has a player the roster lacks
+// full names for the owner, refreshed whenever the stream has a participant the roster lacks
 export function useContestRoster(
   contestId: string,
   isOwner: boolean,
@@ -23,13 +23,13 @@ export function useContestRoster(
         .join(',')
     : '';
 
-  // rtk holds an invalidation until an in-flight request settles, then refetches, so ask once per missing player
+  // rtk holds an invalidation until an in-flight request settles, then refetches, so ask once per missing participant
   useEffect(() => {
     const ids = missing ? missing.split(',') : [];
     const asked =
       requested.current.contestId === contestId ? requested.current.userIds : new Set<string>();
     const unrequested = ids.filter((id) => !asked.has(id));
-    // only the still-missing stay asked for, so a player who leaves and rejoins is asked for again
+    // only the still-missing stay asked for, so a participant who leaves and rejoins is asked for again
     requested.current = { contestId, userIds: new Set(ids) };
     if (unrequested.length > 0) {
       dispatch(contestsApi.util.invalidateTags([{ type: 'Roster', id: contestId }]));

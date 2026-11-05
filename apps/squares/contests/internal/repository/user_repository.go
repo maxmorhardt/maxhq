@@ -72,7 +72,7 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 			return err
 		}
 
-		// a started board keeps its squares whole, as when a player is removed mid-game
+		// a started board keeps its squares whole, as when a participant is removed mid-game
 		var ghosted []model.Square
 		if err := tx.Model(&ghosted).Clauses(clause.Returning{}).
 			Where("owner = ? AND contest_id IN (?)", email,
@@ -95,7 +95,6 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 			{&model.Contest{}, "owner"},
 			{&model.Contest{}, "created_by"},
 			{&model.Contest{}, "updated_by"},
-			{&model.ContestInvite{}, "created_by"},
 		}
 		for _, a := range anonymize {
 			if err := tx.Model(a.tableModel).
@@ -106,6 +105,10 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 		}
 
 		if err := tx.Clauses(clause.Returning{}).Where("user_id = ?", email).Delete(&removed).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("user_id = ?", email).Delete(&model.ContestBan{}).Error; err != nil {
 			return err
 		}
 

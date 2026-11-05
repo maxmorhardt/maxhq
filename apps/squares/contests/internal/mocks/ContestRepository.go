@@ -345,6 +345,65 @@ func (_c *ContestRepository_GetByIDForUpdate_Call) RunAndReturn(run func(context
 	return _c
 }
 
+// GetByInviteToken provides a mock function with given fields: ctx, token
+func (_m *ContestRepository) GetByInviteToken(ctx context.Context, token string) (*model.Contest, error) {
+	ret := _m.Called(ctx, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByInviteToken")
+	}
+
+	var r0 *model.Contest
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.Contest, error)); ok {
+		return rf(ctx, token)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *model.Contest); ok {
+		r0 = rf(ctx, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Contest)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, token)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_GetByInviteToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByInviteToken'
+type ContestRepository_GetByInviteToken_Call struct {
+	*mock.Call
+}
+
+// GetByInviteToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - token string
+func (_e *ContestRepository_Expecter) GetByInviteToken(ctx interface{}, token interface{}) *ContestRepository_GetByInviteToken_Call {
+	return &ContestRepository_GetByInviteToken_Call{Call: _e.mock.On("GetByInviteToken", ctx, token)}
+}
+
+func (_c *ContestRepository_GetByInviteToken_Call) Run(run func(ctx context.Context, token string)) *ContestRepository_GetByInviteToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_GetByInviteToken_Call) Return(_a0 *model.Contest, _a1 error) *ContestRepository_GetByInviteToken_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_GetByInviteToken_Call) RunAndReturn(run func(context.Context, string) (*model.Contest, error)) *ContestRepository_GetByInviteToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetIDsByGameID provides a mock function with given fields: ctx, gameID
 func (_m *ContestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error) {
 	ret := _m.Called(ctx, gameID)
@@ -404,6 +463,63 @@ func (_c *ContestRepository_GetIDsByGameID_Call) RunAndReturn(run func(context.C
 	return _c
 }
 
+// GetInviteToken provides a mock function with given fields: ctx, id
+func (_m *ContestRepository) GetInviteToken(ctx context.Context, id uuid.UUID) (string, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetInviteToken")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (string, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) string); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_GetInviteToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetInviteToken'
+type ContestRepository_GetInviteToken_Call struct {
+	*mock.Call
+}
+
+// GetInviteToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *ContestRepository_Expecter) GetInviteToken(ctx interface{}, id interface{}) *ContestRepository_GetInviteToken_Call {
+	return &ContestRepository_GetInviteToken_Call{Call: _e.mock.On("GetInviteToken", ctx, id)}
+}
+
+func (_c *ContestRepository_GetInviteToken_Call) Run(run func(ctx context.Context, id uuid.UUID)) *ContestRepository_GetInviteToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_GetInviteToken_Call) Return(_a0 string, _a1 error) *ContestRepository_GetInviteToken_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_GetInviteToken_Call) RunAndReturn(run func(context.Context, uuid.UUID) (string, error)) *ContestRepository_GetInviteToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetVisibilityByID provides a mock function with given fields: ctx, id
 func (_m *ContestRepository) GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error) {
 	ret := _m.Called(ctx, id)
@@ -457,6 +573,63 @@ func (_c *ContestRepository_GetVisibilityByID_Call) Return(_a0 model.ContestVisi
 }
 
 func (_c *ContestRepository_GetVisibilityByID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (model.ContestVisibility, error)) *ContestRepository_GetVisibilityByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ResetInviteToken provides a mock function with given fields: ctx, id
+func (_m *ContestRepository) ResetInviteToken(ctx context.Context, id uuid.UUID) (string, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetInviteToken")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (string, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) string); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_ResetInviteToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetInviteToken'
+type ContestRepository_ResetInviteToken_Call struct {
+	*mock.Call
+}
+
+// ResetInviteToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *ContestRepository_Expecter) ResetInviteToken(ctx interface{}, id interface{}) *ContestRepository_ResetInviteToken_Call {
+	return &ContestRepository_ResetInviteToken_Call{Call: _e.mock.On("ResetInviteToken", ctx, id)}
+}
+
+func (_c *ContestRepository_ResetInviteToken_Call) Run(run func(ctx context.Context, id uuid.UUID)) *ContestRepository_ResetInviteToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_ResetInviteToken_Call) Return(_a0 string, _a1 error) *ContestRepository_ResetInviteToken_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_ResetInviteToken_Call) RunAndReturn(run func(context.Context, uuid.UUID) (string, error)) *ContestRepository_ResetInviteToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

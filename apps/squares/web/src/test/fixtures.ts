@@ -49,9 +49,8 @@ export function makeParticipant(overrides: Partial<Participant> = {}): Participa
   return {
     id: 'p-1',
     contestId: 'c-1',
-    userId: 'u_player',
+    userId: 'u_participant',
     displayName: 'Pat P.',
-    inviteId: '',
     role: 'participant',
     maxSquares: 5,
     joinedAt: '2026-01-01T00:00:00Z',
@@ -70,7 +69,7 @@ export function makeQuarterResult(overrides: Partial<QuarterResult> = {}): Quart
     awayTeamScore: 3,
     winnerRow: 1,
     winnerCol: 2,
-    winner: 'u_player',
+    winner: 'u_participant',
     winnerName: 'Player',
     createdAt: '2026-01-01T01:00:00Z',
     updatedAt: '2026-01-01T01:00:00Z',
@@ -80,7 +79,7 @@ export function makeQuarterResult(overrides: Partial<QuarterResult> = {}): Quart
 
 // pass viewerId to sign in as someone else; isMe follows it
 export function makeViewer({
-  viewerId = 'u_player',
+  viewerId = 'u_participant',
   ...overrides
 }: Partial<ContestViewer> = {}): ContestViewer {
   const { isMe, fullName } = getContestViewer(viewerId, makeContest(), []);

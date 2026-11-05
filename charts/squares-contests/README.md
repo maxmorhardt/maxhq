@@ -17,8 +17,8 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 
 | Path under `api.maxhq.io/squares` | |
 | --- | --- |
-| `/contests/**` | create, edit, and delete contests; claim and clear squares; the gateway limits creating contests to 30 an hour and invite links to 60 an hour per client (`route.rateLimit.rules`, `pathType` defaults to `Exact`) |
-| `/invites/**` | preview and redeem invite links |
+| `/contests/**` | create, edit, and delete contests; claim and clear squares; the gateway limits creating contests to 30 an hour and invite link resets to 60 an hour per client (`route.rateLimit.rules`, `pathType` defaults to `Exact`) |
+| `/invites/**` | preview a contest from its invite link, and join it |
 | `/leaderboard`, `/stats` | public stats, cached in Valkey; `/leaderboard/me` and `/stats/me` for the signed-in user |
 | `/swagger/contests` | the API reference |
 

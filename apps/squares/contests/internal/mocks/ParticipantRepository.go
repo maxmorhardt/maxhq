@@ -24,6 +24,53 @@ func (_m *ParticipantRepository) EXPECT() *ParticipantRepository_Expecter {
 	return &ParticipantRepository_Expecter{mock: &_m.Mock}
 }
 
+// Create provides a mock function with given fields: ctx, participant
+func (_m *ParticipantRepository) Create(ctx context.Context, participant *model.ContestParticipant) error {
+	ret := _m.Called(ctx, participant)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Create")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.ContestParticipant) error); ok {
+		r0 = rf(ctx, participant)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ParticipantRepository_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
+type ParticipantRepository_Create_Call struct {
+	*mock.Call
+}
+
+// Create is a helper method to define mock.On call
+//   - ctx context.Context
+//   - participant *model.ContestParticipant
+func (_e *ParticipantRepository_Expecter) Create(ctx interface{}, participant interface{}) *ParticipantRepository_Create_Call {
+	return &ParticipantRepository_Create_Call{Call: _e.mock.On("Create", ctx, participant)}
+}
+
+func (_c *ParticipantRepository_Create_Call) Run(run func(ctx context.Context, participant *model.ContestParticipant)) *ParticipantRepository_Create_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*model.ContestParticipant))
+	})
+	return _c
+}
+
+func (_c *ParticipantRepository_Create_Call) Return(_a0 error) *ParticipantRepository_Create_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ParticipantRepository_Create_Call) RunAndReturn(run func(context.Context, *model.ContestParticipant) error) *ParticipantRepository_Create_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Delete provides a mock function with given fields: ctx, contestID, userID
 func (_m *ParticipantRepository) Delete(ctx context.Context, contestID uuid.UUID, userID string) error {
 	ret := _m.Called(ctx, contestID, userID)

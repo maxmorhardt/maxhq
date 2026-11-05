@@ -21,7 +21,7 @@ export default function LearnMorePage() {
       stepNumber: 2,
       title: 'Friends claim squares',
       description:
-        'Share one invite link. Everyone signs in from their phone and claims squares, up to the limit you set.',
+        'Share one invite link. Everyone signs in from their phone, you give each person their squares, and they claim them.',
     },
     {
       stepNumber: 3,
@@ -54,13 +54,13 @@ export default function LearnMorePage() {
       icon: <People />,
       title: 'One link to invite everyone',
       description:
-        'Drop a single invite link in the group chat. Limit it by uses or time, or invite people as viewers who just follow along.',
+        'Drop a single invite link in the group chat. Anyone who joins can follow along, and you decide who gets squares.',
     },
     {
       icon: <Tune />,
       title: 'Your board, your rules',
       description:
-        'Make a board private or public, and set how many squares each player can claim.',
+        'Make a board private or public, and set how many squares each participant can claim.',
     },
     {
       icon: <Sports />,
@@ -110,17 +110,17 @@ export default function LearnMorePage() {
     {
       question: 'How do I invite people to my contest?',
       answer:
-        'Open your contest and select "Invite Links". Pick a role (participant or viewer) and, for participants, how many squares each person can claim. You can limit how many times a link is used and set it to expire. Share the link, and anyone who opens it can sign in and join.',
+        'Open your contest and select "Invite" to share or copy its invite link. Anyone who opens it can sign in and join with no squares, then you give them squares. If the link ends up somewhere it shouldn\'t, reset it and the old one stops working.',
     },
     {
-      question: 'How do I manage participants and their roles?',
+      question: 'How do I manage participants and their squares?',
       answer:
-        'Participants can claim squares up to their per-person limit, while viewers follow along in real time without claiming any. As the owner, open the "Participants" panel while the contest is active to change someone\'s role, adjust how many squares they can claim, or remove them. Removing a participant clears their squares so others can take them.',
+        'As the owner, open the "Participants" panel before kickoff to set how many squares each person can claim, or give everyone without squares the same number at once. The board never gives out more than 100. Lowering someone below what they hold frees that many of their squares at random. Removing someone frees their squares and bans them from rejoining until you unban them in the same panel.',
     },
     {
       question: "What's the difference between a private and public contest?",
       answer:
-        "A private contest is invite-only and hidden from anyone who isn't part of it. A public contest can be viewed by anyone with the link, but only people you've invited can claim squares.",
+        "A private contest is invite-only and hidden from anyone who isn't part of it. A public contest can be viewed by anyone with the link, but only people who join with your invite link can claim squares.",
     },
     {
       question: 'Do I need an account, and how do I sign in?',

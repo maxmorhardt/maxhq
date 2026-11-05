@@ -19,6 +19,7 @@ type SquareRepository interface {
 	ClaimRandom(ctx context.Context, contestID uuid.UUID, count int, value, owner, ownerName string) ([]model.Square, error)
 	Clear(ctx context.Context, square *model.Square) (*model.Square, error)
 	ClearByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error)
+	ClearRandomByOwner(ctx context.Context, contestID uuid.UUID, owner string, count int) ([]model.Square, error)
 	GhostByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error)
 	UpdateInitials(ctx context.Context, owner, initials string) ([]model.Square, error)
 }
@@ -187,6 +188,14 @@ func (r *squareRepository) Clear(ctx context.Context, square *model.Square) (*mo
 }
 
 func (r *squareRepository) ClearByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error) {
+	return r.clearOwned(ctx, contestID, owner, func(q *gorm.DB) *gorm.DB { return q })
+}
+
+func (r *squareRepository) ClearRandomByOwner(ctx context.Context, contestID uuid.UUID, owner string, count int) ([]model.Square, error) {
+	return r.clearOwned(ctx, contestID, owner, func(q *gorm.DB) *gorm.DB { return q.Order("random()").Limit(count) })
+}
+
+func (r *squareRepository) clearOwned(ctx context.Context, contestID uuid.UUID, owner string, pick func(*gorm.DB) *gorm.DB) ([]model.Square, error) {
 	var clearedSquares []model.Square
 	err := database.InTx(ctx, func(tx *gorm.DB) error {
 		if err := lockActiveContest(tx, contestID); err != nil {
@@ -194,8 +203,7 @@ func (r *squareRepository) ClearByOwner(ctx context.Context, contestID uuid.UUID
 		}
 
 		var ids []uuid.UUID
-		if err := tx.Model(&model.Square{}).
-			Where("contest_id = ? AND owner = ?", contestID, owner).
+		if err := pick(tx.Model(&model.Square{}).Where("contest_id = ? AND owner = ?", contestID, owner)).
 			Pluck("id", &ids).Error; err != nil {
 			return err
 		}
@@ -221,7 +229,6 @@ func (r *squareRepository) ClearByOwner(ctx context.Context, contestID uuid.UUID
 	return clearedSquares, err
 }
 
-// in-progress squares keep their value so scoring is unaffected; only the owner identity is dropped
 func (r *squareRepository) GhostByOwner(ctx context.Context, contestID uuid.UUID, owner string) ([]model.Square, error) {
 	var ghosted []model.Square
 	err := database.InTx(ctx, func(tx *gorm.DB) error {

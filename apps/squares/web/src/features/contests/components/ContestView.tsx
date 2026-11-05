@@ -8,6 +8,7 @@ import ContestGrid, { type SquarePosition } from './grid/ContestGrid';
 import ContestScoreboard from './scoreboard/ContestScoreboard';
 import QuarterStrip from './scoreboard/QuarterStrip';
 import ActivityFeed from './sidebar/ActivityFeed';
+import WatchingBanner from './WatchingBanner';
 
 interface Props {
   contest: Contest;
@@ -67,7 +68,8 @@ export default function ContestView({
           gap: { xs: 2, sm: 2.5 },
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, display: 'grid', gap: { xs: 1.5, sm: 2 }, alignContent: 'start' }}>
+          <WatchingBanner contest={contest} viewer={viewer} />
           <ContestGrid
             contest={contest}
             viewer={viewer}
@@ -87,7 +89,12 @@ export default function ContestView({
               gap: { xs: 2, sm: 2.5 },
             }}
           >
-            <ContestDetails contest={contest} game={game} viewer={viewer} />
+            <ContestDetails
+              contest={contest}
+              game={game}
+              participants={participants}
+              viewer={viewer}
+            />
             <ActivityFeed events={activity} />
           </Box>
         </Box>

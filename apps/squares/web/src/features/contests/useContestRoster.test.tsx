@@ -37,13 +37,13 @@ function rosterServer() {
       })
   );
   vi.stubGlobal('fetch', fetchMock);
-  const answer = async (status: number, players: Participant[]) => {
+  const answer = async (status: number, participants: Participant[]) => {
     await waitFor(() => expect(pending.length).toBeGreaterThan(0));
-    await act(async () => pending.shift()!(status, players.map(identity)));
+    await act(async () => pending.shift()!(status, participants.map(identity)));
   };
   return {
     requests: () => fetchMock.mock.calls.length,
-    respond: (players: Participant[]) => answer(200, players),
+    respond: (participants: Participant[]) => answer(200, participants),
     fail: () => answer(500, []),
   };
 }
@@ -115,7 +115,7 @@ describe('useContestRoster', () => {
     expect(server.requests()).toBe(2);
   });
 
-  it('asks again for a player who left and rejoined after the roster dropped them', async () => {
+  it('asks again for a participant who left and rejoined after the roster dropped them', async () => {
     const server = rosterServer();
     const { result, rerender } = render(true, [owner]);
     await server.respond([owner]);

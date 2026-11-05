@@ -61,15 +61,15 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 
 	contestRepo := repository.NewContestRepository(db)
 	participantRepo := repository.NewParticipantRepository(db)
-	inviteRepo := repository.NewInviteRepository(db)
+	banRepo := repository.NewBanRepository(db)
 	squareRepo := repository.NewSquareRepository(db)
 	gameRepo := repository.NewGameSyncRepository(db)
 	userRepo := repository.NewUserRepository(db)
 
-	participantService := service.NewParticipantService(participantRepo, contestRepo, squareRepo, tx, events)
+	participantService := service.NewParticipantService(participantRepo, contestRepo, squareRepo, banRepo, tx, events)
 	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, participantService)
 	squareService := service.NewSquareService(squareRepo, contestRepo, participantRepo, userRepo, tx, events, participantService)
-	inviteService := service.NewInviteService(inviteRepo, participantRepo, contestRepo, userRepo, participantService, tx, events)
+	inviteService := service.NewInviteService(contestRepo, participantRepo, banRepo, userRepo, participantService, tx, events)
 	leaderboardService := service.NewLeaderboardService(repository.NewLeaderboardRepository(db), sharedCache)
 	statsService := service.NewStatsService(repository.NewStatsRepository(db), sharedCache)
 	userSyncService := service.NewUserSyncService(userRepo, squareRepo, tx, events)

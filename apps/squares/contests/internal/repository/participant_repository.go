@@ -13,6 +13,7 @@ type ParticipantRepository interface {
 	GetByContestAndUser(ctx context.Context, contestID uuid.UUID, userID string) (*model.ContestParticipant, error)
 	GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestParticipant, error)
 	GetTotalAllocatedSquares(ctx context.Context, contestID uuid.UUID) (int, error)
+	Create(ctx context.Context, participant *model.ContestParticipant) error
 	Update(ctx context.Context, participant *model.ContestParticipant) error
 	Delete(ctx context.Context, contestID uuid.UUID, userID string) error
 }
@@ -57,6 +58,10 @@ func (r *participantRepository) GetTotalAllocatedSquares(ctx context.Context, co
 		Row().
 		Scan(&total)
 	return total, err
+}
+
+func (r *participantRepository) Create(ctx context.Context, participant *model.ContestParticipant) error {
+	return database.TranslateError(database.Conn(ctx, r.db).Create(participant).Error)
 }
 
 func (r *participantRepository) Update(ctx context.Context, participant *model.ContestParticipant) error {
