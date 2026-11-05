@@ -25,7 +25,6 @@ export function redactSecrets<T>(item: T): T {
   ) as T;
 }
 
-// where the visit came from, so ad traffic can be picked out of faro's sessions
 export function landingAttributes(href: string, referrer: string): Record<string, string> {
   const params = new URL(href).searchParams;
   const attributes: Record<string, string> = {};
@@ -42,12 +41,11 @@ export function landingAttributes(href: string, referrer: string): Record<string
   try {
     attributes.referrer = new URL(referrer).hostname;
   } catch {
-    // no referrer, or not a url
+    return attributes;
   }
   return attributes;
 }
 
-// once per tab, so the sign-in callback and reloads don't count as new landings
 function firstLoadInTab(): boolean {
   try {
     if (sessionStorage.getItem(LANDED_KEY)) {
@@ -55,7 +53,7 @@ function firstLoadInTab(): boolean {
     }
     sessionStorage.setItem(LANDED_KEY, '1');
   } catch {
-    // storage blocked: report every load rather than none
+    return true;
   }
   return true;
 }
@@ -85,7 +83,6 @@ export function initFaro(hostname?: string, url: string = FARO_URL): void {
     .catch(() => null);
 }
 
-// the email matches faro sessions to the user in the api's request logs
 export function setFaroUser(userId: string | undefined, email?: string): void {
   void loaded.then((faro) => {
     if (!faro) {

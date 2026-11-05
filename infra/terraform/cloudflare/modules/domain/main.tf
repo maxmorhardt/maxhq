@@ -155,7 +155,6 @@ resource "cloudflare_ruleset" "redirect" {
   }]
 }
 
-# cf-region, cf-ipcity and the rest reach the API's request logs
 resource "cloudflare_managed_transforms" "this" {
   zone_id = local.zone_id
 

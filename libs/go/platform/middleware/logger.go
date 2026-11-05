@@ -36,7 +36,6 @@ func LoggerMiddleware(c *gin.Context) {
 		"client_ip", c.ClientIP(),
 		"cf_ray", c.GetHeader("Cf-Ray"),
 		"cf_country", c.GetHeader("Cf-Ipcountry"),
-		// set by Cloudflare's visitor location headers managed transform
 		"cf_region", c.GetHeader("Cf-Region"),
 		"cf_city", c.GetHeader("Cf-Ipcity"),
 	)
