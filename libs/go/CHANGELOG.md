@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.0.0...libs/go/v1.1.0) (2026-11-05)
+
+
+### Features
+
+* **squares:** visitor insights ([#207](https://github.com/maxmorhardt/maxhq/issues/207)) ([494c829](https://github.com/maxmorhardt/maxhq/commit/494c829e0eef51c053b434635c442b5a904e750a))
+
 ## 1.0.0 (2026-11-03)
 
 
