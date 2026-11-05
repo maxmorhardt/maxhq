@@ -4,7 +4,7 @@ import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import { Box, Button, Container, LinearProgress, Link, Skeleton, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useAuth } from 'react-oidc-context';
-import { errorMessage } from '../../../api/errors';
+import { errorMessage, errorStatus } from '../../../api/errors';
 import { fonts, game as palette } from '../../../app/theme';
 import { signInWithProvider, type OIDCProvider } from '../../../auth/oidc';
 import TeamMark from '../../../components/TeamMark';
@@ -65,7 +65,7 @@ function whatToExpect(preview: InvitePreviewResponse): string {
   if (open <= 0) {
     return 'The board is full and locked, so you can join to watch the game.';
   }
-  return `You can claim up to ${preview.maxSquares} of the ${open} open squares.`;
+  return `${open} of ${preview.totalSquares} squares are still open. You join with none, and the owner gives you yours.`;
 }
 
 function ContestHeading({ preview }: { preview: InvitePreviewResponse }) {
@@ -173,8 +173,8 @@ export default function InviteSignIn({ token }: Props) {
   if (error) {
     return (
       <JoinError
-        variant="error"
-        message={errorMessage(error, 'This invite link is invalid or expired')}
+        message={errorMessage(error, 'This invite link doesn’t work anymore')}
+        status={errorStatus(error)}
       />
     );
   }

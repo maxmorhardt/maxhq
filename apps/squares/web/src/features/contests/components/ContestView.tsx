@@ -1,18 +1,19 @@
 import { Box } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import type { StreamStatus } from '../../../api/eventStream';
-import type { ActivityEvent, Contest, Game, Participant } from '../../../types/contest';
+import type { ActivityEvent, Contest, Game, Player } from '../../../types/contest';
 import type { ContestViewer } from '../live/viewer';
 import ContestDetails from './details/ContestDetails';
 import ContestGrid, { type SquarePosition } from './grid/ContestGrid';
 import ContestScoreboard from './scoreboard/ContestScoreboard';
 import QuarterStrip from './scoreboard/QuarterStrip';
 import ActivityFeed from './sidebar/ActivityFeed';
+import WatchingBanner from './WatchingBanner';
 
 interface Props {
   contest: Contest;
   game?: Game;
-  participants: Participant[];
+  players: Player[];
   activity: ActivityEvent[];
   viewer: ContestViewer;
   status: StreamStatus;
@@ -24,7 +25,7 @@ interface Props {
 export default function ContestView({
   contest,
   game,
-  participants,
+  players,
   activity,
   viewer,
   status,
@@ -52,7 +53,7 @@ export default function ContestView({
       <ContestScoreboard
         contest={contest}
         game={game}
-        participants={participants}
+        players={players}
         viewer={viewer}
         status={status}
         onRetry={onStale}
@@ -67,7 +68,8 @@ export default function ContestView({
           gap: { xs: 2, sm: 2.5 },
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, display: 'grid', gap: { xs: 1.5, sm: 2 }, alignContent: 'start' }}>
+          <WatchingBanner contest={contest} viewer={viewer} />
           <ContestGrid
             contest={contest}
             viewer={viewer}
@@ -87,7 +89,7 @@ export default function ContestView({
               gap: { xs: 2, sm: 2.5 },
             }}
           >
-            <ContestDetails contest={contest} game={game} viewer={viewer} />
+            <ContestDetails contest={contest} game={game} players={players} viewer={viewer} />
             <ActivityFeed events={activity} />
           </Box>
         </Box>

@@ -25,7 +25,7 @@ func NewFeedRepository(db *gorm.DB) FeedRepository {
 	return &feedRepository{db: db}
 }
 
-// owners are matched on contests.owner too, since older contests may lack an owner participant row
+// owners are matched on contests.owner too, since older contests may lack an owner player row
 func (r *feedRepository) List(ctx context.Context, user string, f *model.ContestFeedFilter) ([]model.ContestSummary, error) {
 	q := database.Conn(ctx, r.db).
 		Table("contests c").
@@ -34,7 +34,7 @@ func (r *feedRepository) List(ctx context.Context, user string, f *model.Contest
 			CASE WHEN c.owner = ? THEN 'owner' ELSE cp.role END AS role,
 			(SELECT count(*) FROM squares s WHERE s.contest_id = c.id AND s.owner <> '') AS claimed_squares,
 			(SELECT count(*) FROM squares s WHERE s.contest_id = c.id AND s.owner = ?) AS my_squares`, user, user).
-		Joins("LEFT JOIN contest_participants cp ON cp.contest_id = c.id AND cp.user_id = ?", user).
+		Joins("LEFT JOIN contest_players cp ON cp.contest_id = c.id AND cp.user_id = ?", user).
 		Joins("LEFT JOIN games g ON g.id = c.game_id").
 		Joins("LEFT JOIN users ou ON ou.email = c.owner").
 		Where("c.status <> ?", model.ContestStatusDeleted)
@@ -66,7 +66,7 @@ func (r *feedRepository) List(ctx context.Context, user string, f *model.Contest
 func (r *feedRepository) Members(ctx context.Context, contestID uuid.UUID) ([]string, error) {
 	var members []string
 	err := database.Conn(ctx, r.db).Raw(
-		"SELECT user_id FROM contest_participants WHERE contest_id = ? UNION SELECT owner FROM contests WHERE id = ?",
+		"SELECT user_id FROM contest_players WHERE contest_id = ? UNION SELECT owner FROM contests WHERE id = ?",
 		contestID, contestID,
 	).Scan(&members).Error
 	return members, err

@@ -1,19 +1,18 @@
 import { baseApi } from '../../api/baseApi';
 import type {
   Contest,
+  ContestBan,
   ContestFeedParams,
   ContestFeedResponse,
   ContestSnapshot,
   ContestSummary,
   CreateContestRequest,
-  CreateInviteRequest,
-  Invite,
+  InviteLink,
   InvitePreviewResponse,
-  Participant,
-  ParticipantIdentity,
+  Player,
+  PlayerIdentity,
   RandomClaimResponse,
   Square,
-  UpdateParticipantRequest,
 } from '../../types/contest';
 
 const FEED_PAGE_SIZE = 20;
@@ -25,7 +24,7 @@ interface SquareArgs {
   squareId: string;
 }
 
-interface ParticipantArgs {
+interface PlayerArgs {
   contestId: string;
   userId: string;
 }
@@ -92,59 +91,80 @@ export const contestsApi = baseApi.injectEndpoints({
       query: (contestId) => ({ url: `/contests/${contestId}/squares/claims`, method: 'DELETE' }),
     }),
 
-    getInvites: build.query<Invite[], string>({
-      query: (contestId) => `/contests/${contestId}/invites`,
-      providesTags: ['Invites'],
+    getInviteLink: build.query<InviteLink, string>({
+      query: (contestId) => `/contests/${contestId}/invite`,
+      providesTags: (_result, _error, contestId) => [{ type: 'InviteLink', id: contestId }],
     }),
 
-    createInvite: build.mutation<Invite, { contestId: string; request: CreateInviteRequest }>({
-      query: ({ contestId, request }) => ({
-        url: `/contests/${contestId}/invites`,
-        method: 'POST',
-        body: request,
-      }),
-      invalidatesTags: ['Invites'],
-    }),
-
-    deleteInvite: build.mutation<void, { contestId: string; inviteId: string }>({
-      query: ({ contestId, inviteId }) => ({
-        url: `/contests/${contestId}/invites/${inviteId}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: ['Invites'],
+    resetInviteLink: build.mutation<InviteLink, string>({
+      query: (contestId) => ({ url: `/contests/${contestId}/invite/reset`, method: 'POST' }),
+      async onQueryStarted(contestId, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            contestsApi.util.updateQueryData('getInviteLink', contestId, (link) => {
+              link.token = data.token;
+            })
+          );
+        } catch {
+          // the dialog shows the failure
+        }
+      },
     }),
 
     previewInvite: build.query<InvitePreviewResponse, string>({
       query: (token) => `/invites/${token}`,
     }),
 
-    redeemInvite: build.mutation<Participant, string>({
-      query: (token) => ({ url: `/invites/${token}/redeem`, method: 'POST' }),
+    joinContest: build.mutation<Player, string>({
+      query: (token) => ({ url: `/invites/${token}/join`, method: 'POST' }),
       invalidatesTags: ['ContestFeed', 'ActiveContests', 'UserStats'],
     }),
 
-    getRoster: build.query<ParticipantIdentity[], string>({
+    getRoster: build.query<PlayerIdentity[], string>({
       query: (contestId) => `/contests/${contestId}/roster`,
       providesTags: (_result, _error, contestId) => [{ type: 'Roster', id: contestId }],
     }),
 
-    updateParticipant: build.mutation<
-      Participant,
-      ParticipantArgs & { request: UpdateParticipantRequest }
-    >({
-      query: ({ contestId, userId, request }) => ({
-        url: `/contests/${contestId}/participants/${userId}`,
+    updatePlayer: build.mutation<Player, PlayerArgs & { maxSquares: number }>({
+      query: ({ contestId, userId, maxSquares }) => ({
+        url: `/contests/${contestId}/players/${userId}`,
         method: 'PATCH',
-        body: request,
+        body: { maxSquares },
       }),
     }),
 
-    removeParticipant: build.mutation<void, ParticipantArgs>({
+    allotSquares: build.mutation<Player[], { contestId: string; maxSquares: number }>({
+      query: ({ contestId, maxSquares }) => ({
+        url: `/contests/${contestId}/players/allot`,
+        method: 'POST',
+        body: { maxSquares },
+      }),
+    }),
+
+    removePlayer: build.mutation<void, PlayerArgs>({
       query: ({ contestId, userId }) => ({
-        url: `/contests/${contestId}/participants/${userId}`,
+        url: `/contests/${contestId}/players/${userId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ContestFeed', 'ActiveContests'],
+      invalidatesTags: (_result, _error, { contestId }) => [
+        'ContestFeed',
+        'ActiveContests',
+        { type: 'Bans', id: contestId },
+      ],
+    }),
+
+    getBans: build.query<ContestBan[], string>({
+      query: (contestId) => `/contests/${contestId}/bans`,
+      providesTags: (_result, _error, contestId) => [{ type: 'Bans', id: contestId }],
+    }),
+
+    unbanPlayer: build.mutation<void, PlayerArgs>({
+      query: ({ contestId, userId }) => ({
+        url: `/contests/${contestId}/bans/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, { contestId }) => [{ type: 'Bans', id: contestId }],
     }),
   }),
 });
@@ -158,12 +178,14 @@ export const {
   useClearSquareMutation,
   useClaimRandomSquaresMutation,
   useClearMySquaresMutation,
-  useGetInvitesQuery,
-  useCreateInviteMutation,
-  useDeleteInviteMutation,
+  useGetInviteLinkQuery,
+  useResetInviteLinkMutation,
   usePreviewInviteQuery,
-  useRedeemInviteMutation,
+  useJoinContestMutation,
   useGetRosterQuery,
-  useUpdateParticipantMutation,
-  useRemoveParticipantMutation,
+  useUpdatePlayerMutation,
+  useAllotSquaresMutation,
+  useRemovePlayerMutation,
+  useGetBansQuery,
+  useUnbanPlayerMutation,
 } = contestsApi;

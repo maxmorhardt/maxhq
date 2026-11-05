@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { Provider } from 'react-redux';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeStore } from '../../app/store';
-import { makeParticipant } from '../../test/fixtures';
-import type { Participant, ParticipantIdentity } from '../../types/contest';
+import { makePlayer } from '../../test/fixtures';
+import type { Player, PlayerIdentity } from '../../types/contest';
 import { useContestRoster } from './useContestRoster';
 
 vi.mock('../../auth/token', () => ({
@@ -12,17 +12,17 @@ vi.mock('../../auth/token', () => ({
   signOutLocally: vi.fn(),
 }));
 
-const owner = makeParticipant({ userId: 'u_owner', role: 'owner' });
-const pat = makeParticipant({ id: 'p-2', userId: 'u_pat' });
-const sam = makeParticipant({ id: 'p-3', userId: 'u_sam' });
-const identity = (p: Participant): ParticipantIdentity => ({
+const owner = makePlayer({ userId: 'u_owner', role: 'owner' });
+const pat = makePlayer({ id: 'p-2', userId: 'u_pat' });
+const sam = makePlayer({ id: 'p-3', userId: 'u_sam' });
+const identity = (p: Player): PlayerIdentity => ({
   userId: p.userId,
   fullName: p.userId,
 });
 
 // answers roster requests one at a time, so a test can hold one in flight
 function rosterServer() {
-  const pending: ((status: number, body: ParticipantIdentity[]) => void)[] = [];
+  const pending: ((status: number, body: PlayerIdentity[]) => void)[] = [];
   const fetchMock = vi.fn(
     () =>
       new Promise<Response>((resolve) => {
@@ -37,25 +37,25 @@ function rosterServer() {
       })
   );
   vi.stubGlobal('fetch', fetchMock);
-  const answer = async (status: number, players: Participant[]) => {
+  const answer = async (status: number, players: Player[]) => {
     await waitFor(() => expect(pending.length).toBeGreaterThan(0));
     await act(async () => pending.shift()!(status, players.map(identity)));
   };
   return {
     requests: () => fetchMock.mock.calls.length,
-    respond: (players: Participant[]) => answer(200, players),
+    respond: (players: Player[]) => answer(200, players),
     fail: () => answer(500, []),
   };
 }
 
-function render(isOwner: boolean, participants: Participant[]) {
+function render(isOwner: boolean, players: Player[]) {
   const store = makeStore();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <Provider store={store}>{children}</Provider>
   );
-  return renderHook(({ isOwner, participants }) => useContestRoster('c-1', isOwner, participants), {
+  return renderHook(({ isOwner, players }) => useContestRoster('c-1', isOwner, players), {
     wrapper,
-    initialProps: { isOwner, participants },
+    initialProps: { isOwner, players },
   });
 }
 
@@ -78,7 +78,7 @@ describe('useContestRoster', () => {
     await server.respond([owner]);
     await waitFor(() => expect(result.current).toHaveLength(1));
 
-    rerender({ isOwner: false, participants: [owner, pat] });
+    rerender({ isOwner: false, players: [owner, pat] });
     expect(result.current).toBeUndefined();
     expect(server.requests()).toBe(1);
   });
@@ -90,7 +90,7 @@ describe('useContestRoster', () => {
     await server.respond([owner]);
     await waitFor(() => expect(result.current).toHaveLength(1));
 
-    rerender({ isOwner: true, participants: [owner, pat] });
+    rerender({ isOwner: true, players: [owner, pat] });
     await server.fail();
     expect(result.current).toHaveLength(1);
     expect(server.requests()).toBe(2);
@@ -107,11 +107,11 @@ describe('useContestRoster', () => {
     await server.respond([owner]);
     await waitFor(() => expect(result.current).toHaveLength(1));
 
-    rerender({ isOwner: true, participants: [owner, pat] });
+    rerender({ isOwner: true, players: [owner, pat] });
     await server.respond([owner, pat]);
     await waitFor(() => expect(result.current).toHaveLength(2));
 
-    rerender({ isOwner: true, participants: [owner, pat] });
+    rerender({ isOwner: true, players: [owner, pat] });
     expect(server.requests()).toBe(2);
   });
 
@@ -119,16 +119,16 @@ describe('useContestRoster', () => {
     const server = rosterServer();
     const { result, rerender } = render(true, [owner]);
     await server.respond([owner]);
-    rerender({ isOwner: true, participants: [owner, pat] });
+    rerender({ isOwner: true, players: [owner, pat] });
     await server.respond([owner, pat]);
     await waitFor(() => expect(result.current).toHaveLength(2));
 
-    rerender({ isOwner: true, participants: [owner] });
-    rerender({ isOwner: true, participants: [owner, sam] });
+    rerender({ isOwner: true, players: [owner] });
+    rerender({ isOwner: true, players: [owner, sam] });
     await server.respond([owner, sam]);
     await waitFor(() => expect(result.current?.map((r) => r.userId)).toEqual(['u_owner', 'u_sam']));
 
-    rerender({ isOwner: true, participants: [owner, sam, pat] });
+    rerender({ isOwner: true, players: [owner, sam, pat] });
     await server.respond([owner, sam, pat]);
     await waitFor(() => expect(result.current).toHaveLength(3));
     expect(server.requests()).toBe(4);
@@ -140,9 +140,9 @@ describe('useContestRoster', () => {
     await server.respond([owner]);
     await waitFor(() => expect(result.current).toHaveLength(1));
 
-    rerender({ isOwner: true, participants: [owner, pat] });
+    rerender({ isOwner: true, players: [owner, pat] });
     await waitFor(() => expect(server.requests()).toBe(2));
-    rerender({ isOwner: true, participants: [owner, pat, sam] });
+    rerender({ isOwner: true, players: [owner, pat, sam] });
     await server.respond([owner, pat]);
 
     await server.respond([owner, pat, sam]);

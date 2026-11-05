@@ -22,7 +22,7 @@ const renderPage = () =>
   );
 
 describe('JoinPage', () => {
-  it('redeems the invite for a signed-in user', () => {
+  it('joins with the invite for a signed-in user', () => {
     mockAuth({ email: 'a@x.com' });
     renderPage();
     expect(screen.getByTestId('join')).toHaveTextContent('abc');

@@ -21,7 +21,7 @@ const features: Feature[] = [
   },
   {
     title: 'Your board, your rules',
-    body: 'Private or public, invite links with limits and expiry, and a per-person cap on how many squares each player can claim.',
+    body: 'Private or public, one invite link, and you decide how many squares each player gets.',
   },
   {
     title: 'Free, with nothing to install',

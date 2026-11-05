@@ -14,7 +14,7 @@ const renderView = (status: 'live' | 'reconnecting' = 'live') =>
   renderWithProviders(
     <ContestView
       contest={makeContest()}
-      participants={[]}
+      players={[]}
       activity={[]}
       viewer={makeViewer()}
       status={status}

@@ -278,7 +278,7 @@ func TestClaimRandomSquares_MapsErrors(t *testing.T) {
 	cases := map[error]int{
 		errs.ErrSquareNotEditable:      http.StatusForbidden,
 		errs.ErrUnauthorizedSquareEdit: http.StatusForbidden,
-		errs.ErrNotParticipant:         http.StatusForbidden,
+		errs.ErrNotPlayer:              http.StatusForbidden,
 		errs.ErrMissingInitials:        http.StatusUnprocessableEntity,
 		errs.ErrNoEmptySquares:         http.StatusConflict,
 		errs.ErrSquareLimitReached:     http.StatusConflict,

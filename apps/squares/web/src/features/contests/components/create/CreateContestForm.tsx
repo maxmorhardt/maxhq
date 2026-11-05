@@ -48,7 +48,7 @@ const visibilityOptions: {
   {
     value: 'public',
     label: 'Public',
-    body: 'Anyone with the link can watch. Only invited players claim squares.',
+    body: 'Anyone with the link can watch. Only people who join with your invite link claim squares.',
     icon: <Public fontSize="small" />,
   },
 ];
@@ -87,7 +87,7 @@ export default function CreateContestForm() {
   const [name, setName] = useState('');
   const [visibility, setVisibility] = useState<ContestVisibility>('private');
   const [maxSquares, setMaxSquares] = useState(10);
-  // undefined until the player picks, so a linked game stays picked until then
+  // undefined until the owner picks, so a linked game stays picked until then
   const [picked, setPicked] = useState<Game | null>();
   const [fieldErrors, setFieldErrors] = useState<{ game?: string; name?: string }>({});
   const [error, setError] = useState('');
@@ -260,7 +260,7 @@ export default function CreateContestForm() {
         <FormSection
           step={4}
           title="Your squares"
-          description="How many squares you can claim yourself. Invite links set everyone else's."
+          description="How many squares you can claim yourself. You give everyone else theirs after they join."
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, px: 1 }}>
             <Slider

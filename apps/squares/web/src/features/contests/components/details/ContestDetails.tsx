@@ -1,7 +1,7 @@
-import { GridView } from '@mui/icons-material';
+import { GridView, InfoOutlined } from '@mui/icons-material';
 import { Box, LinearProgress, Typography } from '@mui/material';
 import { fonts } from '../../../../app/theme';
-import type { Contest, Game } from '../../../../types/contest';
+import type { Contest, Game, Player } from '../../../../types/contest';
 import { isInGameStatus } from '../../../../utils/contestStatus';
 import { formatKickoff } from '../../../../utils/game';
 import type { ContestViewer } from '../../live/viewer';
@@ -11,6 +11,7 @@ import SquareActions from './SquareActions';
 interface Props {
   contest: Contest;
   game?: Game;
+  players: Player[];
   viewer: ContestViewer;
 }
 
@@ -34,12 +35,37 @@ function boardStatus(contest: Contest, game: Game | undefined, allFilled: boolea
     : `Fill every square before kickoff${kickoff}. The board locks once the game starts and every square is claimed.`;
 }
 
-export default function ContestDetails({ contest, game, viewer }: Props) {
+function ownerWarning(contest: Contest, players: Player[]): string | null {
+  const others = players.filter((p) => p.role !== 'owner');
+  if (others.length === 0) {
+    return 'No one has joined yet. Share your invite link.';
+  }
+
+  const waiting = others.filter((p) => p.maxSquares === 0).length;
+  if (waiting > 0) {
+    return waiting === 1
+      ? '1 player has no squares yet. Give them squares in Players.'
+      : `${waiting} players have no squares yet. Give them squares in Players.`;
+  }
+
+  const allocated = players.reduce((sum, p) => sum + p.maxSquares, 0);
+  const unallocated = contest.squares.length - allocated;
+  if (unallocated > 0) {
+    return unallocated === 1
+      ? '1 square isn’t given to anyone, so the board can’t fill.'
+      : `${unallocated} squares aren’t given to anyone, so the board can’t fill.`;
+  }
+  return null;
+}
+
+export default function ContestDetails({ contest, game, players, viewer }: Props) {
   const totalSquares = contest.squares.length;
   const filledSquares = contest.squares.filter((s) => s.value.trim() !== '').length;
   const allFilled = filledSquares >= totalSquares;
   const isActive = contest.status === 'ACTIVE';
-  const { participant } = viewer;
+  const { player } = viewer;
+  const warning = viewer.isOwner && isActive && !allFilled ? ownerWarning(contest, players) : null;
+  const waitingForSquares = !viewer.isOwner && player?.maxSquares === 0;
 
   return (
     <ContestSidebarCard icon={<GridView fontSize="small" />} title="The Board">
@@ -77,9 +103,29 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
           >
             {boardStatus(contest, game, allFilled)}
           </Typography>
+          {warning && (
+            <Box
+              role="status"
+              sx={{
+                display: 'flex',
+                gap: 1,
+                alignItems: 'flex-start',
+                mt: 1.5,
+                p: 1.25,
+                borderRadius: 1,
+                bgcolor: 'rgba(247, 201, 72, 0.08)',
+                color: 'warning.main',
+                fontSize: '0.85rem',
+                lineHeight: 1.45,
+              }}
+            >
+              <InfoOutlined sx={{ fontSize: '1.1rem', mt: '1px' }} />
+              {warning}
+            </Box>
+          )}
         </Box>
 
-        {participant && (
+        {player && (
           <Box sx={{ pt: 2, borderTop: 1, borderColor: 'divider' }}>
             <Box
               sx={{
@@ -99,11 +145,16 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
                   color: viewer.squaresLeft === 0 ? 'primary.main' : 'text.primary',
                 }}
               >
-                {viewer.squaresClaimed}/{participant.maxSquares}
+                {viewer.squaresClaimed}/{player.maxSquares}
               </Typography>
             </Box>
+            {waitingForSquares && isActive && (
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+                The owner hasn&apos;t given you any squares yet.
+              </Typography>
+            )}
             {/* a full board is locked, so there is nothing left to claim or clear */}
-            {isActive && !allFilled && (
+            {isActive && !allFilled && !waitingForSquares && (
               <SquareActions
                 contest={contest}
                 viewer={viewer}
@@ -111,21 +162,6 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
               />
             )}
           </Box>
-        )}
-
-        {/* a signed-in viewer of a public contest can watch but not play */}
-        {contest.visibility === 'public' && !viewer.isParticipant && !viewer.isOwner && (
-          <Typography
-            sx={{
-              pt: 2,
-              borderTop: 1,
-              borderColor: 'divider',
-              color: 'text.secondary',
-              fontSize: '0.85rem',
-            }}
-          >
-            You&apos;re watching this contest. Ask the owner for an invite link to play.
-          </Typography>
         )}
       </Box>
     </ContestSidebarCard>

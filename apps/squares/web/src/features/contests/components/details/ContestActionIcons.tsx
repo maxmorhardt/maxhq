@@ -1,15 +1,15 @@
-import { Groups, Link as LinkIcon, School } from '@mui/icons-material';
+import { Groups, PersonAdd, School } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import type { Contest, Participant } from '../../../../types/contest';
+import type { Contest, Player } from '../../../../types/contest';
 import type { ContestViewer } from '../../live/viewer';
-import InviteManager from './InviteManager';
-import ParticipantsManager from './ParticipantsManager';
+import InviteLinkDialog from './InviteLinkDialog';
+import PlayersManager from './PlayersManager';
 
 interface Props {
   contest: Contest;
-  participants: Participant[];
+  players: Player[];
   viewer: ContestViewer;
 }
 
@@ -24,8 +24,8 @@ const actionSx = {
 
 const labelSx = { display: { xs: 'none', sm: 'inline' } };
 
-export default function ContestActionIcons({ contest, participants, viewer }: Props) {
-  const [dialog, setDialog] = useState<'invites' | 'participants' | null>(null);
+export default function ContestActionIcons({ contest, players, viewer }: Props) {
+  const [dialog, setDialog] = useState<'invite' | 'players' | null>(null);
   const close = () => setDialog(null);
 
   return (
@@ -33,23 +33,20 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
       <Box sx={{ display: 'flex', gap: 1 }}>
         {viewer.isOwner && (
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
-            aria-label="Invite links"
-            onClick={() => setDialog('invites')}
-            startIcon={<LinkIcon />}
-            sx={actionSx}
+            onClick={() => setDialog('invite')}
+            startIcon={<PersonAdd />}
+            sx={{ px: 1.5 }}
           >
-            <Box component="span" sx={labelSx}>
-              Invite
-            </Box>
+            Invite
           </Button>
         )}
         <Button
           variant="outlined"
           size="small"
-          aria-label="Participants"
-          onClick={() => setDialog('participants')}
+          aria-label="Players"
+          onClick={() => setDialog('players')}
           startIcon={<Groups />}
           sx={actionSx}
         >
@@ -73,13 +70,13 @@ export default function ContestActionIcons({ contest, participants, viewer }: Pr
       </Box>
 
       {viewer.isOwner && (
-        <InviteManager open={dialog === 'invites'} onClose={close} contest={contest} />
+        <InviteLinkDialog open={dialog === 'invite'} onClose={close} contest={contest} />
       )}
-      <ParticipantsManager
-        open={dialog === 'participants'}
+      <PlayersManager
+        open={dialog === 'players'}
         onClose={close}
         contest={contest}
-        participants={participants}
+        players={players}
         viewer={viewer}
       />
     </>

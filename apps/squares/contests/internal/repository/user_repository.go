@@ -13,7 +13,7 @@ import (
 type UserRepository interface {
 	GetOrCreate(ctx context.Context, email, defaultDisplayName, defaultInitials string) (*model.User, error)
 	Upsert(ctx context.Context, user *model.User) error
-	Scrub(ctx context.Context, email string) (released []model.Square, removed []model.ContestParticipant, err error)
+	Scrub(ctx context.Context, email string) (released []model.Square, removed []model.ContestPlayer, err error)
 }
 
 type userRepository struct {
@@ -61,9 +61,9 @@ func (r *userRepository) Upsert(ctx context.Context, user *model.User) error {
 }
 
 // returns what live viewers need to hear about: the squares released in unfinished contests and the memberships removed
-func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestParticipant, error) {
+func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestPlayer, error) {
 	var released []model.Square
-	var removed []model.ContestParticipant
+	var removed []model.ContestPlayer
 	err := database.InTx(ctx, func(tx *gorm.DB) error {
 		if err := tx.Model(&released).Clauses(clause.Returning{}).
 			Where("owner = ? AND contest_id IN (?)", email,
@@ -95,7 +95,6 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 			{&model.Contest{}, "owner"},
 			{&model.Contest{}, "created_by"},
 			{&model.Contest{}, "updated_by"},
-			{&model.ContestInvite{}, "created_by"},
 		}
 		for _, a := range anonymize {
 			if err := tx.Model(a.tableModel).
@@ -106,6 +105,10 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 		}
 
 		if err := tx.Clauses(clause.Returning{}).Where("user_id = ?", email).Delete(&removed).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("user_id = ?", email).Delete(&model.ContestBan{}).Error; err != nil {
 			return err
 		}
 

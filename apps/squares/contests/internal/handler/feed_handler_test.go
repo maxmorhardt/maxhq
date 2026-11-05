@@ -30,7 +30,7 @@ func getFeed(r *gin.Engine, query string) (code int, body []byte) {
 
 func TestGetFeed_Defaults(t *testing.T) {
 	svc := mocks.NewFeedService(t)
-	want := &model.ContestFeedResponse{Contests: []model.ContestSummary{{ID: uuid.New(), Name: "c", Role: model.ParticipantRoleOwner}}, NextCursor: "next"}
+	want := &model.ContestFeedResponse{Contests: []model.ContestSummary{{ID: uuid.New(), Name: "c", Role: model.PlayerRoleOwner}}, NextCursor: "next"}
 	svc.EXPECT().List(mock.Anything, "user1", &model.ContestFeedFilter{Limit: model.DefaultFeedLimit}).Return(want, nil)
 
 	code, body := getFeed(feedRouter(svc), "")
@@ -39,7 +39,7 @@ func TestGetFeed_Defaults(t *testing.T) {
 	var got model.ContestFeedResponse
 	require.NoError(t, json.Unmarshal(body, &got))
 	assert.Equal(t, "next", got.NextCursor)
-	assert.Equal(t, model.ParticipantRoleOwner, got.Contests[0].Role)
+	assert.Equal(t, model.PlayerRoleOwner, got.Contests[0].Role)
 }
 
 func TestGetFeed_ParsesFilters(t *testing.T) {
@@ -85,7 +85,7 @@ func invalidationRouter(svc *mocks.FeedService, status int) *gin.Engine {
 	r := gin.New()
 	write := func(c *gin.Context) { c.Status(status) }
 	r.POST("/contests/:id", authenticatedMiddleware("owner"), InvalidateFeeds(svc), write)
-	r.DELETE("/contests/:id/participants/:userId", authenticatedMiddleware("owner"), InvalidateFeeds(svc), write)
+	r.DELETE("/contests/:id/players/:userId", authenticatedMiddleware("owner"), InvalidateFeeds(svc), write)
 	return r
 }
 
@@ -105,7 +105,7 @@ func TestInvalidateFeeds_RemovalReachesTheRemovedPlayer(t *testing.T) {
 	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"owner", "target@example.com"}).Once()
 	svc.EXPECT().Invalidate(mock.Anything, "owner", "target@example.com").Once()
 
-	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/players/u_target", http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusNoContent), req)
 }
 
@@ -124,7 +124,7 @@ func TestInvalidateFeeds_SkipsFailedRemoval(t *testing.T) {
 	svc := mocks.NewFeedService(t)
 	svc.EXPECT().Members(mock.Anything, contestID).Return([]string{"owner", "target@example.com"}).Once()
 
-	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/players/u_target", http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusForbidden), req)
 }
 
@@ -134,7 +134,7 @@ func TestInvalidateFeeds_RemovalFallsBackWhenMembersFail(t *testing.T) {
 	svc.EXPECT().Members(mock.Anything, contestID).Return(nil).Twice()
 	svc.EXPECT().Invalidate(mock.Anything, "owner").Once()
 
-	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/participants/u_target", http.NoBody)
+	req, _ := http.NewRequest(http.MethodDelete, "/contests/"+contestID.String()+"/players/u_target", http.NoBody)
 	doRequest(invalidationRouter(svc, http.StatusNoContent), req)
 }
 

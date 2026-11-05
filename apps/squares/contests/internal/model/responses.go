@@ -45,8 +45,6 @@ type InvitePreviewResponse struct {
 	ContestID      uuid.UUID     `json:"contestId"`
 	ContestName    string        `json:"contestName"`
 	OwnerName      string        `json:"ownerName,omitempty"`
-	Role           string        `json:"role"`
-	MaxSquares     int           `json:"maxSquares"`
 	Status         ContestStatus `json:"status"`
 	ClaimedSquares int           `json:"claimedSquares"`
 	TotalSquares   int           `json:"totalSquares"`
@@ -57,7 +55,11 @@ type InvitePreviewResponse struct {
 	GameTime       *time.Time    `json:"gameTime,omitempty"`
 }
 
-type ParticipantIdentity struct {
+type InviteLinkResponse struct {
+	Token string `json:"token" example:"9f2c4e1a7b3d5f6e8a0c2e4f6a8b0d1c3e5f7a9b1d3f5a7c9e1b3d5f7a9c1e3"`
+}
+
+type PlayerIdentity struct {
 	UserID   string `json:"userId" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
 	FullName string `json:"fullName" example:"Max Morhardt"`
 }

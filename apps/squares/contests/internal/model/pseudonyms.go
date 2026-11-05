@@ -32,8 +32,8 @@ func (q QuarterResult) MarshalJSON() ([]byte, error) { //nolint:gocritic // huge
 	return json.Marshal(p)
 }
 
-func (cp ContestParticipant) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
-	type plain ContestParticipant
+func (cp ContestPlayer) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
+	type plain ContestPlayer
 	p := plain(cp)
 	p.DisplayName = playerName(p.UserID, p.DisplayName)
 	p.UserID = pseudonym.Of(p.UserID)
@@ -44,6 +44,14 @@ func (s ContestSummary) MarshalJSON() ([]byte, error) { //nolint:gocritic // hug
 	type plain ContestSummary
 	p := plain(s)
 	p.OwnerName = pseudonym.Name(p.OwnerName)
+	return json.Marshal(p)
+}
+
+func (b ContestBan) MarshalJSON() ([]byte, error) { //nolint:gocritic // hugeParam: see the note above
+	type plain ContestBan
+	p := plain(b)
+	p.DisplayName = pseudonym.FullName(p.DisplayName)
+	p.UserID = pseudonym.Of(p.UserID)
 	return json.Marshal(p)
 }
 

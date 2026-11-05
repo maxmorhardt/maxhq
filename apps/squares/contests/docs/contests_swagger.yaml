@@ -49,6 +49,27 @@ definitions:
       firstActivity:
         type: string
     type: object
+  model.AllotSquaresRequest:
+    properties:
+      maxSquares:
+        example: 5
+        maximum: 100
+        minimum: 1
+        type: integer
+    required:
+    - maxSquares
+    type: object
+  model.ContestBan:
+    properties:
+      bannedAt:
+        type: string
+      displayName:
+        example: Max Morhardt
+        type: string
+      userId:
+        example: u_3q2mL0x9VfTzQk1rB7cW8a
+        type: string
+    type: object
   model.ContestFeedResponse:
     properties:
       contests:
@@ -58,30 +79,7 @@ definitions:
       nextCursor:
         type: string
     type: object
-  model.ContestInvite:
-    properties:
-      contestId:
-        type: string
-      createdAt:
-        type: string
-      expiresAt:
-        type: string
-      id:
-        type: string
-      maxSquares:
-        type: integer
-      maxUses:
-        type: integer
-      role:
-        $ref: '#/definitions/model.ParticipantRole'
-      token:
-        type: string
-      updatedAt:
-        type: string
-      uses:
-        type: integer
-    type: object
-  model.ContestParticipant:
+  model.ContestPlayer:
     properties:
       contestId:
         type: string
@@ -93,14 +91,12 @@ definitions:
         type: string
       id:
         type: string
-      inviteId:
-        type: string
       joinedAt:
         type: string
       maxSquares:
         type: integer
       role:
-        $ref: '#/definitions/model.ParticipantRole'
+        $ref: '#/definitions/model.PlayerRole'
       updatedAt:
         type: string
       userId:
@@ -112,7 +108,7 @@ definitions:
         $ref: '#/definitions/model.ContestSwagger'
       participants:
         items:
-          $ref: '#/definitions/model.ContestParticipant'
+          $ref: '#/definitions/model.ContestPlayer'
         type: array
       viewerId:
         example: u_3q2mL0x9VfTzQk1rB7cW8a
@@ -175,7 +171,7 @@ definitions:
         type: string
       role:
         allOf:
-        - $ref: '#/definitions/model.ParticipantRole'
+        - $ref: '#/definitions/model.PlayerRole'
         example: owner
       status:
         allOf:
@@ -257,26 +253,11 @@ definitions:
     - gameId
     - name
     type: object
-  model.CreateInviteRequest:
+  model.InviteLinkResponse:
     properties:
-      expiresIn:
-        description: minutes, 0 = no expiry
-        minimum: 0
-        type: integer
-      maxSquares:
-        maximum: 100
-        minimum: 0
-        type: integer
-      maxUses:
-        minimum: 0
-        type: integer
-      role:
-        enum:
-        - participant
-        - viewer
+      token:
+        example: 9f2c4e1a7b3d5f6e8a0c2e4f6a8b0d1c3e5f7a9b1d3f5a7c9e1b3d5f7a9c1e3
         type: string
-    required:
-    - role
     type: object
   model.InvitePreviewResponse:
     properties:
@@ -296,11 +277,7 @@ definitions:
         type: string
       homeTeam:
         type: string
-      maxSquares:
-        type: integer
       ownerName:
-        type: string
-      role:
         type: string
       status:
         $ref: '#/definitions/model.ContestStatus'
@@ -350,7 +327,7 @@ definitions:
           $ref: '#/definitions/model.LeaderboardEntry'
         type: array
     type: object
-  model.ParticipantIdentity:
+  model.PlayerIdentity:
     properties:
       fullName:
         example: Max Morhardt
@@ -359,16 +336,14 @@ definitions:
         example: u_3q2mL0x9VfTzQk1rB7cW8a
         type: string
     type: object
-  model.ParticipantRole:
+  model.PlayerRole:
     enum:
     - owner
-    - participant
-    - viewer
+    - player
     type: string
     x-enum-varnames:
-    - ParticipantRoleOwner
-    - ParticipantRoleParticipant
-    - ParticipantRoleViewer
+    - PlayerRoleOwner
+    - PlayerRolePlayer
   model.QuarterResult:
     properties:
       awayTeamScore:
@@ -453,17 +428,15 @@ definitions:
         example: 12
         type: integer
     type: object
-  model.UpdateParticipantRequest:
+  model.UpdatePlayerRequest:
     properties:
       maxSquares:
+        example: 10
         maximum: 100
         minimum: 0
         type: integer
-      role:
-        enum:
-        - participant
-        - viewer
-        type: string
+    required:
+    - maxSquares
     type: object
   model.UserStatsResponse:
     properties:
@@ -485,9 +458,8 @@ definitions:
     type: object
 info:
   contact: {}
-  description: Contests, squares, participants, invites, leaderboard, and stats for
-    squares.maxhq.io. Served under /squares behind the gateway, which validates the
-    bearer token.
+  description: Contests, squares, players, invites, leaderboard, and stats for squares.maxhq.io.
+    Served under /squares behind the gateway, which validates the bearer token.
   title: Squares Contests API
   version: 1.0.0
 paths:
@@ -633,8 +605,8 @@ paths:
       tags:
       - contests
     get:
-      description: Returns the contest and its participants if the user may view it,
-        in the shape of the stream's `contest.snapshot`. For contests that are over,
+      description: Returns the contest and its players if the user may view it, in
+        the shape of the stream's `contest.snapshot`. For contests that are over,
         which have nothing left to stream.
       parameters:
       - description: Contest ID
@@ -670,9 +642,10 @@ paths:
       summary: Get a contest
       tags:
       - contests
-  /contests/{id}/invites:
+  /contests/{id}/bans:
     get:
-      description: Owner gets all invite links for a contest
+      description: The owner lists the people they removed, with full names, newest
+        first
       parameters:
       - description: Contest ID
         in: path
@@ -686,48 +659,8 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.ContestInvite'
+              $ref: '#/definitions/model.ContestBan'
             type: array
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Get all invites for a contest
-      tags:
-      - invites
-    post:
-      consumes:
-      - application/json
-      description: Owner creates an invite link with specified role and square limit
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Invite details
-        in: body
-        name: invite
-        required: true
-        schema:
-          $ref: '#/definitions/model.CreateInviteRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/model.ContestInvite'
         "400":
           description: Bad Request
           schema:
@@ -736,69 +669,25 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "429":
-          description: The contest has the most open invite links allowed, or made
-            the most allowed in a day
-          schema:
-            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.APIError'
       security:
       - BearerAuth: []
-      summary: Create an invite link for a contest
+      summary: Who is banned from a contest
       tags:
-      - invites
-  /contests/{id}/invites/{inviteId}:
+      - players
+  /contests/{id}/bans/{userId}:
     delete:
-      description: Owner deletes an invite link
+      description: The owner lets a removed person rejoin with the invite link
       parameters:
       - description: Contest ID
         in: path
         name: id
         required: true
         type: string
-      - description: Invite ID
-        in: path
-        name: inviteId
-        required: true
-        type: string
-      responses:
-        "204":
-          description: No Content
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.APIError'
-      security:
-      - BearerAuth: []
-      summary: Delete an invite link
-      tags:
-      - invites
-  /contests/{id}/participants/{userId}:
-    delete:
-      description: Owner removes a participant, or a participant removes themselves;
-        the removed participant's squares are cleared. The owner cannot be removed.
-      parameters:
-      - description: Contest ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Target user ID
+      - description: Banned user ID
         in: path
         name: userId
         required: true
@@ -824,37 +713,25 @@ paths:
             $ref: '#/definitions/api.APIError'
       security:
       - BearerAuth: []
-      summary: Remove a participant from a contest
+      summary: Unban someone from a contest
       tags:
-      - participants
-    patch:
-      consumes:
-      - application/json
-      description: Owner updates a participant's role or max squares
+      - players
+  /contests/{id}/invite:
+    get:
+      description: The owner reads the token of the contest's one invite link
       parameters:
       - description: Contest ID
         in: path
         name: id
         required: true
         type: string
-      - description: Target user ID
-        in: path
-        name: userId
-        required: true
-        type: string
-      - description: Update details
-        in: body
-        name: participant
-        required: true
-        schema:
-          $ref: '#/definitions/model.UpdateParticipantRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.ContestParticipant'
+            $ref: '#/definitions/model.InviteLinkResponse'
         "400":
           description: Bad Request
           schema:
@@ -873,9 +750,185 @@ paths:
             $ref: '#/definitions/api.APIError'
       security:
       - BearerAuth: []
-      summary: Update a participant's role or square limit
+      summary: Get a contest's invite link
       tags:
-      - participants
+      - invites
+  /contests/{id}/invite/reset:
+    post:
+      description: The owner replaces the invite link, so the old one stops working
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.InviteLinkResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Reset a contest's invite link
+      tags:
+      - invites
+  /contests/{id}/players/{userId}:
+    delete:
+      description: The owner removes a player, who is banned from rejoining until
+        the owner unbans them, or a player leaves on their own and can rejoin. Their
+        squares are freed before kickoff and ghosted after. The owner cannot be removed.
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Target user ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Remove a player from a contest
+      tags:
+      - players
+    patch:
+      consumes:
+      - application/json
+      description: The owner sets how many squares a player can claim. Lowering it
+        below what they hold frees that many of their squares at random. The board
+        never gives out more than 100 squares in total.
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Target user ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: The new square limit
+        in: body
+        name: player
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdatePlayerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ContestPlayer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Set a player's square limit
+      tags:
+      - players
+  /contests/{id}/players/allot:
+    post:
+      consumes:
+      - application/json
+      description: The owner gives every player who has no squares the same number.
+        Nothing changes if that would give out more than 100 squares in total.
+      parameters:
+      - description: Contest ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Squares for each player without any
+        in: body
+        name: allotment
+        required: true
+        schema:
+          $ref: '#/definitions/model.AllotSquaresRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ContestPlayer'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.APIError'
+      security:
+      - BearerAuth: []
+      summary: Give squares to everyone without any
+      tags:
+      - players
   /contests/{id}/roster:
     get:
       description: Full names for the contest's owner, so they know who joined. Other
@@ -893,7 +946,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.ParticipantIdentity'
+              $ref: '#/definitions/model.PlayerIdentity'
             type: array
         "400":
           description: Bad Request
@@ -911,7 +964,7 @@ paths:
       - BearerAuth: []
       summary: Who each player is
       tags:
-      - participants
+      - players
   /contests/{id}/squares/{squareId}/claim:
     delete:
       consumes:
@@ -1139,8 +1192,8 @@ paths:
       - health
   /internal/contests/{id}/snapshot:
     get:
-      description: Returns the contest and its participants if the given user may
-        view it. Called by the realtime service.
+      description: Returns the contest and its players if the given user may view
+        it. Called by the realtime service.
       parameters:
       - description: Contest ID
         in: path
@@ -1214,7 +1267,7 @@ paths:
       - internal
   /invites/{token}:
     get:
-      description: Returns contest name and invite details without authentication
+      description: Returns the contest an invite link joins, without authentication
       parameters:
       - description: Invite token
         in: path
@@ -1228,10 +1281,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.InvitePreviewResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.APIError'
         "404":
           description: Not Found
           schema:
@@ -1243,9 +1292,10 @@ paths:
       summary: Preview an invite link
       tags:
       - invites
-  /invites/{token}/redeem:
+  /invites/{token}/join:
     post:
-      description: Authenticated user joins a contest via invite token
+      description: The signed-in user joins as a player with no squares; the owner
+        gives them squares afterwards
       parameters:
       - description: Invite token
         in: path
@@ -1258,9 +1308,9 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/model.ContestParticipant'
-        "400":
-          description: Bad Request
+            $ref: '#/definitions/model.ContestPlayer'
+        "403":
+          description: The contest is finished, or the owner removed this user
           schema:
             $ref: '#/definitions/api.APIError'
         "404":
@@ -1277,7 +1327,7 @@ paths:
             $ref: '#/definitions/api.APIError'
       security:
       - BearerAuth: []
-      summary: Redeem an invite link
+      summary: Join a contest with its invite link
       tags:
       - invites
   /leaderboard:

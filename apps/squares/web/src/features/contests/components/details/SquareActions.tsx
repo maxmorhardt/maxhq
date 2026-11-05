@@ -15,16 +15,16 @@ interface Props {
   emptySquares: number;
 }
 
-// the fill-phase actions a participant has: claim random squares, or give back their own
+// the fill-phase actions a player has: claim random squares, or give back their own
 export default function SquareActions({ contest, viewer, emptySquares }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [claimRandom, { isLoading: claiming }] = useClaimRandomSquaresMutation();
   const [clearMine, { isLoading: clearing }] = useClearMySquaresMutation();
-  const [requested, setRequested] = useState(1);
+  const [requested, setRequested] = useState<number | null>(null);
 
   const maxFill = Math.min(viewer.squaresLeft, emptySquares);
-  const count = Math.min(Math.max(requested, 1), Math.max(maxFill, 1));
+  const count = Math.min(Math.max(requested ?? maxFill, 1), Math.max(maxFill, 1));
   const busy = claiming || clearing;
   const randomDisabled = busy || maxFill === 0;
 

@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  makeContest,
-  makeParticipant,
-  makeQuarterResult,
-  makeSquare,
-} from '../../../test/fixtures';
+import { makeContest, makePlayer, makeQuarterResult, makeSquare } from '../../../test/fixtures';
 import { describeEvent, MAX_ACTIVITY, ownerLabel, seedActivity } from './activity';
 import type { ContestEvent } from './events';
 
@@ -32,9 +27,9 @@ describe('seedActivity', () => {
       ],
       quarterResults: [makeQuarterResult({ createdAt: '2026-01-01T03:00:00Z' })],
     });
-    const participants = [
-      makeParticipant({ id: 'owner', role: 'owner' }),
-      makeParticipant({
+    const players = [
+      makePlayer({ id: 'owner', role: 'owner' }),
+      makePlayer({
         id: 'p',
         userId: 'u_bo',
         displayName: 'Bo J.',
@@ -42,7 +37,7 @@ describe('seedActivity', () => {
       }),
     ];
 
-    expect(seedActivity(contest, participants).map((a) => a.message)).toEqual([
+    expect(seedActivity(contest, players).map((a) => a.message)).toEqual([
       'Bo J. joined the contest',
       'Ann claimed square (0, 0)',
       'Q1 winner: Player (7-3)',
@@ -160,13 +155,24 @@ describe('describeEvent', () => {
   });
 
   it('names who joined and left', () => {
-    const participant = makeParticipant({ userId: 'u_bo', displayName: 'Bo J.' });
-    expect(describeEvent(event('participant.joined', participant), 'id')?.message).toBe(
+    const player = makePlayer({ userId: 'u_bo', displayName: 'Bo J.' });
+    expect(describeEvent(event('participant.joined', player), 'id')?.message).toBe(
       'Bo J. joined the contest'
     );
-    expect(describeEvent(event('participant.removed', participant), 'id')?.message).toBe(
-      'Bo J. left the contest'
-    );
+    expect(
+      describeEvent({ ...event('participant.removed', player), updatedBy: 'u_bo' }, 'id')?.message
+    ).toBe('Bo J. left the contest');
+  });
+
+  it('says when the owner removed someone, and when an account was deleted', () => {
+    const player = makePlayer({ userId: 'u_bo', displayName: 'Bo J.' });
+    expect(
+      describeEvent({ ...event('participant.removed', player), updatedBy: 'u_owner' }, 'id')
+        ?.message
+    ).toBe('Bo J. was removed from the contest');
+    expect(
+      describeEvent({ ...event('participant.removed', player), updatedBy: 'system' }, 'id')?.message
+    ).toBe('Bo J. left the contest');
   });
 
   it('adds nothing for events without a feed line', () => {

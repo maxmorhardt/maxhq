@@ -268,6 +268,67 @@ func (_c *SquareRepository_ClearByOwner_Call) RunAndReturn(run func(context.Cont
 	return _c
 }
 
+// ClearRandomByOwner provides a mock function with given fields: ctx, contestID, owner, count
+func (_m *SquareRepository) ClearRandomByOwner(ctx context.Context, contestID uuid.UUID, owner string, count int) ([]model.Square, error) {
+	ret := _m.Called(ctx, contestID, owner, count)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClearRandomByOwner")
+	}
+
+	var r0 []model.Square
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, int) ([]model.Square, error)); ok {
+		return rf(ctx, contestID, owner, count)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, int) []model.Square); ok {
+		r0 = rf(ctx, contestID, owner, count)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Square)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string, int) error); ok {
+		r1 = rf(ctx, contestID, owner, count)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SquareRepository_ClearRandomByOwner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClearRandomByOwner'
+type SquareRepository_ClearRandomByOwner_Call struct {
+	*mock.Call
+}
+
+// ClearRandomByOwner is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+//   - owner string
+//   - count int
+func (_e *SquareRepository_Expecter) ClearRandomByOwner(ctx interface{}, contestID interface{}, owner interface{}, count interface{}) *SquareRepository_ClearRandomByOwner_Call {
+	return &SquareRepository_ClearRandomByOwner_Call{Call: _e.mock.On("ClearRandomByOwner", ctx, contestID, owner, count)}
+}
+
+func (_c *SquareRepository_ClearRandomByOwner_Call) Run(run func(ctx context.Context, contestID uuid.UUID, owner string, count int)) *SquareRepository_ClearRandomByOwner_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(int))
+	})
+	return _c
+}
+
+func (_c *SquareRepository_ClearRandomByOwner_Call) Return(_a0 []model.Square, _a1 error) *SquareRepository_ClearRandomByOwner_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SquareRepository_ClearRandomByOwner_Call) RunAndReturn(run func(context.Context, uuid.UUID, string, int) ([]model.Square, error)) *SquareRepository_ClearRandomByOwner_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CountByOwner provides a mock function with given fields: ctx, contestID, owner
 func (_m *SquareRepository) CountByOwner(ctx context.Context, contestID uuid.UUID, owner string) (int, error) {
 	ret := _m.Called(ctx, contestID, owner)

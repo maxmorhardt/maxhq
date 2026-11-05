@@ -2,7 +2,11 @@ import { Box, Paper, Typography } from '@mui/material';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
-import type { Contest, Square as SquareModel } from '../../../../types/contest';
+import {
+  WATCHING_MESSAGE,
+  type Contest,
+  type Square as SquareModel,
+} from '../../../../types/contest';
 import { useToast } from '../../../toast/useToast';
 import { useClaimSquareMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
@@ -65,11 +69,15 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
       return;
     }
 
-    if (!viewer.isParticipant && !viewer.isOwner) {
-      showToast('You need to be a participant to claim squares', 'info');
+    if (!viewer.isPlayer && !viewer.isOwner) {
+      showToast(WATCHING_MESSAGE, 'info');
       return;
     }
-    if (viewer.participant && viewer.squaresLeft === 0) {
+    if (!viewer.isOwner && viewer.player?.maxSquares === 0) {
+      showToast('The owner hasn’t given you any squares yet', 'info');
+      return;
+    }
+    if (viewer.player && viewer.squaresLeft === 0) {
       showToast('Square limit reached', 'warning');
       return;
     }

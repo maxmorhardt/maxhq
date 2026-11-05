@@ -1,10 +1,12 @@
 export const MAX_CONTEST_SQUARES = 100;
+export const WATCHING_MESSAGE =
+  "You're watching this contest. Ask the owner for the invite link to play.";
 
 export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'DELETED';
 
 export type ContestVisibility = 'public' | 'private';
 
-export type ParticipantRole = 'owner' | 'participant' | 'viewer';
+export type PlayerRole = 'owner' | 'player';
 
 export interface Contest {
   id: string;
@@ -24,7 +26,7 @@ export interface Contest {
   updatedAt: string;
 }
 
-export interface ParticipantIdentity {
+export interface PlayerIdentity {
   userId: string;
   fullName: string;
 }
@@ -77,7 +79,7 @@ export interface ContestSummary {
   status: ContestStatus;
   visibility: ContestVisibility;
   ownerName?: string;
-  role: ParticipantRole;
+  role: PlayerRole;
   gameId?: string;
   gameTime?: string;
   // the quarter the game is in, which runs behind status through the break after a quarter pays out
@@ -165,8 +167,8 @@ export type ActivityEventType =
   | 'quarter_winner'
   | 'contest_started'
   | 'contest_status'
-  | 'participant_added'
-  | 'participant_removed';
+  | 'player_added'
+  | 'player_removed';
 
 export interface ActivityEvent {
   id: string;
@@ -192,54 +194,36 @@ export type ContestUpdate = Pick<
 
 export interface ContestSnapshot {
   contest: Contest;
-  participants: Participant[];
+  participants: Player[];
   viewerId: string;
 }
 
-export interface Participant {
+export interface Player {
   id: string;
   contestId: string;
   userId: string;
   displayName: string;
-  inviteId: string;
-  role: ParticipantRole;
+  role: PlayerRole;
   maxSquares: number;
   joinedAt: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface UpdateParticipantRequest {
-  role?: ParticipantRole;
-  maxSquares?: number;
+export interface ContestBan {
+  userId: string;
+  displayName: string;
+  bannedAt: string;
 }
 
-export interface Invite {
-  id: string;
-  contestId: string;
+export interface InviteLink {
   token: string;
-  maxSquares: number;
-  role: ParticipantRole;
-  maxUses?: number;
-  uses: number;
-  expiresAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateInviteRequest {
-  maxSquares: number;
-  role: ParticipantRole;
-  maxUses?: number;
-  expiresIn?: number;
 }
 
 export interface InvitePreviewResponse {
   contestId: string;
   contestName: string;
-  maxSquares: number;
   ownerName?: string;
-  role: string;
   status: ContestStatus;
   claimedSquares: number;
   totalSquares: number;

@@ -142,6 +142,30 @@ func createContestFor(t *testing.T, game *events.Game, owner, name string, maxSq
 	return &contest, resp
 }
 
+func inviteToken(t *testing.T, owner string, contestID uuid.UUID) string {
+	t.Helper()
+	resp := call(t, testkit.As(owner), http.MethodGet, "/contests/"+contestID.String()+"/invite", nil)
+	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+	var link model.InviteLinkResponse
+	resp.Decode(t, &link)
+	return link.Token
+}
+
+func setSquares(t *testing.T, owner, user string, contestID uuid.UUID, maxSquares int) testkit.Response {
+	t.Helper()
+	return call(t, testkit.As(owner), http.MethodPatch, fmt.Sprintf("/contests/%s/players/%s", contestID, pseudonym.Of(user)),
+		model.UpdatePlayerRequest{MaxSquares: &maxSquares})
+}
+
+// joins with the contest's invite link, then the owner gives the newcomer their squares
+func join(t *testing.T, owner, user string, contestID uuid.UUID, maxSquares int) {
+	t.Helper()
+	resp := call(t, testkit.As(user), http.MethodPost, "/invites/"+inviteToken(t, owner, contestID)+"/join", nil)
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	resp = setSquares(t, owner, user, contestID, maxSquares)
+	require.Equal(t, http.StatusOK, resp.Status, string(resp.Body))
+}
+
 func snapshot(t *testing.T, user string, contestID uuid.UUID) *model.ContestSnapshot {
 	t.Helper()
 	resp := call(t, testkit.Anonymous, http.MethodGet,

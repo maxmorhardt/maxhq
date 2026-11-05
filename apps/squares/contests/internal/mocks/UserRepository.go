@@ -84,7 +84,7 @@ func (_c *UserRepository_GetOrCreate_Call) RunAndReturn(run func(context.Context
 }
 
 // Scrub provides a mock function with given fields: ctx, email
-func (_m *UserRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestParticipant, error) {
+func (_m *UserRepository) Scrub(ctx context.Context, email string) ([]model.Square, []model.ContestPlayer, error) {
 	ret := _m.Called(ctx, email)
 
 	if len(ret) == 0 {
@@ -92,9 +92,9 @@ func (_m *UserRepository) Scrub(ctx context.Context, email string) ([]model.Squa
 	}
 
 	var r0 []model.Square
-	var r1 []model.ContestParticipant
+	var r1 []model.ContestPlayer
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]model.Square, []model.ContestParticipant, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]model.Square, []model.ContestPlayer, error)); ok {
 		return rf(ctx, email)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) []model.Square); ok {
@@ -105,11 +105,11 @@ func (_m *UserRepository) Scrub(ctx context.Context, email string) ([]model.Squa
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) []model.ContestParticipant); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string) []model.ContestPlayer); ok {
 		r1 = rf(ctx, email)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).([]model.ContestParticipant)
+			r1 = ret.Get(1).([]model.ContestPlayer)
 		}
 	}
 
@@ -141,12 +141,12 @@ func (_c *UserRepository_Scrub_Call) Run(run func(ctx context.Context, email str
 	return _c
 }
 
-func (_c *UserRepository_Scrub_Call) Return(released []model.Square, removed []model.ContestParticipant, err error) *UserRepository_Scrub_Call {
+func (_c *UserRepository_Scrub_Call) Return(released []model.Square, removed []model.ContestPlayer, err error) *UserRepository_Scrub_Call {
 	_c.Call.Return(released, removed, err)
 	return _c
 }
 
-func (_c *UserRepository_Scrub_Call) RunAndReturn(run func(context.Context, string) ([]model.Square, []model.ContestParticipant, error)) *UserRepository_Scrub_Call {
+func (_c *UserRepository_Scrub_Call) RunAndReturn(run func(context.Context, string) ([]model.Square, []model.ContestPlayer, error)) *UserRepository_Scrub_Call {
 	_c.Call.Return(run)
 	return _c
 }

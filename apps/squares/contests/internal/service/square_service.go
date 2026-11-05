@@ -25,32 +25,32 @@ type SquareService interface {
 }
 
 type squareService struct {
-	squareRepo         repository.SquareRepository
-	contestRepo        repository.ContestRepository
-	participantRepo    repository.ParticipantRepository
-	userRepo           repository.UserRepository
-	tx                 database.Transactor
-	events             ContestEventPublisher
-	participantService ParticipantService
+	squareRepo    repository.SquareRepository
+	contestRepo   repository.ContestRepository
+	playerRepo    repository.PlayerRepository
+	userRepo      repository.UserRepository
+	tx            database.Transactor
+	events        ContestEventPublisher
+	playerService PlayerService
 }
 
 func NewSquareService(
 	squareRepo repository.SquareRepository,
 	contestRepo repository.ContestRepository,
-	participantRepo repository.ParticipantRepository,
+	playerRepo repository.PlayerRepository,
 	userRepo repository.UserRepository,
 	tx database.Transactor,
 	events ContestEventPublisher,
-	participantService ParticipantService,
+	playerService PlayerService,
 ) SquareService {
 	return &squareService{
-		squareRepo:         squareRepo,
-		contestRepo:        contestRepo,
-		participantRepo:    participantRepo,
-		userRepo:           userRepo,
-		tx:                 tx,
-		events:             events,
-		participantService: participantService,
+		squareRepo:    squareRepo,
+		contestRepo:   contestRepo,
+		playerRepo:    playerRepo,
+		userRepo:      userRepo,
+		tx:            tx,
+		events:        events,
+		playerService: playerService,
 	}
 }
 
@@ -71,7 +71,7 @@ func (s *squareService) Claim(ctx context.Context, contestID, squareID uuid.UUID
 		return nil, errs.ErrSquareNotEditable
 	}
 
-	if err = s.participantService.Authorize(ctx, contestID, user, ActionClaimSquare); err != nil {
+	if err = s.playerService.Authorize(ctx, contestID, user, ActionClaimSquare); err != nil {
 		log.Warn("user not authorized to claim squares", "contest_id", contestID, "user", user)
 		return nil, errs.ErrUnauthorizedSquareEdit
 	}
@@ -87,13 +87,13 @@ func (s *squareService) Claim(ctx context.Context, contestID, squareID uuid.UUID
 		return nil, errs.ErrUnauthorizedSquareEdit
 	}
 
-	participant, err := s.participantRepo.GetByContestAndUser(ctx, contestID, user)
+	player, err := s.playerRepo.GetByContestAndUser(ctx, contestID, user)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			log.Warn("user is not a participant", "contest_id", contestID, "user", user)
-			return nil, errs.ErrNotParticipant
+			log.Warn("user is not a player", "contest_id", contestID, "user", user)
+			return nil, errs.ErrNotPlayer
 		}
-		log.Error("failed to get participant for square limit check", "error", err)
+		log.Error("failed to get player for square limit check", "error", err)
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
@@ -107,8 +107,8 @@ func (s *squareService) Claim(ctx context.Context, contestID, squareID uuid.UUID
 			return nil, errs.ErrDatabaseUnavailable
 		}
 
-		if claimed >= participant.MaxSquares {
-			log.Warn("user has reached square limit", "contest_id", contestID, "user", user, "claimed", claimed, "limit", participant.MaxSquares)
+		if claimed >= player.MaxSquares {
+			log.Warn("user has reached square limit", "contest_id", contestID, "user", user, "claimed", claimed, "limit", player.MaxSquares)
 			return nil, errs.ErrSquareLimitReached
 		}
 	}
@@ -166,8 +166,8 @@ func (s *squareService) Claim(ctx context.Context, contestID, squareID uuid.UUID
 func (s *squareService) ClaimRandom(ctx context.Context, contestID uuid.UUID, count int, user string) (*model.RandomClaimResponse, error) {
 	log := logging.FromContext(ctx).With("contest_id", contestID, "user", user)
 
-	if err := s.participantService.Authorize(ctx, contestID, user, ActionClaimSquare); err != nil {
-		if errors.Is(err, errs.ErrNotParticipant) || errors.Is(err, errs.ErrDatabaseUnavailable) {
+	if err := s.playerService.Authorize(ctx, contestID, user, ActionClaimSquare); err != nil {
+		if errors.Is(err, errs.ErrNotPlayer) || errors.Is(err, errs.ErrDatabaseUnavailable) {
 			return nil, err
 		}
 		log.Warn("user not authorized to claim squares")
@@ -252,7 +252,7 @@ func (s *squareService) Clear(ctx context.Context, contestID, squareID uuid.UUID
 	}
 
 	isSquareOwner := square.Owner == user
-	editErr := s.participantService.Authorize(ctx, contestID, user, ActionEditContest)
+	editErr := s.playerService.Authorize(ctx, contestID, user, ActionEditContest)
 	if editErr != nil && !isSquareOwner {
 		log.Warn("user not authorized to clear square", "square_id", squareID, "square_owner", square.Owner, "user", user)
 		return nil, errs.ErrUnauthorizedSquareEdit

@@ -104,7 +104,7 @@ describe('WeekGamePicker', () => {
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
   });
 
-  it('offers a retry when the week fails, and a way back once the player has moved', () => {
+  it('offers a retry when the week fails, and a way back once the owner has moved', () => {
     const onRetry = vi.fn();
     const onReset = vi.fn();
     const { rerender } = renderWithProviders(

@@ -68,7 +68,14 @@ VALUES ('0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'Legacy Pool', '[0,1,2,3,4,5,6,7
         'legacy@squares.test', 'ACTIVE', '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0002', now(), now(), 'legacy@squares.test', 'legacy@squares.test');
 
 INSERT INTO contest_participants (id, contest_id, user_id, role, max_squares, joined_at, created_at, updated_at)
-VALUES (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'legacy@squares.test', 'owner', 100, now(), now(), now());
+VALUES (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'legacy@squares.test', 'owner', 100, now(), now(), now()),
+       (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'viewer@squares.test', 'viewer', 0, now(), now(), now());
+
+-- the newest link still usable is the one the contest keeps
+INSERT INTO contest_invites (id, contest_id, token, max_squares, role, created_by, expires_at, max_uses, uses, created_at, updated_at)
+VALUES (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'live-token', 10, 'participant', 'legacy@squares.test', NULL, 0, 3, now() - interval '2 days', now()),
+       (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'expired-token', 10, 'participant', 'legacy@squares.test', now() - interval '1 hour', 0, 0, now() - interval '1 day', now()),
+       (gen_random_uuid(), '0b5f7f8e-6f3c-4a43-9d8d-1d1c7f1f0001', 'used-up-token', 10, 'participant', 'legacy@squares.test', NULL, 1, 1, now(), now());
 
 -- a 10x10 grid where the owner already holds the first square
 INSERT INTO squares (id, contest_id, "row", col, value, owner, owner_name, created_at, updated_at)

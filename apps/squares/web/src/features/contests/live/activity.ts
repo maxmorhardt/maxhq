@@ -1,15 +1,10 @@
-import type {
-  ActivityEvent,
-  Contest,
-  ContestStatus,
-  Participant,
-  Square,
-} from '../../../types/contest';
+import type { ActivityEvent, Contest, ContestStatus, Player, Square } from '../../../types/contest';
 import { getStatusLabel } from '../../../utils/contestStatus';
 import type { ContestEvent } from './events';
 
 export const MAX_ACTIVITY = 200;
 const GHOST_USER = 'ghost';
+const SYSTEM_ACTOR = 'system';
 
 export const ownerLabel = (owner: string, ownerName: string) =>
   owner === GHOST_USER || owner === '' ? GHOST_USER : ownerName;
@@ -17,12 +12,12 @@ export const ownerLabel = (owner: string, ownerName: string) =>
 const timeOf = (event: ActivityEvent) => new Date(event.timestamp).getTime();
 
 // rebuilds the feed from a snapshot
-export function seedActivity(contest: Contest, participants: Participant[]): ActivityEvent[] {
-  const joined = participants
+export function seedActivity(contest: Contest, players: Player[]): ActivityEvent[] {
+  const joined = players
     .filter((p) => p.role !== 'owner')
     .map<ActivityEvent>((p) => ({
-      id: `seed-participant-${p.id}`,
-      type: 'participant_added',
+      id: `seed-player-${p.id}`,
+      type: 'player_added',
       message: `${p.displayName} joined the contest`,
       timestamp: p.joinedAt || p.createdAt,
     }));
@@ -97,9 +92,14 @@ export function describeEvent(
         ? entry('contest_status', `Contest status changed to ${getStatusLabel(event.data.status)}`)
         : null;
     case 'participant.joined':
-      return entry('participant_added', `${event.data.displayName} joined the contest`);
+      return entry('player_added', `${event.data.displayName} joined the contest`);
     case 'participant.removed':
-      return entry('participant_removed', `${event.data.displayName} left the contest`);
+      return entry(
+        'player_removed',
+        event.updatedBy === event.data.userId || event.updatedBy === SYSTEM_ACTOR
+          ? `${event.data.displayName} left the contest`
+          : `${event.data.displayName} was removed from the contest`
+      );
     default:
       return null;
   }

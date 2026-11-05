@@ -1,16 +1,17 @@
 import { errorMessage } from '../../../api/errors';
 import ConfirmDialog from '../../../components/feedback/ConfirmDialog';
-import { useRemoveParticipantMutation } from '../api';
+import type { ContestStatus } from '../../../types/contest';
+import { useRemovePlayerMutation } from '../api';
 
 interface Props {
-  contest: { id: string; name: string } | null;
+  contest: { id: string; name: string; status: ContestStatus } | null;
   userId: string | undefined;
   onClose: () => void;
   onLeft?: () => void;
 }
 
 export default function LeaveContestDialog({ contest, userId, onClose, onLeft }: Props) {
-  const [removeParticipant, { isLoading, error, reset }] = useRemoveParticipantMutation();
+  const [removePlayer, { isLoading, error, reset }] = useRemovePlayerMutation();
 
   const handleClose = () => {
     reset();
@@ -23,7 +24,7 @@ export default function LeaveContestDialog({ contest, userId, onClose, onLeft }:
     }
 
     try {
-      await removeParticipant({ contestId: contest.id, userId }).unwrap();
+      await removePlayer({ contestId: contest.id, userId }).unwrap();
       onLeft?.();
       handleClose();
     } catch {
@@ -41,8 +42,10 @@ export default function LeaveContestDialog({ contest, userId, onClose, onLeft }:
       loading={isLoading}
       error={error ? errorMessage(error, 'Failed to leave the contest. Please try again.') : null}
     >
-      Are you sure you want to leave <strong>{contest?.name}</strong>? You'll be removed from the
-      contest and will need a new invite to rejoin.
+      Are you sure you want to leave <strong>{contest?.name}</strong>?{' '}
+      {contest?.status === 'ACTIVE'
+        ? 'Your squares go back on the board. You can rejoin later with the invite link, starting with no squares.'
+        : 'The game has started, so your squares stay on the board without you. You can rejoin to watch, but not to play.'}
     </ConfirmDialog>
   );
 }

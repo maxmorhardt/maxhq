@@ -26,7 +26,7 @@ func NewInternalHandler(snapshotService service.SnapshotService, statsService se
 }
 
 // @Summary Contest snapshot for a viewer (internal)
-// @Description Returns the contest and its participants if the given user may view it. Called by the realtime service.
+// @Description Returns the contest and its players if the given user may view it. Called by the realtime service.
 // @Tags internal
 // @Produce json
 // @Param id path string true "Contest ID"

@@ -6,7 +6,7 @@ import type {
   ContestSnapshot,
   ContestStatus,
   ContestUpdate,
-  Participant,
+  Player,
   QuarterResult,
   Square,
 } from '../../../types/contest';
@@ -20,7 +20,7 @@ export type StreamEnd = 'forbidden' | 'not_found' | 'deleted' | 'revoked';
 export interface LiveContestState {
   contestId: string | null;
   contest: Contest | null;
-  participants: Participant[];
+  players: Player[];
   viewerId: string | undefined;
   activity: ActivityEvent[];
   status: StreamStatus;
@@ -30,7 +30,7 @@ export interface LiveContestState {
 const initialState: LiveContestState = {
   contestId: null,
   contest: null,
-  participants: [],
+  players: [],
   viewerId: undefined,
   activity: [],
   status: 'connecting',
@@ -102,17 +102,17 @@ function addQuarterResult(state: LiveContestState, result: QuarterResult) {
   contest.status = statusAfterQuarter[result.quarter] ?? contest.status;
 }
 
-function upsertParticipant(state: LiveContestState, participant: Participant) {
-  const index = state.participants.findIndex((p) => p.id === participant.id);
+function upsertPlayer(state: LiveContestState, player: Player) {
+  const index = state.players.findIndex((p) => p.id === player.id);
   if (index === -1) {
-    state.participants.push(participant);
+    state.players.push(player);
   } else {
-    state.participants[index] = participant;
+    state.players[index] = player;
   }
 }
 
-function removeParticipant(state: LiveContestState, userId: string) {
-  state.participants = state.participants.filter((p) => p.userId !== userId);
+function removePlayer(state: LiveContestState, userId: string) {
+  state.players = state.players.filter((p) => p.userId !== userId);
 }
 
 type EventHandler<T extends ContestEventType> = (
@@ -123,9 +123,9 @@ type EventHandler<T extends ContestEventType> = (
 // one handler per event type; the mapped type makes a missing handler a compile error
 function applySnapshot(state: LiveContestState, snapshot: ContestSnapshot) {
   state.contest = snapshot.contest;
-  state.participants = snapshot.participants ?? [];
+  state.players = snapshot.participants ?? [];
   state.viewerId = snapshot.viewerId;
-  state.activity = seedActivity(snapshot.contest, state.participants);
+  state.activity = seedActivity(snapshot.contest, state.players);
 }
 
 const eventHandlers: { [T in ContestEventType]: EventHandler<T> } = {
@@ -136,9 +136,9 @@ const eventHandlers: { [T in ContestEventType]: EventHandler<T> } = {
   },
   'square.updated': (state, { data }) => upsertSquare(state, data),
   'quarter.recorded': (state, { data }) => addQuarterResult(state, data),
-  'participant.joined': (state, { data }) => upsertParticipant(state, data),
-  'participant.updated': (state, { data }) => upsertParticipant(state, data),
-  'participant.removed': (state, { data }) => removeParticipant(state, data.userId),
+  'participant.joined': (state, { data }) => upsertPlayer(state, data),
+  'participant.updated': (state, { data }) => upsertPlayer(state, data),
+  'participant.removed': (state, { data }) => removePlayer(state, data.userId),
   'access.revoked': (state) => {
     state.ended = 'revoked';
   },
@@ -204,13 +204,16 @@ const liveContestSlice = createSlice({
       .addMatcher(endpoints.clearMySquares.matchFulfilled, (state, action) => {
         action.payload.forEach((square) => upsertSquare(state, square));
       })
-      .addMatcher(endpoints.updateParticipant.matchFulfilled, (state, action) =>
-        upsertParticipant(state, action.payload)
+      .addMatcher(endpoints.updatePlayer.matchFulfilled, (state, action) =>
+        upsertPlayer(state, action.payload)
       )
-      .addMatcher(endpoints.removeParticipant.matchFulfilled, (state, action) => {
+      .addMatcher(endpoints.allotSquares.matchFulfilled, (state, action) => {
+        action.payload.forEach((player) => upsertPlayer(state, player));
+      })
+      .addMatcher(endpoints.removePlayer.matchFulfilled, (state, action) => {
         const { contestId, userId } = action.meta.arg.originalArgs;
         if (contestId === state.contestId) {
-          removeParticipant(state, userId);
+          removePlayer(state, userId);
         }
       });
   },

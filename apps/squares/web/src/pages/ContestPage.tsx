@@ -22,7 +22,7 @@ export default function ContestPage() {
         <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
           <SignInPrompt
             title="Sign in to see this board"
-            description="Contests are only visible to signed-in players. It's free, and you'll come right back here."
+            description="Contests are only visible to people who are signed in. It's free, and you'll come right back here."
           />
         </Container>
       }

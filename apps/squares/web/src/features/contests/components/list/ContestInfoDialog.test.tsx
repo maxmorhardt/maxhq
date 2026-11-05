@@ -58,7 +58,7 @@ describe('ContestInfoDialog', () => {
   });
 
   it('names another owner without their email', () => {
-    renderDialog({ role: 'participant', ownerName: 'Olive O.' });
+    renderDialog({ role: 'player', ownerName: 'Olive O.' });
     expect(screen.getByText('Olive O.')).toBeInTheDocument();
     expect(screen.queryByText(/u_olive/)).not.toBeInTheDocument();
   });
@@ -76,7 +76,7 @@ describe('ContestInfoDialog', () => {
   });
 
   it('offers no delete to players or on finished contests', () => {
-    renderDialog({ role: 'participant' });
+    renderDialog({ role: 'player' });
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });
 

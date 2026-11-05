@@ -1,13 +1,13 @@
 import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockMutation } from '../../../test/auth';
-import { makeParticipant } from '../../../test/fixtures';
+import { makePlayer } from '../../../test/fixtures';
 import { renderWithProviders } from '../../../test/render';
 import JoinInvite from './JoinInvite';
 
 const api = vi.hoisted(() => ({
   usePreviewInviteQuery: vi.fn(),
-  useRedeemInviteMutation: vi.fn(),
+  useJoinContestMutation: vi.fn(),
 }));
 vi.mock('../../contests/api', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -24,25 +24,37 @@ vi.mock('react-router', async () => ({
 const preview = {
   contestId: 'c-1',
   contestName: 'Office Pool',
-  maxSquares: 5,
-  role: 'participant',
+  status: 'ACTIVE',
 };
 
 describe('JoinInvite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.usePreviewInviteQuery.mockReturnValue({ data: preview, error: undefined });
-    api.useRedeemInviteMutation.mockReturnValue(
-      mockMutation(makeParticipant({ contestId: 'c-1' }))
-    );
+    api.useJoinContestMutation.mockReturnValue(mockMutation(makePlayer({ contestId: 'c-1' })));
   });
 
   it('joins and opens the contest', async () => {
     const { store } = renderWithProviders(<JoinInvite token="tok" />);
     expect(screen.getByText('Joining contest...')).toBeInTheDocument();
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/contests/c-1', { replace: true }));
-    expect(store.getState().toast.messages[0]?.message).toBe('Successfully joined contest!');
+    expect(store.getState().toast.messages[0]?.message).toBe(
+      'You joined Office Pool. The owner will give you squares.'
+    );
     expect(ads.trackConversion).toHaveBeenCalledWith('joinedContest');
+  });
+
+  it('tells someone joining after kickoff that they can watch', async () => {
+    api.usePreviewInviteQuery.mockReturnValue({
+      data: { ...preview, status: 'Q2' },
+      error: undefined,
+    });
+    const { store } = renderWithProviders(<JoinInvite token="tok" />);
+    await waitFor(() =>
+      expect(store.getState().toast.messages[0]?.message).toBe(
+        'You joined Office Pool. The game has started, so you can watch.'
+      )
+    );
   });
 
   it('waits for the invite to load', () => {
@@ -52,7 +64,7 @@ describe('JoinInvite', () => {
   });
 
   it('opens the contest for someone already in it', async () => {
-    api.useRedeemInviteMutation.mockReturnValue(
+    api.useJoinContestMutation.mockReturnValue(
       mockMutation(
         { error: { status: 409, message: 'Already joined' } },
         { error: { status: 409, message: 'Already joined' } }
@@ -72,22 +84,22 @@ describe('JoinInvite', () => {
     expect(screen.getByText('Invite expired')).toBeInTheDocument();
   });
 
-  it('explains a full contest', () => {
-    api.useRedeemInviteMutation.mockReturnValue(
+  it('explains a ban', () => {
+    api.useJoinContestMutation.mockReturnValue(
       mockMutation(
-        { error: { status: 422, message: 'Full' } },
-        { error: { status: 422, message: 'Full' } }
+        { error: { status: 403, message: 'the owner removed you from this contest' } },
+        { error: { status: 403, message: 'the owner removed you from this contest' } }
       )
     );
     renderWithProviders(<JoinInvite token="tok" />);
-    expect(screen.getByText('No Squares Available')).toBeInTheDocument();
+    expect(screen.getByText('the owner removed you from this contest')).toBeInTheDocument();
   });
 
-  it('reports a failed join', async () => {
-    api.useRedeemInviteMutation.mockReturnValue(
-      mockMutation({ error: { status: 500, message: 'Server down' } })
+  it('falls back to a plain message when the join fails without one', () => {
+    api.useJoinContestMutation.mockReturnValue(
+      mockMutation({ error: { status: 500 } }, { error: { status: 500 } })
     );
-    const { store } = renderWithProviders(<JoinInvite token="tok" />);
-    await waitFor(() => expect(store.getState().toast.messages[0]?.message).toBe('Server down'));
+    renderWithProviders(<JoinInvite token="tok" />);
+    expect(screen.getByText('Unable to Join')).toBeInTheDocument();
   });
 });

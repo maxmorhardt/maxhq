@@ -49,7 +49,7 @@ func (r *statsRepository) GetUserStats(ctx context.Context, email string) (*mode
 	err := database.Conn(ctx, r.db).Raw(`
 		SELECT
 			(SELECT COUNT(*) FROM contests WHERE owner = @email AND status <> @deleted) AS contests_created,
-			(SELECT COUNT(*) FROM contest_participants p JOIN contests c ON c.id = p.contest_id
+			(SELECT COUNT(*) FROM contest_players p JOIN contests c ON c.id = p.contest_id
 				WHERE p.user_id = @email AND c.status <> @deleted) AS contests_joined,
 			(SELECT COUNT(*) FROM squares s JOIN contests c ON c.id = s.contest_id
 				WHERE s.owner = @email AND c.status <> @deleted) AS squares_claimed,
@@ -70,10 +70,10 @@ func (r *statsRepository) GetActiveContests(ctx context.Context, email string) (
 	var contests []contracts.UserActiveContest
 
 	if err := database.Conn(ctx, r.db).Raw(
-		`SELECT c.id, c.name, CASE WHEN c.owner = ? THEN 'owner' ELSE 'participant' END AS role
+		`SELECT c.id, c.name, CASE WHEN c.owner = ? THEN 'owner' ELSE 'player' END AS role
 		FROM contests c
 		WHERE c.status NOT IN ?
-		AND (c.owner = ? OR c.id IN (SELECT contest_id FROM contest_participants WHERE user_id = ?))
+		AND (c.owner = ? OR c.id IN (SELECT contest_id FROM contest_players WHERE user_id = ?))
 		ORDER BY c.created_at`,
 		email, terminalStatuses, email, email).
 		Scan(&contests).Error; err != nil {
@@ -89,7 +89,7 @@ func (r *statsRepository) GetFirstActivity(ctx context.Context, email string) (*
 		`SELECT MIN(t) FROM (
 			SELECT MIN(created_at) AS t FROM contests WHERE owner = ?
 			UNION ALL
-			SELECT MIN(joined_at) FROM contest_participants WHERE user_id = ?
+			SELECT MIN(joined_at) FROM contest_players WHERE user_id = ?
 		) activity`, email, email).Scan(&firstActivity).Error; err != nil {
 		return nil, err
 	}

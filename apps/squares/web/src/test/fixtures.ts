@@ -1,5 +1,5 @@
 import { getContestViewer, type ContestViewer } from '../features/contests/live/viewer';
-import type { Contest, Participant, QuarterResult, Square } from '../types/contest';
+import type { Contest, Player, QuarterResult, Square } from '../types/contest';
 
 export function makeSquare(overrides: Partial<Square> = {}): Square {
   return {
@@ -45,14 +45,13 @@ export function makeContest(overrides: Partial<Contest> = {}, size = 3): Contest
   };
 }
 
-export function makeParticipant(overrides: Partial<Participant> = {}): Participant {
+export function makePlayer(overrides: Partial<Player> = {}): Player {
   return {
     id: 'p-1',
     contestId: 'c-1',
     userId: 'u_player',
     displayName: 'Pat P.',
-    inviteId: '',
-    role: 'participant',
+    role: 'player',
     maxSquares: 5,
     joinedAt: '2026-01-01T00:00:00Z',
     createdAt: '2026-01-01T00:00:00Z',
@@ -88,9 +87,9 @@ export function makeViewer({
     viewerId,
     isMe,
     fullName,
-    participant: makeParticipant(),
+    player: makePlayer(),
     isOwner: false,
-    isParticipant: true,
+    isPlayer: true,
     squaresClaimed: 0,
     squaresLeft: 5,
     ...overrides,

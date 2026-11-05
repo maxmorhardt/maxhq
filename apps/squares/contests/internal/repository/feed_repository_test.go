@@ -24,7 +24,7 @@ func TestFeedRepository_List_AllRoles(t *testing.T) {
 
 	id, gameID := uuid.New(), uuid.New()
 	kickoff := time.Date(2026, 10, 25, 17, 0, 0, 0, time.UTC)
-	mock.ExpectQuery(`FROM contests c LEFT JOIN contest_participants cp .* LEFT JOIN games g .* WHERE c.status <> \$4 AND \(c.owner = \$5 OR cp.id IS NOT NULL\) ORDER BY c.updated_at DESC,c.id DESC LIMIT \$6`).
+	mock.ExpectQuery(`FROM contests c LEFT JOIN contest_players cp .* LEFT JOIN games g .* WHERE c.status <> \$4 AND \(c.owner = \$5 OR cp.id IS NOT NULL\) ORDER BY c.updated_at DESC,c.id DESC LIMIT \$6`).
 		WithArgs("u", "u", "u", "DELETED", "u", 20).
 		WillReturnRows(sqlmock.NewRows(summaryColumns).AddRow(
 			id, "Big Case", "Chicago Bears", "New England Patriots", "Q2", "private", "u", gameID, 3,
@@ -36,7 +36,7 @@ func TestFeedRepository_List_AllRoles(t *testing.T) {
 	require.Len(t, rows, 1)
 	assert.Equal(t, id, rows[0].ID)
 	assert.Equal(t, model.ContestStatusQ2, rows[0].Status)
-	assert.Equal(t, model.ParticipantRoleOwner, rows[0].Role)
+	assert.Equal(t, model.PlayerRoleOwner, rows[0].Role)
 	assert.Equal(t, &gameID, rows[0].GameID)
 	assert.Equal(t, "CHI", rows[0].HomeAbbr)
 	assert.Equal(t, 100, rows[0].ClaimedSquares)
@@ -124,7 +124,7 @@ func TestFeedRepository_Members(t *testing.T) {
 	repo := NewFeedRepository(gdb)
 
 	contestID := uuid.New()
-	mock.ExpectQuery(`SELECT user_id FROM contest_participants WHERE contest_id = \$1 UNION SELECT owner FROM contests WHERE id = \$2`).
+	mock.ExpectQuery(`SELECT user_id FROM contest_players WHERE contest_id = \$1 UNION SELECT owner FROM contests WHERE id = \$2`).
 		WithArgs(contestID, contestID).
 		WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow("owner@b.com").AddRow("player@b.com"))
 
@@ -139,7 +139,7 @@ func TestFeedRepository_Members_Error(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewFeedRepository(gdb)
 
-	mock.ExpectQuery(`SELECT user_id FROM contest_participants`).WillReturnError(errors.New("db"))
+	mock.ExpectQuery(`SELECT user_id FROM contest_players`).WillReturnError(errors.New("db"))
 
 	_, err := repo.Members(context.Background(), uuid.New())
 

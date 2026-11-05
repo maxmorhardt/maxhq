@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import {
   useDeleteContestMutation,
   useGetActiveContestsQuery,
-  useRemoveParticipantMutation,
+  useRemovePlayerMutation,
 } from '../contests/api';
 import { useToast } from '../toast/useToast';
 import { useDeleteMyAccountMutation } from './api';
@@ -27,7 +27,7 @@ export function useAccountDeletion() {
     refetchOnMountOrArgChange: true,
   });
   const [deleteContest] = useDeleteContestMutation();
-  const [removeParticipant] = useRemoveParticipantMutation();
+  const [removePlayer] = useRemovePlayerMutation();
   const [deleteAccount, { isLoading: deleting }] = useDeleteMyAccountMutation();
 
   const runContestAction = async (id: string, action: () => Promise<unknown>, failure: string) => {
@@ -62,7 +62,7 @@ export function useAccountDeletion() {
         id,
         () =>
           userId
-            ? removeParticipant({ contestId: id, userId }).unwrap()
+            ? removePlayer({ contestId: id, userId }).unwrap()
             : Promise.reject(new Error('profile not loaded')),
         'Failed to leave the contest. Please try again.'
       ),

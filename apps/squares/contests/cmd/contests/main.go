@@ -17,7 +17,7 @@ import (
 
 // @title           Squares Contests API
 // @version         1.0.0
-// @description     Contests, squares, participants, invites, leaderboard, and stats for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.
+// @description     Contests, squares, players, invites, leaderboard, and stats for squares.maxhq.io. Served under /squares behind the gateway, which validates the bearer token.
 // @securityDefinitions.apikey BearerAuth
 // @type apiKey
 // @in header

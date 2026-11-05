@@ -1,9 +1,9 @@
 import { act, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockAuth } from '../../../test/auth';
-import { makeContest, makeParticipant, makeQuarterResult } from '../../../test/fixtures';
+import { makeContest, makePlayer, makeQuarterResult } from '../../../test/fixtures';
 import { renderWithProviders } from '../../../test/render';
-import type { Participant } from '../../../types/contest';
+import type { Player } from '../../../types/contest';
 import type { ContestEvent } from '../live/events';
 import {
   eventReceived,
@@ -68,11 +68,11 @@ function renderLive() {
       result.store.dispatch(action);
     });
   const emit = (e: ContestEvent) => act(() => stream.onEvent?.(e));
-  const snapshot = (contest = makeContest(), participants: Participant[] = []) =>
+  const snapshot = (contest = makeContest(), players: Player[] = []) =>
     dispatch(
       eventReceived({
         id: '1',
-        event: event('contest.snapshot', { contest, participants, viewerId: 'u_player' }),
+        event: event('contest.snapshot', { contest, participants: players, viewerId: 'u_player' }),
       })
     );
   return {
@@ -94,9 +94,9 @@ describe('LiveContest', () => {
 
   it('gives only the owner full names', () => {
     roster.useContestRoster.mockImplementation((_id: string, isOwner: boolean) =>
-      isOwner ? [{ userId: 'u_pat', fullName: 'Pat Player' }] : undefined
+      isOwner ? [{ userId: 'u_pat', fullName: 'Pat Parker' }] : undefined
     );
-    const players = [makeParticipant({ userId: 'u_pat' })];
+    const players = [makePlayer({ userId: 'u_pat' })];
     const { snapshot } = renderLive();
     snapshot(makeContest(), players);
     expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', false, players);
@@ -104,7 +104,7 @@ describe('LiveContest', () => {
 
     snapshot(makeContest({ owner: 'u_player' }), players);
     expect(roster.useContestRoster).toHaveBeenLastCalledWith('c-1', true, players);
-    expect(screen.getByTestId('view')).toHaveAttribute('data-full-name', 'Pat Player');
+    expect(screen.getByTestId('view')).toHaveAttribute('data-full-name', 'Pat Parker');
   });
 
   it('shows a skeleton until the snapshot arrives', () => {
@@ -200,7 +200,7 @@ describe('LiveContest', () => {
   it('sends a removed viewer away from a private contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'private' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'u_player' })));
+    emit(event('participant.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).toHaveBeenCalledWith('/contests');
     expect(toasts()[0]?.severity).toBe('warning');
   });
@@ -208,14 +208,25 @@ describe('LiveContest', () => {
   it('lets a removed viewer keep watching a public contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'public' }));
-    emit(event('participant.removed', makeParticipant({ userId: 'u_player' })));
+    emit(event('participant.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).not.toHaveBeenCalled();
     expect(toasts()[0]?.severity).toBe('info');
   });
 
+  it('says you left rather than were removed when you left on your own', () => {
+    const { snapshot, emit, toasts } = renderLive();
+    snapshot(makeContest({ visibility: 'private' }));
+    emit({
+      ...event('participant.removed', makePlayer({ userId: 'u_player' })),
+      updatedBy: 'u_player',
+    });
+    expect(toasts()[0]).toMatchObject({ message: 'You left this contest', severity: 'info' });
+    expect(navigate).toHaveBeenCalledWith('/contests');
+  });
+
   it('ignores other people being removed', () => {
     const { emit, toasts } = renderLive();
-    emit(event('participant.removed', makeParticipant({ userId: 'u_other' })));
+    emit(event('participant.removed', makePlayer({ userId: 'u_other' })));
     expect(toasts()).toHaveLength(0);
   });
 });

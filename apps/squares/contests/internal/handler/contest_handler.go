@@ -31,7 +31,7 @@ func NewContestHandler(contestService service.ContestService, snapshotService se
 }
 
 // @Summary Get a contest
-// @Description Returns the contest and its participants if the user may view it, in the shape of the stream's `contest.snapshot`. For contests that are over, which have nothing left to stream.
+// @Description Returns the contest and its players if the user may view it, in the shape of the stream's `contest.snapshot`. For contests that are over, which have nothing left to stream.
 // @Tags contests
 // @Produce json
 // @Param id path string true "Contest ID"

@@ -4,7 +4,7 @@ import { alpha } from '@mui/material/styles';
 import type { StreamStatus } from '../../../../api/eventStream';
 import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
-import type { Contest, Game, Participant } from '../../../../types/contest';
+import type { Contest, Game, Player } from '../../../../types/contest';
 import { getStatusLabel } from '../../../../utils/contestStatus';
 import { currentScore, gameClock, isLive, kickoffParts } from '../../../../utils/game';
 import type { ContestViewer } from '../../live/viewer';
@@ -14,7 +14,7 @@ import ContestActionIcons from '../details/ContestActionIcons';
 interface Props {
   contest: Contest;
   game?: Game;
-  participants: Participant[];
+  players: Player[];
   viewer: ContestViewer;
   status: StreamStatus;
   onRetry: () => void;
@@ -113,7 +113,7 @@ function TeamSide({
 export default function ContestScoreboard({
   contest,
   game,
-  participants,
+  players,
   viewer,
   status,
   onRetry,
@@ -121,7 +121,7 @@ export default function ContestScoreboard({
   const score = currentScore(contest, game);
   const live = isLive(game);
   const clock = game ? gameClock(game) : getStatusLabel(contest.status);
-  const role = viewer.isOwner ? 'Owner' : viewer.isParticipant ? 'Player' : 'Watching';
+  const role = viewer.isOwner ? 'Owner' : viewer.isPlayer ? 'Player' : 'Watching';
 
   return (
     <Box
@@ -171,7 +171,7 @@ export default function ContestScoreboard({
             <Chip size="small" variant="outlined" label={role} />
           </Box>
         </Box>
-        <ContestActionIcons contest={contest} participants={participants} viewer={viewer} />
+        <ContestActionIcons contest={contest} players={players} viewer={viewer} />
       </Box>
 
       {/* the score bug, laid out by its own width since the page column can be narrow on a wide screen */}

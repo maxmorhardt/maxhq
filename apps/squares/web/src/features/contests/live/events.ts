@@ -1,7 +1,7 @@
 import type {
   ContestSnapshot,
   ContestUpdate,
-  Participant,
+  Player,
   QuarterResult,
   Square,
 } from '../../../types/contest';
@@ -21,9 +21,9 @@ export type ContestEvent =
   | Envelope<'contest.deleted', undefined>
   | Envelope<'square.updated', Square>
   | Envelope<'quarter.recorded', QuarterResult>
-  | Envelope<'participant.joined', Participant>
-  | Envelope<'participant.updated', Participant>
-  | Envelope<'participant.removed', Participant>
+  | Envelope<'participant.joined', Player>
+  | Envelope<'participant.updated', Player>
+  | Envelope<'participant.removed', Player>
   | Envelope<'access.revoked', undefined>;
 
 export type ContestEventType = ContestEvent['type'];

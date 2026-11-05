@@ -86,16 +86,17 @@ func TestUserRepository_Scrub(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "value", "owner"}).AddRow(uuid.New(), contestID, "", ""))
 	mock.ExpectQuery(`UPDATE "squares" SET "owner"=.*WHERE owner = \$\d+ AND contest_id IN \(SELECT "id" FROM "contests" WHERE status NOT IN .* AND status <> \$\d+.*RETURNING \*`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "value", "owner"}).AddRow(uuid.New(), startedID, "AB", model.GhostUser))
-	for range 10 {
-		mock.ExpectExec(`UPDATE "(squares|quarter_results|contests|contest_invites)" SET`).WillReturnResult(sqlmock.NewResult(0, 0))
+	for range 9 {
+		mock.ExpectExec(`UPDATE "(squares|quarter_results|contests)" SET`).WillReturnResult(sqlmock.NewResult(0, 0))
 	}
-	mock.ExpectQuery(`DELETE FROM "contest_participants" WHERE user_id = \$1 RETURNING \*`).
+	mock.ExpectQuery(`DELETE FROM "contest_players" WHERE user_id = \$1 RETURNING \*`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "user_id"}).AddRow(uuid.New(), contestID, "a@b.com"))
+	mock.ExpectExec(`DELETE FROM "contest_bans" WHERE user_id = \$1`).WithArgs("a@b.com").WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectExec(`DELETE FROM "users"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
 	var released []model.Square
-	var removed []model.ContestParticipant
+	var removed []model.ContestPlayer
 	require.NoError(t, inTxErr(gdb, func(ctx context.Context) error {
 		var err error
 		released, removed, err = NewUserRepository(gdb).Scrub(ctx, "a@b.com")

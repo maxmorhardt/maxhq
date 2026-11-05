@@ -15,8 +15,7 @@ interface Props {
 
 const roleLabel: Record<ContestSummary['role'], string> = {
   owner: 'Owner',
-  participant: 'Player',
-  viewer: 'Watching',
+  player: 'Player',
 };
 
 const formatDate = (value: string) =>

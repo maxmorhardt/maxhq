@@ -115,14 +115,14 @@ describe('faro', () => {
     const { redactSecrets } = await load();
     const item = {
       meta: { page: { url: 'https://squares.maxhq.io/join/abc123?x=1' } },
-      payload: { name: 'https://api.maxhq.io/squares/invites/abc123/redeem' },
-      other: 'https://api.maxhq.io/squares/contests/c1/invites',
+      payload: { name: 'https://api.maxhq.io/squares/invites/abc123/join' },
+      other: 'https://api.maxhq.io/squares/contests/c1/invite',
     };
 
     expect(redactSecrets(item)).toEqual({
       meta: { page: { url: 'https://squares.maxhq.io/join/:token?x=1' } },
-      payload: { name: 'https://api.maxhq.io/squares/invites/:token/redeem' },
-      other: 'https://api.maxhq.io/squares/contests/c1/invites',
+      payload: { name: 'https://api.maxhq.io/squares/invites/:token/join' },
+      other: 'https://api.maxhq.io/squares/contests/c1/invite',
     });
   });
 

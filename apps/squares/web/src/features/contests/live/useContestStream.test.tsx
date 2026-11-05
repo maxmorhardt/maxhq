@@ -49,7 +49,7 @@ function respond(status: number, body: unknown) {
   return fetchMock;
 }
 
-const finished = { contest: makeContest({ status: 'FINISHED' }), participants: [] };
+const finished = { contest: makeContest({ status: 'FINISHED' }), players: [] };
 
 // a contests list that has already loaded this contest with the given status
 async function listed(store: ReturnType<typeof makeStore>, status: ContestStatus) {
@@ -91,7 +91,7 @@ describe('useContestStream', () => {
     // once the contest is in, nothing more is asked for
     streams.handle.reconnect.mockClear();
     act(() =>
-      stream().onMessage(message('contest.snapshot', { contest: makeContest(), participants: [] }))
+      stream().onMessage(message('contest.snapshot', { contest: makeContest(), players: [] }))
     );
     act(() => vi.advanceTimersByTime(10_000));
     expect(streams.handle.reconnect).not.toHaveBeenCalled();
@@ -165,7 +165,7 @@ describe('useContestStream', () => {
 
     act(() => stream().onStatus('live'));
     act(() =>
-      stream().onMessage(message('contest.snapshot', { contest: makeContest(), participants: [] }))
+      stream().onMessage(message('contest.snapshot', { contest: makeContest(), players: [] }))
     );
 
     expect(store.getState().liveContest).toMatchObject({ contestId: 'c-1', status: 'live' });
@@ -201,7 +201,7 @@ describe('useContestStream', () => {
     const { store, stream } = setup();
     act(() =>
       stream().onMessage(
-        message('contest.snapshot', { contest: makeContest({ status: 'Q4' }), participants: [] })
+        message('contest.snapshot', { contest: makeContest({ status: 'Q4' }), players: [] })
       )
     );
     act(() => stream().onMessage(message('quarter.recorded', makeQuarterResult({ quarter: 4 }))));
@@ -221,7 +221,7 @@ describe('useContestStream', () => {
       stream().onMessage(
         message('contest.snapshot', {
           contest: makeContest({ status: 'FINISHED' }),
-          participants: [],
+          players: [],
         })
       )
     );

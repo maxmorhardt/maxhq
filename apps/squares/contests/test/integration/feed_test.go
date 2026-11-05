@@ -33,12 +33,7 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 	}
 	joined, _ := createContest(t, owner, "Feed Joined", 10)
 
-	invite := call(t, testkit.As(owner), http.MethodPost, "/contests/"+joined.ID.String()+"/invites",
-		model.CreateInviteRequest{MaxSquares: 10, Role: "participant"})
-	require.Equal(t, http.StatusCreated, invite.Status, string(invite.Body))
-	var inv model.ContestInvite
-	invite.Decode(t, &inv)
-	require.Equal(t, http.StatusCreated, call(t, testkit.As(member), http.MethodPost, "/invites/"+inv.Token+"/redeem", nil).Status)
+	join(t, owner, member, joined.ID, 10)
 
 	t.Run("owner pages through every contest newest first", func(t *testing.T) {
 		first := feed(t, owner, url.Values{"limit": {"3"}})
@@ -52,7 +47,7 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 		assert.Equal(t, names[0], second.Contests[0].Name)
 
 		for _, c := range append(first.Contests, second.Contests...) {
-			assert.Equal(t, model.ParticipantRoleOwner, c.Role)
+			assert.Equal(t, model.PlayerRoleOwner, c.Role)
 		}
 	})
 
@@ -60,7 +55,7 @@ func TestFeed_CombinesOwnedAndJoinedContests(t *testing.T) {
 		got := feed(t, member, nil)
 		require.Len(t, got.Contests, 1)
 		assert.Equal(t, joined.ID, got.Contests[0].ID)
-		assert.Equal(t, model.ParticipantRoleParticipant, got.Contests[0].Role)
+		assert.Equal(t, model.PlayerRolePlayer, got.Contests[0].Role)
 
 		assert.Len(t, feed(t, member, url.Values{"role": {"joined"}}).Contests, 1)
 		assert.Empty(t, feed(t, member, url.Values{"role": {"owned"}}).Contests)

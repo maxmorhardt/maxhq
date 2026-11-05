@@ -102,7 +102,7 @@ route:
         methods: [POST]
         requests: 30
         unit: Hour
-      - path: /contests/[^/]+/invites(\?.*)?
+      - path: /contests/[^/]+/invite/reset(\?.*)?
         pathType: RegularExpression
         methods: [POST]
         requests: 60

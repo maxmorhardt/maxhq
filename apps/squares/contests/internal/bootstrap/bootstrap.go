@@ -60,22 +60,22 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	sharedCache := cache.NewRedisCache(infra.Redis, Service)
 
 	contestRepo := repository.NewContestRepository(db)
-	participantRepo := repository.NewParticipantRepository(db)
-	inviteRepo := repository.NewInviteRepository(db)
+	playerRepo := repository.NewPlayerRepository(db)
+	banRepo := repository.NewBanRepository(db)
 	squareRepo := repository.NewSquareRepository(db)
 	gameRepo := repository.NewGameSyncRepository(db)
 	userRepo := repository.NewUserRepository(db)
 
-	participantService := service.NewParticipantService(participantRepo, contestRepo, squareRepo, tx, events)
-	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, participantService)
-	squareService := service.NewSquareService(squareRepo, contestRepo, participantRepo, userRepo, tx, events, participantService)
-	inviteService := service.NewInviteService(inviteRepo, participantRepo, contestRepo, userRepo, participantService, tx, events)
+	playerService := service.NewPlayerService(playerRepo, contestRepo, squareRepo, banRepo, tx, events)
+	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, playerService)
+	squareService := service.NewSquareService(squareRepo, contestRepo, playerRepo, userRepo, tx, events, playerService)
+	inviteService := service.NewInviteService(contestRepo, playerRepo, banRepo, userRepo, playerService, tx, events)
 	leaderboardService := service.NewLeaderboardService(repository.NewLeaderboardRepository(db), sharedCache)
 	statsService := service.NewStatsService(repository.NewStatsRepository(db), sharedCache)
 	userSyncService := service.NewUserSyncService(userRepo, squareRepo, tx, events)
 	feedService := service.NewFeedService(repository.NewFeedRepository(db), sharedCache)
 	gameSyncService := service.NewGameSyncService(gameRepo, contestRepo, contestService, tx, feedService)
-	snapshotService := service.NewSnapshotService(contestRepo, participantService)
+	snapshotService := service.NewSnapshotService(contestRepo, playerService)
 
 	engine := server.NewEngine(&cfg.Server)
 	server.RegisterValidation("contestname", util.ValidateContestName)
@@ -87,7 +87,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 		Contest:     handler.NewContestHandler(contestService, snapshotService),
 		Square:      handler.NewSquareHandler(squareService),
 		Feed:        handler.NewFeedHandler(feedService),
-		Participant: handler.NewParticipantHandler(participantService),
+		Player:      handler.NewPlayerHandler(playerService),
 		Invite:      handler.NewInviteHandler(inviteService),
 		Leaderboard: handler.NewLeaderboardHandler(leaderboardService),
 		Stats:       handler.NewStatsHandler(statsService),

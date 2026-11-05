@@ -35,14 +35,14 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	pub := service.NewContestEventPublisher(ob)
 
 	heavy := &model.Contest{ID: contestID, Name: "Bowl", Status: model.ContestStatusQ2, Squares: []model.Square{{}}, QuarterResults: []model.QuarterResult{{}}, Game: &model.Game{}}
-	participant := &model.ContestParticipant{UserID: "p"}
+	player := &model.ContestPlayer{UserID: "p"}
 
 	require.NoError(t, pub.PublishSquareUpdate(ctx, contestID, "u", &model.Square{}))
 	require.NoError(t, pub.PublishContestUpdate(ctx, contestID, "u", heavy))
 	require.NoError(t, pub.PublishQuarterResult(ctx, contestID, "u", &model.QuarterResult{Quarter: 1}))
 	require.NoError(t, pub.PublishContestDeleted(ctx, contestID, "u"))
-	require.NoError(t, pub.PublishParticipantRemoved(ctx, contestID, "u", participant))
-	require.NoError(t, pub.PublishParticipantJoined(ctx, contestID, participant))
+	require.NoError(t, pub.PublishPlayerRemoved(ctx, contestID, "u", player))
+	require.NoError(t, pub.PublishPlayerJoined(ctx, contestID, player))
 
 	types := make([]string, 0, len(*captured))
 	for _, e := range *captured {
