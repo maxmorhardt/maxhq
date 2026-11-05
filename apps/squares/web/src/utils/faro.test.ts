@@ -17,6 +17,7 @@ async function load() {
 describe('faro', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
   });
 
   it('stays off without a collector url', async () => {
@@ -57,6 +58,9 @@ describe('faro', () => {
     setFaroUser('u_2');
     await vi.waitFor(() => expect(api.setUser).toHaveBeenLastCalledWith({ id: 'u_2' }));
 
+    setFaroUser(undefined, 'b@x.com');
+    await vi.waitFor(() => expect(api.setUser).toHaveBeenLastCalledWith({ email: 'b@x.com' }));
+
     setFaroUser(undefined);
     await vi.waitFor(() => expect(api.resetUser).toHaveBeenCalled());
   });
@@ -67,6 +71,17 @@ describe('faro', () => {
     await vi.waitFor(() =>
       expect(api.pushEvent).toHaveBeenCalledWith('landing', expect.any(Object))
     );
+  });
+
+  it('records a landing once per tab, not on the sign-in callback or a reload', async () => {
+    const first = await load();
+    first.initFaro('squares.maxhq.io', URL);
+    await vi.waitFor(() => expect(api.pushEvent).toHaveBeenCalledTimes(1));
+
+    const reload = await load();
+    reload.initFaro('squares.maxhq.io', URL);
+    await vi.waitFor(() => expect(initializeFaro).toHaveBeenCalledTimes(2));
+    expect(api.pushEvent).toHaveBeenCalledTimes(1);
   });
 
   it('reads the campaign, ad click, and referrer from a landing url', async () => {

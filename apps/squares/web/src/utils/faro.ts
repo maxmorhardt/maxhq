@@ -14,6 +14,7 @@ const CLICK_IDS: Record<string, string> = {
   wbraid: 'google',
   fbclid: 'facebook',
 };
+const LANDED_KEY = 'squares.faro.landed';
 
 let loaded: Promise<Faro | null> = Promise.resolve(null);
 
@@ -46,6 +47,19 @@ export function landingAttributes(href: string, referrer: string): Record<string
   return attributes;
 }
 
+// once per tab, so the sign-in callback and reloads don't count as new landings
+function firstLoadInTab(): boolean {
+  try {
+    if (sessionStorage.getItem(LANDED_KEY)) {
+      return false;
+    }
+    sessionStorage.setItem(LANDED_KEY, '1');
+  } catch {
+    // storage blocked: report every load rather than none
+  }
+  return true;
+}
+
 // loaded lazily so the SDK stays out of the main bundle
 export function initFaro(hostname?: string, url: string = FARO_URL): void {
   if (typeof window === 'undefined' || !url || !appDomain(hostname)) {
@@ -63,7 +77,9 @@ export function initFaro(hostname?: string, url: string = FARO_URL): void {
         instrumentations: getWebInstrumentations(),
         beforeSend: redactSecrets,
       });
-      faro.api.pushEvent('landing', landingAttributes(window.location.href, document.referrer));
+      if (firstLoadInTab()) {
+        faro.api.pushEvent('landing', landingAttributes(window.location.href, document.referrer));
+      }
       return faro;
     })
     .catch(() => null);
@@ -75,8 +91,8 @@ export function setFaroUser(userId: string | undefined, email?: string): void {
     if (!faro) {
       return;
     }
-    if (userId) {
-      faro.api.setUser({ id: userId, ...(email && { email }) });
+    if (userId || email) {
+      faro.api.setUser({ ...(userId && { id: userId }), ...(email && { email }) });
     } else {
       faro.api.resetUser();
     }
