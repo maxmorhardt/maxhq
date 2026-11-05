@@ -35,7 +35,8 @@
 
 - **Pages are thin.** A page reads route params, sets the `<Helmet>` title, gates on auth, and renders one feature container. No data fetching or business rules in `src/pages/`.
 - **Feature containers own data.** A container (`LiveContest`, `ContestsBrowser`, `Profile`, `Standings`, `JoinInvite`) calls RTK Query hooks or live selectors and handles its loading, error, and empty states.
-- **Everything below a container takes props.** Pass the domain objects (`contest`, `participants`, `viewer`) down. Presentational components never read the store; a component only calls a mutation hook for the action it owns (a button that starts the game calls `useStartContestMutation`).
+- **A dialog that loads its own data when it opens is a container too** (`InviteLinkDialog`, and `PlayersManager` for the ban list). It passes `skip` until it is open, so nothing is fetched for people who never open it, and it handles its own loading and error states. Do not lift that data into the page container just to drill it down.
+- **Everything below a container takes props.** Pass the domain objects (`contest`, `players`, `viewer`) down. Presentational components never read the store; a component only calls a mutation hook for the action it owns (a button that starts the game calls `useStartContestMutation`).
 - **Read the store with selectors, never by drilling through more than one container.** Server data comes from RTK Query hooks; the only hand-written slices are `liveContest` (stream-fed state) and `toast` (UI state). Do not add a slice for data an endpoint can cache.
 - **Derived data is computed, not stored.** `getContestViewer` works out who the user is in a contest once; pass the result down rather than recomputing it in children.
 - **Logic-heavy flows go in a hook next to the feature** (`useAccountDeletion`), keeping the component a view.

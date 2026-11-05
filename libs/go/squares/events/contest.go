@@ -18,6 +18,9 @@ const (
 	ParticipantJoinedType  = "participant.joined"
 	ParticipantUpdatedType = "participant.updated"
 	ParticipantRemovedType = "participant.removed"
+	PlayerJoinedType       = "player.joined"
+	PlayerUpdatedType      = "player.updated"
+	PlayerRemovedType      = "player.removed"
 	AccessRevokedType      = "access.revoked"
 )
 

@@ -40,7 +40,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
    - Mocks are generated with mockery (`make mocks`), never hand-written.
 3. Explicit, typed errors
    - Services return sentinel errors from the service's `internal/errs` so handlers can map them.
-   - Services translate `gorm.ErrRecordNotFound` into a domain error; repositories pass GORM errors through unchanged.
+   - Repositories keep GORM to themselves: a lookup returns `database.TranslateError(err)`, so callers see `database.ErrNotFound` or `database.ErrDuplicate`, never a GORM error. Services map those to their domain errors and never import GORM.
 4. Context is a first-class parameter
    - `context.Context` comes first in any function crossing a layer or touching Postgres or Valkey.
    - Pull loggers from context with `logging.FromContext(ctx)`. Never call `slog.Default()` in a service or repository.

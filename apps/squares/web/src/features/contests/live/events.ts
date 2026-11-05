@@ -24,6 +24,9 @@ export type ContestEvent =
   | Envelope<'participant.joined', Player>
   | Envelope<'participant.updated', Player>
   | Envelope<'participant.removed', Player>
+  | Envelope<'player.joined', Player>
+  | Envelope<'player.updated', Player>
+  | Envelope<'player.removed', Player>
   | Envelope<'access.revoked', undefined>;
 
 export type ContestEventType = ContestEvent['type'];
@@ -40,6 +43,9 @@ const KNOWN_TYPES: Record<ContestEventType, true> = {
   'participant.joined': true,
   'participant.updated': true,
   'participant.removed': true,
+  'player.joined': true,
+  'player.updated': true,
+  'player.removed': true,
   'access.revoked': true,
 };
 

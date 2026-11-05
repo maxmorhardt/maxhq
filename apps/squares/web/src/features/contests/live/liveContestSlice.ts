@@ -123,7 +123,7 @@ type EventHandler<T extends ContestEventType> = (
 // one handler per event type; the mapped type makes a missing handler a compile error
 function applySnapshot(state: LiveContestState, snapshot: ContestSnapshot) {
   state.contest = snapshot.contest;
-  state.players = snapshot.participants ?? [];
+  state.players = snapshot.players ?? snapshot.participants ?? [];
   state.viewerId = snapshot.viewerId;
   state.activity = seedActivity(snapshot.contest, state.players);
 }
@@ -139,6 +139,9 @@ const eventHandlers: { [T in ContestEventType]: EventHandler<T> } = {
   'participant.joined': (state, { data }) => upsertPlayer(state, data),
   'participant.updated': (state, { data }) => upsertPlayer(state, data),
   'participant.removed': (state, { data }) => removePlayer(state, data.userId),
+  'player.joined': (state, { data }) => upsertPlayer(state, data),
+  'player.updated': (state, { data }) => upsertPlayer(state, data),
+  'player.removed': (state, { data }) => removePlayer(state, data.userId),
   'access.revoked': (state) => {
     state.ended = 'revoked';
   },

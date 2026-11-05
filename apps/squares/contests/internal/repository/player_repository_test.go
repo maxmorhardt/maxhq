@@ -44,17 +44,18 @@ func TestPlayerRepository_GetAllByContestID(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestPlayerRepository_GetTotalAllocatedSquares(t *testing.T) {
+func TestPlayerRepository_SetMaxSquares(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewPlayerRepository(gdb)
+	first, second := uuid.New(), uuid.New()
 
-	mock.ExpectQuery(`SUM\(max_squares\)`).
-		WillReturnRows(sqlmock.NewRows([]string{"coalesce"}).AddRow(25))
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "contest_players" SET "max_squares"=\$1,"updated_at"=\$2 WHERE id IN \(\$3,\$4\)`).
+		WithArgs(5, sqlmock.AnyArg(), first, second).
+		WillReturnResult(sqlmock.NewResult(0, 2))
+	mock.ExpectCommit()
 
-	total, err := repo.GetTotalAllocatedSquares(context.Background(), uuid.New())
-
-	require.NoError(t, err)
-	assert.Equal(t, 25, total)
+	require.NoError(t, repo.SetMaxSquares(context.Background(), []uuid.UUID{first, second}, 5))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

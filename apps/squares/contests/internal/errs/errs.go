@@ -49,6 +49,7 @@ var (
 	ErrNotEnoughSquares      = errors.New("that would give out more than the board's 100 squares")
 	ErrAlreadyPlayer         = errors.New("you are already a player in this contest")
 	ErrNotPlayer             = errors.New("not a player in this contest")
+	ErrPlayerNotFound        = errors.New("that player isn't in this contest")
 	ErrNotBanned             = errors.New("that person isn't banned from this contest")
 	ErrInsufficientRole      = errors.New("insufficient permissions for this action")
 	ErrCannotRemoveOwner     = errors.New("cannot remove the contest owner")

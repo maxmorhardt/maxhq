@@ -15,6 +15,7 @@ func SnapshotPath(contestID uuid.UUID, user string) string {
 type ContestSnapshot struct {
 	Contest      json.RawMessage `json:"contest"`
 	Participants json.RawMessage `json:"participants"`
+	Players      json.RawMessage `json:"players,omitempty"`
 	ViewerID     string          `json:"viewerId"`
 }
 

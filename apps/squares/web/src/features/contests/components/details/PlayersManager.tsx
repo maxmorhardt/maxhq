@@ -24,7 +24,7 @@ import {
   useRemovePlayerMutation,
   useUnbanPlayerMutation,
 } from '../../api';
-import type { ContestViewer } from '../../live/viewer';
+import { getSquarePool, type ContestViewer } from '../../live/viewer';
 import LeaveContestDialog from '../LeaveContestDialog';
 import EditPlayerDialog from './EditPlayerDialog';
 
@@ -79,9 +79,7 @@ export default function PlayersManager({ open, onClose, contest, players, viewer
   const totalSquares = contest.squares.length;
   const claimedBy = (userId: string) => contest.squares.filter((s) => s.owner === userId).length;
   const claimed = contest.squares.filter((s) => s.value.trim() !== '').length;
-  const allocated = players.reduce((sum, p) => sum + p.maxSquares, 0);
-  const unallocated = Math.max(0, totalSquares - allocated);
-  const waiting = players.filter((p) => p.role === 'player' && p.maxSquares === 0);
+  const { allocated, unallocated, waiting } = getSquarePool(contest, players);
   const fairShare = waiting.length ? Math.floor(unallocated / waiting.length) : 0;
   const count = Math.min(Math.max(allotCount ?? Math.min(5, fairShare), 1), Math.max(fairShare, 1));
 

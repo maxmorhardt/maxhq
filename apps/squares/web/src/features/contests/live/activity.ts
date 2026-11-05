@@ -92,8 +92,10 @@ export function describeEvent(
         ? entry('contest_status', `Contest status changed to ${getStatusLabel(event.data.status)}`)
         : null;
     case 'participant.joined':
+    case 'player.joined':
       return entry('player_added', `${event.data.displayName} joined the contest`);
     case 'participant.removed':
+    case 'player.removed':
       return entry(
         'player_removed',
         event.updatedBy === event.data.userId || event.updatedBy === SYSTEM_ACTOR

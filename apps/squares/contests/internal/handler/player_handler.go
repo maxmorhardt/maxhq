@@ -144,9 +144,10 @@ func (h *playerHandler) AllotSquares(c *gin.Context) {
 
 func (h *playerHandler) allotmentError(c *gin.Context, err error, fallback string) {
 	switch {
-	case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrNotPlayer):
+	case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrPlayerNotFound):
 		c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-	case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrPlayersLocked), errors.Is(err, errs.ErrInsufficientRole):
+	case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrPlayersLocked),
+		errors.Is(err, errs.ErrNotPlayer), errors.Is(err, errs.ErrInsufficientRole):
 		c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 	case errors.Is(err, errs.ErrNotEnoughSquares):
 		c.JSON(http.StatusBadRequest, api.NewAPIError(http.StatusBadRequest, api.Message(err), c))
@@ -178,9 +179,9 @@ func (h *playerHandler) RemovePlayer(c *gin.Context) {
 
 	if err := h.playerService.RemovePlayer(c.Request.Context(), contestID, c.Param("userId"), c.GetString(api.UserKey)); err != nil {
 		switch {
-		case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrNotPlayer):
+		case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrPlayerNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestFinalized):
+		case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrNotPlayer):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrCannotRemoveOwner):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))

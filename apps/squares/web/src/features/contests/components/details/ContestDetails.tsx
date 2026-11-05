@@ -4,7 +4,7 @@ import { fonts } from '../../../../app/theme';
 import type { Contest, Game, Player } from '../../../../types/contest';
 import { isInGameStatus } from '../../../../utils/contestStatus';
 import { formatKickoff } from '../../../../utils/game';
-import type { ContestViewer } from '../../live/viewer';
+import { getSquarePool, type ContestViewer } from '../../live/viewer';
 import ContestSidebarCard from '../sidebar/ContestSidebarCard';
 import SquareActions from './SquareActions';
 
@@ -36,20 +36,19 @@ function boardStatus(contest: Contest, game: Game | undefined, allFilled: boolea
 }
 
 function ownerWarning(contest: Contest, players: Player[]): string | null {
-  const others = players.filter((p) => p.role !== 'owner');
-  if (others.length === 0) {
+  if (!players.some((p) => p.role !== 'owner')) {
     return 'No one has joined yet. Share your invite link.';
   }
 
-  const waiting = others.filter((p) => p.maxSquares === 0).length;
+  const pool = getSquarePool(contest, players);
+  const waiting = pool.waiting.length;
   if (waiting > 0) {
     return waiting === 1
       ? '1 player has no squares yet. Give them squares in Players.'
       : `${waiting} players have no squares yet. Give them squares in Players.`;
   }
 
-  const allocated = players.reduce((sum, p) => sum + p.maxSquares, 0);
-  const unallocated = contest.squares.length - allocated;
+  const { unallocated } = pool;
   if (unallocated > 0) {
     return unallocated === 1
       ? '1 square isn’t given to anyone, so the board can’t fill.'

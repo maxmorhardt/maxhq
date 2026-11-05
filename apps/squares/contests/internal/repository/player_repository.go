@@ -12,7 +12,7 @@ import (
 type PlayerRepository interface {
 	GetByContestAndUser(ctx context.Context, contestID uuid.UUID, userID string) (*model.ContestPlayer, error)
 	GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestPlayer, error)
-	GetTotalAllocatedSquares(ctx context.Context, contestID uuid.UUID) (int, error)
+	SetMaxSquares(ctx context.Context, ids []uuid.UUID, maxSquares int) error
 	Create(ctx context.Context, player *model.ContestPlayer) error
 	Update(ctx context.Context, player *model.ContestPlayer) error
 	Delete(ctx context.Context, contestID uuid.UUID, userID string) error
@@ -49,15 +49,11 @@ func (r *playerRepository) GetAllByContestID(ctx context.Context, contestID uuid
 	return players, err
 }
 
-func (r *playerRepository) GetTotalAllocatedSquares(ctx context.Context, contestID uuid.UUID) (int, error) {
-	var total int
-	err := database.Conn(ctx, r.db).
+func (r *playerRepository) SetMaxSquares(ctx context.Context, ids []uuid.UUID, maxSquares int) error {
+	return database.Conn(ctx, r.db).
 		Model(&model.ContestPlayer{}).
-		Where("contest_id = ?", contestID).
-		Select("COALESCE(SUM(max_squares), 0)").
-		Row().
-		Scan(&total)
-	return total, err
+		Where("id IN ?", ids).
+		Update("max_squares", maxSquares).Error
 }
 
 func (r *playerRepository) Create(ctx context.Context, player *model.ContestPlayer) error {
