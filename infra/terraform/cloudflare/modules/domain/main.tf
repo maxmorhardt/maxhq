@@ -154,3 +154,14 @@ resource "cloudflare_ruleset" "redirect" {
     }
   }]
 }
+
+# cf-region, cf-ipcity and the rest reach the API's request logs
+resource "cloudflare_managed_transforms" "this" {
+  zone_id = local.zone_id
+
+  managed_request_headers = [{
+    id      = "add_visitor_location_headers"
+    enabled = true
+  }]
+  managed_response_headers = []
+}
