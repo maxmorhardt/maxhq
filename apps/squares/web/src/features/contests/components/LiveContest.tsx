@@ -67,7 +67,11 @@ export default function LiveContest({ contestId }: Props) {
         }
         // a private contest is off-limits once removed; a public one stays viewable
         const isPrivate = contest?.visibility === 'private';
-        showToast('You have been removed from this contest', isPrivate ? 'warning' : 'info');
+        if (isMe(viewerId, event.updatedBy)) {
+          showToast('You left this contest', 'info');
+        } else {
+          showToast('You have been removed from this contest', isPrivate ? 'warning' : 'info');
+        }
         if (isPrivate) {
           navigate('/contests');
         }

@@ -213,6 +213,17 @@ describe('LiveContest', () => {
     expect(toasts()[0]?.severity).toBe('info');
   });
 
+  it('says you left rather than were removed when you left on your own', () => {
+    const { snapshot, emit, toasts } = renderLive();
+    snapshot(makeContest({ visibility: 'private' }));
+    emit({
+      ...event('participant.removed', makePlayer({ userId: 'u_player' })),
+      updatedBy: 'u_player',
+    });
+    expect(toasts()[0]).toMatchObject({ message: 'You left this contest', severity: 'info' });
+    expect(navigate).toHaveBeenCalledWith('/contests');
+  });
+
   it('ignores other people being removed', () => {
     const { emit, toasts } = renderLive();
     emit(event('participant.removed', makePlayer({ userId: 'u_other' })));
