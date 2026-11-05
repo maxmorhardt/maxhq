@@ -24,9 +24,6 @@ func LoggerMiddleware(c *gin.Context) {
 		requestID = uuid.New().String()
 	}
 
-	cfRay := c.GetHeader("Cf-Ray")
-	cfCountry := c.GetHeader("Cf-Ipcountry")
-
 	route := c.FullPath()
 	if route == "" {
 		route = "unmatched"
@@ -37,8 +34,11 @@ func LoggerMiddleware(c *gin.Context) {
 		"method", c.Request.Method,
 		"route", route,
 		"client_ip", c.ClientIP(),
-		"cf_ray", cfRay,
-		"cf_country", cfCountry,
+		"cf_ray", c.GetHeader("Cf-Ray"),
+		"cf_country", c.GetHeader("Cf-Ipcountry"),
+		// set by Cloudflare's visitor location headers managed transform
+		"cf_region", c.GetHeader("Cf-Region"),
+		"cf_city", c.GetHeader("Cf-Ipcity"),
 	)
 
 	api.SetContextValue(c, api.RequestIDKey, requestID)
