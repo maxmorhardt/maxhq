@@ -43,9 +43,9 @@ describe('SquareActions', () => {
     await waitFor(() => expect(claim).toHaveBeenCalledWith({ contestId: 'c-1', count: 5 }));
   });
 
-  it('starts the owner at one square, since they often hold some back', () => {
-    renderActions(makeViewer({ isOwner: true, squaresLeft: 25 }));
-    expect(screen.getByRole('button', { name: 'Randomly Select Square' })).toBeInTheDocument();
+  it('starts the owner at every square they have left too', () => {
+    renderActions(makeViewer({ isOwner: true, squaresLeft: 25 }), 50);
+    expect(screen.getByRole('button', { name: 'Randomly Select 25' })).toBeInTheDocument();
   });
 
   it('claims the chosen number of random squares', async () => {

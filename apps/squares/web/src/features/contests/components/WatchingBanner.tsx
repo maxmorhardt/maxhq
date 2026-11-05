@@ -1,9 +1,8 @@
 import { VisibilityOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
-import type { Contest } from '../../../types/contest';
+import { WATCHING_MESSAGE, type Contest } from '../../../types/contest';
 import { isTerminalStatus } from '../../../utils/contestStatus';
 import type { ContestViewer } from '../live/viewer';
-import { WATCHING_MESSAGE } from '../watching';
 
 interface Props {
   contest: Contest;

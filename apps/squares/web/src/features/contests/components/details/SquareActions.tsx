@@ -24,10 +24,7 @@ export default function SquareActions({ contest, viewer, emptySquares }: Props) 
   const [requested, setRequested] = useState<number | null>(null);
 
   const maxFill = Math.min(viewer.squaresLeft, emptySquares);
-  const count = Math.min(
-    Math.max(requested ?? (viewer.isOwner ? 1 : maxFill), 1),
-    Math.max(maxFill, 1)
-  );
+  const count = Math.min(Math.max(requested ?? maxFill, 1), Math.max(maxFill, 1));
   const busy = claiming || clearing;
   const randomDisabled = busy || maxFill === 0;
 

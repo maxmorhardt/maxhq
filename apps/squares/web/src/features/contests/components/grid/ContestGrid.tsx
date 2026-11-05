@@ -2,11 +2,14 @@ import { Box, Paper, Typography } from '@mui/material';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { errorMessage, errorStatus } from '../../../../api/errors';
-import type { Contest, Square as SquareModel } from '../../../../types/contest';
+import {
+  WATCHING_MESSAGE,
+  type Contest,
+  type Square as SquareModel,
+} from '../../../../types/contest';
 import { useToast } from '../../../toast/useToast';
 import { useClaimSquareMutation } from '../../api';
 import type { ContestViewer } from '../../live/viewer';
-import { WATCHING_MESSAGE } from '../../watching';
 import { fonts, game } from '../../../../app/theme';
 import Square from './Square';
 import SquareDialog from './SquareDialog';

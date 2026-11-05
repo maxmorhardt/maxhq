@@ -1,4 +1,6 @@
 export const MAX_CONTEST_SQUARES = 100;
+export const WATCHING_MESSAGE =
+  "You're watching this contest. Ask the owner for the invite link to play.";
 
 export type ContestStatus = 'ACTIVE' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FINISHED' | 'DELETED';
 
