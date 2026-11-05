@@ -17,7 +17,7 @@ type ContestRepository interface {
 	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	LockStatus(ctx context.Context, id uuid.UUID) (model.ContestStatus, error)
 	GetByInviteToken(ctx context.Context, token string) (*model.Contest, error)
-	GetIDByInviteToken(ctx context.Context, token string) (uuid.UUID, error)
+	LockByInviteToken(ctx context.Context, token string) (*model.Contest, error)
 	GetInviteToken(ctx context.Context, id uuid.UUID) (string, error)
 	GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error)
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
@@ -64,12 +64,13 @@ func (r *contestRepository) GetByInviteToken(ctx context.Context, token string) 
 	return r.get(database.Conn(ctx, r.db), "invite_token = ?", token)
 }
 
-func (r *contestRepository) GetIDByInviteToken(ctx context.Context, token string) (uuid.UUID, error) {
+func (r *contestRepository) LockByInviteToken(ctx context.Context, token string) (*model.Contest, error) {
 	var contest model.Contest
 	err := database.Conn(ctx, r.db).
-		Select("id").
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Select("id", "status").
 		First(&contest, "invite_token = ? AND status != ?", token, model.ContestStatusDeleted).Error
-	return contest.ID, database.TranslateError(err)
+	return &contest, database.TranslateError(err)
 }
 
 func (r *contestRepository) GetInviteToken(ctx context.Context, id uuid.UUID) (string, error) {

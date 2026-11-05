@@ -204,3 +204,27 @@ func TestPlayers_JoinWaitsForARemovalInFlight(t *testing.T) {
 	require.NoError(t, tx.Commit())
 	assert.Equal(t, http.StatusForbidden, <-joined, "the join sees the ban once the removal commits")
 }
+
+func TestInvite_JoinRacingAResetIsRefused(t *testing.T) {
+	const owner = "race-reset-owner@squares.test"
+	contest, resp := createContest(t, owner, "Race Reset", 10)
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	old := inviteToken(t, owner, contest.ID)
+
+	tx, err := rawDB.Begin()
+	require.NoError(t, err)
+	_, err = tx.Exec(`UPDATE contests.contests SET invite_token = $1 WHERE id = $2`, "fresh-"+uuid.NewString(), contest.ID)
+	require.NoError(t, err)
+
+	joined := make(chan int, 1)
+	go func() { joined <- joinWith(t, "racer@squares.test", old).Status }()
+
+	select {
+	case status := <-joined:
+		t.Fatalf("join finished with %d while the reset still held the contest", status)
+	case <-time.After(500 * time.Millisecond):
+	}
+
+	require.NoError(t, tx.Commit())
+	assert.Equal(t, http.StatusNotFound, <-joined, "the old link stops working the moment the reset commits")
+}

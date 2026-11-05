@@ -181,6 +181,7 @@ describe('PlayersManager', () => {
     const { store } = renderManager();
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Pat P.' }));
+    expect(screen.getByText(/Their squares go back on the board/)).toBeInTheDocument();
     expect(
       screen.getByText(/can't rejoin with the invite link until you unban them/)
     ).toBeInTheDocument();
@@ -232,6 +233,21 @@ describe('PlayersManager', () => {
     const { store } = renderManager();
     fireEvent.click(screen.getByRole('button', { name: 'Unban Gail Gone' }));
     await waitFor(() => expect(store.getState().toast.messages[0]?.message).toBe('down'));
+  });
+
+  it('says a removal after kickoff leaves their squares on the board', () => {
+    renderManager({ contest: boardWithClaims({ status: 'Q2' }) });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Pat P.' }));
+    expect(screen.getByText(/their squares stay on the board without them/)).toBeInTheDocument();
+  });
+
+  it('says so when everyone already has squares', async () => {
+    api.useAllotSquaresMutation.mockReturnValue(mockMutation([]));
+    const { store } = renderManager();
+    fireEvent.click(screen.getByRole('button', { name: 'Give Each' }));
+    await waitFor(() =>
+      expect(store.getState().toast.messages[0]?.message).toBe('Everyone already has squares')
+    );
   });
 
   it('stops edits after kickoff but still allows removals', () => {

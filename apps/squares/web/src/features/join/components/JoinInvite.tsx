@@ -29,7 +29,12 @@ export default function JoinInvite({ token }: Props) {
       .unwrap()
       .then((player) => {
         trackConversion('joinedContest');
-        showToast(`You joined ${preview.contestName}. The owner will give you squares.`, 'success');
+        showToast(
+          preview.status === 'ACTIVE'
+            ? `You joined ${preview.contestName}. The owner will give you squares.`
+            : `You joined ${preview.contestName}. The game has started, so you can watch.`,
+          'success'
+        );
         navigate(`/contests/${player.contestId}`, { replace: true });
       })
       .catch((err: unknown) => {

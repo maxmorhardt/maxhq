@@ -106,7 +106,14 @@ export default function PlayersManager({ open, onClose, contest, players, viewer
   const handleAllot = async () => {
     try {
       const given = await allotSquares({ contestId: contest.id, maxSquares: count }).unwrap();
-      showToast(`Gave ${plural(count, 'square')} to ${plural(given.length, 'player')}`, 'success');
+      if (given.length === 0) {
+        showToast('Everyone already has squares', 'info');
+      } else {
+        showToast(
+          `Gave ${plural(count, 'square')} to ${plural(given.length, 'player')}`,
+          'success'
+        );
+      }
       setAllotCount(null);
     } catch (err) {
       showToast(errorMessage(err, 'Could not give out squares'), 'error');
@@ -319,8 +326,11 @@ export default function PlayersManager({ open, onClose, contest, players, viewer
         loading={removal.isLoading}
         error={removal.error ? errorMessage(removal.error, 'Failed to remove player') : null}
       >
-        Remove <strong>{removing?.displayName}</strong>? They lose their squares and can&apos;t
-        rejoin with the invite link until you unban them.
+        Remove <strong>{removing?.displayName}</strong>?{' '}
+        {contest.status === 'ACTIVE'
+          ? 'Their squares go back on the board'
+          : 'The game has started, so their squares stay on the board without them'}
+        , and they can&apos;t rejoin with the invite link until you unban them.
       </ConfirmDialog>
 
       {/* leaving closes the whole manager */}

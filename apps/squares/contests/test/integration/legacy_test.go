@@ -85,10 +85,14 @@ func TestLegacy_ExistingContestsKeepWorking(t *testing.T) {
 	}
 }
 
-func TestLegacy_ExistingContestsGetAnInviteLinkAndViewersBecomePlayers(t *testing.T) {
+func TestLegacy_ExistingContestsKeepTheirLiveInviteLinkAndViewersBecomePlayers(t *testing.T) {
 	var token string
 	require.NoError(t, rawDB.QueryRow(`SELECT invite_token FROM contests.contests WHERE id = $1`, legacyContestID).Scan(&token))
-	assert.Len(t, token, 64)
+	assert.Equal(t, "live-token", token, "a link already shared keeps working")
+
+	var otherToken string
+	require.NoError(t, rawDB.QueryRow(`SELECT invite_token FROM contests.contests WHERE id <> $1 LIMIT 1`, legacyContestID).Scan(&otherToken))
+	assert.Len(t, otherToken, 64, "a contest without a live link gets a fresh one")
 
 	var role string
 	var maxSquares int

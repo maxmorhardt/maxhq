@@ -24,6 +24,7 @@ vi.mock('react-router', async () => ({
 const preview = {
   contestId: 'c-1',
   contestName: 'Office Pool',
+  status: 'ACTIVE',
 };
 
 describe('JoinInvite', () => {
@@ -41,6 +42,19 @@ describe('JoinInvite', () => {
       'You joined Office Pool. The owner will give you squares.'
     );
     expect(ads.trackConversion).toHaveBeenCalledWith('joinedContest');
+  });
+
+  it('tells someone joining after kickoff that they can watch', async () => {
+    api.usePreviewInviteQuery.mockReturnValue({
+      data: { ...preview, status: 'Q2' },
+      error: undefined,
+    });
+    const { store } = renderWithProviders(<JoinInvite token="tok" />);
+    await waitFor(() =>
+      expect(store.getState().toast.messages[0]?.message).toBe(
+        'You joined Office Pool. The game has started, so you can watch.'
+      )
+    );
   });
 
   it('waits for the invite to load', () => {

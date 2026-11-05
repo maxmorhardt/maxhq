@@ -138,26 +138,18 @@ func invitePreview(contest *model.Contest, ownerName string) *model.InvitePrevie
 func (s *inviteService) Join(ctx context.Context, token, user, displayName string) (*model.ContestPlayer, error) {
 	log := logging.FromContext(ctx)
 
-	contestID, err := s.contestRepo.GetIDByInviteToken(ctx, token)
-	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			return nil, errs.ErrInviteNotFound
-		}
-		log.Error("failed to get contest by invite token", "error", err)
-		return nil, errs.ErrDatabaseUnavailable
-	}
-
 	player := &model.ContestPlayer{
-		ContestID:   contestID,
 		UserID:      user,
 		DisplayName: displayName,
 		Role:        model.PlayerRolePlayer,
 	}
 
-	err = s.tx.Do(ctx, func(ctx context.Context) error {
-		if lockErr := s.checkJoinable(ctx, contestID, user); lockErr != nil {
+	err := s.tx.Do(ctx, func(ctx context.Context) error {
+		contestID, lockErr := s.lockJoinable(ctx, token, user)
+		if lockErr != nil {
 			return lockErr
 		}
+		player.ContestID = contestID
 
 		if createErr := s.playerRepo.Create(ctx, player); createErr != nil {
 			return createErr
@@ -173,47 +165,47 @@ func (s *inviteService) Join(ctx context.Context, token, user, displayName strin
 	if err != nil {
 		switch {
 		case errors.Is(err, database.ErrDuplicate):
-			log.Warn("user already a player", "contest_id", contestID, "user", user)
+			log.Warn("user already a player", "contest_id", player.ContestID, "user", user)
 			return nil, errs.ErrAlreadyPlayer
 		case errors.Is(err, errs.ErrInviteNotFound), errors.Is(err, errs.ErrContestFinalized),
 			errors.Is(err, errs.ErrBannedFromContest), errors.Is(err, errs.ErrDatabaseUnavailable):
 			return nil, err
 		}
-		log.Error("failed to join contest", "contest_id", contestID, "user", user, "error", err)
+		log.Error("failed to join contest", "contest_id", player.ContestID, "user", user, "error", err)
 		return nil, err
 	}
 
 	metrics.IncPlayerJoined(string(model.PlayerRolePlayer))
-	log.Info("joined contest", "contest_id", contestID, "user", user)
+	log.Info("joined contest", "contest_id", player.ContestID, "user", user)
 	return player, nil
 }
 
-func (s *inviteService) checkJoinable(ctx context.Context, contestID uuid.UUID, user string) error {
+func (s *inviteService) lockJoinable(ctx context.Context, token, user string) (uuid.UUID, error) {
 	log := logging.FromContext(ctx)
 
-	status, err := s.contestRepo.LockStatus(ctx, contestID)
+	contest, err := s.contestRepo.LockByInviteToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return errs.ErrInviteNotFound
+			return uuid.Nil, errs.ErrInviteNotFound
 		}
-		log.Error("failed to lock contest", "contest_id", contestID, "error", err)
-		return errs.ErrDatabaseUnavailable
+		log.Error("failed to lock contest by invite token", "error", err)
+		return uuid.Nil, errs.ErrDatabaseUnavailable
 	}
-	if status.IsTerminal() {
-		log.Warn("cannot join a finalized contest", "contest_id", contestID, "status", status)
-		return errs.ErrContestFinalized
+	if contest.Status.IsTerminal() {
+		log.Warn("cannot join a finalized contest", "contest_id", contest.ID, "status", contest.Status)
+		return uuid.Nil, errs.ErrContestFinalized
 	}
 
-	banned, err := s.banRepo.Exists(ctx, contestID, user)
+	banned, err := s.banRepo.Exists(ctx, contest.ID, user)
 	if err != nil {
-		log.Error("failed to check for a ban", "contest_id", contestID, "error", err)
-		return errs.ErrDatabaseUnavailable
+		log.Error("failed to check for a ban", "contest_id", contest.ID, "error", err)
+		return uuid.Nil, errs.ErrDatabaseUnavailable
 	}
 	if banned {
-		log.Warn("banned user tried to rejoin", "contest_id", contestID, "user", user)
-		return errs.ErrBannedFromContest
+		log.Warn("banned user tried to rejoin", "contest_id", contest.ID, "user", user)
+		return uuid.Nil, errs.ErrBannedFromContest
 	}
-	return nil
+	return contest.ID, nil
 }
 
 func (s *inviteService) contestByToken(ctx context.Context, token string) (*model.Contest, error) {

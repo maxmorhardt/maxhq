@@ -9,6 +9,13 @@ UPDATE contest_players SET role = 'player' WHERE role IN ('participant', 'viewer
 ALTER TABLE contest_players DROP COLUMN IF EXISTS invite_id;
 
 ALTER TABLE contests ADD COLUMN IF NOT EXISTS invite_token text;
+UPDATE contests c SET invite_token = i.token
+FROM (
+    SELECT DISTINCT ON (contest_id) contest_id, token FROM contest_invites
+    WHERE (expires_at IS NULL OR expires_at > now()) AND (max_uses = 0 OR uses < max_uses)
+    ORDER BY contest_id, created_at DESC
+) i
+WHERE c.id = i.contest_id AND c.invite_token IS NULL;
 UPDATE contests SET invite_token = replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '')
 WHERE invite_token IS NULL;
 ALTER TABLE contests ALTER COLUMN invite_token SET NOT NULL;
