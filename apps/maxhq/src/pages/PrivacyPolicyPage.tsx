@@ -15,6 +15,8 @@ const sections: LegalSection[] = [
       'Contest information (squares you claim, contests and tournaments you create or join)',
       'Usage data (how you interact with our Services)',
       'Device information (browser type, IP address, device identifiers)',
+      'Approximate location (country, region, and city) derived from your IP address',
+      'How you found us (the website or ad campaign that referred you)',
     ],
   },
   {
@@ -34,7 +36,7 @@ const sections: LegalSection[] = [
     content: [
       'We do not sell your personal information. We may share your information with:',
       'Other players in a contest you join, who see your first name and last initial; the contest owner also sees your full name. Your email address is never shown to other users.',
-      'Service providers who assist in operating our platform, including our logging and monitoring provider, which receives server logs that include your email address',
+      'Service providers who assist in operating our platform, including our logging and monitoring provider, which receives server logs and in-app usage and error data that include your email address',
       'Legal authorities when required by law',
       'Business partners with your consent',
     ],
@@ -86,7 +88,7 @@ export default function PrivacyPolicyPage() {
         canonical="https://maxhq.io/privacy-policy"
       />
 
-      <LegalPage title="Privacy Policy" lastUpdated="November 1, 2026" sections={sections} />
+      <LegalPage title="Privacy Policy" lastUpdated="November 4, 2026" sections={sections} />
     </>
   );
 }

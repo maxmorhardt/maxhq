@@ -7,7 +7,7 @@ created by hand.
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/README.md](https://github.com/maxmorhardt/gitops/blob/main/infra/postgres/README.md) |
-| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod tunnel, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, and the edge-cache rule for `cached_hosts`. Also the prod Cloudflare Tunnel and its ingress rules (`tunnel.tf`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
+| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod tunnel, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, the edge-cache rule for `cached_hosts`, and the visitor location headers (`cf-region`, `cf-ipcity`) the API logs. Also the prod Cloudflare Tunnel and its ingress rules (`tunnel.tf`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges), tag rulesets in maxhq and workflows (a release tag can't be moved or deleted), and deployment environments (`production` waits for approval) |
 
 ## Credentials
@@ -15,7 +15,7 @@ created by hand.
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`) |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, and Account Cloudflare Tunnel: Edit, plus `terraform.tfvars` with `dev_ips` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, Managed headers: Edit, Account Rulesets: Read, and Account Cloudflare Tunnel: Edit, plus `terraform.tfvars` with `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 
 In CI, as repository secrets:
