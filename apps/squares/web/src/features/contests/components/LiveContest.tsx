@@ -61,7 +61,6 @@ export default function LiveContest({ contestId }: Props) {
           setCelebration(event.data);
         }
         break;
-      case 'participant.removed':
       case 'player.removed': {
         if (!isMe(viewerId, event.data.userId)) {
           break;

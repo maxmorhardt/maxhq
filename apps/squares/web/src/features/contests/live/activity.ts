@@ -91,10 +91,8 @@ export function describeEvent(
       return before.status && event.data.status !== before.status
         ? entry('contest_status', `Contest status changed to ${getStatusLabel(event.data.status)}`)
         : null;
-    case 'participant.joined':
     case 'player.joined':
       return entry('player_added', `${event.data.displayName} joined the contest`);
-    case 'participant.removed':
     case 'player.removed':
       return entry(
         'player_removed',

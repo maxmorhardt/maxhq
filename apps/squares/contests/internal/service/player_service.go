@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"slices"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/errs"
@@ -224,17 +226,21 @@ func (s *playerService) AllotSquares(ctx context.Context, contestID uuid.UUID, m
 			return nil
 		}
 
-		if err := checkPool(ctx, contestID, players, maxSquares*len(allotted)); err != nil {
-			return err
+		if poolErr := checkPool(ctx, contestID, players, maxSquares*len(allotted)); poolErr != nil {
+			return poolErr
 		}
 
-		if err := s.playerRepo.SetMaxSquares(ctx, ids, maxSquares); err != nil {
+		now := time.Now()
+		updated, err := s.playerRepo.SetMaxSquares(ctx, contestID, ids, maxSquares, now)
+		if err != nil {
 			log.Error("failed to allot squares", "contest_id", contestID, "players", len(ids), "error", err)
-			return err
+			return errs.ErrDatabaseUnavailable
 		}
 
+		allotted = onlyUpdated(allotted, updated)
 		for i := range allotted {
 			allotted[i].MaxSquares = maxSquares
+			allotted[i].UpdatedAt = now
 			if err := s.events.PublishPlayerUpdated(ctx, contestID, user, &allotted[i]); err != nil {
 				return err
 			}
@@ -247,6 +253,16 @@ func (s *playerService) AllotSquares(ctx context.Context, contestID uuid.UUID, m
 
 	log.Info("allotted squares", "contest_id", contestID, "players", len(allotted), "max_squares", maxSquares)
 	return allotted, nil
+}
+
+func onlyUpdated(players []model.ContestPlayer, updated []uuid.UUID) []model.ContestPlayer {
+	kept := make([]model.ContestPlayer, 0, len(updated))
+	for i := range players {
+		if slices.Contains(updated, players[i].ID) {
+			kept = append(kept, players[i])
+		}
+	}
+	return kept
 }
 
 func (s *playerService) lockContest(ctx context.Context, contestID uuid.UUID) (model.ContestStatus, error) {
@@ -315,11 +331,12 @@ func (s *playerService) trimSquares(ctx context.Context, contestID uuid.UUID, us
 func (s *playerService) RemovePlayer(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error {
 	log := logging.FromContext(ctx)
 
-	targetUserID, leaving, authErr := s.removalTarget(ctx, contestID, targetUserID, user)
+	leaving, authErr := s.removalAccess(ctx, contestID, targetUserID, user)
 	if authErr != nil {
 		return authErr
 	}
 
+	var player *model.ContestPlayer
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		// the contest lock waits out in-flight claims and blocks new ones and kickoff, so the squares loaded here are final
 		status, err := s.lockContest(ctx, contestID)
@@ -327,34 +344,28 @@ func (s *playerService) RemovePlayer(ctx context.Context, contestID uuid.UUID, t
 			return err
 		}
 
-		player, err := s.playerRepo.GetByContestAndUser(ctx, contestID, targetUserID)
-		if err != nil {
-			if errors.Is(err, database.ErrNotFound) {
-				return errs.ErrPlayerNotFound
-			}
-			log.Error("failed to get player", "contest_id", contestID, "user_id", targetUserID, "error", err)
-			return errs.ErrDatabaseUnavailable
+		if player, err = s.removalTarget(ctx, contestID, targetUserID, user, leaving); err != nil {
+			return err
 		}
-
 		if player.Role == model.PlayerRoleOwner {
 			return errs.ErrCannotRemoveOwner
 		}
 
 		// before kickoff the squares go back to the pool. after kickoff they are ghosted
 		ghost := status != model.ContestStatusActive
-		if releaseErr := s.releasePlayerSquares(ctx, contestID, targetUserID, user, ghost); releaseErr != nil {
-			log.Error("failed to release player squares", "contest_id", contestID, "user_id", targetUserID, "ghost", ghost, "error", releaseErr)
+		if releaseErr := s.releasePlayerSquares(ctx, contestID, player.UserID, user, ghost); releaseErr != nil {
+			log.Error("failed to release player squares", "contest_id", contestID, "user_id", player.UserID, "ghost", ghost, "error", releaseErr)
 			return releaseErr
 		}
 
-		if deleteErr := s.playerRepo.Delete(ctx, contestID, targetUserID); deleteErr != nil {
-			log.Error("failed to delete player", "contest_id", contestID, "user_id", targetUserID, "error", deleteErr)
+		if deleteErr := s.playerRepo.Delete(ctx, contestID, player.UserID); deleteErr != nil {
+			log.Error("failed to delete player", "contest_id", contestID, "user_id", player.UserID, "error", deleteErr)
 			return deleteErr
 		}
 
 		if !leaving {
-			if banErr := s.banRepo.Create(ctx, &model.ContestBan{ContestID: contestID, UserID: targetUserID}); banErr != nil {
-				log.Error("failed to ban removed player", "contest_id", contestID, "user_id", targetUserID, "error", banErr)
+			if banErr := s.banRepo.Create(ctx, &model.ContestBan{ContestID: contestID, UserID: player.UserID}); banErr != nil {
+				log.Error("failed to ban removed player", "contest_id", contestID, "user_id", player.UserID, "error", banErr)
 				return banErr
 			}
 		}
@@ -410,30 +421,39 @@ func (s *playerService) Unban(ctx context.Context, contestID uuid.UUID, targetUs
 }
 
 // players can always leave; removing someone else takes a manager and bans them
-func (s *playerService) removalTarget(ctx context.Context, contestID uuid.UUID, target, user string) (resolved string, leaving bool, err error) {
+func (s *playerService) removalAccess(ctx context.Context, contestID uuid.UUID, target, user string) (bool, error) {
 	if target != pseudonym.Of(user) {
-		if authErr := s.Authorize(ctx, contestID, user, ActionManagePlayers); authErr != nil {
-			return "", false, authErr
-		}
-		players, loadErr := s.loadPlayers(ctx, contestID)
-		if loadErr != nil {
-			return "", false, loadErr
-		}
-		player, findErr := findPlayer(players, target)
-		if findErr != nil {
-			return "", false, findErr
-		}
-		return player.UserID, false, nil
+		return false, s.Authorize(ctx, contestID, user, ActionManagePlayers)
 	}
 
-	if _, lookupErr := s.playerRepo.GetByContestAndUser(ctx, contestID, user); lookupErr != nil {
-		if errors.Is(lookupErr, database.ErrNotFound) {
-			return "", false, errs.ErrNotPlayer
+	if _, err := s.playerRepo.GetByContestAndUser(ctx, contestID, user); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return false, errs.ErrNotPlayer
 		}
-		logging.FromContext(ctx).Error("failed to get player", "contest_id", contestID, "error", lookupErr)
-		return "", false, errs.ErrDatabaseUnavailable
+		logging.FromContext(ctx).Error("failed to get player", "contest_id", contestID, "error", err)
+		return false, errs.ErrDatabaseUnavailable
 	}
-	return user, true, nil
+	return true, nil
+}
+
+func (s *playerService) removalTarget(ctx context.Context, contestID uuid.UUID, target, user string, leaving bool) (*model.ContestPlayer, error) {
+	if !leaving {
+		players, err := s.loadPlayers(ctx, contestID)
+		if err != nil {
+			return nil, err
+		}
+		return findPlayer(players, target)
+	}
+
+	player, err := s.playerRepo.GetByContestAndUser(ctx, contestID, user)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return nil, errs.ErrNotPlayer
+		}
+		logging.FromContext(ctx).Error("failed to get player", "contest_id", contestID, "error", err)
+		return nil, errs.ErrDatabaseUnavailable
+	}
+	return player, nil
 }
 
 func (s *playerService) loadPlayers(ctx context.Context, contestID uuid.UUID) ([]model.ContestPlayer, error) {

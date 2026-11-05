@@ -8,6 +8,8 @@ import (
 	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	mock "github.com/stretchr/testify/mock"
 
+	time "time"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -238,22 +240,34 @@ func (_c *PlayerRepository_GetByContestAndUser_Call) RunAndReturn(run func(conte
 	return _c
 }
 
-// SetMaxSquares provides a mock function with given fields: ctx, ids, maxSquares
-func (_m *PlayerRepository) SetMaxSquares(ctx context.Context, ids []uuid.UUID, maxSquares int) error {
-	ret := _m.Called(ctx, ids, maxSquares)
+// SetMaxSquares provides a mock function with given fields: ctx, contestID, ids, maxSquares, at
+func (_m *PlayerRepository) SetMaxSquares(ctx context.Context, contestID uuid.UUID, ids []uuid.UUID, maxSquares int, at time.Time) ([]uuid.UUID, error) {
+	ret := _m.Called(ctx, contestID, ids, maxSquares, at)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SetMaxSquares")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []uuid.UUID, int) error); ok {
-		r0 = rf(ctx, ids, maxSquares)
+	var r0 []uuid.UUID
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) ([]uuid.UUID, error)); ok {
+		return rf(ctx, contestID, ids, maxSquares, at)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) []uuid.UUID); ok {
+		r0 = rf(ctx, contestID, ids, maxSquares, at)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]uuid.UUID)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) error); ok {
+		r1 = rf(ctx, contestID, ids, maxSquares, at)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // PlayerRepository_SetMaxSquares_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetMaxSquares'
@@ -263,25 +277,27 @@ type PlayerRepository_SetMaxSquares_Call struct {
 
 // SetMaxSquares is a helper method to define mock.On call
 //   - ctx context.Context
+//   - contestID uuid.UUID
 //   - ids []uuid.UUID
 //   - maxSquares int
-func (_e *PlayerRepository_Expecter) SetMaxSquares(ctx interface{}, ids interface{}, maxSquares interface{}) *PlayerRepository_SetMaxSquares_Call {
-	return &PlayerRepository_SetMaxSquares_Call{Call: _e.mock.On("SetMaxSquares", ctx, ids, maxSquares)}
+//   - at time.Time
+func (_e *PlayerRepository_Expecter) SetMaxSquares(ctx interface{}, contestID interface{}, ids interface{}, maxSquares interface{}, at interface{}) *PlayerRepository_SetMaxSquares_Call {
+	return &PlayerRepository_SetMaxSquares_Call{Call: _e.mock.On("SetMaxSquares", ctx, contestID, ids, maxSquares, at)}
 }
 
-func (_c *PlayerRepository_SetMaxSquares_Call) Run(run func(ctx context.Context, ids []uuid.UUID, maxSquares int)) *PlayerRepository_SetMaxSquares_Call {
+func (_c *PlayerRepository_SetMaxSquares_Call) Run(run func(ctx context.Context, contestID uuid.UUID, ids []uuid.UUID, maxSquares int, at time.Time)) *PlayerRepository_SetMaxSquares_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]uuid.UUID), args[2].(int))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].([]uuid.UUID), args[3].(int), args[4].(time.Time))
 	})
 	return _c
 }
 
-func (_c *PlayerRepository_SetMaxSquares_Call) Return(_a0 error) *PlayerRepository_SetMaxSquares_Call {
-	_c.Call.Return(_a0)
+func (_c *PlayerRepository_SetMaxSquares_Call) Return(_a0 []uuid.UUID, _a1 error) *PlayerRepository_SetMaxSquares_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *PlayerRepository_SetMaxSquares_Call) RunAndReturn(run func(context.Context, []uuid.UUID, int) error) *PlayerRepository_SetMaxSquares_Call {
+func (_c *PlayerRepository_SetMaxSquares_Call) RunAndReturn(run func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) ([]uuid.UUID, error)) *PlayerRepository_SetMaxSquares_Call {
 	_c.Call.Return(run)
 	return _c
 }

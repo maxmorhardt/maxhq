@@ -2,17 +2,19 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type PlayerRepository interface {
 	GetByContestAndUser(ctx context.Context, contestID uuid.UUID, userID string) (*model.ContestPlayer, error)
 	GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestPlayer, error)
-	SetMaxSquares(ctx context.Context, ids []uuid.UUID, maxSquares int) error
+	SetMaxSquares(ctx context.Context, contestID uuid.UUID, ids []uuid.UUID, maxSquares int, at time.Time) ([]uuid.UUID, error)
 	Create(ctx context.Context, player *model.ContestPlayer) error
 	Update(ctx context.Context, player *model.ContestPlayer) error
 	Delete(ctx context.Context, contestID uuid.UUID, userID string) error
@@ -49,11 +51,22 @@ func (r *playerRepository) GetAllByContestID(ctx context.Context, contestID uuid
 	return players, err
 }
 
-func (r *playerRepository) SetMaxSquares(ctx context.Context, ids []uuid.UUID, maxSquares int) error {
-	return database.Conn(ctx, r.db).
-		Model(&model.ContestPlayer{}).
-		Where("id IN ?", ids).
-		Update("max_squares", maxSquares).Error
+func (r *playerRepository) SetMaxSquares(ctx context.Context, contestID uuid.UUID, ids []uuid.UUID, maxSquares int, at time.Time) ([]uuid.UUID, error) {
+	var updated []model.ContestPlayer
+	err := database.Conn(ctx, r.db).
+		Model(&updated).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Where("contest_id = ? AND id IN ? AND max_squares = 0", contestID, ids).
+		Updates(map[string]any{"max_squares": maxSquares, "updated_at": at}).Error
+	if err != nil {
+		return nil, err
+	}
+
+	updatedIDs := make([]uuid.UUID, 0, len(updated))
+	for i := range updated {
+		updatedIDs = append(updatedIDs, updated[i].ID)
+	}
+	return updatedIDs, nil
 }
 
 func (r *playerRepository) Create(ctx context.Context, player *model.ContestPlayer) error {

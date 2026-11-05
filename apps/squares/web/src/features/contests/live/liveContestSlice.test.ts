@@ -113,27 +113,13 @@ describe('liveContestSlice events', () => {
   });
 
   it('adds, updates, and removes players', () => {
-    let state = receive(
-      live(),
-      event('participant.joined', makePlayer({ id: 'p-2', userId: 'u_b' }))
-    );
-    expect(state.players).toHaveLength(2);
-    state = receive(
-      state,
-      event('participant.updated', makePlayer({ id: 'p-2', userId: 'u_b', maxSquares: 9 }))
-    );
-    expect(state.players).toHaveLength(2);
-    expect(state.players.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
-    state = receive(state, event('participant.removed', makePlayer({ userId: 'u_b' })));
-    expect(state.players.map((p) => p.userId)).toEqual(['u_player']);
-  });
-
-  it('handles the player event names the same way', () => {
     let state = receive(live(), event('player.joined', makePlayer({ id: 'p-2', userId: 'u_b' })));
+    expect(state.players).toHaveLength(2);
     state = receive(
       state,
       event('player.updated', makePlayer({ id: 'p-2', userId: 'u_b', maxSquares: 9 }))
     );
+    expect(state.players).toHaveLength(2);
     expect(state.players.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
     state = receive(state, event('player.removed', makePlayer({ userId: 'u_b' })));
     expect(state.players.map((p) => p.userId)).toEqual(['u_player']);
@@ -223,7 +209,7 @@ describe('liveContestSlice write responses', () => {
 
   it('applies squares given to everyone at once', () => {
     const newcomer = makePlayer({ id: 'p-2', userId: 'u_new', maxSquares: 0 });
-    let state = receive(live(), event('participant.joined', newcomer));
+    let state = receive(live(), event('player.joined', newcomer));
     state = liveContestReducer(state, fulfilled('allotSquares', [{ ...newcomer, maxSquares: 5 }]));
     expect(state.players.find((p) => p.id === 'p-2')?.maxSquares).toBe(5);
   });

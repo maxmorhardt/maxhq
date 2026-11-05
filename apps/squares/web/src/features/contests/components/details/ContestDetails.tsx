@@ -40,15 +40,13 @@ function ownerWarning(contest: Contest, players: Player[]): string | null {
     return 'No one has joined yet. Share your invite link.';
   }
 
-  const pool = getSquarePool(contest, players);
-  const waiting = pool.waiting.length;
-  if (waiting > 0) {
-    return waiting === 1
+  const { waiting, unallocated } = getSquarePool(contest, players);
+  if (waiting.length > 0) {
+    return waiting.length === 1
       ? '1 player has no squares yet. Give them squares in Players.'
-      : `${waiting} players have no squares yet. Give them squares in Players.`;
+      : `${waiting.length} players have no squares yet. Give them squares in Players.`;
   }
 
-  const { unallocated } = pool;
   if (unallocated > 0) {
     return unallocated === 1
       ? '1 square isn’t given to anyone, so the board can’t fill.'

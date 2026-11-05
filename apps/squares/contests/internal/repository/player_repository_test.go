@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
@@ -47,15 +48,19 @@ func TestPlayerRepository_GetAllByContestID(t *testing.T) {
 func TestPlayerRepository_SetMaxSquares(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewPlayerRepository(gdb)
-	first, second := uuid.New(), uuid.New()
+	contestID, first, second := uuid.New(), uuid.New(), uuid.New()
+	at := time.Now()
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`UPDATE "contest_players" SET "max_squares"=\$1,"updated_at"=\$2 WHERE id IN \(\$3,\$4\)`).
-		WithArgs(5, sqlmock.AnyArg(), first, second).
-		WillReturnResult(sqlmock.NewResult(0, 2))
+	mock.ExpectQuery(`UPDATE "contest_players" SET "max_squares"=\$1,"updated_at"=\$2 WHERE contest_id = \$3 AND id IN \(\$4,\$5\) AND max_squares = 0 RETURNING "id"`).
+		WithArgs(5, at, contestID, first, second).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(first))
 	mock.ExpectCommit()
 
-	require.NoError(t, repo.SetMaxSquares(context.Background(), []uuid.UUID{first, second}, 5))
+	updated, err := repo.SetMaxSquares(context.Background(), contestID, []uuid.UUID{first, second}, 5, at)
+
+	require.NoError(t, err)
+	assert.Equal(t, []uuid.UUID{first}, updated, "a player who already had squares, or left, isn't reported")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
