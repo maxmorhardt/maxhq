@@ -416,6 +416,7 @@ func (s *playerService) Unban(ctx context.Context, contestID uuid.UUID, targetUs
 		return errs.ErrDatabaseUnavailable
 	}
 
+	metrics.IncPlayerUnbanned()
 	log.Info("player unbanned", "contest_id", contestID, "target_user", targetUserID)
 	return nil
 }

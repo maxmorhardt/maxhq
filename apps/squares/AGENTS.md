@@ -47,6 +47,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 5. Migrations own the schema
    - Changing a model means adding a migration in the owning service's `internal/migrations`.
    - Migrations are embedded and applied at startup with `search_path` set to the service's schema.
+   - Grafana's Contests dashboard (`gitops/infra/monitoring/dashboards/contests.json`) queries the `contests` and `accounts` tables directly. Renaming or dropping a table or column means updating it in the same round.
 6. Identity stays a plain value
    - Handlers read identity with `c.GetString(api.UserKey)` and pass it down as a `string`. Services never depend on `*gin.Context`.
 7. Valkey outages degrade, they do not fail requests

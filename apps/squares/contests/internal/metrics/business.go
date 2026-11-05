@@ -57,6 +57,20 @@ var (
 		},
 	)
 
+	playersUnbannedTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "players_unbanned_total",
+			Help: "Total number of players unbanned from a contest",
+		},
+	)
+
+	inviteLinksResetTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "invite_links_reset_total",
+			Help: "Total number of contest invite links reset",
+		},
+	)
+
 	squaresClaimedTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "squares_claimed_total",
@@ -81,6 +95,8 @@ func init() {
 		limitsReachedTotal,
 		playersJoinedTotal,
 		playersRemovedTotal,
+		playersUnbannedTotal,
+		inviteLinksResetTotal,
 		squaresClaimedTotal,
 		squaresClearedTotal,
 	)
@@ -112,6 +128,14 @@ func IncPlayerJoined(role string) {
 
 func IncPlayerRemoved() {
 	playersRemovedTotal.Inc()
+}
+
+func IncPlayerUnbanned() {
+	playersUnbannedTotal.Inc()
+}
+
+func IncInviteLinkReset() {
+	inviteLinksResetTotal.Inc()
 }
 
 func IncSquareClaimed() {
