@@ -55,9 +55,14 @@ export function useAuthSession() {
     wasAuthenticated.current = auth.isAuthenticated;
   }, [auth.isAuthenticated, auth.isLoading, dispatch]);
 
+  const email = auth.user?.profile?.email;
   useEffect(() => {
-    setFaroUser(auth.isAuthenticated ? userId : undefined);
-  }, [auth.isAuthenticated, userId]);
+    if (auth.isAuthenticated) {
+      setFaroUser(userId, email);
+    } else {
+      setFaroUser(undefined);
+    }
+  }, [auth.isAuthenticated, userId, email]);
 
   // timers stall in background tabs, so renew a session that went stale while the tab was away
   useEffect(() => {

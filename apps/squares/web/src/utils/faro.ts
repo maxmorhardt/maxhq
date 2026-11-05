@@ -7,6 +7,14 @@ const FARO_URL =
 const INVITE_TOKEN = /\/(join|invites)\/[\w-]+/g;
 const OIDC_PARAM = /([?&](?:code|state|session_state)=)[^&#"\s\\]+/g;
 
+const CAMPAIGN_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'gad_campaignid'];
+const CLICK_IDS: Record<string, string> = {
+  gclid: 'google',
+  gbraid: 'google',
+  wbraid: 'google',
+  fbclid: 'facebook',
+};
+
 let loaded: Promise<Faro | null> = Promise.resolve(null);
 
 // page urls, resource timings and errors can carry an invite link or the sign-in callback's code
@@ -16,6 +24,28 @@ export function redactSecrets<T>(item: T): T {
   ) as T;
 }
 
+// where the visit came from, so ad traffic can be picked out of faro's sessions
+export function landingAttributes(href: string, referrer: string): Record<string, string> {
+  const params = new URL(href).searchParams;
+  const attributes: Record<string, string> = {};
+  for (const key of CAMPAIGN_PARAMS) {
+    const value = params.get(key);
+    if (value) {
+      attributes[key] = value;
+    }
+  }
+  const clickId = Object.keys(CLICK_IDS).find((key) => params.has(key));
+  if (clickId) {
+    attributes.ad_click = CLICK_IDS[clickId];
+  }
+  try {
+    attributes.referrer = new URL(referrer).hostname;
+  } catch {
+    // no referrer, or not a url
+  }
+  return attributes;
+}
+
 // loaded lazily so the SDK stays out of the main bundle
 export function initFaro(hostname?: string, url: string = FARO_URL): void {
   if (typeof window === 'undefined' || !url || !appDomain(hostname)) {
@@ -23,8 +53,8 @@ export function initFaro(hostname?: string, url: string = FARO_URL): void {
   }
 
   loaded = import('@grafana/faro-web-sdk')
-    .then(({ getWebInstrumentations, initializeFaro }) =>
-      initializeFaro({
+    .then(({ getWebInstrumentations, initializeFaro }) => {
+      const faro = initializeFaro({
         url,
         app: {
           name: 'squares',
@@ -32,18 +62,21 @@ export function initFaro(hostname?: string, url: string = FARO_URL): void {
         },
         instrumentations: getWebInstrumentations(),
         beforeSend: redactSecrets,
-      })
-    )
+      });
+      faro.api.pushEvent('landing', landingAttributes(window.location.href, document.referrer));
+      return faro;
+    })
     .catch(() => null);
 }
 
-export function setFaroUser(userId: string | undefined): void {
+// the email matches faro sessions to the user in the api's request logs
+export function setFaroUser(userId: string | undefined, email?: string): void {
   void loaded.then((faro) => {
     if (!faro) {
       return;
     }
     if (userId) {
-      faro.api.setUser({ id: userId });
+      faro.api.setUser({ id: userId, ...(email && { email }) });
     } else {
       faro.api.resetUser();
     }
