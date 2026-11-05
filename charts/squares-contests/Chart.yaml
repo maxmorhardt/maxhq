@@ -1,6 +1,6 @@
 apiVersion: v2
 name: squares-contests
-description: Contests, squares, players, invites, leaderboard, and stats
-  for squares.maxhq.io
+description: Contests, squares, players, invites, leaderboard, and stats for
+  squares.maxhq.io
 type: application
-version: 2.3.0
+version: 2.4.0

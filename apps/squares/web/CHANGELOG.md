@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.10.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.9.0...squares/2.10.0) (2026-11-05)
+
+
+### Features
+
+* **squares-contests:** rework contest players around one invite link ([#208](https://github.com/maxmorhardt/maxhq/issues/208)) ([dbed7d5](https://github.com/maxmorhardt/maxhq/commit/dbed7d5dd38262850cb87c372b83ee5b99db5d06))
+* **squares:** visitor insights ([#207](https://github.com/maxmorhardt/maxhq/issues/207)) ([494c829](https://github.com/maxmorhardt/maxhq/commit/494c829e0eef51c053b434635c442b5a904e750a))
+
 ## [2.9.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.8.0...squares/2.9.0) (2026-11-03)
 
 

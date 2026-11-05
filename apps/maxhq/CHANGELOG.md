@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.6.0...maxhq/1.7.0) (2026-11-05)
+
+
+### Features
+
+* **squares:** visitor insights ([#207](https://github.com/maxmorhardt/maxhq/issues/207)) ([494c829](https://github.com/maxmorhardt/maxhq/commit/494c829e0eef51c053b434635c442b5a904e750a))
+
 ## [1.6.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.5.1...maxhq/1.6.0) (2026-11-02)
 
 

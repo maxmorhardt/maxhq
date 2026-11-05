@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests-chart/2.3.0...squares-contests-chart/2.4.0) (2026-11-05)
+
+
+### Features
+
+* **squares-contests:** rework contest players around one invite link ([#208](https://github.com/maxmorhardt/maxhq/issues/208)) ([dbed7d5](https://github.com/maxmorhardt/maxhq/commit/dbed7d5dd38262850cb87c372b83ee5b99db5d06))
+
 ## [2.3.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests-chart/2.2.1...squares-contests-chart/2.3.0) (2026-11-03)
 
 
