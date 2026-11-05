@@ -195,4 +195,11 @@ describe('liveContestSlice write responses', () => {
     );
     expect(state.players).toHaveLength(0);
   });
+
+  it('applies squares given to everyone at once', () => {
+    const newcomer = makePlayer({ id: 'p-2', userId: 'u_new', maxSquares: 0 });
+    let state = receive(live(), event('participant.joined', newcomer));
+    state = liveContestReducer(state, fulfilled('allotSquares', [{ ...newcomer, maxSquares: 5 }]));
+    expect(state.players.find((p) => p.id === 'p-2')?.maxSquares).toBe(5);
+  });
 });

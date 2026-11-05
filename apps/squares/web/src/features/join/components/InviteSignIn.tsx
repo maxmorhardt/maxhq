@@ -4,7 +4,7 @@ import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import { Box, Button, Container, LinearProgress, Link, Skeleton, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useAuth } from 'react-oidc-context';
-import { errorMessage } from '../../../api/errors';
+import { errorMessage, errorStatus } from '../../../api/errors';
 import { fonts, game as palette } from '../../../app/theme';
 import { signInWithProvider, type OIDCProvider } from '../../../auth/oidc';
 import TeamMark from '../../../components/TeamMark';
@@ -171,7 +171,12 @@ export default function InviteSignIn({ token }: Props) {
   const { data: preview, error, isLoading } = usePreviewInviteQuery(token);
 
   if (error) {
-    return <JoinError message={errorMessage(error, 'This invite link doesn’t work anymore')} />;
+    return (
+      <JoinError
+        message={errorMessage(error, 'This invite link doesn’t work anymore')}
+        status={errorStatus(error)}
+      />
+    );
   }
 
   const signIn = (provider: OIDCProvider) => signInWithProvider(auth, provider);

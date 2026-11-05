@@ -106,7 +106,7 @@ definitions:
     properties:
       contest:
         $ref: '#/definitions/model.ContestSwagger'
-      players:
+      participants:
         items:
           $ref: '#/definitions/model.ContestPlayer'
         type: array

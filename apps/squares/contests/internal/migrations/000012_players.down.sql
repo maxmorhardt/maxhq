@@ -20,7 +20,7 @@ DROP INDEX IF EXISTS idx_contests_invite_token;
 ALTER TABLE contests DROP COLUMN IF EXISTS invite_token;
 
 ALTER TABLE contest_players ADD COLUMN IF NOT EXISTS invite_id uuid;
-UPDATE contest_players SET role = 'participant' WHERE role = 'player';
+UPDATE contest_players SET role = CASE WHEN max_squares = 0 THEN 'viewer' ELSE 'participant' END WHERE role = 'player';
 
 ALTER INDEX IF EXISTS idx_contest_players_contest_user RENAME TO idx_contest_participants_contest_user;
 ALTER INDEX IF EXISTS idx_contest_players_user_id RENAME TO idx_contest_participants_user_id;

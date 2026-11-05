@@ -24,6 +24,6 @@ type ContestSwagger struct {
 
 type ContestSnapshotSwagger struct {
 	Contest  ContestSwagger  `json:"contest"`
-	Players  []ContestPlayer `json:"players"`
+	Players  []ContestPlayer `json:"participants"`
 	ViewerID string          `json:"viewerId" example:"u_3q2mL0x9VfTzQk1rB7cW8a"`
 }

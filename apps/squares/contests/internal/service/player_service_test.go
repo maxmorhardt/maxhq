@@ -124,13 +124,17 @@ func asOwner(p *mocks.PlayerRepository) {
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{UserID: "owner@x.com", Role: model.PlayerRoleOwner}, nil)
 }
 
+func listing(p *mocks.PlayerRepository, players ...model.ContestPlayer) {
+	p.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(players, nil)
+}
+
 func activeContest(c *mocks.ContestRepository) {
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 }
 
 func TestUpdatePlayer_ContestNotFound(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatus(""), database.ErrNotFound)
 	p := mocks.NewPlayerRepository(t)
 	asOwner(p)
 
@@ -141,7 +145,7 @@ func TestUpdatePlayer_ContestNotFound(t *testing.T) {
 
 func TestUpdatePlayer_ContestDBError(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatus(""), errors.New("db"))
 	p := mocks.NewPlayerRepository(t)
 	asOwner(p)
 
@@ -152,7 +156,7 @@ func TestUpdatePlayer_ContestDBError(t *testing.T) {
 
 func TestUpdatePlayer_TerminalContest(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusFinished, nil)
 	p := mocks.NewPlayerRepository(t)
 	asOwner(p)
 
@@ -164,7 +168,7 @@ func TestUpdatePlayer_TerminalContest(t *testing.T) {
 func TestUpdatePlayer_AfterKickoff(t *testing.T) {
 	for _, status := range []model.ContestStatus{model.ContestStatusQ1, model.ContestStatusQ4} {
 		c := mocks.NewContestRepository(t)
-		c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: status}, nil)
+		c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(status, nil)
 		p := mocks.NewPlayerRepository(t)
 		asOwner(p)
 
@@ -195,32 +199,24 @@ func TestUpdatePlayer_UnknownPseudonym(t *testing.T) {
 	assert.ErrorIs(t, err, errs.ErrNotPlayer)
 }
 
-func TestUpdatePlayer_TargetLookupErrors(t *testing.T) {
-	cases := map[error]error{
-		database.ErrNotFound: errs.ErrNotPlayer,
-		errors.New("db"):     errs.ErrDatabaseUnavailable,
-	}
-	for repoErr, want := range cases {
-		c := mocks.NewContestRepository(t)
-		activeContest(c)
-		p := mocks.NewPlayerRepository(t)
-		withPlayers(p)
-		asOwner(p)
-		p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(nil, repoErr)
+func TestUpdatePlayer_PlayerListError(t *testing.T) {
+	c := mocks.NewContestRepository(t)
+	activeContest(c)
+	p := mocks.NewPlayerRepository(t)
+	asOwner(p)
+	p.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
 
-		svc := service.NewPlayerService(p, c, mocks.NewSquareRepository(t), mocks.NewBanRepository(t), passTx(), anyEvents())
-		_, err := svc.UpdatePlayer(context.Background(), uuid.New(), pseudonym.Of("target@x.com"), 5, "owner@x.com")
-		assert.ErrorIs(t, err, want)
-	}
+	svc := service.NewPlayerService(p, c, mocks.NewSquareRepository(t), mocks.NewBanRepository(t), passTx(), anyEvents())
+	_, err := svc.UpdatePlayer(context.Background(), uuid.New(), pseudonym.Of("target@x.com"), 5, "owner@x.com")
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
 }
 
 func TestUpdatePlayer_SameLimitChangesNothing(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	asOwner(p)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 5}, nil)
+	listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 5})
 
 	svc := service.NewPlayerService(p, c, mocks.NewSquareRepository(t), mocks.NewBanRepository(t), passTx(), mocks.NewContestEventPublisher(t))
 	got, err := svc.UpdatePlayer(context.Background(), uuid.New(), pseudonym.Of("target@x.com"), 5, "owner@x.com")
@@ -232,9 +228,8 @@ func TestUpdatePlayer_RaiseWithinThePool(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	asOwner(p)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 10}, nil)
+	listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 10})
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(95, nil)
 	p.EXPECT().Update(mock.Anything, mock.MatchedBy(func(cp *model.ContestPlayer) bool { return cp.MaxSquares == 15 })).Return(nil)
 	contestID := uuid.New()
@@ -251,9 +246,8 @@ func TestUpdatePlayer_RaisePastThePool(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	asOwner(p)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{Role: model.PlayerRolePlayer, MaxSquares: 10}, nil)
+	listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 10})
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(96, nil)
 
 	svc := service.NewPlayerService(p, c, mocks.NewSquareRepository(t), mocks.NewBanRepository(t), passTx(), mocks.NewContestEventPublisher(t))
@@ -265,9 +259,8 @@ func TestUpdatePlayer_PoolDBError(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	asOwner(p)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{Role: model.PlayerRolePlayer}, nil)
+	listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer})
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, errors.New("db"))
 
 	svc := service.NewPlayerService(p, c, mocks.NewSquareRepository(t), mocks.NewBanRepository(t), passTx(), anyEvents())
@@ -279,9 +272,8 @@ func TestUpdatePlayer_LowerAboveWhatTheyHoldFreesNothing(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	asOwner(p)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{Role: model.PlayerRolePlayer, MaxSquares: 10}, nil)
+	listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 10})
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().CountByOwner(mock.Anything, mock.Anything, "target@x.com").Return(3, nil)
 	p.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
@@ -296,15 +288,14 @@ func TestUpdatePlayer_LowerBelowWhatTheyHoldFreesTheRestAtRandom(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	asOwner(p)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 10}, nil)
+	listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 10})
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().CountByOwner(mock.Anything, mock.Anything, "target@x.com").Return(8, nil)
 	sq.EXPECT().ClearRandomByOwner(mock.Anything, mock.Anything, "target@x.com", 3).Return([]model.Square{{}, {}, {}}, nil).Once()
 	p.EXPECT().Update(mock.Anything, mock.MatchedBy(func(cp *model.ContestPlayer) bool { return cp.MaxSquares == 5 })).Return(nil)
 	pub := mocks.NewContestEventPublisher(t)
-	pub.EXPECT().PublishSquareUpdate(mock.Anything, mock.Anything, "target@x.com", mock.Anything).Return(nil).Times(3)
+	pub.EXPECT().PublishSquareUpdate(mock.Anything, mock.Anything, "owner@x.com", mock.Anything).Return(nil).Times(3)
 	pub.EXPECT().PublishPlayerUpdated(mock.Anything, mock.Anything, "owner@x.com", mock.Anything).Return(nil).Once()
 
 	svc := service.NewPlayerService(p, c, sq, mocks.NewBanRepository(t), passTx(), pub)
@@ -332,9 +323,8 @@ func TestUpdatePlayer_FreeingFailures(t *testing.T) {
 		c := mocks.NewContestRepository(t)
 		activeContest(c)
 		p := mocks.NewPlayerRepository(t)
-		withPlayers(p)
 		asOwner(p)
-		p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{Role: model.PlayerRolePlayer, MaxSquares: 10}, nil)
+		listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer, MaxSquares: 10})
 		sq := mocks.NewSquareRepository(t)
 		pub := mocks.NewContestEventPublisher(t)
 		setup(sq, pub)
@@ -349,8 +339,8 @@ func TestUpdatePlayer_OwnerCanSetTheirOwnLimit(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{UserID: "owner@x.com", Role: model.PlayerRoleOwner, MaxSquares: 25}, nil)
+	listing(p, model.ContestPlayer{UserID: "owner@x.com", Role: model.PlayerRoleOwner, MaxSquares: 25})
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().CountByOwner(mock.Anything, mock.Anything, "owner@x.com").Return(0, nil)
 	p.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
@@ -365,9 +355,8 @@ func TestUpdatePlayer_UpdateDBError(t *testing.T) {
 	c := mocks.NewContestRepository(t)
 	activeContest(c)
 	p := mocks.NewPlayerRepository(t)
-	withPlayers(p)
 	asOwner(p)
-	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{Role: model.PlayerRolePlayer}, nil)
+	listing(p, model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer})
 	p.EXPECT().GetTotalAllocatedSquares(mock.Anything, mock.Anything).Return(0, nil)
 	p.EXPECT().Update(mock.Anything, mock.Anything).Return(errors.New("db"))
 
@@ -441,7 +430,7 @@ func TestAllotSquares_Failures(t *testing.T) {
 		want  error
 	}{
 		"after kickoff": {func(c *mocks.ContestRepository, _ *mocks.PlayerRepository, _ *mocks.ContestEventPublisher) {
-			c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ2}, nil)
+			c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusQ2, nil)
 		}, errs.ErrPlayersLocked},
 		"list": {func(c *mocks.ContestRepository, p *mocks.PlayerRepository, _ *mocks.ContestEventPublisher) {
 			activeContest(c)
@@ -578,7 +567,7 @@ func TestRemovePlayer_BanFailureFailsTheRemoval(t *testing.T) {
 
 func TestRemovePlayer_Terminal(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusFinished, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -589,12 +578,8 @@ func TestRemovePlayer_Terminal(t *testing.T) {
 
 func TestRemovePlayer_InProgressGhostsSquares(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
-	contestWithSquare := &model.Contest{
-		Status:  model.ContestStatusQ2,
-		Squares: []model.Square{{Owner: "target@x.com"}, {}},
-	}
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(contestWithSquare, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusQ2, nil)
 	sq.EXPECT().GhostByOwner(mock.Anything, mock.Anything, "target@x.com").Return([]model.Square{{Owner: model.GhostUser}}, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
@@ -607,7 +592,7 @@ func TestRemovePlayer_InProgressGhostsSquares(t *testing.T) {
 
 func TestRemovePlayer_CannotRemoveOwner(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -620,7 +605,7 @@ func TestRemovePlayer_Success(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().ClearByOwner(mock.Anything, mock.Anything, "target@x.com").Return(nil, nil)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -640,10 +625,7 @@ func TestRemovePlayer_ReleasesSquaresUnderTheContestLock(t *testing.T) {
 	inTx := mock.MatchedBy(func(ctx context.Context) bool { return ctx.Value(inTxKey{}) != nil })
 
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(inTx, mock.Anything).Return(&model.Contest{
-		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "target@x.com"}, {Owner: "other"}},
-	}, nil).Once()
+	c.EXPECT().LockStatus(inTx, mock.Anything).Return(model.ContestStatusActive, nil).Once()
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().ClearByOwner(inTx, mock.Anything, "target@x.com").Return([]model.Square{{}}, nil).Once()
 	p := mocks.NewPlayerRepository(t)
@@ -728,7 +710,7 @@ func TestRemovePlayer_PseudonymLookupError(t *testing.T) {
 
 func TestRemovePlayer_ContestNotFound(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatus(""), database.ErrNotFound)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -740,7 +722,7 @@ func TestRemovePlayer_ContestNotFound(t *testing.T) {
 
 func TestRemovePlayer_ContestDBError(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatus(""), errors.New("db"))
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -776,7 +758,7 @@ func TestRemovePlayer_SelfRemovalSuccess(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().ClearByOwner(mock.Anything, mock.Anything, "self@x.com").Return(nil, nil)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "self@x.com").Return(&model.ContestPlayer{Role: model.PlayerRolePlayer}, nil)
@@ -806,7 +788,7 @@ func TestRemovePlayer_LeavingLookupError(t *testing.T) {
 
 func TestRemovePlayer_OwnerCannotRemoveSelf(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -817,7 +799,7 @@ func TestRemovePlayer_OwnerCannotRemoveSelf(t *testing.T) {
 
 func TestRemovePlayer_TargetNotFound(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -830,7 +812,7 @@ func TestRemovePlayer_TargetNotFound(t *testing.T) {
 
 func TestRemovePlayer_TargetDBError(t *testing.T) {
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -844,10 +826,7 @@ func TestRemovePlayer_TargetDBError(t *testing.T) {
 func TestRemovePlayer_ClearSquaresFails(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "target@x.com"}, {}},
-	}, nil).Once()
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil).Once()
 	sq.EXPECT().ClearByOwner(mock.Anything, mock.Anything, "target@x.com").Return(nil, errors.New("db"))
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
@@ -862,10 +841,7 @@ func TestRemovePlayer_ClearSquaresFails(t *testing.T) {
 func TestRemovePlayer_GhostsSquaresOnceStarted(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{
-		Status:  model.ContestStatusQ2,
-		Squares: []model.Square{{Owner: "target@x.com", Value: "TG"}, {Owner: "other"}},
-	}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusQ2, nil)
 	sq.EXPECT().GhostByOwner(mock.Anything, mock.Anything, "target@x.com").Return([]model.Square{{Owner: model.GhostUser, Value: "TG"}}, nil).Once()
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
@@ -873,7 +849,7 @@ func TestRemovePlayer_GhostsSquaresOnceStarted(t *testing.T) {
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "target@x.com").Return(&model.ContestPlayer{UserID: "target@x.com", Role: model.PlayerRolePlayer}, nil)
 	p.EXPECT().Delete(mock.Anything, mock.Anything, "target@x.com").Return(nil)
 	events := mocks.NewContestEventPublisher(t)
-	events.EXPECT().PublishSquareUpdate(mock.Anything, mock.Anything, "target@x.com", mock.Anything).Return(nil).Once()
+	events.EXPECT().PublishSquareUpdate(mock.Anything, mock.Anything, "owner@x.com", mock.Anything).Return(nil).Once()
 	events.EXPECT().PublishPlayerRemoved(mock.Anything, mock.Anything, "owner@x.com", mock.Anything).Return(nil).Once()
 
 	svc := service.NewPlayerService(p, c, sq, bansRemovingTarget(t), passTx(), events)
@@ -884,7 +860,7 @@ func TestRemovePlayer_EventFailureFailsTheRemoval(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().ClearByOwner(mock.Anything, mock.Anything, "target@x.com").Return(nil, nil)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -899,12 +875,8 @@ func TestRemovePlayer_EventFailureFailsTheRemoval(t *testing.T) {
 
 func TestRemovePlayer_WithSquaresToClear(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
-	contestWithSquare := &model.Contest{
-		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "target@x.com"}, {}},
-	}
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(contestWithSquare, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	sq.EXPECT().ClearByOwner(mock.Anything, mock.Anything, "target@x.com").Return([]model.Square{{}}, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
@@ -920,7 +892,7 @@ func TestRemovePlayer_DeleteFails(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
 	sq.EXPECT().ClearByOwner(mock.Anything, mock.Anything, "target@x.com").Return(nil, nil)
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)
 	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "owner@x.com").Return(&model.ContestPlayer{Role: model.PlayerRoleOwner}, nil)
@@ -934,12 +906,8 @@ func TestRemovePlayer_DeleteFails(t *testing.T) {
 
 func TestRemovePlayer_FullBoardBeforeKickoffFreesTheirSquares(t *testing.T) {
 	sq := mocks.NewSquareRepository(t)
-	full := &model.Contest{
-		Status:  model.ContestStatusActive,
-		Squares: []model.Square{{Owner: "target@x.com", Value: "TG"}, {Owner: "owner@x.com", Value: "OW"}},
-	}
 	c := mocks.NewContestRepository(t)
-	c.EXPECT().GetByIDForUpdate(mock.Anything, mock.Anything).Return(full, nil)
+	c.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 	sq.EXPECT().ClearByOwner(mock.Anything, mock.Anything, "target@x.com").Return([]model.Square{{}}, nil).Once()
 	p := mocks.NewPlayerRepository(t)
 	withPlayers(p)

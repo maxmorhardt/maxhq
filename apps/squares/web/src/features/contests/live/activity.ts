@@ -4,6 +4,7 @@ import type { ContestEvent } from './events';
 
 export const MAX_ACTIVITY = 200;
 const GHOST_USER = 'ghost';
+const SYSTEM_ACTOR = 'system';
 
 export const ownerLabel = (owner: string, ownerName: string) =>
   owner === GHOST_USER || owner === '' ? GHOST_USER : ownerName;
@@ -93,7 +94,12 @@ export function describeEvent(
     case 'participant.joined':
       return entry('player_added', `${event.data.displayName} joined the contest`);
     case 'participant.removed':
-      return entry('player_removed', `${event.data.displayName} left the contest`);
+      return entry(
+        'player_removed',
+        event.updatedBy === event.data.userId || event.updatedBy === SYSTEM_ACTOR
+          ? `${event.data.displayName} left the contest`
+          : `${event.data.displayName} was removed from the contest`
+      );
     default:
       return null;
   }

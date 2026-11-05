@@ -320,7 +320,7 @@ func TestContestRepository_ResetInviteToken(t *testing.T) {
 	id := uuid.New()
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`UPDATE "contests" SET "invite_token"=\$1,"updated_at"=\$2 WHERE id = \$3 AND status != \$4`).
+	mock.ExpectExec(`UPDATE "contests" SET "invite_token"=\$1,"updated_at"=\$2 WHERE id = \$3 AND status NOT IN \(\$4,\$5\)`).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
@@ -338,7 +338,7 @@ func TestContestRepository_ResetInviteToken_Failures(t *testing.T) {
 	mock.ExpectCommit()
 
 	_, err := NewContestRepository(gdb).ResetInviteToken(context.Background(), uuid.New())
-	assert.ErrorIs(t, err, database.ErrNotFound, "a deleted contest has no link to reset")
+	assert.ErrorIs(t, err, database.ErrNotFound, "a finished or deleted contest has no link to reset")
 
 	gdb, mock = newMockDB(t)
 	mock.ExpectBegin()
@@ -358,5 +358,44 @@ func TestContestRepository_Update_LeavesTheInviteTokenAlone(t *testing.T) {
 
 	contest := &model.Contest{ID: uuid.New(), Version: 1, InviteToken: "stale"}
 	require.NoError(t, NewContestRepository(gdb).Update(context.Background(), contest))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestContestRepository_LockStatus(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	id := uuid.New()
+
+	mock.ExpectQuery(`SELECT "status" FROM "contests" WHERE id = \$1 AND status != \$2 ORDER BY "contests"."id" LIMIT \$3 FOR UPDATE`).
+		WithArgs(id, model.ContestStatusDeleted, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"status"}).AddRow(model.ContestStatusQ2))
+
+	status, err := NewContestRepository(gdb).LockStatus(context.Background(), id)
+
+	require.NoError(t, err)
+	assert.Equal(t, model.ContestStatusQ2, status)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestContestRepository_LockStatus_NotFound(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	mock.ExpectQuery(`SELECT "status" FROM "contests"`).WillReturnRows(sqlmock.NewRows([]string{"status"}))
+
+	_, err := NewContestRepository(gdb).LockStatus(context.Background(), uuid.New())
+
+	assert.ErrorIs(t, err, database.ErrNotFound)
+}
+
+func TestContestRepository_GetIDByInviteToken(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	id := uuid.New()
+
+	mock.ExpectQuery(`SELECT "id" FROM "contests" WHERE invite_token = \$1 AND status != \$2`).
+		WithArgs("tok", model.ContestStatusDeleted, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
+
+	got, err := NewContestRepository(gdb).GetIDByInviteToken(context.Background(), "tok")
+
+	require.NoError(t, err)
+	assert.Equal(t, id, got)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

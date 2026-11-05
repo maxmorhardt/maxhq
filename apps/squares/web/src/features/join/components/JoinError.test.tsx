@@ -11,11 +11,11 @@ vi.mock('react-router', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-function renderComponent(message: string) {
+function renderComponent(message: string, status?: number) {
   return render(
     <ThemeProvider theme={createTheme()}>
       <MemoryRouter>
-        <JoinError message={message} />
+        <JoinError message={message} status={status} />
       </MemoryRouter>
     </ThemeProvider>
   );
@@ -28,9 +28,14 @@ describe('JoinError', () => {
     expect(screen.getByText('the owner removed you from this contest')).toBeInTheDocument();
   });
 
-  it('explains that a reset link stops working', () => {
-    renderComponent('gone');
+  it('explains that a reset link stops working when the link is gone', () => {
+    renderComponent('gone', 404);
     expect(screen.getByText(/stops working when the owner resets it/)).toBeInTheDocument();
+  });
+
+  it('skips the new-link advice when a new link would not help', () => {
+    renderComponent('the owner removed you from this contest', 403);
+    expect(screen.queryByText(/stops working when the owner resets it/)).not.toBeInTheDocument();
   });
 
   it('navigates to /contests when My Contests is clicked', () => {

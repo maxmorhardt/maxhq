@@ -43,7 +43,12 @@ export default function JoinInvite({ token }: Props) {
   const error = previewError ?? (errorStatus(joinError) === 409 ? undefined : joinError);
 
   if (error) {
-    return <JoinError message={errorMessage(error, 'This invite link doesn’t work anymore')} />;
+    return (
+      <JoinError
+        message={errorMessage(error, 'This invite link doesn’t work anymore')}
+        status={errorStatus(error)}
+      />
+    );
   }
 
   if (!preview) {

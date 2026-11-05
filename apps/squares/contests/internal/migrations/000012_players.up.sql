@@ -22,3 +22,4 @@ CREATE TABLE IF NOT EXISTS contest_bans (
     created_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (contest_id, user_id)
 );
+CREATE INDEX IF NOT EXISTS idx_contest_bans_user_id ON contest_bans (user_id);

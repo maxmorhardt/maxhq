@@ -1616,7 +1616,7 @@ const docTemplatecontests = `{
                 "contest": {
                     "$ref": "#/definitions/model.ContestSwagger"
                 },
-                "players": {
+                "participants": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.ContestPlayer"

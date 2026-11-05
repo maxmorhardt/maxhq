@@ -158,18 +158,9 @@ func (s *playerService) UpdatePlayer(ctx context.Context, contestID uuid.UUID, t
 			return err
 		}
 
-		target, err := s.resolveTarget(ctx, contestID, targetUserID)
-		if err != nil {
+		var err error
+		if player, err = s.findPlayer(ctx, contestID, targetUserID); err != nil {
 			return err
-		}
-
-		player, err = s.playerRepo.GetByContestAndUser(ctx, contestID, target)
-		if err != nil {
-			if errors.Is(err, database.ErrNotFound) {
-				return errs.ErrNotPlayer
-			}
-			log.Error("failed to get player", "contest_id", contestID, "user_id", target, "error", err)
-			return errs.ErrDatabaseUnavailable
 		}
 
 		if maxSquares == player.MaxSquares {
@@ -180,13 +171,13 @@ func (s *playerService) UpdatePlayer(ctx context.Context, contestID uuid.UUID, t
 			if err := s.checkPool(ctx, contestID, maxSquares-player.MaxSquares); err != nil {
 				return err
 			}
-		} else if err := s.trimSquares(ctx, contestID, target, maxSquares); err != nil {
+		} else if err := s.trimSquares(ctx, contestID, player.UserID, maxSquares, user); err != nil {
 			return err
 		}
 
 		player.MaxSquares = maxSquares
 		if err := s.playerRepo.Update(ctx, player); err != nil {
-			log.Error("failed to update player", "contest_id", contestID, "user_id", target, "error", err)
+			log.Error("failed to update player", "contest_id", contestID, "user_id", player.UserID, "error", err)
 			return err
 		}
 
@@ -253,38 +244,52 @@ func (s *playerService) AllotSquares(ctx context.Context, contestID uuid.UUID, m
 	return allotted, nil
 }
 
-func (s *playerService) lockForAllotment(ctx context.Context, contestID uuid.UUID) error {
-	contest, err := s.contestRepo.GetByIDForUpdate(ctx, contestID)
+func (s *playerService) lockContest(ctx context.Context, contestID uuid.UUID) (model.ContestStatus, error) {
+	log := logging.FromContext(ctx)
+
+	status, err := s.contestRepo.LockStatus(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return errs.ErrContestNotFound
+			return "", errs.ErrContestNotFound
 		}
-		logging.FromContext(ctx).Error("failed to get contest", "contest_id", contestID, "error", err)
-		return errs.ErrDatabaseUnavailable
+		log.Error("failed to lock contest", "contest_id", contestID, "error", err)
+		return "", errs.ErrDatabaseUnavailable
 	}
 
-	if contest.Status.IsTerminal() {
-		return errs.ErrContestFinalized
+	if status.IsTerminal() {
+		log.Warn("contest is finalized", "contest_id", contestID, "status", status)
+		return "", errs.ErrContestFinalized
 	}
-	if contest.Status != model.ContestStatusActive {
+	return status, nil
+}
+
+func (s *playerService) lockForAllotment(ctx context.Context, contestID uuid.UUID) error {
+	status, err := s.lockContest(ctx, contestID)
+	if err != nil {
+		return err
+	}
+	if status != model.ContestStatusActive {
 		return errs.ErrPlayersLocked
 	}
 	return nil
 }
 
 func (s *playerService) checkPool(ctx context.Context, contestID uuid.UUID, added int) error {
+	log := logging.FromContext(ctx)
+
 	allocated, err := s.playerRepo.GetTotalAllocatedSquares(ctx, contestID)
 	if err != nil {
-		logging.FromContext(ctx).Error("failed to get total allocated squares", "contest_id", contestID, "error", err)
+		log.Error("failed to get total allocated squares", "contest_id", contestID, "error", err)
 		return errs.ErrDatabaseUnavailable
 	}
 	if allocated+added > model.MaxContestSquares {
+		log.Warn("refusing to give out more squares than the board holds", "contest_id", contestID, "allocated", allocated, "added", added)
 		return errs.ErrNotEnoughSquares
 	}
 	return nil
 }
 
-func (s *playerService) trimSquares(ctx context.Context, contestID uuid.UUID, userID string, maxSquares int) error {
+func (s *playerService) trimSquares(ctx context.Context, contestID uuid.UUID, userID string, maxSquares int, actor string) error {
 	log := logging.FromContext(ctx)
 
 	claimed, err := s.squareRepo.CountByOwner(ctx, contestID, userID)
@@ -302,12 +307,7 @@ func (s *playerService) trimSquares(ctx context.Context, contestID uuid.UUID, us
 		return err
 	}
 
-	for i := range freed {
-		if err := s.events.PublishSquareUpdate(ctx, contestID, userID, &freed[i]); err != nil {
-			return err
-		}
-	}
-	return nil
+	return s.publishSquares(ctx, contestID, actor, freed)
 }
 
 func (s *playerService) RemovePlayer(ctx context.Context, contestID uuid.UUID, targetUserID, user string) error {
@@ -320,18 +320,9 @@ func (s *playerService) RemovePlayer(ctx context.Context, contestID uuid.UUID, t
 
 	err := s.tx.Do(ctx, func(ctx context.Context) error {
 		// the contest lock waits out in-flight claims and blocks new ones and kickoff, so the squares loaded here are final
-		contest, err := s.contestRepo.GetByIDForUpdate(ctx, contestID)
+		status, err := s.lockContest(ctx, contestID)
 		if err != nil {
-			if errors.Is(err, database.ErrNotFound) {
-				return errs.ErrContestNotFound
-			}
-			log.Error("failed to get contest", "contest_id", contestID, "error", err)
-			return errs.ErrDatabaseUnavailable
-		}
-
-		if contest.Status.IsTerminal() {
-			log.Warn("cannot remove player from a finalized contest", "contest_id", contestID, "status", contest.Status)
-			return errs.ErrContestFinalized
+			return err
 		}
 
 		player, err := s.playerRepo.GetByContestAndUser(ctx, contestID, targetUserID)
@@ -348,8 +339,8 @@ func (s *playerService) RemovePlayer(ctx context.Context, contestID uuid.UUID, t
 		}
 
 		// before kickoff the squares go back to the pool. after kickoff they are ghosted
-		ghost := contest.Status != model.ContestStatusActive
-		if releaseErr := s.releasePlayerSquares(ctx, contestID, targetUserID, ghost); releaseErr != nil {
+		ghost := status != model.ContestStatusActive
+		if releaseErr := s.releasePlayerSquares(ctx, contestID, targetUserID, user, ghost); releaseErr != nil {
 			log.Error("failed to release player squares", "contest_id", contestID, "user_id", targetUserID, "ghost", ghost, "error", releaseErr)
 			return releaseErr
 		}
@@ -403,18 +394,17 @@ func (s *playerService) Unban(ctx context.Context, contestID uuid.UUID, targetUs
 		return errs.ErrDatabaseUnavailable
 	}
 
-	for i := range bans {
-		if pseudonym.Of(bans[i].UserID) != targetUserID {
-			continue
-		}
-		if err := s.banRepo.Delete(ctx, contestID, bans[i].UserID); err != nil {
-			log.Error("failed to unban", "contest_id", contestID, "error", err)
-			return errs.ErrDatabaseUnavailable
-		}
-		log.Info("player unbanned", "contest_id", contestID, "target_user", targetUserID)
-		return nil
+	ban := byPseudonym(bans, targetUserID, func(b *model.ContestBan) string { return b.UserID })
+	if ban == nil {
+		return errs.ErrNotBanned
 	}
-	return errs.ErrNotBanned
+	if err := s.banRepo.Delete(ctx, contestID, ban.UserID); err != nil {
+		log.Error("failed to unban", "contest_id", contestID, "error", err)
+		return errs.ErrDatabaseUnavailable
+	}
+
+	log.Info("player unbanned", "contest_id", contestID, "target_user", targetUserID)
+	return nil
 }
 
 // players can always leave; removing someone else takes a manager and bans them
@@ -423,8 +413,11 @@ func (s *playerService) removalTarget(ctx context.Context, contestID uuid.UUID, 
 		if authErr := s.Authorize(ctx, contestID, user, ActionManagePlayers); authErr != nil {
 			return "", false, authErr
 		}
-		resolved, err = s.resolveTarget(ctx, contestID, target)
-		return resolved, false, err
+		player, findErr := s.findPlayer(ctx, contestID, target)
+		if findErr != nil {
+			return "", false, findErr
+		}
+		return player.UserID, false, nil
 	}
 
 	if _, lookupErr := s.playerRepo.GetByContestAndUser(ctx, contestID, user); lookupErr != nil {
@@ -437,22 +430,30 @@ func (s *playerService) removalTarget(ctx context.Context, contestID uuid.UUID, 
 	return user, true, nil
 }
 
-func (s *playerService) resolveTarget(ctx context.Context, contestID uuid.UUID, target string) (string, error) {
+func (s *playerService) findPlayer(ctx context.Context, contestID uuid.UUID, target string) (*model.ContestPlayer, error) {
 	players, err := s.playerRepo.GetAllByContestID(ctx, contestID)
 	if err != nil {
 		logging.FromContext(ctx).Error("failed to get players to resolve a pseudonym", "contest_id", contestID, "error", err)
-		return "", errs.ErrDatabaseUnavailable
+		return nil, errs.ErrDatabaseUnavailable
 	}
 
-	for i := range players {
-		if pseudonym.Of(players[i].UserID) == target {
-			return players[i].UserID, nil
-		}
+	player := byPseudonym(players, target, func(p *model.ContestPlayer) string { return p.UserID })
+	if player == nil {
+		return nil, errs.ErrNotPlayer
 	}
-	return "", errs.ErrNotPlayer
+	return player, nil
 }
 
-func (s *playerService) releasePlayerSquares(ctx context.Context, contestID uuid.UUID, userID string, ghost bool) error {
+func byPseudonym[T any](items []T, target string, userID func(*T) string) *T {
+	for i := range items {
+		if pseudonym.Of(userID(&items[i])) == target {
+			return &items[i]
+		}
+	}
+	return nil
+}
+
+func (s *playerService) releasePlayerSquares(ctx context.Context, contestID uuid.UUID, userID, actor string, ghost bool) error {
 	release := s.squareRepo.ClearByOwner
 	if ghost {
 		release = s.squareRepo.GhostByOwner
@@ -463,11 +464,14 @@ func (s *playerService) releasePlayerSquares(ctx context.Context, contestID uuid
 		return err
 	}
 
+	return s.publishSquares(ctx, contestID, actor, squares)
+}
+
+func (s *playerService) publishSquares(ctx context.Context, contestID uuid.UUID, actor string, squares []model.Square) error {
 	for i := range squares {
-		if err := s.events.PublishSquareUpdate(ctx, contestID, userID, &squares[i]); err != nil {
+		if err := s.events.PublishSquareUpdate(ctx, contestID, actor, &squares[i]); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

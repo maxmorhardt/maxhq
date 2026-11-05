@@ -15,7 +15,9 @@ import (
 type ContestRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Contest, error)
 	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*model.Contest, error)
+	LockStatus(ctx context.Context, id uuid.UUID) (model.ContestStatus, error)
 	GetByInviteToken(ctx context.Context, token string) (*model.Contest, error)
+	GetIDByInviteToken(ctx context.Context, token string) (uuid.UUID, error)
 	GetInviteToken(ctx context.Context, id uuid.UUID) (string, error)
 	GetVisibilityByID(ctx context.Context, id uuid.UUID) (model.ContestVisibility, error)
 	GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error)
@@ -49,8 +51,25 @@ func (r *contestRepository) GetByIDForUpdate(ctx context.Context, id uuid.UUID) 
 	return r.get(database.Conn(ctx, r.db).Clauses(clause.Locking{Strength: "UPDATE"}), "id = ?", id)
 }
 
+func (r *contestRepository) LockStatus(ctx context.Context, id uuid.UUID) (model.ContestStatus, error) {
+	var contest model.Contest
+	err := database.Conn(ctx, r.db).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Select("status").
+		First(&contest, "id = ? AND status != ?", id, model.ContestStatusDeleted).Error
+	return contest.Status, database.TranslateError(err)
+}
+
 func (r *contestRepository) GetByInviteToken(ctx context.Context, token string) (*model.Contest, error) {
 	return r.get(database.Conn(ctx, r.db), "invite_token = ?", token)
+}
+
+func (r *contestRepository) GetIDByInviteToken(ctx context.Context, token string) (uuid.UUID, error) {
+	var contest model.Contest
+	err := database.Conn(ctx, r.db).
+		Select("id").
+		First(&contest, "invite_token = ? AND status != ?", token, model.ContestStatusDeleted).Error
+	return contest.ID, database.TranslateError(err)
 }
 
 func (r *contestRepository) GetInviteToken(ctx context.Context, id uuid.UUID) (string, error) {
@@ -178,7 +197,7 @@ func (r *contestRepository) ResetInviteToken(ctx context.Context, id uuid.UUID) 
 
 	res := database.Conn(ctx, r.db).
 		Model(&model.Contest{}).
-		Where("id = ? AND status != ?", id, model.ContestStatusDeleted).
+		Where("id = ? AND status NOT IN ?", id, terminalStatuses).
 		Update("invite_token", token)
 	if res.Error != nil {
 		return "", res.Error

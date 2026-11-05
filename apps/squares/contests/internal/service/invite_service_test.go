@@ -75,12 +75,11 @@ func TestResetInviteLink_Success(t *testing.T) {
 	d := newInviteDeps(t)
 	d.owner()
 	contestID := uuid.New()
-	d.contests.EXPECT().GetByID(mock.Anything, contestID).Return(&model.Contest{Status: model.ContestStatusQ2}, nil)
 	d.contests.EXPECT().ResetInviteToken(mock.Anything, contestID).Return("fresh", nil)
 
 	got, err := d.svc().ResetInviteLink(context.Background(), contestID, "owner")
 	require.NoError(t, err)
-	assert.Equal(t, "fresh", got.Token, "a link can be reset mid-game, since late joiners only watch")
+	assert.Equal(t, "fresh", got.Token)
 }
 
 func TestResetInviteLink_Failures(t *testing.T) {
@@ -91,26 +90,12 @@ func TestResetInviteLink_Failures(t *testing.T) {
 		"unauthorized": {func(d *inviteDeps) {
 			d.authz.EXPECT().Authorize(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errs.ErrInsufficientRole)
 		}, errs.ErrInsufficientRole},
-		"contest missing": {func(d *inviteDeps) {
+		"finished or deleted": {func(d *inviteDeps) {
 			d.owner()
-			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
-		}, errs.ErrContestNotFound},
-		"contest lookup": {func(d *inviteDeps) {
-			d.owner()
-			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(nil, errors.New("db"))
-		}, errs.ErrDatabaseUnavailable},
-		"finished": {func(d *inviteDeps) {
-			d.owner()
-			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
-		}, errs.ErrContestFinalized},
-		"deleted meanwhile": {func(d *inviteDeps) {
-			d.owner()
-			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 			d.contests.EXPECT().ResetInviteToken(mock.Anything, mock.Anything).Return("", database.ErrNotFound)
-		}, errs.ErrContestNotFound},
+		}, errs.ErrContestFinalized},
 		"reset": {func(d *inviteDeps) {
 			d.owner()
-			d.contests.EXPECT().GetByID(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusActive}, nil)
 			d.contests.EXPECT().ResetInviteToken(mock.Anything, mock.Anything).Return("", errors.New("db"))
 		}, errs.ErrDatabaseUnavailable},
 	}
@@ -185,7 +170,8 @@ func TestGetInvitePreview_Failures(t *testing.T) {
 func TestJoin_JoinsWithNoSquares(t *testing.T) {
 	d := newInviteDeps(t)
 	contestID := uuid.New()
-	d.contests.EXPECT().GetByInviteToken(mock.Anything, "tok").Return(&model.Contest{ID: contestID, Status: model.ContestStatusActive}, nil)
+	d.contests.EXPECT().GetIDByInviteToken(mock.Anything, "tok").Return(contestID, nil)
+	d.contests.EXPECT().LockStatus(mock.Anything, contestID).Return(model.ContestStatusActive, nil)
 	d.bans.EXPECT().Exists(mock.Anything, contestID, "pat@x.com").Return(false, nil)
 	d.players.EXPECT().Create(mock.Anything, mock.MatchedBy(func(p *model.ContestPlayer) bool {
 		return p.ContestID == contestID && p.UserID == "pat@x.com" && p.Role == model.PlayerRolePlayer && p.MaxSquares == 0
@@ -199,9 +185,27 @@ func TestJoin_JoinsWithNoSquares(t *testing.T) {
 	assert.Equal(t, 0, got.MaxSquares)
 }
 
+func TestJoin_ChecksTheBanUnderTheContestLock(t *testing.T) {
+	d := newInviteDeps(t)
+	tx := &mocks.Transactor{}
+	tx.On("Do", mock.Anything, mock.Anything).
+		Return(func(ctx context.Context, fn func(context.Context) error) error {
+			return fn(context.WithValue(ctx, inTxKey{}, true))
+		})
+	inTx := mock.MatchedBy(func(ctx context.Context) bool { return ctx.Value(inTxKey{}) != nil })
+	d.contests.EXPECT().GetIDByInviteToken(mock.Anything, mock.Anything).Return(uuid.New(), nil)
+	d.contests.EXPECT().LockStatus(inTx, mock.Anything).Return(model.ContestStatusActive, nil).Once()
+	d.bans.EXPECT().Exists(inTx, mock.Anything, mock.Anything).Return(true, nil).Once()
+
+	svc := service.NewInviteService(d.contests, d.players, d.bans, d.users, d.authz, tx, d.events)
+	_, err := svc.Join(context.Background(), "tok", "pat@x.com", "Pat")
+	assert.ErrorIs(t, err, errs.ErrBannedFromContest)
+}
+
 func TestJoin_AfterKickoffJoinsToWatch(t *testing.T) {
 	d := newInviteDeps(t)
-	d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusQ3}, nil)
+	d.contests.EXPECT().GetIDByInviteToken(mock.Anything, mock.Anything).Return(uuid.New(), nil)
+	d.contests.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusQ3, nil)
 	d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
 	d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 
@@ -210,45 +214,62 @@ func TestJoin_AfterKickoffJoinsToWatch(t *testing.T) {
 }
 
 func TestJoin_Failures(t *testing.T) {
-	active := &model.Contest{Status: model.ContestStatusActive}
+	found := func(d *inviteDeps) {
+		d.contests.EXPECT().GetIDByInviteToken(mock.Anything, mock.Anything).Return(uuid.New(), nil)
+	}
+	joinable := func(d *inviteDeps) {
+		found(d)
+		d.contests.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
+		d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+	}
 	cases := map[string]struct {
 		setup func(d *inviteDeps)
 		want  error
 	}{
 		"unknown token": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
+			d.contests.EXPECT().GetIDByInviteToken(mock.Anything, mock.Anything).Return(uuid.Nil, database.ErrNotFound)
 		}, errs.ErrInviteNotFound},
+		"token lookup": {func(d *inviteDeps) {
+			d.contests.EXPECT().GetIDByInviteToken(mock.Anything, mock.Anything).Return(uuid.Nil, errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
+		"deleted meanwhile": {func(d *inviteDeps) {
+			found(d)
+			d.contests.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatus(""), database.ErrNotFound)
+		}, errs.ErrInviteNotFound},
+		"lock": {func(d *inviteDeps) {
+			found(d)
+			d.contests.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatus(""), errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
 		"finished": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{Status: model.ContestStatusFinished}, nil)
+			found(d)
+			d.contests.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusFinished, nil)
 		}, errs.ErrContestFinalized},
 		"banned": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			found(d)
+			d.contests.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
 		}, errs.ErrBannedFromContest},
 		"ban lookup": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
+			found(d)
+			d.contests.EXPECT().LockStatus(mock.Anything, mock.Anything).Return(model.ContestStatusActive, nil)
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, errors.New("db"))
 		}, errs.ErrDatabaseUnavailable},
 		"already in": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
-			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			joinable(d)
 			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(database.ErrDuplicate)
 		}, errs.ErrAlreadyPlayer},
 		"create": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
-			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			joinable(d)
 			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(assert.AnError)
 		}, assert.AnError},
 		"profile": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
-			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			joinable(d)
 			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 			d.users = mocks.NewUserRepository(t)
 			d.users.EXPECT().GetOrCreate(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, assert.AnError)
 		}, assert.AnError},
 		"event": {func(d *inviteDeps) {
-			d.contests.EXPECT().GetByInviteToken(mock.Anything, mock.Anything).Return(active, nil)
-			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			joinable(d)
 			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 			d.events = mocks.NewContestEventPublisher(t)
 			d.events.EXPECT().PublishPlayerJoined(mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)

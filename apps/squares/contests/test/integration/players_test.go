@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
@@ -176,4 +177,30 @@ func TestInvite_ResetKillsTheOldLink(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, call(t, testkit.Anonymous, http.MethodGet, "/invites/"+old, nil).Status)
 	assert.Equal(t, http.StatusNotFound, joinWith(t, "late@squares.test", old).Status)
 	assert.Equal(t, http.StatusCreated, joinWith(t, "late@squares.test", fresh.Token).Status)
+}
+
+func TestPlayers_JoinWaitsForARemovalInFlight(t *testing.T) {
+	const owner, player = "inflight-owner@squares.test", "inflight@squares.test"
+	contest, resp := createContest(t, owner, "In Flight", 10)
+	require.Equal(t, http.StatusCreated, resp.Status, string(resp.Body))
+	token := inviteToken(t, owner, contest.ID)
+
+	tx, err := rawDB.Begin()
+	require.NoError(t, err)
+	_, err = tx.Exec(`SELECT id FROM contests.contests WHERE id = $1 FOR UPDATE`, contest.ID)
+	require.NoError(t, err)
+	_, err = tx.Exec(`INSERT INTO contests.contest_bans (contest_id, user_id) VALUES ($1, $2)`, contest.ID, player)
+	require.NoError(t, err)
+
+	joined := make(chan int, 1)
+	go func() { joined <- joinWith(t, player, token).Status }()
+
+	select {
+	case status := <-joined:
+		t.Fatalf("join finished with %d while the removal still held the contest", status)
+	case <-time.After(500 * time.Millisecond):
+	}
+
+	require.NoError(t, tx.Commit())
+	assert.Equal(t, http.StatusForbidden, <-joined, "the join sees the ban once the removal commits")
 }

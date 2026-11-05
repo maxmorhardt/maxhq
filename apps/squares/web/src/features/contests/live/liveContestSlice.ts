@@ -207,6 +207,9 @@ const liveContestSlice = createSlice({
       .addMatcher(endpoints.updatePlayer.matchFulfilled, (state, action) =>
         upsertPlayer(state, action.payload)
       )
+      .addMatcher(endpoints.allotSquares.matchFulfilled, (state, action) => {
+        action.payload.forEach((player) => upsertPlayer(state, player));
+      })
       .addMatcher(endpoints.removePlayer.matchFulfilled, (state, action) => {
         const { contestId, userId } = action.meta.arg.originalArgs;
         if (contestId === state.contestId) {

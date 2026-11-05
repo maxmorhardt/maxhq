@@ -7,7 +7,7 @@ import LeaveContestDialog from './LeaveContestDialog';
 const api = vi.hoisted(() => ({ useRemovePlayerMutation: vi.fn() }));
 vi.mock('../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
 
-const contest = { id: 'c-1', name: 'Test Bowl' };
+const contest = { id: 'c-1', name: 'Test Bowl', status: 'ACTIVE' as const };
 
 describe('LeaveContestDialog', () => {
   it('renders nothing without a contest', () => {
@@ -31,6 +31,20 @@ describe('LeaveContestDialog', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'u_me' });
     expect(onLeft).toHaveBeenCalled();
+  });
+
+  it('says squares go back before kickoff and stay on the board after', () => {
+    api.useRemovePlayerMutation.mockReturnValue(mockMutation(undefined));
+    const { unmount } = renderWithProviders(
+      <LeaveContestDialog contest={contest} userId="u_me" onClose={vi.fn()} />
+    );
+    expect(screen.getByText(/Your squares go back on the board/)).toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(
+      <LeaveContestDialog contest={{ ...contest, status: 'Q2' }} userId="u_me" onClose={vi.fn()} />
+    );
+    expect(screen.getByText(/your squares stay on the board without you/)).toBeInTheDocument();
   });
 
   it('does nothing until the user id is known', () => {

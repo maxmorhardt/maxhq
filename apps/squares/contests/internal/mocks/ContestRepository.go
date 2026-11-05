@@ -404,6 +404,65 @@ func (_c *ContestRepository_GetByInviteToken_Call) RunAndReturn(run func(context
 	return _c
 }
 
+// GetIDByInviteToken provides a mock function with given fields: ctx, token
+func (_m *ContestRepository) GetIDByInviteToken(ctx context.Context, token string) (uuid.UUID, error) {
+	ret := _m.Called(ctx, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIDByInviteToken")
+	}
+
+	var r0 uuid.UUID
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (uuid.UUID, error)); ok {
+		return rf(ctx, token)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) uuid.UUID); ok {
+		r0 = rf(ctx, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(uuid.UUID)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, token)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_GetIDByInviteToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetIDByInviteToken'
+type ContestRepository_GetIDByInviteToken_Call struct {
+	*mock.Call
+}
+
+// GetIDByInviteToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - token string
+func (_e *ContestRepository_Expecter) GetIDByInviteToken(ctx interface{}, token interface{}) *ContestRepository_GetIDByInviteToken_Call {
+	return &ContestRepository_GetIDByInviteToken_Call{Call: _e.mock.On("GetIDByInviteToken", ctx, token)}
+}
+
+func (_c *ContestRepository_GetIDByInviteToken_Call) Run(run func(ctx context.Context, token string)) *ContestRepository_GetIDByInviteToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_GetIDByInviteToken_Call) Return(_a0 uuid.UUID, _a1 error) *ContestRepository_GetIDByInviteToken_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_GetIDByInviteToken_Call) RunAndReturn(run func(context.Context, string) (uuid.UUID, error)) *ContestRepository_GetIDByInviteToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetIDsByGameID provides a mock function with given fields: ctx, gameID
 func (_m *ContestRepository) GetIDsByGameID(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error) {
 	ret := _m.Called(ctx, gameID)
@@ -573,6 +632,63 @@ func (_c *ContestRepository_GetVisibilityByID_Call) Return(_a0 model.ContestVisi
 }
 
 func (_c *ContestRepository_GetVisibilityByID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (model.ContestVisibility, error)) *ContestRepository_GetVisibilityByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// LockStatus provides a mock function with given fields: ctx, id
+func (_m *ContestRepository) LockStatus(ctx context.Context, id uuid.UUID) (model.ContestStatus, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LockStatus")
+	}
+
+	var r0 model.ContestStatus
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (model.ContestStatus, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) model.ContestStatus); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(model.ContestStatus)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ContestRepository_LockStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LockStatus'
+type ContestRepository_LockStatus_Call struct {
+	*mock.Call
+}
+
+// LockStatus is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *ContestRepository_Expecter) LockStatus(ctx interface{}, id interface{}) *ContestRepository_LockStatus_Call {
+	return &ContestRepository_LockStatus_Call{Call: _e.mock.On("LockStatus", ctx, id)}
+}
+
+func (_c *ContestRepository_LockStatus_Call) Run(run func(ctx context.Context, id uuid.UUID)) *ContestRepository_LockStatus_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *ContestRepository_LockStatus_Call) Return(_a0 model.ContestStatus, _a1 error) *ContestRepository_LockStatus_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ContestRepository_LockStatus_Call) RunAndReturn(run func(context.Context, uuid.UUID) (model.ContestStatus, error)) *ContestRepository_LockStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }
