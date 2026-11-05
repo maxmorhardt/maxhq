@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const api = vi.hoisted(() => ({ setUser: vi.fn(), resetUser: vi.fn() }));
+const api = vi.hoisted(() => ({ setUser: vi.fn(), resetUser: vi.fn(), pushEvent: vi.fn() }));
 const initializeFaro = vi.hoisted(() => vi.fn(() => ({ api })));
 vi.mock('@grafana/faro-web-sdk', () => ({
   initializeFaro,
@@ -17,6 +17,7 @@ async function load() {
 describe('faro', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
   });
 
   it('stays off without a collector url', async () => {
@@ -49,11 +50,65 @@ describe('faro', () => {
     const { initFaro, setFaroUser } = await load();
     initFaro('squares.maxhq.io', URL);
 
-    setFaroUser('u_1');
-    await vi.waitFor(() => expect(api.setUser).toHaveBeenCalledWith({ id: 'u_1' }));
+    setFaroUser('u_1', 'a@x.com');
+    await vi.waitFor(() =>
+      expect(api.setUser).toHaveBeenCalledWith({ id: 'u_1', email: 'a@x.com' })
+    );
+
+    setFaroUser('u_2');
+    await vi.waitFor(() => expect(api.setUser).toHaveBeenLastCalledWith({ id: 'u_2' }));
+
+    setFaroUser(undefined, 'b@x.com');
+    await vi.waitFor(() => expect(api.setUser).toHaveBeenLastCalledWith({ email: 'b@x.com' }));
 
     setFaroUser(undefined);
     await vi.waitFor(() => expect(api.resetUser).toHaveBeenCalled());
+  });
+
+  it('records where the visit landed from', async () => {
+    const { initFaro } = await load();
+    initFaro('squares.maxhq.io', URL);
+    await vi.waitFor(() =>
+      expect(api.pushEvent).toHaveBeenCalledWith('landing', expect.any(Object))
+    );
+  });
+
+  it('records a landing once per tab, not on the sign-in callback or a reload', async () => {
+    const first = await load();
+    first.initFaro('squares.maxhq.io', URL);
+    await vi.waitFor(() => expect(api.pushEvent).toHaveBeenCalledTimes(1));
+
+    const reload = await load();
+    reload.initFaro('squares.maxhq.io', URL);
+    await vi.waitFor(() => expect(initializeFaro).toHaveBeenCalledTimes(2));
+    expect(api.pushEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads the campaign, ad click, and referrer from a landing url', async () => {
+    const { landingAttributes } = await load();
+
+    expect(
+      landingAttributes(
+        'https://squares.maxhq.io/?utm_source=google&utm_medium=cpc&utm_campaign=squares-search&gad_campaignid=9&gclid=abc&x=1',
+        'https://www.google.com/'
+      )
+    ).toEqual({
+      utm_source: 'google',
+      utm_medium: 'cpc',
+      utm_campaign: 'squares-search',
+      gad_campaignid: '9',
+      ad_click: 'google',
+      referrer: 'www.google.com',
+    });
+  });
+
+  it('tells a facebook click from a direct visit', async () => {
+    const { landingAttributes } = await load();
+
+    expect(landingAttributes('https://squares.maxhq.io/contests/c1?fbclid=f', '')).toEqual({
+      ad_click: 'facebook',
+    });
+    expect(landingAttributes('https://squares.maxhq.io/', 'not a url')).toEqual({});
   });
 
   it('strips invite tokens from everything it sends', async () => {

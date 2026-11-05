@@ -73,7 +73,7 @@ describe('useAuthSession', () => {
   it('tells faro who is signed in, and when they sign out', () => {
     mockAuth({ email: 'a@x.com' });
     const { rerender } = setup();
-    expect(setFaroUser).toHaveBeenLastCalledWith('u_a');
+    expect(setFaroUser).toHaveBeenLastCalledWith('u_a', 'a@x.com');
 
     mockAuth();
     rerender();

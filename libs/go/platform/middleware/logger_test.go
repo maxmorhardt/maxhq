@@ -71,6 +71,8 @@ func TestLoggerMiddleware_LogsRequestWithUser(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/contests/42", http.NoBody)
 	req.Header.Set("Cf-Ipcountry", "US")
+	req.Header.Set("Cf-Region", "Massachusetts")
+	req.Header.Set("Cf-Ipcity", "Boston")
 	req.Header.Set(HeaderRequestID, "req-1")
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
@@ -84,6 +86,8 @@ func TestLoggerMiddleware_LogsRequestWithUser(t *testing.T) {
 	assert.InDelta(t, http.StatusCreated, entry["status"], 0)
 	assert.Equal(t, "a@example.com", entry["user"])
 	assert.Equal(t, "US", entry["cf_country"])
+	assert.Equal(t, "Massachusetts", entry["cf_region"])
+	assert.Equal(t, "Boston", entry["cf_city"])
 	assert.Contains(t, entry, "duration_ms")
 }
 
