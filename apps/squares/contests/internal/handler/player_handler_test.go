@@ -96,7 +96,8 @@ func TestUpdatePlayer_Errors(t *testing.T) {
 		errs.ErrContestFinalized:    http.StatusForbidden,
 		errs.ErrNotEnoughSquares:    http.StatusBadRequest,
 		errs.ErrContestNotFound:     http.StatusNotFound,
-		errs.ErrNotPlayer:           http.StatusNotFound,
+		errs.ErrNotPlayer:           http.StatusForbidden,
+		errs.ErrPlayerNotFound:      http.StatusNotFound,
 		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
 	}
 	for svcErr, want := range cases {
@@ -165,7 +166,8 @@ func TestRemovePlayer_Errors(t *testing.T) {
 		errs.ErrCannotRemoveOwner:   http.StatusForbidden,
 		errs.ErrContestFinalized:    http.StatusForbidden,
 		errs.ErrContestNotFound:     http.StatusNotFound,
-		errs.ErrNotPlayer:           http.StatusNotFound,
+		errs.ErrNotPlayer:           http.StatusForbidden,
+		errs.ErrPlayerNotFound:      http.StatusNotFound,
 		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,
 	}
 	for svcErr, want := range cases {

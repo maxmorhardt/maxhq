@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeContest, makePlayer, makeSquare } from '../../../test/fixtures';
-import { getContestViewer } from './viewer';
+import { getContestViewer, getSquarePool } from './viewer';
 
 const contest = makeContest({
   owner: 'u_owner',
@@ -45,5 +45,26 @@ describe('getContestViewer', () => {
     });
     expect(viewer.isMe(undefined)).toBe(false);
     expect(viewer.isMe('')).toBe(false);
+  });
+});
+
+describe('getSquarePool', () => {
+  const board = makeContest({}, 10);
+
+  it('counts what is given out and who still waits for squares', () => {
+    const players = [
+      makePlayer({ id: 'o', userId: 'u_owner', role: 'owner', maxSquares: 0 }),
+      makePlayer({ id: 'a', userId: 'u_a', maxSquares: 30 }),
+      makePlayer({ id: 'b', userId: 'u_b', maxSquares: 0 }),
+    ];
+    const pool = getSquarePool(board, players);
+    expect(pool.allocated).toBe(30);
+    expect(pool.unallocated).toBe(70);
+    expect(pool.waiting.map((p) => p.id)).toEqual(['b']);
+  });
+
+  it('never reports a negative number left', () => {
+    const pool = getSquarePool(board, [makePlayer({ maxSquares: 105 })]);
+    expect(pool.unallocated).toBe(0);
   });
 });

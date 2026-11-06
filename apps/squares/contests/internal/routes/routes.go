@@ -27,6 +27,9 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	write := func(final gin.HandlerFunc) []gin.HandlerFunc {
 		return []gin.HandlerFunc{g.Auth, g.FeedWrite, g.Idempotent, final}
 	}
+	writeWithoutFeed := func(final gin.HandlerFunc) []gin.HandlerFunc {
+		return []gin.HandlerFunc{g.Auth, g.Idempotent, final}
+	}
 
 	contests := r.Group("/contests")
 	contests.GET("", g.Auth, h.Feed.GetFeed)
@@ -39,14 +42,14 @@ func Register(r *gin.Engine, h *Handlers, g Guards) {
 	contests.DELETE("/:id/squares/:squareId/claim", write(h.Square.ClearSquare)...)
 
 	contests.GET("/:id/roster", g.Auth, h.Player.GetRoster)
-	contests.POST("/:id/players/allot", write(h.Player.AllotSquares)...)
+	contests.POST("/:id/players/allot", writeWithoutFeed(h.Player.AllotSquares)...)
 	contests.PATCH("/:id/players/:userId", write(h.Player.UpdatePlayer)...)
 	contests.DELETE("/:id/players/:userId", write(h.Player.RemovePlayer)...)
 	contests.GET("/:id/bans", g.Auth, h.Player.GetBans)
-	contests.DELETE("/:id/bans/:userId", write(h.Player.Unban)...)
+	contests.DELETE("/:id/bans/:userId", writeWithoutFeed(h.Player.Unban)...)
 
 	contests.GET("/:id/invite", g.Auth, h.Invite.GetInviteLink)
-	contests.POST("/:id/invite/reset", write(h.Invite.ResetInviteLink)...)
+	contests.POST("/:id/invite/reset", writeWithoutFeed(h.Invite.ResetInviteLink)...)
 
 	invites := r.Group("/invites")
 	invites.GET("/:token", h.Invite.GetInvitePreview)

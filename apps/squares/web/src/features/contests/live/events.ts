@@ -21,9 +21,9 @@ export type ContestEvent =
   | Envelope<'contest.deleted', undefined>
   | Envelope<'square.updated', Square>
   | Envelope<'quarter.recorded', QuarterResult>
-  | Envelope<'participant.joined', Player>
-  | Envelope<'participant.updated', Player>
-  | Envelope<'participant.removed', Player>
+  | Envelope<'player.joined', Player>
+  | Envelope<'player.updated', Player>
+  | Envelope<'player.removed', Player>
   | Envelope<'access.revoked', undefined>;
 
 export type ContestEventType = ContestEvent['type'];
@@ -37,10 +37,16 @@ const KNOWN_TYPES: Record<ContestEventType, true> = {
   'contest.deleted': true,
   'square.updated': true,
   'quarter.recorded': true,
-  'participant.joined': true,
-  'participant.updated': true,
-  'participant.removed': true,
+  'player.joined': true,
+  'player.updated': true,
+  'player.removed': true,
   'access.revoked': true,
+};
+
+const RENAMED_TYPES: Record<string, ContestEventType> = {
+  'participant.joined': 'player.joined',
+  'participant.updated': 'player.updated',
+  'participant.removed': 'player.removed',
 };
 
 export type ParsedEvent =
@@ -59,14 +65,15 @@ export function parseContestEvent(data: string, contestId: string): ParsedEvent 
     return { kind: 'invalid' };
   }
 
-  const { type, contestId: eventContestId } = parsed as Partial<ContestEvent>;
-  if (typeof type !== 'string' || eventContestId !== contestId) {
+  const { type: sentType, contestId: eventContestId } = parsed as Partial<ContestEvent>;
+  if (typeof sentType !== 'string' || eventContestId !== contestId) {
     return { kind: 'invalid' };
   }
 
-  if (!(type in KNOWN_TYPES)) {
+  const type = Object.hasOwn(RENAMED_TYPES, sentType) ? RENAMED_TYPES[sentType] : sentType;
+  if (!Object.hasOwn(KNOWN_TYPES, type)) {
     return { kind: 'unknown', type };
   }
 
-  return { kind: 'event', event: parsed as ContestEvent };
+  return { kind: 'event', event: { ...parsed, type } as ContestEvent };
 }

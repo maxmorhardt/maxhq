@@ -113,19 +113,30 @@ describe('liveContestSlice events', () => {
   });
 
   it('adds, updates, and removes players', () => {
-    let state = receive(
-      live(),
-      event('participant.joined', makePlayer({ id: 'p-2', userId: 'u_b' }))
-    );
+    let state = receive(live(), event('player.joined', makePlayer({ id: 'p-2', userId: 'u_b' })));
     expect(state.players).toHaveLength(2);
     state = receive(
       state,
-      event('participant.updated', makePlayer({ id: 'p-2', userId: 'u_b', maxSquares: 9 }))
+      event('player.updated', makePlayer({ id: 'p-2', userId: 'u_b', maxSquares: 9 }))
     );
     expect(state.players).toHaveLength(2);
     expect(state.players.find((p) => p.id === 'p-2')?.maxSquares).toBe(9);
-    state = receive(state, event('participant.removed', makePlayer({ userId: 'u_b' })));
+    state = receive(state, event('player.removed', makePlayer({ userId: 'u_b' })));
     expect(state.players.map((p) => p.userId)).toEqual(['u_player']);
+  });
+
+  it('reads players from a snapshot under either key, preferring players', () => {
+    const opened = liveContestReducer(undefined, streamOpened('c-1'));
+    const state = receive(
+      opened,
+      event('contest.snapshot', {
+        contest: makeContest(),
+        players: [makePlayer({ id: 'new' })],
+        participants: [makePlayer({ id: 'old' })],
+        viewerId: 'u_player',
+      })
+    );
+    expect(state.players.map((p) => p.id)).toEqual(['new']);
   });
 
   it('marks the stream ended when the contest is deleted or access is revoked', () => {
@@ -198,7 +209,7 @@ describe('liveContestSlice write responses', () => {
 
   it('applies squares given to everyone at once', () => {
     const newcomer = makePlayer({ id: 'p-2', userId: 'u_new', maxSquares: 0 });
-    let state = receive(live(), event('participant.joined', newcomer));
+    let state = receive(live(), event('player.joined', newcomer));
     state = liveContestReducer(state, fulfilled('allotSquares', [{ ...newcomer, maxSquares: 5 }]));
     expect(state.players.find((p) => p.id === 'p-2')?.maxSquares).toBe(5);
   });

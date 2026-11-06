@@ -8,6 +8,8 @@ import (
 	model "github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	mock "github.com/stretchr/testify/mock"
 
+	time "time"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -238,27 +240,29 @@ func (_c *PlayerRepository_GetByContestAndUser_Call) RunAndReturn(run func(conte
 	return _c
 }
 
-// GetTotalAllocatedSquares provides a mock function with given fields: ctx, contestID
-func (_m *PlayerRepository) GetTotalAllocatedSquares(ctx context.Context, contestID uuid.UUID) (int, error) {
-	ret := _m.Called(ctx, contestID)
+// SetMaxSquares provides a mock function with given fields: ctx, contestID, ids, maxSquares, at
+func (_m *PlayerRepository) SetMaxSquares(ctx context.Context, contestID uuid.UUID, ids []uuid.UUID, maxSquares int, at time.Time) ([]uuid.UUID, error) {
+	ret := _m.Called(ctx, contestID, ids, maxSquares, at)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetTotalAllocatedSquares")
+		panic("no return value specified for SetMaxSquares")
 	}
 
-	var r0 int
+	var r0 []uuid.UUID
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (int, error)); ok {
-		return rf(ctx, contestID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) ([]uuid.UUID, error)); ok {
+		return rf(ctx, contestID, ids, maxSquares, at)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) int); ok {
-		r0 = rf(ctx, contestID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) []uuid.UUID); ok {
+		r0 = rf(ctx, contestID, ids, maxSquares, at)
 	} else {
-		r0 = ret.Get(0).(int)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]uuid.UUID)
+		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = rf(ctx, contestID)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) error); ok {
+		r1 = rf(ctx, contestID, ids, maxSquares, at)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -266,31 +270,34 @@ func (_m *PlayerRepository) GetTotalAllocatedSquares(ctx context.Context, contes
 	return r0, r1
 }
 
-// PlayerRepository_GetTotalAllocatedSquares_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTotalAllocatedSquares'
-type PlayerRepository_GetTotalAllocatedSquares_Call struct {
+// PlayerRepository_SetMaxSquares_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetMaxSquares'
+type PlayerRepository_SetMaxSquares_Call struct {
 	*mock.Call
 }
 
-// GetTotalAllocatedSquares is a helper method to define mock.On call
+// SetMaxSquares is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contestID uuid.UUID
-func (_e *PlayerRepository_Expecter) GetTotalAllocatedSquares(ctx interface{}, contestID interface{}) *PlayerRepository_GetTotalAllocatedSquares_Call {
-	return &PlayerRepository_GetTotalAllocatedSquares_Call{Call: _e.mock.On("GetTotalAllocatedSquares", ctx, contestID)}
+//   - ids []uuid.UUID
+//   - maxSquares int
+//   - at time.Time
+func (_e *PlayerRepository_Expecter) SetMaxSquares(ctx interface{}, contestID interface{}, ids interface{}, maxSquares interface{}, at interface{}) *PlayerRepository_SetMaxSquares_Call {
+	return &PlayerRepository_SetMaxSquares_Call{Call: _e.mock.On("SetMaxSquares", ctx, contestID, ids, maxSquares, at)}
 }
 
-func (_c *PlayerRepository_GetTotalAllocatedSquares_Call) Run(run func(ctx context.Context, contestID uuid.UUID)) *PlayerRepository_GetTotalAllocatedSquares_Call {
+func (_c *PlayerRepository_SetMaxSquares_Call) Run(run func(ctx context.Context, contestID uuid.UUID, ids []uuid.UUID, maxSquares int, at time.Time)) *PlayerRepository_SetMaxSquares_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].([]uuid.UUID), args[3].(int), args[4].(time.Time))
 	})
 	return _c
 }
 
-func (_c *PlayerRepository_GetTotalAllocatedSquares_Call) Return(_a0 int, _a1 error) *PlayerRepository_GetTotalAllocatedSquares_Call {
+func (_c *PlayerRepository_SetMaxSquares_Call) Return(_a0 []uuid.UUID, _a1 error) *PlayerRepository_SetMaxSquares_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *PlayerRepository_GetTotalAllocatedSquares_Call) RunAndReturn(run func(context.Context, uuid.UUID) (int, error)) *PlayerRepository_GetTotalAllocatedSquares_Call {
+func (_c *PlayerRepository_SetMaxSquares_Call) RunAndReturn(run func(context.Context, uuid.UUID, []uuid.UUID, int, time.Time) ([]uuid.UUID, error)) *PlayerRepository_SetMaxSquares_Call {
 	_c.Call.Return(run)
 	return _c
 }

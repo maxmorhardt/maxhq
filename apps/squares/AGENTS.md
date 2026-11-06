@@ -40,13 +40,14 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
    - Mocks are generated with mockery (`make mocks`), never hand-written.
 3. Explicit, typed errors
    - Services return sentinel errors from the service's `internal/errs` so handlers can map them.
-   - Services translate `gorm.ErrRecordNotFound` into a domain error; repositories pass GORM errors through unchanged.
+   - Repositories keep GORM to themselves: a lookup returns `database.TranslateError(err)`, so callers see `database.ErrNotFound` or `database.ErrDuplicate`, never a GORM error. Services map those to their domain errors and never import GORM.
 4. Context is a first-class parameter
    - `context.Context` comes first in any function crossing a layer or touching Postgres or Valkey.
    - Pull loggers from context with `logging.FromContext(ctx)`. Never call `slog.Default()` in a service or repository.
 5. Migrations own the schema
    - Changing a model means adding a migration in the owning service's `internal/migrations`.
    - Migrations are embedded and applied at startup with `search_path` set to the service's schema.
+   - Grafana's Contests dashboard (`gitops/infra/monitoring/dashboards/contests.json`) queries the `contests` and `accounts` tables directly. Renaming or dropping a table or column means updating it in the same round.
 6. Identity stays a plain value
    - Handlers read identity with `c.GetString(api.UserKey)` and pass it down as a `string`. Services never depend on `*gin.Context`.
 7. Valkey outages degrade, they do not fail requests

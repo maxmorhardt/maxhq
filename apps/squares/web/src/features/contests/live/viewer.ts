@@ -35,3 +35,18 @@ export function getContestViewer(
     squaresLeft: Math.max(0, (player?.maxSquares ?? 0) - squaresClaimed),
   };
 }
+
+export interface SquarePool {
+  allocated: number;
+  unallocated: number;
+  waiting: Player[];
+}
+
+export function getSquarePool(contest: Contest, players: Player[]): SquarePool {
+  const allocated = players.reduce((sum, p) => sum + p.maxSquares, 0);
+  return {
+    allocated,
+    unallocated: Math.max(0, contest.squares.length - allocated),
+    waiting: players.filter((p) => p.role === 'player' && p.maxSquares === 0),
+  };
+}

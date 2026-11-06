@@ -85,6 +85,7 @@ func (s *inviteService) ResetInviteLink(ctx context.Context, contestID uuid.UUID
 		return nil, errs.ErrDatabaseUnavailable
 	}
 
+	metrics.IncInviteLinkReset()
 	log.Info("invite link reset", "contest_id", contestID)
 	return &model.InviteLinkResponse{Token: token}, nil
 }

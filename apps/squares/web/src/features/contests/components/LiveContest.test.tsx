@@ -200,7 +200,7 @@ describe('LiveContest', () => {
   it('sends a removed viewer away from a private contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'private' }));
-    emit(event('participant.removed', makePlayer({ userId: 'u_player' })));
+    emit(event('player.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).toHaveBeenCalledWith('/contests');
     expect(toasts()[0]?.severity).toBe('warning');
   });
@@ -208,7 +208,7 @@ describe('LiveContest', () => {
   it('lets a removed viewer keep watching a public contest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'public' }));
-    emit(event('participant.removed', makePlayer({ userId: 'u_player' })));
+    emit(event('player.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).not.toHaveBeenCalled();
     expect(toasts()[0]?.severity).toBe('info');
   });
@@ -217,7 +217,7 @@ describe('LiveContest', () => {
     const { snapshot, emit, toasts } = renderLive();
     snapshot(makeContest({ visibility: 'private' }));
     emit({
-      ...event('participant.removed', makePlayer({ userId: 'u_player' })),
+      ...event('player.removed', makePlayer({ userId: 'u_player' })),
       updatedBy: 'u_player',
     });
     expect(toasts()[0]).toMatchObject({ message: 'You left this contest', severity: 'info' });
@@ -226,7 +226,7 @@ describe('LiveContest', () => {
 
   it('ignores other people being removed', () => {
     const { emit, toasts } = renderLive();
-    emit(event('participant.removed', makePlayer({ userId: 'u_other' })));
+    emit(event('player.removed', makePlayer({ userId: 'u_other' })));
     expect(toasts()).toHaveLength(0);
   });
 });

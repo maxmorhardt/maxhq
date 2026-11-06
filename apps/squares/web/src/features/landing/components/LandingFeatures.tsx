@@ -38,7 +38,7 @@ function sample(type: ContestEvent['type'], data: object, timestamp: string, bef
 }
 
 const sampleActivity = [
-  sample('participant.joined', { userId: 'u_jordan', displayName: 'Jordan D.' }, at(18, 58)),
+  sample('player.joined', { userId: 'u_jordan', displayName: 'Jordan D.' }, at(18, 58)),
   sample(
     'square.updated',
     { row: 4, col: 7, value: 'JD', owner: 'u_jordan', ownerName: 'Jordan D.' },

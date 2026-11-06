@@ -156,22 +156,21 @@ describe('describeEvent', () => {
 
   it('names who joined and left', () => {
     const player = makePlayer({ userId: 'u_bo', displayName: 'Bo J.' });
-    expect(describeEvent(event('participant.joined', player), 'id')?.message).toBe(
+    expect(describeEvent(event('player.joined', player), 'id')?.message).toBe(
       'Bo J. joined the contest'
     );
     expect(
-      describeEvent({ ...event('participant.removed', player), updatedBy: 'u_bo' }, 'id')?.message
+      describeEvent({ ...event('player.removed', player), updatedBy: 'u_bo' }, 'id')?.message
     ).toBe('Bo J. left the contest');
   });
 
   it('says when the owner removed someone, and when an account was deleted', () => {
     const player = makePlayer({ userId: 'u_bo', displayName: 'Bo J.' });
     expect(
-      describeEvent({ ...event('participant.removed', player), updatedBy: 'u_owner' }, 'id')
-        ?.message
+      describeEvent({ ...event('player.removed', player), updatedBy: 'u_owner' }, 'id')?.message
     ).toBe('Bo J. was removed from the contest');
     expect(
-      describeEvent({ ...event('participant.removed', player), updatedBy: 'system' }, 'id')?.message
+      describeEvent({ ...event('player.removed', player), updatedBy: 'system' }, 'id')?.message
     ).toBe('Bo J. left the contest');
   });
 
