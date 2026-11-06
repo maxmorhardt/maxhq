@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.5.0...squares-accounts/1.5.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.1.0 ([#212](https://github.com/maxmorhardt/maxhq/issues/212)) ([5c765b1](https://github.com/maxmorhardt/maxhq/commit/5c765b1eb22a85d8deebabd110ed6eb939c5899d))
+
 ## [1.5.0](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.4.2...squares-accounts/1.5.0) (2026-11-03)
 
 

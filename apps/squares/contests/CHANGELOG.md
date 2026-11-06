@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.8.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.7.0...squares-contests/2.8.0) (2026-11-06)
+
+
+### Features
+
+* **squares:** add player events and tighten player controls ([#213](https://github.com/maxmorhardt/maxhq/issues/213)) ([482caaa](https://github.com/maxmorhardt/maxhq/commit/482caaa53a1b23b5fa2baa58f946a0a1b5c6fb7c))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#210](https://github.com/maxmorhardt/maxhq/issues/210)) ([e220497](https://github.com/maxmorhardt/maxhq/commit/e2204972b458a16e4c9d60c7633d154285ff973f))
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.1.0 ([#212](https://github.com/maxmorhardt/maxhq/issues/212)) ([5c765b1](https://github.com/maxmorhardt/maxhq/commit/5c765b1eb22a85d8deebabd110ed6eb939c5899d))
+
 ## [2.7.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.6.0...squares-contests/2.7.0) (2026-11-05)
 
 

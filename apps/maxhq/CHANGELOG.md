@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.7.0...maxhq/1.7.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#210](https://github.com/maxmorhardt/maxhq/issues/210)) ([e220497](https://github.com/maxmorhardt/maxhq/commit/e2204972b458a16e4c9d60c7633d154285ff973f))
+
 ## [1.7.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.6.0...maxhq/1.7.0) (2026-11-05)
 
 
