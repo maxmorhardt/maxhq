@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.1](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.8.0...squares-contests/2.8.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/klauspost/compress to v1.20.2 [security] ([#214](https://github.com/maxmorhardt/maxhq/issues/214)) ([5464a81](https://github.com/maxmorhardt/maxhq/commit/5464a8104eeac32cafae85ef782166ddb48f435a))
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.2.0 ([#218](https://github.com/maxmorhardt/maxhq/issues/218)) ([ec8f1e6](https://github.com/maxmorhardt/maxhq/commit/ec8f1e6741c43771704e77162379fb73643c6f6b))
+
 ## [2.8.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.7.0...squares-contests/2.8.0) (2026-11-06)
 
 
