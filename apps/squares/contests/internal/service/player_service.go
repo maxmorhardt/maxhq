@@ -381,6 +381,9 @@ func (s *playerService) RemovePlayer(ctx context.Context, contestID uuid.UUID, t
 	}
 
 	metrics.IncPlayerRemoved()
+	if !leaving {
+		metrics.IncPlayerBanned()
+	}
 	log.Info("player removed", "contest_id", contestID, "target_user", targetUserID, "banned", !leaving)
 	return nil
 }

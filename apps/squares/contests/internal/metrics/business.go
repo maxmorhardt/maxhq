@@ -57,6 +57,13 @@ var (
 		},
 	)
 
+	playersBannedTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "players_banned_total",
+			Help: "Total number of players banned from a contest",
+		},
+	)
+
 	playersUnbannedTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "players_unbanned_total",
@@ -95,6 +102,7 @@ func init() {
 		limitsReachedTotal,
 		playersJoinedTotal,
 		playersRemovedTotal,
+		playersBannedTotal,
 		playersUnbannedTotal,
 		inviteLinksResetTotal,
 		squaresClaimedTotal,
@@ -128,6 +136,10 @@ func IncPlayerJoined(role string) {
 
 func IncPlayerRemoved() {
 	playersRemovedTotal.Inc()
+}
+
+func IncPlayerBanned() {
+	playersBannedTotal.Inc()
 }
 
 func IncPlayerUnbanned() {
