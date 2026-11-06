@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.1...libs/go/v1.2.2) (2026-11-06)
+
+
+### Bug Fixes
+
+* **libs:** drop the participant event names and snapshot key ([#222](https://github.com/maxmorhardt/maxhq/issues/222)) ([d774e54](https://github.com/maxmorhardt/maxhq/commit/d774e544631d050a51ccb2bebcd563a6ed5ee9ed))
+
 ## [1.2.1](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.0...libs/go/v1.2.1) (2026-11-06)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.11.0...squares/2.11.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **libs:** drop the participant event names and snapshot key ([#222](https://github.com/maxmorhardt/maxhq/issues/222)) ([d774e54](https://github.com/maxmorhardt/maxhq/commit/d774e544631d050a51ccb2bebcd563a6ed5ee9ed))
+
 ## [2.11.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.10.0...squares/2.11.0) (2026-11-06)
 
 

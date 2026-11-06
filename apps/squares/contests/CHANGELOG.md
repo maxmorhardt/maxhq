@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.1](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.0...squares-contests/2.9.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **libs:** drop the participant event names and snapshot key ([#222](https://github.com/maxmorhardt/maxhq/issues/222)) ([d774e54](https://github.com/maxmorhardt/maxhq/commit/d774e544631d050a51ccb2bebcd563a6ed5ee9ed))
+
 ## [2.9.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.8.1...squares-contests/2.9.0) (2026-11-06)
 
 
