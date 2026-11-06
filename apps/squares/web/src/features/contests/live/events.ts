@@ -70,8 +70,8 @@ export function parseContestEvent(data: string, contestId: string): ParsedEvent 
     return { kind: 'invalid' };
   }
 
-  const type = RENAMED_TYPES[sentType] ?? sentType;
-  if (!(type in KNOWN_TYPES)) {
+  const type = Object.hasOwn(RENAMED_TYPES, sentType) ? RENAMED_TYPES[sentType] : sentType;
+  if (!Object.hasOwn(KNOWN_TYPES, type)) {
     return { kind: 'unknown', type };
   }
 

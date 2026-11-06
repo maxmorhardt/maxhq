@@ -895,3 +895,27 @@ func TestRemovePlayer_FullBoardBeforeKickoffFreesTheirSquares(t *testing.T) {
 	svc := service.NewPlayerService(p, c, sq, bansRemovingTarget(t), passTx(), anyEvents())
 	require.NoError(t, svc.RemovePlayer(context.Background(), uuid.New(), pseudonym.Of("target@x.com"), "owner@x.com"))
 }
+
+func TestRemovePlayer_LeavingAfterYourRowIsGoneSaysNotAPlayer(t *testing.T) {
+	c := mocks.NewContestRepository(t)
+	activeContest(c)
+	p := mocks.NewPlayerRepository(t)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "self@x.com").Return(&model.ContestPlayer{UserID: "self@x.com"}, nil).Once()
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "self@x.com").Return(nil, database.ErrNotFound).Once()
+
+	svc := service.NewPlayerService(p, c, mocks.NewSquareRepository(t), mocks.NewBanRepository(t), passTx(), anyEvents())
+	err := svc.RemovePlayer(context.Background(), uuid.New(), pseudonym.Of("self@x.com"), "self@x.com")
+	assert.ErrorIs(t, err, errs.ErrNotPlayer, "a double-clicked leave gets the same answer as the first one would")
+}
+
+func TestRemovePlayer_LeavingLookupUnderTheLockFails(t *testing.T) {
+	c := mocks.NewContestRepository(t)
+	activeContest(c)
+	p := mocks.NewPlayerRepository(t)
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "self@x.com").Return(&model.ContestPlayer{UserID: "self@x.com"}, nil).Once()
+	p.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "self@x.com").Return(nil, errors.New("db")).Once()
+
+	svc := service.NewPlayerService(p, c, mocks.NewSquareRepository(t), mocks.NewBanRepository(t), passTx(), anyEvents())
+	err := svc.RemovePlayer(context.Background(), uuid.New(), pseudonym.Of("self@x.com"), "self@x.com")
+	assert.ErrorIs(t, err, errs.ErrDatabaseUnavailable)
+}

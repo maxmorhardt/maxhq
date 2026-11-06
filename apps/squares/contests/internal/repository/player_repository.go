@@ -59,7 +59,7 @@ func (r *playerRepository) SetMaxSquares(ctx context.Context, contestID uuid.UUI
 		Where("contest_id = ? AND id IN ? AND max_squares = 0", contestID, ids).
 		Updates(map[string]any{"max_squares": maxSquares, "updated_at": at}).Error
 	if err != nil {
-		return nil, err
+		return nil, database.TranslateError(err)
 	}
 
 	updatedIDs := make([]uuid.UUID, 0, len(updated))

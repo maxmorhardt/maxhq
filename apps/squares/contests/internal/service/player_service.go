@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -230,7 +229,7 @@ func (s *playerService) AllotSquares(ctx context.Context, contestID uuid.UUID, m
 			return poolErr
 		}
 
-		now := time.Now()
+		now := time.Now().UTC().Truncate(time.Microsecond)
 		updated, err := s.playerRepo.SetMaxSquares(ctx, contestID, ids, maxSquares, now)
 		if err != nil {
 			log.Error("failed to allot squares", "contest_id", contestID, "players", len(ids), "error", err)
@@ -256,9 +255,14 @@ func (s *playerService) AllotSquares(ctx context.Context, contestID uuid.UUID, m
 }
 
 func onlyUpdated(players []model.ContestPlayer, updated []uuid.UUID) []model.ContestPlayer {
+	ids := make(map[uuid.UUID]struct{}, len(updated))
+	for _, id := range updated {
+		ids[id] = struct{}{}
+	}
+
 	kept := make([]model.ContestPlayer, 0, len(updated))
 	for i := range players {
-		if slices.Contains(updated, players[i].ID) {
+		if _, ok := ids[players[i].ID]; ok {
 			kept = append(kept, players[i])
 		}
 	}

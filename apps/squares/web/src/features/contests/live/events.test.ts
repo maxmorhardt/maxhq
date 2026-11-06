@@ -29,6 +29,12 @@ describe('parseContestEvent', () => {
     }
   });
 
+  it('treats built-in object keys as unknown types, not events', () => {
+    for (const type of ['constructor', 'toString', '__proto__']) {
+      expect(parseContestEvent(envelope({ type }), 'c-1')).toEqual({ kind: 'unknown', type });
+    }
+  });
+
   it('skips event types it does not know yet', () => {
     expect(parseContestEvent(envelope({ type: 'contest.renamed' }), 'c-1')).toEqual({
       kind: 'unknown',

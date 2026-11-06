@@ -181,9 +181,8 @@ func (h *playerHandler) RemovePlayer(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrContestNotFound), errors.Is(err, errs.ErrPlayerNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrNotPlayer):
-			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
-		case errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrCannotRemoveOwner):
+		case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrNotPlayer),
+			errors.Is(err, errs.ErrInsufficientRole), errors.Is(err, errs.ErrCannotRemoveOwner):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		default:
 			log.Error("failed to remove player", "error", err)
