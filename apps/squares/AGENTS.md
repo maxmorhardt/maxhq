@@ -27,7 +27,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `users` - accounts. Read by contests.
 - Consumers keep their position in their own schema (`stream_offsets`), handle entries in order, and retry a failing entry with backoff before moving on. A handler must tolerate seeing an entry again after a crash. A payload that can never decode is logged and skipped.
 - Synchronous calls between services are limited to two internal reads on contests (`/internal/contests/:id/snapshot` for realtime, `/internal/users/:email/activity` for accounts), guarded by `X-Internal-Token` and a NetworkPolicy, and made through `httpclient.Internal`, which retries network errors and 5xx. Keep it that way.
-- Changing a payload in `libs/go/squares` is a contract change: keep it backwards compatible (add fields, never rename or retype), because services move to a new `libs/go` version one at a time.
+- Changing a payload in `libs/go/squares` is a contract change: keep it backwards compatible (add fields, never rename or retype; remove only once nothing uses it, see `libs/AGENTS.md`), because services move to a new `libs/go` version one at a time.
 
 ## Core Principles
 

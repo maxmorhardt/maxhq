@@ -194,7 +194,7 @@ export type ContestUpdate = Pick<
 
 export interface ContestSnapshot {
   contest: Contest;
-  players: Player[];
+  players?: Player[];
   viewerId: string;
 }
 

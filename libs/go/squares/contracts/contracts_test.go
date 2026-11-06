@@ -21,4 +21,8 @@ func TestContestSnapshot_CarriesPlayers(t *testing.T) {
 	assert.NoError(t, json.Unmarshal([]byte(`{"contest":{},"players":[{"id":"a"}],"viewerId":"u"}`), &snap))
 	assert.JSONEq(t, `[{"id":"a"}]`, string(snap.Players))
 	assert.Equal(t, "u", snap.ViewerID)
+
+	out, err := json.Marshal(ContestSnapshot{Contest: json.RawMessage(`{}`), Players: json.RawMessage(`[]`), ViewerID: "u"})
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"contest":{},"players":[],"viewerId":"u"}`, string(out))
 }

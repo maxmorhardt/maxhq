@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -31,6 +32,10 @@ func TestSnapshot_ReturnsContestAndPlayersToViewers(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "C", snap.Contest.Name)
 	assert.Len(t, snap.Players, 1)
+	out, err := json.Marshal(snap)
+	require.NoError(t, err)
+	assert.Contains(t, string(out), `"players":[`)
+	assert.NotContains(t, string(out), "participants")
 	assert.Equal(t, pseudonym.Of("v@b.com"), snap.ViewerID, "the page tells which squares are yours without asking accounts")
 }
 

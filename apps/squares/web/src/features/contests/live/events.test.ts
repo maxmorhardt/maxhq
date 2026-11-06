@@ -24,6 +24,13 @@ describe('parseContestEvent', () => {
     }
   });
 
+  it('no longer knows the retired participant event names', () => {
+    expect(parseContestEvent(envelope({ type: 'participant.joined' }), 'c-1')).toEqual({
+      kind: 'unknown',
+      type: 'participant.joined',
+    });
+  });
+
   it('skips event types it does not know yet', () => {
     expect(parseContestEvent(envelope({ type: 'contest.renamed' }), 'c-1')).toEqual({
       kind: 'unknown',
