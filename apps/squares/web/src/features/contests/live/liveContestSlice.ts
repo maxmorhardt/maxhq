@@ -123,7 +123,7 @@ type EventHandler<T extends ContestEventType> = (
 // one handler per event type; the mapped type makes a missing handler a compile error
 function applySnapshot(state: LiveContestState, snapshot: ContestSnapshot) {
   state.contest = snapshot.contest;
-  state.players = snapshot.players ?? snapshot.participants ?? [];
+  state.players = snapshot.players ?? [];
   state.viewerId = snapshot.viewerId;
   state.activity = seedActivity(snapshot.contest, state.players);
 }

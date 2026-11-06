@@ -72,7 +72,7 @@ function renderLive() {
     dispatch(
       eventReceived({
         id: '1',
-        event: event('contest.snapshot', { contest, participants: players, viewerId: 'u_player' }),
+        event: event('contest.snapshot', { contest, players, viewerId: 'u_player' }),
       })
     );
   return {

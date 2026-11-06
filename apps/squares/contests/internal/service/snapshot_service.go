@@ -51,5 +51,5 @@ func (s *snapshotService) GetSnapshot(ctx context.Context, contestID uuid.UUID, 
 		return nil, err
 	}
 
-	return &model.ContestSnapshot{Contest: contest, Players: players, Participants: players, ViewerID: pseudonym.Of(user)}, nil
+	return &model.ContestSnapshot{Contest: contest, Players: players, ViewerID: pseudonym.Of(user)}, nil
 }

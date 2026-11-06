@@ -120,7 +120,7 @@ func (f *fakeContests) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case !allowed:
 		w.WriteHeader(http.StatusForbidden)
 	default:
-		_, _ = w.Write([]byte(`{"contest":{"id":"` + id.String() + `","name":"Stream Bowl"},"participants":[],"viewerId":"` + viewerID(user) + `"}`))
+		_, _ = w.Write([]byte(`{"contest":{"id":"` + id.String() + `","name":"Stream Bowl"},"players":[],"viewerId":"` + viewerID(user) + `"}`))
 	}
 }
 

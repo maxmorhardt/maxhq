@@ -254,7 +254,6 @@ func TestRequiresAccessCheck(t *testing.T) {
 		{"unreadable update", events.ContestUpdatedType, `"oops"`, true},
 		{"viewer removed", events.PlayerRemovedType, `{"userId":"u_viewer"}`, true},
 		{"someone else removed", events.PlayerRemovedType, `{"userId":"u_other"}`, false},
-		{"viewer removed under the old name", events.ParticipantRemovedType, `{"userId":"u_viewer"}`, true},
 		{"square update", events.SquareUpdatedType, `{"visibility":"private"}`, false},
 	}
 
@@ -263,7 +262,7 @@ func TestRequiresAccessCheck(t *testing.T) {
 		assert.Equal(t, tt.want, service.RequiresAccessCheck(&event, true, "u_viewer"), tt.name)
 	}
 
-	removal := events.ContestEvent{Type: events.ParticipantRemovedType, Data: json.RawMessage(`{"userId":"u_other"}`)}
+	removal := events.ContestEvent{Type: events.PlayerRemovedType, Data: json.RawMessage(`{"userId":"u_other"}`)}
 	assert.True(t, service.RequiresAccessCheck(&removal, true, ""), "a viewer contests didn't name is checked on every removal")
 	assert.False(t, service.RequiresAccessCheck(&removal, false, ""), "a signed-out viewer is never checked on a removal")
 

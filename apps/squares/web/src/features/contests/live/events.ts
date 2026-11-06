@@ -43,12 +43,6 @@ const KNOWN_TYPES: Record<ContestEventType, true> = {
   'access.revoked': true,
 };
 
-const RENAMED_TYPES: Record<string, ContestEventType> = {
-  'participant.joined': 'player.joined',
-  'participant.updated': 'player.updated',
-  'participant.removed': 'player.removed',
-};
-
 export type ParsedEvent =
   { kind: 'event'; event: ContestEvent } | { kind: 'unknown'; type: string } | { kind: 'invalid' };
 
@@ -65,15 +59,14 @@ export function parseContestEvent(data: string, contestId: string): ParsedEvent 
     return { kind: 'invalid' };
   }
 
-  const { type: sentType, contestId: eventContestId } = parsed as Partial<ContestEvent>;
-  if (typeof sentType !== 'string' || eventContestId !== contestId) {
+  const { type, contestId: eventContestId } = parsed as Partial<ContestEvent>;
+  if (typeof type !== 'string' || eventContestId !== contestId) {
     return { kind: 'invalid' };
   }
 
-  const type = Object.hasOwn(RENAMED_TYPES, sentType) ? RENAMED_TYPES[sentType] : sentType;
   if (!Object.hasOwn(KNOWN_TYPES, type)) {
     return { kind: 'unknown', type };
   }
 
-  return { kind: 'event', event: { ...parsed, type } as ContestEvent };
+  return { kind: 'event', event: parsed as ContestEvent };
 }

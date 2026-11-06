@@ -256,8 +256,7 @@ func isFinished(contest json.RawMessage) bool {
 }
 
 func RequiresAccessCheck(event *events.ContestEvent, signedIn bool, viewerID string) bool {
-	removal := event.Type == events.PlayerRemovedType || event.Type == events.ParticipantRemovedType
-	if event.Type != events.ContestUpdatedType && !removal {
+	if event.Type != events.ContestUpdatedType && event.Type != events.PlayerRemovedType {
 		return false
 	}
 

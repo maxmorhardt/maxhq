@@ -10,18 +10,15 @@ import (
 
 // contest stream event types; the strings are the contract with the web client
 const (
-	ContestSnapshotType    = "contest.snapshot"
-	ContestUpdatedType     = "contest.updated"
-	ContestDeletedType     = "contest.deleted"
-	SquareUpdatedType      = "square.updated"
-	QuarterRecordedType    = "quarter.recorded"
-	ParticipantJoinedType  = "participant.joined"
-	ParticipantUpdatedType = "participant.updated"
-	ParticipantRemovedType = "participant.removed"
-	PlayerJoinedType       = "player.joined"
-	PlayerUpdatedType      = "player.updated"
-	PlayerRemovedType      = "player.removed"
-	AccessRevokedType      = "access.revoked"
+	ContestSnapshotType = "contest.snapshot"
+	ContestUpdatedType  = "contest.updated"
+	ContestDeletedType  = "contest.deleted"
+	SquareUpdatedType   = "square.updated"
+	QuarterRecordedType = "quarter.recorded"
+	PlayerJoinedType    = "player.joined"
+	PlayerUpdatedType   = "player.updated"
+	PlayerRemovedType   = "player.removed"
+	AccessRevokedType   = "access.revoked"
 )
 
 const (
