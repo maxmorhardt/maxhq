@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.0](https://github.com/maxmorhardt/maxhq/compare/squares-realtime/2.5.2...squares-realtime/2.6.0) (2026-11-06)
+
+
+### Features
+
+* **squares-contests:** send player events and the players snapshot key ([#219](https://github.com/maxmorhardt/maxhq/issues/219)) ([534a7e6](https://github.com/maxmorhardt/maxhq/commit/534a7e633bfcc8c77e00f26df77ea8717e1a4de3))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.2.1 ([#221](https://github.com/maxmorhardt/maxhq/issues/221)) ([a1dcfdf](https://github.com/maxmorhardt/maxhq/commit/a1dcfdfddb9ea0d5bcc8d188129b6ecf8de50269))
+
 ## [2.5.2](https://github.com/maxmorhardt/maxhq/compare/squares-realtime/2.5.1...squares-realtime/2.5.2) (2026-11-06)
 
 
