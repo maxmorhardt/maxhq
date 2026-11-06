@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.4](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.5.3...squares-games/2.5.4) (2026-11-06)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.2.2 ([#224](https://github.com/maxmorhardt/maxhq/issues/224)) ([a8b5cc7](https://github.com/maxmorhardt/maxhq/commit/a8b5cc72f1e47243ee546fba20727c826fa7b971))
+
 ## [2.5.3](https://github.com/maxmorhardt/maxhq/compare/squares-games/2.5.2...squares-games/2.5.3) (2026-11-06)
 
 
