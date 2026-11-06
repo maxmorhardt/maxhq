@@ -1616,12 +1616,6 @@ const docTemplatecontests = `{
                 "contest": {
                     "$ref": "#/definitions/model.ContestSwagger"
                 },
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ContestPlayer"
-                    }
-                },
                 "players": {
                     "type": "array",
                     "items": {

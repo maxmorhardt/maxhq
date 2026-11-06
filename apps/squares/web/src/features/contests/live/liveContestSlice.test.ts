@@ -39,7 +39,7 @@ function live(contest = makeContest(), players = [makePlayer()]) {
   const opened = liveContestReducer(undefined, streamOpened('c-1'));
   return receive(
     opened,
-    event('contest.snapshot', { contest, participants: players, viewerId: 'u_player' }),
+    event('contest.snapshot', { contest, players, viewerId: 'u_player' }),
     'snap'
   );
 }
@@ -125,20 +125,6 @@ describe('liveContestSlice events', () => {
     expect(state.players.map((p) => p.userId)).toEqual(['u_player']);
   });
 
-  it('reads players from a snapshot under either key, preferring players', () => {
-    const opened = liveContestReducer(undefined, streamOpened('c-1'));
-    const state = receive(
-      opened,
-      event('contest.snapshot', {
-        contest: makeContest(),
-        players: [makePlayer({ id: 'new' })],
-        participants: [makePlayer({ id: 'old' })],
-        viewerId: 'u_player',
-      })
-    );
-    expect(state.players.map((p) => p.id)).toEqual(['new']);
-  });
-
   it('marks the stream ended when the contest is deleted or access is revoked', () => {
     expect(receive(live(), event('contest.deleted')).ended).toBe('deleted');
     expect(receive(live(), event('access.revoked')).ended).toBe('revoked');
@@ -154,7 +140,7 @@ describe('liveContestSlice events', () => {
 describe('liveContestSlice contest read', () => {
   const read = (contestId: string, status: Contest['status']) => ({
     type: 'api/executeQuery/fulfilled',
-    payload: { contest: makeContest({ status }), participants: [makePlayer()] },
+    payload: { contest: makeContest({ status }), players: [makePlayer()] },
     meta: {
       arg: { type: 'query', endpointName: 'getContest', originalArgs: contestId },
       requestId: 'r',

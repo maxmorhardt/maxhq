@@ -18,21 +18,17 @@ describe('parseContestEvent', () => {
     expect(parsed).toMatchObject({ kind: 'event', event: { type: 'square.updated' } });
   });
 
-  it('reads the old participant event names as the player ones', () => {
-    for (const [sent, read] of [
-      ['participant.joined', 'player.joined'],
-      ['participant.updated', 'player.updated'],
-      ['participant.removed', 'player.removed'],
-    ]) {
-      const parsed = parseContestEvent(envelope({ type: sent, data: { id: 'p' } }), 'c-1');
-      expect(parsed).toMatchObject({ kind: 'event', event: { type: read, data: { id: 'p' } } });
-    }
-  });
-
   it('treats built-in object keys as unknown types, not events', () => {
     for (const type of ['constructor', 'toString', '__proto__']) {
       expect(parseContestEvent(envelope({ type }), 'c-1')).toEqual({ kind: 'unknown', type });
     }
+  });
+
+  it('no longer knows the retired participant event names', () => {
+    expect(parseContestEvent(envelope({ type: 'participant.joined' }), 'c-1')).toEqual({
+      kind: 'unknown',
+      type: 'participant.joined',
+    });
   });
 
   it('skips event types it does not know yet', () => {

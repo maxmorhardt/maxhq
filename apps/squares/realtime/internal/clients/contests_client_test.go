@@ -19,7 +19,7 @@ func TestGetSnapshot(t *testing.T) {
 		assert.Equal(t, "/internal/contests/"+contestID.String()+"/snapshot", r.URL.Path)
 		assert.Equal(t, "v+1@b.com", r.URL.Query().Get("user"))
 		assert.Equal(t, "s3cret", r.Header.Get(middleware.HeaderInternalToken))
-		_, _ = w.Write([]byte(`{"contest":{"id":"` + contestID.String() + `"},"participants":[{"userId":"o"}]}`))
+		_, _ = w.Write([]byte(`{"contest":{"id":"` + contestID.String() + `"},"players":[{"userId":"o"}]}`))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -27,7 +27,7 @@ func TestGetSnapshot(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.JSONEq(t, `{"id":"`+contestID.String()+`"}`, string(snap.Contest), "passed through untouched")
-	assert.JSONEq(t, `[{"userId":"o"}]`, string(snap.Participants))
+	assert.JSONEq(t, `[{"userId":"o"}]`, string(snap.Players))
 }
 
 func TestGetSnapshot_StatusMapping(t *testing.T) {

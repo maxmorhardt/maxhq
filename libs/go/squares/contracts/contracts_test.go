@@ -16,12 +16,13 @@ func TestPaths(t *testing.T) {
 	assert.Equal(t, "/internal/users/a%2Fb/activity", UserActivityPath("a/b"))
 }
 
-func TestContestSnapshot_CarriesPlayersAlongsideParticipants(t *testing.T) {
+func TestContestSnapshot_CarriesPlayers(t *testing.T) {
 	var snap ContestSnapshot
-	assert.NoError(t, json.Unmarshal([]byte(`{"contest":{},"participants":[{"id":"a"}],"players":[{"id":"a"}],"viewerId":"u"}`), &snap))
+	assert.NoError(t, json.Unmarshal([]byte(`{"contest":{},"players":[{"id":"a"}],"viewerId":"u"}`), &snap))
 	assert.JSONEq(t, `[{"id":"a"}]`, string(snap.Players))
+	assert.Equal(t, "u", snap.ViewerID)
 
-	out, err := json.Marshal(ContestSnapshot{Contest: json.RawMessage(`{}`), Participants: json.RawMessage(`[]`)})
+	out, err := json.Marshal(ContestSnapshot{Contest: json.RawMessage(`{}`), Players: json.RawMessage(`[]`), ViewerID: "u"})
 	assert.NoError(t, err)
-	assert.NotContains(t, string(out), "players", "a snapshot from a service that hasn't switched stays as it was")
+	assert.JSONEq(t, `{"contest":{},"players":[],"viewerId":"u"}`, string(out))
 }

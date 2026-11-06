@@ -69,7 +69,7 @@ func TestStreamContest_SnapshotThenEventsUntilDeleted(t *testing.T) {
 
 	svc := mocks.NewStreamService(t)
 	svc.EXPECT().Subscribe(mock.Anything, contestID, "v@b.com", "").Return(&service.Subscription{
-		Snapshot:   &contracts.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`), Participants: json.RawMessage(`[]`)},
+		Snapshot:   &contracts.ContestSnapshot{Contest: json.RawMessage(`{"id":"` + contestID.String() + `"}`), Players: json.RawMessage(`[]`)},
 		SnapshotID: "7-0",
 		Events:     ch,
 		Stop:       func() { stopped = true },
@@ -156,7 +156,7 @@ func TestStreamContest_SubscribeErrors(t *testing.T) {
 func TestStreamContest_RevokesWhenAccessIsLost(t *testing.T) {
 	contestID := uuid.New()
 	ch := make(chan service.Event, 1)
-	ch <- eventOf(t, "3-0", events.ParticipantRemovedType, contestID, events.AccessFields{UserID: "u_viewer"})
+	ch <- eventOf(t, "3-0", events.PlayerRemovedType, contestID, events.AccessFields{UserID: "u_viewer"})
 	svc := mocks.NewStreamService(t)
 	svc.EXPECT().Subscribe(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&service.Subscription{ViewerID: "u_viewer", Events: ch, Stop: func() {}}, nil)
 	svc.EXPECT().CheckAccess(mock.Anything, contestID, "v@b.com").Return(errs.ErrInsufficientRole)
@@ -164,7 +164,7 @@ func TestStreamContest_RevokesWhenAccessIsLost(t *testing.T) {
 	w := serve(streamRouter(svc, slowTimers, nil, farFuture()), "/events/contests/"+contestID.String(), nil)
 
 	assert.Contains(t, w.Body.String(), "id: 3-0\nevent: access.revoked\n")
-	assert.NotContains(t, w.Body.String(), "participant.removed")
+	assert.NotContains(t, w.Body.String(), "player.removed")
 }
 
 func TestStreamContest_KeepsStreamingWhenAccessRecheckFails(t *testing.T) {
