@@ -104,7 +104,7 @@ func TestSubscribe_ResumeReplaysOnlyTheGap(t *testing.T) {
 	contestID := uuid.New()
 	seen := publish(t, client, contestID, events.SquareUpdatedType)
 	missed1 := publish(t, client, contestID, events.SquareUpdatedType)
-	missed2 := publish(t, client, contestID, events.ParticipantJoinedType)
+	missed2 := publish(t, client, contestID, events.PlayerJoinedType)
 
 	sub, err := service.NewStreamService(client, hub, allowAll(t, contestID), nil).Subscribe(context.Background(), contestID, "v@b.com", seen)
 	require.NoError(t, err)
@@ -252,8 +252,9 @@ func TestRequiresAccessCheck(t *testing.T) {
 		{"made private", events.ContestUpdatedType, `{"visibility":"private"}`, true},
 		{"made public", events.ContestUpdatedType, `{"visibility":"public"}`, false},
 		{"unreadable update", events.ContestUpdatedType, `"oops"`, true},
-		{"viewer removed", events.ParticipantRemovedType, `{"userId":"u_viewer"}`, true},
-		{"someone else removed", events.ParticipantRemovedType, `{"userId":"u_other"}`, false},
+		{"viewer removed", events.PlayerRemovedType, `{"userId":"u_viewer"}`, true},
+		{"someone else removed", events.PlayerRemovedType, `{"userId":"u_other"}`, false},
+		{"viewer removed under the old name", events.ParticipantRemovedType, `{"userId":"u_viewer"}`, true},
 		{"square update", events.SquareUpdatedType, `{"visibility":"private"}`, false},
 	}
 

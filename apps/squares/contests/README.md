@@ -22,7 +22,7 @@ Contests, squares, players, invites, the leaderboard, and stats. One of the squa
 
 ## Events
 
-- **Writes:** `contest:<id>` - every change to a contest (`square.updated`, `contest.updated`, `quarter.recorded`, `participant.joined`, `participant.updated`, `participant.removed`, `contest.deleted`), each a `{type, contestId, updatedBy, timestamp, data}` envelope from `libs/go/squares/events`.
+- **Writes:** `contest:<id>` - every change to a contest (`square.updated`, `contest.updated`, `quarter.recorded`, `player.joined`, `player.updated`, `player.removed`, `contest.deleted`), each a `{type, contestId, updatedBy, timestamp, data}` envelope from `libs/go/squares/events`.
 - **Reads:** `games` (`contests-games`): keeps the local copy of each game, used only to validate new contests and to auto-start and score them; clients read games from the games service. `users` (`contests-users`): keeps display names and initials, cascades new initials onto live squares, and scrubs deleted users.
 
 ## Development

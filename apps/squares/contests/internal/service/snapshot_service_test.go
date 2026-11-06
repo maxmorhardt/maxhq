@@ -31,6 +31,7 @@ func TestSnapshot_ReturnsContestAndPlayersToViewers(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "C", snap.Contest.Name)
 	assert.Len(t, snap.Players, 1)
+	assert.Equal(t, snap.Players, snap.Participants, "older clients still read the participants key")
 	assert.Equal(t, pseudonym.Of("v@b.com"), snap.ViewerID, "the page tells which squares are yours without asking accounts")
 }
 

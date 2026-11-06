@@ -110,6 +110,10 @@ definitions:
         items:
           $ref: '#/definitions/model.ContestPlayer'
         type: array
+      players:
+        items:
+          $ref: '#/definitions/model.ContestPlayer'
+        type: array
       viewerId:
         example: u_3q2mL0x9VfTzQk1rB7cW8a
         type: string
