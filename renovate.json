@@ -3,12 +3,13 @@
   "extends": ["github>maxmorhardt/workflows//renovate/default.json"],
   "packageRules": [
     {
-      "description": "ship each libs/go release to every squares service right away, as a fix so release-please releases them",
+      "description": "ship each libs/go release to every squares service right away, ahead of other updates when the hourly pr limit is hit, as a fix so release-please releases them",
       "matchManagers": ["gomod"],
       "matchPackageNames": ["github.com/maxmorhardt/maxhq/libs/go"],
       "groupName": "libs/go",
       "minimumReleaseAge": "0 days",
-      "semanticCommitType": "fix"
+      "semanticCommitType": "fix",
+      "prPriority": 10
     },
     {
       "description": "services move only between libs/go releases, never to an untagged commit",
