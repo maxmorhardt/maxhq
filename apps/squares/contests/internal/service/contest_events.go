@@ -45,15 +45,15 @@ func (p *contestEventPublisher) PublishContestDeleted(ctx context.Context, conte
 }
 
 func (p *contestEventPublisher) PublishPlayerRemoved(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error {
-	return p.publish(ctx, events.ParticipantRemovedType, contestID, updatedBy, player)
+	return p.publish(ctx, events.PlayerRemovedType, contestID, updatedBy, player)
 }
 
 func (p *contestEventPublisher) PublishPlayerJoined(ctx context.Context, contestID uuid.UUID, player *model.ContestPlayer) error {
-	return p.publish(ctx, events.ParticipantJoinedType, contestID, player.UserID, player)
+	return p.publish(ctx, events.PlayerJoinedType, contestID, player.UserID, player)
 }
 
 func (p *contestEventPublisher) PublishPlayerUpdated(ctx context.Context, contestID uuid.UUID, updatedBy string, player *model.ContestPlayer) error {
-	return p.publish(ctx, events.ParticipantUpdatedType, contestID, updatedBy, player)
+	return p.publish(ctx, events.PlayerUpdatedType, contestID, updatedBy, player)
 }
 
 func (p *contestEventPublisher) publish(ctx context.Context, eventType string, contestID uuid.UUID, updatedBy string, data any) error {

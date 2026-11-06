@@ -198,7 +198,7 @@ func TestRemoval_EditedAndRemovedPlayersKeepTheirNames(t *testing.T) {
 		entries, err := streams.Range(context.Background(), rdb, events.ContestStream(contest.ID), "", 100)
 		require.NoError(t, err)
 		for _, e := range entries {
-			if e.Type == events.ParticipantRemovedType {
+			if e.Type == events.PlayerRemovedType {
 				var event events.ContestEvent
 				require.NoError(t, json.Unmarshal(e.Data, &event))
 				require.NoError(t, json.Unmarshal(event.Data, &removed))

@@ -175,7 +175,7 @@ func TestRealtime_ResumeReplaysOnlyWhatWasMissed(t *testing.T) {
 	contests.setMembers(contestID, "v@squares.test")
 	seen := publish(t, contestID, events.SquareUpdatedType, nil)
 	missed1 := publish(t, contestID, events.SquareUpdatedType, nil)
-	missed2 := publish(t, contestID, events.ParticipantJoinedType, nil)
+	missed2 := publish(t, contestID, events.PlayerJoinedType, nil)
 
 	stream := open(t, "v@squares.test", contestID, seen)
 
@@ -212,7 +212,7 @@ func TestRealtime_RemovedViewerIsRevoked(t *testing.T) {
 	stream.Next(t)
 
 	contests.setMembers(contestID, "owner@squares.test")
-	publish(t, contestID, events.ParticipantRemovedType, events.AccessFields{UserID: viewerID("kicked@squares.test")})
+	publish(t, contestID, events.PlayerRemovedType, events.AccessFields{UserID: viewerID("kicked@squares.test")})
 
 	assert.Equal(t, events.AccessRevokedType, stream.Next(t).Kind)
 	assert.True(t, stream.Ended(5*time.Second))

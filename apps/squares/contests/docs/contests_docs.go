@@ -1622,6 +1622,12 @@ const docTemplatecontests = `{
                         "$ref": "#/definitions/model.ContestPlayer"
                     }
                 },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ContestPlayer"
+                    }
+                },
                 "viewerId": {
                     "type": "string",
                     "example": "u_3q2mL0x9VfTzQk1rB7cW8a"

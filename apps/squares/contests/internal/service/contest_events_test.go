@@ -51,7 +51,7 @@ func TestContestEventPublisher_WritesEveryEventToTheContestStream(t *testing.T) 
 	}
 	assert.Equal(t, []string{
 		events.SquareUpdatedType, events.ContestUpdatedType, events.QuarterRecordedType,
-		events.ContestDeletedType, events.ParticipantRemovedType, events.ParticipantJoinedType,
+		events.ContestDeletedType, events.PlayerRemovedType, events.PlayerJoinedType,
 	}, types)
 
 	var update map[string]any
