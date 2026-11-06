@@ -13,5 +13,5 @@
   "charts/squares-accounts": "1.4.0",
   "charts/squares-realtime": "2.2.0",
   "charts/cloudflare-cidr": "1.2.0",
-  "libs/go": "1.2.2"
+  "libs/go": "1.2.3"
 }
