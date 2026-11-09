@@ -62,18 +62,28 @@ function boardWithClaims(overrides: Partial<Contest> = {}) {
 
 const asOwner = makeViewer({ viewerId: 'u_owner', isOwner: true });
 
+const onInvite = vi.fn();
+
 function renderManager({
   viewer = asOwner,
   contest = boardWithClaims(),
   list = players,
 }: { viewer?: ContestViewer; contest?: Contest; list?: Player[] } = {}) {
   return renderWithProviders(
-    <PlayersManager open onClose={vi.fn()} contest={contest} players={list} viewer={viewer} />
+    <PlayersManager
+      open
+      onClose={vi.fn()}
+      onInvite={onInvite}
+      contest={contest}
+      players={list}
+      viewer={viewer}
+    />
   );
 }
 
 describe('PlayersManager', () => {
   beforeEach(() => {
+    onInvite.mockClear();
     api.useRemovePlayerMutation.mockReturnValue(mockMutation(undefined));
     api.useAllotSquaresMutation.mockReturnValue(mockMutation([newcomer]));
     api.useUnbanPlayerMutation.mockReturnValue(mockMutation(undefined));
@@ -92,9 +102,40 @@ describe('PlayersManager', () => {
     expect(screen.getByText('Given out 15/100 · Claimed 3')).toBeInTheDocument();
   });
 
+  it('lets the owner invite more players from the list', () => {
+    renderManager();
+    expect(screen.getByRole('progressbar', { name: 'squares given out' })).toHaveAttribute(
+      'aria-valuenow',
+      '15'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Invite Players' }));
+    expect(onInvite).toHaveBeenCalled();
+  });
+
+  it('puts players waiting for squares first, each one tap from the editor', () => {
+    renderManager();
+    const labels = screen.getAllByText(/^(Waiting for squares|Everyone else|Nia N\.|Pat P\.)$/);
+    expect(labels.map((l) => l.textContent)).toEqual([
+      'Waiting for squares',
+      'Nia N.',
+      'Everyone else',
+      'Pat P.',
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'Give squares to Nia N.' }));
+    expect(screen.getByTestId('edit')).toHaveTextContent('u_new 0 85');
+  });
+
+  it('keeps one list when nobody is waiting', () => {
+    renderManager({ list: [owner, pat] });
+    expect(screen.queryByText('Waiting for squares')).not.toBeInTheDocument();
+    expect(screen.queryByText('Everyone else')).not.toBeInTheDocument();
+  });
+
   it('keeps the totals and give-out tools from everyone else', () => {
     renderManager({ viewer: makeViewer({ viewerId: 'u_player' }) });
     expect(screen.queryByText(/Given out/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Invite Players' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Waiting for squares')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Give Each' })).not.toBeInTheDocument();
     expect(api.useGetBansQuery).toHaveBeenCalledWith('c-1', { skip: true });
   });
@@ -254,6 +295,7 @@ describe('PlayersManager', () => {
     renderManager({ contest: boardWithClaims({ status: 'Q1' }) });
     expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Give Each' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Give squares/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove Pat P.' })).toBeInTheDocument();
   });
 

@@ -1,4 +1,4 @@
-import { Close, Edit, Logout } from '@mui/icons-material';
+import { Close, Edit, Logout, PersonAdd } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  LinearProgress,
   TextField,
   Tooltip,
   Typography,
@@ -31,6 +32,7 @@ import EditPlayerDialog from './EditPlayerDialog';
 interface Props {
   open: boolean;
   onClose: () => void;
+  onInvite: () => void;
   contest: Contest;
   players: Player[];
   viewer: ContestViewer;
@@ -58,7 +60,14 @@ const sectionLabelSx = { color: 'text.secondary', fontSize: '0.8rem', fontWeight
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-export default function PlayersManager({ open, onClose, contest, players, viewer }: Props) {
+export default function PlayersManager({
+  open,
+  onClose,
+  onInvite,
+  contest,
+  players,
+  viewer,
+}: Props) {
   const { showToast } = useToast();
   const [removePlayer, removal] = useRemovePlayerMutation();
   const [allotSquares, allotment] = useAllotSquaresMutation();
@@ -127,6 +136,106 @@ export default function PlayersManager({ open, onClose, contest, players, viewer
     }
   };
 
+  const renderPlayer = (player: Player) => {
+    const held = claimedBy(player.userId);
+    const noSquares = player.role !== 'owner' && player.maxSquares === 0;
+    return (
+      <Box key={player.id} sx={rowSx}>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Typography
+              variant="body2"
+              noWrap
+              sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}
+            >
+              {viewer.isMe(player.userId) ? 'You' : player.displayName}
+            </Typography>
+            <Chip
+              label={player.role}
+              size="small"
+              sx={{
+                bgcolor: roleColor[player.role],
+                color: '#000',
+                fontWeight: 600,
+                fontSize: '0.65rem',
+                height: 20,
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
+          </Box>
+          {viewer.fullName(player.userId) && (
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{ display: 'block', color: 'rgba(255,255,255,0.5)' }}
+            >
+              {viewer.fullName(player.userId)}
+            </Typography>
+          )}
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+            {noSquares ? 'No squares yet' : `${held}/${player.maxSquares} squares`}
+          </Typography>
+        </Box>
+
+        {canManage && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+            {canEdit && noSquares && (
+              <Button
+                variant="contained"
+                size="small"
+                aria-label={`Give squares to ${player.displayName}`}
+                onClick={() => setEditing(player)}
+              >
+                Give
+              </Button>
+            )}
+            {canEdit && !noSquares && (
+              <Tooltip title="Edit squares">
+                <IconButton
+                  aria-label={`Edit ${player.displayName}`}
+                  size="small"
+                  onClick={() => setEditing(player)}
+                  sx={{ color: 'rgba(255,255,255,0.6)' }}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            {player.role !== 'owner' && (
+              <Tooltip title="Remove">
+                <IconButton
+                  aria-label={`Remove ${player.displayName}`}
+                  size="small"
+                  onClick={() => setRemoving(player)}
+                  sx={actionSx}
+                >
+                  <Close fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        )}
+
+        {/* anyone but the owner can leave until the contest is final */}
+        {isOpen && viewer.isMe(player.userId) && player.role !== 'owner' && (
+          <Tooltip title="Leave contest">
+            <IconButton
+              aria-label="Leave contest"
+              size="small"
+              onClick={() => setLeaving(true)}
+              sx={{ ...actionSx, flexShrink: 0 }}
+            >
+              <Logout fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
+    );
+  };
+
+  const showWaiting = canEdit && waiting.length > 0;
+  const rest = showWaiting ? players.filter((p) => !waiting.includes(p)) : players;
+
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -148,131 +257,82 @@ export default function PlayersManager({ open, onClose, contest, players, viewer
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {viewer.isOwner && (
-              <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                Given out {allocated}/{totalSquares} · Claimed {claimed}
-              </Typography>
-            )}
-
-            {canEdit && waiting.length > 0 && (
-              <Box sx={{ ...rowSx, flexWrap: 'wrap', borderColor: 'primary.main' }}>
-                <Typography sx={{ fontSize: '0.85rem', flex: '1 1 200px' }}>
-                  {plural(waiting.length, 'player')} {waiting.length === 1 ? 'has' : 'have'} no
-                  squares yet.
-                  {fairShare === 0 && ' Lower someone’s squares to make room first.'}
-                </Typography>
-                {fairShare > 0 && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <TextField
-                      type="number"
-                      size="small"
-                      value={count}
-                      onKeyDown={blockNonIntegerKeys}
-                      onChange={(e) => {
-                        const parsed = parseInt(e.target.value, 10);
-                        setAllotCount(isNaN(parsed) ? 1 : parsed);
-                      }}
-                      slotProps={{ htmlInput: { 'aria-label': 'Squares each' } }}
-                      sx={{ width: 72, '& input': { textAlign: 'center' }, ...noNumberSpinners }}
-                    />
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={handleAllot}
-                      disabled={allotment.isLoading}
-                    >
-                      Give Each
-                    </Button>
-                  </Box>
+              <Box sx={{ display: 'grid', gap: 1, mb: 1 }}>
+                {canEdit && (
+                  <Typography
+                    sx={{ color: 'text.secondary', fontSize: '0.85rem', lineHeight: 1.5 }}
+                  >
+                    Players join with no squares. Give each one some, then they pick theirs on the
+                    board.
+                  </Typography>
                 )}
+                <LinearProgress
+                  variant="determinate"
+                  aria-label="squares given out"
+                  value={totalSquares ? (allocated / totalSquares) * 100 : 0}
+                  sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(238, 242, 250, 0.08)' }}
+                />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                  }}
+                >
+                  <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+                    Given out {allocated}/{totalSquares} · Claimed {claimed}
+                  </Typography>
+                  {isOpen && (
+                    <Button size="small" startIcon={<PersonAdd />} onClick={onInvite}>
+                      Invite Players
+                    </Button>
+                  )}
+                </Box>
               </Box>
             )}
 
-            {players.map((player) => {
-              const held = claimedBy(player.userId);
-              const noSquares = player.role !== 'owner' && player.maxSquares === 0;
-              return (
-                <Box key={player.id} sx={rowSx}>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                      <Typography
-                        variant="body2"
-                        noWrap
-                        sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}
-                      >
-                        {viewer.isMe(player.userId) ? 'You' : player.displayName}
-                      </Typography>
-                      <Chip
-                        label={player.role}
+            {showWaiting && (
+              <>
+                <Typography sx={sectionLabelSx}>Waiting for squares</Typography>
+                <Box sx={{ ...rowSx, flexWrap: 'wrap', borderColor: 'primary.main' }}>
+                  <Typography sx={{ fontSize: '0.85rem', flex: '1 1 200px' }}>
+                    {plural(waiting.length, 'player')} {waiting.length === 1 ? 'has' : 'have'} no
+                    squares yet.
+                    {fairShare === 0 && ' Lower someone’s squares to make room first.'}
+                  </Typography>
+                  {fairShare > 0 && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <TextField
+                        type="number"
                         size="small"
-                        sx={{
-                          bgcolor: roleColor[player.role],
-                          color: '#000',
-                          fontWeight: 600,
-                          fontSize: '0.65rem',
-                          height: 20,
-                          '& .MuiChip-label': { px: 0.75 },
+                        value={count}
+                        onKeyDown={blockNonIntegerKeys}
+                        onChange={(e) => {
+                          const parsed = parseInt(e.target.value, 10);
+                          setAllotCount(isNaN(parsed) ? 1 : parsed);
                         }}
+                        slotProps={{ htmlInput: { 'aria-label': 'Squares each' } }}
+                        sx={{ width: 72, '& input': { textAlign: 'center' }, ...noNumberSpinners }}
                       />
-                    </Box>
-                    {viewer.fullName(player.userId) && (
-                      <Typography
-                        variant="caption"
-                        noWrap
-                        sx={{ display: 'block', color: 'rgba(255,255,255,0.5)' }}
-                      >
-                        {viewer.fullName(player.userId)}
-                      </Typography>
-                    )}
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                      {noSquares ? 'No squares yet' : `${held}/${player.maxSquares} squares`}
-                    </Typography>
-                  </Box>
-
-                  {canManage && (
-                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                      {canEdit && (
-                        <Tooltip title="Edit squares">
-                          <IconButton
-                            aria-label={`Edit ${player.displayName}`}
-                            size="small"
-                            onClick={() => setEditing(player)}
-                            sx={{ color: 'rgba(255,255,255,0.6)' }}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      {player.role !== 'owner' && (
-                        <Tooltip title="Remove">
-                          <IconButton
-                            aria-label={`Remove ${player.displayName}`}
-                            size="small"
-                            onClick={() => setRemoving(player)}
-                            sx={actionSx}
-                          >
-                            <Close fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-                  )}
-
-                  {/* anyone but the owner can leave until the contest is final */}
-                  {isOpen && viewer.isMe(player.userId) && player.role !== 'owner' && (
-                    <Tooltip title="Leave contest">
-                      <IconButton
-                        aria-label="Leave contest"
+                      <Button
+                        variant="contained"
                         size="small"
-                        onClick={() => setLeaving(true)}
-                        sx={{ ...actionSx, flexShrink: 0 }}
+                        onClick={handleAllot}
+                        disabled={allotment.isLoading}
                       >
-                        <Logout fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                        Give Each
+                      </Button>
+                    </Box>
                   )}
                 </Box>
-              );
-            })}
+                {waiting.map(renderPlayer)}
+                <Typography sx={{ ...sectionLabelSx, mt: 1.5 }}>Everyone else</Typography>
+              </>
+            )}
+
+            {rest.map(renderPlayer)}
 
             {players.length === 0 && (
               <Typography

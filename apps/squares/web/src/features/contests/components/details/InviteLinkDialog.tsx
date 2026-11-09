@@ -16,6 +16,7 @@ import { errorMessage } from '../../../../api/errors';
 import ConfirmDialog from '../../../../components/feedback/ConfirmDialog';
 import type { Contest } from '../../../../types/contest';
 import { isTerminalStatus } from '../../../../utils/contestStatus';
+import { trackEvent } from '../../../../utils/faro';
 import { useToast } from '../../../toast/useToast';
 import { useGetInviteLinkQuery, useResetInviteLinkMutation } from '../../api';
 
@@ -39,6 +40,7 @@ export default function InviteLinkDialog({ open, onClose, contest }: Props) {
   const isTerminal = isTerminalStatus(contest.status);
 
   const copy = async () => {
+    trackEvent('invite_share', { method: 'copy' });
     try {
       await navigator.clipboard.writeText(url);
       showToast('Invite link copied', 'success');
@@ -52,6 +54,7 @@ export default function InviteLinkDialog({ open, onClose, contest }: Props) {
       await copy();
       return;
     }
+    trackEvent('invite_share', { method: 'share' });
     try {
       await navigator.share({ title: contest.name, url });
     } catch {

@@ -4,7 +4,10 @@ import { mockAuth } from '../test/auth';
 import { renderWithProviders } from '../test/render';
 import SignInOptions from './SignInOptions';
 
+const faro = vi.hoisted(() => ({ trackEvent: vi.fn() }));
+
 vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }));
+vi.mock('../utils/faro', () => faro);
 
 describe('SignInOptions', () => {
   beforeEach(() => {
@@ -32,6 +35,7 @@ describe('SignInOptions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign in with Microsoft' }));
 
     expect(onSelect).toHaveBeenCalled();
+    expect(faro.trackEvent).toHaveBeenCalledWith('sign_in_provider', { provider: 'microsoft' });
     expect(auth.signinRedirect).toHaveBeenCalledWith({
       extraQueryParams: { connector_id: 'microsoft' },
     });

@@ -1,16 +1,17 @@
 import { Groups, PersonAdd, School } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
-import { useState } from 'react';
+import { Badge, Box, Button } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Link } from 'react-router';
+import { game } from '../../../../app/theme';
 import type { Contest, Player } from '../../../../types/contest';
-import type { ContestViewer } from '../../live/viewer';
-import InviteLinkDialog from './InviteLinkDialog';
-import PlayersManager from './PlayersManager';
+import { getOwnerTodo, type ContestViewer } from '../../live/viewer';
+import type { ContestDialog } from './ContestDialogs';
 
 interface Props {
   contest: Contest;
   players: Player[];
   viewer: ContestViewer;
+  onOpen: (dialog: ContestDialog) => void;
 }
 
 const actionSx = {
@@ -18,67 +19,73 @@ const actionSx = {
   px: { xs: 1, sm: 1.5 },
   color: 'text.secondary',
   borderColor: 'divider',
-  '& .MuiButton-startIcon': { mr: { xs: 0, sm: 0.75 }, ml: 0 },
   '&:hover': { color: 'text.primary' },
 };
 
-const labelSx = { display: { xs: 'none', sm: 'inline' } };
+const countSx = {
+  ml: 0.75,
+  minWidth: 20,
+  height: 20,
+  px: 0.75,
+  borderRadius: '10px',
+  display: 'inline-grid',
+  placeItems: 'center',
+  bgcolor: alpha(game.chalk, 0.1),
+  color: 'text.primary',
+  fontSize: '0.72rem',
+  fontWeight: 700,
+  lineHeight: 1,
+  fontVariantNumeric: 'tabular-nums',
+};
 
-export default function ContestActionIcons({ contest, players, viewer }: Props) {
-  const [dialog, setDialog] = useState<'invite' | 'players' | null>(null);
-  const close = () => setDialog(null);
+export default function ContestActionIcons({ contest, players, viewer, onOpen }: Props) {
+  const needsSquares = viewer.isOwner && getOwnerTodo(contest, players) === 'squares';
 
   return (
-    <>
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        {viewer.isOwner && (
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => setDialog('invite')}
-            startIcon={<PersonAdd />}
-            sx={{ px: 1.5 }}
-          >
-            Invite
-          </Button>
-        )}
+    <Box sx={{ display: 'flex', gap: 1 }}>
+      {viewer.isOwner && (
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => onOpen('invite')}
+          startIcon={<PersonAdd />}
+          sx={{ px: 1.5 }}
+        >
+          Invite
+        </Button>
+      )}
+      <Badge variant="dot" color="warning" invisible={!needsSquares} overlap="rectangular">
         <Button
           variant="outlined"
           size="small"
-          aria-label="Players"
-          onClick={() => setDialog('players')}
+          aria-label={
+            needsSquares
+              ? `Players (${players.length}), squares left to give out`
+              : `Players (${players.length})`
+          }
+          onClick={() => onOpen('players')}
           startIcon={<Groups />}
           sx={actionSx}
         >
-          <Box component="span" sx={labelSx}>
-            Players
+          Players
+          <Box component="span" aria-hidden sx={countSx}>
+            {players.length}
           </Box>
         </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          aria-label="How to play"
-          component={Link}
-          to="/learn-more"
-          startIcon={<School />}
-          sx={actionSx}
-        >
-          <Box component="span" sx={labelSx}>
-            Rules
-          </Box>
-        </Button>
-      </Box>
-
-      {viewer.isOwner && (
-        <InviteLinkDialog open={dialog === 'invite'} onClose={close} contest={contest} />
-      )}
-      <PlayersManager
-        open={dialog === 'players'}
-        onClose={close}
-        contest={contest}
-        players={players}
-        viewer={viewer}
-      />
-    </>
+      </Badge>
+      <Button
+        variant="outlined"
+        size="small"
+        aria-label="How to play"
+        component={Link}
+        to="/learn-more"
+        startIcon={<School />}
+        sx={{ ...actionSx, '& .MuiButton-startIcon': { mr: { xs: 0, sm: 0.75 }, ml: 0 } }}
+      >
+        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+          Rules
+        </Box>
+      </Button>
+    </Box>
   );
 }

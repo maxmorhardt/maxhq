@@ -10,6 +10,7 @@ import { currentScore, gameClock, isLive, kickoffParts } from '../../../../utils
 import type { ContestViewer } from '../../live/viewer';
 import ConnectionStatus from '../ConnectionStatus';
 import ContestActionIcons from '../details/ContestActionIcons';
+import type { ContestDialog } from '../details/ContestDialogs';
 
 interface Props {
   contest: Contest;
@@ -18,6 +19,7 @@ interface Props {
   viewer: ContestViewer;
   status: StreamStatus;
   onRetry: () => void;
+  onOpen: (dialog: ContestDialog) => void;
 }
 
 // below this width the names would crowd out the score, so the badge and score stand alone
@@ -117,6 +119,7 @@ export default function ContestScoreboard({
   viewer,
   status,
   onRetry,
+  onOpen,
 }: Props) {
   const score = currentScore(contest, game);
   const live = isLive(game);
@@ -171,7 +174,7 @@ export default function ContestScoreboard({
             <Chip size="small" variant="outlined" label={role} />
           </Box>
         </Box>
-        <ContestActionIcons contest={contest} players={players} viewer={viewer} />
+        <ContestActionIcons contest={contest} players={players} viewer={viewer} onOpen={onOpen} />
       </Box>
 
       {/* the score bug, laid out by its own width since the page column can be narrow on a wide screen */}

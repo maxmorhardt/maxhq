@@ -95,3 +95,7 @@ export function setFaroUser(userId: string | undefined, email?: string): void {
     }
   });
 }
+
+export function trackEvent(name: string, attributes?: Record<string, string>): void {
+  void loaded.then((faro) => faro?.api.pushEvent(name, attributes));
+}

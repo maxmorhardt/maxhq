@@ -5,6 +5,14 @@ export default {
   buildDirectory: 'dist',
   ssr: false,
   async prerender() {
-    return ['/', '/learn-more', '/printable-football-squares', '/contact', '/404'];
+    return [
+      '/',
+      '/learn-more',
+      '/printable-football-squares',
+      '/games',
+      '/leaderboard',
+      '/contact',
+      '/404',
+    ];
   },
 } satisfies Config;

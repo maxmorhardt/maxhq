@@ -7,6 +7,7 @@ import NotFoundError from '../../../components/errors/NotFoundError';
 import type { QuarterResult } from '../../../types/contest';
 import { isGameOver } from '../../../utils/game';
 import { useGetGameQuery } from '../../games/api';
+import { useHasFinishedOwnContestQuery } from '../api';
 import { useGameStream } from '../../games/useGameStream';
 import { isMe } from '../../profile/useUserId';
 import { useToast } from '../../toast/useToast';
@@ -19,6 +20,7 @@ import {
   selectStreamEnd,
   selectStreamStatus,
 } from '../live/selectors';
+import { contestToast } from '../live/toasts';
 import { useContestStream } from '../live/useContestStream';
 import { getContestViewer } from '../live/viewer';
 import { useContestRoster } from '../useContestRoster';
@@ -50,6 +52,11 @@ export default function LiveContest({ contestId }: Props) {
   const [celebration, setCelebration] = useState<QuarterResult | null>(null);
 
   const onEvent = (event: ContestEvent) => {
+    const toast = contestToast(event, { viewerId, contest, players });
+    if (toast) {
+      showToast(toast.message, toast.severity);
+    }
+
     switch (event.type) {
       case 'contest.deleted':
         showToast('Contest has been deleted', 'warning');
@@ -89,6 +96,7 @@ export default function LiveContest({ contestId }: Props) {
 
   const isOwner = !!contest && isMe(viewerId, contest.owner);
   const roster = useContestRoster(contestId, isOwner, players);
+  const { data: hasFinished } = useHasFinishedOwnContestQuery(undefined, { skip: !isOwner });
 
   useEffect(() => {
     if (!winnerFlash) {
@@ -121,6 +129,7 @@ export default function LiveContest({ contestId }: Props) {
         status={status}
         winnerFlash={winnerFlash}
         onStale={resync}
+        guideOwner={isOwner && hasFinished === false}
       />
       {/* the game can still be loading when a quarter lands, so the dialog falls back to away and home */}
       <WinnerCelebrationDialog

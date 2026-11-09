@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { makeContest, makePlayer, makeSquare, makeViewer } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
-import type { Contest, Game, Player } from '../../../../types/contest';
+import type { Contest, Game } from '../../../../types/contest';
 import type { ContestViewer } from '../../live/viewer';
 import ContestDetails from './ContestDetails';
 
@@ -19,15 +19,8 @@ const spectator = makeViewer({ isPlayer: false, player: undefined, squaresLeft: 
 const ownerEntry = makePlayer({ id: 'o', userId: 'u_owner', role: 'owner', maxSquares: 50 });
 const owner = makeViewer({ viewerId: 'u_owner', isOwner: true, player: ownerEntry });
 
-function renderDetails(
-  contest: Contest,
-  viewer: ContestViewer = makeViewer(),
-  game?: Game,
-  players: Player[] = []
-) {
-  return renderWithProviders(
-    <ContestDetails contest={contest} game={game} players={players} viewer={viewer} />
-  );
+function renderDetails(contest: Contest, viewer: ContestViewer = makeViewer(), game?: Game) {
+  return renderWithProviders(<ContestDetails contest={contest} game={game} viewer={viewer} />);
 }
 
 const board = () => makeContest({}, 10);
@@ -82,44 +75,8 @@ describe('ContestDetails', () => {
     expect(screen.queryByTestId('square-actions')).not.toBeInTheDocument();
   });
 
-  it('tells the owner when nobody has joined', () => {
-    renderDetails(board(), owner, undefined, [ownerEntry]);
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No one has joined yet. Share your invite link.'
-    );
-  });
-
-  it('tells the owner who is still waiting for squares', () => {
-    const waiting = [
-      makePlayer({ id: 'a', userId: 'u_a', maxSquares: 0 }),
-      makePlayer({ id: 'b', userId: 'u_b', maxSquares: 0 }),
-    ];
-    renderDetails(board(), owner, undefined, [ownerEntry, ...waiting]);
-    expect(screen.getByRole('status')).toHaveTextContent('2 players have no squares yet.');
-
-    renderDetails(board(), owner, undefined, [ownerEntry, waiting[0]]);
-    expect(screen.getAllByRole('status')[1]).toHaveTextContent('1 player has no squares yet.');
-  });
-
-  it('tells the owner when squares are left unassigned', () => {
-    const pat = makePlayer({ maxSquares: 49 });
-    renderDetails(board(), owner, undefined, [ownerEntry, pat]);
-    expect(screen.getByRole('status')).toHaveTextContent('1 square isn’t given to anyone');
-
-    renderDetails(board(), owner, undefined, [ownerEntry, makePlayer({ maxSquares: 40 })]);
-    expect(screen.getAllByRole('status')[1]).toHaveTextContent('10 squares aren’t given to anyone');
-  });
-
-  it('has nothing to warn about once every square is given out, or the board is full', () => {
-    renderDetails(board(), owner, undefined, [ownerEntry, makePlayer({ maxSquares: 50 })]);
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-
-    renderDetails(fullGrid(), owner, undefined, [ownerEntry]);
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-  });
-
-  it('keeps the owner warnings from everyone else', () => {
-    renderDetails(board(), makeViewer(), undefined, [ownerEntry]);
+  it('leaves the owner’s next steps to the checklist above the board', () => {
+    renderDetails(board(), owner);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
