@@ -71,7 +71,7 @@ describe('contestToast', () => {
   it('says when a quarter lands on an empty square', () => {
     const ghost = makeQuarterResult({ quarter: 4, winner: '', winnerName: '' });
     expect(toast(event('quarter.recorded', ghost))?.message).toBe(
-      'Q4 landed on an empty square, so nobody wins it.'
+      'No winner for Q4. Nobody claimed that square.'
     );
   });
 

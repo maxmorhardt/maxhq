@@ -60,9 +60,18 @@ describe('OwnerChecklist', () => {
     expect(screen.getByText(/^30 squares aren’t given to anyone yet/)).toBeInTheDocument();
   });
 
-  it('leaves once every square is handed out', () => {
-    renderGuide([owner, makePlayer({ maxSquares: 50 })]);
-    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+  it('waits on the board to fill once every square is handed out', () => {
+    const contest = makeContest({}, 10);
+    contest.squares[0] = makeSquare({ value: 'AB' });
+    renderGuide([owner, makePlayer({ maxSquares: 50 })], contest);
+    expect(currentStep()).toHaveTextContent('Fill the board');
+    expect(screen.getAllByRole('listitem')[1]).toHaveTextContent('Give out squares (done)');
+    expect(
+      screen.getByText(
+        'Everyone has squares. 1 of 100 are claimed so far, and the numbers are drawn at kickoff.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('leaves once the board is full or the game is on', () => {

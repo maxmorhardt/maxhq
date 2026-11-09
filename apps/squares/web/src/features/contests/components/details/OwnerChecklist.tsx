@@ -1,4 +1,5 @@
 import { Check, Groups, PersonAdd } from '@mui/icons-material';
+import type { ReactNode } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { fonts, game as palette } from '../../../../app/theme';
@@ -15,7 +16,13 @@ interface Props {
 const STEPS: { todo: OwnerTodo; label: string }[] = [
   { todo: 'invite', label: 'Invite players' },
   { todo: 'squares', label: 'Give out squares' },
+  { todo: 'fill', label: 'Fill the board' },
 ];
+
+interface NextStep {
+  message: string;
+  button?: { label: string; icon: ReactNode; dialog: ContestDialog };
+}
 
 const visuallyHidden = {
   position: 'absolute',
@@ -24,6 +31,13 @@ const visuallyHidden = {
   overflow: 'hidden',
   clip: 'rect(0 0 0 0)',
   whiteSpace: 'nowrap',
+} as const;
+
+const hiddenOnPhone = {
+  position: { xs: 'absolute', sm: 'static' },
+  width: { xs: '1px', sm: 'auto' },
+  height: { xs: '1px', sm: 'auto' },
+  clip: { xs: 'rect(0 0 0 0)', sm: 'auto' },
 } as const;
 
 function squaresMessage(contest: Contest, players: Player[]): string {
@@ -38,6 +52,26 @@ function squaresMessage(contest: Contest, players: Player[]): string {
     : `${who} waiting for squares. Lower someone’s squares to make room.`;
 }
 
+function nextStep(todo: OwnerTodo, contest: Contest, players: Player[]): NextStep {
+  if (todo === 'invite') {
+    return {
+      message:
+        'Share your invite link with the group. Everyone joins with no squares, and you hand them out.',
+      button: { label: 'Share Invite Link', icon: <PersonAdd />, dialog: 'invite' },
+    };
+  }
+  if (todo === 'squares') {
+    return {
+      message: squaresMessage(contest, players),
+      button: { label: 'Give Squares', icon: <Groups />, dialog: 'players' },
+    };
+  }
+  const claimed = contest.squares.filter((s) => s.value.trim() !== '').length;
+  return {
+    message: `Everyone has squares. ${claimed} of ${contest.squares.length} are claimed so far, and the numbers are drawn at kickoff.`,
+  };
+}
+
 export default function OwnerChecklist({ contest, players, onOpen }: Props) {
   const todo = getOwnerTodo(contest, players);
   if (!todo) {
@@ -45,21 +79,7 @@ export default function OwnerChecklist({ contest, players, onOpen }: Props) {
   }
 
   const current = STEPS.findIndex((s) => s.todo === todo);
-  const action =
-    todo === 'invite'
-      ? {
-          message:
-            'Share your invite link with the group. Everyone joins with no squares, and you hand them out.',
-          label: 'Share Invite Link',
-          icon: <PersonAdd />,
-          dialog: 'invite' as const,
-        }
-      : {
-          message: squaresMessage(contest, players),
-          label: 'Give Squares',
-          icon: <Groups />,
-          dialog: 'players' as const,
-        };
+  const { message, button } = nextStep(todo, contest, players);
 
   return (
     <Box
@@ -129,6 +149,7 @@ export default function OwnerChecklist({ contest, players, onOpen }: Props) {
               <Typography
                 noWrap
                 sx={{
+                  ...(!isCurrent && hiddenOnPhone),
                   fontSize: '0.85rem',
                   fontWeight: isCurrent ? 700 : 500,
                   color: isCurrent ? 'text.primary' : 'text.secondary',
@@ -158,17 +179,19 @@ export default function OwnerChecklist({ contest, players, onOpen }: Props) {
         }}
       >
         <Typography sx={{ flex: '1 1 240px', fontSize: '0.9rem', lineHeight: 1.45 }}>
-          {action.message}
+          {message}
         </Typography>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={action.icon}
-          onClick={() => onOpen(action.dialog)}
-          sx={{ whiteSpace: 'nowrap' }}
-        >
-          {action.label}
-        </Button>
+        {button && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={button.icon}
+            onClick={() => onOpen(button.dialog)}
+            sx={{ whiteSpace: 'nowrap' }}
+          >
+            {button.label}
+          </Button>
+        )}
       </Box>
     </Box>
   );

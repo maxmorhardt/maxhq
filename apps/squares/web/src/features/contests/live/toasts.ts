@@ -71,7 +71,7 @@ export function contestToast(
       return {
         message: winner
           ? `${winnerName} wins Q${quarter}.`
-          : `Q${quarter} landed on an empty square, so nobody wins it.`,
+          : `No winner for Q${quarter}. Nobody claimed that square.`,
         severity: 'info',
       };
     }
