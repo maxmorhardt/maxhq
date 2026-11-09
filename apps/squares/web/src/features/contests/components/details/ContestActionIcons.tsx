@@ -3,15 +3,15 @@ import { Badge, Box, Button } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Link } from 'react-router';
 import { game } from '../../../../app/theme';
-import type { Contest, Player } from '../../../../types/contest';
-import { getOwnerTodo, type ContestViewer } from '../../live/viewer';
+import type { Player } from '../../../../types/contest';
+import type { ContestViewer } from '../../live/viewer';
 import type { ContestDialog } from './ContestDialogs';
 
 interface Props {
-  contest: Contest;
   players: Player[];
   viewer: ContestViewer;
   onOpen: (dialog: ContestDialog) => void;
+  squaresToGive: boolean;
 }
 
 const actionSx = {
@@ -38,9 +38,7 @@ const countSx = {
   fontVariantNumeric: 'tabular-nums',
 };
 
-export default function ContestActionIcons({ contest, players, viewer, onOpen }: Props) {
-  const needsSquares = viewer.isOwner && getOwnerTodo(contest, players) === 'squares';
-
+export default function ContestActionIcons({ players, viewer, onOpen, squaresToGive }: Props) {
   return (
     <Box sx={{ display: 'flex', gap: 1 }}>
       {viewer.isOwner && (
@@ -54,12 +52,12 @@ export default function ContestActionIcons({ contest, players, viewer, onOpen }:
           Invite
         </Button>
       )}
-      <Badge variant="dot" color="warning" invisible={!needsSquares} overlap="rectangular">
+      <Badge variant="dot" color="warning" invisible={!squaresToGive} overlap="rectangular">
         <Button
           variant="outlined"
           size="small"
           aria-label={
-            needsSquares
+            squaresToGive
               ? `Players (${players.length}), squares left to give out`
               : `Players (${players.length})`
           }

@@ -205,6 +205,7 @@ describe('PlayersManager', () => {
     renderManager({ list: [makePlayer({ ...owner, maxSquares: 100 }), newcomer] });
     expect(screen.getByText(/Lower someone’s squares to make room first/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Give Each' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Give squares to/ })).not.toBeInTheDocument();
   });
 
   it('reports a failed give-out', async () => {

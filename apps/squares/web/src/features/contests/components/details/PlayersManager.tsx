@@ -12,12 +12,15 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
+import { game } from '../../../../app/theme';
 import ConfirmDialog from '../../../../components/feedback/ConfirmDialog';
 import { blockNonIntegerKeys, noNumberSpinners } from '../../../../components/inputs';
 import type { Contest, Player, PlayerRole } from '../../../../types/contest';
 import { isTerminalStatus } from '../../../../utils/contestStatus';
+import { plural } from '../../../../utils/plural';
 import { useToast } from '../../../toast/useToast';
 import {
   useAllotSquaresMutation,
@@ -57,8 +60,6 @@ const rowSx = {
 const actionSx = { color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#ff5d5d' } };
 
 const sectionLabelSx = { color: 'text.secondary', fontSize: '0.8rem', fontWeight: 600 };
-
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export default function PlayersManager({
   open,
@@ -179,7 +180,7 @@ export default function PlayersManager({
 
         {canManage && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
-            {canEdit && noSquares && (
+            {canEdit && noSquares && unallocated > 0 && (
               <Button
                 variant="contained"
                 size="small"
@@ -270,7 +271,7 @@ export default function PlayersManager({
                   variant="determinate"
                   aria-label="squares given out"
                   value={totalSquares ? (allocated / totalSquares) * 100 : 0}
-                  sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(238, 242, 250, 0.08)' }}
+                  sx={{ height: 6, borderRadius: 3, bgcolor: alpha(game.chalk, 0.08) }}
                 />
                 <Box
                   sx={{

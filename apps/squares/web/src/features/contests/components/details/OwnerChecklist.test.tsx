@@ -3,13 +3,20 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeContest, makePlayer, makeSquare } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
 import type { Contest, Player } from '../../../../types/contest';
+import { getOwnerTodo } from '../../live/viewer';
 import OwnerChecklist from './OwnerChecklist';
 
 const owner = makePlayer({ id: 'o', userId: 'u_owner', role: 'owner', maxSquares: 50 });
 
 function renderGuide(players: Player[], contest: Contest = makeContest({}, 10)) {
   const onOpen = vi.fn();
-  renderWithProviders(<OwnerChecklist contest={contest} players={players} onOpen={onOpen} />);
+  const todo = getOwnerTodo(contest, players);
+  if (!todo) {
+    throw new Error('nothing left for the owner to do');
+  }
+  renderWithProviders(
+    <OwnerChecklist todo={todo} contest={contest} players={players} onOpen={onOpen} />
+  );
   return onOpen;
 }
 
@@ -72,11 +79,5 @@ describe('OwnerChecklist', () => {
       )
     ).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-  });
-
-  it('leaves once the board is full or the game is on', () => {
-    renderGuide([owner], makeContest({ squares: [makeSquare({ value: 'AB' })] }));
-    renderGuide([owner], makeContest({ status: 'Q1' }));
-    expect(screen.queryByRole('region')).not.toBeInTheDocument();
   });
 });

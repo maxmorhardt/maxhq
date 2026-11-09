@@ -37,7 +37,7 @@ const renderView = (status: 'live' | 'reconnecting' = 'live', guideOwner = true)
       contest={makeContest()}
       players={[]}
       activity={[]}
-      viewer={makeViewer()}
+      viewer={makeViewer({ isOwner: true })}
       status={status}
       winnerFlash={null}
       onStale={vi.fn()}
@@ -65,6 +65,22 @@ describe('ContestView', () => {
 
   it('guides only owners who haven’t run a contest yet', () => {
     renderView('live', false);
+    expect(screen.queryByTestId('checklist')).not.toBeInTheDocument();
+  });
+
+  it('guides nobody but the owner', () => {
+    renderWithProviders(
+      <ContestView
+        contest={makeContest()}
+        players={[]}
+        activity={[]}
+        viewer={makeViewer()}
+        status="live"
+        winnerFlash={null}
+        onStale={vi.fn()}
+        guideOwner
+      />
+    );
     expect(screen.queryByTestId('checklist')).not.toBeInTheDocument();
   });
 

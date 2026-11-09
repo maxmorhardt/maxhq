@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import type { StreamStatus } from '../../../api/eventStream';
 import type { ActivityEvent, Contest, Game, Player } from '../../../types/contest';
-import type { ContestViewer } from '../live/viewer';
+import { getOwnerTodo, type ContestViewer } from '../live/viewer';
 import ContestDetails from './details/ContestDetails';
 import ContestDialogs, { type ContestDialog } from './details/ContestDialogs';
 import OwnerChecklist from './details/OwnerChecklist';
@@ -38,6 +38,7 @@ export default function ContestView({
   guideOwner = false,
 }: Props) {
   const [dialog, setDialog] = useState<ContestDialog | null>(null);
+  const ownerTodo = viewer.isOwner ? getOwnerTodo(contest, players) : null;
 
   return (
     <Box
@@ -65,9 +66,12 @@ export default function ContestView({
         status={status}
         onRetry={onStale}
         onOpen={setDialog}
+        squaresToGive={ownerTodo === 'squares'}
       />
 
-      {guideOwner && <OwnerChecklist contest={contest} players={players} onOpen={setDialog} />}
+      {guideOwner && ownerTodo && (
+        <OwnerChecklist todo={ownerTodo} contest={contest} players={players} onOpen={setDialog} />
+      )}
 
       <QuarterStrip contest={contest} game={game} viewer={viewer} />
 

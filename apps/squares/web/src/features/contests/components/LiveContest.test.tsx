@@ -5,6 +5,7 @@ import { makeContest, makePlayer, makeQuarterResult } from '../../../test/fixtur
 import { renderWithProviders } from '../../../test/render';
 import type { Player } from '../../../types/contest';
 import type { ContestEvent } from '../live/events';
+import type { LiveContestState } from '../live/liveContestSlice';
 import {
   eventReceived,
   streamEnded,
@@ -20,11 +21,11 @@ vi.mock('../../profile/api', () => ({
   useGetMyProfileQuery: vi.fn(() => ({ data: undefined, isLoading: false, isError: true })),
 }));
 const stream = vi.hoisted(() => ({
-  onEvent: undefined as ((e: ContestEvent) => void) | undefined,
+  onEvent: undefined as ((e: ContestEvent, before: LiveContestState) => void) | undefined,
   resync: vi.fn(),
 }));
 vi.mock('../live/useContestStream', () => ({
-  useContestStream: (_: string, onEvent: (e: ContestEvent) => void) => {
+  useContestStream: (_: string, onEvent: (e: ContestEvent, before: LiveContestState) => void) => {
     stream.onEvent = onEvent;
     return { resync: stream.resync };
   },
@@ -79,7 +80,8 @@ function renderLive() {
     act(() => {
       result.store.dispatch(action);
     });
-  const emit = (e: ContestEvent) => act(() => stream.onEvent?.(e));
+  const emit = (e: ContestEvent) =>
+    act(() => stream.onEvent?.(e, result.store.getState().liveContest));
   const snapshot = (contest = makeContest(), players: Player[] = []) =>
     dispatch(
       eventReceived({
@@ -101,7 +103,7 @@ describe('LiveContest', () => {
     vi.clearAllMocks();
     games.useGetGameQuery.mockReturnValue({ data: undefined });
     roster.useContestRoster.mockReturnValue(undefined);
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined });
+    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined, isError: false });
     mockAuth({ email: 'player@x.com' });
   });
 
@@ -254,29 +256,27 @@ describe('LiveContest', () => {
     expect(toasts()[0]?.message).toBe('Pat P. wins Q1.');
   });
 
-  it('guides an owner who hasn’t finished a contest yet', () => {
+  it('guides an owner who hasn’t finished a contest, or can’t tell', () => {
+    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: false, isError: false });
     const { snapshot } = renderLive();
     snapshot();
-    expect(history.useHasFinishedOwnContestQuery).toHaveBeenLastCalledWith(undefined, {
-      skip: true,
-    });
     expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'false');
 
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: false });
     snapshot(makeContest({ owner: 'u_player' }));
-    expect(history.useHasFinishedOwnContestQuery).toHaveBeenLastCalledWith(undefined, {
-      skip: false,
-    });
+    expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'true');
+
+    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined, isError: true });
+    snapshot(makeContest({ owner: 'u_player', version: 2 }));
     expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'true');
   });
 
   it('leaves an experienced owner unguided, and waits until it knows', () => {
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: true });
+    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: true, isError: false });
     const { snapshot } = renderLive();
     snapshot(makeContest({ owner: 'u_player' }));
     expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'false');
 
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined });
+    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined, isError: false });
     snapshot(makeContest({ owner: 'u_player', version: 2 }));
     expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'false');
   });

@@ -71,8 +71,43 @@ describe('contestToast', () => {
   it('says when a quarter lands on an empty square', () => {
     const ghost = makeQuarterResult({ quarter: 4, winner: '', winnerName: '' });
     expect(toast(event('quarter.recorded', ghost))?.message).toBe(
-      'No winner for Q4. Nobody claimed that square.'
+      'No winner for Q4. Nobody holds that square.'
     );
+  });
+
+  it('treats a removed player’s ghosted square as no winner', () => {
+    const ghost = makeQuarterResult({ quarter: 3, winner: 'ghost', winnerName: '' });
+    expect(toast(event('quarter.recorded', ghost))?.message).toBe(
+      'No winner for Q3. Nobody holds that square.'
+    );
+  });
+
+  it('skips a quarter or join the board already shows, as a resume replays', () => {
+    const q1 = makeQuarterResult({ winner: 'u_pat' });
+    expect(toast(event('quarter.recorded', q1), { ...owned, quarterResults: [q1] })).toBeNull();
+    const nia = makePlayer({ userId: 'u_nia' });
+    expect(toast(event('player.joined', nia), owned, [me, nia])).toBeNull();
+  });
+
+  it('asks the owner to make room when a player joins a fully handed-out board', () => {
+    const full = makePlayer({ userId: 'u_me', role: 'owner', maxSquares: 9 });
+    expect(
+      toast(event('player.joined', makePlayer({ displayName: 'Nia N.' })), owned, [full])
+    ).toEqual({
+      message: 'Nia N. joined. Lower someone’s squares to make room for them.',
+      severity: 'info',
+    });
+  });
+
+  it('drops news older than a couple of minutes', () => {
+    const late = {
+      ...event('quarter.recorded', makeQuarterResult({ winner: 'u_pat' })),
+      timestamp: '2026-11-09T12:00:00Z',
+    };
+    const at = (iso: string) =>
+      contestToast(late, { viewerId: 'u_me', contest: owned, players: [me] }, Date.parse(iso));
+    expect(at('2026-11-09T12:01:00Z')).not.toBeNull();
+    expect(at('2026-11-09T12:03:00Z')).toBeNull();
   });
 
   it('stays quiet about the viewer’s own changes, other events, and before the snapshot', () => {

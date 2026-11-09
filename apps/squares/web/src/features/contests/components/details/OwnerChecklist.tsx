@@ -1,13 +1,15 @@
 import { Check, Groups, PersonAdd } from '@mui/icons-material';
-import type { ReactNode } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import type { ReactNode } from 'react';
 import { fonts, game as palette } from '../../../../app/theme';
+import { visuallyHidden } from '../../../../components/visuallyHidden';
 import type { Contest, Player } from '../../../../types/contest';
-import { getOwnerTodo, getSquarePool, type OwnerTodo } from '../../live/viewer';
+import { getSquarePool, type OwnerTodo } from '../../live/viewer';
 import type { ContestDialog } from './ContestDialogs';
 
 interface Props {
+  todo: OwnerTodo;
   contest: Contest;
   players: Player[];
   onOpen: (dialog: ContestDialog) => void;
@@ -24,19 +26,11 @@ interface NextStep {
   button?: { label: string; icon: ReactNode; dialog: ContestDialog };
 }
 
-const visuallyHidden = {
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;
-
 const hiddenOnPhone = {
   position: { xs: 'absolute', sm: 'static' },
   width: { xs: '1px', sm: 'auto' },
   height: { xs: '1px', sm: 'auto' },
+  margin: { xs: '-1px', sm: 0 },
   clip: { xs: 'rect(0 0 0 0)', sm: 'auto' },
 } as const;
 
@@ -72,12 +66,7 @@ function nextStep(todo: OwnerTodo, contest: Contest, players: Player[]): NextSte
   };
 }
 
-export default function OwnerChecklist({ contest, players, onOpen }: Props) {
-  const todo = getOwnerTodo(contest, players);
-  if (!todo) {
-    return null;
-  }
-
+export default function OwnerChecklist({ todo, contest, players, onOpen }: Props) {
   const current = STEPS.findIndex((s) => s.todo === todo);
   const { message, button } = nextStep(todo, contest, players);
 

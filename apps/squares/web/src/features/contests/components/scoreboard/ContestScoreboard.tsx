@@ -4,6 +4,7 @@ import { alpha } from '@mui/material/styles';
 import type { StreamStatus } from '../../../../api/eventStream';
 import { fonts, game as palette } from '../../../../app/theme';
 import TeamMark from '../../../../components/TeamMark';
+import { visuallyHidden } from '../../../../components/visuallyHidden';
 import type { Contest, Game, Player } from '../../../../types/contest';
 import { getStatusLabel } from '../../../../utils/contestStatus';
 import { currentScore, gameClock, isLive, kickoffParts } from '../../../../utils/game';
@@ -20,22 +21,11 @@ interface Props {
   status: StreamStatus;
   onRetry: () => void;
   onOpen: (dialog: ContestDialog) => void;
+  squaresToGive?: boolean;
 }
 
 // below this width the names would crowd out the score, so the badge and score stand alone
 const NARROW = '@container scorebug (max-width: 600px)';
-
-const visuallyHidden = {
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  margin: '-1px',
-  padding: 0,
-  border: 0,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;
 
 function TeamSide({
   abbr,
@@ -120,6 +110,7 @@ export default function ContestScoreboard({
   status,
   onRetry,
   onOpen,
+  squaresToGive = false,
 }: Props) {
   const score = currentScore(contest, game);
   const live = isLive(game);
@@ -174,7 +165,12 @@ export default function ContestScoreboard({
             <Chip size="small" variant="outlined" label={role} />
           </Box>
         </Box>
-        <ContestActionIcons contest={contest} players={players} viewer={viewer} onOpen={onOpen} />
+        <ContestActionIcons
+          players={players}
+          viewer={viewer}
+          onOpen={onOpen}
+          squaresToGive={squaresToGive}
+        />
       </Box>
 
       {/* the score bug, laid out by its own width since the page column can be narrow on a wide screen */}

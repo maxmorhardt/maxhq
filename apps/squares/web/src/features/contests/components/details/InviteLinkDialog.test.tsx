@@ -11,6 +11,8 @@ const api = vi.hoisted(() => ({
   useResetInviteLinkMutation: vi.fn(),
 }));
 vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }));
+const faro = vi.hoisted(() => ({ trackEvent: vi.fn() }));
+vi.mock('../../../../utils/faro', () => faro);
 
 const link = `${window.location.origin}/join/tok`;
 
@@ -19,6 +21,7 @@ const renderDialog = (contest: Contest = makeContest()) =>
 
 describe('InviteLinkDialog', () => {
   beforeEach(() => {
+    faro.trackEvent.mockClear();
     api.useGetInviteLinkQuery.mockReturnValue({ data: { token: 'tok' }, isLoading: false });
     api.useResetInviteLinkMutation.mockReturnValue(mockMutation({ token: 'fresh' }));
   });
@@ -49,6 +52,7 @@ describe('InviteLinkDialog', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(link));
     expect(store.getState().toast.messages[0]?.message).toBe('Invite link copied');
+    expect(faro.trackEvent).toHaveBeenCalledWith('invite_share', { method: 'copy' });
   });
 
   it('says so when copying fails', async () => {
@@ -62,6 +66,7 @@ describe('InviteLinkDialog', () => {
     await waitFor(() =>
       expect(store.getState().toast.messages[0]?.message).toBe('Failed to copy link')
     );
+    expect(faro.trackEvent).not.toHaveBeenCalled();
   });
 
   it('opens the share sheet when there is one', async () => {
@@ -72,6 +77,20 @@ describe('InviteLinkDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Share Link' }));
 
     await waitFor(() => expect(share).toHaveBeenCalledWith({ title: 'Test Bowl', url: link }));
+    await waitFor(() =>
+      expect(faro.trackEvent).toHaveBeenCalledWith('invite_share', { method: 'share' })
+    );
+  });
+
+  it('counts nothing when the share sheet is closed', async () => {
+    const share = vi.fn().mockRejectedValue(new Error('AbortError'));
+    vi.stubGlobal('navigator', { share });
+    renderDialog();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Share Link' }));
+
+    await waitFor(() => expect(share).toHaveBeenCalled());
+    expect(faro.trackEvent).not.toHaveBeenCalled();
   });
 
   it('copies instead when the browser cannot share', async () => {

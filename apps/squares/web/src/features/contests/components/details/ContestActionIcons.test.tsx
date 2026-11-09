@@ -1,21 +1,21 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { makeContest, makePlayer, makeViewer } from '../../../../test/fixtures';
+import { makePlayer, makeViewer } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
-import type { Contest, Player } from '../../../../types/contest';
+import type { Player } from '../../../../types/contest';
 import ContestActionIcons from './ContestActionIcons';
 
 const owner = makePlayer({ id: 'o', userId: 'u_owner', role: 'owner', maxSquares: 50 });
 const waiting = makePlayer({ id: 'w', userId: 'u_w', maxSquares: 0 });
 
-function renderIcons(isOwner: boolean, players: Player[] = [], contest: Contest = makeContest()) {
+function renderIcons(isOwner: boolean, players: Player[] = [], squaresToGive = false) {
   const onOpen = vi.fn();
   renderWithProviders(
     <ContestActionIcons
-      contest={contest}
       players={players}
       viewer={makeViewer({ isOwner })}
       onOpen={onOpen}
+      squaresToGive={squaresToGive}
     />
   );
   return onOpen;
@@ -44,22 +44,10 @@ describe('ContestActionIcons', () => {
     expect(onOpen).toHaveBeenCalledWith('players');
   });
 
-  it('flags squares left to give out to the owner', () => {
-    renderIcons(true, [owner, waiting]);
+  it('flags squares left to give out', () => {
+    renderIcons(true, [owner, waiting], true);
     expect(
       screen.getByRole('button', { name: 'Players (2), squares left to give out' })
     ).toBeInTheDocument();
-  });
-
-  it('flags nothing to players, or before anyone joins', () => {
-    renderIcons(false, [owner, waiting]);
-    expect(screen.getByRole('button', { name: 'Players (2)' })).toBeInTheDocument();
-    renderIcons(true, [owner]);
-    expect(screen.getByRole('button', { name: 'Players (1)' })).toBeInTheDocument();
-  });
-
-  it('stops flagging once the game starts', () => {
-    renderIcons(true, [owner, waiting], makeContest({ status: 'Q1' }));
-    expect(screen.getByRole('button', { name: 'Players (2)' })).toBeInTheDocument();
   });
 });

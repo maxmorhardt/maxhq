@@ -40,9 +40,9 @@ export default function InviteLinkDialog({ open, onClose, contest }: Props) {
   const isTerminal = isTerminalStatus(contest.status);
 
   const copy = async () => {
-    trackEvent('invite_share', { method: 'copy' });
     try {
       await navigator.clipboard.writeText(url);
+      trackEvent('invite_share', { method: 'copy' });
       showToast('Invite link copied', 'success');
     } catch {
       showToast('Failed to copy link', 'error');
@@ -54,9 +54,9 @@ export default function InviteLinkDialog({ open, onClose, contest }: Props) {
       await copy();
       return;
     }
-    trackEvent('invite_share', { method: 'share' });
     try {
       await navigator.share({ title: contest.name, url });
+      trackEvent('invite_share', { method: 'share' });
     } catch {
       // the user closed the share sheet
     }
