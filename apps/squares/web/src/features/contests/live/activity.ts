@@ -6,8 +6,10 @@ export const MAX_ACTIVITY = 200;
 const GHOST_USER = 'ghost';
 const SYSTEM_ACTOR = 'system';
 
+export const isGhost = (owner: string) => owner === GHOST_USER || owner === '';
+
 export const ownerLabel = (owner: string, ownerName: string) =>
-  owner === GHOST_USER || owner === '' ? GHOST_USER : ownerName;
+  isGhost(owner) ? GHOST_USER : ownerName;
 
 const timeOf = (event: ActivityEvent) => new Date(event.timestamp).getTime();
 

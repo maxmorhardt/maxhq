@@ -178,6 +178,22 @@ describe('faro', () => {
     );
   });
 
+  it('pushes a named event once faro is up', async () => {
+    const { initFaro, trackEvent } = await load();
+    initFaro('squares.maxhq.io', URL);
+    trackEvent('sign_in_provider', { provider: 'google' });
+    await vi.waitFor(() =>
+      expect(api.pushEvent).toHaveBeenCalledWith('sign_in_provider', { provider: 'google' })
+    );
+  });
+
+  it('drops events when faro is off', async () => {
+    const { trackEvent } = await load();
+    trackEvent('sign_in_provider');
+    await Promise.resolve();
+    expect(api.pushEvent).not.toHaveBeenCalled();
+  });
+
   it('ignores the user before faro starts', async () => {
     const { setFaroUser } = await load();
     setFaroUser('u_1');

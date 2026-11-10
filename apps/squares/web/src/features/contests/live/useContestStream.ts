@@ -2,7 +2,7 @@ import { useCallback, useEffect, useEffectEvent, useRef } from 'react';
 import { API_BASE_URL } from '../../../api/baseQuery';
 import { errorStatus } from '../../../api/errors';
 import { openEventStream, type EventStream } from '../../../api/eventStream';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+import { useAppDispatch, useAppSelector, useAppStore } from '../../../app/hooks';
 import { getIdToken } from '../../../auth/token';
 import { isTerminalStatus } from '../../../utils/contestStatus';
 import { contestsApi } from '../api';
@@ -10,6 +10,7 @@ import { parseContestEvent, type ContestEvent } from './events';
 import { selectListedStatus } from './selectors';
 import {
   eventReceived,
+  type LiveContestState,
   streamClosed,
   streamEnded,
   streamOpened,
@@ -33,12 +34,15 @@ export const contestEventsUrl = (contestId: string) =>
 // keeps the live contest in the store in sync with the server; onEvent is for side effects like toasts
 export function useContestStream(
   contestId: string | undefined,
-  onEvent?: (event: ContestEvent) => void
+  onEvent?: (event: ContestEvent, before: LiveContestState) => void
 ) {
   const dispatch = useAppDispatch();
+  const store = useAppStore();
   const streamRef = useRef<EventStream | null>(null);
   const rereadRef = useRef<(() => void) | null>(null);
-  const notify = useEffectEvent((event: ContestEvent) => onEvent?.(event));
+  const notify = useEffectEvent((event: ContestEvent, before: LiveContestState) =>
+    onEvent?.(event, before)
+  );
   const listed = useAppSelector((state) => selectListedStatus(state, contestId));
   const listedAsFinished = useEffectEvent(() => isTerminalStatus(listed));
 
@@ -76,6 +80,7 @@ export function useContestStream(
           }
 
           const { event } = parsed;
+          const before = store.getState().liveContest;
           dispatch(eventReceived({ id, event }));
           if (
             event.type === 'contest.deleted' ||
@@ -84,7 +89,7 @@ export function useContestStream(
           ) {
             stream.close();
           }
-          notify(event);
+          notify(event, before);
         },
       });
       streamRef.current = stream;
@@ -132,7 +137,7 @@ export function useContestStream(
       rereadRef.current = null;
       dispatch(streamClosed());
     };
-  }, [contestId, dispatch]);
+  }, [contestId, dispatch, store]);
 
   // drops local state and starts over from a fresh snapshot, for when a write proves it stale
   const resync = useCallback(() => {

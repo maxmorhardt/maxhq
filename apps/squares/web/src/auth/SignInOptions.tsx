@@ -4,6 +4,7 @@ import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import { Box, Button, Divider, Link, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { trackEvent } from '../utils/faro';
 import { signInWithProvider, type OIDCProvider } from './oidc';
 
 interface Props {
@@ -22,6 +23,7 @@ export default function SignInOptions({ redirectPath, onSelect }: Props) {
 
   const handleSignIn = (provider: OIDCProvider) => {
     onSelect?.();
+    trackEvent('sign_in_provider', { provider });
     signInWithProvider(auth, provider, redirectPath);
   };
 

@@ -31,6 +31,7 @@ function renderBoard(contest: Contest, viewer = makeViewer(), withGame?: Game) {
       viewer={viewer}
       status="live"
       onRetry={vi.fn()}
+      onOpen={vi.fn()}
     />
   );
 }

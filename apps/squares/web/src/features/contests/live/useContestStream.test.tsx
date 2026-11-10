@@ -170,7 +170,10 @@ describe('useContestStream', () => {
 
     expect(store.getState().liveContest).toMatchObject({ contestId: 'c-1', status: 'live' });
     expect(store.getState().liveContest.contest?.name).toBe('Test Bowl');
-    expect(onEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'contest.snapshot' }));
+    expect(onEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'contest.snapshot' }),
+      expect.objectContaining({ contest: null })
+    );
   });
 
   it('records why the server refused the stream', () => {
