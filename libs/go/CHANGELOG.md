@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.3](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.2...libs/go/v1.2.3) (2026-11-10)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#231](https://github.com/maxmorhardt/maxhq/issues/231)) ([a8cd556](https://github.com/maxmorhardt/maxhq/commit/a8cd556cff11d1428c1bf76fdd25f4dda13b8c57))
+* **deps:** update module github.com/caarlos0/env/v11 to v11.4.2 ([#226](https://github.com/maxmorhardt/maxhq/issues/226)) ([7ff0e75](https://github.com/maxmorhardt/maxhq/commit/7ff0e758c6313f1c7eda76535b26860326cf1f64))
+
 ## [1.2.2](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.1...libs/go/v1.2.2) (2026-11-06)
 
 

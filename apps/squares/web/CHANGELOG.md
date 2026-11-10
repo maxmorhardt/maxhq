@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.11.1...squares/2.12.0) (2026-11-10)
+
+
+### Features
+
+* **squares:** guide new owners through inviting and giving out squares ([#232](https://github.com/maxmorhardt/maxhq/issues/232)) ([b93fb40](https://github.com/maxmorhardt/maxhq/commit/b93fb400e7f7f29c19bcf91717bd0d1afed7d959))
+
 ## [2.11.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.11.0...squares/2.11.1) (2026-11-06)
 
 
