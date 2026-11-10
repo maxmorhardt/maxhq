@@ -74,7 +74,7 @@ jobs:
   maxhq-node:
     needs: changes
     if: needs.changes.outputs.maxhq == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       app_name: maxhq
@@ -82,7 +82,7 @@ jobs:
 
   maxhq-docker:
     needs: maxhq-node
-    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       app_name: maxhq
@@ -98,7 +98,7 @@ jobs:
   squares-web-node:
     needs: changes
     if: needs.changes.outputs.squares_web == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-node.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       app_name: squares
@@ -106,7 +106,7 @@ jobs:
 
   squares-web-docker:
     needs: squares-web-node
-    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       app_name: squares
@@ -126,7 +126,7 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
-    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       working_directory: apps/squares/${{ matrix.service }}
@@ -137,7 +137,7 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJSON(needs.changes.outputs.squares_services) }}
-    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-docker.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       app_name: squares-${{ matrix.service }}
@@ -154,7 +154,7 @@ jobs:
       fail-fast: false
       matrix:
         lib: [platform, squares]
-    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-go.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       working_directory: libs/go/${{ matrix.lib }}
@@ -169,7 +169,7 @@ jobs:
       fail-fast: false
       matrix:
         chart: ${{ fromJSON(needs.changes.outputs.charts) }}
-    uses: maxmorhardt/workflows/.github/workflows/validate-helm.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/validate-helm.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       chart: charts/${{ matrix.chart }}
@@ -185,7 +185,7 @@ jobs:
       fail-fast: false
       matrix:
         module: [aws, cloudflare, github]
-    uses: maxmorhardt/workflows/.github/workflows/validate-terraform.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/validate-terraform.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       working_directory: infra/terraform/${{ matrix.module }}
@@ -199,7 +199,7 @@ jobs:
   k3s-bootstrap:
     needs: changes
     if: needs.changes.outputs.k3s == 'true'
-    uses: maxmorhardt/workflows/.github/workflows/ci-python.yml@aa3842528749b4315e9c6115ee980da7f511b172 # v1.0.0
+    uses: maxmorhardt/workflows/.github/workflows/ci-python.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
       app_name: k3s-bootstrap
