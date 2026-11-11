@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.9.3](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.2...squares-contests/2.9.3) (2026-11-11)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.2.3 ([#233](https://github.com/maxmorhardt/maxhq/issues/233)) ([2b181a9](https://github.com/maxmorhardt/maxhq/commit/2b181a9e753746200321f055333e9a04a37a0ed6))
+* **deps:** update module golang.org/x/crypto to v0.59.0 [security] ([#236](https://github.com/maxmorhardt/maxhq/issues/236)) ([f884829](https://github.com/maxmorhardt/maxhq/commit/f884829222ce0406fbb1210f5f080684bdf48543))
+
 ## [2.9.2](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.1...squares-contests/2.9.2) (2026-11-06)
 
 

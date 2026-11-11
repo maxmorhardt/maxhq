@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.4](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.3...libs/go/v1.2.4) (2026-11-11)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/gin-contrib/cors to v1.7.11 ([#237](https://github.com/maxmorhardt/maxhq/issues/237)) ([8a2fa2f](https://github.com/maxmorhardt/maxhq/commit/8a2fa2f5222d1d72b1203b1eecce4a433118d3f1))
+* **deps:** update module golang.org/x/crypto to v0.59.0 [security] ([#236](https://github.com/maxmorhardt/maxhq/issues/236)) ([f884829](https://github.com/maxmorhardt/maxhq/commit/f884829222ce0406fbb1210f5f080684bdf48543))
+
 ## [1.2.3](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.2...libs/go/v1.2.3) (2026-11-10)
 
 
