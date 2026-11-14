@@ -113,14 +113,16 @@ describe('ContestGrid', () => {
       viewer: makeViewer({ player: makePlayer({ maxSquares: 0 }), squaresLeft: 0 }),
     });
     fireEvent.click(cells()[1]);
-    expect(toasts()[0]?.message).toBe('The owner hasn’t given you any squares yet');
+    expect(toasts()[0]?.message).toBe('Ask the owner for squares');
     expect(claim).not.toHaveBeenCalled();
   });
 
   it('stops a player at their limit', () => {
-    const { cells, toasts } = renderGrid({ viewer: makeViewer({ squaresLeft: 0 }) });
+    const { cells, toasts } = renderGrid({
+      viewer: makeViewer({ squaresClaimed: 5, squaresLeft: 0 }),
+    });
     fireEvent.click(cells()[1]);
-    expect(toasts()[0]?.message).toBe('Square limit reached');
+    expect(toasts()[0]?.message).toBe('5/5 squares filled');
   });
 
   it('sends the user to set initials when the server has none', async () => {

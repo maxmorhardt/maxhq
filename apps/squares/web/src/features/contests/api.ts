@@ -50,11 +50,6 @@ export const contestsApi = baseApi.injectEndpoints({
       providesTags: ['ActiveContests'],
     }),
 
-    hasFinishedOwnContest: build.query<boolean, void>({
-      query: () => ({ url: '/contests', params: { role: 'owned', status: 'finished', limit: 1 } }),
-      transformResponse: (feed: ContestFeedResponse) => feed.contests.length > 0,
-    }),
-
     // a finished contest has nothing left to stream, so it is read once instead
     getContest: build.query<ContestSnapshot, string>({
       query: (id) => `/contests/${id}`,
@@ -177,7 +172,6 @@ export const contestsApi = baseApi.injectEndpoints({
 export const {
   useGetContestFeedInfiniteQuery,
   useGetActiveContestsQuery,
-  useHasFinishedOwnContestQuery,
   useCreateContestMutation,
   useDeleteContestMutation,
   useClaimSquareMutation,

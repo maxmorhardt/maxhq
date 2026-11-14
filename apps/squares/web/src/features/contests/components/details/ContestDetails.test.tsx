@@ -66,12 +66,11 @@ describe('ContestDetails', () => {
     expect(screen.queryByText('Your squares')).not.toBeInTheDocument();
   });
 
-  it('tells a player with no squares to wait for the owner', () => {
+  it('offers no square tools to a player still waiting for squares', () => {
     renderDetails(
       makeContest(),
       makeViewer({ player: makePlayer({ maxSquares: 0 }), squaresLeft: 0 })
     );
-    expect(screen.getByText(/The owner hasn't given you any squares yet/)).toBeInTheDocument();
     expect(screen.queryByTestId('square-actions')).not.toBeInTheDocument();
   });
 

@@ -126,22 +126,6 @@ describe('contestsApi', () => {
     );
   });
 
-  it('asks the feed whether the viewer has finished a contest of their own', async () => {
-    fetch = stubFetch({ contests: [{ id: 'c1' }] });
-    const result = await store.dispatch(endpoints.hasFinishedOwnContest.initiate());
-    const params = fetch.lastRequest().url.searchParams;
-    expect([params.get('role'), params.get('status'), params.get('limit')]).toEqual([
-      'owned',
-      'finished',
-      '1',
-    ]);
-    expect(result.data).toBe(true);
-
-    fetch = stubFetch({ contests: [] });
-    store = makeStore();
-    expect((await store.dispatch(endpoints.hasFinishedOwnContest.initiate())).data).toBe(false);
-  });
-
   it('lists active contests from the feed', async () => {
     fetch = stubFetch({ contests: [{ id: 'c1', name: 'pool', role: 'owner' }] });
     const result = await store.dispatch(endpoints.getActiveContests.initiate());

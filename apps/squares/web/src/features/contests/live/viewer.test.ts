@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeContest, makePlayer, makeSquare } from '../../../test/fixtures';
-import { getContestViewer, getOwnerTodo, getSquarePool } from './viewer';
+import { getContestViewer, isBoardOpen, getSquarePool } from './viewer';
 
 const contest = makeContest({
   owner: 'u_owner',
@@ -69,26 +69,10 @@ describe('getSquarePool', () => {
   });
 });
 
-describe('getOwnerTodo', () => {
-  const owner = makePlayer({ id: 'o', userId: 'u_owner', role: 'owner', maxSquares: 5 });
-  const board = makeContest();
-
-  it('starts with inviting players', () => {
-    expect(getOwnerTodo(board, [owner])).toBe('invite');
-  });
-
-  it('asks for squares while someone waits or squares are left over', () => {
-    expect(getOwnerTodo(board, [owner, makePlayer({ maxSquares: 0 })])).toBe('squares');
-    expect(getOwnerTodo(board, [owner, makePlayer({ maxSquares: 3 })])).toBe('squares');
-  });
-
-  it('waits on the board to fill once every square is handed out', () => {
-    expect(getOwnerTodo(board, [owner, makePlayer({ maxSquares: 4 })])).toBe('fill');
-  });
-
-  it('is done once the board is full or the game is on', () => {
-    const full = makeContest({ squares: [makeSquare({ value: 'AB' })] });
-    expect(getOwnerTodo(full, [owner, makePlayer({ maxSquares: 0 })])).toBeNull();
-    expect(getOwnerTodo(makeContest({ status: 'Q1' }), [owner])).toBeNull();
+describe('isBoardOpen', () => {
+  it('is open while the contest takes claims and a square is free', () => {
+    expect(isBoardOpen(makeContest())).toBe(true);
+    expect(isBoardOpen(makeContest({ squares: [makeSquare({ value: 'AB' })] }))).toBe(false);
+    expect(isBoardOpen(makeContest({ status: 'Q1' }))).toBe(false);
   });
 });

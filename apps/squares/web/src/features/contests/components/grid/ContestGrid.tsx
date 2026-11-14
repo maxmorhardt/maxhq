@@ -74,11 +74,11 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
       return;
     }
     if (!viewer.isOwner && viewer.player?.maxSquares === 0) {
-      showToast('The owner hasn’t given you any squares yet', 'info');
+      showToast('Ask the owner for squares', 'info');
       return;
     }
     if (viewer.player && viewer.squaresLeft === 0) {
-      showToast('Square limit reached', 'warning');
+      showToast(`${viewer.squaresClaimed}/${viewer.player.maxSquares} squares filled`, 'info');
       return;
     }
     try {

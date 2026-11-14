@@ -7,7 +7,6 @@ import NotFoundError from '../../../components/errors/NotFoundError';
 import type { QuarterResult } from '../../../types/contest';
 import { isGameOver } from '../../../utils/game';
 import { useGetGameQuery } from '../../games/api';
-import { useHasFinishedOwnContestQuery } from '../api';
 import { useGameStream } from '../../games/useGameStream';
 import { isMe } from '../../profile/useUserId';
 import { useToast } from '../../toast/useToast';
@@ -97,8 +96,6 @@ export default function LiveContest({ contestId }: Props) {
 
   const isOwner = !!contest && isMe(viewerId, contest.owner);
   const roster = useContestRoster(contestId, isOwner, players);
-  const history = useHasFinishedOwnContestQuery();
-  const guideOwner = isOwner && (history.data === false || history.isError);
 
   useEffect(() => {
     if (!winnerFlash) {
@@ -131,7 +128,6 @@ export default function LiveContest({ contestId }: Props) {
         status={status}
         winnerFlash={winnerFlash}
         onStale={resync}
-        guideOwner={guideOwner}
       />
       {/* the game can still be loading when a quarter lands, so the dialog falls back to away and home */}
       <WinnerCelebrationDialog

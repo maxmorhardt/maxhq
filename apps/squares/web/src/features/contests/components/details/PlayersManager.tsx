@@ -104,7 +104,7 @@ export default function PlayersManager({
     }
     try {
       await removePlayer({ contestId: contest.id, userId: removing.userId }).unwrap();
-      showToast('Player removed', 'success');
+      showToast(`${removing.displayName} removed`, 'success');
       closeRemove();
     } catch {
       // the error renders in the dialog

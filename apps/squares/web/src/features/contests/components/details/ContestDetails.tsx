@@ -103,11 +103,6 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
                 {viewer.squaresClaimed}/{player.maxSquares}
               </Typography>
             </Box>
-            {waitingForSquares && isActive && (
-              <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                The owner hasn&apos;t given you any squares yet.
-              </Typography>
-            )}
             {/* a full board is locked, so there is nothing left to claim or clear */}
             {isActive && !allFilled && !waitingForSquares && (
               <SquareActions
