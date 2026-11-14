@@ -25,10 +25,16 @@ describe('contestToast', () => {
     expect(toast(event('player.joined', makePlayer()), makeContest())).toBeNull();
   });
 
-  it('just names who joined once the board is full or the game is on', () => {
+  it('asks the owner to make room when someone joins a full board', () => {
     const joined = event('player.joined', makePlayer({ displayName: 'Nia N.' }));
     const full = makeContest({ owner: 'u_me', squares: [makeSquare({ value: 'AB' })] });
-    expect(toast(joined, full)?.message).toBe('Nia N. joined.');
+    expect(toast(joined, full, [{ ...me, role: 'owner', maxSquares: 1 }])?.message).toBe(
+      'Nia N. joined. Free up squares for them.'
+    );
+  });
+
+  it('just names who joined once the numbers are drawn', () => {
+    const joined = event('player.joined', makePlayer({ displayName: 'Nia N.' }));
     expect(toast(joined, makeContest({ owner: 'u_me', status: 'Q1' }))?.message).toBe(
       'Nia N. joined.'
     );

@@ -1,7 +1,6 @@
 import { Box } from '@mui/material';
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { hasKickedOff } from '../../../utils/game';
 import type { StreamStatus } from '../../../api/eventStream';
 import type { ActivityEvent, Contest, Game, Player } from '../../../types/contest';
 import { getSquarePool, isBoardOpen, type ContestViewer } from '../live/viewer';
@@ -67,7 +66,7 @@ export default function ContestView({
         status={status}
         onRetry={onStale}
         onOpen={setDialog}
-        squaresToGive={viewer.isOwner && boardOpen && pool.waiting.length > 0}
+        squaresToGive={viewer.isOwner && contest.status === 'ACTIVE' && pool.waiting.length > 0}
       />
 
       <ContestStatusBanner
@@ -76,7 +75,6 @@ export default function ContestView({
         viewer={viewer}
         pool={pool}
         boardOpen={boardOpen}
-        beforeKickoff={!!game && !hasKickedOff(game)}
         removed={removed}
         onOpen={setDialog}
       />
@@ -93,6 +91,7 @@ export default function ContestView({
         <Box sx={{ minWidth: 0, display: 'grid', gap: { xs: 1.5, sm: 2 }, alignContent: 'start' }}>
           <ContestGrid
             contest={contest}
+            boardOpen={boardOpen}
             viewer={viewer}
             winnerFlash={winnerFlash}
             onStale={onStale}
@@ -110,7 +109,7 @@ export default function ContestView({
               gap: { xs: 2, sm: 2.5 },
             }}
           >
-            <ContestDetails contest={contest} game={game} viewer={viewer} />
+            <ContestDetails contest={contest} game={game} viewer={viewer} boardOpen={boardOpen} />
             <ActivityFeed events={activity} />
           </Box>
         </Box>

@@ -21,17 +21,11 @@ vi.mock('./details/ContestActionIcons', () => ({
   ),
 }));
 vi.mock('./ContestStatusBanner', () => ({
-  default: ({
-    onOpen,
-    pool,
-    boardOpen,
-    beforeKickoff,
-  }: Opener & { pool: SquarePool; boardOpen: boolean; beforeKickoff: boolean }) => (
+  default: ({ onOpen, pool, boardOpen }: Opener & { pool: SquarePool; boardOpen: boolean }) => (
     <button
       data-testid="banner"
       data-waiting={pool.waiting.length}
       data-open={boardOpen}
-      data-before-kickoff={beforeKickoff}
       onClick={() => onOpen('invite')}
     >
       invite
@@ -96,22 +90,18 @@ describe('ContestView', () => {
     expect(screen.getByTestId('actions')).toHaveAttribute('data-dot', 'true');
   });
 
-  it('flags nothing once the board is full, or to anyone but the owner', () => {
+  it('keeps the dot on a full board until the numbers are drawn', () => {
     renderView({ contest: makeContest({ squares: [makeSquare({ value: 'AB' })] }) });
     expect(screen.getByTestId('banner')).toHaveAttribute('data-open', 'false');
-    expect(screen.getByTestId('actions')).toHaveAttribute('data-dot', 'false');
+    expect(screen.getByTestId('actions')).toHaveAttribute('data-dot', 'true');
 
-    renderView({ viewer: makeViewer() });
+    renderView({ contest: makeContest({ status: 'Q1' }) });
     expect(screen.getAllByTestId('actions')[1]).toHaveAttribute('data-dot', 'false');
   });
 
-  it('tells the banner whether the game is known to be before kickoff', () => {
-    renderView();
-    expect(screen.getByTestId('banner')).toHaveAttribute('data-before-kickoff', 'false');
-    renderView({ game: { status: 'scheduled', period: 0 } as Game });
-    expect(screen.getAllByTestId('banner')[1]).toHaveAttribute('data-before-kickoff', 'true');
-    renderView({ game: { status: 'in_progress', period: 1 } as Game });
-    expect(screen.getAllByTestId('banner')[2]).toHaveAttribute('data-before-kickoff', 'false');
+  it('flags nothing to anyone but the owner', () => {
+    renderView({ viewer: makeViewer() });
+    expect(screen.getByTestId('actions')).toHaveAttribute('data-dot', 'false');
   });
 
   it('shows the connection state when not live', () => {

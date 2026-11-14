@@ -5,7 +5,7 @@ import { isMe } from '../../profile/useUserId';
 import type { ToastSeverity } from '../../toast/toastSlice';
 import type { ContestEvent } from './events';
 import { isGhost } from './activity';
-import { getSquarePool, isBoardOpen } from './viewer';
+import { getSquarePool } from './viewer';
 
 interface Before {
   viewerId: string | undefined;
@@ -41,7 +41,7 @@ export function contestToast(
       ) {
         return null;
       }
-      if (!isBoardOpen(contest)) {
+      if (contest.status !== 'ACTIVE') {
         return { message: `${displayName} joined.`, severity: 'info' };
       }
       return {

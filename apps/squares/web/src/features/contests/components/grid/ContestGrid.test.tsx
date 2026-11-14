@@ -10,7 +10,7 @@ import {
 } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
 import type { Contest } from '../../../../types/contest';
-import type { ContestViewer } from '../../live/viewer';
+import { isBoardOpen, type ContestViewer } from '../../live/viewer';
 import ContestGrid from './ContestGrid';
 
 const api = vi.hoisted(() => ({
@@ -48,6 +48,7 @@ function renderGrid(overrides: { contest?: Contest; viewer?: ContestViewer } = {
     <ContestGrid
       contest={overrides.contest ?? contest}
       viewer={overrides.viewer ?? makeViewer()}
+      boardOpen={isBoardOpen(overrides.contest ?? contest)}
       winnerFlash={null}
       onStale={onStale}
     />

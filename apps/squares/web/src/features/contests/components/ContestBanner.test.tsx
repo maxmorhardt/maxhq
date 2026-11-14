@@ -4,16 +4,12 @@ import { renderWithProviders } from '../../../test/render';
 import ContestBanner from './ContestBanner';
 
 describe('ContestBanner', () => {
-  it('shows the message with an optional header and action', () => {
+  it('shows the message with an optional action', () => {
     const onClick = vi.fn();
     renderWithProviders(
-      <ContestBanner
-        header={<span>steps</span>}
-        message="Do the thing."
-        action={{ label: 'Go', icon: null, onClick }}
-      />
+      <ContestBanner message="Do the thing." action={{ label: 'Go', icon: null, onClick }} />
     );
-    expect(screen.getByRole('status')).toHaveTextContent('stepsDo the thing.Go');
+    expect(screen.getByRole('status')).toHaveTextContent('Do the thing.Go');
     fireEvent.click(screen.getByRole('button', { name: 'Go' }));
     expect(onClick).toHaveBeenCalled();
   });

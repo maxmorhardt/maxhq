@@ -9,14 +9,13 @@ export interface BannerAction {
   onClick: () => void;
 }
 
-interface Props {
+export interface ContestBannerProps {
   message: string;
   icon?: ReactNode;
-  header?: ReactNode;
   action?: BannerAction;
 }
 
-export default function ContestBanner({ message, icon, header, action }: Props) {
+export default function ContestBanner({ message, icon, action }: ContestBannerProps) {
   return (
     <Box
       role="status"
@@ -29,7 +28,6 @@ export default function ContestBanner({ message, icon, header, action }: Props) 
         py: 1.5,
       }}
     >
-      {header && <Box sx={{ mb: 1.25 }}>{header}</Box>}
       <Box
         sx={{
           display: 'flex',

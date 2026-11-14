@@ -3,8 +3,8 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import { fonts } from '../../../../app/theme';
 import type { Contest, Game } from '../../../../types/contest';
 import { isInGameStatus } from '../../../../utils/contestStatus';
-import { formatKickoff } from '../../../../utils/game';
-import { isBoardOpen, type ContestViewer } from '../../live/viewer';
+import { formatKickoff, hasKickedOff } from '../../../../utils/game';
+import type { ContestViewer } from '../../live/viewer';
 import ContestSidebarCard from '../sidebar/ContestSidebarCard';
 import SquareActions from './SquareActions';
 
@@ -12,6 +12,7 @@ interface Props {
   contest: Contest;
   game?: Game;
   viewer: ContestViewer;
+  boardOpen: boolean;
 }
 
 const barSx = { height: 8, borderRadius: 4, bgcolor: 'rgba(238, 242, 250, 0.08)' };
@@ -29,12 +30,15 @@ function boardStatus(contest: Contest, game: Game | undefined, allFilled: boolea
   if (isInGameStatus(contest.status)) {
     return 'The board is locked and the numbers are drawn. Each quarter’s winner comes from the live score.';
   }
-  return allFilled
-    ? `The board is full and locked. The numbers are drawn at kickoff${kickoff}.`
-    : `Fill every square before kickoff${kickoff}. The board locks once the game starts and every square is claimed.`;
+  if (allFilled) {
+    return `The board is full and locked. The numbers are drawn at kickoff${kickoff}.`;
+  }
+  return game && hasKickedOff(game)
+    ? 'The game is on and the board is still open. The numbers are drawn once every square is claimed, or at the final whistle.'
+    : `The numbers are drawn at kickoff${kickoff} if every square is claimed. If not, the board stays open until it fills or the game ends.`;
 }
 
-export default function ContestDetails({ contest, game, viewer }: Props) {
+export default function ContestDetails({ contest, game, viewer, boardOpen }: Props) {
   const totalSquares = contest.squares.length;
   const filledSquares = contest.squares.filter((s) => s.value.trim() !== '').length;
   const allFilled = filledSquares >= totalSquares;
@@ -103,7 +107,7 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
               </Typography>
             </Box>
             {/* a full board is locked, so there is nothing left to claim or clear */}
-            {isBoardOpen(contest) && !waitingForSquares && (
+            {boardOpen && !waitingForSquares && (
               <SquareActions
                 contest={contest}
                 viewer={viewer}

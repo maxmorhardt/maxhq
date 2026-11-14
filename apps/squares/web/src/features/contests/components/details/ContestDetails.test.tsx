@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeContest, makePlayer, makeSquare, makeViewer } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
 import type { Contest, Game } from '../../../../types/contest';
-import type { ContestViewer } from '../../live/viewer';
+import { isBoardOpen, type ContestViewer } from '../../live/viewer';
 import ContestDetails from './ContestDetails';
 
 vi.mock('./SquareActions', () => ({ default: () => <div data-testid="square-actions" /> }));
@@ -20,7 +20,14 @@ const ownerEntry = makePlayer({ id: 'o', userId: 'u_owner', role: 'owner', maxSq
 const owner = makeViewer({ viewerId: 'u_owner', isOwner: true, player: ownerEntry });
 
 function renderDetails(contest: Contest, viewer: ContestViewer = makeViewer(), game?: Game) {
-  return renderWithProviders(<ContestDetails contest={contest} game={game} viewer={viewer} />);
+  return renderWithProviders(
+    <ContestDetails
+      contest={contest}
+      game={game}
+      viewer={viewer}
+      boardOpen={isBoardOpen(contest)}
+    />
+  );
 }
 
 const board = () => makeContest({}, 10);
@@ -32,7 +39,9 @@ describe('ContestDetails', () => {
     expect(screen.getByText('9 open')).toBeInTheDocument();
     expect(screen.getByText('2/5')).toBeInTheDocument();
     expect(screen.getByTestId('square-actions')).toBeInTheDocument();
-    expect(screen.getByText(/Fill every square before kickoff/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/drawn at kickoff if every square is claimed\. If not, the board stays open/)
+    ).toBeInTheDocument();
   });
 
   it('names the kickoff of a scheduled game', () => {
@@ -43,6 +52,13 @@ describe('ContestDetails', () => {
       screen.getByText(/The board is full and locked\. The numbers are drawn at kickoff \(/)
     ).toBeInTheDocument();
     expect(screen.queryByTestId('square-actions')).not.toBeInTheDocument();
+  });
+
+  it('says the board stays open once a game kicks off without a full board', () => {
+    const game = { status: 'in_progress', period: 1 } as Game;
+    renderDetails(makeContest(), makeViewer(), game);
+    expect(screen.getByText(/The game is on and the board is still open/)).toBeInTheDocument();
+    expect(screen.getByTestId('square-actions')).toBeInTheDocument();
   });
 
   it('explains each later stage', () => {
@@ -74,7 +90,7 @@ describe('ContestDetails', () => {
     expect(screen.queryByTestId('square-actions')).not.toBeInTheDocument();
   });
 
-  it('leaves the owner’s next steps to the checklist above the board', () => {
+  it('leaves the owner’s next steps to the banner above the board', () => {
     renderDetails(board(), owner);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });

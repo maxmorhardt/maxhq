@@ -19,7 +19,6 @@ interface Options {
   players?: Player[];
   pool?: Partial<SquarePool>;
   boardOpen?: boolean;
-  beforeKickoff?: boolean;
   removed?: boolean;
 }
 
@@ -30,7 +29,6 @@ function renderBanner(
     players = [ownerEntry],
     pool = {},
     boardOpen = true,
-    beforeKickoff = true,
     removed = false,
   }: Options = {}
 ) {
@@ -42,7 +40,6 @@ function renderBanner(
       viewer={viewer}
       pool={{ allocated: 0, unallocated: 50, waiting: [], ...pool }}
       boardOpen={boardOpen}
-      beforeKickoff={beforeKickoff}
       removed={removed}
       onOpen={onOpen}
     />
@@ -97,22 +94,30 @@ describe('ContestStatusBanner', () => {
     expect(onOpen).toHaveBeenCalledWith('players');
   });
 
-  it('drops the owner’s prompts once the board is closed', () => {
-    renderBanner(makeViewer({ ...owner, squaresLeft: 0 }), {
+  it('keeps asking the owner to make room on a full board until the numbers are drawn', () => {
+    renderBanner(owner, { boardOpen: false, pool: { waiting: [nia], unallocated: 0 } });
+    expect(banner()).toHaveTextContent('Nia N. is waiting. Lower someone’s squares to make room.');
+  });
+
+  it('drops the owner’s prompts once the numbers are drawn', () => {
+    renderBanner(owner, {
+      contest: makeContest({ status: 'Q1' }),
       boardOpen: false,
       pool: { waiting: [nia] },
     });
     expect(banner()).not.toBeInTheDocument();
   });
 
-  it('asks a player to pick their squares before kickoff', () => {
-    renderBanner(makeViewer({ squaresLeft: 1 }));
-    expect(banner()).toHaveTextContent('You have 1 square left. Pick them before kickoff.');
+  it('stops asking for invites once the board is full', () => {
+    renderBanner(makeViewer({ ...owner, squaresLeft: 0 }), { boardOpen: false });
+    expect(banner()).not.toBeInTheDocument();
   });
 
-  it('just says to pick on the board after kickoff or before the game loads', () => {
-    renderBanner(makeViewer({ squaresLeft: 3 }), { beforeKickoff: false });
-    expect(banner()).toHaveTextContent('You have 3 squares left. Pick them on the board.');
+  it('asks a player to pick the squares they have left', () => {
+    renderBanner(makeViewer({ squaresLeft: 1 }));
+    expect(banner()).toHaveTextContent(
+      'You have 1 square left. Tap open squares on the board to claim them.'
+    );
   });
 
   it('asks the owner to pick their own squares once nobody is waiting', () => {
@@ -121,7 +126,7 @@ describe('ContestStatusBanner', () => {
   });
 
   it('tells a player with no squares to ask the owner while the board is open', () => {
-    renderBanner(waitingPlayer, { beforeKickoff: false });
+    renderBanner(waitingPlayer);
     expect(banner()).toHaveTextContent(
       'You don’t have any squares yet. Ask the owner to give you some.'
     );
