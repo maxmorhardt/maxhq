@@ -5,6 +5,9 @@ export default defineConfig(({ command }) => ({
   plugins: [reactRouter()],
   server: {
     port: 3000,
+    warmup: {
+      clientFiles: ['./src/root.tsx', './src/pages/*.tsx', '!./src/pages/*.test.tsx'],
+    },
   },
   ...(command === 'build' ? { ssr: { noExternal: true } } : {}),
   build: {
