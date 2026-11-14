@@ -77,6 +77,10 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
       showToast('Ask the owner for squares', 'info');
       return;
     }
+    if (viewer.isOwner && viewer.player?.maxSquares === 0) {
+      showToast('Give yourself squares in Players', 'info');
+      return;
+    }
     if (viewer.player && viewer.squaresLeft === 0) {
       showToast(`${viewer.squaresClaimed}/${viewer.player.maxSquares} squares filled`, 'info');
       return;

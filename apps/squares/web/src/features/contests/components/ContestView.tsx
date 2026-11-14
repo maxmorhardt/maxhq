@@ -22,6 +22,7 @@ interface Props {
   status: StreamStatus;
   winnerFlash: SquarePosition | null;
   onStale: () => void;
+  removed?: boolean;
 }
 
 // the contest page: the broadcast header and quarter strip, then the board beside its panels
@@ -34,10 +35,11 @@ export default function ContestView({
   status,
   winnerFlash,
   onStale,
+  removed = false,
 }: Props) {
   const [dialog, setDialog] = useState<ContestDialog | null>(null);
   const boardOpen = isBoardOpen(contest);
-  const waiting = viewer.isOwner && boardOpen ? getSquarePool(contest, players).waiting : [];
+  const pool = getSquarePool(contest, players);
 
   return (
     <Box
@@ -65,16 +67,17 @@ export default function ContestView({
         status={status}
         onRetry={onStale}
         onOpen={setDialog}
-        squaresToGive={waiting.length > 0}
+        squaresToGive={viewer.isOwner && boardOpen && pool.waiting.length > 0}
       />
 
       <ContestStatusBanner
         contest={contest}
         players={players}
         viewer={viewer}
-        waiting={waiting}
+        pool={pool}
         boardOpen={boardOpen}
-        kickedOff={!!game && hasKickedOff(game)}
+        beforeKickoff={!!game && !hasKickedOff(game)}
+        removed={removed}
         onOpen={setDialog}
       />
 

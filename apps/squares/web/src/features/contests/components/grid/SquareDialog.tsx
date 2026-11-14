@@ -18,7 +18,7 @@ import type { Contest, Square } from '../../../../types/contest';
 import { useToast } from '../../../toast/useToast';
 import { useClearSquareMutation } from '../../api';
 import { ownerLabel } from '../../live/activity';
-import type { ContestViewer } from '../../live/viewer';
+import { isBoardOpen, type ContestViewer } from '../../live/viewer';
 
 interface Props {
   square: Square | null;
@@ -38,8 +38,7 @@ export default function SquareDialog({ square, contest, viewer, onClose }: Props
   const isMine = viewer.isMe(square.owner);
   const isClaimed = square.value.trim() !== '';
   // a full board is locked until kickoff
-  const boardFull = contest.squares.every((s) => s.value.trim() !== '');
-  const canClear = contest.status === 'ACTIVE' && !boardFull && isMine && isClaimed;
+  const canClear = isBoardOpen(contest) && isMine && isClaimed;
 
   const winningQuarters = (contest.quarterResults ?? [])
     .filter((qr) => qr.winnerRow === square.row && qr.winnerCol === square.col)

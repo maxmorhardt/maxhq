@@ -35,12 +35,19 @@ vi.mock('./ContestView', () => ({
     winnerFlash,
     game,
     viewer,
+    removed,
   }: {
     winnerFlash: unknown;
     game?: { homeScore: number };
     viewer: ContestViewer;
+    removed: boolean;
   }) => (
-    <div data-testid="view" data-score={game?.homeScore} data-full-name={viewer.fullName('u_pat')}>
+    <div
+      data-testid="view"
+      data-score={game?.homeScore}
+      data-full-name={viewer.fullName('u_pat')}
+      data-removed={removed}
+    >
       {winnerFlash ? 'flash' : ''}
     </div>
   ),
@@ -213,6 +220,7 @@ describe('LiveContest', () => {
     emit(event('player.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).not.toHaveBeenCalled();
     expect(toasts()[0]?.severity).toBe('info');
+    expect(screen.getByTestId('view')).toHaveAttribute('data-removed', 'true');
   });
 
   it('says you left rather than were removed when you left on your own', () => {
@@ -223,6 +231,7 @@ describe('LiveContest', () => {
       updatedBy: 'u_player',
     });
     expect(toasts()[0]).toMatchObject({ message: 'You left this contest', severity: 'info' });
+    expect(screen.queryByTestId('view')).toHaveAttribute('data-removed', 'false');
     expect(navigate).toHaveBeenCalledWith('/contests');
   });
 

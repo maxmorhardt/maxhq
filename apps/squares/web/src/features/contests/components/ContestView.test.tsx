@@ -2,8 +2,8 @@ import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { makeContest, makePlayer, makeSquare, makeViewer } from '../../../test/fixtures';
 import { renderWithProviders } from '../../../test/render';
-import type { Contest, Game, Player } from '../../../types/contest';
-import type { ContestViewer } from '../live/viewer';
+import type { Contest, Game } from '../../../types/contest';
+import type { ContestViewer, SquarePool } from '../live/viewer';
 import type { ContestDialog } from './details/ContestDialogs';
 import ContestView from './ContestView';
 
@@ -23,15 +23,15 @@ vi.mock('./details/ContestActionIcons', () => ({
 vi.mock('./ContestStatusBanner', () => ({
   default: ({
     onOpen,
-    waiting,
+    pool,
     boardOpen,
-    kickedOff,
-  }: Opener & { waiting: Player[]; boardOpen: boolean; kickedOff: boolean }) => (
+    beforeKickoff,
+  }: Opener & { pool: SquarePool; boardOpen: boolean; beforeKickoff: boolean }) => (
     <button
       data-testid="banner"
-      data-waiting={waiting.length}
+      data-waiting={pool.waiting.length}
       data-open={boardOpen}
-      data-kicked-off={kickedOff}
+      data-before-kickoff={beforeKickoff}
       onClick={() => onOpen('invite')}
     >
       invite
@@ -102,12 +102,16 @@ describe('ContestView', () => {
     expect(screen.getByTestId('actions')).toHaveAttribute('data-dot', 'false');
 
     renderView({ viewer: makeViewer() });
-    expect(screen.getAllByTestId('banner')[1]).toHaveAttribute('data-waiting', '0');
+    expect(screen.getAllByTestId('actions')[1]).toHaveAttribute('data-dot', 'false');
   });
 
-  it('tells the banner when the game has kicked off', () => {
+  it('tells the banner whether the game is known to be before kickoff', () => {
+    renderView();
+    expect(screen.getByTestId('banner')).toHaveAttribute('data-before-kickoff', 'false');
+    renderView({ game: { status: 'scheduled', period: 0 } as Game });
+    expect(screen.getAllByTestId('banner')[1]).toHaveAttribute('data-before-kickoff', 'true');
     renderView({ game: { status: 'in_progress', period: 1 } as Game });
-    expect(screen.getByTestId('banner')).toHaveAttribute('data-kicked-off', 'true');
+    expect(screen.getAllByTestId('banner')[2]).toHaveAttribute('data-before-kickoff', 'false');
   });
 
   it('shows the connection state when not live', () => {

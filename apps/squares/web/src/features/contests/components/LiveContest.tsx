@@ -50,6 +50,7 @@ export default function LiveContest({ contestId }: Props) {
 
   const [winnerFlash, setWinnerFlash] = useState<SquarePosition | null>(null);
   const [celebration, setCelebration] = useState<QuarterResult | null>(null);
+  const [removed, setRemoved] = useState(false);
 
   const onEvent = (event: ContestEvent, before: LiveContestState) => {
     const toast = contestToast(event, before);
@@ -78,6 +79,7 @@ export default function LiveContest({ contestId }: Props) {
           showToast('You left this contest', 'info');
         } else {
           showToast('You have been removed from this contest', isPrivate ? 'warning' : 'info');
+          setRemoved(true);
         }
         if (isPrivate) {
           navigate('/contests');
@@ -128,6 +130,7 @@ export default function LiveContest({ contestId }: Props) {
         status={status}
         winnerFlash={winnerFlash}
         onStale={resync}
+        removed={removed}
       />
       {/* the game can still be loading when a quarter lands, so the dialog falls back to away and home */}
       <WinnerCelebrationDialog

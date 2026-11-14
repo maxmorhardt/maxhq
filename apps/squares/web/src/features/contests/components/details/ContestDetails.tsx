@@ -4,7 +4,7 @@ import { fonts } from '../../../../app/theme';
 import type { Contest, Game } from '../../../../types/contest';
 import { isInGameStatus } from '../../../../utils/contestStatus';
 import { formatKickoff } from '../../../../utils/game';
-import type { ContestViewer } from '../../live/viewer';
+import { isBoardOpen, type ContestViewer } from '../../live/viewer';
 import ContestSidebarCard from '../sidebar/ContestSidebarCard';
 import SquareActions from './SquareActions';
 
@@ -38,7 +38,6 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
   const totalSquares = contest.squares.length;
   const filledSquares = contest.squares.filter((s) => s.value.trim() !== '').length;
   const allFilled = filledSquares >= totalSquares;
-  const isActive = contest.status === 'ACTIVE';
   const { player } = viewer;
   const waitingForSquares = !viewer.isOwner && player?.maxSquares === 0;
 
@@ -104,7 +103,7 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
               </Typography>
             </Box>
             {/* a full board is locked, so there is nothing left to claim or clear */}
-            {isActive && !allFilled && !waitingForSquares && (
+            {isBoardOpen(contest) && !waitingForSquares && (
               <SquareActions
                 contest={contest}
                 viewer={viewer}

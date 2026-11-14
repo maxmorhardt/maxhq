@@ -125,6 +125,14 @@ describe('ContestGrid', () => {
     expect(toasts()[0]?.message).toBe('5/5 squares filled');
   });
 
+  it('reminds an owner who kept no squares to give themselves some', () => {
+    const { cells, toasts } = renderGrid({
+      viewer: makeViewer({ isOwner: true, player: makePlayer({ maxSquares: 0 }), squaresLeft: 0 }),
+    });
+    fireEvent.click(cells()[1]);
+    expect(toasts()[0]?.message).toBe('Give yourself squares in Players');
+  });
+
   it('sends the user to set initials when the server has none', async () => {
     api.useClaimSquareMutation.mockReturnValue(
       mockMutation({ error: { status: 422, message: 'Set your initials' } })
