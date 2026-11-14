@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.9.4](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.3...squares-contests/2.9.4) (2026-11-14)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.2.4 ([#238](https://github.com/maxmorhardt/maxhq/issues/238)) ([eb9945b](https://github.com/maxmorhardt/maxhq/commit/eb9945b835dc7a4754d6a22335a7f3ec2ac2c55e))
+* **deps:** update module go.opentelemetry.io/otel/trace to v1.47.0 [security] ([#242](https://github.com/maxmorhardt/maxhq/issues/242)) ([24e422a](https://github.com/maxmorhardt/maxhq/commit/24e422ab46b6eec45a0f46d9691405ce5622c069))
+
 ## [2.9.3](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.2...squares-contests/2.9.3) (2026-11-11)
 
 
