@@ -22,6 +22,7 @@ export interface SquarePosition {
 interface Props {
   contest: Contest;
   viewer: ContestViewer;
+  boardOpen: boolean;
   winnerFlash: SquarePosition | null;
   // a claim conflict means the local grid is out of date
   onStale: () => void;
@@ -39,7 +40,7 @@ const teamLabelSx = {
 
 const squareGap = 'clamp(2px, 0.9cqw, 8px)';
 
-export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: Props) {
+export default function ContestGrid({ contest, viewer, boardOpen, winnerFlash, onStale }: Props) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [claimSquare] = useClaimSquareMutation();
@@ -73,12 +74,15 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
       showToast(WATCHING_MESSAGE, 'info');
       return;
     }
-    if (!viewer.isOwner && viewer.player?.maxSquares === 0) {
-      showToast('The owner hasn’t given you any squares yet', 'info');
+    if (viewer.player?.maxSquares === 0) {
+      showToast(
+        viewer.isOwner ? 'Give yourself squares in Players' : 'Ask the owner for squares',
+        'info'
+      );
       return;
     }
     if (viewer.player && viewer.squaresLeft === 0) {
-      showToast('Square limit reached', 'warning');
+      showToast(`${viewer.squaresClaimed}/${viewer.player.maxSquares} squares filled`, 'info');
       return;
     }
     try {
@@ -184,6 +188,7 @@ export default function ContestGrid({ contest, viewer, winnerFlash, onStale }: P
         square={contest.squares.find((s) => s.id === selectedId) ?? null}
         contest={contest}
         viewer={viewer}
+        boardOpen={boardOpen}
         onClose={() => setSelectedId(null)}
       />
     </>

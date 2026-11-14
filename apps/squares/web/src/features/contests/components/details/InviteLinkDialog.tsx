@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
 import ConfirmDialog from '../../../../components/feedback/ConfirmDialog';
 import type { Contest } from '../../../../types/contest';
-import { isTerminalStatus } from '../../../../utils/contestStatus';
+import { isInGameStatus, isTerminalStatus } from '../../../../utils/contestStatus';
 import { trackEvent } from '../../../../utils/faro';
 import { useToast } from '../../../toast/useToast';
 import { useGetInviteLinkQuery, useResetInviteLinkMutation } from '../../api';
@@ -97,8 +97,9 @@ export default function InviteLinkDialog({ open, onClose, contest }: Props) {
               </Typography>
             ) : (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                Anyone with this link can join. They start with no squares, and you give them
-                squares in Players.
+                {isInGameStatus(contest.status)
+                  ? 'Anyone with this link can join to watch. The numbers are drawn, so nobody new can get squares.'
+                  : 'Anyone with this link can join. They start with no squares, and you give them squares in Players.'}
               </Typography>
             )}
 

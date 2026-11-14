@@ -2,16 +2,16 @@ import { Box } from '@mui/material';
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import type { StreamStatus } from '../../../api/eventStream';
+import { hasKickedOff } from '../../../utils/game';
 import type { ActivityEvent, Contest, Game, Player } from '../../../types/contest';
-import { getOwnerTodo, type ContestViewer } from '../live/viewer';
+import { getSquarePool, isBoardOpen, type ContestViewer } from '../live/viewer';
 import ContestDetails from './details/ContestDetails';
 import ContestDialogs, { type ContestDialog } from './details/ContestDialogs';
-import OwnerChecklist from './details/OwnerChecklist';
 import ContestGrid, { type SquarePosition } from './grid/ContestGrid';
 import ContestScoreboard from './scoreboard/ContestScoreboard';
 import QuarterStrip from './scoreboard/QuarterStrip';
 import ActivityFeed from './sidebar/ActivityFeed';
-import WatchingBanner from './WatchingBanner';
+import ContestStatusBanner from './ContestStatusBanner';
 
 interface Props {
   contest: Contest;
@@ -22,7 +22,7 @@ interface Props {
   status: StreamStatus;
   winnerFlash: SquarePosition | null;
   onStale: () => void;
-  guideOwner?: boolean;
+  removed?: boolean;
 }
 
 // the contest page: the broadcast header and quarter strip, then the board beside its panels
@@ -35,10 +35,11 @@ export default function ContestView({
   status,
   winnerFlash,
   onStale,
-  guideOwner = false,
+  removed = false,
 }: Props) {
   const [dialog, setDialog] = useState<ContestDialog | null>(null);
-  const ownerTodo = viewer.isOwner ? getOwnerTodo(contest, players) : null;
+  const boardOpen = isBoardOpen(contest);
+  const pool = getSquarePool(contest, players);
 
   return (
     <Box
@@ -66,12 +67,19 @@ export default function ContestView({
         status={status}
         onRetry={onStale}
         onOpen={setDialog}
-        squaresToGive={ownerTodo === 'squares'}
+        squaresToGive={viewer.isOwner && contest.status === 'ACTIVE' && pool.waiting.length > 0}
       />
 
-      {guideOwner && ownerTodo && (
-        <OwnerChecklist todo={ownerTodo} contest={contest} players={players} onOpen={setDialog} />
-      )}
+      <ContestStatusBanner
+        contest={contest}
+        players={players}
+        viewer={viewer}
+        pool={pool}
+        boardOpen={boardOpen}
+        beforeKickoff={!!game && !hasKickedOff(game)}
+        removed={removed}
+        onOpen={setDialog}
+      />
 
       <QuarterStrip contest={contest} game={game} viewer={viewer} />
 
@@ -83,9 +91,9 @@ export default function ContestView({
         }}
       >
         <Box sx={{ minWidth: 0, display: 'grid', gap: { xs: 1.5, sm: 2 }, alignContent: 'start' }}>
-          <WatchingBanner contest={contest} viewer={viewer} />
           <ContestGrid
             contest={contest}
+            boardOpen={boardOpen}
             viewer={viewer}
             winnerFlash={winnerFlash}
             onStale={onStale}
@@ -103,7 +111,7 @@ export default function ContestView({
               gap: { xs: 2, sm: 2.5 },
             }}
           >
-            <ContestDetails contest={contest} game={game} viewer={viewer} />
+            <ContestDetails contest={contest} game={game} viewer={viewer} boardOpen={boardOpen} />
             <ActivityFeed events={activity} />
           </Box>
         </Box>

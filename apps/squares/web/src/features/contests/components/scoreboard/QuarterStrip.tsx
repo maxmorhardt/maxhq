@@ -12,7 +12,7 @@ interface Props {
   viewer: ContestViewer;
 }
 
-type QuarterState = 'won' | 'scored' | 'live' | 'upcoming';
+type QuarterState = 'won' | 'scored' | 'pending' | 'live' | 'upcoming';
 
 interface Quarter {
   quarter: number;
@@ -42,7 +42,11 @@ function quarters(contest: Contest, game: Game | undefined): Quarter[] {
     // a quarter can end without a winner, when its square was never claimed
     const score = scores.find((s) => s.quarter === quarter);
     if (score) {
-      return { quarter, state: 'scored', score: { away: score.awayScore, home: score.homeScore } };
+      return {
+        quarter,
+        state: contest.status === 'ACTIVE' ? 'pending' : 'scored',
+        score: { away: score.awayScore, home: score.homeScore },
+      };
     }
 
     return { quarter, state: quarter === playing ? 'live' : 'upcoming' };
@@ -147,9 +151,11 @@ export default function QuarterStrip({ contest, game, viewer }: Props) {
                   : ownerLabel(result.winner, result.winnerName)
                 : state === 'scored'
                   ? 'No winner'
-                  : state === 'live'
-                    ? 'In progress'
-                    : 'Not yet played'}
+                  : state === 'pending'
+                    ? 'Pending'
+                    : state === 'live'
+                      ? 'In progress'
+                      : 'Not yet played'}
             </Typography>
           </Box>
         );

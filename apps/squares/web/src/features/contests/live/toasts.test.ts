@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeContest, makePlayer, makeQuarterResult } from '../../../test/fixtures';
+import { makeContest, makePlayer, makeQuarterResult, makeSquare } from '../../../test/fixtures';
 import type { Contest, ContestUpdate, Player } from '../../../types/contest';
 import type { ContestEvent } from './events';
 import { contestToast } from './toasts';
@@ -21,15 +21,28 @@ describe('contestToast', () => {
     });
   });
 
-  it('keeps join news from players and from the owner once the game is on', () => {
-    const joined = event('player.joined', makePlayer());
-    expect(toast(joined, makeContest())).toBeNull();
-    expect(toast(joined, makeContest({ owner: 'u_me', status: 'Q1' }))).toBeNull();
+  it('keeps join news from players', () => {
+    expect(toast(event('player.joined', makePlayer()), makeContest())).toBeNull();
+  });
+
+  it('asks the owner to make room when someone joins a full board', () => {
+    const joined = event('player.joined', makePlayer({ displayName: 'Nia N.' }));
+    const full = makeContest({ owner: 'u_me', squares: [makeSquare({ value: 'AB' })] });
+    expect(toast(joined, full, [{ ...me, role: 'owner', maxSquares: 1 }])?.message).toBe(
+      'Nia N. joined. Free up squares for them.'
+    );
+  });
+
+  it('just names who joined once the numbers are drawn', () => {
+    const joined = event('player.joined', makePlayer({ displayName: 'Nia N.' }));
+    expect(toast(joined, makeContest({ owner: 'u_me', status: 'Q1' }))?.message).toBe(
+      'Nia N. joined.'
+    );
   });
 
   it('tells a player when the owner first gives them squares', () => {
     expect(toast(event('player.updated', { ...me, maxSquares: 5 }))).toEqual({
-      message: 'You got 5 squares. Tap open squares on the board to claim them.',
+      message: 'You got 5 squares. Pick them on the board.',
       severity: 'success',
     });
     expect(toast(event('player.updated', { ...me, maxSquares: 1 }))?.message).toMatch(
@@ -40,7 +53,7 @@ describe('contestToast', () => {
   it('tells a player when the owner changes their squares later', () => {
     const holding = makePlayer({ userId: 'u_me', maxSquares: 5 });
     expect(toast(event('player.updated', { ...holding, maxSquares: 3 }), owned, [holding])).toEqual(
-      { message: 'The owner changed your squares to 3.', severity: 'info' }
+      { message: 'You now have 3 squares.', severity: 'info' }
     );
     expect(toast(event('player.updated', holding), owned, [holding])).toBeNull();
   });
@@ -94,7 +107,7 @@ describe('contestToast', () => {
     expect(
       toast(event('player.joined', makePlayer({ displayName: 'Nia N.' })), owned, [full])
     ).toEqual({
-      message: 'Nia N. joined. Lower someone’s squares to make room for them.',
+      message: 'Nia N. joined. Free up squares for them.',
       severity: 'info',
     });
   });

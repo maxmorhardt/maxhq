@@ -47,7 +47,7 @@ describe('ContestActionIcons', () => {
   it('flags squares left to give out', () => {
     renderIcons(true, [owner, waiting], true);
     expect(
-      screen.getByRole('button', { name: 'Players (2), squares left to give out' })
+      screen.getByRole('button', { name: 'Players (2), some waiting for squares' })
     ).toBeInTheDocument();
   });
 });

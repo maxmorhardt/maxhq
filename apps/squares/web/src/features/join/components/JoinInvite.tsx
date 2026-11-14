@@ -31,8 +31,8 @@ export default function JoinInvite({ token }: Props) {
         trackConversion('joinedContest');
         showToast(
           preview.status === 'ACTIVE'
-            ? `You joined ${preview.contestName}. The owner will give you squares.`
-            : `You joined ${preview.contestName}. The game has started, so you can watch.`,
+            ? `You joined ${preview.contestName}`
+            : `You joined ${preview.contestName}. The game’s on, so you can watch.`,
           'success'
         );
         navigate(`/contests/${player.contestId}`, { replace: true });

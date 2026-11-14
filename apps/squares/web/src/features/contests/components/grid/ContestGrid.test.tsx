@@ -10,7 +10,7 @@ import {
 } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
 import type { Contest } from '../../../../types/contest';
-import type { ContestViewer } from '../../live/viewer';
+import { isBoardOpen, type ContestViewer } from '../../live/viewer';
 import ContestGrid from './ContestGrid';
 
 const api = vi.hoisted(() => ({
@@ -48,6 +48,7 @@ function renderGrid(overrides: { contest?: Contest; viewer?: ContestViewer } = {
     <ContestGrid
       contest={overrides.contest ?? contest}
       viewer={overrides.viewer ?? makeViewer()}
+      boardOpen={isBoardOpen(overrides.contest ?? contest)}
       winnerFlash={null}
       onStale={onStale}
     />
@@ -113,14 +114,24 @@ describe('ContestGrid', () => {
       viewer: makeViewer({ player: makePlayer({ maxSquares: 0 }), squaresLeft: 0 }),
     });
     fireEvent.click(cells()[1]);
-    expect(toasts()[0]?.message).toBe('The owner hasn’t given you any squares yet');
+    expect(toasts()[0]?.message).toBe('Ask the owner for squares');
     expect(claim).not.toHaveBeenCalled();
   });
 
   it('stops a player at their limit', () => {
-    const { cells, toasts } = renderGrid({ viewer: makeViewer({ squaresLeft: 0 }) });
+    const { cells, toasts } = renderGrid({
+      viewer: makeViewer({ squaresClaimed: 5, squaresLeft: 0 }),
+    });
     fireEvent.click(cells()[1]);
-    expect(toasts()[0]?.message).toBe('Square limit reached');
+    expect(toasts()[0]?.message).toBe('5/5 squares filled');
+  });
+
+  it('reminds an owner who kept no squares to give themselves some', () => {
+    const { cells, toasts } = renderGrid({
+      viewer: makeViewer({ isOwner: true, player: makePlayer({ maxSquares: 0 }), squaresLeft: 0 }),
+    });
+    fireEvent.click(cells()[1]);
+    expect(toasts()[0]?.message).toBe('Give yourself squares in Players');
   });
 
   it('sends the user to set initials when the server has none', async () => {

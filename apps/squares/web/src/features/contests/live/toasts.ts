@@ -35,18 +35,20 @@ export function contestToast(
     case 'player.joined': {
       const { userId, displayName } = event.data;
       if (
-        contest.status !== 'ACTIVE' ||
         !isMe(viewerId, contest.owner) ||
         isMe(viewerId, userId) ||
         players.some((p) => p.userId === userId)
       ) {
         return null;
       }
+      if (contest.status !== 'ACTIVE') {
+        return { message: `${displayName} joined.`, severity: 'info' };
+      }
       return {
         message:
           getSquarePool(contest, players).unallocated > 0
             ? `${displayName} joined. Give them squares to play.`
-            : `${displayName} joined. Lower someone’s squares to make room for them.`,
+            : `${displayName} joined. Free up squares for them.`,
         severity: 'info',
       };
     }
@@ -62,11 +64,11 @@ export function contestToast(
       }
       if (before === 0) {
         return {
-          message: `You got ${plural(after, 'square')}. Tap open squares on the board to claim them.`,
+          message: `You got ${plural(after, 'square')}. Pick them on the board.`,
           severity: 'success',
         };
       }
-      return { message: `The owner changed your squares to ${after}.`, severity: 'info' };
+      return { message: `You now have ${plural(after, 'square')}.`, severity: 'info' };
     }
 
     case 'contest.updated':

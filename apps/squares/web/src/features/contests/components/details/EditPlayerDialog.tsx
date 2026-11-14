@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 import { errorMessage } from '../../../../api/errors';
 import type { Player } from '../../../../types/contest';
+import { plural } from '../../../../utils/plural';
 import { useToast } from '../../../toast/useToast';
 import { useUpdatePlayerMutation } from '../../api';
 
@@ -46,7 +47,12 @@ function EditPlayerForm({
   const handleSave = async () => {
     try {
       await updatePlayer({ contestId, userId: player.userId, maxSquares }).unwrap();
-      showToast('Player updated', 'success');
+      showToast(
+        freed > 0
+          ? `${player.displayName} now has ${plural(maxSquares, 'square')}, ${freed} freed`
+          : `${player.displayName} now has ${plural(maxSquares, 'square')}`,
+        'success'
+      );
       onClose();
     } catch {
       // the save button turns into a retry
