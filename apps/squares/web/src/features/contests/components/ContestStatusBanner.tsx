@@ -18,6 +18,7 @@ interface Props {
   viewer: ContestViewer;
   pool: SquarePool;
   boardOpen: boolean;
+  beforeKickoff: boolean;
   removed: boolean;
   onOpen: (dialog: ContestDialog) => void;
 }
@@ -36,6 +37,7 @@ function bannerFor({
   viewer,
   pool,
   boardOpen,
+  beforeKickoff,
   removed,
   onOpen,
 }: Props): ContestBannerProps | null {
@@ -72,7 +74,9 @@ function bannerFor({
   if (boardOpen && viewer.squaresLeft > 0) {
     return {
       icon: <TouchApp />,
-      message: `You have ${plural(viewer.squaresLeft, 'square')} left. Tap open squares on the board to claim them.`,
+      message: `You have ${plural(viewer.squaresLeft, 'square')} left. ${
+        beforeKickoff ? 'Pick them before kickoff.' : 'Tap open squares on the board to claim them.'
+      }`,
     };
   }
   if (!viewer.isOwner && active && viewer.player?.maxSquares === 0) {

@@ -40,7 +40,7 @@ describe('ContestDetails', () => {
     expect(screen.getByText('2/5')).toBeInTheDocument();
     expect(screen.getByTestId('square-actions')).toBeInTheDocument();
     expect(
-      screen.getByText(/drawn at kickoff if every square is claimed\. If not, the board stays open/)
+      screen.getByText(/Fill every square before kickoff so the numbers can be drawn\./)
     ).toBeInTheDocument();
   });
 
@@ -54,10 +54,10 @@ describe('ContestDetails', () => {
     expect(screen.queryByTestId('square-actions')).not.toBeInTheDocument();
   });
 
-  it('says the board stays open once a game kicks off without a full board', () => {
+  it('asks for the last squares once a game kicks off without a full board', () => {
     const game = { status: 'in_progress', period: 1 } as Game;
     renderDetails(makeContest(), makeViewer(), game);
-    expect(screen.getByText(/The game is on and the board is still open/)).toBeInTheDocument();
+    expect(screen.getByText(/The game has started\. Fill the last squares/)).toBeInTheDocument();
     expect(screen.getByTestId('square-actions')).toBeInTheDocument();
   });
 

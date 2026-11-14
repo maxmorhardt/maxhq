@@ -2,6 +2,7 @@ import { Box } from '@mui/material';
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import type { StreamStatus } from '../../../api/eventStream';
+import { hasKickedOff } from '../../../utils/game';
 import type { ActivityEvent, Contest, Game, Player } from '../../../types/contest';
 import { getSquarePool, isBoardOpen, type ContestViewer } from '../live/viewer';
 import ContestDetails from './details/ContestDetails';
@@ -75,6 +76,7 @@ export default function ContestView({
         viewer={viewer}
         pool={pool}
         boardOpen={boardOpen}
+        beforeKickoff={!!game && !hasKickedOff(game)}
         removed={removed}
         onOpen={setDialog}
       />

@@ -21,11 +21,17 @@ vi.mock('./details/ContestActionIcons', () => ({
   ),
 }));
 vi.mock('./ContestStatusBanner', () => ({
-  default: ({ onOpen, pool, boardOpen }: Opener & { pool: SquarePool; boardOpen: boolean }) => (
+  default: ({
+    onOpen,
+    pool,
+    boardOpen,
+    beforeKickoff,
+  }: Opener & { pool: SquarePool; boardOpen: boolean; beforeKickoff: boolean }) => (
     <button
       data-testid="banner"
       data-waiting={pool.waiting.length}
       data-open={boardOpen}
+      data-before-kickoff={beforeKickoff}
       onClick={() => onOpen('invite')}
     >
       invite
@@ -102,6 +108,15 @@ describe('ContestView', () => {
   it('flags nothing to anyone but the owner', () => {
     renderView({ viewer: makeViewer() });
     expect(screen.getByTestId('actions')).toHaveAttribute('data-dot', 'false');
+  });
+
+  it('tells the banner when the game is known to be before kickoff', () => {
+    renderView();
+    expect(screen.getByTestId('banner')).toHaveAttribute('data-before-kickoff', 'false');
+    renderView({ game: { status: 'scheduled', period: 0 } as Game });
+    expect(screen.getAllByTestId('banner')[1]).toHaveAttribute('data-before-kickoff', 'true');
+    renderView({ game: { status: 'in_progress', period: 1 } as Game });
+    expect(screen.getAllByTestId('banner')[2]).toHaveAttribute('data-before-kickoff', 'false');
   });
 
   it('shows the connection state when not live', () => {

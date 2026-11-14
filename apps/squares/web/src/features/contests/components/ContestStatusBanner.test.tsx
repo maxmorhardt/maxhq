@@ -19,6 +19,7 @@ interface Options {
   players?: Player[];
   pool?: Partial<SquarePool>;
   boardOpen?: boolean;
+  beforeKickoff?: boolean;
   removed?: boolean;
 }
 
@@ -29,6 +30,7 @@ function renderBanner(
     players = [ownerEntry],
     pool = {},
     boardOpen = true,
+    beforeKickoff = false,
     removed = false,
   }: Options = {}
 ) {
@@ -40,6 +42,7 @@ function renderBanner(
       viewer={viewer}
       pool={{ allocated: 0, unallocated: 50, waiting: [], ...pool }}
       boardOpen={boardOpen}
+      beforeKickoff={beforeKickoff}
       removed={removed}
       onOpen={onOpen}
     />
@@ -113,10 +116,15 @@ describe('ContestStatusBanner', () => {
     expect(banner()).not.toBeInTheDocument();
   });
 
-  it('asks a player to pick the squares they have left', () => {
-    renderBanner(makeViewer({ squaresLeft: 1 }));
+  it('asks a player to pick their squares before kickoff', () => {
+    renderBanner(makeViewer({ squaresLeft: 1 }), { beforeKickoff: true });
+    expect(banner()).toHaveTextContent('You have 1 square left. Pick them before kickoff.');
+  });
+
+  it('just says to tap open squares after kickoff or while the game loads', () => {
+    renderBanner(makeViewer({ squaresLeft: 3 }));
     expect(banner()).toHaveTextContent(
-      'You have 1 square left. Tap open squares on the board to claim them.'
+      'You have 3 squares left. Tap open squares on the board to claim them.'
     );
   });
 

@@ -34,8 +34,8 @@ function boardStatus(contest: Contest, game: Game | undefined, allFilled: boolea
     return `The board is full and locked. The numbers are drawn at kickoff${kickoff}.`;
   }
   return game && hasKickedOff(game)
-    ? 'The game is on and the board is still open. The numbers are drawn once every square is claimed, or at the final whistle.'
-    : `The numbers are drawn at kickoff${kickoff} if every square is claimed. If not, the board stays open until it fills or the game ends.`;
+    ? 'The game has started. Fill the last squares so the numbers can be drawn.'
+    : `Fill every square before kickoff${kickoff} so the numbers can be drawn.`;
 }
 
 export default function ContestDetails({ contest, game, viewer, boardOpen }: Props) {
