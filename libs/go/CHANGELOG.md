@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.4...libs/go/v1.2.5) (2026-11-14)
+
+
+### Bug Fixes
+
+* **deps:** update module go.opentelemetry.io/otel/trace to v1.47.0 [security] ([#242](https://github.com/maxmorhardt/maxhq/issues/242)) ([24e422a](https://github.com/maxmorhardt/maxhq/commit/24e422ab46b6eec45a0f46d9691405ce5622c069))
+
 ## [1.2.4](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.3...libs/go/v1.2.4) (2026-11-11)
 
 

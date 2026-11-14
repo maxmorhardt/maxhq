@@ -1,10 +1,10 @@
 {
   "apps/maxhq": "1.7.1",
   "apps/squares/web": "2.12.0",
-  "apps/squares/games": "2.5.5",
-  "apps/squares/contests": "2.9.3",
-  "apps/squares/accounts": "1.5.5",
-  "apps/squares/realtime": "2.6.3",
+  "apps/squares/games": "2.5.6",
+  "apps/squares/contests": "2.9.4",
+  "apps/squares/accounts": "1.5.6",
+  "apps/squares/realtime": "2.6.4",
   "charts/maxhq": "1.1.2",
   "charts/gateway": "1.4.0",
   "charts/squares": "1.1.2",
@@ -13,5 +13,5 @@
   "charts/squares-accounts": "1.4.0",
   "charts/squares-realtime": "2.2.0",
   "charts/cloudflare-cidr": "1.2.0",
-  "libs/go": "1.2.4"
+  "libs/go": "1.2.5"
 }
