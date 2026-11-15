@@ -160,7 +160,7 @@ function ScoreBug({ stage }: { stage: DemoStage }) {
             }}
           />
         )}
-        {gameClock(games[stage])}
+        {gameClock(games[stage], 'en-US')}
       </Typography>
       {team('HOME', SCORE.home)}
     </Box>

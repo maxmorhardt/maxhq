@@ -123,6 +123,12 @@ describe('kickoffParts', () => {
     expect(day).not.toContain(':');
     expect(time).toMatch(/\d:\d\d/);
   });
+
+  it('formats in the given locale', () => {
+    const kickoff = new Date(2026, 9, 25, 20, 20).toISOString();
+    expect(formatKickoff(kickoff, 'en-US')).toBe('Sun, Oct 25 · 8:20 PM');
+    expect(formatKickoff(kickoff, 'en-GB')).toBe('Sun 25 Oct · 20:20');
+  });
 });
 
 describe('canStartBoard', () => {

@@ -113,7 +113,7 @@ export default function LandingFeatures() {
             aria-label="Example contest activity"
             sx={{ boxShadow: '0 40px 90px -40px rgba(0, 0, 0, 0.9)', borderRadius: '14px' }}
           >
-            <ActivityFeed events={sampleActivity} />
+            <ActivityFeed events={sampleActivity} locale="en-US" />
           </Box>
         </Reveal>
       </Container>

@@ -16,6 +16,7 @@ import ContestSidebarCard from './ContestSidebarCard';
 
 interface ActivityFeedProps {
   events: ActivityEvent[];
+  locale?: string;
 }
 
 const iconSx = { fontSize: '0.95rem' };
@@ -31,12 +32,12 @@ const eventIcons: Record<ActivityEventType, { icon: ReactNode; color: string }> 
   player_removed: { icon: <PersonRemove sx={iconSx} />, color: 'error.main' },
 };
 
-function formatTime(timestamp: string): string {
+function formatTime(timestamp: string, locale?: string): string {
   const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function ActivityFeed({ events }: ActivityFeedProps) {
+export default function ActivityFeed({ events, locale }: ActivityFeedProps) {
   const feedRef = useRef<HTMLOListElement>(null);
 
   // keep the newest entry in view as the feed grows
@@ -119,7 +120,7 @@ export default function ActivityFeed({ events }: ActivityFeedProps) {
                     {event.message}
                   </Typography>
                   <Typography sx={{ color: 'text.secondary', fontSize: '0.74rem', mt: 0.25 }}>
-                    {formatTime(event.timestamp)}
+                    {formatTime(event.timestamp, locale)}
                   </Typography>
                 </Box>
               </Box>
