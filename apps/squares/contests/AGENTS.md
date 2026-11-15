@@ -14,6 +14,7 @@ Read [../AGENTS.md](../AGENTS.md) first: service boundaries, layering, testing, 
 - `internal/bootstrap/` - composition root: `Connect` opens infrastructure, `New` wires handlers, services, and repositories, `Start` runs background work, `Run` serves.
 - `internal/handler/`, `internal/service/`, `internal/repository/`, `internal/routes/` - the usual layers, one file per resource.
 - `internal/consumer/` - the stream handlers for game and user events.
+- `internal/email/` - the SMTP mailer and the recap email every player gets when a contest finishes (`templates/`).
 - `internal/handler/validators.go` - the `contestname` binding tag.
 - `internal/model/`, `internal/errs/`, `internal/metrics/` - this service's types and sentinel errors.
 - `internal/mocks/` - mockery output for `.mockery.yaml`.

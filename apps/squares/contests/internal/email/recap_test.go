@@ -1,0 +1,90 @@
+package email
+
+import (
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func sampleRecap() *Recap {
+	return &Recap{
+		ContestID:   uuid.MustParse("6f2c8c1e-6d2f-4a9e-9c6b-3f0f6f7a1b2c"),
+		ContestName: "Office Pool",
+		AwayTeam:    "Buffalo Bills",
+		HomeTeam:    "Kansas City Chiefs",
+		AwayAbbr:    "BUF",
+		HomeAbbr:    "KC",
+		AwayScore:   24,
+		HomeScore:   27,
+		Started:     true,
+		Quarters: []RecapQuarter{
+			{Number: 1, AwayScore: 7, HomeScore: 3, Winner: "Max M."},
+			{Number: 2, AwayScore: 14, HomeScore: 10},
+			{Number: 4, AwayScore: 24, HomeScore: 27, Winner: "Jen K."},
+		},
+	}
+}
+
+func TestRenderRecap_Final(t *testing.T) {
+	content, err := RenderRecap("https://squares.example.com/", sampleRecap())
+	require.NoError(t, err)
+
+	assert.Equal(t, "Office Pool: final results", content.Subject)
+	for _, want := range []string{
+		"Final results",
+		"Buffalo Bills at Kansas City Chiefs is in the books.",
+		"Final: BUF 24, KC 27. Q1 Max M. · Half Open square · Final Jen K.",
+		"https://squares.example.com/contests/create?utm_source=recap&amp;utm_medium=email",
+		"https://squares.example.com/contests/6f2c8c1e-6d2f-4a9e-9c6b-3f0f6f7a1b2c?utm_source=recap&amp;utm_medium=email",
+		"https://squares.example.com/squares_logo.png",
+		"mailto:support@maxhq.io",
+		">squares.example.com</a>",
+	} {
+		assert.Contains(t, content.HTML, want)
+	}
+	for _, want := range []string{
+		"Final: Buffalo Bills 24, Kansas City Chiefs 27",
+		"Q1  BUF 7 – 3 KC  Max M.",
+		"Half  BUF 14 – 10 KC  Open square",
+		"Start your next contest: https://squares.example.com/contests/create?utm_source=recap&utm_medium=email",
+		"Feedback or ideas? Email support@maxhq.io or just reply.",
+	} {
+		assert.Contains(t, content.Text, want)
+	}
+}
+
+func TestRenderRecap_EscapesContestNames(t *testing.T) {
+	recap := sampleRecap()
+	recap.ContestName = `<script>alert(1)</script>`
+
+	content, err := RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+
+	assert.NotContains(t, content.HTML, "<script>")
+}
+
+func TestRenderRecap_Canceled(t *testing.T) {
+	recap := sampleRecap()
+	recap.Canceled = true
+
+	content, err := RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+
+	assert.Equal(t, "Office Pool: game canceled", content.Subject)
+	assert.Contains(t, content.HTML, "Played quarters keep their winners.")
+	assert.Contains(t, content.Text, "Canceled: Buffalo Bills 24")
+
+	recap.Started, recap.Quarters = false, nil
+	content, err = RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+	assert.Contains(t, content.HTML, "before Office Pool drew its numbers, so it closed with no winners.")
+	assert.NotContains(t, content.HTML, "Winning squares")
+}
+
+func TestLabels(t *testing.T) {
+	assert.Equal(t, "Q3", quarterLabel(3))
+	assert.Equal(t, "Buffalo Bills", teamLabel("", "Buffalo Bills"))
+	assert.Equal(t, "not a url", hostOf("not a url"))
+}

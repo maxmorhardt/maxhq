@@ -250,6 +250,14 @@ metrics:
           summary: 'Contests keeps failing to apply events'
           description: 'Consumer {{ $labels.consumer }} failed {{ $value }} times in 15m; game or profile updates are stuck behind an entry it cannot apply'
 
+      - alert: RecapEmailsFailing
+        expr: sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="aborted"}[1h])) > 0 or (sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="failed"}[1h])) >= 3 and sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="failed"}[1h])) > sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="sent"}[1h])))
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Contest recap emails are failing'
+          description: 'A contest could not be prepared, or more recap emails failed than were sent in the last hour; check the contests logs for the error'
+
       - alert: ConsumerMissedEvents
         expr: |
           increase(stream_consumer_gaps_total{job="{{ include "app.fullname" . }}"}[1h]) > 0

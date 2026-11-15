@@ -78,6 +78,7 @@ services:
       SMTP_HOST: localhost
       SMTP_PORT: "25"
       SMTP_USER: local
+      EMAIL_FROM: contact@localhost
       SMTP_PASSWORD: local
       SUPPORT_EMAIL: support@localhost
       # Cloudflare's test secret, which accepts every token

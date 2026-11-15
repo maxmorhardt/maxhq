@@ -37,3 +37,7 @@ packages:
       UserSyncService:
       GameSyncService:
       SnapshotService:
+      RecapService:
+  github.com/maxmorhardt/maxhq/apps/squares/contests/internal/email:
+    interfaces:
+      Mailer:
