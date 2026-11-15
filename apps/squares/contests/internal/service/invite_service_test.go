@@ -172,6 +172,7 @@ func TestJoin_JoinsWithNoSquares(t *testing.T) {
 	contestID := uuid.New()
 	d.contests.EXPECT().LockByInviteToken(mock.Anything, "tok").Return(&model.Contest{ID: contestID, Status: model.ContestStatusActive}, nil)
 	d.bans.EXPECT().Exists(mock.Anything, contestID, "pat@x.com").Return(false, nil)
+	d.players.EXPECT().GetByContestAndUser(mock.Anything, contestID, "pat@x.com").Return(nil, database.ErrNotFound)
 	d.players.EXPECT().Create(mock.Anything, mock.MatchedBy(func(p *model.ContestPlayer) bool {
 		return p.ContestID == contestID && p.UserID == "pat@x.com" && p.Role == model.PlayerRolePlayer && p.MaxSquares == 0
 	})).Return(nil)
@@ -204,6 +205,7 @@ func TestJoin_AfterKickoffJoinsToWatch(t *testing.T) {
 	d := newInviteDeps(t)
 	d.contests.EXPECT().LockByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{ID: uuid.New(), Status: model.ContestStatusQ3}, nil)
 	d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+	d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 
 	_, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat")
@@ -214,9 +216,13 @@ func TestJoin_Failures(t *testing.T) {
 	locked := func(d *inviteDeps, status model.ContestStatus) {
 		d.contests.EXPECT().LockByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{ID: uuid.New(), Status: status}, nil)
 	}
-	joinable := func(d *inviteDeps) {
+	notBanned := func(d *inviteDeps) {
 		locked(d, model.ContestStatusActive)
 		d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+	}
+	joinable := func(d *inviteDeps) {
+		notBanned(d)
+		d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, database.ErrNotFound)
 	}
 	cases := map[string]struct {
 		setup func(d *inviteDeps)
@@ -240,6 +246,14 @@ func TestJoin_Failures(t *testing.T) {
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, errors.New("db"))
 		}, errs.ErrDatabaseUnavailable},
 		"already in": {func(d *inviteDeps) {
+			notBanned(d)
+			d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(&model.ContestPlayer{}, nil)
+		}, errs.ErrAlreadyPlayer},
+		"player lookup": {func(d *inviteDeps) {
+			notBanned(d)
+			d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
+		"joined concurrently": {func(d *inviteDeps) {
 			joinable(d)
 			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(database.ErrDuplicate)
 		}, errs.ErrAlreadyPlayer},

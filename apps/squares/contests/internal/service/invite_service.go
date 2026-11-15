@@ -169,7 +169,8 @@ func (s *inviteService) Join(ctx context.Context, token, user, displayName strin
 			log.Warn("user already a player", "contest_id", player.ContestID, "user", user)
 			return nil, errs.ErrAlreadyPlayer
 		case errors.Is(err, errs.ErrInviteNotFound), errors.Is(err, errs.ErrContestFinalized),
-			errors.Is(err, errs.ErrBannedFromContest), errors.Is(err, errs.ErrDatabaseUnavailable):
+			errors.Is(err, errs.ErrBannedFromContest), errors.Is(err, errs.ErrAlreadyPlayer),
+			errors.Is(err, errs.ErrDatabaseUnavailable):
 			return nil, err
 		}
 		log.Error("failed to join contest", "contest_id", player.ContestID, "user", user, "error", err)
@@ -205,6 +206,16 @@ func (s *inviteService) lockJoinable(ctx context.Context, token, user string) (u
 	if banned {
 		log.Warn("banned user tried to rejoin", "contest_id", contest.ID, "user", user)
 		return uuid.Nil, errs.ErrBannedFromContest
+	}
+
+	_, err = s.playerRepo.GetByContestAndUser(ctx, contest.ID, user)
+	switch {
+	case err == nil:
+		log.Info("user already a player", "contest_id", contest.ID, "user", user)
+		return uuid.Nil, errs.ErrAlreadyPlayer
+	case !errors.Is(err, database.ErrNotFound):
+		log.Error("failed to check for an existing player", "contest_id", contest.ID, "error", err)
+		return uuid.Nil, errs.ErrDatabaseUnavailable
 	}
 	return contest.ID, nil
 }
