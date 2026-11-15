@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders } from '../../../test/render';
-import { formatKickoff } from '../../../utils/game';
 import DemoBoard from './DemoBoard';
 
 describe('DemoBoard', () => {
@@ -10,9 +9,7 @@ describe('DemoBoard', () => {
 
     expect(screen.getByRole('img')).toHaveAccessibleName(/empty ten by ten squares board/i);
     // before kickoff the scorebug shows the kickoff, as a real contest's does
-    expect(
-      screen.getByText(formatKickoff(new Date(2026, 9, 25, 20, 20).toISOString()))
-    ).toBeInTheDocument();
+    expect(screen.getByText('Sun, Oct 25 · 8:20 PM')).toBeInTheDocument();
   });
 
   it('hides the digits until they are drawn', () => {

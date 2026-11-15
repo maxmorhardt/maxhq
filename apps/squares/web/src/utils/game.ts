@@ -6,20 +6,20 @@ export function formatMatchup(game: Pick<Game, 'awayTeam' | 'homeTeam'>): string
 }
 
 // the kickoff's day and time apart, for places too narrow to put them on one line
-export function kickoffParts(gameTime: string): { day: string; time: string } {
+export function kickoffParts(gameTime: string, locale?: string): { day: string; time: string } {
   const kickoff = new Date(gameTime);
   return {
-    day: kickoff.toLocaleDateString(undefined, {
+    day: kickoff.toLocaleDateString(locale, {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
     }),
-    time: kickoff.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+    time: kickoff.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }),
   };
 }
 
-export function formatKickoff(gameTime: string): string {
-  const { day, time } = kickoffParts(gameTime);
+export function formatKickoff(gameTime: string, locale?: string): string {
+  const { day, time } = kickoffParts(gameTime, locale);
   return `${day} · ${time}`;
 }
 
@@ -30,7 +30,10 @@ export const isHalftime = (game: Pick<Game, 'status' | 'period' | 'scores'>) =>
   !!game.scores?.some((score) => score.quarter === 2);
 
 // what a scoreboard shows in the middle: the kickoff, the quarter being played, or the final
-export function gameClock(game: Pick<Game, 'status' | 'period' | 'gameTime' | 'scores'>): string {
+export function gameClock(
+  game: Pick<Game, 'status' | 'period' | 'gameTime' | 'scores'>,
+  locale?: string
+): string {
   const overtime = game.period > 4;
 
   if (game.status === 'final') {
@@ -48,7 +51,7 @@ export function gameClock(game: Pick<Game, 'status' | 'period' | 'gameTime' | 's
   if (game.status === 'canceled') {
     return 'Canceled';
   }
-  return formatKickoff(game.gameTime);
+  return formatKickoff(game.gameTime, locale);
 }
 
 export const isLive = (game?: Pick<Game, 'status'>) => game?.status === 'in_progress';
