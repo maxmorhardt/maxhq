@@ -8,6 +8,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -83,27 +84,39 @@ func TestPlayerRepository_Create(t *testing.T) {
 	repo := NewPlayerRepository(gdb)
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`INSERT INTO "contest_players" .* ON CONFLICT \("contest_id","user_id"\) DO NOTHING`).WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(onConflictInsert).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
 	p := &model.ContestPlayer{ContestID: uuid.New(), UserID: "u1", Role: model.PlayerRolePlayer}
-	created, err := repo.Create(context.Background(), p)
-	require.NoError(t, err)
-	assert.True(t, created)
+	require.NoError(t, repo.Create(context.Background(), p))
 	assert.NotEqual(t, uuid.Nil, p.ID)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+const onConflictInsert = `INSERT INTO "contest_players" .* ON CONFLICT \("contest_id","user_id"\) DO NOTHING`
 
 func TestPlayerRepository_Create_AlreadyAPlayer(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	repo := NewPlayerRepository(gdb)
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`INSERT INTO "contest_players"`).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec(onConflictInsert).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectCommit()
 
-	created, err := repo.Create(context.Background(), &model.ContestPlayer{ContestID: uuid.New(), UserID: "u1"})
-	require.NoError(t, err)
-	assert.False(t, created)
+	err := repo.Create(context.Background(), &model.ContestPlayer{ContestID: uuid.New(), UserID: "u1"})
+	assert.ErrorIs(t, err, database.ErrDuplicate)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestPlayerRepository_Create_Error(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewPlayerRepository(gdb)
+
+	mock.ExpectBegin()
+	mock.ExpectExec(onConflictInsert).WillReturnError(assert.AnError)
+	mock.ExpectRollback()
+
+	err := repo.Create(context.Background(), &model.ContestPlayer{ContestID: uuid.New(), UserID: "u1"})
+	assert.ErrorIs(t, err, assert.AnError)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

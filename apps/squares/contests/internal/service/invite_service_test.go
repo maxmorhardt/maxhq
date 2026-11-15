@@ -174,7 +174,7 @@ func TestJoin_JoinsWithNoSquares(t *testing.T) {
 	d.bans.EXPECT().Exists(mock.Anything, contestID, "pat@x.com").Return(false, nil)
 	d.players.EXPECT().Create(mock.Anything, mock.MatchedBy(func(p *model.ContestPlayer) bool {
 		return p.ContestID == contestID && p.UserID == "pat@x.com" && p.Role == model.PlayerRolePlayer && p.MaxSquares == 0
-	})).Return(true, nil)
+	})).Return(nil)
 	d.events = mocks.NewContestEventPublisher(t)
 	d.events.EXPECT().PublishPlayerJoined(mock.Anything, contestID, mock.Anything).Return(nil).Once()
 
@@ -204,7 +204,7 @@ func TestJoin_AfterKickoffJoinsToWatch(t *testing.T) {
 	d := newInviteDeps(t)
 	d.contests.EXPECT().LockByInviteToken(mock.Anything, mock.Anything).Return(&model.Contest{ID: uuid.New(), Status: model.ContestStatusQ3}, nil)
 	d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-	d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(true, nil)
+	d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 
 	_, err := d.svc().Join(context.Background(), "tok", "pat@x.com", "Pat")
 	require.NoError(t, err)
@@ -241,23 +241,21 @@ func TestJoin_Failures(t *testing.T) {
 		}, errs.ErrDatabaseUnavailable},
 		"already in": {func(d *inviteDeps) {
 			joinable(d)
-			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(false, nil)
-			d.users = mocks.NewUserRepository(t)
-			d.events = mocks.NewContestEventPublisher(t)
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(database.ErrDuplicate)
 		}, errs.ErrAlreadyPlayer},
 		"create": {func(d *inviteDeps) {
 			joinable(d)
-			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(false, assert.AnError)
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(assert.AnError)
 		}, assert.AnError},
 		"profile": {func(d *inviteDeps) {
 			joinable(d)
-			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(true, nil)
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 			d.users = mocks.NewUserRepository(t)
 			d.users.EXPECT().GetOrCreate(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, assert.AnError)
 		}, assert.AnError},
 		"event": {func(d *inviteDeps) {
 			joinable(d)
-			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(true, nil)
+			d.players.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
 			d.events = mocks.NewContestEventPublisher(t)
 			d.events.EXPECT().PublishPlayerJoined(mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
 		}, assert.AnError},

@@ -152,12 +152,8 @@ func (s *inviteService) Join(ctx context.Context, token, user, displayName strin
 		}
 		player.ContestID = contestID
 
-		created, createErr := s.playerRepo.Create(ctx, player)
-		if createErr != nil {
+		if createErr := s.playerRepo.Create(ctx, player); createErr != nil {
 			return createErr
-		}
-		if !created {
-			return errs.ErrAlreadyPlayer
 		}
 
 		// a first-time player may join before accounts has published their profile, so the players list needs a name now
@@ -169,9 +165,9 @@ func (s *inviteService) Join(ctx context.Context, token, user, displayName strin
 	})
 	if err != nil {
 		switch {
-		case errors.Is(err, errs.ErrAlreadyPlayer):
+		case errors.Is(err, database.ErrDuplicate):
 			log.Info("user already a player", "contest_id", player.ContestID, "user", user)
-			return nil, err
+			return nil, errs.ErrAlreadyPlayer
 		case errors.Is(err, errs.ErrInviteNotFound), errors.Is(err, errs.ErrContestFinalized),
 			errors.Is(err, errs.ErrBannedFromContest), errors.Is(err, errs.ErrDatabaseUnavailable):
 			return nil, err

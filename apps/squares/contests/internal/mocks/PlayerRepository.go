@@ -27,31 +27,21 @@ func (_m *PlayerRepository) EXPECT() *PlayerRepository_Expecter {
 }
 
 // Create provides a mock function with given fields: ctx, player
-func (_m *PlayerRepository) Create(ctx context.Context, player *model.ContestPlayer) (bool, error) {
+func (_m *PlayerRepository) Create(ctx context.Context, player *model.ContestPlayer) error {
 	ret := _m.Called(ctx, player)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *model.ContestPlayer) (bool, error)); ok {
-		return rf(ctx, player)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *model.ContestPlayer) bool); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.ContestPlayer) error); ok {
 		r0 = rf(ctx, player)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *model.ContestPlayer) error); ok {
-		r1 = rf(ctx, player)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // PlayerRepository_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
@@ -73,12 +63,12 @@ func (_c *PlayerRepository_Create_Call) Run(run func(ctx context.Context, player
 	return _c
 }
 
-func (_c *PlayerRepository_Create_Call) Return(_a0 bool, _a1 error) *PlayerRepository_Create_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *PlayerRepository_Create_Call) Return(_a0 error) *PlayerRepository_Create_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *PlayerRepository_Create_Call) RunAndReturn(run func(context.Context, *model.ContestPlayer) (bool, error)) *PlayerRepository_Create_Call {
+func (_c *PlayerRepository_Create_Call) RunAndReturn(run func(context.Context, *model.ContestPlayer) error) *PlayerRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
