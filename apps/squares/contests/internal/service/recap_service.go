@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -72,39 +73,50 @@ func (s *recapService) Send(ctx context.Context, contestID uuid.UUID) {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, recapSendTimeout)
-	defer cancel()
-
 	sent, unconfirmed, failed := 0, 0, 0
 	for attempt := 1; len(pending) > 0; attempt++ {
 		if attempt > 1 && !wait(ctx, s.retryDelay*time.Duration(attempt-1)) {
 			failed += len(pending)
-			log.Error("ran out of time to retry the recap emails", "unsent", len(pending), "error", ctx.Err())
+			metrics.AddRecapEmails(metrics.RecapFailed, len(pending))
+			log.Error("stopped retrying the recap emails", "unsent", len(pending), "error", ctx.Err())
 			break
 		}
-
-		errs := s.mailer.SendAll(ctx, pending)
-		retry := make([]*mail.Message, 0)
-		for i, sendErr := range errs {
-			switch {
-			case sendErr == nil:
-				sent++
-			case mail.MaybeDelivered(sendErr):
-				unconfirmed++
-			case mail.Retryable(sendErr) && attempt < recapAttempts:
-				retry = append(retry, pending[i])
-			default:
-				failed++
-				log.Error("failed to send a recap email", "attempt", attempt, "error", sendErr)
-			}
-		}
-		pending = retry
+		pending = s.sendRound(ctx, log, attempt, pending, &sent, &unconfirmed, &failed)
 	}
 
-	metrics.AddRecapEmails(metrics.RecapSent, sent)
-	metrics.AddRecapEmails(metrics.RecapUnconfirmed, unconfirmed)
-	metrics.AddRecapEmails(metrics.RecapFailed, failed)
 	log.Info("sent contest recap emails", "sent", sent, "unconfirmed", unconfirmed, "failed", failed)
+}
+
+func (s *recapService) sendRound(ctx context.Context, log *slog.Logger, attempt int, pending []*mail.Message, sent, unconfirmed, failed *int) []*mail.Message {
+	roundCtx, cancel := context.WithTimeout(ctx, recapSendTimeout)
+	errs := s.mailer.SendAll(roundCtx, pending)
+	cancel()
+
+	retry := make([]*mail.Message, 0, len(pending))
+	roundSent, roundUnconfirmed, roundFailed := 0, 0, 0
+	var lastErr error
+	for i, sendErr := range errs {
+		switch {
+		case sendErr == nil:
+			roundSent++
+		case mail.MaybeDelivered(sendErr):
+			roundUnconfirmed++
+		case mail.Retryable(sendErr) && attempt < recapAttempts:
+			retry = append(retry, pending[i])
+		default:
+			roundFailed++
+			lastErr = sendErr
+		}
+	}
+
+	metrics.AddRecapEmails(metrics.RecapSent, roundSent)
+	metrics.AddRecapEmails(metrics.RecapUnconfirmed, roundUnconfirmed)
+	metrics.AddRecapEmails(metrics.RecapFailed, roundFailed)
+	*sent, *unconfirmed, *failed = *sent+roundSent, *unconfirmed+roundUnconfirmed, *failed+roundFailed
+	if roundFailed > 0 {
+		log.Error("failed to send recap emails", "count", roundFailed, "attempt", attempt, "error", lastErr)
+	}
+	return retry
 }
 
 func wait(ctx context.Context, d time.Duration) bool {

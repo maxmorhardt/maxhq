@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	netmail "net/mail"
@@ -16,8 +17,11 @@ import (
 	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 )
 
-// covers loading the submission and the SMTP exchange
-const notifyTimeout = 30 * time.Second
+// covers loading the submission and every send attempt
+const (
+	notifyTimeout  = 2 * time.Minute
+	notifyAttempts = 3
+)
 
 type ContactService interface {
 	SubmitContact(ctx context.Context, req *model.ContactRequest, ipAddress string) error
@@ -28,6 +32,7 @@ type contactService struct {
 	mailer       mail.Client
 	supportEmail string
 	turnstile    model.TurnstileConfig
+	retryDelay   time.Duration
 }
 
 func NewContactService(repo repository.ContactRepository, mailer mail.Client, supportEmail string, turnstileCfg model.TurnstileConfig) ContactService {
@@ -36,6 +41,7 @@ func NewContactService(repo repository.ContactRepository, mailer mail.Client, su
 		mailer:       mailer,
 		supportEmail: supportEmail,
 		turnstile:    turnstileCfg,
+		retryDelay:   5 * time.Second,
 	}
 }
 
@@ -91,16 +97,27 @@ func (s *contactService) notify(ctx context.Context, submissionID uuid.UUID) {
 }
 
 func (s *contactService) sendEmailNotification(ctx context.Context, submission *model.ContactSubmission) error {
-	content, err := BuildContactEmail(submission)
+	msg, err := BuildContactEmail(submission)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
-
-	msg := &mail.Message{To: s.supportEmail, Subject: content.Subject, Text: content.Text, HTML: content.HTML}
+	msg.To = s.supportEmail
 	if addr, parseErr := netmail.ParseAddress(submission.Email); parseErr == nil {
 		msg.ReplyTo = addr.String()
 	}
-	if err := s.mailer.Send(ctx, msg); err != nil {
+
+	for attempt := 1; ; attempt++ {
+		err = s.mailer.Send(ctx, msg)
+		if err == nil || !mail.Retryable(err) || attempt == notifyAttempts {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("%w: %w", errs.ErrEmailNotification, errors.Join(err, ctx.Err()))
+		case <-time.After(s.retryDelay * time.Duration(attempt)):
+		}
+	}
+	if err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
 	return nil

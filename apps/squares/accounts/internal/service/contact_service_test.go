@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
 	"testing"
 	"time"
 
@@ -169,7 +170,7 @@ func TestContactService_SubmitContact_SendFailureIsLoggedAndBadReplyToIsLeftOff(
 	sent := make(chan *mail.Message, 1)
 	mailer := mocks.NewClient(t)
 	mailer.EXPECT().Send(mock.Anything, mock.Anything).
-		Run(func(_ context.Context, msg *mail.Message) { sent <- msg }).Return(errors.New("smtp down")).Maybe()
+		Run(func(_ context.Context, msg *mail.Message) { sent <- msg }).Return(&textproto.Error{Code: 550, Msg: "rejected"}).Maybe()
 
 	require.NoError(t, service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile).
 		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
@@ -179,5 +180,28 @@ func TestContactService_SubmitContact_SendFailureIsLoggedAndBadReplyToIsLeftOff(
 		assert.Empty(t, msg.ReplyTo)
 	case <-time.After(5 * time.Second):
 		t.Fatal("the notification was never attempted")
+	}
+}
+
+func TestContactService_SubmitContact_RetriesATemporaryFailure(t *testing.T) {
+	cfg := turnstileServer(t, http.StatusOK, `{"success":true}`)
+
+	repo := mocks.NewContactRepository(t)
+	repo.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).
+		Return(&model.ContactSubmission{Email: "a@x.com", Subject: "hi"}, nil).Maybe()
+
+	delivered := make(chan struct{})
+	mailer := mocks.NewClient(t)
+	mailer.EXPECT().Send(mock.Anything, mock.Anything).Return(errors.New("timeout")).Once()
+	mailer.EXPECT().Send(mock.Anything, mock.Anything).Run(func(context.Context, *mail.Message) { close(delivered) }).Return(nil).Once()
+
+	require.NoError(t, service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile).
+		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
+
+	select {
+	case <-delivered:
+	case <-time.After(15 * time.Second):
+		t.Fatal("the notification was not retried")
 	}
 }

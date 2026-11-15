@@ -7,6 +7,7 @@ import (
 
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/templates"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 )
 
 const (
@@ -19,19 +20,13 @@ var contactEmailTmpl = template.Must(template.New("contact_email").Funcs(templat
 	"msoClose": func() template.HTML { return msoClose },
 }).Parse(templates.ContactEmailHTML))
 
-type ContactEmail struct {
-	Subject string
-	Text    string
-	HTML    string
-}
-
-func BuildContactEmail(sub *model.ContactSubmission) (*ContactEmail, error) {
+func BuildContactEmail(sub *model.ContactSubmission) (*mail.Message, error) {
 	var html bytes.Buffer
 	if err := contactEmailTmpl.Execute(&html, sub); err != nil {
 		return nil, fmt.Errorf("failed to render contact email template: %w", err)
 	}
 
-	return &ContactEmail{
+	return &mail.Message{
 		Subject: "Squares contact form: " + sub.Subject,
 		Text: fmt.Sprintf(
 			"New contact form submission:\n\nName: %s\nEmail: %s\nSubject: %s\n\nMessage:\n%s\n",
