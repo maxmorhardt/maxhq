@@ -22,7 +22,7 @@ state that was previously created by hand.
 | `dockerhub/` | `terraform.tfvars` with `token`, a Docker Hub personal access token with Read & Write |
 | `tailscale/` | `terraform.tfvars` with `oauth_client_id` and `oauth_client_secret` (an OAuth client with write on DNS, Policy File, Feature Settings, and Networking Settings; its secret doesn't expire) |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
-| `grafana/` | `terraform.tfvars` with `auth` (an Admin service account token), `sm_access_token` (Testing & synthetics > Synthetics > Config), `cloud_access_policy_token` (the `terraform` access policy on grafana.com: `stacks:read`, `stacks:write`, and read, write, and delete on `accesspolicies` and `frontend-observability`), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
+| `grafana/` | `terraform.tfvars` with `auth` (a token of the `terraform` service account, Admin role), `sm_access_token` (Testing & synthetics > Synthetics > Config), `cloud_access_policy_token` (the `terraform` access policy on grafana.com: `stacks:read`, `stacks:write`, and read, write, and delete on `accesspolicies` and `frontend-observability`), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
 
 In CI, as repository secrets:
 
@@ -96,7 +96,7 @@ the UI and not committed; the Monday plan reports it.
 
 The `empty` contact point, which silences `severity=info`, stays manual: Terraform can't hold a
 contact point with no integrations. Tokens (service accounts, Synthetic Monitoring, access policies,
-the PDC signing token) and the `terraform` access policy itself are created by hand, so secrets stay
+the PDC signing token), the `terraform` service account, and the `terraform` access policy are created by hand, so secrets stay
 out of state and Terraform can't widen its own access.
 
 ## Notes
