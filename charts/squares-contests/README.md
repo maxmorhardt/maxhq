@@ -34,10 +34,10 @@ The `squares-contests` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | service-to-service | `INTERNAL_API_TOKEN` (the same value in contests, accounts, and realtime) |
 | pseudonyms | `PSEUDONYM_KEY`, at least 32 bytes (the same value in contests and accounts; changing it renames every player) |
 | http | `ALLOWED_ORIGINS` |
-| recap emails (optional) | `SMTP_USER`, `SMTP_PASSWORD` |
+| recap emails (optional) | `EMAIL_ENABLED`, `EMAIL_FROM` (`Squares <recaps@example.com>`), `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `WEB_URL` |
 
 `REDIS_URL` is `redis://squares:<password>@valkey-master.valkey.svc:6379/0`, the `squares` ACL user from the gitops repo's `valkey-users` secret.
-Recap emails stay off until `env` sets `EMAIL_ENABLED: "true"`, `EMAIL_FROM` (`Squares <recaps@example.com>`), and `SMTP_HOST` (`SMTP_PORT` defaults to 587, `WEB_URL` to `https://squares.maxhq.io`). When a contest finishes, every player gets the same results email.
+Recap emails stay off unless `EMAIL_ENABLED` is `true`; `SMTP_PORT` defaults to 587 and `WEB_URL` to `https://squares.maxhq.io`. When a contest finishes, every player gets the same results email.
 
 `SERVER_PORT` and `METRICS_*` come from the chart; other settings go in `env` in `values.yaml` (see the service's `.env.example` in the maxhq repo for each one and its default).
 
