@@ -21,12 +21,14 @@ const (
 	dialTimeout     = 10 * time.Second
 	stepTimeout     = 30 * time.Second
 	acceptTimeout   = 5 * time.Minute
+	quitTimeout     = 5 * time.Second
 	helloName       = "localhost"
 )
 
 var (
 	ErrNoTLS          = errors.New("the smtp server does not offer STARTTLS, so mail would go out in plaintext")
 	ErrMaybeDelivered = errors.New("the connection failed after the message was sent, so the server may have accepted it")
+	ErrSession        = errors.New("the smtp session failed")
 )
 
 type Client interface {
@@ -58,6 +60,8 @@ func New(cfg *config.SMTPConfig) (Client, error) {
 func Permanent(err error) bool {
 	var reply *textproto.Error
 	switch {
+	case errors.Is(err, ErrSession):
+		return false
 	case errors.Is(err, ErrInvalidRecipient), errors.Is(err, ErrInvalidReplyTo), errors.Is(err, ErrEmptyMessage):
 		return true
 	case errors.As(err, &reply):
@@ -80,10 +84,10 @@ func (c *smtpClient) Send(ctx context.Context, msg *Message) error {
 
 func (c *smtpClient) SendAll(ctx context.Context, msgs []*Message) []error {
 	errs := make([]error, len(msgs))
-	envelopes := make([]*envelope, len(msgs))
+	parsed := make([]*addresses, len(msgs))
 	pending := make([]int, 0, len(msgs))
 	for i, msg := range msgs {
-		if envelopes[i], errs[i] = msg.prepare(c.from); errs[i] == nil {
+		if parsed[i], errs[i] = msg.validate(); errs[i] == nil {
 			pending = append(pending, i)
 		}
 	}
@@ -109,8 +113,15 @@ func (c *smtpClient) SendAll(ctx context.Context, msgs []*Message) []error {
 				}
 			}
 
-			errs[i] = s.transact(ctx, envelopes[i])
-			if errs[i] == nil || !s.broken {
+			errs[i] = s.transact(ctx, msgs[i].build(c.from, parsed[i]))
+			if errs[i] == nil {
+				break
+			}
+			if !s.broken {
+				if errors.Is(errs[i], ErrSession) {
+					failAll(errs, pending[n+1:], errs[i])
+					return errs
+				}
 				break
 			}
 			s.close()
@@ -133,7 +144,7 @@ func (c *smtpClient) open(ctx context.Context) (*session, error) {
 	addr := net.JoinHostPort(c.cfg.Host, strconv.Itoa(c.cfg.Port))
 	raw, err := (&net.Dialer{Timeout: dialTimeout}).DialContext(ctx, "tcp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("connect to %s: %w", c.cfg.Host, err)
+		return nil, fmt.Errorf("%w: connect to %s: %w", ErrSession, c.cfg.Host, err)
 	}
 
 	s := &session{client: c, raw: raw}
@@ -141,7 +152,7 @@ func (c *smtpClient) open(ctx context.Context) (*session, error) {
 	if err := s.start(ctx, &tls.Config{ServerName: c.cfg.Host, MinVersion: tls.VersionTLS12, RootCAs: c.rootCAs}); err != nil {
 		s.broken = true
 		s.close()
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrSession, err)
 	}
 	return s, nil
 }
@@ -199,16 +210,12 @@ func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
 }
 
 func loopback(host string) bool {
-	if host == "localhost" {
-		return true
-	}
-	ip := net.ParseIP(host)
-	return ip != nil && ip.IsLoopback()
+	return host == "localhost" || host == "127.0.0.1" || host == "::1"
 }
 
 func (s *session) transact(ctx context.Context, env *envelope) error {
 	if err := s.step(ctx, func() error { return s.smtp.Mail(s.client.from.Address) }); err != nil {
-		return err
+		return fmt.Errorf("%w: mail from: %w", ErrSession, err)
 	}
 	if err := s.step(ctx, func() error { return s.smtp.Rcpt(env.to) }); err != nil {
 		return err
@@ -287,8 +294,9 @@ func (s *session) extendDeadline(ctx context.Context, timeout time.Duration) err
 }
 
 func (s *session) close() {
-	s.stopCancel()
-	if s.smtp != nil && !s.broken {
+	canceled := !s.stopCancel()
+	if s.smtp != nil && !s.broken && !canceled {
+		_ = s.raw.SetDeadline(time.Now().Add(quitTimeout))
 		_ = s.smtp.Quit()
 	}
 	if s.smtp != nil {

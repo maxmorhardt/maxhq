@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const crlf = "\r\n"
+
 func decode(t *testing.T, raw []byte) (parsed *netmail.Message, bodies []string) {
 	t.Helper()
 	parsed, err := netmail.ReadMessage(bytes.NewReader(raw))
@@ -38,16 +40,21 @@ func decode(t *testing.T, raw []byte) (parsed *netmail.Message, bodies []string)
 
 func prepared(t *testing.T, msg *Message, from *netmail.Address) *envelope {
 	t.Helper()
-	env, err := msg.prepare(from)
+	addrs, err := msg.validate()
 	require.NoError(t, err)
-	return env
+	return msg.build(from, addrs)
 }
 
-func TestMessage_Prepare(t *testing.T) {
+func headerOf(env *envelope) string {
+	head, _, _ := strings.Cut(string(env.body), crlf+crlf)
+	return head
+}
+
+func TestMessage_Build(t *testing.T) {
 	msg := &Message{
 		To:      "Max <max@example.com>",
 		ReplyTo: "Jen <jen@example.com>",
-		Subject: "Weekly report 📈\r\nBcc: evil@example.com",
+		Subject: "Weekly report 📈" + crlf + "Bcc: evil@example.com",
 		Text:    "Total – 27",
 		HTML:    "<p>Total – 27</p>",
 	}
@@ -67,7 +74,7 @@ func TestMessage_Prepare(t *testing.T) {
 	assert.Equal(t, []string{"text/plain; charset=utf-8|Total – 27", "text/html; charset=utf-8|<p>Total – 27</p>"}, bodies)
 }
 
-func TestMessage_PrepareSkipsEmptyParts(t *testing.T) {
+func TestMessage_BuildSkipsEmptyParts(t *testing.T) {
 	env := prepared(t, &Message{To: "max@example.com", HTML: "<p>hi</p>"}, &netmail.Address{Address: "nobody"})
 	parsed, bodies := decode(t, env.body)
 
@@ -76,15 +83,40 @@ func TestMessage_PrepareSkipsEmptyParts(t *testing.T) {
 	assert.Equal(t, []string{"text/html; charset=utf-8|<p>hi</p>"}, bodies)
 }
 
+func TestMessage_SubjectCannotSmuggleEncodedWords(t *testing.T) {
+	env := prepared(t, &Message{To: "max@example.com", Subject: "=?utf-8?b?RmFrZQ==?=", Text: "hi"}, &netmail.Address{Address: "notify@example.com"})
+	parsed, _ := decode(t, env.body)
+
+	decoded, err := new(mime.WordDecoder).DecodeHeader(parsed.Header.Get("Subject"))
+	require.NoError(t, err)
+	zwsp := string(rune(0x200b))
+	assert.Equal(t, "="+zwsp+"?utf-8?b?RmFrZQ=="+zwsp+"?=", decoded)
+}
+
+func TestMessage_TruncatesLongSubjectsAndKeepsTheKeyLine(t *testing.T) {
+	env := prepared(t, &Message{To: "max@example.com", Subject: strings.Repeat("x", 500), Text: "hi"}, &netmail.Address{Address: "notify@example.com"})
+
+	head := headerOf(env)
+	assert.NotContains(t, head, "Subject:"+crlf)
+	assert.Contains(t, head, "Subject: "+strings.Repeat("x", maxSubjectRunes)+crlf)
+}
+
+func TestMessage_ValidateRejectsNil(t *testing.T) {
+	var msg *Message
+	_, err := msg.validate()
+	assert.ErrorIs(t, err, ErrEmptyMessage)
+}
+
 func TestMessage_FoldsLongSubjects(t *testing.T) {
-	subject := strings.Repeat("quarterly numbers for the whole team ", 8)
+	subject := strings.Repeat("quarterly numbers for the whole team ", 6)
 	for _, s := range []string{subject, subject + "📈"} {
 		env := prepared(t, &Message{To: "max@example.com", Subject: s, Text: "hi"}, &netmail.Address{Address: "notify@example.com"})
 
-		head, _, _ := strings.Cut(string(env.body), "\r\n\r\n")
-		for _, line := range strings.Split(head, "\r\n") {
-			assert.LessOrEqual(t, len(line), 78, line)
+		lines := strings.Split(headerOf(env), crlf)
+		for _, line := range lines {
+			assert.LessOrEqual(t, len(line), len("Subject: ")+75, line)
 		}
+		assert.Greater(t, len(lines), 9)
 		parsed, _ := decode(t, env.body)
 		decoded, err := new(mime.WordDecoder).DecodeHeader(parsed.Header.Get("Subject"))
 		require.NoError(t, err)

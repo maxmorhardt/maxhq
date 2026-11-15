@@ -31,6 +31,9 @@ type fakeSMTP struct {
 	closeAfter    int
 	stallMail     bool
 	stallAfterDot bool
+	stallQuit     bool
+	authReply     string
+	mailReply     string
 
 	connections atomic.Int32
 	mu          sync.Mutex
@@ -98,11 +101,19 @@ func (f *fakeSMTP) serve(conn net.Conn) {
 			f.mu.Lock()
 			f.auths++
 			f.mu.Unlock()
+			if f.authReply != "" {
+				_ = c.PrintfLine("%s", f.authReply)
+				continue
+			}
 			_ = c.PrintfLine("235 ok")
 		case "MAIL":
 			if f.stallMail {
 				time.Sleep(time.Minute)
 				return
+			}
+			if f.mailReply != "" {
+				_ = c.PrintfLine("%s", f.mailReply)
+				continue
 			}
 			if f.closeAfter > 0 && sent >= f.closeAfter {
 				_ = c.PrintfLine("421 too many messages")
@@ -145,6 +156,10 @@ func (f *fakeSMTP) serve(conn net.Conn) {
 			f.mu.Unlock()
 			_ = c.PrintfLine("250 queued")
 		case "QUIT":
+			if f.stallQuit {
+				time.Sleep(time.Minute)
+				return
+			}
 			_ = c.PrintfLine("221 bye")
 			return
 		default:
@@ -381,6 +396,44 @@ func TestSendAll_CancelInterruptsAStalledServer(t *testing.T) {
 	}
 }
 
+func TestSendAll_SessionFailuresAreRetryableForTheWholeBatch(t *testing.T) {
+	cases := map[string]*fakeSMTP{
+		"wrong password":   {authReply: "535 bad credentials"},
+		"sender rejected":  {mailReply: "554 sender not verified"},
+		"sender throttled": {mailReply: "454 sending rate exceeded"},
+	}
+	for name, f := range cases {
+		t.Run(name, func(t *testing.T) {
+			startFake(t, f)
+			user := ""
+			if f.authReply != "" {
+				user = "apikey"
+			}
+
+			errs := f.client(t, user, false).SendAll(context.Background(), messages("a@example.com", "b@example.com", "c@example.com"))
+
+			for _, err := range errs {
+				require.ErrorIs(t, err, ErrSession)
+				assert.True(t, Retryable(err))
+			}
+			assert.Equal(t, int32(1), f.connections.Load())
+			assert.Empty(t, f.rcpts)
+		})
+	}
+}
+
+func TestSendAll_CancelDuringAStalledQuitReturnsQuickly(t *testing.T) {
+	f := startFake(t, &fakeSMTP{stallQuit: true})
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(200*time.Millisecond, cancel)
+
+	start := time.Now()
+	errs := f.client(t, "", false).SendAll(ctx, messages("a@example.com"))
+
+	assert.NoError(t, errs[0])
+	assert.Less(t, time.Since(start), quitTimeout+2*time.Second)
+}
+
 func TestSend_HonorsTheContextDeadline(t *testing.T) {
 	f := startFake(t, &fakeSMTP{})
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -407,6 +460,7 @@ func TestLoopback(t *testing.T) {
 	assert.True(t, loopback("localhost"))
 	assert.True(t, loopback("127.0.0.1"))
 	assert.True(t, loopback("::1"))
+	assert.False(t, loopback("127.0.0.2"))
 	assert.False(t, loopback("smtp.example.com"))
 	assert.False(t, loopback("10.0.0.1"))
 }

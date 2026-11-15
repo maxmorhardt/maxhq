@@ -15,7 +15,10 @@ import (
 	"github.com/google/uuid"
 )
 
-const foldWidth = 76
+const (
+	foldWidth       = 76
+	maxSubjectRunes = 300
+)
 
 var (
 	ErrInvalidRecipient = errors.New("invalid recipient address")
@@ -36,21 +39,29 @@ type envelope struct {
 	body []byte
 }
 
-func (m *Message) prepare(from *netmail.Address) (*envelope, error) {
+type addresses struct {
+	to      *netmail.Address
+	replyTo *netmail.Address
+}
+
+func (m *Message) validate() (*addresses, error) {
+	if m == nil || (m.Text == "" && m.HTML == "") {
+		return nil, ErrEmptyMessage
+	}
 	to, err := netmail.ParseAddress(m.To)
 	if err != nil {
 		return nil, fmt.Errorf("%w %q: %w", ErrInvalidRecipient, m.To, err)
 	}
-	var replyTo *netmail.Address
+	addrs := &addresses{to: to}
 	if m.ReplyTo != "" {
-		if replyTo, err = netmail.ParseAddress(m.ReplyTo); err != nil {
+		if addrs.replyTo, err = netmail.ParseAddress(m.ReplyTo); err != nil {
 			return nil, fmt.Errorf("%w %q: %w", ErrInvalidReplyTo, m.ReplyTo, err)
 		}
 	}
-	if m.Text == "" && m.HTML == "" {
-		return nil, ErrEmptyMessage
-	}
+	return addrs, nil
+}
 
+func (m *Message) build(from *netmail.Address, addrs *addresses) *envelope {
 	var out bytes.Buffer
 	parts := multipart.NewWriter(&out)
 	header := func(key, value string) {
@@ -58,11 +69,11 @@ func (m *Message) prepare(from *netmail.Address) (*envelope, error) {
 		out.WriteString("\r\n")
 	}
 	header("From", from.String())
-	header("To", (&netmail.Address{Address: to.Address}).String())
-	if replyTo != nil {
-		header("Reply-To", replyTo.String())
+	header("To", (&netmail.Address{Address: addrs.to.Address}).String())
+	if addrs.replyTo != nil {
+		header("Reply-To", addrs.replyTo.String())
 	}
-	header("Subject", mime.QEncoding.Encode("utf-8", oneLine(m.Subject)))
+	header("Subject", subject(m.Subject))
 	header("Date", time.Now().Format(time.RFC1123Z))
 	header("Message-ID", fmt.Sprintf("<%s@%s>", uuid.NewString(), domainOf(from.Address)))
 	header("MIME-Version", "1.0")
@@ -76,25 +87,25 @@ func (m *Message) prepare(from *netmail.Address) (*envelope, error) {
 		if part.content == "" {
 			continue
 		}
-		w, err := parts.CreatePart(textproto.MIMEHeader{
+		w, _ := parts.CreatePart(textproto.MIMEHeader{
 			"Content-Type":              {part.contentType},
 			"Content-Transfer-Encoding": {"quoted-printable"},
 		})
-		if err != nil {
-			return nil, err
-		}
 		qp := quotedprintable.NewWriter(w)
-		if _, err := qp.Write([]byte(part.content)); err != nil {
-			return nil, err
-		}
-		if err := qp.Close(); err != nil {
-			return nil, err
-		}
+		_, _ = qp.Write([]byte(part.content))
+		_ = qp.Close()
 	}
-	if err := parts.Close(); err != nil {
-		return nil, err
+	_ = parts.Close()
+	return &envelope{to: addrs.to.Address, body: out.Bytes()}
+}
+
+func subject(s string) string {
+	s = oneLine(s)
+	if runes := []rune(s); len(runes) > maxSubjectRunes {
+		s = string(runes[:maxSubjectRunes])
 	}
-	return &envelope{to: to.Address, body: out.Bytes()}, nil
+	s = strings.ReplaceAll(s, "=?", "=\u200b?")
+	return mime.QEncoding.Encode("utf-8", s)
 }
 
 func oneLine(v string) string {
@@ -108,18 +119,21 @@ func oneLine(v string) string {
 
 func fold(line string) string {
 	var out strings.Builder
-	width := 0
+	width, words := 0, 0
+	first := true
 	for i, word := range strings.Split(line, " ") {
 		if i > 0 {
-			if width+1+len(word) > foldWidth {
+			canBreak := words > 1 || (!first && words > 0)
+			if canBreak && width+1+len(word) > foldWidth {
 				out.WriteString("\r\n")
-				width = 0
+				width, words, first = 0, 0, false
 			}
 			out.WriteString(" ")
 			width++
 		}
 		out.WriteString(word)
 		width += len(word)
+		words++
 	}
 	return out.String()
 }
