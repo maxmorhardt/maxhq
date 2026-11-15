@@ -112,6 +112,10 @@ func (r *userRepository) Scrub(ctx context.Context, email string) ([]model.Squar
 			return err
 		}
 
+		if err := tx.Where("user_id = ?", email).Delete(&model.RecapEmail{}).Error; err != nil {
+			return err
+		}
+
 		return tx.Where("email = ?", email).Delete(&model.User{}).Error
 	})
 	if err != nil {

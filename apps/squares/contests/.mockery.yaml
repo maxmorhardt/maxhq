@@ -15,6 +15,7 @@ packages:
       Outbox:
   github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository:
     interfaces:
+      RecapEmailRepository:
       ContestRepository:
       FeedRepository:
       PlayerRepository:
@@ -38,6 +39,6 @@ packages:
       GameSyncService:
       SnapshotService:
       RecapService:
-  github.com/maxmorhardt/maxhq/apps/squares/contests/internal/email:
+  github.com/maxmorhardt/maxhq/libs/go/platform/mail:
     interfaces:
-      Mailer:
+      Client:

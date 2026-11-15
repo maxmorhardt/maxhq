@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/mail"
-	"net/smtp"
+	netmail "net/mail"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -14,6 +13,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 )
 
 // covers loading the submission and the SMTP exchange
@@ -24,16 +24,18 @@ type ContactService interface {
 }
 
 type contactService struct {
-	repo      repository.ContactRepository
-	smtp      model.SMTPConfig
-	turnstile model.TurnstileConfig
+	repo         repository.ContactRepository
+	mailer       mail.Client
+	supportEmail string
+	turnstile    model.TurnstileConfig
 }
 
-func NewContactService(repo repository.ContactRepository, smtpCfg *model.SMTPConfig, turnstileCfg model.TurnstileConfig) ContactService {
+func NewContactService(repo repository.ContactRepository, mailer mail.Client, supportEmail string, turnstileCfg model.TurnstileConfig) ContactService {
 	return &contactService{
-		repo:      repo,
-		smtp:      *smtpCfg,
-		turnstile: turnstileCfg,
+		repo:         repo,
+		mailer:       mailer,
+		supportEmail: supportEmail,
+		turnstile:    turnstileCfg,
 	}
 }
 
@@ -81,32 +83,26 @@ func (s *contactService) notify(ctx context.Context, submissionID uuid.UUID) {
 		return
 	}
 
-	if err := s.sendEmailNotification(submission); err != nil {
+	if err := s.sendEmailNotification(ctx, submission); err != nil {
 		log.Error("failed to send contact email notification", "error", err)
 		return
 	}
 	log.Info("contact email notification sent")
 }
 
-func (s *contactService) sendEmailNotification(submission *model.ContactSubmission) error {
-	from, err := mail.ParseAddress(s.smtp.Sender())
+func (s *contactService) sendEmailNotification(ctx context.Context, submission *model.ContactSubmission) error {
+	content, err := BuildContactEmail(submission)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
 
-	msg, err := BuildContactEmail(from.String(), s.smtp.SupportEmail, submission)
-	if err != nil {
+	msg := &mail.Message{To: s.supportEmail, Subject: content.Subject, Text: content.Text, HTML: content.HTML}
+	if addr, parseErr := netmail.ParseAddress(submission.Email); parseErr == nil {
+		msg.ReplyTo = addr.String()
+	}
+	if err := s.mailer.Send(ctx, msg); err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
-
-	auth := smtp.PlainAuth("", s.smtp.User, s.smtp.Password, s.smtp.Host)
-	addr := fmt.Sprintf("%s:%d", s.smtp.Host, s.smtp.Port)
-	to := []string{s.smtp.SupportEmail}
-
-	if err := smtp.SendMail(addr, auth, from.Address, to, msg); err != nil {
-		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
-	}
-
 	return nil
 }
 

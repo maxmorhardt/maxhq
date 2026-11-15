@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
@@ -47,7 +49,7 @@ func Connect(cfg *model.AccountsConfig) (*server.Infra, error) {
 	})
 }
 
-func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
+func New(cfg *model.AccountsConfig, infra *server.Infra) (*App, error) {
 	db := infra.DB
 	relay := streams.NewRelay(db, infra.Redis, outboxLockKey, cfg.Streams.Retention)
 	revocations := cache.NewRevocationStore(infra.Redis)
@@ -59,7 +61,11 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		clients.NewContestActivityClient(cfg.Contests.URL, cfg.Internal.Token),
 		revocations,
 	)
-	contactService := service.NewContactService(repository.NewContactRepository(db), &cfg.SMTP, cfg.Turnstile)
+	mailer, err := mail.New(&cfg.SMTP)
+	if err != nil {
+		return nil, fmt.Errorf("email: %w", err)
+	}
+	contactService := service.NewContactService(repository.NewContactRepository(db), mailer, cfg.Contact.SupportEmail, cfg.Turnstile)
 
 	engine := server.NewEngine(&cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
@@ -75,7 +81,7 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		Idempotent: middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
 	})
 
-	return &App{Engine: engine, cfg: cfg, infra: infra, relay: relay, userService: userService}
+	return &App{Engine: engine, cfg: cfg, infra: infra, relay: relay, userService: userService}, nil
 }
 
 func (a *App) Start(ctx context.Context) {

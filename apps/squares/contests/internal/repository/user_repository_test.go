@@ -92,6 +92,7 @@ func TestUserRepository_Scrub(t *testing.T) {
 	mock.ExpectQuery(`DELETE FROM "contest_players" WHERE user_id = \$1 RETURNING \*`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "user_id"}).AddRow(uuid.New(), contestID, "a@b.com"))
 	mock.ExpectExec(`DELETE FROM "contest_bans" WHERE user_id = \$1`).WithArgs("a@b.com").WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`DELETE FROM "recap_emails" WHERE user_id = \$1`).WithArgs("a@b.com").WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectExec(`DELETE FROM "users"`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 

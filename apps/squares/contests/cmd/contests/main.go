@@ -42,11 +42,6 @@ func run() error {
 		return err
 	}
 
-	err = cfg.Email.Validate()
-	if err != nil {
-		return err
-	}
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -55,5 +50,10 @@ func run() error {
 		return err
 	}
 
-	return bootstrap.New(cfg, infra).Run(ctx)
+	app, err := bootstrap.New(cfg, infra)
+	if err != nil {
+		infra.Close()
+		return err
+	}
+	return app.Run(ctx)
 }

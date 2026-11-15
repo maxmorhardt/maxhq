@@ -137,7 +137,9 @@ func TestAccounts_StartupRestoresRevocationsFromTombstones(t *testing.T) {
 	infra, err := bootstrap.Connect(baseCfg)
 	require.NoError(t, err)
 	t.Cleanup(infra.Close)
-	bootstrap.New(baseCfg, infra).Start(ctx)
+	app, err := bootstrap.New(baseCfg, infra)
+	require.NoError(t, err)
+	app.Start(ctx)
 
 	stale := testkit.Identity{Email: user, IssuedAt: deletedAt.Add(-time.Hour)}
 	assert.Equal(t, http.StatusUnauthorized, testkit.Call(t, replicaA, stale, http.MethodGet, "/users/me", nil).Status)

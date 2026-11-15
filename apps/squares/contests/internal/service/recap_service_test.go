@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/textproto"
@@ -14,6 +13,8 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -40,145 +41,206 @@ func finishedContest(t *testing.T) *model.Contest {
 	}
 }
 
-func recapRepos(t *testing.T, contest *model.Contest, players ...string) (*mocks.ContestRepository, *mocks.PlayerRepository) {
-	contestRepo := mocks.NewContestRepository(t)
-	contestRepo.EXPECT().GetByID(mock.Anything, contest.ID).Return(contest, nil)
-	playerRepo := mocks.NewPlayerRepository(t)
-	rows := make([]model.ContestPlayer, 0, len(players))
-	for _, p := range players {
-		rows = append(rows, model.ContestPlayer{ID: uuid.New(), ContestID: contest.ID, UserID: p})
+type recapDeps struct {
+	repo     *mocks.RecapEmailRepository
+	contests *mocks.ContestRepository
+	players  *mocks.PlayerRepository
+	mailer   *mocks.Client
+}
+
+func newRecapDeps(t *testing.T) *recapDeps {
+	return &recapDeps{
+		repo:     mocks.NewRecapEmailRepository(t),
+		contests: mocks.NewContestRepository(t),
+		players:  mocks.NewPlayerRepository(t),
+		mailer:   mocks.NewClient(t),
 	}
-	playerRepo.EXPECT().GetAllByContestID(mock.Anything, contest.ID).Return(rows, nil)
-	return contestRepo, playerRepo
 }
 
-func recapSvc(contestRepo *mocks.ContestRepository, playerRepo *mocks.PlayerRepository, mailer email.Mailer) service.RecapService {
-	return service.NewRecapService(contestRepo, playerRepo, mailer, "https://squares.example.com", 0)
+func (d *recapDeps) service() service.RecapService {
+	return service.NewRecapService(d.repo, d.contests, d.players, d.mailer, "https://squares.example.com")
 }
 
-func TestRecapService_SendsTheSameRecapToEveryPlayer(t *testing.T) {
-	contest := finishedContest(t)
-	contestRepo, playerRepo := recapRepos(t, contest, "max@example.com", "jen@example.com", model.GhostUser)
-
-	var sent []*email.Message
-	mailer := mocks.NewMailer(t)
-	mailer.EXPECT().Send(mock.Anything, mock.Anything).
-		Run(func(_ context.Context, msg *email.Message) { sent = append(sent, msg) }).
-		Return(nil).Twice()
-
-	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
-
-	require.Len(t, sent, 2)
-	assert.Equal(t, "max@example.com", sent[0].To)
-	assert.Equal(t, "jen@example.com", sent[1].To)
-	assert.Equal(t, sent[0].HTML, sent[1].HTML)
-	assert.Equal(t, "Squares: Office Pool final results", sent[0].Subject)
-	for _, want := range []string{"Max M.", "Removed player", "Open square", "Jen K.", ">BUF<", ">24<", ">27<", "/contests/create"} {
-		assert.Contains(t, sent[0].HTML, want)
-	}
-	assert.NotContains(t, sent[0].HTML, "max@example.com")
+func (d *recapDeps) claim(rows ...model.RecapEmail) {
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Once()
+	d.repo.EXPECT().ClaimDue(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(rows, nil).Once()
 }
 
-func TestRecapService_CanceledBeforeKickoff(t *testing.T) {
-	unlocked, err := json.Marshal([]int8{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1})
-	require.NoError(t, err)
-	contest := finishedContest(t)
-	contest.XLabels, contest.YLabels, contest.QuarterResults = unlocked, unlocked, nil
-	contest.Game.Status = model.GameStatusCanceled
-	contestRepo, playerRepo := recapRepos(t, contest, "max@example.com")
-
-	var msg *email.Message
-	mailer := mocks.NewMailer(t)
-	mailer.EXPECT().Send(mock.Anything, mock.Anything).
-		Run(func(_ context.Context, m *email.Message) { msg = m }).Return(nil).Once()
-
-	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
-
-	require.NotNil(t, msg)
-	assert.Equal(t, "Squares: Office Pool game canceled", msg.Subject)
-	assert.Contains(t, msg.Text, "This board has no winners.")
-	assert.NotContains(t, msg.Text, "Winner")
+func row(contestID uuid.UUID, to string, attempts int) model.RecapEmail {
+	return model.RecapEmail{ID: uuid.New(), ContestID: contestID, UserID: to, Attempts: attempts}
 }
 
-func TestRecapService_WithoutAGameUsesTheLastQuarter(t *testing.T) {
-	contest := finishedContest(t)
-	contest.Game = nil
-	contestRepo, playerRepo := recapRepos(t, contest, "max@example.com")
+func TestRecapService_ScheduleQueuesEveryPlayerWithAnEmail(t *testing.T) {
+	d := newRecapDeps(t)
+	contestID := uuid.New()
+	d.players.EXPECT().GetAllByContestID(mock.Anything, contestID).Return([]model.ContestPlayer{
+		{UserID: "max@example.com"}, {UserID: model.GhostUser}, {UserID: "jen@example.com"},
+	}, nil)
+	var queued []model.RecapEmail
+	d.repo.EXPECT().CreateAll(mock.Anything, mock.Anything).Run(func(_ context.Context, rows []model.RecapEmail) { queued = rows }).Return(nil)
 
-	var msg *email.Message
-	mailer := mocks.NewMailer(t)
-	mailer.EXPECT().Send(mock.Anything, mock.Anything).
-		Run(func(_ context.Context, m *email.Message) { msg = m }).Return(nil).Once()
+	require.NoError(t, d.service().Schedule(context.Background(), contestID))
 
-	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
-
-	require.NotNil(t, msg)
-	assert.Contains(t, msg.Text, "Buffalo Bills 24, Kansas City Chiefs 27.")
+	require.Len(t, queued, 2)
+	assert.Equal(t, "max@example.com", queued[0].UserID)
+	assert.Equal(t, contestID, queued[1].ContestID)
 }
 
-func TestRecapService_RetriesTransientFailures(t *testing.T) {
-	contest := finishedContest(t)
-	contestRepo, playerRepo := recapRepos(t, contest, "max@example.com")
+func TestRecapService_ScheduleErrors(t *testing.T) {
+	d := newRecapDeps(t)
+	d.players.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(nil, errors.New("db")).Once()
+	require.Error(t, d.service().Schedule(context.Background(), uuid.New()))
 
-	mailer := mocks.NewMailer(t)
-	mailer.EXPECT().Send(mock.Anything, mock.Anything).Return(errors.New("connection reset")).Twice()
-	mailer.EXPECT().Send(mock.Anything, mock.Anything).Return(nil).Once()
-
-	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
-}
-
-func TestRecapService_GivesUpOnPermanentFailures(t *testing.T) {
-	contest := finishedContest(t)
-	contestRepo, playerRepo := recapRepos(t, contest, "bad@example.com", "max@example.com")
-
-	mailer := mocks.NewMailer(t)
-	mailer.EXPECT().Send(mock.Anything, mock.MatchedBy(func(m *email.Message) bool { return m.To == "bad@example.com" })).
-		Return(&textproto.Error{Code: 550, Msg: "mailbox unavailable"}).Once()
-	mailer.EXPECT().Send(mock.Anything, mock.MatchedBy(func(m *email.Message) bool { return m.To == "max@example.com" })).
-		Return(nil).Once()
-
-	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
-}
-
-func TestRecapService_StopsTheBatchWhenTheMailServerIsUnreachable(t *testing.T) {
-	contest := finishedContest(t)
-	contestRepo, playerRepo := recapRepos(t, contest, "a@example.com", "b@example.com", "c@example.com")
-
-	unreachable := fmt.Errorf("%w: connect to smtp.example.com: refused", email.ErrConnection)
-	mailer := mocks.NewMailer(t)
-	mailer.EXPECT().Send(mock.Anything, mock.MatchedBy(func(m *email.Message) bool { return m.To == "a@example.com" })).
-		Return(unreachable).Times(3)
-
-	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
-}
-
-func TestRecapService_StopsRetryingWhenCanceled(t *testing.T) {
-	contest := finishedContest(t)
-	contestRepo, playerRepo := recapRepos(t, contest, "max@example.com")
-	ctx, cancel := context.WithCancel(context.Background())
-
-	mailer := mocks.NewMailer(t)
-	mailer.EXPECT().Send(mock.Anything, mock.Anything).
-		Run(func(context.Context, *email.Message) { cancel() }).
-		Return(errors.New("timeout")).Once()
-
-	service.NewRecapService(contestRepo, playerRepo, mailer, "https://squares.example.com", time.Hour).Send(ctx, contest.ID)
-}
-
-func TestRecapService_LoadFailuresSendNothing(t *testing.T) {
-	contest := finishedContest(t)
-
-	contestRepo := mocks.NewContestRepository(t)
-	contestRepo.EXPECT().GetByID(mock.Anything, contest.ID).Return(nil, errors.New("db"))
-	recapSvc(contestRepo, mocks.NewPlayerRepository(t), mocks.NewMailer(t)).Send(context.Background(), contest.ID)
-
-	contestRepo = mocks.NewContestRepository(t)
-	contestRepo.EXPECT().GetByID(mock.Anything, contest.ID).Return(contest, nil)
-	playerRepo := mocks.NewPlayerRepository(t)
-	playerRepo.EXPECT().GetAllByContestID(mock.Anything, contest.ID).Return(nil, errors.New("db"))
-	recapSvc(contestRepo, playerRepo, mocks.NewMailer(t)).Send(context.Background(), contest.ID)
+	d.players.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return([]model.ContestPlayer{{UserID: "a@example.com"}}, nil).Once()
+	d.repo.EXPECT().CreateAll(mock.Anything, mock.Anything).Return(errors.New("db"))
+	require.Error(t, d.service().Schedule(context.Background(), uuid.New()))
 }
 
 func TestRecapService_DisabledWithoutAMailer(t *testing.T) {
-	recapSvc(mocks.NewContestRepository(t), mocks.NewPlayerRepository(t), nil).Send(context.Background(), uuid.New())
+	svc := service.NewRecapService(mocks.NewRecapEmailRepository(t), mocks.NewContestRepository(t), mocks.NewPlayerRepository(t), nil, "https://squares.example.com")
+
+	require.NoError(t, svc.Schedule(context.Background(), uuid.New()))
+	require.NoError(t, svc.SendDue(context.Background()))
+}
+
+func TestRecapService_SendsEachContestOverOneBatchAndRecordsEveryOutcome(t *testing.T) {
+	d := newRecapDeps(t)
+	contest := finishedContest(t)
+	sent, unconfirmed := row(contest.ID, "max@example.com", 1), row(contest.ID, "jen@example.com", 1)
+	gone, busy := row(contest.ID, "gone@example.com", 1), row(contest.ID, "busy@example.com", 2)
+	d.claim(sent, unconfirmed, gone, busy)
+	d.contests.EXPECT().GetByID(mock.Anything, contest.ID).Return(contest, nil)
+
+	var batch []*mail.Message
+	d.mailer.EXPECT().SendAll(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, msgs []*mail.Message) { batch = msgs }).
+		Return([]error{nil, fmt.Errorf("%w: reset", mail.ErrMaybeDelivered), &textproto.Error{Code: 550, Msg: "no such mailbox"}, errors.New("timeout")})
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{sent.ID}, model.RecapEmailSent, "", mock.Anything).Return(nil)
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{unconfirmed.ID}, model.RecapEmailUnconfirmed, mock.Anything, mock.Anything).Return(nil)
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{gone.ID}, model.RecapEmailFailed, mock.Anything, mock.Anything).Return(nil)
+	d.repo.EXPECT().Reschedule(mock.Anything, busy.ID, "timeout", mock.MatchedBy(func(next time.Time) bool {
+		return next.After(time.Now().Add(4 * time.Minute))
+	})).Return(nil)
+
+	require.NoError(t, d.service().SendDue(context.Background()))
+
+	require.Len(t, batch, 4)
+	assert.Equal(t, "max@example.com", batch[0].To)
+	assert.Equal(t, email.FeedbackAddress, batch[0].ReplyTo)
+	assert.Equal(t, "Squares: Office Pool final results", batch[0].Subject)
+	assert.Equal(t, batch[0].HTML, batch[3].HTML)
+	for _, want := range []string{"Max M.", "Removed player", "Open square", "Jen K.", ">BUF<", "/contests/create"} {
+		assert.Contains(t, batch[0].HTML, want)
+	}
+	assert.NotContains(t, batch[0].HTML, "max@example.com")
+}
+
+func TestRecapService_GivesUpAfterTheLastAttempt(t *testing.T) {
+	d := newRecapDeps(t)
+	contest := finishedContest(t)
+	last := row(contest.ID, "max@example.com", 5)
+	d.claim(last)
+	d.contests.EXPECT().GetByID(mock.Anything, contest.ID).Return(contest, nil)
+	d.mailer.EXPECT().SendAll(mock.Anything, mock.Anything).Return([]error{errors.New("timeout")})
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{last.ID}, model.RecapEmailFailed, "timeout", mock.Anything).Return(nil)
+
+	require.NoError(t, d.service().SendDue(context.Background()))
+}
+
+func TestRecapService_DeletedContestFailsItsEmails(t *testing.T) {
+	d := newRecapDeps(t)
+	r := row(uuid.New(), "max@example.com", 1)
+	d.claim(r)
+	d.contests.EXPECT().GetByID(mock.Anything, r.ContestID).Return(nil, database.ErrNotFound)
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{r.ID}, model.RecapEmailFailed, "the contest no longer exists", mock.Anything).Return(nil)
+
+	require.NoError(t, d.service().SendDue(context.Background()))
+}
+
+func TestRecapService_LoadFailureRetriesOrGivesUp(t *testing.T) {
+	d := newRecapDeps(t)
+	contestID := uuid.New()
+	early, last := row(contestID, "a@example.com", 1), row(contestID, "b@example.com", 5)
+	d.claim(early, last)
+	d.contests.EXPECT().GetByID(mock.Anything, contestID).Return(nil, errors.New("db down"))
+	d.repo.EXPECT().Reschedule(mock.Anything, early.ID, "db down", mock.Anything).Return(errors.New("still down"))
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{last.ID}, model.RecapEmailFailed, "db down", mock.Anything).Return(errors.New("still down"))
+
+	require.NoError(t, d.service().SendDue(context.Background()))
+}
+
+func TestRecapService_CanceledBeforeNumbersHasNoTable(t *testing.T) {
+	d := newRecapDeps(t)
+	contest := finishedContest(t)
+	contest.XLabels, contest.YLabels, contest.QuarterResults = []byte(`[-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]`), []byte(`[-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]`), nil
+	contest.Game.Status = model.GameStatusCanceled
+	r := row(contest.ID, "max@example.com", 1)
+	d.claim(r)
+	d.contests.EXPECT().GetByID(mock.Anything, contest.ID).Return(contest, nil)
+	var batch []*mail.Message
+	d.mailer.EXPECT().SendAll(mock.Anything, mock.Anything).Run(func(_ context.Context, msgs []*mail.Message) { batch = msgs }).Return([]error{nil})
+	d.repo.EXPECT().Finish(mock.Anything, mock.Anything, model.RecapEmailSent, "", mock.Anything).Return(nil)
+
+	require.NoError(t, d.service().SendDue(context.Background()))
+
+	require.Len(t, batch, 1)
+	assert.Equal(t, "Squares: Office Pool game canceled", batch[0].Subject)
+	assert.Contains(t, batch[0].Text, "This board has no winners.")
+	assert.NotContains(t, batch[0].Text, "Winner")
+}
+
+func TestRecapService_WithoutAGameUsesTheLastQuarter(t *testing.T) {
+	d := newRecapDeps(t)
+	contest := finishedContest(t)
+	contest.Game = nil
+	r := row(contest.ID, "max@example.com", 1)
+	d.claim(r)
+	d.contests.EXPECT().GetByID(mock.Anything, contest.ID).Return(contest, nil)
+	var batch []*mail.Message
+	d.mailer.EXPECT().SendAll(mock.Anything, mock.Anything).Run(func(_ context.Context, msgs []*mail.Message) { batch = msgs }).Return([]error{nil})
+	d.repo.EXPECT().Finish(mock.Anything, mock.Anything, model.RecapEmailSent, "", mock.Anything).Return(nil)
+
+	require.NoError(t, d.service().SendDue(context.Background()))
+
+	assert.Contains(t, batch[0].Text, "Buffalo Bills 24, Kansas City Chiefs 27.")
+}
+
+func TestRecapService_SendDueSkipsStaleEmailsAndSurfacesQueryErrors(t *testing.T) {
+	d := newRecapDeps(t)
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(3, nil).Once()
+	d.repo.EXPECT().ClaimDue(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db")).Once()
+	require.Error(t, d.service().SendDue(context.Background()))
+
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(0, errors.New("db")).Once()
+	require.Error(t, d.service().SendDue(context.Background()))
+}
+
+func TestRecapService_RunSendsUntilCanceled(t *testing.T) {
+	d := newRecapDeps(t)
+	ticked := make(chan struct{}, 4)
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Maybe()
+	d.repo.EXPECT().ClaimDue(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	oldest := time.Now().Add(-time.Minute)
+	d.repo.EXPECT().OldestPending(mock.Anything).Run(func(context.Context) { ticked <- struct{}{} }).Return(&oldest, nil).Once()
+	d.repo.EXPECT().OldestPending(mock.Anything).Run(func(context.Context) { ticked <- struct{}{} }).Return(nil, errors.New("db")).Maybe()
+	d.players.EXPECT().GetAllByContestID(mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	d.repo.EXPECT().CreateAll(mock.Anything, mock.Anything).Return(nil).Maybe()
+
+	svc := d.service()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		svc.Run(ctx)
+		close(done)
+	}()
+
+	<-ticked
+	require.NoError(t, svc.Schedule(context.Background(), uuid.New()))
+	select {
+	case <-ticked:
+	case <-time.After(5 * time.Second):
+		t.Fatal("scheduling did not wake the sender")
+	}
+	cancel()
+	<-done
 }

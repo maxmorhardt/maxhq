@@ -23,37 +23,129 @@ func (_m *RecapService) EXPECT() *RecapService_Expecter {
 	return &RecapService_Expecter{mock: &_m.Mock}
 }
 
-// Send provides a mock function with given fields: ctx, contestID
-func (_m *RecapService) Send(ctx context.Context, contestID uuid.UUID) {
-	_m.Called(ctx, contestID)
+// Run provides a mock function with given fields: ctx
+func (_m *RecapService) Run(ctx context.Context) {
+	_m.Called(ctx)
 }
 
-// RecapService_Send_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Send'
-type RecapService_Send_Call struct {
+// RecapService_Run_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Run'
+type RecapService_Run_Call struct {
 	*mock.Call
 }
 
-// Send is a helper method to define mock.On call
+// Run is a helper method to define mock.On call
 //   - ctx context.Context
-//   - contestID uuid.UUID
-func (_e *RecapService_Expecter) Send(ctx interface{}, contestID interface{}) *RecapService_Send_Call {
-	return &RecapService_Send_Call{Call: _e.mock.On("Send", ctx, contestID)}
+func (_e *RecapService_Expecter) Run(ctx interface{}) *RecapService_Run_Call {
+	return &RecapService_Run_Call{Call: _e.mock.On("Run", ctx)}
 }
 
-func (_c *RecapService_Send_Call) Run(run func(ctx context.Context, contestID uuid.UUID)) *RecapService_Send_Call {
+func (_c *RecapService_Run_Call) Run(run func(ctx context.Context)) *RecapService_Run_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *RecapService_Run_Call) Return() *RecapService_Run_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *RecapService_Run_Call) RunAndReturn(run func(context.Context)) *RecapService_Run_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Schedule provides a mock function with given fields: ctx, contestID
+func (_m *RecapService) Schedule(ctx context.Context, contestID uuid.UUID) error {
+	ret := _m.Called(ctx, contestID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Schedule")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = rf(ctx, contestID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RecapService_Schedule_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Schedule'
+type RecapService_Schedule_Call struct {
+	*mock.Call
+}
+
+// Schedule is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contestID uuid.UUID
+func (_e *RecapService_Expecter) Schedule(ctx interface{}, contestID interface{}) *RecapService_Schedule_Call {
+	return &RecapService_Schedule_Call{Call: _e.mock.On("Schedule", ctx, contestID)}
+}
+
+func (_c *RecapService_Schedule_Call) Run(run func(ctx context.Context, contestID uuid.UUID)) *RecapService_Schedule_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uuid.UUID))
 	})
 	return _c
 }
 
-func (_c *RecapService_Send_Call) Return() *RecapService_Send_Call {
-	_c.Call.Return()
+func (_c *RecapService_Schedule_Call) Return(_a0 error) *RecapService_Schedule_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *RecapService_Send_Call) RunAndReturn(run func(context.Context, uuid.UUID)) *RecapService_Send_Call {
-	_c.Run(run)
+func (_c *RecapService_Schedule_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *RecapService_Schedule_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SendDue provides a mock function with given fields: ctx
+func (_m *RecapService) SendDue(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendDue")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RecapService_SendDue_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendDue'
+type RecapService_SendDue_Call struct {
+	*mock.Call
+}
+
+// SendDue is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *RecapService_Expecter) SendDue(ctx interface{}) *RecapService_SendDue_Call {
+	return &RecapService_SendDue_Call{Call: _e.mock.On("SendDue", ctx)}
+}
+
+func (_c *RecapService_SendDue_Call) Run(run func(ctx context.Context)) *RecapService_SendDue_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *RecapService_SendDue_Call) Return(_a0 error) *RecapService_SendDue_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *RecapService_SendDue_Call) RunAndReturn(run func(context.Context) error) *RecapService_SendDue_Call {
+	_c.Call.Return(run)
 	return _c
 }
 

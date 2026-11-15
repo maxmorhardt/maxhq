@@ -46,13 +46,26 @@ func testConfig() *model.AccountsConfig {
 		Server:   config.ServerConfig{Host: "127.0.0.1"},
 		Internal: config.InternalConfig{Token: "internal"},
 		Contests: model.ContestsConfig{URL: "http://127.0.0.1:1"},
+		SMTP:     config.SMTPConfig{Host: "127.0.0.1", Port: 1, User: "noreply@squares.test"},
+		Contact:  model.ContactConfig{SupportEmail: "support@squares.test"},
 	}
+}
+
+func TestNew_RefusesAnUnusableSender(t *testing.T) {
+	infra, _ := testInfra(t)
+	cfg := testConfig()
+	cfg.SMTP.User = "apikey"
+
+	_, err := New(cfg, infra)
+
+	require.ErrorContains(t, err, "EMAIL_FROM")
 }
 
 func TestNew_WiresProfileAndContactRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	infra, _ := testInfra(t)
-	app := New(testConfig(), infra)
+	app, err := New(testConfig(), infra)
+	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
 	app.Engine.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/users/me", http.NoBody))
@@ -70,7 +83,8 @@ func TestRun_SyncsRevocationsAndStopsWithContext(t *testing.T) {
 	infra, mock := testInfra(t)
 	mock.ExpectQuery(`SELECT email, deleted_at FROM "deleted_accounts"`).
 		WillReturnRows(sqlmock.NewRows([]string{"email", "deleted_at"}).AddRow("gone@b.com", time.Now().Add(-time.Hour)))
-	app := New(testConfig(), infra)
+	app, err := New(testConfig(), infra)
+	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)

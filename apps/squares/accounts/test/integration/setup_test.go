@@ -89,7 +89,8 @@ func run(m *testing.M) int {
 		Streams:   config.StreamsConfig{Retention: time.Hour},
 		Internal:  config.InternalConfig{Token: internalToken},
 		Contests:  model.ContestsConfig{URL: contestsSrv.URL},
-		SMTP:      model.SMTPConfig{Host: "127.0.0.1", Port: 1, User: "noreply@squares.test", SupportEmail: "support@squares.test"},
+		SMTP:      config.SMTPConfig{Host: "127.0.0.1", Port: 1, User: "noreply@squares.test"},
+		Contact:   model.ContactConfig{SupportEmail: "support@squares.test"},
 		Turnstile: model.TurnstileConfig{SecretKey: "unused", BaseURL: "http://127.0.0.1:1"},
 	}
 	defer func() {
@@ -117,7 +118,10 @@ func startReplica(ctx context.Context) (string, *server.Infra, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	app := bootstrap.New(baseCfg, infra)
+	app, err := bootstrap.New(baseCfg, infra)
+	if err != nil {
+		return "", nil, err
+	}
 	app.Start(ctx)
 	srv := httptest.NewServer(app.Engine)
 	stopAll = append(stopAll, func() {

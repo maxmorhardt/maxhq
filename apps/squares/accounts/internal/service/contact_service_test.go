@@ -14,20 +14,21 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/mocks"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewContactService(t *testing.T) {
-	require.NotNil(t, service.NewContactService(nil, &model.SMTPConfig{}, model.TurnstileConfig{}))
+	require.NotNil(t, service.NewContactService(nil, nil, "support@example.com", model.TurnstileConfig{}))
 }
 
 func TestContactService_SubmitContact_TurnstileValidationFails(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), &contactCfg().SMTP, contactCfg().Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", contactCfg().Turnstile)
 
 	err := svc.SubmitContact(ctx, contactReq(), "127.0.0.1")
 
@@ -37,11 +38,6 @@ func TestContactService_SubmitContact_TurnstileValidationFails(t *testing.T) {
 func contactCfg() *model.AccountsConfig {
 	cfg := &model.AccountsConfig{}
 	cfg.Turnstile.SecretKey = "test-secret"
-	cfg.SMTP.Host = "127.0.0.1"
-	cfg.SMTP.Port = 1
-	cfg.SMTP.User = "sender@example.com"
-	cfg.SMTP.Password = "pass"
-	cfg.SMTP.SupportEmail = "support@example.com"
 	return cfg
 }
 
@@ -58,7 +54,7 @@ func contactReq() *model.ContactRequest {
 func TestContactService_SubmitContact_TurnstileAPIReturnsFail(t *testing.T) {
 	cfg := turnstileServer(t, http.StatusOK, `{"success":false,"error-codes":["invalid-input-response"]}`)
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), &cfg.SMTP, cfg.Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -77,18 +73,13 @@ func turnstileServer(t *testing.T, statusCode int, body string) *model.AccountsC
 	cfg := &model.AccountsConfig{}
 	cfg.Turnstile.SecretKey = "test-secret"
 	cfg.Turnstile.BaseURL = ts.URL
-	cfg.SMTP.Host = "127.0.0.1"
-	cfg.SMTP.Port = 1
-	cfg.SMTP.User = "sender@example.com"
-	cfg.SMTP.Password = "pass"
-	cfg.SMTP.SupportEmail = "support@example.com"
 	return cfg
 }
 
 func TestContactService_SubmitContact_TurnstileAPIStatusError(t *testing.T) {
 	cfg := turnstileServer(t, http.StatusInternalServerError, `{}`)
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), &cfg.SMTP, cfg.Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -101,7 +92,7 @@ func TestContactService_SubmitContact_RepoCreateFails(t *testing.T) {
 	repo := mocks.NewContactRepository(t)
 	repo.EXPECT().Create(mock.Anything, mock.Anything).Return(errors.New("db error"))
 
-	svc := service.NewContactService(repo, &cfg.SMTP, cfg.Turnstile)
+	svc := service.NewContactService(repo, mocks.NewClient(t), "support@example.com", cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -121,7 +112,12 @@ func TestContactService_SubmitContact_Success(t *testing.T) {
 		Run(func(_ context.Context, id uuid.UUID) { loaded <- id }).
 		Return(&model.ContactSubmission{ID: saved, Email: "a@x.com"}, nil).Maybe()
 
-	svc := service.NewContactService(repo, &cfg.SMTP, cfg.Turnstile)
+	sent := make(chan *mail.Message, 1)
+	mailer := mocks.NewClient(t)
+	mailer.EXPECT().Send(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, msg *mail.Message) { sent <- msg }).Return(nil).Maybe()
+
+	svc := service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -131,6 +127,14 @@ func TestContactService_SubmitContact_Success(t *testing.T) {
 		assert.Equal(t, saved, id, "the notification is built from the stored submission")
 	case <-time.After(5 * time.Second):
 		t.Fatal("the notification never loaded the submission")
+	}
+	select {
+	case msg := <-sent:
+		assert.Equal(t, "support@example.com", msg.To)
+		assert.Equal(t, "<a@x.com>", msg.ReplyTo)
+		assert.Contains(t, msg.Subject, "Squares contact form:")
+	case <-time.After(5 * time.Second):
+		t.Fatal("the notification was never sent")
 	}
 }
 
@@ -144,12 +148,36 @@ func TestContactService_SubmitContact_NotificationSkipsAMissingSubmission(t *tes
 		Run(func(context.Context, uuid.UUID) { loaded <- struct{}{} }).
 		Return(nil, errors.New("gone")).Maybe()
 
-	require.NoError(t, service.NewContactService(repo, &cfg.SMTP, cfg.Turnstile).
+	require.NoError(t, service.NewContactService(repo, mocks.NewClient(t), "support@example.com", cfg.Turnstile).
 		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
 
 	select {
 	case <-loaded:
 	case <-time.After(5 * time.Second):
 		t.Fatal("the notification never tried to load the submission")
+	}
+}
+
+func TestContactService_SubmitContact_SendFailureIsLoggedAndBadReplyToIsLeftOff(t *testing.T) {
+	cfg := turnstileServer(t, http.StatusOK, `{"success":true}`)
+
+	repo := mocks.NewContactRepository(t)
+	repo.EXPECT().Create(mock.Anything, mock.Anything).Return(nil)
+	repo.EXPECT().GetByID(mock.Anything, mock.Anything).
+		Return(&model.ContactSubmission{Email: "not an address", Subject: "hi"}, nil).Maybe()
+
+	sent := make(chan *mail.Message, 1)
+	mailer := mocks.NewClient(t)
+	mailer.EXPECT().Send(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, msg *mail.Message) { sent <- msg }).Return(errors.New("smtp down")).Maybe()
+
+	require.NoError(t, service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile).
+		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
+
+	select {
+	case msg := <-sent:
+		assert.Empty(t, msg.ReplyTo)
+	case <-time.After(5 * time.Second):
+		t.Fatal("the notification was never attempted")
 	}
 }

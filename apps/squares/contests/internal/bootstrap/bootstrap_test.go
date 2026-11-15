@@ -49,7 +49,8 @@ func testConfig() *model.ContestsConfig {
 
 func TestNew_WiresRoutesAndGuards(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	app := New(testConfig(), testInfra(t))
+	app, err := New(testConfig(), testInfra(t))
+	require.NoError(t, err)
 
 	routes := map[string]bool{}
 	for _, r := range app.Engine.Routes() {
@@ -87,7 +88,8 @@ func TestNew_WiresRoutesAndGuards(t *testing.T) {
 
 func TestRun_StartsConsumersAndStopsWithContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	app := New(testConfig(), testInfra(t))
+	app, err := New(testConfig(), testInfra(t))
+	require.NoError(t, err)
 	assert.Len(t, app.consumers, 2, "games and users streams")
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -102,6 +104,22 @@ func TestRun_StartsConsumersAndStopsWithContext(t *testing.T) {
 	case <-time.After(15 * time.Second):
 		t.Fatal("contests service did not stop")
 	}
+}
+
+func TestNew_EmailNeedsValidSMTPSettings(t *testing.T) {
+	cfg := testConfig()
+	cfg.Email.Enabled = true
+
+	_, err := New(cfg, testInfra(t))
+	require.ErrorContains(t, err, "SMTP_HOST")
+
+	cfg.Email.SMTP = config.SMTPConfig{Host: "smtp.example.com", Port: 587, User: "apikey", Password: "x", From: "Squares <recaps@example.com>"}
+	app, err := New(cfg, testInfra(t))
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	app.Start(ctx)
 }
 
 func TestConnect_FailsWithoutDatabase(t *testing.T) {
