@@ -1727,6 +1727,28 @@
           "legendFormat": "invite links reset",
           "range": true,
           "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(recap_emails_total{cluster=\"$cluster\",result=\"sent\"}[$__interval]))",
+          "instant": false,
+          "legendFormat": "recap emails sent",
+          "range": true,
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(recap_emails_total{cluster=\"$cluster\",result=\"failed\"}[$__interval]))",
+          "instant": false,
+          "legendFormat": "recap emails failed",
+          "range": true,
+          "refId": "I"
         }
       ],
       "title": "Activity",
