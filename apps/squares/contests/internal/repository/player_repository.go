@@ -15,7 +15,7 @@ type PlayerRepository interface {
 	GetByContestAndUser(ctx context.Context, contestID uuid.UUID, userID string) (*model.ContestPlayer, error)
 	GetAllByContestID(ctx context.Context, contestID uuid.UUID) ([]model.ContestPlayer, error)
 	SetMaxSquares(ctx context.Context, contestID uuid.UUID, ids []uuid.UUID, maxSquares int, at time.Time) ([]uuid.UUID, error)
-	Create(ctx context.Context, player *model.ContestPlayer) error
+	Create(ctx context.Context, player *model.ContestPlayer) (bool, error)
 	Update(ctx context.Context, player *model.ContestPlayer) error
 	Delete(ctx context.Context, contestID uuid.UUID, userID string) error
 }
@@ -69,8 +69,11 @@ func (r *playerRepository) SetMaxSquares(ctx context.Context, contestID uuid.UUI
 	return updatedIDs, nil
 }
 
-func (r *playerRepository) Create(ctx context.Context, player *model.ContestPlayer) error {
-	return database.TranslateError(database.Conn(ctx, r.db).Create(player).Error)
+func (r *playerRepository) Create(ctx context.Context, player *model.ContestPlayer) (bool, error) {
+	result := database.Conn(ctx, r.db).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "contest_id"}, {Name: "user_id"}}, DoNothing: true}).
+		Create(player)
+	return result.RowsAffected > 0, database.TranslateError(result.Error)
 }
 
 func (r *playerRepository) Update(ctx context.Context, player *model.ContestPlayer) error {

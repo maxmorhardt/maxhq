@@ -83,11 +83,27 @@ func TestPlayerRepository_Create(t *testing.T) {
 	repo := NewPlayerRepository(gdb)
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`INSERT INTO "contest_players"`).WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`INSERT INTO "contest_players" .* ON CONFLICT \("contest_id","user_id"\) DO NOTHING`).WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
 	p := &model.ContestPlayer{ContestID: uuid.New(), UserID: "u1", Role: model.PlayerRolePlayer}
-	require.NoError(t, repo.Create(context.Background(), p))
+	created, err := repo.Create(context.Background(), p)
+	require.NoError(t, err)
+	assert.True(t, created)
 	assert.NotEqual(t, uuid.Nil, p.ID)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestPlayerRepository_Create_AlreadyAPlayer(t *testing.T) {
+	gdb, mock := newMockDB(t)
+	repo := NewPlayerRepository(gdb)
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`INSERT INTO "contest_players"`).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+
+	created, err := repo.Create(context.Background(), &model.ContestPlayer{ContestID: uuid.New(), UserID: "u1"})
+	require.NoError(t, err)
+	assert.False(t, created)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
