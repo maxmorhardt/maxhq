@@ -69,8 +69,18 @@ func (r *playerRepository) SetMaxSquares(ctx context.Context, contestID uuid.UUI
 	return updatedIDs, nil
 }
 
+// a duplicate is skipped rather than raised so GORM doesn't log it as a failed query
 func (r *playerRepository) Create(ctx context.Context, player *model.ContestPlayer) error {
-	return database.TranslateError(database.Conn(ctx, r.db).Create(player).Error)
+	result := database.Conn(ctx, r.db).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "contest_id"}, {Name: "user_id"}}, DoNothing: true}).
+		Create(player)
+	if result.Error != nil {
+		return database.TranslateError(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return database.ErrDuplicate
+	}
+	return nil
 }
 
 func (r *playerRepository) Update(ctx context.Context, player *model.ContestPlayer) error {

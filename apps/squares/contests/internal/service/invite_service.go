@@ -166,7 +166,7 @@ func (s *inviteService) Join(ctx context.Context, token, user, displayName strin
 	if err != nil {
 		switch {
 		case errors.Is(err, database.ErrDuplicate):
-			log.Warn("user already a player", "contest_id", player.ContestID, "user", user)
+			log.Info("user already a player", "contest_id", player.ContestID, "user", user)
 			return nil, errs.ErrAlreadyPlayer
 		case errors.Is(err, errs.ErrInviteNotFound), errors.Is(err, errs.ErrContestFinalized),
 			errors.Is(err, errs.ErrBannedFromContest), errors.Is(err, errs.ErrDatabaseUnavailable):
