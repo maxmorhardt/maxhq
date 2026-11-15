@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.8.0...maxhq/1.9.0) (2026-11-15)
+
+
+### Features
+
+* **squares-contests:** email every player a recap when a contest finishes ([#247](https://github.com/maxmorhardt/maxhq/issues/247)) ([841deda](https://github.com/maxmorhardt/maxhq/commit/841dedaf9752b1708521d1be7b92d71e454c7be2))
+
 ## [1.8.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.7.1...maxhq/1.8.0) (2026-11-15)
 
 

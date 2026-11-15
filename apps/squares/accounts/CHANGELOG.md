@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.5.6...squares-accounts/1.6.0) (2026-11-15)
+
+
+### Features
+
+* **squares-contests:** email every player a recap when a contest finishes ([#247](https://github.com/maxmorhardt/maxhq/issues/247)) ([841deda](https://github.com/maxmorhardt/maxhq/commit/841dedaf9752b1708521d1be7b92d71e454c7be2))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.2.5 ([#249](https://github.com/maxmorhardt/maxhq/issues/249)) ([de6d8af](https://github.com/maxmorhardt/maxhq/commit/de6d8af0c37264f23b7e151f2490f4ec332e95cc))
+
 ## [1.5.6](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.5.5...squares-accounts/1.5.6) (2026-11-15)
 
 

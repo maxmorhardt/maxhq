@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests-chart/2.4.0...squares-contests-chart/2.5.0) (2026-11-15)
+
+
+### Features
+
+* **squares-contests:** email every player a recap when a contest finishes ([#247](https://github.com/maxmorhardt/maxhq/issues/247)) ([841deda](https://github.com/maxmorhardt/maxhq/commit/841dedaf9752b1708521d1be7b92d71e454c7be2))
+
 ## [2.4.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests-chart/2.3.0...squares-contests-chart/2.4.0) (2026-11-05)
 
 
