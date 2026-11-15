@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.13.0...squares/2.13.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **squares:** format the landing demo times in en-US so they hydrate ([#255](https://github.com/maxmorhardt/maxhq/issues/255)) ([8016538](https://github.com/maxmorhardt/maxhq/commit/80165388997d4730adef78bb5425486c213aec43))
+
 ## [2.13.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.12.0...squares/2.13.0) (2026-11-15)
 
 
