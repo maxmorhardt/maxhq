@@ -24,14 +24,21 @@ func contestSvc(repo *mocks.ContestRepository, pSvc *mocks.PlayerService) servic
 
 func anyRecaps() *mocks.RecapService {
 	m := &mocks.RecapService{}
-	m.On("Schedule", mock.Anything, mock.Anything).Return(nil).Maybe()
+	m.On("Send", mock.Anything, mock.Anything).Maybe()
 	return m
 }
 
-func expectRecap(t *testing.T, contestID uuid.UUID) *mocks.RecapService {
+func expectRecap(t *testing.T, contestID uuid.UUID) (recaps *mocks.RecapService, wait func()) {
+	sent := make(chan struct{})
 	m := mocks.NewRecapService(t)
-	m.EXPECT().Schedule(mock.Anything, contestID).Return(nil).Once()
-	return m
+	m.EXPECT().Send(mock.Anything, contestID).Run(func(context.Context, uuid.UUID) { close(sent) }).Once()
+	return m, func() {
+		select {
+		case <-sent:
+		case <-time.After(time.Second):
+			t.Fatal("the recap email was not sent")
+		}
+	}
 }
 
 func passTx() *mocks.Transactor {
@@ -290,13 +297,14 @@ func TestApplyQuarterResult_FinishPublishesContestUpdate(t *testing.T) {
 	quarter := pub.EXPECT().PublishQuarterResult(mock.Anything, contest.ID, "system", mock.Anything).Return(nil).Call
 	pub.EXPECT().PublishContestUpdate(mock.Anything, contest.ID, "system", contest).Return(nil).NotBefore(quarter)
 
-	recaps := expectRecap(t, contest.ID)
+	recaps, recapSent := expectRecap(t, contest.ID)
 
 	_, err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), pub, mocks.NewPlayerService(t), recaps).
 		ApplyQuarterResult(context.Background(), contest, 4, 17, 23)
 
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
+	recapSent()
 }
 
 func TestApplyQuarterResult_InvalidQuarter(t *testing.T) {
@@ -332,7 +340,7 @@ func TestFinalizeFromScores_RecordsEveryQuarter(t *testing.T) {
 			persisted = results
 		}).Return(nil)
 
-	recaps := expectRecap(t, contest.ID)
+	recaps, recapSent := expectRecap(t, contest.ID)
 
 	err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), mocks.NewPlayerService(t), recaps).
 		FinalizeFromScores(context.Background(), contest, []model.GameScore{
@@ -341,6 +349,7 @@ func TestFinalizeFromScores_RecordsEveryQuarter(t *testing.T) {
 		})
 
 	require.NoError(t, err)
+	recapSent()
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
 	assert.Equal(t, "system", contest.UpdatedBy)
 	require.Len(t, persisted, 2)
@@ -397,28 +406,40 @@ func TestFinishCanceled_KeepsTheBoardAsItStands(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, contest).Return(nil)
 
-	recaps := expectRecap(t, contest.ID)
+	recaps, recapSent := expectRecap(t, contest.ID)
 
 	err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), mocks.NewPlayerService(t), recaps).
 		FinishCanceled(context.Background(), contest)
 
 	require.NoError(t, err)
+	recapSent()
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
 	assert.Equal(t, "system", contest.UpdatedBy)
 	assert.Equal(t, labels, contest.XLabels)
 }
 
-func TestFinishCanceled_RecapSchedulingFailureRollsBack(t *testing.T) {
+type txMarker struct{}
+
+func TestFinishCanceled_RecapDoesNotReuseTheTransactionContext(t *testing.T) {
 	contest := &model.Contest{ID: uuid.New(), Status: model.ContestStatusQ2}
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, contest).Return(nil)
+
+	sent := make(chan context.Context, 1)
 	recaps := mocks.NewRecapService(t)
-	recaps.EXPECT().Schedule(mock.Anything, contest.ID).Return(errors.New("db"))
+	recaps.EXPECT().Send(mock.Anything, contest.ID).Run(func(ctx context.Context, _ uuid.UUID) { sent <- ctx }).Once()
 
+	ctx := context.WithValue(context.Background(), txMarker{}, "tx")
 	err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), mocks.NewPlayerService(t), recaps).
-		FinishCanceled(context.Background(), contest)
+		FinishCanceled(ctx, contest)
+	require.NoError(t, err)
 
-	require.Error(t, err)
+	select {
+	case recapCtx := <-sent:
+		assert.Nil(t, recapCtx.Value(txMarker{}))
+	case <-time.After(time.Second):
+		t.Fatal("the recap email was not sent")
+	}
 }
 
 func TestFinishCanceled_UpdateFails(t *testing.T) {

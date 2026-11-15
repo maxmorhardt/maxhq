@@ -33,6 +33,8 @@ const (
 	outboxLockKey int64 = 910101
 
 	writeTimeout = 30 * time.Second
+
+	recapRetryDelay = 10 * time.Second
 )
 
 type App struct {
@@ -40,7 +42,6 @@ type App struct {
 	cfg       *model.ContestsConfig
 	infra     *server.Infra
 	relay     *streams.Relay
-	recaps    service.RecapService
 	consumers []*streams.Consumer
 }
 
@@ -78,7 +79,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) (*App, error) {
 		}
 		mailer = m
 	}
-	recapService := service.NewRecapService(repository.NewRecapEmailRepository(db), contestRepo, playerRepo, mailer, cfg.Email.WebURL)
+	recapService := service.NewRecapService(contestRepo, playerRepo, mailer, cfg.Email.WebURL, recapRetryDelay)
 	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, playerService, recapService)
 	squareService := service.NewSquareService(squareRepo, contestRepo, playerRepo, userRepo, tx, events, playerService)
 	inviteService := service.NewInviteService(contestRepo, playerRepo, banRepo, userRepo, playerService, tx, events)
@@ -116,7 +117,6 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) (*App, error) {
 		cfg:    cfg,
 		infra:  infra,
 		relay:  relay,
-		recaps: recapService,
 		consumers: []*streams.Consumer{
 			streams.NewConsumer(db, infra.Redis, consumer.GamesSpec, consumer.GameHandler(gameSyncService)),
 			streams.NewConsumer(db, infra.Redis, consumer.UsersSpec, consumer.UserHandler(userSyncService)),
@@ -126,7 +126,6 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) (*App, error) {
 
 func (a *App) Start(ctx context.Context) {
 	go a.relay.Run(ctx)
-	go a.recaps.Run(ctx)
 
 	for _, c := range a.consumers {
 		go c.Run(ctx)

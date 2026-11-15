@@ -15,7 +15,6 @@ packages:
       Outbox:
   github.com/maxmorhardt/maxhq/apps/squares/contests/internal/repository:
     interfaces:
-      RecapEmailRepository:
       ContestRepository:
       FeedRepository:
       PlayerRepository:

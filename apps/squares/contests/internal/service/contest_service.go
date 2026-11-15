@@ -199,9 +199,7 @@ func (s *contestService) ApplyQuarterResult(ctx context.Context, contest *model.
 		if nextStatus != model.ContestStatusFinished {
 			return nil
 		}
-		if err := s.recaps.Schedule(ctx, contest.ID); err != nil {
-			return err
-		}
+		s.sendRecapAfterCommit(ctx, contest.ID)
 		return s.events.PublishContestUpdate(ctx, contest.ID, systemUser, contest)
 	}); err != nil {
 		log.Error("failed to apply quarter result", "contest_id", contest.ID, "quarter", quarter, "error", err)
@@ -241,9 +239,7 @@ func (s *contestService) FinalizeFromScores(ctx context.Context, contest *model.
 		if applyErr := s.applyQuarterResults(ctx, contest, results, systemUser); applyErr != nil {
 			return applyErr
 		}
-		if scheduleErr := s.recaps.Schedule(ctx, contest.ID); scheduleErr != nil {
-			return scheduleErr
-		}
+		s.sendRecapAfterCommit(ctx, contest.ID)
 		return s.events.PublishContestUpdate(ctx, contest.ID, systemUser, contest)
 	})
 	if err != nil {
@@ -267,9 +263,7 @@ func (s *contestService) FinishCanceled(ctx context.Context, contest *model.Cont
 		if err := s.repo.Update(ctx, contest); err != nil {
 			return err
 		}
-		if err := s.recaps.Schedule(ctx, contest.ID); err != nil {
-			return err
-		}
+		s.sendRecapAfterCommit(ctx, contest.ID)
 		return s.events.PublishContestUpdate(ctx, contest.ID, systemUser, contest)
 	})
 	if err != nil {
@@ -279,6 +273,11 @@ func (s *contestService) FinishCanceled(ctx context.Context, contest *model.Cont
 
 	log.Info("finished contest for canceled game", "contest_id", contest.ID)
 	return nil
+}
+
+func (s *contestService) sendRecapAfterCommit(ctx context.Context, contestID uuid.UUID) {
+	recapCtx := logging.NewContext(context.Background(), logging.FromContext(ctx))
+	database.AfterCommit(ctx, func() { go s.recaps.Send(recapCtx, contestID) })
 }
 
 func (s *contestService) applyQuarterResults(ctx context.Context, contest *model.Contest, results []model.QuarterResult, user string) error {
