@@ -8,7 +8,6 @@
 {{- range .Quarters}}
 {{printf "%-8s" .Label}} {{printf "%-4d" .AwayScore}} {{printf "%-4d" .HomeScore}} {{.Winner}}
 {{- end}}
-{{printf "%-8s" .Status}} {{printf "%-4d" .AwayScore}} {{.HomeScore}}
 {{- end}}
 
 Start your next contest: {{.CreateURL}}

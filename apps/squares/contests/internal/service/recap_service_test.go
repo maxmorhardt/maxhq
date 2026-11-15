@@ -96,7 +96,7 @@ func TestRecapService_CanceledBeforeKickoff(t *testing.T) {
 
 	require.NotNil(t, msg)
 	assert.Equal(t, "Squares: Office Pool game canceled", msg.Subject)
-	assert.Contains(t, msg.Text, "closed with no winners")
+	assert.Contains(t, msg.Text, "This board has no winners.")
 	assert.NotContains(t, msg.Text, "Winner")
 }
 

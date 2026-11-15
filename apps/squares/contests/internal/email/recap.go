@@ -123,7 +123,7 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 	results := make([]string, 0, len(recap.Quarters))
 	for _, q := range recap.Quarters {
 		qv := quarterView{
-			Label:     fmt.Sprintf("Q%d", q.Number),
+			Label:     quarterLabel(q.Number),
 			AwayScore: q.AwayScore,
 			HomeScore: q.HomeScore,
 			Winner:    q.Winner,
@@ -143,12 +143,12 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 		view.Status = "Canceled"
 		view.Subject = "Squares: " + recap.ContestName + " game canceled"
 		view.Headline = "Game canceled"
-		view.Subhead = fmt.Sprintf("%s was canceled before %s drew its numbers, so it closed with no winners.", matchup, recap.ContestName)
+		view.Subhead = fmt.Sprintf("%s was canceled before the numbers were drawn. This board has no winners.", matchup)
 	case recap.Canceled:
 		view.Status = "Canceled"
 		view.Subject = "Squares: " + recap.ContestName + " game canceled"
 		view.Headline = "Game canceled"
-		view.Subhead = fmt.Sprintf("%s was canceled, so the board finished where it stood. Played quarters keep their winners.", matchup)
+		view.Subhead = fmt.Sprintf("%s was canceled during the game. Quarters that were played keep their winners.", matchup)
 	default:
 		view.Subject = "Squares: " + recap.ContestName + " final results"
 		view.Headline = "Final results"
@@ -170,6 +170,13 @@ func teamLabel(abbr, name string) string {
 		return abbr
 	}
 	return name
+}
+
+func quarterLabel(n int) string {
+	if n == 4 {
+		return "Final"
+	}
+	return fmt.Sprintf("Q%d", n)
 }
 
 const (

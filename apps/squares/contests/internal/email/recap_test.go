@@ -35,7 +35,7 @@ func TestRenderRecap_Final(t *testing.T) {
 	for _, want := range []string{
 		"Final results",
 		"Buffalo Bills 24, Kansas City Chiefs 27. Here&#39;s the winning square for each quarter.",
-		"Final: BUF 24, KC 27. Q1 Max M. · Q2 Open square · Q4 Jen K.",
+		"Final: BUF 24, KC 27. Q1 Max M. · Q2 Open square · Final Jen K.",
 		"<!--[if mso]>",
 		"https://squares.example.com/contests/create?utm_source=recap&amp;utm_medium=email",
 		"https://squares.example.com/contests/6f2c8c1e-6d2f-4a9e-9c6b-3f0f6f7a1b2c?utm_source=recap&amp;utm_medium=email",
@@ -49,7 +49,7 @@ func TestRenderRecap_Final(t *testing.T) {
 		"         BUF  KC   Winner",
 		"Q1       7    3    Max M.",
 		"Q2       14   10   Open square",
-		"Final    24   27",
+		"Final    24   27   Jen K.",
 		"Start your next contest: https://squares.example.com/contests/create?utm_source=recap&utm_medium=email",
 		"Feedback or ideas? Email support@maxhq.io.",
 	} {
@@ -75,13 +75,13 @@ func TestRenderRecap_Canceled(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "Squares: Office Pool game canceled", content.Subject)
-	assert.Contains(t, content.HTML, "Played quarters keep their winners.")
-	assert.Contains(t, content.Text, "Canceled 24   27")
+	assert.Contains(t, content.HTML, "Buffalo Bills at Kansas City Chiefs was canceled during the game. Quarters that were played keep their winners.")
+	assert.NotContains(t, content.Text, "Canceled 24")
 
 	recap.Started, recap.Quarters = false, nil
 	content, err = RenderRecap("https://squares.example.com", recap)
 	require.NoError(t, err)
-	assert.Contains(t, content.HTML, "before Office Pool drew its numbers, so it closed with no winners.")
+	assert.Contains(t, content.HTML, "Buffalo Bills at Kansas City Chiefs was canceled before the numbers were drawn. This board has no winners.")
 	assert.NotContains(t, content.HTML, ">Winner<")
 }
 
@@ -97,6 +97,8 @@ func TestRenderRecap_RemovedPlayersAreMutedLikeOpenSquares(t *testing.T) {
 }
 
 func TestLabels(t *testing.T) {
+	assert.Equal(t, "Q3", quarterLabel(3))
+	assert.Equal(t, "Final", quarterLabel(4))
 	assert.Equal(t, "Buffalo Bills", teamLabel("", "Buffalo Bills"))
 	assert.Equal(t, "not a url", hostOf("not a url"))
 }
