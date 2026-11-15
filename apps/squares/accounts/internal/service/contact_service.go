@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	netmail "net/mail"
+	"net/textproto"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -35,13 +36,13 @@ type contactService struct {
 	retryDelay   time.Duration
 }
 
-func NewContactService(repo repository.ContactRepository, mailer mail.Client, supportEmail string, turnstileCfg model.TurnstileConfig) ContactService {
+func NewContactService(repo repository.ContactRepository, mailer mail.Client, supportEmail string, turnstileCfg model.TurnstileConfig, retryDelay time.Duration) ContactService {
 	return &contactService{
 		repo:         repo,
 		mailer:       mailer,
 		supportEmail: supportEmail,
 		turnstile:    turnstileCfg,
-		retryDelay:   5 * time.Second,
+		retryDelay:   retryDelay,
 	}
 }
 
@@ -108,7 +109,7 @@ func (s *contactService) sendEmailNotification(ctx context.Context, submission *
 
 	for attempt := 1; ; attempt++ {
 		err = s.mailer.Send(ctx, msg)
-		if err == nil || !mail.Retryable(err) || attempt == notifyAttempts {
+		if err == nil || !worthRetrying(err) || attempt == notifyAttempts {
 			break
 		}
 		select {
@@ -121,6 +122,14 @@ func (s *contactService) sendEmailNotification(ctx context.Context, submission *
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
 	return nil
+}
+
+func worthRetrying(err error) bool {
+	if !mail.Retryable(err) || errors.Is(err, mail.ErrNoTLS) {
+		return false
+	}
+	var reply *textproto.Error
+	return !errors.As(err, &reply) || reply.Code < 500
 }
 
 func (s *contactService) validateTurnstile(ctx context.Context, token, remoteIP string) error {

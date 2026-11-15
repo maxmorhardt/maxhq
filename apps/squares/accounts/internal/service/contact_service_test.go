@@ -22,14 +22,14 @@ import (
 )
 
 func TestNewContactService(t *testing.T) {
-	require.NotNil(t, service.NewContactService(nil, nil, "support@example.com", model.TurnstileConfig{}))
+	require.NotNil(t, service.NewContactService(nil, nil, "support@example.com", model.TurnstileConfig{}, 0))
 }
 
 func TestContactService_SubmitContact_TurnstileValidationFails(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", contactCfg().Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", contactCfg().Turnstile, 0)
 
 	err := svc.SubmitContact(ctx, contactReq(), "127.0.0.1")
 
@@ -55,7 +55,7 @@ func contactReq() *model.ContactRequest {
 func TestContactService_SubmitContact_TurnstileAPIReturnsFail(t *testing.T) {
 	cfg := turnstileServer(t, http.StatusOK, `{"success":false,"error-codes":["invalid-input-response"]}`)
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", cfg.Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", cfg.Turnstile, 0)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -80,7 +80,7 @@ func turnstileServer(t *testing.T, statusCode int, body string) *model.AccountsC
 func TestContactService_SubmitContact_TurnstileAPIStatusError(t *testing.T) {
 	cfg := turnstileServer(t, http.StatusInternalServerError, `{}`)
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", cfg.Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), mocks.NewClient(t), "support@example.com", cfg.Turnstile, 0)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -93,7 +93,7 @@ func TestContactService_SubmitContact_RepoCreateFails(t *testing.T) {
 	repo := mocks.NewContactRepository(t)
 	repo.EXPECT().Create(mock.Anything, mock.Anything).Return(errors.New("db error"))
 
-	svc := service.NewContactService(repo, mocks.NewClient(t), "support@example.com", cfg.Turnstile)
+	svc := service.NewContactService(repo, mocks.NewClient(t), "support@example.com", cfg.Turnstile, 0)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -118,7 +118,7 @@ func TestContactService_SubmitContact_Success(t *testing.T) {
 	mailer.EXPECT().Send(mock.Anything, mock.Anything).
 		Run(func(_ context.Context, msg *mail.Message) { sent <- msg }).Return(nil).Maybe()
 
-	svc := service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile)
+	svc := service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile, 0)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -149,7 +149,7 @@ func TestContactService_SubmitContact_NotificationSkipsAMissingSubmission(t *tes
 		Run(func(context.Context, uuid.UUID) { loaded <- struct{}{} }).
 		Return(nil, errors.New("gone")).Maybe()
 
-	require.NoError(t, service.NewContactService(repo, mocks.NewClient(t), "support@example.com", cfg.Turnstile).
+	require.NoError(t, service.NewContactService(repo, mocks.NewClient(t), "support@example.com", cfg.Turnstile, 0).
 		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
 
 	select {
@@ -172,7 +172,7 @@ func TestContactService_SubmitContact_SendFailureIsLoggedAndBadReplyToIsLeftOff(
 	mailer.EXPECT().Send(mock.Anything, mock.Anything).
 		Run(func(_ context.Context, msg *mail.Message) { sent <- msg }).Return(&textproto.Error{Code: 550, Msg: "rejected"}).Maybe()
 
-	require.NoError(t, service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile).
+	require.NoError(t, service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile, 0).
 		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
 
 	select {
@@ -196,12 +196,12 @@ func TestContactService_SubmitContact_RetriesATemporaryFailure(t *testing.T) {
 	mailer.EXPECT().Send(mock.Anything, mock.Anything).Return(errors.New("timeout")).Once()
 	mailer.EXPECT().Send(mock.Anything, mock.Anything).Run(func(context.Context, *mail.Message) { close(delivered) }).Return(nil).Once()
 
-	require.NoError(t, service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile).
+	require.NoError(t, service.NewContactService(repo, mailer, "support@example.com", cfg.Turnstile, 0).
 		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
 
 	select {
 	case <-delivered:
-	case <-time.After(15 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("the notification was not retried")
 	}
 }

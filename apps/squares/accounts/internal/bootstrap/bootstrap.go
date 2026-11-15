@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	netmail "net/mail"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,8 @@ const (
 	KeyPrefix           = "squares"
 	outboxLockKey int64 = 910103
 	writeTimeout        = 30 * time.Second
+
+	contactRetryDelay = 5 * time.Second
 )
 
 type App struct {
@@ -65,11 +68,14 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) (*App, error) {
 	if cfg.SMTP.User == "" || cfg.SMTP.Password == "" {
 		return nil, errors.New("email: SMTP_USER and SMTP_PASSWORD are required")
 	}
+	if _, err := netmail.ParseAddress(cfg.Contact.SupportEmail); err != nil {
+		return nil, fmt.Errorf("email: SUPPORT_EMAIL must be an email address: %w", err)
+	}
 	mailer, err := mail.New(&cfg.SMTP)
 	if err != nil {
 		return nil, fmt.Errorf("email: %w", err)
 	}
-	contactService := service.NewContactService(repository.NewContactRepository(db), mailer, cfg.Contact.SupportEmail, cfg.Turnstile)
+	contactService := service.NewContactService(repository.NewContactRepository(db), mailer, cfg.Contact.SupportEmail, cfg.Turnstile, contactRetryDelay)
 
 	engine := server.NewEngine(&cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{

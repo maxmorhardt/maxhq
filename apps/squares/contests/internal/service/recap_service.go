@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net/textproto"
 	"strings"
 	"time"
 
@@ -101,7 +103,7 @@ func (s *recapService) sendRound(ctx context.Context, log *slog.Logger, attempt 
 			roundSent++
 		case mail.MaybeDelivered(sendErr):
 			roundUnconfirmed++
-		case mail.Retryable(sendErr) && attempt < recapAttempts:
+		case worthRetrying(sendErr) && attempt < recapAttempts:
 			retry = append(retry, pending[i])
 		default:
 			roundFailed++
@@ -116,7 +118,18 @@ func (s *recapService) sendRound(ctx context.Context, log *slog.Logger, attempt 
 	if roundFailed > 0 {
 		log.Error("failed to send recap emails", "count", roundFailed, "attempt", attempt, "error", lastErr)
 	}
+	if roundUnconfirmed > 0 {
+		log.Warn("recap emails may not have arrived", "count", roundUnconfirmed, "attempt", attempt)
+	}
 	return retry
+}
+
+func worthRetrying(err error) bool {
+	if !mail.Retryable(err) || errors.Is(err, mail.ErrNoTLS) {
+		return false
+	}
+	var reply *textproto.Error
+	return !errors.As(err, &reply) || reply.Code < 500
 }
 
 func wait(ctx context.Context, d time.Duration) bool {

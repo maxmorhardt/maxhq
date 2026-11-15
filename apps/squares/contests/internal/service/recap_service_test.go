@@ -80,7 +80,7 @@ func TestRecapService_SendsTheSameRecapToEveryPlayerInOneBatch(t *testing.T) {
 	assert.Equal(t, batch[0].HTML, batch[1].HTML)
 	assert.Equal(t, email.FeedbackAddress, batch[0].ReplyTo)
 	assert.Equal(t, "Squares: Office Pool final results", batch[0].Subject)
-	for _, want := range []string{"Max M.", "Removed player", "Open square", "Jen K.", ">BUF<", "/contests/create"} {
+	for _, want := range []string{"Max M.", "Removed player", "Open square", "Jen K.", ">BUF<", ">24<", ">27<", ">17<", "/contests/create"} {
 		assert.Contains(t, batch[0].HTML, want)
 	}
 	assert.NotContains(t, batch[0].HTML, "max@example.com")
@@ -101,6 +101,35 @@ func TestRecapService_RetriesOnlyWhatIsSafeToRetry(t *testing.T) {
 	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
 
 	assert.Equal(t, []string{"busy@example.com"}, recipients(retried))
+}
+
+func TestRecapService_DoesNotRetryARejectedLogin(t *testing.T) {
+	contest := finishedContest(t)
+	contestRepo, playerRepo := recapRepos(t, contest, "a@example.com", "b@example.com")
+
+	rejected := fmt.Errorf("%w: auth: %w", mail.ErrSession, &textproto.Error{Code: 535, Msg: "bad credentials"})
+	mailer := mocks.NewClient(t)
+	mailer.EXPECT().SendAll(mock.Anything, mock.Anything).Return([]error{rejected, rejected}).Once()
+
+	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
+}
+
+func TestRecapService_RetriesABusyServerAndNotAMissingTLS(t *testing.T) {
+	contest := finishedContest(t)
+	contestRepo, playerRepo := recapRepos(t, contest, "a@example.com", "b@example.com")
+
+	busy := fmt.Errorf("%w: ehlo: %w", mail.ErrSession, &textproto.Error{Code: 421, Msg: "busy"})
+	noTLS := fmt.Errorf("%w: %w", mail.ErrSession, mail.ErrNoTLS)
+	var retried []*mail.Message
+	mailer := mocks.NewClient(t)
+	mailer.EXPECT().SendAll(mock.Anything, mock.Anything).Return([]error{busy, noTLS}).Once()
+	mailer.EXPECT().SendAll(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, msgs []*mail.Message) { retried = msgs }).
+		Return([]error{nil}).Once()
+
+	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
+
+	assert.Equal(t, []string{"a@example.com"}, recipients(retried))
 }
 
 func TestRecapService_GivesUpAfterTheLastAttempt(t *testing.T) {

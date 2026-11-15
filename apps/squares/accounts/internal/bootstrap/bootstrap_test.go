@@ -62,6 +62,11 @@ func TestNew_RefusesUnusableMailSettings(t *testing.T) {
 	cfg.SMTP.Password = ""
 	_, err = New(cfg, infra)
 	require.ErrorContains(t, err, "SMTP_PASSWORD")
+
+	cfg = testConfig()
+	cfg.Contact.SupportEmail = "support\r"
+	_, err = New(cfg, infra)
+	require.ErrorContains(t, err, "SUPPORT_EMAIL")
 }
 
 func TestNew_WiresProfileAndContactRoutes(t *testing.T) {

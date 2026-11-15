@@ -114,12 +114,8 @@ func TestNew_EmailNeedsValidSMTPSettings(t *testing.T) {
 	require.ErrorContains(t, err, "SMTP_HOST")
 
 	cfg.Email.SMTP = config.SMTPConfig{Host: "smtp.example.com", Port: 587, User: "apikey", Password: "x", From: "Squares <recaps@example.com>"}
-	app, err := New(cfg, testInfra(t))
+	_, err = New(cfg, testInfra(t))
 	require.NoError(t, err)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	app.Start(ctx)
 }
 
 func TestConnect_FailsWithoutDatabase(t *testing.T) {
