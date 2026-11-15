@@ -86,8 +86,8 @@ export function ContestsBrowserSkeleton() {
             height={40}
             sx={{ width: { xs: '100%', sm: 320 }, borderRadius: 1 }}
           />
-          <Skeleton variant="rectangular" width={196} height={40} sx={{ borderRadius: 1 }} />
-          <Skeleton variant="rectangular" width={268} height={40} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width={148} height={39} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width={180} height={39} sx={{ borderRadius: 1 }} />
         </Box>
       </Hero>
       <Container maxWidth="lg" sx={pageSx}>

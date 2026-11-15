@@ -24,10 +24,11 @@ interface Props {
   square: Square | null;
   contest: Contest;
   viewer: ContestViewer;
+  boardOpen: boolean;
   onClose: () => void;
 }
 
-export default function SquareDialog({ square, contest, viewer, onClose }: Props) {
+export default function SquareDialog({ square, contest, viewer, boardOpen, onClose }: Props) {
   const { showToast } = useToast();
   const [clearSquare, { isLoading: clearing }] = useClearSquareMutation();
 
@@ -38,8 +39,7 @@ export default function SquareDialog({ square, contest, viewer, onClose }: Props
   const isMine = viewer.isMe(square.owner);
   const isClaimed = square.value.trim() !== '';
   // a full board is locked until kickoff
-  const boardFull = contest.squares.every((s) => s.value.trim() !== '');
-  const canClear = contest.status === 'ACTIVE' && !boardFull && isMine && isClaimed;
+  const canClear = boardOpen && isMine && isClaimed;
 
   const winningQuarters = (contest.quarterResults ?? [])
     .filter((qr) => qr.winnerRow === square.row && qr.winnerCol === square.col)

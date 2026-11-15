@@ -35,27 +35,22 @@ vi.mock('./ContestView', () => ({
     winnerFlash,
     game,
     viewer,
-    guideOwner,
+    removed,
   }: {
     winnerFlash: unknown;
     game?: { homeScore: number };
     viewer: ContestViewer;
-    guideOwner: boolean;
+    removed: boolean;
   }) => (
     <div
       data-testid="view"
       data-score={game?.homeScore}
       data-full-name={viewer.fullName('u_pat')}
-      data-guide={guideOwner}
+      data-removed={removed}
     >
       {winnerFlash ? 'flash' : ''}
     </div>
   ),
-}));
-const history = vi.hoisted(() => ({ useHasFinishedOwnContestQuery: vi.fn() }));
-vi.mock('../api', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  ...history,
 }));
 const roster = vi.hoisted(() => ({ useContestRoster: vi.fn() }));
 vi.mock('../useContestRoster', () => roster);
@@ -103,7 +98,6 @@ describe('LiveContest', () => {
     vi.clearAllMocks();
     games.useGetGameQuery.mockReturnValue({ data: undefined });
     roster.useContestRoster.mockReturnValue(undefined);
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined, isError: false });
     mockAuth({ email: 'player@x.com' });
   });
 
@@ -226,6 +220,7 @@ describe('LiveContest', () => {
     emit(event('player.removed', makePlayer({ userId: 'u_player' })));
     expect(navigate).not.toHaveBeenCalled();
     expect(toasts()[0]?.severity).toBe('info');
+    expect(screen.getByTestId('view')).toHaveAttribute('data-removed', 'true');
   });
 
   it('says you left rather than were removed when you left on your own', () => {
@@ -236,6 +231,7 @@ describe('LiveContest', () => {
       updatedBy: 'u_player',
     });
     expect(toasts()[0]).toMatchObject({ message: 'You left this contest', severity: 'info' });
+    expect(screen.queryByTestId('view')).toHaveAttribute('data-removed', 'false');
     expect(navigate).toHaveBeenCalledWith('/contests');
   });
 
@@ -254,31 +250,6 @@ describe('LiveContest', () => {
     snapshot();
     emit(event('quarter.recorded', makeQuarterResult({ winner: 'u_pat', winnerName: 'Pat P.' })));
     expect(toasts()[0]?.message).toBe('Pat P. wins Q1.');
-  });
-
-  it('guides an owner who hasn’t finished a contest, or can’t tell', () => {
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: false, isError: false });
-    const { snapshot } = renderLive();
-    snapshot();
-    expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'false');
-
-    snapshot(makeContest({ owner: 'u_player' }));
-    expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'true');
-
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined, isError: true });
-    snapshot(makeContest({ owner: 'u_player', version: 2 }));
-    expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'true');
-  });
-
-  it('leaves an experienced owner unguided, and waits until it knows', () => {
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: true, isError: false });
-    const { snapshot } = renderLive();
-    snapshot(makeContest({ owner: 'u_player' }));
-    expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'false');
-
-    history.useHasFinishedOwnContestQuery.mockReturnValue({ data: undefined, isError: false });
-    snapshot(makeContest({ owner: 'u_player', version: 2 }));
-    expect(screen.getByTestId('view')).toHaveAttribute('data-guide', 'false');
   });
 
   it('ignores other people being removed', () => {

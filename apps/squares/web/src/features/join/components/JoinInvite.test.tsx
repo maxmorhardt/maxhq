@@ -38,9 +38,7 @@ describe('JoinInvite', () => {
     const { store } = renderWithProviders(<JoinInvite token="tok" />);
     expect(screen.getByText('Joining contest...')).toBeInTheDocument();
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/contests/c-1', { replace: true }));
-    expect(store.getState().toast.messages[0]?.message).toBe(
-      'You joined Office Pool. The owner will give you squares.'
-    );
+    expect(store.getState().toast.messages[0]?.message).toBe('You joined Office Pool');
     expect(ads.trackConversion).toHaveBeenCalledWith('joinedContest');
   });
 
@@ -52,7 +50,7 @@ describe('JoinInvite', () => {
     const { store } = renderWithProviders(<JoinInvite token="tok" />);
     await waitFor(() =>
       expect(store.getState().toast.messages[0]?.message).toBe(
-        'You joined Office Pool. The game has started, so you can watch.'
+        'You joined Office Pool. The game’s on, so you can watch.'
       )
     );
   });

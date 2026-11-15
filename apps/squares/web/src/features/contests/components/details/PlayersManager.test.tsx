@@ -232,7 +232,7 @@ describe('PlayersManager', () => {
     await waitFor(() =>
       expect(remove).toHaveBeenCalledWith({ contestId: 'c-1', userId: 'u_player' })
     );
-    expect(store.getState().toast.messages[0]?.message).toBe('Player removed');
+    expect(store.getState().toast.messages[0]?.message).toBe('Pat P. removed');
   });
 
   it('shows why a removal failed', () => {

@@ -51,15 +51,5 @@ export function getSquarePool(contest: Contest, players: Player[]): SquarePool {
   };
 }
 
-export type OwnerTodo = 'invite' | 'squares' | 'fill';
-
-export function getOwnerTodo(contest: Contest, players: Player[]): OwnerTodo | null {
-  if (contest.status !== 'ACTIVE' || contest.squares.every((s) => s.value.trim() !== '')) {
-    return null;
-  }
-  if (!players.some((p) => p.role !== 'owner')) {
-    return 'invite';
-  }
-  const { unallocated, waiting } = getSquarePool(contest, players);
-  return waiting.length > 0 || unallocated > 0 ? 'squares' : 'fill';
-}
+export const isBoardOpen = (contest: Contest) =>
+  contest.status === 'ACTIVE' && contest.squares.some((s) => s.value.trim() === '');

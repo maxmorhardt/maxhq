@@ -57,7 +57,7 @@ describe('EditPlayerDialog', () => {
       userId: 'u_player',
       maxSquares: 8,
     });
-    expect(store.getState().toast.messages[0]?.message).toBe('Player updated');
+    expect(store.getState().toast.messages[0]?.message).toBe('Pat P. now has 8 squares');
   });
 
   it('caps the slider at what is left to give out', () => {
@@ -77,13 +77,16 @@ describe('EditPlayerDialog', () => {
   });
 
   it('warns that lowering below what they hold frees squares at random', async () => {
-    renderDialog(makePlayer({ maxSquares: 10 }), { claimed: 8 });
+    const { store } = renderDialog(makePlayer({ maxSquares: 10 }), { claimed: 8 });
     setLimit(5);
 
     expect(screen.getByText(/3 of their squares will be freed at random/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save and Free 3' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(expect.objectContaining({ maxSquares: 5 }))
+    );
+    await waitFor(() =>
+      expect(store.getState().toast.messages[0]?.message).toBe('Pat P. now has 5 squares, 3 freed')
     );
   });
 

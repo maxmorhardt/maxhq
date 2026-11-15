@@ -3,7 +3,7 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import { fonts } from '../../../../app/theme';
 import type { Contest, Game } from '../../../../types/contest';
 import { isInGameStatus } from '../../../../utils/contestStatus';
-import { formatKickoff } from '../../../../utils/game';
+import { formatKickoff, hasKickedOff } from '../../../../utils/game';
 import type { ContestViewer } from '../../live/viewer';
 import ContestSidebarCard from '../sidebar/ContestSidebarCard';
 import SquareActions from './SquareActions';
@@ -12,6 +12,7 @@ interface Props {
   contest: Contest;
   game?: Game;
   viewer: ContestViewer;
+  boardOpen: boolean;
 }
 
 const barSx = { height: 8, borderRadius: 4, bgcolor: 'rgba(238, 242, 250, 0.08)' };
@@ -29,16 +30,18 @@ function boardStatus(contest: Contest, game: Game | undefined, allFilled: boolea
   if (isInGameStatus(contest.status)) {
     return 'The board is locked and the numbers are drawn. Each quarter’s winner comes from the live score.';
   }
-  return allFilled
-    ? `The board is full and locked. The numbers are drawn at kickoff${kickoff}.`
-    : `Fill every square before kickoff${kickoff}. The board locks once the game starts and every square is claimed.`;
+  if (allFilled) {
+    return `The board is full and locked. The numbers are drawn at kickoff${kickoff}.`;
+  }
+  return game && hasKickedOff(game)
+    ? 'The game has started. Fill the last squares so the numbers can be drawn.'
+    : `Fill every square before kickoff${kickoff} so the numbers can be drawn.`;
 }
 
-export default function ContestDetails({ contest, game, viewer }: Props) {
+export default function ContestDetails({ contest, game, viewer, boardOpen }: Props) {
   const totalSquares = contest.squares.length;
   const filledSquares = contest.squares.filter((s) => s.value.trim() !== '').length;
   const allFilled = filledSquares >= totalSquares;
-  const isActive = contest.status === 'ACTIVE';
   const { player } = viewer;
   const waitingForSquares = !viewer.isOwner && player?.maxSquares === 0;
 
@@ -103,13 +106,8 @@ export default function ContestDetails({ contest, game, viewer }: Props) {
                 {viewer.squaresClaimed}/{player.maxSquares}
               </Typography>
             </Box>
-            {waitingForSquares && isActive && (
-              <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                The owner hasn&apos;t given you any squares yet.
-              </Typography>
-            )}
             {/* a full board is locked, so there is nothing left to claim or clear */}
-            {isActive && !allFilled && !waitingForSquares && (
+            {boardOpen && !waitingForSquares && (
               <SquareActions
                 contest={contest}
                 viewer={viewer}

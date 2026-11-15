@@ -63,9 +63,28 @@ describe('QuarterStrip', () => {
       scores: [{ quarter: 1, homeScore: 0, awayScore: 3 }],
     } as Game;
 
-    renderWithProviders(<QuarterStrip contest={makeContest()} game={game} viewer={makeViewer()} />);
+    renderWithProviders(
+      <QuarterStrip
+        contest={makeContest({ status: 'FINISHED' })}
+        game={game}
+        viewer={makeViewer()}
+      />
+    );
 
     expect(quarters()[0]).toHaveTextContent('No winner');
+  });
+
+  it('leaves a played quarter pending while the board is still open', () => {
+    const game = {
+      status: 'in_progress',
+      period: 2,
+      scores: [{ quarter: 1, homeScore: 0, awayScore: 3 }],
+    } as Game;
+
+    renderWithProviders(<QuarterStrip contest={makeContest()} game={game} viewer={makeViewer()} />);
+
+    expect(quarters()[0]).toHaveTextContent('Pending');
+    expect(quarters()[0]).not.toHaveTextContent('No winner');
   });
 
   it('calls a quarter that landed on an empty square for the ghost', () => {

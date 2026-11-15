@@ -36,6 +36,11 @@ describe('InviteLinkDialog', () => {
     expect(screen.getByText(/They start with no squares/)).toBeInTheDocument();
   });
 
+  it('says newcomers can only watch once the numbers are drawn', () => {
+    renderDialog(makeContest({ status: 'Q2' }));
+    expect(screen.getByText(/join to watch\. The numbers are drawn/)).toBeInTheDocument();
+  });
+
   it('only fetches the link while open', () => {
     renderWithProviders(
       <InviteLinkDialog open={false} onClose={vi.fn()} contest={makeContest()} />

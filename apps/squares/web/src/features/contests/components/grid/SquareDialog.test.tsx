@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockMutation } from '../../../../test/auth';
 import { makeContest, makeQuarterResult, makeSquare, makeViewer } from '../../../../test/fixtures';
 import { renderWithProviders } from '../../../../test/render';
+import { isBoardOpen } from '../../live/viewer';
 import type { Contest, Square } from '../../../../types/contest';
 import SquareDialog from './SquareDialog';
 
@@ -14,7 +15,13 @@ const mine = makeSquare({ value: 'ME', owner: 'u_player', ownerName: 'Me' });
 function renderDialog(square: Square | null, contest: Contest = makeContest()) {
   const onClose = vi.fn();
   const result = renderWithProviders(
-    <SquareDialog square={square} contest={contest} viewer={makeViewer()} onClose={onClose} />
+    <SquareDialog
+      square={square}
+      contest={contest}
+      viewer={makeViewer()}
+      boardOpen={isBoardOpen(contest)}
+      onClose={onClose}
+    />
   );
   return { ...result, onClose };
 }

@@ -58,7 +58,7 @@ export default function ContestActionIcons({ players, viewer, onOpen, squaresToG
           size="small"
           aria-label={
             squaresToGive
-              ? `Players (${players.length}), squares left to give out`
+              ? `Players (${players.length}), some waiting for squares`
               : `Players (${players.length})`
           }
           onClick={() => onOpen('players')}
