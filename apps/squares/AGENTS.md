@@ -72,7 +72,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
 - `make test-integration` runs the service against real Postgres and Valkey containers (Docker required; on Windows use Docker Desktop). Other services are replaced by small fakes or by appending their events to Valkey directly.
 - `make test-smoke` builds the service's real binary, starts it against Postgres and Valkey, and checks it migrates, reports ready, serves its API reference, and rejects requests without the gateway's identity. Games has no signed-in routes, so its smoke test skips that last check. `make test-integration` runs it with the integration tests, and CI runs that.
 - Each database service's integration tests start from the pre-split monolith's tables (`test/integration/testdata/legacy_schema.sql`) and check the service adopts its own.
-- Coverage is gated at **80%** per service by `.testcoverage.yml`. Do not lower the threshold to get a build green.
+- Coverage is gated at **90%** per service by `.testcoverage.yml`. Do not lower the threshold to get a build green.
 
 ## Commit Tags
 

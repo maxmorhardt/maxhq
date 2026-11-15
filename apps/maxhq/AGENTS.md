@@ -83,7 +83,7 @@ Missing any step ships a route that 404s in production or never gets indexed.
 - `setupTests.ts` forces `prefers-reduced-motion`, so motion renders in its settled state. To exercise the animated path, override `window.matchMedia` (see `PlatformStack.test.tsx`).
 - `IntersectionObserver` is absent in jsdom. When stubbing it use a **class**, because the hook calls it with `new`, and restore it in `afterEach`. `useScrollReveal` falls back to immediately visible when the API is missing, so tests see revealed content.
 - Prefer role-based queries (`getByRole('link', { name })`) over test ids.
-- Coverage is gated at **80%** for statements, branches, functions, and lines in `vitest.config.ts`. Do not lower a threshold to get a build green.
+- Coverage is gated at **90%** for statements, branches, functions, and lines in `vitest.config.ts`. Do not lower a threshold to get a build green.
 - Always run `pnpm lint`, `pnpm type-check`, and `pnpm test` before committing.
 
 ## Dependency Checklist

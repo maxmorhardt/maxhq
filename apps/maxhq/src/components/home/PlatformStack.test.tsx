@@ -37,6 +37,15 @@ describe('PlatformStack', () => {
     expect(scene.style.getPropertyValue('--tilt-x')).toBe('');
   });
 
+  it('stays still when the browser cannot report pointer or motion preferences', () => {
+    window.matchMedia = undefined as unknown as typeof window.matchMedia;
+    renderWithProviders(<PlatformStack />);
+    const scene = screen.getByRole('img').firstElementChild as HTMLElement;
+
+    fireEvent.pointerMove(window, { clientX: 0, clientY: 0 });
+    expect(scene.style.getPropertyValue('--tilt-x')).toBe('');
+  });
+
   it('leans toward the pointer', () => {
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
       matches: true,

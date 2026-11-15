@@ -85,7 +85,7 @@ Every page resolves its states in the same order, so the conditional rendering n
 - Mock `react-oidc-context` with `vi.mock('react-oidc-context', () => ({ useAuth: vi.fn() }))` and set the user with `mockAuth({ email })`.
 - Mock a feature's hooks while keeping its real exports: `vi.mock('../../api', async (importOriginal) => ({ ...(await importOriginal<object>()), ...api }))`, with `mockMutation(result)` for mutation tuples.
 - Endpoint and base query tests use `stubFetch` and dispatch `endpoint.initiate(...)` on `makeStore()`.
-- Coverage is gated at **80%** for lines, branches, functions, and statements. Do not lower a threshold to get a build green.
+- Coverage is gated at **90%** for lines, branches, functions, and statements. Do not lower a threshold to get a build green.
 
 ## Dependency Checklist
 

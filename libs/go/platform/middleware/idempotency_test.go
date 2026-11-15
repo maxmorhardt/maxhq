@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -187,4 +188,28 @@ func fingerprintOf(t *testing.T, body string) string {
 	fp, err := requestFingerprint(c)
 	require.NoError(t, err)
 	return fp
+}
+
+func TestIdempotency_ReplaysBodiesWrittenAsStrings(t *testing.T) {
+	store, _ := redisStore(t)
+	gin.SetMode(gin.TestMode)
+	calls := 0
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set(api.UserKey, "user@example.com")
+		c.Next()
+	})
+	r.Use(Idempotency(store, "contests"))
+	r.POST("/contests", func(c *gin.Context) {
+		calls++
+		c.Status(http.StatusCreated)
+		_, _ = io.WriteString(c.Writer, "made")
+	})
+
+	first := post(r, "k-string", `{}`)
+	second := post(r, "k-string", `{}`)
+
+	assert.Equal(t, "made", first.Body.String())
+	assert.Equal(t, "made", second.Body.String())
+	assert.Equal(t, 1, calls)
 }
