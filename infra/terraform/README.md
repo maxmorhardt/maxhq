@@ -1,15 +1,14 @@
 # Terraform
 
 Terraform for the resources that live outside the cluster. Anything Argo CD reconciles stays
-in Helm and manifests; this covers the AWS, Cloudflare, GitHub, and Grafana Cloud state that was
-previously created by hand.
+in Helm and manifests; this covers the AWS, Cloudflare, and GitHub state that was previously
+created by hand.
 
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, and the `srv-s3` identity behind `aws-s3-credentials` — see [postgres/README.md](https://github.com/maxmorhardt/gitops/blob/main/infra/postgres/README.md) |
 | `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod tunnel, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, the edge-cache rule for `cached_hosts`, and the visitor location headers (`cf-region`, `cf-ipcity`) the API logs. Also the prod Cloudflare Tunnel and its ingress rules (`tunnel.tf`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
-| `github/` | Repository rulesets on every default branch (required checks, squash-only merges), tag rulesets in maxhq and workflows (a release tag can't be moved or deleted), and deployment environments (`production` waits for approval). Also each repository's settings (visibility, squash-only merge titles, secret scanning, vulnerability alerts), maxhq-private included |
-| `grafana/` | The Grafana Cloud stack's dashboards (`dashboards/*.json`, in the `maxhq` folder), the `repo alerts` folder Alloy syncs PrometheusRules into, the Telegram contact point and notification policy, the free-tier series alert, the `alloy-rules` service account, the prod Postgres data source, and the synthetic HTTP checks and their alerts |
+| `github/` | Repository rulesets on every default branch (required checks, squash-only merges), tag rulesets in maxhq and workflows (a release tag can't be moved or deleted), and deployment environments (`production` waits for approval) |
 
 ## Credentials
 
@@ -18,7 +17,6 @@ previously created by hand.
 | `aws/` | An authenticated AWS session (`aws login`) |
 | `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, Managed headers: Edit, Account Rulesets: Read, and Account Cloudflare Tunnel: Edit, plus `terraform.tfvars` with `dev_ips` |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
-| `grafana/` | `terraform.tfvars` with `auth` (an Admin service account token), `sm_access_token` (Testing & synthetics > Synthetics > Config), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
 
 In CI, as repository secrets:
 
@@ -26,9 +24,8 @@ In CI, as repository secrets:
 | --- | --- |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | every module — the state backend, not just `aws/` |
 | `CLOUDFLARE_API_TOKEN` | `cloudflare/` |
-| `REPO_ADMIN_TOKEN` | `github/` — a fine-grained PAT with Administration: Read and write on `maxhq`, `gitops`, `workflows`, and `maxhq-private`, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
+| `REPO_ADMIN_TOKEN` | `github/` — a fine-grained PAT with Administration: Read and write on `maxhq`, `gitops`, and `workflows`, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
 | `TF_VARS` | `cloudflare/` — `dev_ips = [...]` (dev's Tailscale IPs), written to `ci.auto.tfvars` at runtime |
-| `TF_VARS_GRAFANA` | `grafana/` — the four variables above, written the same way |
 
 ## One-time setup
 
@@ -54,7 +51,7 @@ resources.
 
 A pull request that touches `infra/terraform/` plans every module and posts the output to the
 job summary; `CI Complete` covers it. Merging to `main` applies any module under
-`infra/terraform/`. A scheduled run every Monday plans every module with `fail_on_diff`, which is
+`infra/terraform/`. A scheduled run every Monday plans all three with `fail_on_diff`, which is
 the only signal that something changed outside Terraform.
 
 Locally, for iterating before opening a PR:
@@ -78,17 +75,6 @@ rebuilt tunnel needs it resealed:
 ```bash
 terraform output -raw prod_tunnel_token
 ```
-
-## Grafana
-
-Each file in `grafana/dashboards/` is one dashboard, named after its uid (`maxhq-<file>`). Grafana
-saves dashboards in its own JSON form, so edit in the UI, then Export > Export as JSON (with
-"Export for sharing externally" off) and replace the file. An apply overwrites anything changed in
-the UI and not committed; the Monday plan reports it.
-
-The `empty` contact point, which silences `severity=info`, stays manual: Terraform can't hold a
-contact point with no integrations. Service account and Synthetic Monitoring tokens are created by
-hand so they stay out of state.
 
 ## Notes
 
