@@ -63,15 +63,3 @@ resource "github_repository_vulnerability_alerts" "this" {
   repository = github_repository.this[each.key].name
   enabled    = each.value.vulnerability_alerts
 }
-
-import {
-  for_each = local.settings
-  to       = github_repository.this[each.key]
-  id       = each.key
-}
-
-import {
-  for_each = local.settings
-  to       = github_repository_vulnerability_alerts.this[each.key]
-  id       = each.key
-}

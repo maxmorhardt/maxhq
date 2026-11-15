@@ -8,9 +8,3 @@ resource "grafana_dashboard" "maxhq" {
   folder      = grafana_folder.maxhq.uid
   config_json = file("${path.module}/dashboards/${each.key}.json")
 }
-
-import {
-  for_each = toset(["apps", "cluster", "contests", "nodes", "users", "workloads"])
-  to       = grafana_dashboard.maxhq[each.key]
-  id       = "maxhq-${each.key}"
-}

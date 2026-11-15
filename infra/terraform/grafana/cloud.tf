@@ -50,23 +50,3 @@ resource "grafana_frontend_o11y_app" "squares" {
   extra_log_attributes = {}
   settings             = {}
 }
-
-import {
-  to = grafana_cloud_stack.maxhqio
-  id = "maxhqio"
-}
-
-import {
-  to = grafana_cloud_access_policy.alloy
-  id = "${var.region}:f380e83e-84a2-403b-bed3-ea3e7613e8c6"
-}
-
-import {
-  to = grafana_cloud_private_data_source_connect_network.default
-  id = "${var.region}:${var.pdc_network_id}"
-}
-
-import {
-  to = grafana_frontend_o11y_app.squares
-  id = "${var.stack_id}:2205"
-}

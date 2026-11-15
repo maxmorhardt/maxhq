@@ -23,8 +23,3 @@ resource "aws_budgets_budget" "backups" {
     ignore_changes = [metrics]
   }
 }
-
-import {
-  to = aws_budgets_budget.backups
-  id = "${var.account_id}:S3 Backup Budget"
-}

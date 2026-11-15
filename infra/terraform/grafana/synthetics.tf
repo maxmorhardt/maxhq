@@ -1,9 +1,9 @@
 locals {
   checks = {
-    maxhq       = { id = 172510, target = "https://maxhq.io", slow_ms = 2500 }
-    squares     = { id = 172511, target = "https://squares.maxhq.io", slow_ms = 2500 }
-    login       = { id = 172512, target = "https://login.maxhq.io/.well-known/openid-configuration", slow_ms = 3000 }
-    squares-api = { id = 172513, target = "https://api.maxhq.io/squares/stats", slow_ms = 3000 }
+    maxhq       = { target = "https://maxhq.io", slow_ms = 2500 }
+    squares     = { target = "https://squares.maxhq.io", slow_ms = 2500 }
+    login       = { target = "https://login.maxhq.io/.well-known/openid-configuration", slow_ms = 3000 }
+    squares-api = { target = "https://api.maxhq.io/squares/stats", slow_ms = 3000 }
   }
 }
 
@@ -63,16 +63,4 @@ resource "grafana_synthetic_monitoring_check_alerts" "http" {
       runbook_url = ""
     },
   ]
-}
-
-import {
-  for_each = local.checks
-  to       = grafana_synthetic_monitoring_check.http[each.key]
-  id       = each.value.id
-}
-
-import {
-  for_each = local.checks
-  to       = grafana_synthetic_monitoring_check_alerts.http[each.key]
-  id       = each.value.id
 }

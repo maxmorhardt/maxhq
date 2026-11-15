@@ -16,13 +16,3 @@ resource "tailscale_dns_configuration" "this" {
   override_local_dns = false
   search_paths       = []
 }
-
-import {
-  to = tailscale_tailnet_settings.this
-  id = "tailnet_settings"
-}
-
-import {
-  to = tailscale_dns_configuration.this
-  id = "dns_configuration"
-}

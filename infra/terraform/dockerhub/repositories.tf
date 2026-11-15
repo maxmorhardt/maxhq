@@ -23,9 +23,3 @@ resource "docker_hub_repository" "this" {
     prevent_destroy = true
   }
 }
-
-import {
-  for_each = local.repositories
-  to       = docker_hub_repository.this[each.key]
-  id       = "${var.namespace}/${each.key}"
-}

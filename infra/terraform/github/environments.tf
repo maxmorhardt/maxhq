@@ -25,8 +25,3 @@ resource "github_repository_environment" "this" {
     }
   }
 }
-
-import {
-  to = github_repository_environment.this["maxhq:production"]
-  id = "maxhq:production"
-}
