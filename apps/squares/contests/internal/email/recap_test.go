@@ -34,8 +34,9 @@ func TestRenderRecap_Final(t *testing.T) {
 	assert.Equal(t, "Office Pool: final results", content.Subject)
 	for _, want := range []string{
 		"Final results",
-		"Buffalo Bills at Kansas City Chiefs is in the books.",
-		"Final: BUF 24, KC 27. Q1 Max M. · Half Open square · Final Jen K.",
+		"Buffalo Bills 24, Kansas City Chiefs 27. Here&#39;s the winning square for each quarter.",
+		"Final: BUF 24, KC 27. Q1 Max M. · Q2 Open square · Q4 Jen K.",
+		"<!--[if mso]>",
 		"https://squares.example.com/contests/create?utm_source=recap&amp;utm_medium=email",
 		"https://squares.example.com/contests/6f2c8c1e-6d2f-4a9e-9c6b-3f0f6f7a1b2c?utm_source=recap&amp;utm_medium=email",
 		"https://squares.example.com/squares_logo.png",
@@ -45,9 +46,10 @@ func TestRenderRecap_Final(t *testing.T) {
 		assert.Contains(t, content.HTML, want)
 	}
 	for _, want := range []string{
-		"Final: Buffalo Bills 24, Kansas City Chiefs 27",
-		"Q1  BUF 7 – 3 KC  Max M.",
-		"Half  BUF 14 – 10 KC  Open square",
+		"         BUF  KC   Winner",
+		"Q1       7    3    Max M.",
+		"Q2       14   10   Open square",
+		"Final    24   27",
 		"Start your next contest: https://squares.example.com/contests/create?utm_source=recap&utm_medium=email",
 		"Feedback or ideas? Email support@maxhq.io or just reply.",
 	} {
@@ -74,17 +76,27 @@ func TestRenderRecap_Canceled(t *testing.T) {
 
 	assert.Equal(t, "Office Pool: game canceled", content.Subject)
 	assert.Contains(t, content.HTML, "Played quarters keep their winners.")
-	assert.Contains(t, content.Text, "Canceled: Buffalo Bills 24")
+	assert.Contains(t, content.Text, "Canceled 24   27")
 
 	recap.Started, recap.Quarters = false, nil
 	content, err = RenderRecap("https://squares.example.com", recap)
 	require.NoError(t, err)
 	assert.Contains(t, content.HTML, "before Office Pool drew its numbers, so it closed with no winners.")
-	assert.NotContains(t, content.HTML, "Winning squares")
+	assert.NotContains(t, content.HTML, ">Winner<")
+}
+
+func TestRenderRecap_RemovedPlayersAreMutedLikeOpenSquares(t *testing.T) {
+	recap := sampleRecap()
+	recap.Quarters[0].Winner = RemovedPlayer
+
+	view := newRecapView("https://squares.example.com", recap)
+
+	assert.True(t, view.Quarters[0].Open)
+	assert.Equal(t, RemovedPlayer, view.Quarters[0].Winner)
+	assert.False(t, view.Quarters[2].Open)
 }
 
 func TestLabels(t *testing.T) {
-	assert.Equal(t, "Q3", quarterLabel(3))
 	assert.Equal(t, "Buffalo Bills", teamLabel("", "Buffalo Bills"))
 	assert.Equal(t, "not a url", hostOf("not a url"))
 }

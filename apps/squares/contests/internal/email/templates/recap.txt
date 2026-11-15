@@ -4,18 +4,15 @@
 {{.Subhead}}
 {{- if .Started}}
 
-{{if .Canceled}}Canceled{{else}}Final{{end}}: {{.AwayTeam}} {{.AwayScore}}, {{.HomeTeam}} {{.HomeScore}}
-{{- if .Quarters}}
-
-Winning squares
+         {{printf "%-4s" .AwayLabel}} {{printf "%-4s" .HomeLabel}} Winner
 {{- range .Quarters}}
-{{.Label}}  {{.Score}}  {{.Winner}}
+{{printf "%-8s" .Label}} {{printf "%-4d" .AwayScore}} {{printf "%-4d" .HomeScore}} {{.Winner}}
 {{- end}}
-{{- end}}
+{{printf "%-8s" .Status}} {{printf "%-4d" .AwayScore}} {{.HomeScore}}
 {{- end}}
 
 Start your next contest: {{.CreateURL}}
-See the final board: {{.BoardURL}}
+{{if .Started}}See the final board{{else}}Open the contest{{end}}: {{.BoardURL}}
 
 Feedback or ideas? Email {{.FeedbackAddress}} or just reply.
 

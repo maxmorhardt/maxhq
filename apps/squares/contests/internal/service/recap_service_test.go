@@ -73,7 +73,7 @@ func TestRecapService_SendsTheSameRecapToEveryPlayer(t *testing.T) {
 	assert.Equal(t, "jen@example.com", sent[1].To)
 	assert.Equal(t, sent[0].HTML, sent[1].HTML)
 	assert.Equal(t, "Office Pool: final results", sent[0].Subject)
-	for _, want := range []string{"Max M.", "Removed player", "Open square", "Jen K.", "BUF 24 – 27 KC", "/contests/create"} {
+	for _, want := range []string{"Max M.", "Removed player", "Open square", "Jen K.", ">BUF<", ">24<", ">27<", "/contests/create"} {
 		assert.Contains(t, sent[0].HTML, want)
 	}
 	assert.NotContains(t, sent[0].HTML, "max@example.com")
@@ -97,7 +97,7 @@ func TestRecapService_CanceledBeforeKickoff(t *testing.T) {
 	require.NotNil(t, msg)
 	assert.Equal(t, "Office Pool: game canceled", msg.Subject)
 	assert.Contains(t, msg.Text, "closed with no winners")
-	assert.NotContains(t, msg.Text, "Winning squares")
+	assert.NotContains(t, msg.Text, "Winner")
 }
 
 func TestRecapService_WithoutAGameUsesTheLastQuarter(t *testing.T) {
@@ -113,7 +113,7 @@ func TestRecapService_WithoutAGameUsesTheLastQuarter(t *testing.T) {
 	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
 
 	require.NotNil(t, msg)
-	assert.Contains(t, msg.Text, "Final: Buffalo Bills 24, Kansas City Chiefs 27")
+	assert.Contains(t, msg.Text, "Buffalo Bills 24, Kansas City Chiefs 27.")
 }
 
 func TestRecapService_RetriesTransientFailures(t *testing.T) {

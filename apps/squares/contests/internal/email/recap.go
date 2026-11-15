@@ -18,7 +18,10 @@ const FeedbackAddress = "support@maxhq.io"
 var templateFS embed.FS
 
 var (
-	recapHTML = htmltemplate.Must(htmltemplate.ParseFS(templateFS, "templates/recap.html"))
+	recapHTML = htmltemplate.Must(htmltemplate.New("recap.html").Funcs(htmltemplate.FuncMap{
+		"msoOpen":  func() htmltemplate.HTML { return msoOpen },
+		"msoClose": func() htmltemplate.HTML { return msoClose },
+	}).ParseFS(templateFS, "templates/recap.html"))
 	recapText = texttemplate.Must(texttemplate.ParseFS(templateFS, "templates/recap.txt"))
 )
 
@@ -51,12 +54,13 @@ type recapView struct {
 	Subhead         string
 	Started         bool
 	Canceled        bool
+	Status          string
 	AwayTeam        string
 	HomeTeam        string
+	AwayLabel       string
+	HomeLabel       string
 	AwayScore       int
 	HomeScore       int
-	AwayLeads       bool
-	HomeLeads       bool
 	Quarters        []quarterView
 	BoardURL        string
 	CreateURL       string
@@ -67,10 +71,11 @@ type recapView struct {
 }
 
 type quarterView struct {
-	Label  string
-	Score  string
-	Winner string
-	Open   bool
+	Label     string
+	AwayScore int
+	HomeScore int
+	Winner    string
+	Open      bool
 }
 
 type Content struct {
@@ -100,12 +105,13 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 		ContestName:     recap.ContestName,
 		Started:         recap.Started,
 		Canceled:        recap.Canceled,
+		Status:          "Final",
 		AwayTeam:        recap.AwayTeam,
 		HomeTeam:        recap.HomeTeam,
+		AwayLabel:       away,
+		HomeLabel:       home,
 		AwayScore:       recap.AwayScore,
 		HomeScore:       recap.HomeScore,
-		AwayLeads:       recap.AwayScore > recap.HomeScore,
-		HomeLeads:       recap.HomeScore > recap.AwayScore,
 		BoardURL:        fmt.Sprintf("%s/contests/%s%s", webURL, recap.ContestID, utm),
 		CreateURL:       webURL + "/contests/create" + utm,
 		HomeURL:         webURL,
@@ -117,12 +123,16 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 	results := make([]string, 0, len(recap.Quarters))
 	for _, q := range recap.Quarters {
 		qv := quarterView{
-			Label:  quarterLabel(q.Number),
-			Score:  fmt.Sprintf("%s %d – %d %s", away, q.AwayScore, q.HomeScore, home),
-			Winner: q.Winner,
+			Label:     fmt.Sprintf("Q%d", q.Number),
+			AwayScore: q.AwayScore,
+			HomeScore: q.HomeScore,
+			Winner:    q.Winner,
 		}
-		if qv.Winner == "" {
+		switch qv.Winner {
+		case "":
 			qv.Winner, qv.Open = "Open square", true
+		case RemovedPlayer:
+			qv.Open = true
 		}
 		view.Quarters = append(view.Quarters, qv)
 		results = append(results, qv.Label+" "+qv.Winner)
@@ -130,26 +140,24 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 
 	switch {
 	case recap.Canceled && !recap.Started:
+		view.Status = "Canceled"
 		view.Subject = recap.ContestName + ": game canceled"
 		view.Headline = "Game canceled"
 		view.Subhead = fmt.Sprintf("%s was canceled before %s drew its numbers, so it closed with no winners.", matchup, recap.ContestName)
 	case recap.Canceled:
+		view.Status = "Canceled"
 		view.Subject = recap.ContestName + ": game canceled"
 		view.Headline = "Game canceled"
-		view.Subhead = fmt.Sprintf("%s was canceled, so %s finished where it stood. Played quarters keep their winners.", matchup, recap.ContestName)
+		view.Subhead = fmt.Sprintf("%s was canceled, so the board finished where it stood. Played quarters keep their winners.", matchup)
 	default:
 		view.Subject = recap.ContestName + ": final results"
 		view.Headline = "Final results"
-		view.Subhead = fmt.Sprintf("%s is in the books. Here's who won each quarter.", matchup)
+		view.Subhead = fmt.Sprintf("%s %d, %s %d. Here's the winning square for each quarter.", recap.AwayTeam, recap.AwayScore, recap.HomeTeam, recap.HomeScore)
 	}
 
 	view.Preheader = view.Subhead
 	if recap.Started {
-		status := "Final"
-		if recap.Canceled {
-			status = "Canceled"
-		}
-		view.Preheader = fmt.Sprintf("%s: %s %d, %s %d. %s", status, away, recap.AwayScore, home, recap.HomeScore, strings.Join(results, " · "))
+		view.Preheader = fmt.Sprintf("%s: %s %d, %s %d. %s", view.Status, away, recap.AwayScore, home, recap.HomeScore, strings.Join(results, " · "))
 	}
 
 	return view
@@ -164,16 +172,11 @@ func teamLabel(abbr, name string) string {
 	return name
 }
 
-func quarterLabel(n int) string {
-	switch n {
-	case 2:
-		return "Half"
-	case 4:
-		return "Final"
-	default:
-		return fmt.Sprintf("Q%d", n)
-	}
-}
+const (
+	RemovedPlayer = "Removed player"
+	msoOpen       = `<!--[if mso]><table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->`
+	msoClose      = `<!--[if mso]></td></tr></table><![endif]-->`
+)
 
 func hostOf(raw string) string {
 	if u, err := url.Parse(raw); err == nil && u.Host != "" {
