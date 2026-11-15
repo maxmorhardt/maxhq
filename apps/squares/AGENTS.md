@@ -13,7 +13,7 @@ Rules shared by every squares backend service. Each service's own `AGENTS.md` co
   - `realtime/` - server-sent events for one contest, and a public stream of live game scores, both resumable with `Last-Event-ID`. Owns no data.
 - Each service is its own Go module (`apps/squares/<service>/go.mod`), with its own image (`maxmorhardt/squares-<service>`, built from the shared `apps/squares/Dockerfile` with `SERVICE=<service>` and `apps/squares` as the context), Argo CD Application, and release-please component. Its Helm chart is `charts/squares-<service>`. A service never imports another service's packages; Go's `internal` rule enforces it.
 - Shared code lives in the `libs/go` module, which each service requires at a released version:
-  - `libs/go/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, middleware, server, metrics.
+  - `libs/go/platform` - infrastructure every Go service uses: config, database, Valkey (cache, revocations, idempotency), streams (outbox, relay, consumers), the internal HTTP client, SMTP mail, middleware, server, metrics.
   - `libs/go/squares` - the contract between squares services: stream names, event types and payloads (`events`), and the `/internal` API (`contracts`).
 - Everything sits behind the `maxhq` Envoy Gateway at `api.maxhq.io/squares`. The gateway validates the Dex token, passes its claims as `X-Auth-*` headers, and rate limits; the services do not.
 
