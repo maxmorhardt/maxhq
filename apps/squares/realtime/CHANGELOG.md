@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.6](https://github.com/maxmorhardt/maxhq/compare/squares-realtime/2.6.5...squares-realtime/2.6.6) (2026-11-15)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.3.0 ([#257](https://github.com/maxmorhardt/maxhq/issues/257)) ([49690e4](https://github.com/maxmorhardt/maxhq/commit/49690e4bccf77381652b098326d2d4da1e215cb0))
+
 ## [2.6.5](https://github.com/maxmorhardt/maxhq/compare/squares-realtime/2.6.4...squares-realtime/2.6.5) (2026-11-15)
 
 

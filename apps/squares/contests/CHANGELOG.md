@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.10.1](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.10.0...squares-contests/2.10.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.3.0 ([#257](https://github.com/maxmorhardt/maxhq/issues/257)) ([49690e4](https://github.com/maxmorhardt/maxhq/commit/49690e4bccf77381652b098326d2d4da1e215cb0))
+* **squares-contests:** redesign the recap and contact emails light-first ([#258](https://github.com/maxmorhardt/maxhq/issues/258)) ([c639ec5](https://github.com/maxmorhardt/maxhq/commit/c639ec54a57e10a1b525bcb13379fe93d840c334))
+
 ## [2.10.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.4...squares-contests/2.10.0) (2026-11-15)
 
 
