@@ -79,7 +79,7 @@ resource "cloudflare_dns_record" "txt" {
   zone_id = local.zone_id
   name    = each.value.name == "@" ? var.domain : "${each.value.name}.${var.domain}"
   type    = "TXT"
-  content = "\"${each.value.content}\""
+  content = join(" ", [for chunk in regexall(".{1,255}", each.value.content) : "\"${chunk}\""])
   ttl     = 1
 }
 

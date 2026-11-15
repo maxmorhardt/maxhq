@@ -27,7 +27,7 @@ variable "mx" {
 }
 
 variable "txt" {
-  description = "TXT records by key: name relative to the zone (\"@\" for the apex) and unquoted content"
+  description = "TXT records by key: name relative to the zone (\"@\" for the apex) and unquoted content, split into 255-character strings"
   type = map(object({
     name    = string
     content = string
