@@ -31,7 +31,7 @@ func TestRenderRecap_Final(t *testing.T) {
 	content, err := RenderRecap("https://squares.example.com/", sampleRecap())
 	require.NoError(t, err)
 
-	assert.Equal(t, "Office Pool: final results", content.Subject)
+	assert.Equal(t, "Squares: Office Pool final results", content.Subject)
 	for _, want := range []string{
 		"Final results",
 		"Buffalo Bills 24, Kansas City Chiefs 27. Here&#39;s the winning square for each quarter.",
@@ -51,7 +51,7 @@ func TestRenderRecap_Final(t *testing.T) {
 		"Q2       14   10   Open square",
 		"Final    24   27",
 		"Start your next contest: https://squares.example.com/contests/create?utm_source=recap&utm_medium=email",
-		"Feedback or ideas? Email support@maxhq.io or just reply.",
+		"Feedback or ideas? Email support@maxhq.io.",
 	} {
 		assert.Contains(t, content.Text, want)
 	}
@@ -74,7 +74,7 @@ func TestRenderRecap_Canceled(t *testing.T) {
 	content, err := RenderRecap("https://squares.example.com", recap)
 	require.NoError(t, err)
 
-	assert.Equal(t, "Office Pool: game canceled", content.Subject)
+	assert.Equal(t, "Squares: Office Pool game canceled", content.Subject)
 	assert.Contains(t, content.HTML, "Played quarters keep their winners.")
 	assert.Contains(t, content.Text, "Canceled 24   27")
 

@@ -72,7 +72,7 @@ func TestRecapService_SendsTheSameRecapToEveryPlayer(t *testing.T) {
 	assert.Equal(t, "max@example.com", sent[0].To)
 	assert.Equal(t, "jen@example.com", sent[1].To)
 	assert.Equal(t, sent[0].HTML, sent[1].HTML)
-	assert.Equal(t, "Office Pool: final results", sent[0].Subject)
+	assert.Equal(t, "Squares: Office Pool final results", sent[0].Subject)
 	for _, want := range []string{"Max M.", "Removed player", "Open square", "Jen K.", ">BUF<", ">24<", ">27<", "/contests/create"} {
 		assert.Contains(t, sent[0].HTML, want)
 	}
@@ -95,7 +95,7 @@ func TestRecapService_CanceledBeforeKickoff(t *testing.T) {
 	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
 
 	require.NotNil(t, msg)
-	assert.Equal(t, "Office Pool: game canceled", msg.Subject)
+	assert.Equal(t, "Squares: Office Pool game canceled", msg.Subject)
 	assert.Contains(t, msg.Text, "closed with no winners")
 	assert.NotContains(t, msg.Text, "Winner")
 }

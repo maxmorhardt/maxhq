@@ -54,7 +54,7 @@ func TestBuildContactEmail(t *testing.T) {
 	assert.Equal(t, "support@maxhq.io", msg.Header.Get("To"))
 	subject, err := new(mime.WordDecoder).DecodeHeader(msg.Header.Get("Subject"))
 	require.NoError(t, err)
-	assert.Equal(t, "Contact Form: Scores look off", subject)
+	assert.Equal(t, "Squares contact form: Scores look off", subject)
 	assert.Equal(t, "<ann@x.com>", msg.Header.Get("Reply-To"))
 
 	assert.Contains(t, parts["text/plain"], "Message:\nQ2 shows 7–3 <b>twice</b>")

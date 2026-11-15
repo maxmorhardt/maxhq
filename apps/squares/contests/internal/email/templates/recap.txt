@@ -14,7 +14,7 @@
 Start your next contest: {{.CreateURL}}
 {{if .Started}}See the final board{{else}}Open the contest{{end}}: {{.BoardURL}}
 
-Feedback or ideas? Email {{.FeedbackAddress}} or just reply.
+Feedback or ideas? Email {{.FeedbackAddress}}.
 
 --
 You're getting this because you played in {{.ContestName}} on {{.HomeHost}}.

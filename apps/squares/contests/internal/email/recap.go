@@ -141,16 +141,16 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 	switch {
 	case recap.Canceled && !recap.Started:
 		view.Status = "Canceled"
-		view.Subject = recap.ContestName + ": game canceled"
+		view.Subject = "Squares: " + recap.ContestName + " game canceled"
 		view.Headline = "Game canceled"
 		view.Subhead = fmt.Sprintf("%s was canceled before %s drew its numbers, so it closed with no winners.", matchup, recap.ContestName)
 	case recap.Canceled:
 		view.Status = "Canceled"
-		view.Subject = recap.ContestName + ": game canceled"
+		view.Subject = "Squares: " + recap.ContestName + " game canceled"
 		view.Headline = "Game canceled"
 		view.Subhead = fmt.Sprintf("%s was canceled, so the board finished where it stood. Played quarters keep their winners.", matchup)
 	default:
-		view.Subject = recap.ContestName + ": final results"
+		view.Subject = "Squares: " + recap.ContestName + " final results"
 		view.Headline = "Final results"
 		view.Subhead = fmt.Sprintf("%s %d, %s %d. Here's the winning square for each quarter.", recap.AwayTeam, recap.AwayScore, recap.HomeTeam, recap.HomeScore)
 	}

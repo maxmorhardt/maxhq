@@ -15,7 +15,15 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/templates"
 )
 
-var contactEmailTmpl = template.Must(template.New("contact_email").Parse(templates.ContactEmailHTML))
+const (
+	msoOpen  = `<!--[if mso]><table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->`
+	msoClose = `<!--[if mso]></td></tr></table><![endif]-->`
+)
+
+var contactEmailTmpl = template.Must(template.New("contact_email").Funcs(template.FuncMap{
+	"msoOpen":  func() template.HTML { return msoOpen },
+	"msoClose": func() template.HTML { return msoClose },
+}).Parse(templates.ContactEmailHTML))
 
 // one header line: control characters could start a new header
 func oneLine(v string) string {
@@ -43,7 +51,7 @@ func BuildContactEmail(from, to string, sub *model.ContactSubmission) ([]byte, e
 	var msg bytes.Buffer
 	fmt.Fprintf(&msg, "From: %s\r\n", oneLine(from))
 	fmt.Fprintf(&msg, "To: %s\r\n", oneLine(to))
-	fmt.Fprintf(&msg, "Subject: %s\r\n", mime.QEncoding.Encode("utf-8", oneLine("Contact Form: "+sub.Subject)))
+	fmt.Fprintf(&msg, "Subject: %s\r\n", mime.QEncoding.Encode("utf-8", oneLine("Squares contact form: "+sub.Subject)))
 	// an address that does not parse is left off rather than passed through
 	if addr, err := mail.ParseAddress(sub.Email); err == nil {
 		fmt.Fprintf(&msg, "Reply-To: %s\r\n", addr.String())
