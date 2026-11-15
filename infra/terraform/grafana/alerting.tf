@@ -51,8 +51,8 @@ resource "grafana_rule_group" "usage" {
 
     annotations = {
       summary     = "Over 9,000 active metric series, close to the free tier's 10,000"
-      description = "Run count by (cluster) ({__name__=~\".+\"}) to see which cluster grew, then trim its allowlist in gitops infrastructure/monitoring/values.yaml."
-      runbook_url = "https://github.com/maxmorhardt/gitops/blob/main/infrastructure/monitoring/README.md"
+      description = "Run count by (cluster) ({__name__=~\".+\"}) to see which cluster grew, then trim its allowlist in gitops infra/monitoring/values.yaml."
+      runbook_url = "https://github.com/maxmorhardt/gitops/blob/main/infra/monitoring/README.md"
     }
 
     data {
