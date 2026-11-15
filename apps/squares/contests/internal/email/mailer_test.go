@@ -116,6 +116,7 @@ func TestMailer_RefusesCredentialsWithoutTLS(t *testing.T) {
 	err := s.mailer(t, "emailapikey").Send(context.Background(), testMessage())
 
 	require.ErrorIs(t, err, ErrNoTLS)
+	assert.ErrorIs(t, err, ErrConnection)
 	assert.True(t, IsPermanent(err))
 }
 
@@ -156,7 +157,7 @@ func TestMailer_ConnectionRefused(t *testing.T) {
 		m, err := NewMailer(&Config{From: "recaps@example.com", SMTPHost: "127.0.0.1", SMTPPort: p})
 		require.NoError(t, err)
 		err = m.Send(context.Background(), testMessage())
-		assert.Error(t, err, strconv.Itoa(p))
+		assert.ErrorIs(t, err, ErrConnection, strconv.Itoa(p))
 	}
 }
 

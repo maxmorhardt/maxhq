@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ const (
 	recapLoadTimeout = 30 * time.Second
 	recapSendTimeout = 2 * time.Minute
 	recapAttempts    = 3
+	recapConcurrency = 2
 )
 
 type RecapService interface {
@@ -32,6 +34,7 @@ type recapService struct {
 	mailer      email.Mailer
 	webURL      string
 	retryDelay  time.Duration
+	slots       chan struct{}
 }
 
 func NewRecapService(contestRepo repository.ContestRepository, playerRepo repository.PlayerRepository, mailer email.Mailer, webURL string, retryDelay time.Duration) RecapService {
@@ -41,6 +44,7 @@ func NewRecapService(contestRepo repository.ContestRepository, playerRepo reposi
 		mailer:      mailer,
 		webURL:      webURL,
 		retryDelay:  retryDelay,
+		slots:       make(chan struct{}, recapConcurrency),
 	}
 }
 
@@ -49,30 +53,46 @@ func (s *recapService) Send(ctx context.Context, contestID uuid.UUID) {
 		return
 	}
 
+	s.slots <- struct{}{}
+	defer func() { <-s.slots }()
+
 	log := logging.FromContext(ctx).With("contest_id", contestID)
 
 	players, content, err := s.prepare(ctx, contestID)
 	if err != nil {
-		metrics.IncRecapEmail(false)
+		metrics.IncRecapAborted()
 		log.Error("failed to prepare the recap email", "error", err)
 		return
 	}
 
-	sent, failed := 0, 0
+	recipients := make([]model.ContestPlayer, 0, len(players))
 	for i := range players {
-		to := players[i].UserID
-		if !strings.Contains(to, "@") {
+		if strings.Contains(players[i].UserID, "@") {
+			recipients = append(recipients, players[i])
+		}
+	}
+
+	sent, failed := 0, 0
+	for i := range recipients {
+		msg := &email.Message{To: recipients[i].UserID, Subject: content.Subject, HTML: content.HTML, Text: content.Text}
+		err := s.deliver(ctx, msg)
+		if err == nil {
+			sent++
+			metrics.IncRecapEmail(true)
 			continue
 		}
-		msg := &email.Message{To: to, Subject: content.Subject, HTML: content.HTML, Text: content.Text}
-		if err := s.deliver(ctx, msg); err != nil {
-			failed++
-			metrics.IncRecapEmail(false)
-			log.Error("failed to send the recap email", "player_id", players[i].ID, "error", err)
-			continue
+		if errors.Is(err, email.ErrConnection) {
+			remaining := len(recipients) - i
+			failed += remaining
+			for range remaining {
+				metrics.IncRecapEmail(false)
+			}
+			log.Error("could not reach the mail server, so the rest of the recap emails were not sent", "unsent", remaining, "error", err)
+			break
 		}
-		sent++
-		metrics.IncRecapEmail(true)
+		failed++
+		metrics.IncRecapEmail(false)
+		log.Error("failed to send the recap email", "player_id", recipients[i].ID, "error", err)
 	}
 
 	log.Info("sent contest recap emails", "sent", sent, "failed", failed)
@@ -108,7 +128,7 @@ func (s *recapService) deliver(ctx context.Context, msg *email.Message) error {
 		}
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return errors.Join(err, ctx.Err())
 		case <-time.After(s.retryDelay * time.Duration(attempt)):
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/textproto"
 	"testing"
 	"time"
@@ -135,6 +136,18 @@ func TestRecapService_GivesUpOnPermanentFailures(t *testing.T) {
 		Return(&textproto.Error{Code: 550, Msg: "mailbox unavailable"}).Once()
 	mailer.EXPECT().Send(mock.Anything, mock.MatchedBy(func(m *email.Message) bool { return m.To == "max@example.com" })).
 		Return(nil).Once()
+
+	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
+}
+
+func TestRecapService_StopsTheBatchWhenTheMailServerIsUnreachable(t *testing.T) {
+	contest := finishedContest(t)
+	contestRepo, playerRepo := recapRepos(t, contest, "a@example.com", "b@example.com", "c@example.com")
+
+	unreachable := fmt.Errorf("%w: connect to smtp.example.com: refused", email.ErrConnection)
+	mailer := mocks.NewMailer(t)
+	mailer.EXPECT().Send(mock.Anything, mock.MatchedBy(func(m *email.Message) bool { return m.To == "a@example.com" })).
+		Return(unreachable).Times(3)
 
 	recapSvc(contestRepo, playerRepo, mailer).Send(context.Background(), contest.ID)
 }

@@ -45,7 +45,7 @@ func (m *smtpMailer) Send(ctx context.Context, msg *Message) error {
 
 	conn, err := m.dial(ctx)
 	if err != nil {
-		return fmt.Errorf("connect to %s: %w", m.cfg.SMTPHost, err)
+		return fmt.Errorf("%w: connect to %s: %w", ErrConnection, m.cfg.SMTPHost, err)
 	}
 	defer func() { _ = conn.Close() }()
 
@@ -59,7 +59,7 @@ func (m *smtpMailer) Send(ctx context.Context, msg *Message) error {
 
 	client, err := smtp.NewClient(conn, m.cfg.SMTPHost)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrConnection, err)
 	}
 	defer func() { _ = client.Close() }()
 
@@ -70,15 +70,15 @@ func (m *smtpMailer) deliver(client *smtp.Client, to string, body []byte) error 
 	if m.cfg.SMTPPort != implicitTLSPort {
 		if ok, _ := client.Extension("STARTTLS"); ok {
 			if err := client.StartTLS(m.tlsConfig()); err != nil {
-				return fmt.Errorf("starttls: %w", err)
+				return fmt.Errorf("%w: starttls: %w", ErrConnection, err)
 			}
 		} else if m.cfg.SMTPUser != "" {
-			return ErrNoTLS
+			return fmt.Errorf("%w: %w", ErrConnection, ErrNoTLS)
 		}
 	}
 	if m.cfg.SMTPUser != "" {
 		if err := client.Auth(smtp.PlainAuth("", m.cfg.SMTPUser, m.cfg.SMTPPassword, m.cfg.SMTPHost)); err != nil {
-			return fmt.Errorf("auth: %w", err)
+			return fmt.Errorf("%w: auth: %w", ErrConnection, err)
 		}
 	}
 	if err := client.Mail(m.from.Address); err != nil {
@@ -115,7 +115,10 @@ func (m *smtpMailer) tlsConfig() *tls.Config {
 	return &tls.Config{ServerName: m.cfg.SMTPHost, MinVersion: tls.VersionTLS12}
 }
 
-var ErrNoTLS = errors.New("the smtp server does not offer STARTTLS, so credentials would go out in plaintext")
+var (
+	ErrNoTLS      = errors.New("the smtp server does not offer STARTTLS, so credentials would go out in plaintext")
+	ErrConnection = errors.New("could not open an smtp session")
+)
 
 func IsPermanent(err error) bool {
 	if errors.Is(err, ErrNoTLS) {

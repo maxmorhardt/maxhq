@@ -95,7 +95,7 @@ var (
 	recapEmailsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "recap_emails_total",
-			Help: "Total number of contest recap emails by result (sent or failed)",
+			Help: "Total number of contest recap emails by result: sent or failed per player, aborted per contest that could not be prepared",
 		},
 		[]string{"result"},
 	)
@@ -119,6 +119,7 @@ func init() {
 	)
 	recapEmailsTotal.WithLabelValues("sent")
 	recapEmailsTotal.WithLabelValues("failed")
+	recapEmailsTotal.WithLabelValues("aborted")
 }
 
 func IncContestCreated() {
@@ -175,6 +176,10 @@ func IncRecapEmail(sent bool) {
 		result = "sent"
 	}
 	recapEmailsTotal.WithLabelValues(result).Inc()
+}
+
+func IncRecapAborted() {
+	recapEmailsTotal.WithLabelValues("aborted").Inc()
 }
 
 func quarterLabel(q int) string {
