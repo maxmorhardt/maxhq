@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/consumer"
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/email"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/handler"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/migrations"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
@@ -31,6 +32,8 @@ const (
 	outboxLockKey int64 = 910101
 
 	writeTimeout = 30 * time.Second
+
+	recapRetryDelay = 10 * time.Second
 )
 
 type App struct {
@@ -67,7 +70,8 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	userRepo := repository.NewUserRepository(db)
 
 	playerService := service.NewPlayerService(playerRepo, contestRepo, squareRepo, banRepo, tx, events)
-	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, playerService)
+	recapService := service.NewRecapService(contestRepo, playerRepo, newMailer(&cfg.Email), cfg.Email.WebURL, recapRetryDelay)
+	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, playerService, recapService)
 	squareService := service.NewSquareService(squareRepo, contestRepo, playerRepo, userRepo, tx, events, playerService)
 	inviteService := service.NewInviteService(contestRepo, playerRepo, banRepo, userRepo, playerService, tx, events)
 	leaderboardService := service.NewLeaderboardService(repository.NewLeaderboardRepository(db), sharedCache)
@@ -109,6 +113,18 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 			streams.NewConsumer(db, infra.Redis, consumer.UsersSpec, consumer.UserHandler(userSyncService)),
 		},
 	}
+}
+
+func newMailer(cfg *email.Config) email.Mailer {
+	if !cfg.Enabled {
+		return nil
+	}
+	mailer, err := email.NewMailer(cfg)
+	if err != nil {
+		slog.Error("recap emails are off: invalid email config", "error", err)
+		return nil
+	}
+	return mailer
 }
 
 func (a *App) Start(ctx context.Context) {

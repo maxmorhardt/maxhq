@@ -42,6 +42,11 @@ func run() error {
 		return err
 	}
 
+	err = cfg.Email.Validate()
+	if err != nil {
+		return err
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 

@@ -91,6 +91,14 @@ var (
 			Help: "Total number of squares cleared",
 		},
 	)
+
+	recapEmailsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "recap_emails_total",
+			Help: "Total number of contest recap emails by result (sent or failed)",
+		},
+		[]string{"result"},
+	)
 )
 
 func init() {
@@ -107,6 +115,7 @@ func init() {
 		inviteLinksResetTotal,
 		squaresClaimedTotal,
 		squaresClearedTotal,
+		recapEmailsTotal,
 	)
 }
 
@@ -156,6 +165,14 @@ func IncSquareClaimed() {
 
 func IncSquareCleared() {
 	squaresClearedTotal.Inc()
+}
+
+func IncRecapEmail(sent bool) {
+	result := "failed"
+	if sent {
+		result = "sent"
+	}
+	recapEmailsTotal.WithLabelValues(result).Inc()
 }
 
 func quarterLabel(q int) string {

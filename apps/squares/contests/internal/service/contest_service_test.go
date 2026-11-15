@@ -19,7 +19,26 @@ import (
 )
 
 func contestSvc(repo *mocks.ContestRepository, pSvc *mocks.PlayerService) service.ContestService {
-	return service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), pSvc)
+	return service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), pSvc, anyRecaps())
+}
+
+func anyRecaps() *mocks.RecapService {
+	m := &mocks.RecapService{}
+	m.On("Send", mock.Anything, mock.Anything).Maybe()
+	return m
+}
+
+func expectRecap(t *testing.T, contestID uuid.UUID) (recaps *mocks.RecapService, wait func()) {
+	sent := make(chan struct{})
+	m := mocks.NewRecapService(t)
+	m.EXPECT().Send(mock.Anything, contestID).Run(func(context.Context, uuid.UUID) { close(sent) }).Once()
+	return m, func() {
+		select {
+		case <-sent:
+		case <-time.After(time.Second):
+			t.Fatal("the recap email was not sent")
+		}
+	}
 }
 
 func passTx() *mocks.Transactor {
@@ -47,7 +66,7 @@ func anyUser() *mocks.UserRepository {
 }
 
 func contestSvcWithGame(repo *mocks.ContestRepository, gameRepo *mocks.GameSyncRepository, pSvc *mocks.PlayerService) service.ContestService {
-	return service.NewContestService(repo, gameRepo, passTx(), anyEvents(), pSvc)
+	return service.NewContestService(repo, gameRepo, passTx(), anyEvents(), pSvc, anyRecaps())
 }
 
 func okAuth(t *testing.T) *mocks.PlayerService {
@@ -257,7 +276,7 @@ func TestApplyQuarterResult_StepsStatusAndStamps(t *testing.T) {
 	}
 	repo.EXPECT().ApplyQuarterResults(mock.Anything, contest, mock.Anything).Return(nil)
 
-	got, err := contestSvc(repo, mocks.NewPlayerService(t)).
+	got, err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), mocks.NewPlayerService(t), mocks.NewRecapService(t)).
 		ApplyQuarterResult(context.Background(), contest, 1, 17, 23)
 
 	require.NoError(t, err)
@@ -278,11 +297,14 @@ func TestApplyQuarterResult_FinishPublishesContestUpdate(t *testing.T) {
 	quarter := pub.EXPECT().PublishQuarterResult(mock.Anything, contest.ID, "system", mock.Anything).Return(nil).Call
 	pub.EXPECT().PublishContestUpdate(mock.Anything, contest.ID, "system", contest).Return(nil).NotBefore(quarter)
 
-	_, err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), pub, mocks.NewPlayerService(t)).
+	recaps, recapSent := expectRecap(t, contest.ID)
+
+	_, err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), pub, mocks.NewPlayerService(t), recaps).
 		ApplyQuarterResult(context.Background(), contest, 4, 17, 23)
 
 	require.NoError(t, err)
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
+	recapSent()
 }
 
 func TestApplyQuarterResult_InvalidQuarter(t *testing.T) {
@@ -318,13 +340,16 @@ func TestFinalizeFromScores_RecordsEveryQuarter(t *testing.T) {
 			persisted = results
 		}).Return(nil)
 
-	err := contestSvc(repo, mocks.NewPlayerService(t)).
+	recaps, recapSent := expectRecap(t, contest.ID)
+
+	err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), mocks.NewPlayerService(t), recaps).
 		FinalizeFromScores(context.Background(), contest, []model.GameScore{
 			{Quarter: 1, HomeScore: 7, AwayScore: 3},
 			{Quarter: 4, HomeScore: 21, AwayScore: 17},
 		})
 
 	require.NoError(t, err)
+	recapSent()
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
 	assert.Equal(t, "system", contest.UpdatedBy)
 	require.Len(t, persisted, 2)
@@ -381,9 +406,13 @@ func TestFinishCanceled_KeepsTheBoardAsItStands(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, contest).Return(nil)
 
-	err := contestSvc(repo, mocks.NewPlayerService(t)).FinishCanceled(context.Background(), contest)
+	recaps, recapSent := expectRecap(t, contest.ID)
+
+	err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), mocks.NewPlayerService(t), recaps).
+		FinishCanceled(context.Background(), contest)
 
 	require.NoError(t, err)
+	recapSent()
 	assert.Equal(t, model.ContestStatusFinished, contest.Status)
 	assert.Equal(t, "system", contest.UpdatedBy)
 	assert.Equal(t, labels, contest.XLabels)

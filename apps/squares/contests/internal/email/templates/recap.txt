@@ -1,0 +1,23 @@
+{{.ContestName}}
+
+{{.Headline}}
+{{.Subhead}}
+{{- if .Started}}
+
+{{if .Canceled}}Canceled{{else}}Final{{end}}: {{.AwayTeam}} {{.AwayScore}}, {{.HomeTeam}} {{.HomeScore}}
+{{- if .Quarters}}
+
+Winning squares
+{{- range .Quarters}}
+{{.Label}}  {{.Score}}  {{.Winner}}
+{{- end}}
+{{- end}}
+{{- end}}
+
+Start your next contest: {{.CreateURL}}
+See the final board: {{.BoardURL}}
+
+Feedback or ideas? Email {{.FeedbackAddress}} or just reply.
+
+--
+You're getting this because you played in {{.ContestName}} on {{.HomeHost}}.

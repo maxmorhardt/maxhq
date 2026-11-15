@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/email"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
 	"github.com/maxmorhardt/maxhq/libs/go/squares/pseudonym"
 )
@@ -12,4 +13,5 @@ type ContestsConfig struct {
 	Streams   config.StreamsConfig
 	Internal  config.InternalConfig
 	Pseudonym pseudonym.Config
+	Email     email.Config
 }
