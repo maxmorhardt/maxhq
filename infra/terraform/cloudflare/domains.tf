@@ -32,3 +32,14 @@ module "domains" {
   mx             = try(local.domains[each.key].mx, {})
   txt            = try(local.domains[each.key].txt, {})
 }
+
+import {
+  for_each = toset(["ssl", "always_use_https", "ipv6"])
+  to       = module.domains["maxhq.io"].cloudflare_zone_setting.this[each.key]
+  id       = "b8c0ef48ae425aa6711048795c487f15/${each.key}"
+}
+
+import {
+  to = module.domains["maxhq.io"].cloudflare_zone_setting.hsts
+  id = "b8c0ef48ae425aa6711048795c487f15/security_header"
+}

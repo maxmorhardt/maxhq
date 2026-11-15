@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [aws, cloudflare, dockerhub, github, grafana]
+        module: [aws, cloudflare, dockerhub, github, grafana, tailscale]
     uses: maxmorhardt/workflows/.github/workflows/cd-terraform.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
@@ -28,14 +28,14 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || matrix.module == 'aws' && secrets.TF_VARS_AWS || matrix.module == 'dockerhub' && secrets.TF_VARS_DOCKERHUB || matrix.module == 'grafana' && secrets.TF_VARS_GRAFANA || '' }}
+      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || matrix.module == 'aws' && secrets.TF_VARS_AWS || matrix.module == 'dockerhub' && secrets.TF_VARS_DOCKERHUB || matrix.module == 'grafana' && secrets.TF_VARS_GRAFANA || matrix.module == 'tailscale' && secrets.TF_VARS_TAILSCALE || '' }}
 
   drift:
     if: github.event_name == 'schedule'
     strategy:
       fail-fast: false
       matrix:
-        module: [aws, cloudflare, dockerhub, github, grafana]
+        module: [aws, cloudflare, dockerhub, github, grafana, tailscale]
     uses: maxmorhardt/workflows/.github/workflows/validate-terraform.yml@4d64c3534f2e10f2fe0d602f6e01b6db0d384ef7 # v1.0.1
     with:
       repository: ${{ github.repository }}
@@ -46,4 +46,4 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || matrix.module == 'aws' && secrets.TF_VARS_AWS || matrix.module == 'dockerhub' && secrets.TF_VARS_DOCKERHUB || matrix.module == 'grafana' && secrets.TF_VARS_GRAFANA || '' }}
+      tf_vars: ${{ matrix.module == 'cloudflare' && secrets.TF_VARS || matrix.module == 'aws' && secrets.TF_VARS_AWS || matrix.module == 'dockerhub' && secrets.TF_VARS_DOCKERHUB || matrix.module == 'grafana' && secrets.TF_VARS_GRAFANA || matrix.module == 'tailscale' && secrets.TF_VARS_TAILSCALE || '' }}

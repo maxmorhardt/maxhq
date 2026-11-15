@@ -1,24 +1,26 @@
 # Terraform
 
 Terraform for the resources that live outside the cluster. Anything Argo CD reconciles stays
-in Helm and manifests; this covers the AWS, Cloudflare, Docker Hub, GitHub, and Grafana Cloud state
-that was previously created by hand.
+in Helm and manifests; this covers the AWS, Cloudflare, Docker Hub, GitHub, Grafana Cloud, and Tailscale
+state that was previously created by hand.
 
 | module | owns |
 | --- | --- |
 | `aws/` | The CNPG backup bucket, its lifecycle and policy, the `srv-s3` identity behind `aws-s3-credentials`, and the `S3 Backup Budget` cost alerts — see [postgres/README.md](https://github.com/maxmorhardt/gitops/blob/main/infra/postgres/README.md) |
-| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod tunnel, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, the edge-cache rule for `cached_hosts`, and the visitor location headers (`cf-region`, `cf-ipcity`) the API logs. Also the prod Cloudflare Tunnel and its ingress rules (`tunnel.tf`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
+| `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod tunnel, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, the edge-cache rule for `cached_hosts`, and the visitor location headers (`cf-region`, `cf-ipcity`) the API logs. The zone settings changed from Cloudflare's defaults (SSL Full (strict), Always Use HTTPS, IPv6, and HSTS). Also the prod Cloudflare Tunnel and its ingress rules (`tunnel.tf`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `dockerhub/` | The image repositories under `maxmorhardt`, and that `ages` stays private |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges), tag rulesets in maxhq and workflows (a release tag can't be moved or deleted), and deployment environments (`production` waits for approval). Also each repository's settings (visibility, squash-only merge titles, secret scanning, vulnerability alerts), maxhq-private included |
 | `grafana/` | The Grafana Cloud stack's dashboards (`dashboards/*.json`, in the `maxhq` folder), the `repo alerts` folder Alloy syncs PrometheusRules into, the Telegram contact point and notification policy, the free-tier series alert, the `alloy-rules` service account, the prod Postgres data source, and the synthetic HTTP checks and their alerts |
+| `tailscale/` | The tailnet policy file (`policy.hujson.tftpl`, kept byte for byte as the admin console saves it), tailnet settings, and DNS |
 
 ## Credentials
 
 | module | needs |
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`), plus `terraform.tfvars` with `budget_email` |
-| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, Managed headers: Edit, Account Rulesets: Read, and Account Cloudflare Tunnel: Edit, plus `terraform.tfvars` with `dev_ips` |
+| `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, Managed headers: Edit, Account Rulesets: Read, Account Cloudflare Tunnel: Edit, and Zone Settings: Edit, plus `terraform.tfvars` with `dev_ips` |
 | `dockerhub/` | `terraform.tfvars` with `token`, a Docker Hub personal access token with Read & Write |
+| `tailscale/` | `terraform.tfvars` with `api_key` (a Tailscale API access token) and `ci_owner` (the login that owns `tag:ci`) |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 | `grafana/` | `terraform.tfvars` with `auth` (an Admin service account token), `sm_access_token` (Testing & synthetics > Synthetics > Config), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
 
@@ -32,6 +34,7 @@ In CI, as repository secrets:
 | `TF_VARS` | `cloudflare/` — `dev_ips = [...]` (dev's Tailscale IPs), written to `ci.auto.tfvars` at runtime |
 | `TF_VARS_AWS` | `aws/` — `budget_email` |
 | `TF_VARS_DOCKERHUB` | `dockerhub/` — `token` |
+| `TF_VARS_TAILSCALE` | `tailscale/` — `api_key` and `ci_owner` |
 | `TF_VARS_GRAFANA` | `grafana/` — the four variables above, written the same way |
 
 ## One-time setup
@@ -97,6 +100,8 @@ hand so they stay out of state.
 
 ## Notes
 
+- Still manual: Cloudflare Web Analytics (dashboard only), and the Tailscale auth keys the k3s
+  bootstrap uses (`TS_AUTHKEY_<CLUSTER>`), since Terraform would keep their secrets in state.
 - `aws_s3_bucket.backups` carries `prevent_destroy`, so a mistake fails the plan instead of
   deleting backups.
 - The `srv-s3` access key is not managed here. Terraform would write it into state, so
