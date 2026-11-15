@@ -20,7 +20,7 @@ state that was previously created by hand.
 | `aws/` | An authenticated AWS session (`aws login`), plus `terraform.tfvars` with `budget_email` |
 | `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, Managed headers: Edit, Account Rulesets: Read, Account Cloudflare Tunnel: Edit, Account Settings: Read, and Zone Settings: Edit, plus `terraform.tfvars` with `dev_ips` |
 | `dockerhub/` | `terraform.tfvars` with `token`, a Docker Hub personal access token with Read & Write |
-| `tailscale/` | `terraform.tfvars` with `oauth_client_id` and `oauth_client_secret` (an OAuth client with `policy_file`, `dns`, `feature_settings`, `networking_settings`, and `logs:network`; its secret doesn't expire), or `api_key` for a quick local run |
+| `tailscale/` | `terraform.tfvars` with `oauth_client_id` and `oauth_client_secret` (an OAuth client with write on DNS, Policy File, Feature Settings, and Networking Settings; its secret doesn't expire) |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 | `grafana/` | `terraform.tfvars` with `auth` (an Admin service account token), `sm_access_token` (Testing & synthetics > Synthetics > Config), `cloud_access_policy_token` (the `terraform` access policy on grafana.com: `stacks:read`, `stacks:write`, and read, write, and delete on `accesspolicies` and `frontend-observability`), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
 
