@@ -12,7 +12,7 @@ Monorepo for everything served under `maxhq.io`: the apps, their Helm charts, an
 | [`apps/squares/realtime`](apps/squares/realtime) | Squares live updates (server-sent events) | `maxmorhardt/squares-realtime` |
 | [`libs/go`](libs) | Go module shared by the services (`platform`, `squares`), released as `libs/go/v<version>` | - |
 | [`charts`](charts) | Helm chart for each app and the gateway | - |
-| [`infra/terraform`](infra/terraform/README.md) | AWS backups, Cloudflare DNS, GitHub rulesets and environments | - |
+| [`infra/terraform`](infra/terraform/README.md) | AWS backups and budget, Cloudflare DNS and zone settings, GitHub repositories, Grafana Cloud, Docker Hub, and Tailscale | - |
 | [`infra/k3s`](infra/k3s/README.md) | Node bootstrap and the k3s runbook | - |
 | [`infra/cloudflare-maintenance`](infra/cloudflare-maintenance/README.md) | Maintenance page Worker | - |
 

@@ -27,3 +27,8 @@ variable "backup_user_name" {
   type        = string
   default     = "srv-s3"
 }
+
+variable "budget_email" {
+  description = "Address the budget alerts go to"
+  type        = string
+}
