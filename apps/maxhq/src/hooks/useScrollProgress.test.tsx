@@ -70,6 +70,42 @@ describe('useScrollProgress', () => {
     expect(probe.style.getPropertyValue('--progress')).toBe('0.0000');
   });
 
+  it('does nothing until the ref is attached', () => {
+    function Detached() {
+      useScrollProgress();
+      return <div data-testid="detached" />;
+    }
+    render(<Detached />);
+
+    expect(screen.getByTestId('detached').style.getPropertyValue('--progress')).toBe('');
+  });
+
+  it('measures once per frame however many scrolls land in it', () => {
+    allowMotion();
+    const frame = vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(1);
+
+    render(<Probe />);
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      window.dispatchEvent(new Event('scroll'));
+    });
+
+    expect(frame).toHaveBeenCalledTimes(1);
+  });
+
+  it('animates when the browser cannot report a motion preference', () => {
+    vi.stubGlobal('matchMedia', undefined);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: 768,
+      height: 100,
+    } as DOMRect);
+
+    render(<Probe />);
+
+    expect(screen.getByTestId('probe').style.getPropertyValue('--progress')).toBe('0.0000');
+    vi.unstubAllGlobals();
+  });
+
   it('stops listening once unmounted', () => {
     allowMotion();
     const remove = vi.spyOn(window, 'removeEventListener');

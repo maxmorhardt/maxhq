@@ -237,3 +237,28 @@ func TestConsumer_HandsTheRequestIDToTheHandler(t *testing.T) {
 	require.NoError(t, c.handle(context.Background(), &Entry{ID: "1-0", RequestID: "req-1"}))
 	assert.Equal(t, "req-1", got)
 }
+
+func TestSleep_EndsWithTheTimerOrTheContext(t *testing.T) {
+	start := time.Now()
+	sleep(context.Background(), 10*time.Millisecond)
+	assert.GreaterOrEqual(t, time.Since(start), 10*time.Millisecond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	start = time.Now()
+	sleep(ctx, time.Hour)
+	assert.Less(t, time.Since(start), time.Second)
+}
+
+func TestConsumer_WaitBacksOffWhenRedisIsDown(t *testing.T) {
+	mr, client := newRedis(t)
+	mr.Close()
+	c := &Consumer{rdb: client, spec: testSpec, block: time.Millisecond}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	c.wait(ctx, "0-0")
+
+	assert.Less(t, time.Since(start), consumerLockedWait)
+}

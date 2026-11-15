@@ -27,7 +27,7 @@ const chapters: Chapter[] = [
     id: 'ship',
     icon: <RocketLaunchIcon />,
     title: 'Ship it on merge.',
-    body: 'Every pull request runs lint, tests, and security scans. Merging builds one image tagged with its commit, and Argo CD rolls it out to dev. A release promotes that exact image to production, never rebuilt, so nothing reaches a cluster except through Git.',
+    body: 'Every pull request runs lint, tests held to 90% coverage, and security scans. Merging builds one image tagged with its commit, and Argo CD rolls it out to dev. A release promotes that exact image to production, never rebuilt, so nothing reaches a cluster except through Git.',
     visual: <PipelineVisual />,
   },
   {
