@@ -35,6 +35,15 @@ variable "txt" {
   default = {}
 }
 
+variable "cname" {
+  description = "DNS-only CNAME records by key: name relative to the zone and target"
+  type = map(object({
+    name    = string
+    content = string
+  }))
+  default = {}
+}
+
 variable "cached_hosts" {
   description = "Prod hosts serving prebuilt pages whose HTML is cached at the edge; \"\" is the apex"
   type        = list(string)

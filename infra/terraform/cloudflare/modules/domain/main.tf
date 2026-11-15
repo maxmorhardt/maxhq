@@ -83,6 +83,17 @@ resource "cloudflare_dns_record" "txt" {
   ttl     = 1
 }
 
+resource "cloudflare_dns_record" "cname" {
+  for_each = var.cname
+
+  zone_id = local.zone_id
+  name    = "${each.value.name}.${var.domain}"
+  type    = "CNAME"
+  content = each.value.content
+  proxied = false
+  ttl     = 1
+}
+
 # cache html at edge
 resource "cloudflare_ruleset" "cache" {
   count = length(var.cached_hosts) > 0 ? 1 : 0

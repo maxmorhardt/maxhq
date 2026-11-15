@@ -31,4 +31,5 @@ module "domains" {
   dev_ips        = try(local.domains[each.key].dev, false) ? var.dev_ips : []
   mx             = try(local.domains[each.key].mx, {})
   txt            = try(local.domains[each.key].txt, {})
+  cname          = try(local.domains[each.key].cname, {})
 }
