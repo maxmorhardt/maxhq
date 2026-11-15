@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.6.1...squares-accounts/1.6.2) (2026-11-15)
+
+
+### Bug Fixes
+
+* **squares-contests:** send email through the shared mail client ([#259](https://github.com/maxmorhardt/maxhq/issues/259)) ([f4178fa](https://github.com/maxmorhardt/maxhq/commit/f4178fa14d9ef8c12515ce5b5178f5ff1fea25e0))
+
 ## [1.6.1](https://github.com/maxmorhardt/maxhq/compare/squares-accounts/1.6.0...squares-accounts/1.6.1) (2026-11-15)
 
 
