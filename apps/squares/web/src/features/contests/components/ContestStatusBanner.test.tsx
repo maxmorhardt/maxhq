@@ -42,6 +42,7 @@ function renderBanner(
       viewer={viewer}
       pool={{ allocated: 0, unallocated: 50, waiting: [], ...pool }}
       boardOpen={boardOpen}
+      ownerWaiting={viewer.isOwner && contest.status === 'ACTIVE' && !!pool.waiting?.length}
       beforeKickoff={beforeKickoff}
       removed={removed}
       onOpen={onOpen}
@@ -121,7 +122,7 @@ describe('ContestStatusBanner', () => {
     expect(banner()).toHaveTextContent('You have 1 square left. Pick them before kickoff.');
   });
 
-  it('just says to tap open squares after kickoff or while the game loads', () => {
+  it('just says to tap open squares after kickoff', () => {
     renderBanner(makeViewer({ squaresLeft: 3 }));
     expect(banner()).toHaveTextContent(
       'You have 3 squares left. Tap open squares on the board to claim them.'

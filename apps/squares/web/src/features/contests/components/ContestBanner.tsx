@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { game as palette } from '../../../app/theme';
 
-export interface BannerAction {
+interface BannerAction {
   label: string;
   icon: ReactNode;
   onClick: () => void;

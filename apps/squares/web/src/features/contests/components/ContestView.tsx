@@ -40,6 +40,7 @@ export default function ContestView({
   const [dialog, setDialog] = useState<ContestDialog | null>(null);
   const boardOpen = isBoardOpen(contest);
   const pool = getSquarePool(contest, players);
+  const ownerWaiting = viewer.isOwner && contest.status === 'ACTIVE' && pool.waiting.length > 0;
 
   return (
     <Box
@@ -67,7 +68,7 @@ export default function ContestView({
         status={status}
         onRetry={onStale}
         onOpen={setDialog}
-        squaresToGive={viewer.isOwner && contest.status === 'ACTIVE' && pool.waiting.length > 0}
+        squaresToGive={ownerWaiting}
       />
 
       <ContestStatusBanner
@@ -76,7 +77,8 @@ export default function ContestView({
         viewer={viewer}
         pool={pool}
         boardOpen={boardOpen}
-        beforeKickoff={!!game && !hasKickedOff(game)}
+        ownerWaiting={ownerWaiting}
+        beforeKickoff={!(game && hasKickedOff(game))}
         removed={removed}
         onOpen={setDialog}
       />

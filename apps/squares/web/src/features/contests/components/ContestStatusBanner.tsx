@@ -18,6 +18,7 @@ interface Props {
   viewer: ContestViewer;
   pool: SquarePool;
   boardOpen: boolean;
+  ownerWaiting: boolean;
   beforeKickoff: boolean;
   removed: boolean;
   onOpen: (dialog: ContestDialog) => void;
@@ -37,6 +38,7 @@ function bannerFor({
   viewer,
   pool,
   boardOpen,
+  ownerWaiting,
   beforeKickoff,
   removed,
   onOpen,
@@ -59,7 +61,7 @@ function bannerFor({
       action: { label: 'Share Invite Link', icon: <PersonAdd />, onClick: () => onOpen('invite') },
     };
   }
-  if (viewer.isOwner && active && pool.waiting.length > 0) {
+  if (ownerWaiting) {
     return {
       icon: <Groups />,
       message: waitingMessage(pool),

@@ -110,9 +110,9 @@ describe('ContestView', () => {
     expect(screen.getByTestId('actions')).toHaveAttribute('data-dot', 'false');
   });
 
-  it('tells the banner when the game is known to be before kickoff', () => {
+  it('treats the game as before kickoff until it is known to have started', () => {
     renderView();
-    expect(screen.getByTestId('banner')).toHaveAttribute('data-before-kickoff', 'false');
+    expect(screen.getByTestId('banner')).toHaveAttribute('data-before-kickoff', 'true');
     renderView({ game: { status: 'scheduled', period: 0 } as Game });
     expect(screen.getAllByTestId('banner')[1]).toHaveAttribute('data-before-kickoff', 'true');
     renderView({ game: { status: 'in_progress', period: 1 } as Game });
