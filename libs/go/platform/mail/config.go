@@ -22,11 +22,20 @@ func (c *Config) Sender() string {
 }
 
 func (c *Config) Validate() error {
+	_, err := c.sender()
+	return err
+}
+
+func (c *Config) sender() (*netmail.Address, error) {
 	if c.Host == "" {
-		return errors.New("SMTP_HOST is required")
+		return nil, errors.New("SMTP_HOST is required")
 	}
-	if _, err := netmail.ParseAddress(c.Sender()); err != nil {
-		return fmt.Errorf("EMAIL_FROM (or SMTP_USER when it is unset) must be an email address: %w", err)
+	if c.Port < 1 || c.Port > 65535 {
+		return nil, fmt.Errorf("SMTP_PORT must be between 1 and 65535, got %d", c.Port)
 	}
-	return nil
+	from, err := netmail.ParseAddress(c.Sender())
+	if err != nil {
+		return nil, fmt.Errorf("EMAIL_FROM (or SMTP_USER when it is unset) must be an email address: %w", err)
+	}
+	return from, nil
 }

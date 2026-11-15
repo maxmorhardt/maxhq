@@ -2,6 +2,7 @@ package mail
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"mime"
 	"mime/multipart"
@@ -14,6 +15,13 @@ import (
 	"github.com/google/uuid"
 )
 
+const foldWidth = 76
+
+var (
+	ErrInvalidRecipient = errors.New("invalid recipient address")
+	ErrEmptyMessage     = errors.New("message has neither a text nor an html body")
+)
+
 type Message struct {
 	To      string
 	ReplyTo string
@@ -22,7 +30,19 @@ type Message struct {
 	HTML    string
 }
 
-func (m *Message) encode(from *netmail.Address, now time.Time) ([]byte, error) {
+func (m *Message) recipient() (*netmail.Address, error) {
+	addr, err := netmail.ParseAddress(m.To)
+	if err != nil {
+		return nil, fmt.Errorf("%w %q: %w", ErrInvalidRecipient, m.To, err)
+	}
+	return addr, nil
+}
+
+func (m *Message) encode(from, to *netmail.Address, now time.Time) ([]byte, error) {
+	if m.Text == "" && m.HTML == "" {
+		return nil, ErrEmptyMessage
+	}
+
 	var body bytes.Buffer
 	parts := multipart.NewWriter(&body)
 	for _, part := range []struct{ contentType, content string }{
@@ -53,10 +73,11 @@ func (m *Message) encode(from *netmail.Address, now time.Time) ([]byte, error) {
 
 	var out bytes.Buffer
 	header := func(key, value string) {
-		fmt.Fprintf(&out, "%s: %s\r\n", key, oneLine(value))
+		out.WriteString(fold(key + ": " + oneLine(value)))
+		out.WriteString("\r\n")
 	}
 	header("From", from.String())
-	header("To", (&netmail.Address{Address: m.To}).String())
+	header("To", (&netmail.Address{Address: to.Address}).String())
 	if addr, err := netmail.ParseAddress(m.ReplyTo); err == nil {
 		header("Reply-To", addr.String())
 	}
@@ -77,6 +98,24 @@ func oneLine(v string) string {
 		}
 		return r
 	}, v)
+}
+
+func fold(line string) string {
+	var out strings.Builder
+	width := 0
+	for i, word := range strings.Split(line, " ") {
+		if i > 0 {
+			if width+1+len(word) > foldWidth {
+				out.WriteString("\r\n")
+				width = 0
+			}
+			out.WriteString(" ")
+			width++
+		}
+		out.WriteString(word)
+		width += len(word)
+	}
+	return out.String()
 }
 
 func domainOf(address string) string {

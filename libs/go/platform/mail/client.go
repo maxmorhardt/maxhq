@@ -11,6 +11,7 @@ import (
 	"net/smtp"
 	"net/textproto"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -18,6 +19,7 @@ const (
 	implicitTLSPort = 465
 	dialTimeout     = 10 * time.Second
 	stepTimeout     = 30 * time.Second
+	helloName       = "localhost"
 )
 
 var (
@@ -38,10 +40,7 @@ type client struct {
 }
 
 func New(cfg *Config) (Sender, error) {
-	if err := cfg.Validate(); err != nil {
-		return nil, err
-	}
-	from, err := netmail.ParseAddress(cfg.Sender())
+	from, err := cfg.sender()
 	if err != nil {
 		return nil, err
 	}
@@ -49,11 +48,17 @@ func New(cfg *Config) (Sender, error) {
 }
 
 func Permanent(err error) bool {
-	if errors.Is(err, ErrNoTLS) {
-		return true
-	}
 	var reply *textproto.Error
-	return errors.As(err, &reply) && reply.Code >= 500
+	var certErr *tls.CertificateVerificationError
+	switch {
+	case errors.Is(err, ErrNoTLS), errors.Is(err, ErrInvalidRecipient), errors.Is(err, ErrEmptyMessage):
+		return true
+	case errors.As(err, &certErr):
+		return true
+	case errors.As(err, &reply):
+		return reply.Code >= 500
+	}
+	return false
 }
 
 func MaybeDelivered(err error) bool {
@@ -78,20 +83,28 @@ func (c *client) SendAll(ctx context.Context, msgs []*Message) []error {
 	}()
 
 	for i, msg := range msgs {
-		if err := ctx.Err(); err != nil {
-			fill(errs[i:], err)
-			return errs
-		}
-		if s == nil {
-			var err error
-			if s, err = c.open(ctx); err != nil {
+		for attempt := 0; ; attempt++ {
+			if err := ctx.Err(); err != nil {
 				fill(errs[i:], err)
 				return errs
 			}
-		}
-		if errs[i] = s.send(ctx, msg); errs[i] != nil && s.broken {
+			if s == nil {
+				var err error
+				if s, err = c.open(ctx); err != nil {
+					fill(errs[i:], err)
+					return errs
+				}
+			}
+
+			errs[i] = s.send(ctx, msg)
+			if errs[i] == nil || !s.broken {
+				break
+			}
 			s.close()
 			s = nil
+			if attempt > 0 || !Retryable(errs[i]) {
+				break
+			}
 		}
 	}
 	return errs
@@ -105,33 +118,57 @@ func fill(errs []error, err error) {
 
 func (c *client) open(ctx context.Context) (*session, error) {
 	addr := net.JoinHostPort(c.cfg.Host, strconv.Itoa(c.cfg.Port))
-	dialer := &net.Dialer{Timeout: dialTimeout}
-	tlsConfig := &tls.Config{ServerName: c.cfg.Host, MinVersion: tls.VersionTLS12, RootCAs: c.rootCAs}
-
-	var conn net.Conn
-	var err error
-	if c.cfg.Port == implicitTLSPort {
-		conn, err = (&tls.Dialer{NetDialer: dialer, Config: tlsConfig}).DialContext(ctx, "tcp", addr)
-	} else {
-		conn, err = dialer.DialContext(ctx, "tcp", addr)
-	}
+	raw, err := (&net.Dialer{Timeout: dialTimeout}).DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("connect to %s: %w", c.cfg.Host, err)
 	}
 
-	s := &session{client: c, conn: conn}
-	if err := s.start(ctx, tlsConfig); err != nil {
+	tracked := &trackedConn{Conn: raw}
+	s := &session{client: c, raw: tracked, conn: tracked}
+	s.stopCancel = context.AfterFunc(ctx, func() { _ = raw.SetDeadline(time.Now()) })
+	if err := s.start(ctx, &tls.Config{ServerName: c.cfg.Host, MinVersion: tls.VersionTLS12, RootCAs: c.rootCAs}); err != nil {
+		s.broken = true
 		s.close()
 		return nil, err
 	}
 	return s, nil
 }
 
+type trackedConn struct {
+	net.Conn
+	mu       sync.Mutex
+	writeErr error
+}
+
+func (t *trackedConn) Write(p []byte) (int, error) {
+	n, err := t.Conn.Write(p)
+	if err != nil {
+		t.mu.Lock()
+		t.writeErr = err
+		t.mu.Unlock()
+	}
+	return n, err
+}
+
+func (t *trackedConn) lastWriteErr() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.writeErr
+}
+
+func (t *trackedConn) resetWriteErr() {
+	t.mu.Lock()
+	t.writeErr = nil
+	t.mu.Unlock()
+}
+
 type session struct {
-	client *client
-	conn   net.Conn
-	smtp   *smtp.Client
-	broken bool
+	client     *client
+	raw        *trackedConn
+	conn       net.Conn
+	smtp       *smtp.Client
+	stopCancel func() bool
+	broken     bool
 }
 
 func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
@@ -139,13 +176,24 @@ func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
 		return err
 	}
 
-	smtpClient, err := smtp.NewClient(s.conn, s.client.cfg.Host)
+	cfg := &s.client.cfg
+	if cfg.Port == implicitTLSPort {
+		tlsConn := tls.Client(s.raw, tlsConfig)
+		if err := tlsConn.HandshakeContext(ctx); err != nil {
+			return fmt.Errorf("tls: %w", err)
+		}
+		s.conn = tlsConn
+	}
+
+	smtpClient, err := smtp.NewClient(s.conn, cfg.Host)
 	if err != nil {
 		return err
 	}
 	s.smtp = smtpClient
+	if err := s.smtp.Hello(helloName); err != nil {
+		return fmt.Errorf("ehlo: %w", err)
+	}
 
-	cfg := &s.client.cfg
 	if cfg.Port != implicitTLSPort {
 		if ok, _ := s.smtp.Extension("STARTTLS"); ok {
 			if err := s.smtp.StartTLS(tlsConfig); err != nil {
@@ -164,11 +212,15 @@ func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
 }
 
 func (s *session) send(ctx context.Context, msg *Message) error {
-	body, err := msg.encode(s.client.from, s.client.now())
+	to, err := msg.recipient()
 	if err != nil {
-		return fmt.Errorf("encode message: %w", err)
+		return err
 	}
-	return s.transact(ctx, msg.To, body)
+	body, err := msg.encode(s.client.from, to, s.client.now())
+	if err != nil {
+		return err
+	}
+	return s.transact(ctx, to.Address, body)
 }
 
 func (s *session) transact(ctx context.Context, to string, body []byte) error {
@@ -189,12 +241,16 @@ func (s *session) transact(ctx context.Context, to string, body []byte) error {
 	if _, writeErr := w.Write(body); writeErr != nil {
 		return s.fail(writeErr)
 	}
+	s.raw.resetWriteErr()
 	if closeErr := w.Close(); closeErr != nil {
 		var reply *textproto.Error
 		if errors.As(closeErr, &reply) {
 			return s.fail(closeErr)
 		}
 		s.broken = true
+		if writeErr := s.raw.lastWriteErr(); writeErr != nil {
+			return fmt.Errorf("finish message: %w", writeErr)
+		}
 		return fmt.Errorf("%w: %w", ErrMaybeDelivered, closeErr)
 	}
 	return nil
@@ -213,10 +269,11 @@ func (s *session) extendDeadline(ctx context.Context) error {
 	if d, ok := ctx.Deadline(); ok && d.Before(deadline) {
 		deadline = d
 	}
-	return s.conn.SetDeadline(deadline)
+	return s.raw.SetDeadline(deadline)
 }
 
 func (s *session) close() {
+	s.stopCancel()
 	if s.smtp != nil && !s.broken {
 		_ = s.smtp.Quit()
 	}
