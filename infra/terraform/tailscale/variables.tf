@@ -1,10 +1,19 @@
-variable "api_key" {
-  description = "Tailscale API access token"
+variable "oauth_client_id" {
+  description = "Tailscale OAuth client ID"
   type        = string
-  sensitive   = true
+  default     = null
 }
 
-variable "ci_owner" {
-  description = "Login that owns tag:ci"
+variable "oauth_client_secret" {
+  description = "Tailscale OAuth client secret"
   type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "api_key" {
+  description = "Tailscale API access token, when not using the OAuth client"
+  type        = string
+  sensitive   = true
+  default     = null
 }

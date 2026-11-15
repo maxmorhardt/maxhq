@@ -1,5 +1,5 @@
 resource "tailscale_acl" "this" {
-  acl = templatefile("${path.module}/policy.hujson.tftpl", { ci_owner = var.ci_owner })
+  acl = file("${path.module}/policy.hujson")
 }
 
 import {

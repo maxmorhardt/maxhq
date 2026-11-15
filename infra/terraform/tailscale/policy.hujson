@@ -6,7 +6,6 @@
 	// },
 
 	"tagOwners": {
-		"tag:ci":   ["${ci_owner}"],
 		"tag:dev":  ["autogroup:admin"],
 		"tag:prod": ["autogroup:admin"],
 	},
