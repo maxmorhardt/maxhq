@@ -36,3 +36,18 @@ type StreamsConfig struct {
 type InternalConfig struct {
 	Token string `env:"INTERNAL_API_TOKEN,required"`
 }
+
+type SMTPConfig struct {
+	Host     string `env:"SMTP_HOST"`
+	Port     int    `env:"SMTP_PORT" envDefault:"587"`
+	User     string `env:"SMTP_USER"`
+	Password string `env:"SMTP_PASSWORD"`
+	From     string `env:"EMAIL_FROM"`
+}
+
+func (c *SMTPConfig) Sender() string {
+	if c.From != "" {
+		return c.From
+	}
+	return c.User
+}

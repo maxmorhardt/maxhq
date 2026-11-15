@@ -11,49 +11,54 @@ import (
 	"net/smtp"
 	"net/textproto"
 	"strconv"
-	"sync"
 	"time"
+
+	"github.com/maxmorhardt/maxhq/libs/go/platform/config"
 )
 
 const (
 	implicitTLSPort = 465
 	dialTimeout     = 10 * time.Second
 	stepTimeout     = 30 * time.Second
+	acceptTimeout   = 5 * time.Minute
 	helloName       = "localhost"
 )
 
 var (
-	ErrNoTLS          = errors.New("the smtp server does not offer STARTTLS, so credentials would go out in plaintext")
+	ErrNoTLS          = errors.New("the smtp server does not offer STARTTLS, so mail would go out in plaintext")
 	ErrMaybeDelivered = errors.New("the connection failed after the message was sent, so the server may have accepted it")
 )
 
-type Sender interface {
+type Client interface {
 	Send(ctx context.Context, msg *Message) error
 	SendAll(ctx context.Context, msgs []*Message) []error
 }
 
-type client struct {
-	cfg     Config
-	from    *netmail.Address
-	now     func() time.Time
-	rootCAs *x509.CertPool
+type smtpClient struct {
+	cfg        config.SMTPConfig
+	from       *netmail.Address
+	requireTLS bool
+	rootCAs    *x509.CertPool
 }
 
-func New(cfg *Config) (Sender, error) {
-	from, err := cfg.sender()
-	if err != nil {
-		return nil, err
+func New(cfg *config.SMTPConfig) (Client, error) {
+	if cfg.Host == "" {
+		return nil, errors.New("SMTP_HOST is required")
 	}
-	return &client{cfg: *cfg, from: from, now: time.Now}, nil
+	if cfg.Port < 1 || cfg.Port > 65535 {
+		return nil, fmt.Errorf("SMTP_PORT must be between 1 and 65535, got %d", cfg.Port)
+	}
+	from, err := netmail.ParseAddress(cfg.Sender())
+	if err != nil {
+		return nil, fmt.Errorf("EMAIL_FROM (or SMTP_USER when it is unset) must be an email address: %w", err)
+	}
+	return &smtpClient{cfg: *cfg, from: from, requireTLS: !loopback(cfg.Host)}, nil
 }
 
 func Permanent(err error) bool {
 	var reply *textproto.Error
-	var certErr *tls.CertificateVerificationError
 	switch {
-	case errors.Is(err, ErrNoTLS), errors.Is(err, ErrInvalidRecipient), errors.Is(err, ErrEmptyMessage):
-		return true
-	case errors.As(err, &certErr):
+	case errors.Is(err, ErrInvalidRecipient), errors.Is(err, ErrInvalidReplyTo), errors.Is(err, ErrEmptyMessage):
 		return true
 	case errors.As(err, &reply):
 		return reply.Code >= 500
@@ -69,12 +74,20 @@ func Retryable(err error) bool {
 	return err != nil && !Permanent(err) && !MaybeDelivered(err)
 }
 
-func (c *client) Send(ctx context.Context, msg *Message) error {
+func (c *smtpClient) Send(ctx context.Context, msg *Message) error {
 	return c.SendAll(ctx, []*Message{msg})[0]
 }
 
-func (c *client) SendAll(ctx context.Context, msgs []*Message) []error {
+func (c *smtpClient) SendAll(ctx context.Context, msgs []*Message) []error {
 	errs := make([]error, len(msgs))
+	envelopes := make([]*envelope, len(msgs))
+	pending := make([]int, 0, len(msgs))
+	for i, msg := range msgs {
+		if envelopes[i], errs[i] = msg.prepare(c.from); errs[i] == nil {
+			pending = append(pending, i)
+		}
+	}
+
 	var s *session
 	defer func() {
 		if s != nil {
@@ -82,21 +95,21 @@ func (c *client) SendAll(ctx context.Context, msgs []*Message) []error {
 		}
 	}()
 
-	for i, msg := range msgs {
+	for n, i := range pending {
 		for attempt := 0; ; attempt++ {
 			if err := ctx.Err(); err != nil {
-				fill(errs[i:], err)
+				failAll(errs, pending[n:], err)
 				return errs
 			}
 			if s == nil {
 				var err error
 				if s, err = c.open(ctx); err != nil {
-					fill(errs[i:], err)
+					failAll(errs, pending[n:], err)
 					return errs
 				}
 			}
 
-			errs[i] = s.send(ctx, msg)
+			errs[i] = s.transact(ctx, envelopes[i])
 			if errs[i] == nil || !s.broken {
 				break
 			}
@@ -110,21 +123,20 @@ func (c *client) SendAll(ctx context.Context, msgs []*Message) []error {
 	return errs
 }
 
-func fill(errs []error, err error) {
-	for i := range errs {
+func failAll(errs []error, indexes []int, err error) {
+	for _, i := range indexes {
 		errs[i] = err
 	}
 }
 
-func (c *client) open(ctx context.Context) (*session, error) {
+func (c *smtpClient) open(ctx context.Context) (*session, error) {
 	addr := net.JoinHostPort(c.cfg.Host, strconv.Itoa(c.cfg.Port))
 	raw, err := (&net.Dialer{Timeout: dialTimeout}).DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("connect to %s: %w", c.cfg.Host, err)
 	}
 
-	tracked := &trackedConn{Conn: raw}
-	s := &session{client: c, raw: tracked, conn: tracked}
+	s := &session{client: c, raw: raw}
 	s.stopCancel = context.AfterFunc(ctx, func() { _ = raw.SetDeadline(time.Now()) })
 	if err := s.start(ctx, &tls.Config{ServerName: c.cfg.Host, MinVersion: tls.VersionTLS12, RootCAs: c.rootCAs}); err != nil {
 		s.broken = true
@@ -134,58 +146,30 @@ func (c *client) open(ctx context.Context) (*session, error) {
 	return s, nil
 }
 
-type trackedConn struct {
-	net.Conn
-	mu       sync.Mutex
-	writeErr error
-}
-
-func (t *trackedConn) Write(p []byte) (int, error) {
-	n, err := t.Conn.Write(p)
-	if err != nil {
-		t.mu.Lock()
-		t.writeErr = err
-		t.mu.Unlock()
-	}
-	return n, err
-}
-
-func (t *trackedConn) lastWriteErr() error {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.writeErr
-}
-
-func (t *trackedConn) resetWriteErr() {
-	t.mu.Lock()
-	t.writeErr = nil
-	t.mu.Unlock()
-}
-
 type session struct {
-	client     *client
-	raw        *trackedConn
-	conn       net.Conn
+	client     *smtpClient
+	raw        net.Conn
 	smtp       *smtp.Client
 	stopCancel func() bool
 	broken     bool
 }
 
 func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
-	if err := s.extendDeadline(ctx); err != nil {
+	if err := s.extendDeadline(ctx, stepTimeout); err != nil {
 		return err
 	}
 
 	cfg := &s.client.cfg
+	conn := s.raw
 	if cfg.Port == implicitTLSPort {
 		tlsConn := tls.Client(s.raw, tlsConfig)
 		if err := tlsConn.HandshakeContext(ctx); err != nil {
 			return fmt.Errorf("tls: %w", err)
 		}
-		s.conn = tlsConn
+		conn = tlsConn
 	}
 
-	smtpClient, err := smtp.NewClient(s.conn, cfg.Host)
+	smtpClient, err := smtp.NewClient(conn, cfg.Host)
 	if err != nil {
 		return err
 	}
@@ -199,11 +183,14 @@ func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
 			if err := s.smtp.StartTLS(tlsConfig); err != nil {
 				return fmt.Errorf("starttls: %w", err)
 			}
-		} else if cfg.User != "" {
+		} else if s.client.requireTLS {
 			return ErrNoTLS
 		}
 	}
 	if cfg.User != "" {
+		if err := s.extendDeadline(ctx, stepTimeout); err != nil {
+			return err
+		}
 		if err := s.smtp.Auth(smtp.PlainAuth("", cfg.User, cfg.Password, cfg.Host)); err != nil {
 			return fmt.Errorf("auth: %w", err)
 		}
@@ -211,49 +198,69 @@ func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
 	return nil
 }
 
-func (s *session) send(ctx context.Context, msg *Message) error {
-	to, err := msg.recipient()
-	if err != nil {
-		return err
+func loopback(host string) bool {
+	if host == "localhost" {
+		return true
 	}
-	body, err := msg.encode(s.client.from, to, s.client.now())
-	if err != nil {
-		return err
-	}
-	return s.transact(ctx, to.Address, body)
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
-func (s *session) transact(ctx context.Context, to string, body []byte) error {
-	if err := s.extendDeadline(ctx); err != nil {
-		return s.fail(err)
+func (s *session) transact(ctx context.Context, env *envelope) error {
+	if err := s.step(ctx, func() error { return s.smtp.Mail(s.client.from.Address) }); err != nil {
+		return err
 	}
-	if err := s.smtp.Mail(s.client.from.Address); err != nil {
-		return s.fail(err)
+	if err := s.step(ctx, func() error { return s.smtp.Rcpt(env.to) }); err != nil {
+		return err
 	}
-	if err := s.smtp.Rcpt(to); err != nil {
-		return s.fail(err)
+	if err := s.step(ctx, func() error { return s.command(354, "DATA") }); err != nil {
+		return err
 	}
 
-	w, err := s.smtp.Data()
-	if err != nil {
-		return s.fail(err)
+	w := s.smtp.Text.DotWriter()
+	if _, err := w.Write(env.body); err != nil {
+		s.broken = true
+		return fmt.Errorf("send message: %w", err)
 	}
-	if _, writeErr := w.Write(body); writeErr != nil {
-		return s.fail(writeErr)
+	if err := w.Close(); err != nil {
+		s.broken = true
+		return fmt.Errorf("finish message: %w", err)
 	}
-	s.raw.resetWriteErr()
-	if closeErr := w.Close(); closeErr != nil {
+
+	if err := s.extendDeadline(ctx, acceptTimeout); err != nil {
+		s.broken = true
+		return fmt.Errorf("%w: %w", ErrMaybeDelivered, err)
+	}
+	if _, _, err := s.smtp.Text.ReadResponse(250); err != nil {
 		var reply *textproto.Error
-		if errors.As(closeErr, &reply) {
-			return s.fail(closeErr)
+		if errors.As(err, &reply) {
+			return s.fail(err)
 		}
 		s.broken = true
-		if writeErr := s.raw.lastWriteErr(); writeErr != nil {
-			return fmt.Errorf("finish message: %w", writeErr)
-		}
-		return fmt.Errorf("%w: %w", ErrMaybeDelivered, closeErr)
+		return fmt.Errorf("%w: %w", ErrMaybeDelivered, err)
 	}
 	return nil
+}
+
+func (s *session) step(ctx context.Context, fn func() error) error {
+	if err := s.extendDeadline(ctx, stepTimeout); err != nil {
+		return s.fail(err)
+	}
+	if err := fn(); err != nil {
+		return s.fail(err)
+	}
+	return nil
+}
+
+func (s *session) command(code int, cmd string) error {
+	id, err := s.smtp.Text.Cmd("%s", cmd)
+	if err != nil {
+		return err
+	}
+	s.smtp.Text.StartResponse(id)
+	defer s.smtp.Text.EndResponse(id)
+	_, _, err = s.smtp.Text.ReadResponse(code)
+	return err
 }
 
 func (s *session) fail(err error) error {
@@ -264,12 +271,19 @@ func (s *session) fail(err error) error {
 	return err
 }
 
-func (s *session) extendDeadline(ctx context.Context) error {
-	deadline := time.Now().Add(stepTimeout)
+func (s *session) extendDeadline(ctx context.Context, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
 	if d, ok := ctx.Deadline(); ok && d.Before(deadline) {
 		deadline = d
 	}
-	return s.raw.SetDeadline(deadline)
+	if err := s.raw.SetDeadline(deadline); err != nil {
+		return err
+	}
+	if err := ctx.Err(); err != nil {
+		_ = s.raw.SetDeadline(time.Now())
+		return err
+	}
+	return nil
 }
 
 func (s *session) close() {
@@ -277,5 +291,8 @@ func (s *session) close() {
 	if s.smtp != nil && !s.broken {
 		_ = s.smtp.Quit()
 	}
-	_ = s.conn.Close()
+	if s.smtp != nil {
+		_ = s.smtp.Close()
+	}
+	_ = s.raw.Close()
 }
