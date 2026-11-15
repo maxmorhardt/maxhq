@@ -252,12 +252,12 @@ metrics:
 
       - alert: RecapEmailsFailing
         expr: |
-          sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="failed"}[1h])) > 0
+          sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="failed"}[1h])) >= 3 and sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="failed"}[1h])) > sum(increase(recap_emails_total{job="{{ include "app.fullname" . }}",result="sent"}[1h]))
         labels:
           severity: warning
         annotations:
           summary: 'Contest recap emails are failing'
-          description: '{{ $value }} recap emails failed in the last hour; check the contests logs for the SMTP error'
+          description: '{{ $value }} recap emails failed in the last hour, more than were sent; check the contests logs for the SMTP error'
 
       - alert: ConsumerMissedEvents
         expr: |

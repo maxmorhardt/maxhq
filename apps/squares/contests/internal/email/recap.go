@@ -132,7 +132,7 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 	case recap.Canceled && !recap.Started:
 		view.Subject = recap.ContestName + ": game canceled"
 		view.Headline = "Game canceled"
-		view.Subhead = fmt.Sprintf("%s was canceled before kickoff, so %s closed without drawing numbers.", matchup, recap.ContestName)
+		view.Subhead = fmt.Sprintf("%s was canceled before %s drew its numbers, so it closed with no winners.", matchup, recap.ContestName)
 	case recap.Canceled:
 		view.Subject = recap.ContestName + ": game canceled"
 		view.Headline = "Game canceled"

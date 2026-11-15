@@ -79,7 +79,7 @@ func TestRenderRecap_Canceled(t *testing.T) {
 	recap.Started, recap.Quarters = false, nil
 	content, err = RenderRecap("https://squares.example.com", recap)
 	require.NoError(t, err)
-	assert.Contains(t, content.HTML, "closed without drawing numbers")
+	assert.Contains(t, content.HTML, "before Office Pool drew its numbers, so it closed with no winners.")
 	assert.NotContains(t, content.HTML, "Winning squares")
 }
 
