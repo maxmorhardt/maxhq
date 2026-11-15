@@ -10,8 +10,8 @@ state that was previously created by hand.
 | `cloudflare/` | DNS for every domain in `domains.tf`: prod hostnames proxied to the prod tunnel, `dev.` and `*.dev.` pointing at dev's Tailscale IPs, mail and TXT records, the edge-cache rule for `cached_hosts`, and the visitor location headers (`cf-region`, `cf-ipcity`) the API logs. The zone settings changed from Cloudflare's defaults (SSL Full (strict), Always Use HTTPS, IPv6, and HSTS). Also the prod Cloudflare Tunnel and its ingress rules (`tunnel.tf`). Adding a domain is one entry in `local.domains` once its zone exists in Cloudflare |
 | `dockerhub/` | The image repositories under `maxmorhardt`, and that `ages` stays private |
 | `github/` | Repository rulesets on every default branch (required checks, squash-only merges), tag rulesets in maxhq and workflows (a release tag can't be moved or deleted), and deployment environments (`production` waits for approval). Also each repository's settings (visibility, squash-only merge titles, secret scanning, vulnerability alerts), maxhq-private included |
-| `grafana/` | The Grafana Cloud stack's dashboards (`dashboards/*.json`, in the `maxhq` folder), the `repo alerts` folder Alloy syncs PrometheusRules into, the Telegram contact point and notification policy, the free-tier series alert, the `alloy-rules` service account, the prod Postgres data source, and the synthetic HTTP checks and their alerts |
-| `tailscale/` | The tailnet policy file (`policy.hujson.tftpl`, kept byte for byte as the admin console saves it), tailnet settings, and DNS |
+| `grafana/` | The Grafana Cloud stack's dashboards (`dashboards/*.json`, in the `maxhq` folder), the `repo alerts` folder Alloy syncs PrometheusRules into, the Telegram contact point and notification policy, the free-tier series alert, the `alloy-rules` service account, the prod Postgres data source, the synthetic HTTP checks and their alerts, and on the Cloud side the stack itself, Alloy's write access policy, the private data source connect network, and the squares Faro app |
+| `tailscale/` | The tailnet policy file (`policy.hujson`, compared byte for byte with what the admin console shows, so edit it here), tailnet settings, and DNS |
 
 ## Credentials
 
@@ -20,9 +20,9 @@ state that was previously created by hand.
 | `aws/` | An authenticated AWS session (`aws login`), plus `terraform.tfvars` with `budget_email` |
 | `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, Managed headers: Edit, Account Rulesets: Read, Account Cloudflare Tunnel: Edit, and Zone Settings: Edit, plus `terraform.tfvars` with `dev_ips` |
 | `dockerhub/` | `terraform.tfvars` with `token`, a Docker Hub personal access token with Read & Write |
-| `tailscale/` | `terraform.tfvars` with `api_key` (a Tailscale API access token) and `ci_owner` (the login that owns `tag:ci`) |
+| `tailscale/` | `terraform.tfvars` with `oauth_client_id` and `oauth_client_secret` (an OAuth client with `policy_file`, `dns`, `feature_settings`, `networking_settings`, and `logs:network`; its secret doesn't expire), or `api_key` for a quick local run |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
-| `grafana/` | `terraform.tfvars` with `auth` (an Admin service account token), `sm_access_token` (Testing & synthetics > Synthetics > Config), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
+| `grafana/` | `terraform.tfvars` with `auth` (an Admin service account token), `sm_access_token` (Testing & synthetics > Synthetics > Config), `cloud_access_policy_token` (the `terraform` access policy on grafana.com: `stacks:read`, `stacks:write`, and read, write, and delete on `accesspolicies` and `frontend-observability`), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
 
 In CI, as repository secrets:
 
@@ -34,8 +34,8 @@ In CI, as repository secrets:
 | `TF_VARS` | `cloudflare/` — `dev_ips = [...]` (dev's Tailscale IPs), written to `ci.auto.tfvars` at runtime |
 | `TF_VARS_AWS` | `aws/` — `budget_email` |
 | `TF_VARS_DOCKERHUB` | `dockerhub/` — `token` |
-| `TF_VARS_TAILSCALE` | `tailscale/` — `api_key` and `ci_owner` |
-| `TF_VARS_GRAFANA` | `grafana/` — the four variables above, written the same way |
+| `TF_VARS_TAILSCALE` | `tailscale/` — `oauth_client_id` and `oauth_client_secret` |
+| `TF_VARS_GRAFANA` | `grafana/` — the five variables above, written the same way |
 
 ## One-time setup
 
@@ -95,8 +95,9 @@ saves dashboards in its own JSON form, so edit in the UI, then Export > Export a
 the UI and not committed; the Monday plan reports it.
 
 The `empty` contact point, which silences `severity=info`, stays manual: Terraform can't hold a
-contact point with no integrations. Service account and Synthetic Monitoring tokens are created by
-hand so they stay out of state.
+contact point with no integrations. Tokens (service accounts, Synthetic Monitoring, access policies,
+the PDC signing token) and the `terraform` access policy itself are created by hand, so secrets stay
+out of state and Terraform can't widen its own access.
 
 ## Notes
 

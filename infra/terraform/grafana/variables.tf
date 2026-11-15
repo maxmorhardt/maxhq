@@ -10,6 +10,18 @@ variable "sm_url" {
   default     = "https://synthetic-monitoring-api-us-east-0.grafana.net"
 }
 
+variable "stack_id" {
+  description = "Grafana Cloud stack ID"
+  type        = string
+  default     = "1880852"
+}
+
+variable "region" {
+  description = "Grafana Cloud region the stack runs in"
+  type        = string
+  default     = "prod-us-east-0"
+}
+
 variable "auth" {
   description = "Service account token with the Admin role"
   type        = string
@@ -18,6 +30,12 @@ variable "auth" {
 
 variable "sm_access_token" {
   description = "Synthetic Monitoring access token"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloud_access_policy_token" {
+  description = "Grafana Cloud access policy token (the terraform policy)"
   type        = string
   sensitive   = true
 }
