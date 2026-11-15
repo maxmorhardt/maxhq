@@ -18,6 +18,7 @@ import (
 const (
 	foldWidth       = 76
 	maxSubjectRunes = 300
+	maxNameRunes    = 200
 )
 
 var (
@@ -57,8 +58,16 @@ func (m *Message) validate() (*addresses, error) {
 		if addrs.replyTo, err = netmail.ParseAddress(m.ReplyTo); err != nil {
 			return nil, fmt.Errorf("%w %q: %w", ErrInvalidReplyTo, m.ReplyTo, err)
 		}
+		addrs.replyTo.Name = truncate(addrs.replyTo.Name, maxNameRunes)
 	}
 	return addrs, nil
+}
+
+func truncate(s string, limit int) string {
+	if runes := []rune(s); len(runes) > limit {
+		return string(runes[:limit])
+	}
+	return s
 }
 
 func (m *Message) build(from *netmail.Address, addrs *addresses) *envelope {
@@ -101,9 +110,7 @@ func (m *Message) build(from *netmail.Address, addrs *addresses) *envelope {
 
 func subject(s string) string {
 	s = oneLine(s)
-	if runes := []rune(s); len(runes) > maxSubjectRunes {
-		s = string(runes[:maxSubjectRunes])
-	}
+	s = truncate(s, maxSubjectRunes)
 	s = strings.ReplaceAll(s, "=?", "=\u200b?")
 	return mime.QEncoding.Encode("utf-8", s)
 }
@@ -121,7 +128,7 @@ func fold(line string) string {
 	var out strings.Builder
 	width, words := 0, 0
 	first := true
-	for i, word := range strings.Split(line, " ") {
+	for i, word := range strings.Fields(line) {
 		if i > 0 {
 			canBreak := words > 1 || (!first && words > 0)
 			if canBreak && width+1+len(word) > foldWidth {

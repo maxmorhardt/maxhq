@@ -101,6 +101,30 @@ func TestMessage_TruncatesLongSubjectsAndKeepsTheKeyLine(t *testing.T) {
 	assert.Contains(t, head, "Subject: "+strings.Repeat("x", maxSubjectRunes)+crlf)
 }
 
+func TestMessage_FoldNeverLeavesAWhitespaceOnlyLine(t *testing.T) {
+	s := strings.Repeat("a", 60) + "  " + strings.Repeat("b", 75) + "  " + strings.Repeat("c", 75)
+	env := prepared(t, &Message{To: "max@example.com", Subject: s, Text: "hi"}, &netmail.Address{Address: "notify@example.com"})
+
+	for _, line := range strings.Split(headerOf(env), crlf) {
+		assert.NotEmpty(t, strings.TrimSpace(line))
+		assert.False(t, strings.HasSuffix(line, " "), line)
+	}
+}
+
+func TestMessage_CapsLongReplyToNames(t *testing.T) {
+	name := strings.Repeat("n", 1200)
+	env := prepared(t, &Message{To: "max@example.com", ReplyTo: name + " <jen@example.com>", Text: "hi"}, &netmail.Address{Address: "notify@example.com"})
+
+	for _, line := range strings.Split(headerOf(env), crlf) {
+		assert.LessOrEqual(t, len(line), 998)
+	}
+	parsed, _ := decode(t, env.body)
+	replyTo, err := netmail.ParseAddress(parsed.Header.Get("Reply-To"))
+	require.NoError(t, err)
+	assert.Len(t, replyTo.Name, maxNameRunes)
+	assert.Equal(t, "jen@example.com", replyTo.Address)
+}
+
 func TestMessage_ValidateRejectsNil(t *testing.T) {
 	var msg *Message
 	_, err := msg.validate()

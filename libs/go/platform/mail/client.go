@@ -180,11 +180,10 @@ func (s *session) start(ctx context.Context, tlsConfig *tls.Config) error {
 		conn = tlsConn
 	}
 
-	smtpClient, err := smtp.NewClient(conn, cfg.Host)
-	if err != nil {
+	var err error
+	if s.smtp, err = smtp.NewClient(conn, cfg.Host); err != nil {
 		return err
 	}
-	s.smtp = smtpClient
 	if err := s.smtp.Hello(helloName); err != nil {
 		return fmt.Errorf("ehlo: %w", err)
 	}
