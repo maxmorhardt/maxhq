@@ -19,10 +19,10 @@ state that was previously created by hand.
 | --- | --- |
 | `aws/` | An authenticated AWS session (`aws login`), plus `terraform.tfvars` with `budget_email` |
 | `cloudflare/` | `CLOUDFLARE_API_TOKEN` with Zone DNS: Edit, Cache Settings: Edit, Dynamic URL Redirects: Edit, Managed headers: Edit, Account Rulesets: Read, Account Cloudflare Tunnel: Edit, Account Settings: Read, and Zone Settings: Edit, plus `terraform.tfvars` with `dev_ips` |
-| `dockerhub/` | `terraform.tfvars` with `token`, a Docker Hub personal access token with Read & Write |
-| `tailscale/` | `terraform.tfvars` with `oauth_client_id` and `oauth_client_secret` (an OAuth client with write on DNS, Policy File, Feature Settings, and Networking Settings; its secret doesn't expire) |
+| `dockerhub/` | `terraform.tfvars` with `token`, a Docker Hub personal access token with Read, Write, Delete (the `github-actions` token, which also pushes images) |
 | `github/` | `GITHUB_TOKEN` (`export GITHUB_TOKEN=$(gh auth token)`) |
 | `grafana/` | `terraform.tfvars` with `auth` (a token of the `terraform` service account, Admin role), `sm_access_token` (Testing & synthetics > Synthetics > Config), `cloud_access_policy_token` (the `terraform` access policy on grafana.com: `stacks:read`, `stacks:write`, and read, write, and delete on `accesspolicies` and `frontend-observability`), `telegram_bot_token`, and `postgres_password` (`scripts/secrets.sh get prod cnpg-database/postgres-grafana-user password` in gitops) |
+| `tailscale/` | `terraform.tfvars` with `oauth_client_id` and `oauth_client_secret` (an OAuth client with write on DNS, Policy File, Feature Settings, and Networking Settings; its secret doesn't expire) |
 
 In CI, as repository secrets:
 
@@ -57,7 +57,8 @@ aws s3api put-bucket-lifecycle-configuration --bucket maxhq-tf --lifecycle-confi
 CI uses an access key for `srv-s3` rather than the account root, since root keys cannot be
 scoped or cleanly rotated. Its `srv-s3-terraform-policy` is managed by hand, so CI can't widen
 its own access: grant it the state bucket and anything a module adds (the budget needs
-`budgets:ViewBudget`, `budgets:ModifyBudget`, and `budgets:ListTagsForResource`).
+`budgets:ViewBudget`, `budgets:ModifyBudget`, `budgets:ListTagsForResource`, `budgets:TagResource`,
+and `budgets:UntagResource` on that budget).
 
 ## Workflow
 
@@ -97,8 +98,8 @@ the UI and not committed; the Monday plan reports it.
 
 The `empty` contact point, which silences `severity=info`, stays manual: Terraform can't hold a
 contact point with no integrations. Tokens (service accounts, Synthetic Monitoring, access policies,
-the PDC signing token), the `terraform` service account, and the `terraform` access policy are created by hand, so secrets stay
-out of state and Terraform can't widen its own access.
+the PDC signing token) are created by hand so their values stay out of state, and so are the
+`terraform` service account and access policy, so Terraform can't widen its own access.
 
 ## Notes
 
