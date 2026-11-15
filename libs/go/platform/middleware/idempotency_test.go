@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -203,7 +202,7 @@ func TestIdempotency_ReplaysBodiesWrittenAsStrings(t *testing.T) {
 	r.POST("/contests", func(c *gin.Context) {
 		calls++
 		c.Status(http.StatusCreated)
-		_, _ = io.WriteString(c.Writer, "made")
+		_, _ = c.Writer.WriteString("made")
 	})
 
 	first := post(r, "k-string", `{}`)
