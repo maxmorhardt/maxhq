@@ -117,6 +117,8 @@ func init() {
 		squaresClearedTotal,
 		recapEmailsTotal,
 	)
+	recapEmailsTotal.WithLabelValues("sent")
+	recapEmailsTotal.WithLabelValues("failed")
 }
 
 func IncContestCreated() {

@@ -72,6 +72,8 @@ func (m *smtpMailer) deliver(client *smtp.Client, to string, body []byte) error 
 			if err := client.StartTLS(m.tlsConfig()); err != nil {
 				return fmt.Errorf("starttls: %w", err)
 			}
+		} else if m.cfg.SMTPUser != "" {
+			return ErrNoTLS
 		}
 	}
 	if m.cfg.SMTPUser != "" {
@@ -96,7 +98,8 @@ func (m *smtpMailer) deliver(client *smtp.Client, to string, body []byte) error 
 	if closeErr := w.Close(); closeErr != nil {
 		return closeErr
 	}
-	return client.Quit()
+	_ = client.Quit()
+	return nil
 }
 
 func (m *smtpMailer) dial(ctx context.Context) (net.Conn, error) {
@@ -112,7 +115,12 @@ func (m *smtpMailer) tlsConfig() *tls.Config {
 	return &tls.Config{ServerName: m.cfg.SMTPHost, MinVersion: tls.VersionTLS12}
 }
 
+var ErrNoTLS = errors.New("the smtp server does not offer STARTTLS, so credentials would go out in plaintext")
+
 func IsPermanent(err error) bool {
+	if errors.Is(err, ErrNoTLS) {
+		return true
+	}
 	var reply *textproto.Error
 	return errors.As(err, &reply) && reply.Code >= 500
 }

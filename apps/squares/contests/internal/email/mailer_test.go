@@ -17,16 +17,17 @@ type fakeServer struct {
 	addr     *net.TCPAddr
 	starttls bool
 	rcpt     string
+	dropQuit bool
 	received chan string
 }
 
-func startFakeSMTP(t *testing.T, starttls bool, rcpt string) *fakeServer {
+func startFakeSMTP(t *testing.T, s *fakeServer) *fakeServer {
 	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = ln.Close() })
 
-	s := &fakeServer{addr: ln.Addr().(*net.TCPAddr), starttls: starttls, rcpt: rcpt, received: make(chan string, 1)}
+	s.addr, s.received = ln.Addr().(*net.TCPAddr), make(chan string, 1)
 	go func() {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -69,6 +70,9 @@ func (s *fakeServer) serve(c *textproto.Conn) {
 			data, _ := c.ReadDotBytes()
 			s.received <- string(data)
 			_ = c.PrintfLine("250 queued")
+			if s.dropQuit {
+				return
+			}
 		case "QUIT":
 			_ = c.PrintfLine("221 bye")
 			return
@@ -90,17 +94,33 @@ func testMessage() *Message {
 }
 
 func TestMailer_Sends(t *testing.T) {
-	s := startFakeSMTP(t, false, "250 ok")
+	s := startFakeSMTP(t, &fakeServer{rcpt: "250 ok"})
 
-	require.NoError(t, s.mailer(t, "emailapikey").Send(context.Background(), testMessage()))
+	require.NoError(t, s.mailer(t, "").Send(context.Background(), testMessage()))
 
 	data := <-s.received
 	assert.Contains(t, data, "Subject: Office Pool: final results")
 	assert.Contains(t, data, "To: <max@example.com>")
 }
 
+func TestMailer_AcceptedMessageIgnoresAFailedQuit(t *testing.T) {
+	s := startFakeSMTP(t, &fakeServer{rcpt: "250 ok", dropQuit: true})
+
+	require.NoError(t, s.mailer(t, "").Send(context.Background(), testMessage()))
+	assert.NotEmpty(t, <-s.received)
+}
+
+func TestMailer_RefusesCredentialsWithoutTLS(t *testing.T) {
+	s := startFakeSMTP(t, &fakeServer{rcpt: "250 ok"})
+
+	err := s.mailer(t, "emailapikey").Send(context.Background(), testMessage())
+
+	require.ErrorIs(t, err, ErrNoTLS)
+	assert.True(t, IsPermanent(err))
+}
+
 func TestMailer_RejectedRecipientIsPermanent(t *testing.T) {
-	s := startFakeSMTP(t, false, "550 mailbox unavailable")
+	s := startFakeSMTP(t, &fakeServer{rcpt: "550 mailbox unavailable"})
 
 	err := s.mailer(t, "").Send(context.Background(), testMessage())
 
@@ -109,7 +129,7 @@ func TestMailer_RejectedRecipientIsPermanent(t *testing.T) {
 }
 
 func TestMailer_BusyRecipientIsTransient(t *testing.T) {
-	s := startFakeSMTP(t, false, "451 try later")
+	s := startFakeSMTP(t, &fakeServer{rcpt: "451 try later"})
 
 	err := s.mailer(t, "").Send(context.Background(), testMessage())
 
@@ -119,7 +139,7 @@ func TestMailer_BusyRecipientIsTransient(t *testing.T) {
 }
 
 func TestMailer_FailedStartTLS(t *testing.T) {
-	s := startFakeSMTP(t, true, "250 ok")
+	s := startFakeSMTP(t, &fakeServer{starttls: true, rcpt: "250 ok"})
 
 	err := s.mailer(t, "").Send(context.Background(), testMessage())
 

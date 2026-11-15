@@ -418,6 +418,30 @@ func TestFinishCanceled_KeepsTheBoardAsItStands(t *testing.T) {
 	assert.Equal(t, labels, contest.XLabels)
 }
 
+type txMarker struct{}
+
+func TestFinishCanceled_RecapDoesNotReuseTheTransactionContext(t *testing.T) {
+	contest := &model.Contest{ID: uuid.New(), Status: model.ContestStatusQ2}
+	repo := mocks.NewContestRepository(t)
+	repo.EXPECT().Update(mock.Anything, contest).Return(nil)
+
+	sent := make(chan context.Context, 1)
+	recaps := mocks.NewRecapService(t)
+	recaps.EXPECT().Send(mock.Anything, contest.ID).Run(func(ctx context.Context, _ uuid.UUID) { sent <- ctx }).Once()
+
+	ctx := context.WithValue(context.Background(), txMarker{}, "tx")
+	err := service.NewContestService(repo, &mocks.GameSyncRepository{}, passTx(), anyEvents(), mocks.NewPlayerService(t), recaps).
+		FinishCanceled(ctx, contest)
+	require.NoError(t, err)
+
+	select {
+	case recapCtx := <-sent:
+		assert.Nil(t, recapCtx.Value(txMarker{}))
+	case <-time.After(time.Second):
+		t.Fatal("the recap email was not sent")
+	}
+}
+
 func TestFinishCanceled_UpdateFails(t *testing.T) {
 	repo := mocks.NewContestRepository(t)
 	repo.EXPECT().Update(mock.Anything, mock.Anything).Return(errs.ErrVersionConflict)

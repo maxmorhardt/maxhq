@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -16,8 +17,9 @@ import (
 )
 
 const (
-	recapTimeout  = 5 * time.Minute
-	recapAttempts = 3
+	recapLoadTimeout = 30 * time.Second
+	recapSendTimeout = 2 * time.Minute
+	recapAttempts    = 3
 )
 
 type RecapService interface {
@@ -47,24 +49,12 @@ func (s *recapService) Send(ctx context.Context, contestID uuid.UUID) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, recapTimeout)
-	defer cancel()
 	log := logging.FromContext(ctx).With("contest_id", contestID)
 
-	contest, err := s.contestRepo.GetByID(ctx, contestID)
+	players, content, err := s.prepare(ctx, contestID)
 	if err != nil {
-		log.Error("failed to load contest for the recap email", "error", err)
-		return
-	}
-	players, err := s.playerRepo.GetAllByContestID(ctx, contestID)
-	if err != nil {
-		log.Error("failed to load players for the recap email", "error", err)
-		return
-	}
-
-	content, err := email.RenderRecap(s.webURL, recapOf(contest))
-	if err != nil {
-		log.Error("failed to render the recap email", "error", err)
+		metrics.IncRecapEmail(false)
+		log.Error("failed to prepare the recap email", "error", err)
 		return
 	}
 
@@ -88,7 +78,29 @@ func (s *recapService) Send(ctx context.Context, contestID uuid.UUID) {
 	log.Info("sent contest recap emails", "sent", sent, "failed", failed)
 }
 
+func (s *recapService) prepare(ctx context.Context, contestID uuid.UUID) ([]model.ContestPlayer, *email.Content, error) {
+	ctx, cancel := context.WithTimeout(ctx, recapLoadTimeout)
+	defer cancel()
+
+	contest, err := s.contestRepo.GetByID(ctx, contestID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("load contest: %w", err)
+	}
+	players, err := s.playerRepo.GetAllByContestID(ctx, contestID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("load players: %w", err)
+	}
+	content, err := email.RenderRecap(s.webURL, recapOf(contest))
+	if err != nil {
+		return nil, nil, err
+	}
+	return players, content, nil
+}
+
 func (s *recapService) deliver(ctx context.Context, msg *email.Message) error {
+	ctx, cancel := context.WithTimeout(ctx, recapSendTimeout)
+	defer cancel()
+
 	var err error
 	for attempt := 1; attempt <= recapAttempts; attempt++ {
 		if err = s.mailer.Send(ctx, msg); err == nil || email.IsPermanent(err) || attempt == recapAttempts {

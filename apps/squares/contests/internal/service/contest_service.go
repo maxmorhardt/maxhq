@@ -276,7 +276,7 @@ func (s *contestService) FinishCanceled(ctx context.Context, contest *model.Cont
 }
 
 func (s *contestService) sendRecapAfterCommit(ctx context.Context, contestID uuid.UUID) {
-	recapCtx := context.WithoutCancel(ctx)
+	recapCtx := logging.NewContext(context.Background(), logging.FromContext(ctx))
 	database.AfterCommit(ctx, func() { go s.recaps.Send(recapCtx, contestID) })
 }
 
