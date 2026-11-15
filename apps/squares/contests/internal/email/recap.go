@@ -55,12 +55,8 @@ type recapView struct {
 	Started         bool
 	Canceled        bool
 	Status          string
-	AwayTeam        string
-	HomeTeam        string
 	AwayLabel       string
 	HomeLabel       string
-	AwayScore       int
-	HomeScore       int
 	Quarters        []quarterView
 	BoardURL        string
 	CreateURL       string
@@ -106,12 +102,8 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 		Started:         recap.Started,
 		Canceled:        recap.Canceled,
 		Status:          "Final",
-		AwayTeam:        recap.AwayTeam,
-		HomeTeam:        recap.HomeTeam,
-		AwayLabel:       away,
-		HomeLabel:       home,
-		AwayScore:       recap.AwayScore,
-		HomeScore:       recap.HomeScore,
+		AwayLabel:       columnLabel(recap.AwayAbbr, "Away"),
+		HomeLabel:       columnLabel(recap.HomeAbbr, "Home"),
 		BoardURL:        fmt.Sprintf("%s/contests/%s%s", webURL, recap.ContestID, utm),
 		CreateURL:       webURL + "/contests/create" + utm,
 		HomeURL:         webURL,
@@ -148,11 +140,14 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 		view.Status = "Canceled"
 		view.Subject = "Squares: " + recap.ContestName + " game canceled"
 		view.Headline = "Game canceled"
-		view.Subhead = fmt.Sprintf("%s was canceled during the game. Quarters that were played keep their winners.", matchup)
+		view.Subhead = fmt.Sprintf("%s %d, %s %d when the game was canceled. Quarters that were played keep their winners.", recap.AwayTeam, recap.AwayScore, recap.HomeTeam, recap.HomeScore)
 	default:
 		view.Subject = "Squares: " + recap.ContestName + " final results"
 		view.Headline = "Final results"
 		view.Subhead = fmt.Sprintf("%s %d, %s %d. Here's the winning square for each quarter.", recap.AwayTeam, recap.AwayScore, recap.HomeTeam, recap.HomeScore)
+		if len(view.Quarters) == 0 {
+			view.Subhead = fmt.Sprintf("%s %d, %s %d. This board has no winners.", recap.AwayTeam, recap.AwayScore, recap.HomeTeam, recap.HomeScore)
+		}
 	}
 
 	view.Preheader = view.Subhead
@@ -164,6 +159,13 @@ func newRecapView(webURL string, recap *Recap) *recapView {
 }
 
 const utm = "?utm_source=recap&utm_medium=email"
+
+func columnLabel(abbr, side string) string {
+	if abbr != "" {
+		return abbr
+	}
+	return side
+}
 
 func teamLabel(abbr, name string) string {
 	if abbr != "" {

@@ -75,8 +75,9 @@ func TestRenderRecap_Canceled(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "Squares: Office Pool game canceled", content.Subject)
-	assert.Contains(t, content.HTML, "Buffalo Bills at Kansas City Chiefs was canceled during the game. Quarters that were played keep their winners.")
-	assert.NotContains(t, content.Text, "Canceled 24")
+	assert.Contains(t, content.HTML, "Buffalo Bills 24, Kansas City Chiefs 27 when the game was canceled. Quarters that were played keep their winners.")
+	assert.Contains(t, content.Text, "Q1       7    3    Max M.")
+	assert.Contains(t, content.Text, "Final    24   27   Jen K.")
 
 	recap.Started, recap.Quarters = false, nil
 	content, err = RenderRecap("https://squares.example.com", recap)
@@ -94,6 +95,34 @@ func TestRenderRecap_RemovedPlayersAreMutedLikeOpenSquares(t *testing.T) {
 	assert.True(t, view.Quarters[0].Open)
 	assert.Equal(t, RemovedPlayer, view.Quarters[0].Winner)
 	assert.False(t, view.Quarters[2].Open)
+}
+
+func TestRenderRecap_HidesTheTableWithoutQuarters(t *testing.T) {
+	recap := sampleRecap()
+	recap.Canceled, recap.Quarters = true, nil
+
+	content, err := RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+
+	assert.NotContains(t, content.HTML, ">Winner<")
+	assert.NotContains(t, content.Text, "Winner")
+
+	recap.Canceled = false
+	content, err = RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+	assert.Contains(t, content.Text, "Buffalo Bills 24, Kansas City Chiefs 27. This board has no winners.")
+}
+
+func TestRenderRecap_FallsBackToAwayAndHomeColumns(t *testing.T) {
+	recap := sampleRecap()
+	recap.AwayAbbr, recap.HomeAbbr = "", ""
+
+	content, err := RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+
+	assert.Contains(t, content.Text, "         Away Home Winner")
+	assert.Contains(t, content.HTML, ">Away<")
+	assert.Contains(t, content.HTML, "Final: Buffalo Bills 24, Kansas City Chiefs 27.")
 }
 
 func TestLabels(t *testing.T) {

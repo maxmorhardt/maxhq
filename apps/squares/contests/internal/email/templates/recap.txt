@@ -2,7 +2,7 @@
 
 {{.Headline}}
 {{.Subhead}}
-{{- if .Started}}
+{{- if .Quarters}}
 
          {{printf "%-4s" .AwayLabel}} {{printf "%-4s" .HomeLabel}} Winner
 {{- range .Quarters}}
