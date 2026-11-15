@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.5...libs/go/v1.3.0) (2026-11-15)
+
+
+### Features
+
+* **libs:** add a shared smtp mail client ([#252](https://github.com/maxmorhardt/maxhq/issues/252)) ([49e80d5](https://github.com/maxmorhardt/maxhq/commit/49e80d5baa6287f6484b961e83e42c2727865c32))
+
 ## [1.2.5](https://github.com/maxmorhardt/maxhq/compare/libs/go/v1.2.4...libs/go/v1.2.5) (2026-11-15)
 
 

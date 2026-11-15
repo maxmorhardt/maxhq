@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.10.0](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.4...squares-contests/2.10.0) (2026-11-15)
+
+
+### Features
+
+* **squares-contests:** email every player a recap when a contest finishes ([#247](https://github.com/maxmorhardt/maxhq/issues/247)) ([841deda](https://github.com/maxmorhardt/maxhq/commit/841dedaf9752b1708521d1be7b92d71e454c7be2))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/maxmorhardt/maxhq/libs/go to v1.2.5 ([#249](https://github.com/maxmorhardt/maxhq/issues/249)) ([de6d8af](https://github.com/maxmorhardt/maxhq/commit/de6d8af0c37264f23b7e151f2490f4ec332e95cc))
+* **squares-contests:** join with ON CONFLICT DO NOTHING so reused invite links don't log errors ([#248](https://github.com/maxmorhardt/maxhq/issues/248)) ([09a1d0c](https://github.com/maxmorhardt/maxhq/commit/09a1d0ccacb1589e8fa6652ca00966b30557be02))
+
 ## [2.9.4](https://github.com/maxmorhardt/maxhq/compare/squares-contests/2.9.3...squares-contests/2.9.4) (2026-11-15)
 
 
