@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.7.1...maxhq/1.8.0) (2026-11-15)
+
+
+### Features
+
+* **squares:** one status banner for owners, players and watchers ([#244](https://github.com/maxmorhardt/maxhq/issues/244)) ([8b598fa](https://github.com/maxmorhardt/maxhq/commit/8b598fa58d35ee588f243d0d68ec49147349a64c))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#243](https://github.com/maxmorhardt/maxhq/issues/243)) ([d142dc3](https://github.com/maxmorhardt/maxhq/commit/d142dc374bd1b3df134a35aabd05dc10835f9471))
+
 ## [1.7.1](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.7.0...maxhq/1.7.1) (2026-11-06)
 
 
