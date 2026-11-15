@@ -31,7 +31,8 @@ In CI, as repository secrets:
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | every module — the state backend, not just `aws/` |
 | `CLOUDFLARE_API_TOKEN` | `cloudflare/` |
 | `REPO_ADMIN_TOKEN` | `github/` — a fine-grained PAT with Administration: Read and write on `maxhq`, `gitops`, `workflows`, and `maxhq-private`, since the built-in `GITHUB_TOKEN` cannot reach other repositories |
-| `TF_VARS` | `cloudflare/` — `dev_ips = [...]` (dev's Tailscale IPs), written to `ci.auto.tfvars` at runtime |
+| `TF_VARS_<MODULE>` | each module's `terraform.tfvars`, written to `ci.auto.tfvars` at runtime; a module without one gets nothing |
+| `TF_VARS_CLOUDFLARE` | `cloudflare/` — `dev_ips = [...]` (dev's Tailscale IPs) |
 | `TF_VARS_AWS` | `aws/` — `budget_email` |
 | `TF_VARS_DOCKERHUB` | `dockerhub/` — `token` |
 | `TF_VARS_TAILSCALE` | `tailscale/` — `oauth_client_id` and `oauth_client_secret` |
