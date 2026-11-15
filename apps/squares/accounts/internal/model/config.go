@@ -26,7 +26,15 @@ type SMTPConfig struct {
 	Port         int    `env:"SMTP_PORT,required"`
 	User         string `env:"SMTP_USER,required"`
 	Password     string `env:"SMTP_PASSWORD,required"`
+	From         string `env:"EMAIL_FROM"`
 	SupportEmail string `env:"SUPPORT_EMAIL,required"`
+}
+
+func (c *SMTPConfig) Sender() string {
+	if c.From != "" {
+		return c.From
+	}
+	return c.User
 }
 
 type TurnstileConfig struct {

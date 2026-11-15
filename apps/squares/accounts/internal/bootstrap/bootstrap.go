@@ -59,7 +59,7 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		clients.NewContestActivityClient(cfg.Contests.URL, cfg.Internal.Token),
 		revocations,
 	)
-	contactService := service.NewContactService(repository.NewContactRepository(db), cfg.SMTP, cfg.Turnstile)
+	contactService := service.NewContactService(repository.NewContactRepository(db), &cfg.SMTP, cfg.Turnstile)
 
 	engine := server.NewEngine(&cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{

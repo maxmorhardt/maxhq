@@ -37,7 +37,7 @@ The `squares-accounts` service: one Deployment, Service, HPA, PDB, HTTPRoute, Se
 | redis | `REDIS_URL` |
 | service-to-service | `INTERNAL_API_TOKEN` (the same value in contests, accounts, and realtime) |
 | pseudonyms | `PSEUDONYM_KEY`, at least 32 bytes (the same value in contests and accounts; changing it renames every player) |
-| email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SUPPORT_EMAIL` |
+| email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SUPPORT_EMAIL`, and `EMAIL_FROM` (the sender; `SMTP_USER` when unset) |
 | captcha | `TURNSTILE_SECRET_KEY` |
 | http | `ALLOWED_ORIGINS` |
 

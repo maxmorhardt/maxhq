@@ -20,14 +20,14 @@ import (
 )
 
 func TestNewContactService(t *testing.T) {
-	require.NotNil(t, service.NewContactService(nil, model.SMTPConfig{}, model.TurnstileConfig{}))
+	require.NotNil(t, service.NewContactService(nil, &model.SMTPConfig{}, model.TurnstileConfig{}))
 }
 
 func TestContactService_SubmitContact_TurnstileValidationFails(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), contactCfg().SMTP, contactCfg().Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), &contactCfg().SMTP, contactCfg().Turnstile)
 
 	err := svc.SubmitContact(ctx, contactReq(), "127.0.0.1")
 
@@ -58,7 +58,7 @@ func contactReq() *model.ContactRequest {
 func TestContactService_SubmitContact_TurnstileAPIReturnsFail(t *testing.T) {
 	cfg := turnstileServer(t, http.StatusOK, `{"success":false,"error-codes":["invalid-input-response"]}`)
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), cfg.SMTP, cfg.Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), &cfg.SMTP, cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -88,7 +88,7 @@ func turnstileServer(t *testing.T, statusCode int, body string) *model.AccountsC
 func TestContactService_SubmitContact_TurnstileAPIStatusError(t *testing.T) {
 	cfg := turnstileServer(t, http.StatusInternalServerError, `{}`)
 
-	svc := service.NewContactService(mocks.NewContactRepository(t), cfg.SMTP, cfg.Turnstile)
+	svc := service.NewContactService(mocks.NewContactRepository(t), &cfg.SMTP, cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -101,7 +101,7 @@ func TestContactService_SubmitContact_RepoCreateFails(t *testing.T) {
 	repo := mocks.NewContactRepository(t)
 	repo.EXPECT().Create(mock.Anything, mock.Anything).Return(errors.New("db error"))
 
-	svc := service.NewContactService(repo, cfg.SMTP, cfg.Turnstile)
+	svc := service.NewContactService(repo, &cfg.SMTP, cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -121,7 +121,7 @@ func TestContactService_SubmitContact_Success(t *testing.T) {
 		Run(func(_ context.Context, id uuid.UUID) { loaded <- id }).
 		Return(&model.ContactSubmission{ID: saved, Email: "a@x.com"}, nil).Maybe()
 
-	svc := service.NewContactService(repo, cfg.SMTP, cfg.Turnstile)
+	svc := service.NewContactService(repo, &cfg.SMTP, cfg.Turnstile)
 
 	err := svc.SubmitContact(context.Background(), contactReq(), "127.0.0.1")
 
@@ -144,7 +144,7 @@ func TestContactService_SubmitContact_NotificationSkipsAMissingSubmission(t *tes
 		Run(func(context.Context, uuid.UUID) { loaded <- struct{}{} }).
 		Return(nil, errors.New("gone")).Maybe()
 
-	require.NoError(t, service.NewContactService(repo, cfg.SMTP, cfg.Turnstile).
+	require.NoError(t, service.NewContactService(repo, &cfg.SMTP, cfg.Turnstile).
 		SubmitContact(context.Background(), contactReq(), "127.0.0.1"))
 
 	select {

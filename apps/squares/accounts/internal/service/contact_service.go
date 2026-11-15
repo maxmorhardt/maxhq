@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/mail"
 	"net/smtp"
 	"time"
 
@@ -28,10 +29,10 @@ type contactService struct {
 	turnstile model.TurnstileConfig
 }
 
-func NewContactService(repo repository.ContactRepository, smtpCfg model.SMTPConfig, turnstileCfg model.TurnstileConfig) ContactService {
+func NewContactService(repo repository.ContactRepository, smtpCfg *model.SMTPConfig, turnstileCfg model.TurnstileConfig) ContactService {
 	return &contactService{
 		repo:      repo,
-		smtp:      smtpCfg,
+		smtp:      *smtpCfg,
 		turnstile: turnstileCfg,
 	}
 }
@@ -88,7 +89,12 @@ func (s *contactService) notify(ctx context.Context, submissionID uuid.UUID) {
 }
 
 func (s *contactService) sendEmailNotification(submission *model.ContactSubmission) error {
-	msg, err := BuildContactEmail(s.smtp.User, s.smtp.SupportEmail, submission)
+	from, err := mail.ParseAddress(s.smtp.Sender())
+	if err != nil {
+		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
+	}
+
+	msg, err := BuildContactEmail(from.String(), s.smtp.SupportEmail, submission)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
@@ -97,7 +103,7 @@ func (s *contactService) sendEmailNotification(submission *model.ContactSubmissi
 	addr := fmt.Sprintf("%s:%d", s.smtp.Host, s.smtp.Port)
 	to := []string{s.smtp.SupportEmail}
 
-	if err := smtp.SendMail(addr, auth, s.smtp.User, to, msg); err != nil {
+	if err := smtp.SendMail(addr, auth, from.Address, to, msg); err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
 
