@@ -25,13 +25,13 @@ func TestRecapEmailRepository_CreateAll(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestRecapEmailRepository_ClaimDueLeasesWithSkipLocked(t *testing.T) {
+func TestRecapEmailRepository_ClaimNextContestLeasesWithSkipLocked(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	id := uuid.New()
-	mock.ExpectQuery(`UPDATE recap_emails SET attempts = attempts \+ 1.*FOR UPDATE SKIP LOCKED.*RETURNING \*`).
+	mock.ExpectQuery(`UPDATE recap_emails SET attempts = attempts \+ 1.*contest_id = \(.*FOR UPDATE SKIP LOCKED.*RETURNING \*`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "contest_id", "user_id", "status", "attempts"}).AddRow(id, uuid.New(), "a@x.com", "pending", 1))
 
-	claimed, err := NewRecapEmailRepository(gdb).ClaimDue(context.Background(), time.Now(), time.Now().Add(time.Minute), 10)
+	claimed, err := NewRecapEmailRepository(gdb).ClaimNextContest(context.Background(), time.Now(), time.Now().Add(time.Minute), 10)
 
 	require.NoError(t, err)
 	require.Len(t, claimed, 1)
@@ -62,14 +62,14 @@ func TestRecapEmailRepository_FinishAndReschedule(t *testing.T) {
 func TestRecapEmailRepository_ExpireAndPrune(t *testing.T) {
 	gdb, mock := newMockDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec(`UPDATE "recap_emails" SET .*WHERE status = \$\d+ AND created_at < \$\d+`).WillReturnResult(sqlmock.NewResult(0, 3))
+	mock.ExpectExec(`UPDATE "recap_emails" SET .*WHERE status = \$\d+ AND created_at < \$\d+ AND next_attempt_at <= \$\d+`).WillReturnResult(sqlmock.NewResult(0, 3))
 	mock.ExpectCommit()
 	mock.ExpectBegin()
 	mock.ExpectExec(`DELETE FROM "recap_emails" WHERE status <> \$1 AND updated_at < \$2`).WillReturnResult(sqlmock.NewResult(0, 4))
 	mock.ExpectCommit()
 
 	repo := NewRecapEmailRepository(gdb)
-	expired, err := repo.ExpirePending(context.Background(), time.Now(), "too old")
+	expired, err := repo.ExpirePending(context.Background(), time.Now(), time.Now(), "too old")
 	require.NoError(t, err)
 	assert.Equal(t, int64(3), expired)
 	pruned, err := repo.PruneFinished(context.Background(), time.Now())

@@ -259,7 +259,7 @@ metrics:
           description: 'More recap emails failed than were sent in the last hour; check the contests logs for the SMTP error'
 
       - alert: RecapEmailsStuck
-        expr: max(recap_emails_oldest_pending_seconds{job="{{ include "app.fullname" . }}"}) > 1800
+        expr: max(recap_emails_oldest_pending_seconds{job="{{ include "app.fullname" . }}"}) > 10800
         for: 10m
         labels:
           severity: warning

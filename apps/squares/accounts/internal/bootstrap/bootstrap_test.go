@@ -46,19 +46,22 @@ func testConfig() *model.AccountsConfig {
 		Server:   config.ServerConfig{Host: "127.0.0.1"},
 		Internal: config.InternalConfig{Token: "internal"},
 		Contests: model.ContestsConfig{URL: "http://127.0.0.1:1"},
-		SMTP:     config.SMTPConfig{Host: "127.0.0.1", Port: 1, User: "noreply@squares.test"},
+		SMTP:     config.SMTPConfig{Host: "127.0.0.1", Port: 1, User: "noreply@squares.test", Password: "x"},
 		Contact:  model.ContactConfig{SupportEmail: "support@squares.test"},
 	}
 }
 
-func TestNew_RefusesAnUnusableSender(t *testing.T) {
+func TestNew_RefusesUnusableMailSettings(t *testing.T) {
 	infra, _ := testInfra(t)
 	cfg := testConfig()
 	cfg.SMTP.User = "apikey"
-
 	_, err := New(cfg, infra)
-
 	require.ErrorContains(t, err, "EMAIL_FROM")
+
+	cfg = testConfig()
+	cfg.SMTP.Password = ""
+	_, err = New(cfg, infra)
+	require.ErrorContains(t, err, "SMTP_PASSWORD")
 }
 
 func TestNew_WiresProfileAndContactRoutes(t *testing.T) {

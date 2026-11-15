@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -61,6 +62,9 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) (*App, error) {
 		clients.NewContestActivityClient(cfg.Contests.URL, cfg.Internal.Token),
 		revocations,
 	)
+	if cfg.SMTP.User == "" || cfg.SMTP.Password == "" {
+		return nil, errors.New("email: SMTP_USER and SMTP_PASSWORD are required")
+	}
 	mailer, err := mail.New(&cfg.SMTP)
 	if err != nil {
 		return nil, fmt.Errorf("email: %w", err)

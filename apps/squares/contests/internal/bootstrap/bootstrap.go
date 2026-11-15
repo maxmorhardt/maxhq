@@ -126,9 +126,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) (*App, error) {
 
 func (a *App) Start(ctx context.Context) {
 	go a.relay.Run(ctx)
-	if a.cfg.Email.Enabled {
-		go a.recaps.Run(ctx)
-	}
+	go a.recaps.Run(ctx)
 
 	for _, c := range a.consumers {
 		go c.Run(ctx)

@@ -26,12 +26,12 @@ func (_m *RecapEmailRepository) EXPECT() *RecapEmailRepository_Expecter {
 	return &RecapEmailRepository_Expecter{mock: &_m.Mock}
 }
 
-// ClaimDue provides a mock function with given fields: ctx, now, leaseUntil, limit
-func (_m *RecapEmailRepository) ClaimDue(ctx context.Context, now time.Time, leaseUntil time.Time, limit int) ([]model.RecapEmail, error) {
+// ClaimNextContest provides a mock function with given fields: ctx, now, leaseUntil, limit
+func (_m *RecapEmailRepository) ClaimNextContest(ctx context.Context, now time.Time, leaseUntil time.Time, limit int) ([]model.RecapEmail, error) {
 	ret := _m.Called(ctx, now, leaseUntil, limit)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ClaimDue")
+		panic("no return value specified for ClaimNextContest")
 	}
 
 	var r0 []model.RecapEmail
@@ -56,33 +56,33 @@ func (_m *RecapEmailRepository) ClaimDue(ctx context.Context, now time.Time, lea
 	return r0, r1
 }
 
-// RecapEmailRepository_ClaimDue_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClaimDue'
-type RecapEmailRepository_ClaimDue_Call struct {
+// RecapEmailRepository_ClaimNextContest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClaimNextContest'
+type RecapEmailRepository_ClaimNextContest_Call struct {
 	*mock.Call
 }
 
-// ClaimDue is a helper method to define mock.On call
+// ClaimNextContest is a helper method to define mock.On call
 //   - ctx context.Context
 //   - now time.Time
 //   - leaseUntil time.Time
 //   - limit int
-func (_e *RecapEmailRepository_Expecter) ClaimDue(ctx interface{}, now interface{}, leaseUntil interface{}, limit interface{}) *RecapEmailRepository_ClaimDue_Call {
-	return &RecapEmailRepository_ClaimDue_Call{Call: _e.mock.On("ClaimDue", ctx, now, leaseUntil, limit)}
+func (_e *RecapEmailRepository_Expecter) ClaimNextContest(ctx interface{}, now interface{}, leaseUntil interface{}, limit interface{}) *RecapEmailRepository_ClaimNextContest_Call {
+	return &RecapEmailRepository_ClaimNextContest_Call{Call: _e.mock.On("ClaimNextContest", ctx, now, leaseUntil, limit)}
 }
 
-func (_c *RecapEmailRepository_ClaimDue_Call) Run(run func(ctx context.Context, now time.Time, leaseUntil time.Time, limit int)) *RecapEmailRepository_ClaimDue_Call {
+func (_c *RecapEmailRepository_ClaimNextContest_Call) Run(run func(ctx context.Context, now time.Time, leaseUntil time.Time, limit int)) *RecapEmailRepository_ClaimNextContest_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(time.Time), args[2].(time.Time), args[3].(int))
 	})
 	return _c
 }
 
-func (_c *RecapEmailRepository_ClaimDue_Call) Return(_a0 []model.RecapEmail, _a1 error) *RecapEmailRepository_ClaimDue_Call {
+func (_c *RecapEmailRepository_ClaimNextContest_Call) Return(_a0 []model.RecapEmail, _a1 error) *RecapEmailRepository_ClaimNextContest_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *RecapEmailRepository_ClaimDue_Call) RunAndReturn(run func(context.Context, time.Time, time.Time, int) ([]model.RecapEmail, error)) *RecapEmailRepository_ClaimDue_Call {
+func (_c *RecapEmailRepository_ClaimNextContest_Call) RunAndReturn(run func(context.Context, time.Time, time.Time, int) ([]model.RecapEmail, error)) *RecapEmailRepository_ClaimNextContest_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -134,9 +134,9 @@ func (_c *RecapEmailRepository_CreateAll_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
-// ExpirePending provides a mock function with given fields: ctx, createdBefore, reason
-func (_m *RecapEmailRepository) ExpirePending(ctx context.Context, createdBefore time.Time, reason string) (int64, error) {
-	ret := _m.Called(ctx, createdBefore, reason)
+// ExpirePending provides a mock function with given fields: ctx, now, createdBefore, reason
+func (_m *RecapEmailRepository) ExpirePending(ctx context.Context, now time.Time, createdBefore time.Time, reason string) (int64, error) {
+	ret := _m.Called(ctx, now, createdBefore, reason)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ExpirePending")
@@ -144,17 +144,17 @@ func (_m *RecapEmailRepository) ExpirePending(ctx context.Context, createdBefore
 
 	var r0 int64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time, string) (int64, error)); ok {
-		return rf(ctx, createdBefore, reason)
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time, string) (int64, error)); ok {
+		return rf(ctx, now, createdBefore, reason)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time, string) int64); ok {
-		r0 = rf(ctx, createdBefore, reason)
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time, string) int64); ok {
+		r0 = rf(ctx, now, createdBefore, reason)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, time.Time, string) error); ok {
-		r1 = rf(ctx, createdBefore, reason)
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time, string) error); ok {
+		r1 = rf(ctx, now, createdBefore, reason)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -169,15 +169,16 @@ type RecapEmailRepository_ExpirePending_Call struct {
 
 // ExpirePending is a helper method to define mock.On call
 //   - ctx context.Context
+//   - now time.Time
 //   - createdBefore time.Time
 //   - reason string
-func (_e *RecapEmailRepository_Expecter) ExpirePending(ctx interface{}, createdBefore interface{}, reason interface{}) *RecapEmailRepository_ExpirePending_Call {
-	return &RecapEmailRepository_ExpirePending_Call{Call: _e.mock.On("ExpirePending", ctx, createdBefore, reason)}
+func (_e *RecapEmailRepository_Expecter) ExpirePending(ctx interface{}, now interface{}, createdBefore interface{}, reason interface{}) *RecapEmailRepository_ExpirePending_Call {
+	return &RecapEmailRepository_ExpirePending_Call{Call: _e.mock.On("ExpirePending", ctx, now, createdBefore, reason)}
 }
 
-func (_c *RecapEmailRepository_ExpirePending_Call) Run(run func(ctx context.Context, createdBefore time.Time, reason string)) *RecapEmailRepository_ExpirePending_Call {
+func (_c *RecapEmailRepository_ExpirePending_Call) Run(run func(ctx context.Context, now time.Time, createdBefore time.Time, reason string)) *RecapEmailRepository_ExpirePending_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(time.Time), args[2].(string))
+		run(args[0].(context.Context), args[1].(time.Time), args[2].(time.Time), args[3].(string))
 	})
 	return _c
 }
@@ -187,7 +188,7 @@ func (_c *RecapEmailRepository_ExpirePending_Call) Return(_a0 int64, _a1 error) 
 	return _c
 }
 
-func (_c *RecapEmailRepository_ExpirePending_Call) RunAndReturn(run func(context.Context, time.Time, string) (int64, error)) *RecapEmailRepository_ExpirePending_Call {
+func (_c *RecapEmailRepository_ExpirePending_Call) RunAndReturn(run func(context.Context, time.Time, time.Time, string) (int64, error)) *RecapEmailRepository_ExpirePending_Call {
 	_c.Call.Return(run)
 	return _c
 }

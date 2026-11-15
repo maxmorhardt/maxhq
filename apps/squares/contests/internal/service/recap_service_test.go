@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/textproto"
+	"strings"
 	"testing"
 	"time"
 
@@ -62,8 +63,9 @@ func (d *recapDeps) service() service.RecapService {
 }
 
 func (d *recapDeps) claim(rows ...model.RecapEmail) {
-	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Once()
-	d.repo.EXPECT().ClaimDue(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(rows, nil).Once()
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(rows, nil).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Once()
 }
 
 func row(contestID uuid.UUID, to string, attempts int) model.RecapEmail {
@@ -101,6 +103,7 @@ func TestRecapService_DisabledWithoutAMailer(t *testing.T) {
 
 	require.NoError(t, svc.Schedule(context.Background(), uuid.New()))
 	require.NoError(t, svc.SendDue(context.Background()))
+	svc.Run(context.Background())
 }
 
 func TestRecapService_SendsEachContestOverOneBatchAndRecordsEveryOutcome(t *testing.T) {
@@ -117,7 +120,7 @@ func TestRecapService_SendsEachContestOverOneBatchAndRecordsEveryOutcome(t *test
 		Return([]error{nil, fmt.Errorf("%w: reset", mail.ErrMaybeDelivered), &textproto.Error{Code: 550, Msg: "no such mailbox"}, errors.New("timeout")})
 	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{sent.ID}, model.RecapEmailSent, "", mock.Anything).Return(nil)
 	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{unconfirmed.ID}, model.RecapEmailUnconfirmed, mock.Anything, mock.Anything).Return(nil)
-	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{gone.ID}, model.RecapEmailFailed, mock.Anything, mock.Anything).Return(nil)
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{gone.ID}, model.RecapEmailFailed, mock.MatchedBy(func(reason string) bool { return strings.Contains(reason, "550") }), mock.Anything).Return(nil)
 	d.repo.EXPECT().Reschedule(mock.Anything, busy.ID, "timeout", mock.MatchedBy(func(next time.Time) bool {
 		return next.After(time.Now().Add(4 * time.Minute))
 	})).Return(nil)
@@ -205,21 +208,63 @@ func TestRecapService_WithoutAGameUsesTheLastQuarter(t *testing.T) {
 	assert.Contains(t, batch[0].Text, "Buffalo Bills 24, Kansas City Chiefs 27.")
 }
 
-func TestRecapService_SendDueSkipsStaleEmailsAndSurfacesQueryErrors(t *testing.T) {
+func TestRecapService_SendDueSkipsStaleEmailsAndSurfacesClaimErrors(t *testing.T) {
 	d := newRecapDeps(t)
-	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(3, nil).Once()
-	d.repo.EXPECT().ClaimDue(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db")).Once()
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(3, nil).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("db")).Once()
 	require.Error(t, d.service().SendDue(context.Background()))
 
-	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(0, errors.New("db")).Once()
-	require.Error(t, d.service().SendDue(context.Background()))
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, errors.New("db")).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Once()
+	require.NoError(t, d.service().SendDue(context.Background()), "a failed expiry does not stop the send pass")
+}
+
+func TestRecapService_SendsContestsOneAtATime(t *testing.T) {
+	d := newRecapDeps(t)
+	first, second := finishedContest(t), finishedContest(t)
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]model.RecapEmail{row(first.ID, "a@example.com", 1)}, nil).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]model.RecapEmail{row(second.ID, "b@example.com", 1)}, nil).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Once()
+	d.contests.EXPECT().GetByID(mock.Anything, first.ID).Return(first, nil)
+	d.contests.EXPECT().GetByID(mock.Anything, second.ID).Return(second, nil)
+	d.mailer.EXPECT().SendAll(mock.Anything, mock.Anything).Return([]error{nil}).Twice()
+	d.repo.EXPECT().Finish(mock.Anything, mock.Anything, model.RecapEmailSent, "", mock.Anything).Return(nil).Twice()
+
+	require.NoError(t, d.service().SendDue(context.Background()))
+}
+
+func TestRecapService_SendDueStopsWhenCanceled(t *testing.T) {
+	d := newRecapDeps(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Once()
+
+	require.ErrorIs(t, d.service().SendDue(ctx), context.Canceled)
+}
+
+func TestRecapService_ResultsAreRecordedEvenWhenShuttingDown(t *testing.T) {
+	d := newRecapDeps(t)
+	contest := finishedContest(t)
+	r := row(contest.ID, "max@example.com", 1)
+	ctx, cancel := context.WithCancel(context.Background())
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Once()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]model.RecapEmail{r}, nil).Once()
+	d.contests.EXPECT().GetByID(mock.Anything, contest.ID).Return(contest, nil)
+	d.mailer.EXPECT().SendAll(mock.Anything, mock.Anything).Run(func(context.Context, []*mail.Message) { cancel() }).Return([]error{nil})
+	d.repo.EXPECT().Finish(mock.Anything, []uuid.UUID{r.ID}, model.RecapEmailSent, "", mock.Anything).
+		Run(func(ctx context.Context, _ []uuid.UUID, _ model.RecapEmailStatus, _ string, _ time.Time) {
+			assert.NoError(t, ctx.Err(), "results are recorded on a context the shutdown does not cancel")
+		}).Return(nil)
+
+	require.ErrorIs(t, d.service().SendDue(ctx), context.Canceled)
 }
 
 func TestRecapService_RunSendsUntilCanceled(t *testing.T) {
 	d := newRecapDeps(t)
 	ticked := make(chan struct{}, 4)
-	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Maybe()
-	d.repo.EXPECT().ClaimDue(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	d.repo.EXPECT().ExpirePending(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Maybe()
+	d.repo.EXPECT().ClaimNextContest(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 	oldest := time.Now().Add(-time.Minute)
 	d.repo.EXPECT().OldestPending(mock.Anything).Run(func(context.Context) { ticked <- struct{}{} }).Return(&oldest, nil).Once()
 	d.repo.EXPECT().OldestPending(mock.Anything).Run(func(context.Context) { ticked <- struct{}{} }).Return(nil, errors.New("db")).Maybe()

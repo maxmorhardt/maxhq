@@ -22,6 +22,7 @@ const (
 	recapBatchSize     = 200
 	recapLease         = 10 * time.Minute
 	recapSendTimeout   = 5 * time.Minute
+	recapRecordTimeout = 30 * time.Second
 	recapMaxAttempts   = 5
 	recapMaxAge        = 24 * time.Hour
 	recapRetention     = 30 * 24 * time.Hour
@@ -90,6 +91,9 @@ func (s *recapService) notify() {
 }
 
 func (s *recapService) Run(ctx context.Context) {
+	if s.mailer == nil {
+		return
+	}
 	ctx = logging.NewContext(ctx, logging.FromContext(ctx).With("component", "recap-sender"))
 	poll := time.NewTicker(recapPollInterval)
 	defer poll.Stop()
@@ -146,52 +150,47 @@ func (s *recapService) SendDue(ctx context.Context) error {
 	}
 
 	now := s.now()
-	expired, err := s.repo.ExpirePending(ctx, now.Add(-recapMaxAge), "not sent within 24 hours")
+	expired, err := s.repo.ExpirePending(ctx, now, now.Add(-recapMaxAge), "not sent within 24 hours")
 	if err != nil {
-		return err
-	}
-	if expired > 0 {
+		logging.FromContext(ctx).Warn("failed to skip stale recap emails", "error", err)
+	} else if expired > 0 {
 		metrics.AddRecapEmails(metrics.RecapSkipped, int(expired))
 		logging.FromContext(ctx).Warn("skipped recap emails that waited more than 24 hours", "count", expired)
 	}
 
-	claimed, err := s.repo.ClaimDue(ctx, now, now.Add(recapLease), recapBatchSize)
-	if err != nil {
-		return err
-	}
-
-	order := make([]uuid.UUID, 0)
-	byContest := make(map[uuid.UUID][]model.RecapEmail)
-	for i := range claimed {
-		id := claimed[i].ContestID
-		if _, seen := byContest[id]; !seen {
-			order = append(order, id)
+	for ctx.Err() == nil {
+		now = s.now()
+		claimed, err := s.repo.ClaimNextContest(ctx, now, now.Add(recapLease), recapBatchSize)
+		if err != nil {
+			return err
 		}
-		byContest[id] = append(byContest[id], claimed[i])
+		if len(claimed) == 0 {
+			return nil
+		}
+		s.sendContest(ctx, claimed[0].ContestID, claimed)
 	}
-	for _, id := range order {
-		s.sendContest(ctx, id, byContest[id])
-	}
-	return nil
+	return ctx.Err()
 }
 
 func (s *recapService) sendContest(ctx context.Context, contestID uuid.UUID, rows []model.RecapEmail) {
 	log := logging.FromContext(ctx).With("contest_id", contestID)
+	record, cancelRecord := context.WithTimeout(context.WithoutCancel(ctx), recapSendTimeout+recapRecordTimeout)
+	defer cancelRecord()
 
 	contest, err := s.contestRepo.GetByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			s.finish(ctx, rows, model.RecapEmailFailed, "the contest no longer exists", metrics.RecapFailed)
+			s.finish(record, rows, model.RecapEmailFailed, "the contest no longer exists", metrics.RecapFailed)
 			return
 		}
 		log.Error("failed to load the contest for its recap emails", "error", err)
-		s.retryAll(ctx, rows, err)
+		s.retryAll(record, rows, err)
 		return
 	}
 	content, err := email.RenderRecap(s.webURL, recapOf(contest))
 	if err != nil {
 		log.Error("failed to render the recap email", "error", err)
-		s.retryAll(ctx, rows, err)
+		s.retryAll(record, rows, err)
 		return
 	}
 
@@ -204,8 +203,8 @@ func (s *recapService) sendContest(ctx context.Context, contestID uuid.UUID, row
 	errs := s.mailer.SendAll(sendCtx, msgs)
 	cancel()
 
-	var sent, unconfirmed, failed []model.RecapEmail
-	retried := 0
+	var sent, unconfirmed []model.RecapEmail
+	failed, retried := 0, 0
 	for i, sendErr := range errs {
 		switch {
 		case sendErr == nil:
@@ -213,18 +212,18 @@ func (s *recapService) sendContest(ctx context.Context, contestID uuid.UUID, row
 		case mail.MaybeDelivered(sendErr):
 			unconfirmed = append(unconfirmed, rows[i])
 		case mail.Permanent(sendErr) || rows[i].Attempts >= recapMaxAttempts:
-			failed = append(failed, rows[i])
+			failed++
 			log.Error("gave up on a recap email", "recap_email_id", rows[i].ID, "attempts", rows[i].Attempts, "error", sendErr)
+			s.finish(record, rows[i:i+1], model.RecapEmailFailed, sendErr.Error(), metrics.RecapFailed)
 		default:
 			retried++
-			s.retry(ctx, &rows[i], sendErr)
+			s.retry(record, &rows[i], sendErr)
 		}
 	}
-	s.finish(ctx, sent, model.RecapEmailSent, "", metrics.RecapSent)
-	s.finish(ctx, unconfirmed, model.RecapEmailUnconfirmed, "the connection dropped after sending, so it was not retried", metrics.RecapUnconfirmed)
-	s.finish(ctx, failed, model.RecapEmailFailed, firstError(errs), metrics.RecapFailed)
+	s.finish(record, sent, model.RecapEmailSent, "", metrics.RecapSent)
+	s.finish(record, unconfirmed, model.RecapEmailUnconfirmed, "the connection dropped after sending, so it was not retried", metrics.RecapUnconfirmed)
 
-	log.Info("sent contest recap emails", "sent", len(sent), "unconfirmed", len(unconfirmed), "failed", len(failed), "retrying", retried)
+	log.Info("sent contest recap emails", "sent", len(sent), "unconfirmed", len(unconfirmed), "failed", failed, "retrying", retried)
 }
 
 func (s *recapService) finish(ctx context.Context, rows []model.RecapEmail, status model.RecapEmailStatus, reason, result string) {
@@ -259,15 +258,6 @@ func (s *recapService) retry(ctx context.Context, row *model.RecapEmail, err err
 		return
 	}
 	metrics.AddRecapEmails(metrics.RecapRetried, 1)
-}
-
-func firstError(errs []error) string {
-	for _, err := range errs {
-		if err != nil {
-			return err.Error()
-		}
-	}
-	return ""
 }
 
 func recapOf(contest *model.Contest) *email.Recap {
