@@ -11,13 +11,3 @@ resource "grafana_folder" "repo_alerts" {
     prevent_destroy = true
   }
 }
-
-import {
-  to = grafana_folder.maxhq
-  id = "fbmdf4"
-}
-
-import {
-  to = grafana_folder.repo_alerts
-  id = "repo-alerts"
-}

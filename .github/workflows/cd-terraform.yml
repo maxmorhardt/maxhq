@@ -28,7 +28,7 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ secrets[format('TF_VARS_{0}', matrix.module)] }}
+      tf_vars: ${{ matrix.module == 'aws' && secrets.TF_VARS_AWS || matrix.module == 'cloudflare' && secrets.TF_VARS_CLOUDFLARE || matrix.module == 'dockerhub' && secrets.TF_VARS_DOCKERHUB || matrix.module == 'grafana' && secrets.TF_VARS_GRAFANA || matrix.module == 'tailscale' && secrets.TF_VARS_TAILSCALE || '' }}
 
   drift:
     if: github.event_name == 'schedule'
@@ -46,4 +46,4 @@ jobs:
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       cloudflare_api_token: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN || '' }}
       repo_admin_token: ${{ matrix.module == 'github' && secrets.REPO_ADMIN_TOKEN || '' }}
-      tf_vars: ${{ secrets[format('TF_VARS_{0}', matrix.module)] }}
+      tf_vars: ${{ matrix.module == 'aws' && secrets.TF_VARS_AWS || matrix.module == 'cloudflare' && secrets.TF_VARS_CLOUDFLARE || matrix.module == 'dockerhub' && secrets.TF_VARS_DOCKERHUB || matrix.module == 'grafana' && secrets.TF_VARS_GRAFANA || matrix.module == 'tailscale' && secrets.TF_VARS_TAILSCALE || '' }}

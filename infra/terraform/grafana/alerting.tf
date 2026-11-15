@@ -106,18 +106,3 @@ resource "grafana_rule_group" "usage" {
     }
   }
 }
-
-import {
-  to = grafana_contact_point.alerts
-  id = "alerts"
-}
-
-import {
-  to = grafana_notification_policy.root
-  id = "policy"
-}
-
-import {
-  to = grafana_rule_group.usage
-  id = "fbmdf4:usage"
-}

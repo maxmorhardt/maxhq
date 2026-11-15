@@ -21,8 +21,3 @@ resource "grafana_data_source" "postgres" {
     password = var.postgres_password
   })
 }
-
-import {
-  to = grafana_data_source.postgres
-  id = "fg3c6efr2hnnkf"
-}
