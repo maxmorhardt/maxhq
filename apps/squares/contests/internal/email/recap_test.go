@@ -31,11 +31,12 @@ func TestRenderRecap_Final(t *testing.T) {
 	content, err := RenderRecap("https://squares.example.com/", sampleRecap())
 	require.NoError(t, err)
 
-	assert.Equal(t, "Office Pool: final results", content.Subject)
+	assert.Equal(t, "Squares: Office Pool final results", content.Subject)
 	for _, want := range []string{
 		"Final results",
-		"Buffalo Bills at Kansas City Chiefs is in the books.",
-		"Final: BUF 24, KC 27. Q1 Max M. · Half Open square · Final Jen K.",
+		"Buffalo Bills 24, Kansas City Chiefs 27. Here&#39;s the winning square for each quarter.",
+		"Final: BUF 24, KC 27. Q1 Max M. · Q2 Open square · Final Jen K.",
+		"<!--[if mso]>",
 		"https://squares.example.com/contests/create?utm_source=recap&amp;utm_medium=email",
 		"https://squares.example.com/contests/6f2c8c1e-6d2f-4a9e-9c6b-3f0f6f7a1b2c?utm_source=recap&amp;utm_medium=email",
 		"https://squares.example.com/squares_logo.png",
@@ -45,11 +46,12 @@ func TestRenderRecap_Final(t *testing.T) {
 		assert.Contains(t, content.HTML, want)
 	}
 	for _, want := range []string{
-		"Final: Buffalo Bills 24, Kansas City Chiefs 27",
-		"Q1  BUF 7 – 3 KC  Max M.",
-		"Half  BUF 14 – 10 KC  Open square",
+		"         BUF  KC   Winner",
+		"Q1       7    3    Max M.",
+		"Q2       14   10   Open square",
+		"Final    24   27   Jen K.",
 		"Start your next contest: https://squares.example.com/contests/create?utm_source=recap&utm_medium=email",
-		"Feedback or ideas? Email support@maxhq.io or just reply.",
+		"Feedback or ideas? Email support@maxhq.io.",
 	} {
 		assert.Contains(t, content.Text, want)
 	}
@@ -72,19 +74,60 @@ func TestRenderRecap_Canceled(t *testing.T) {
 	content, err := RenderRecap("https://squares.example.com", recap)
 	require.NoError(t, err)
 
-	assert.Equal(t, "Office Pool: game canceled", content.Subject)
-	assert.Contains(t, content.HTML, "Played quarters keep their winners.")
-	assert.Contains(t, content.Text, "Canceled: Buffalo Bills 24")
+	assert.Equal(t, "Squares: Office Pool game canceled", content.Subject)
+	assert.Contains(t, content.HTML, "Buffalo Bills 24, Kansas City Chiefs 27 when the game was canceled. Quarters that were played keep their winners.")
+	assert.Contains(t, content.Text, "Q1       7    3    Max M.")
+	assert.Contains(t, content.Text, "Final    24   27   Jen K.")
 
 	recap.Started, recap.Quarters = false, nil
 	content, err = RenderRecap("https://squares.example.com", recap)
 	require.NoError(t, err)
-	assert.Contains(t, content.HTML, "before Office Pool drew its numbers, so it closed with no winners.")
-	assert.NotContains(t, content.HTML, "Winning squares")
+	assert.Contains(t, content.HTML, "Buffalo Bills at Kansas City Chiefs was canceled before the numbers were drawn. This board has no winners.")
+	assert.NotContains(t, content.HTML, ">Winner<")
+}
+
+func TestRenderRecap_RemovedPlayersAreMutedLikeOpenSquares(t *testing.T) {
+	recap := sampleRecap()
+	recap.Quarters[0].Winner = RemovedPlayer
+
+	view := newRecapView("https://squares.example.com", recap)
+
+	assert.True(t, view.Quarters[0].Open)
+	assert.Equal(t, RemovedPlayer, view.Quarters[0].Winner)
+	assert.False(t, view.Quarters[2].Open)
+}
+
+func TestRenderRecap_HidesTheTableWithoutQuarters(t *testing.T) {
+	recap := sampleRecap()
+	recap.Canceled, recap.Quarters = true, nil
+
+	content, err := RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+
+	assert.NotContains(t, content.HTML, ">Winner<")
+	assert.NotContains(t, content.Text, "Winner")
+
+	recap.Canceled = false
+	content, err = RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+	assert.Contains(t, content.Text, "Buffalo Bills 24, Kansas City Chiefs 27. This board has no winners.")
+}
+
+func TestRenderRecap_FallsBackToAwayAndHomeColumns(t *testing.T) {
+	recap := sampleRecap()
+	recap.AwayAbbr, recap.HomeAbbr = "", ""
+
+	content, err := RenderRecap("https://squares.example.com", recap)
+	require.NoError(t, err)
+
+	assert.Contains(t, content.Text, "         Away Home Winner")
+	assert.Contains(t, content.HTML, ">Away<")
+	assert.Contains(t, content.HTML, "Final: Buffalo Bills 24, Kansas City Chiefs 27.")
 }
 
 func TestLabels(t *testing.T) {
 	assert.Equal(t, "Q3", quarterLabel(3))
+	assert.Equal(t, "Final", quarterLabel(4))
 	assert.Equal(t, "Buffalo Bills", teamLabel("", "Buffalo Bills"))
 	assert.Equal(t, "not a url", hostOf("not a url"))
 }

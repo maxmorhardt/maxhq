@@ -54,12 +54,13 @@ func TestBuildContactEmail(t *testing.T) {
 	assert.Equal(t, "support@maxhq.io", msg.Header.Get("To"))
 	subject, err := new(mime.WordDecoder).DecodeHeader(msg.Header.Get("Subject"))
 	require.NoError(t, err)
-	assert.Equal(t, "Contact Form: Scores look off", subject)
+	assert.Equal(t, "Squares contact form: Scores look off", subject)
 	assert.Equal(t, "<ann@x.com>", msg.Header.Get("Reply-To"))
 
 	assert.Contains(t, parts["text/plain"], "Message:\nQ2 shows 7–3 <b>twice</b>")
 	assert.Contains(t, parts["text/html"], "&lt;b&gt;twice&lt;/b&gt;", "the html part escapes what the visitor typed")
-	assert.Contains(t, parts["text/html"], `href="mailto:ann@x.com?subject=Re%3A%20Scores%20look%20off"`, "the reply button encodes the subject")
+	assert.Contains(t, parts["text/html"], `href="mailto:ann@x.com"`)
+	assert.NotContains(t, parts["text/html"], "Reply to Ann Smith")
 }
 
 func TestBuildContactEmail_SubmittedTextCannotAddHeaders(t *testing.T) {

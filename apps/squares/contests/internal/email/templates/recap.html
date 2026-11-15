@@ -1,132 +1,119 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="x-apple-disable-message-reformatting">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
-<meta name="color-scheme" content="dark">
-<meta name="supported-color-schemes" content="dark">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <title>{{.Subject}}</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
 <style>
-  body { margin: 0; padding: 0; width: 100%; background-color: #060a14; }
-  table { border-collapse: collapse; }
-  img { border: 0; outline: none; text-decoration: none; }
-  a { color: #3d9bff; }
-  a.button:hover { background-color: #6bb3ff !important; }
-  @media (max-width: 520px) {
-    .gutter { padding-left: 8px !important; padding-right: 8px !important; }
-    .pad { padding-left: 20px !important; padding-right: 20px !important; }
-    .headline { font-size: 32px !important; line-height: 32px !important; }
-    .score { font-size: 36px !important; line-height: 36px !important; }
+  :root { color-scheme: light; supported-color-schemes: light; }
+  body { margin: 0; padding: 0; width: 100% !important; background-color: #f1f4f9; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  table { border-collapse: collapse; mso-table-lspace: 0; mso-table-rspace: 0; }
+  img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+  a { color: #1d63c4; }
+  @media (max-width: 480px) {
+    .pad { padding-left: 18px !important; padding-right: 18px !important; }
+    .gutter { padding-left: 10px !important; padding-right: 10px !important; }
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background-color:#060a14;" bgcolor="#060a14">
+<body style="margin:0;padding:0;background-color:#f1f4f9;" bgcolor="#f1f4f9">
 <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">{{.Preheader}}&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#060a14" style="background-color:#060a14;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f4f9" style="background-color:#f1f4f9;">
 <tr>
-<td class="gutter" align="center" style="padding:32px 16px 40px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+<td class="gutter" align="center" style="padding:24px 16px;">
+{{msoOpen}}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
 
 <tr>
-<td style="padding:0 4px 20px;">
-<a href="{{.HomeURL}}" style="text-decoration:none;">
-<img src="{{.LogoURL}}" width="32" height="32" alt="" style="display:inline-block;vertical-align:middle;border-radius:8px;">
-<span style="display:inline-block;vertical-align:middle;padding-left:8px;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:22px;line-height:32px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#eef2fa;">Squares</span>
-</a>
-</td>
-</tr>
+<td bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #dde3ec;border-radius:12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 
 <tr>
-<td bgcolor="#0b1222" style="background-color:#0b1222;border:1px solid #1e2b47;border-radius:18px;">
+<td class="pad" style="padding:18px 28px;border-bottom:1px solid #e7ebf2;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr>
-<td height="4" bgcolor="#f7c948" style="height:4px;line-height:4px;font-size:0;border-radius:17px 17px 0 0;background-color:#f7c948;">&nbsp;</td>
-</tr>
-
+<td valign="middle">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0">
 <tr>
-<td class="pad" style="padding:28px 32px 4px;">
-<p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#93a0ba;">{{.ContestName}}</p>
-<h1 class="headline" style="margin:10px 0 0;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:40px;line-height:40px;font-weight:800;text-transform:uppercase;color:#eef2fa;">{{.Headline}}</h1>
-<p style="margin:12px 0 0;font-family:'Barlow',Arial,sans-serif;font-size:16px;line-height:24px;color:#93a0ba;">{{.Subhead}}</p>
+<td width="32" height="32" valign="middle" style="width:32px;height:32px;line-height:0;font-size:0;">
+<a href="{{.HomeURL}}" style="text-decoration:none;"><img src="{{.LogoURL}}" width="32" height="32" alt="Squares" style="display:block;width:32px;height:32px;border:0;"></a>
+</td>
+<td valign="middle" style="padding-left:10px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:32px;font-weight:700;letter-spacing:2px;color:#0f172a;">
+<a href="{{.HomeURL}}" style="text-decoration:none;color:#0f172a;">SQUARES</a>
 </td>
 </tr>
-
-{{if .Started}}
-<tr>
-<td class="pad" style="padding:20px 32px 0;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#101a2e" style="background-color:#101a2e;border:1px solid #1e2b47;border-radius:14px;">
-<tr>
-<td style="padding:16px 20px 6px;">
-{{if .Canceled}}<span style="display:inline-block;padding:3px 9px;border-radius:6px;background-color:#3a1b22;font-family:'Barlow',Arial,sans-serif;font-size:11px;line-height:14px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#ff5d5d;">Canceled</span>{{else}}<span style="display:inline-block;padding:3px 9px;border-radius:6px;background-color:#16223a;font-family:'Barlow',Arial,sans-serif;font-size:11px;line-height:14px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#93a0ba;">Final</span>{{end}}
+</table>
 </td>
-</tr>
-<tr>
-<td style="padding:4px 20px 14px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr>
-<td style="padding:6px 0;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:22px;line-height:26px;font-weight:700;text-transform:uppercase;color:{{if .AwayLeads}}#eef2fa{{else}}#93a0ba{{end}};">{{.AwayTeam}}</td>
-<td class="score" align="right" style="padding:6px 0;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:42px;line-height:42px;font-weight:800;color:{{if .AwayLeads}}#eef2fa{{else}}#93a0ba{{end}};">{{.AwayScore}}</td>
-</tr>
-<tr>
-<td style="padding:6px 0;border-top:1px solid #1e2b47;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:22px;line-height:26px;font-weight:700;text-transform:uppercase;color:{{if .HomeLeads}}#eef2fa{{else}}#93a0ba{{end}};">{{.HomeTeam}}</td>
-<td class="score" align="right" style="padding:6px 0;border-top:1px solid #1e2b47;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:42px;line-height:42px;font-weight:800;color:{{if .HomeLeads}}#eef2fa{{else}}#93a0ba{{end}};">{{.HomeScore}}</td>
+<td valign="middle" align="right" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{{if .Canceled}}#b42318{{else}}#1d63c4{{end}};">{{.Status}}</td>
 </tr>
 </table>
 </td>
 </tr>
-</table>
+
+<tr>
+<td class="pad" style="padding:22px 28px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+<p style="margin:0;font-size:12px;line-height:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#5b677d;">{{.ContestName}}</p>
+<h1 style="margin:6px 0 0;font-size:24px;line-height:30px;font-weight:700;color:#0f172a;">{{.Headline}}</h1>
+<p style="margin:6px 0 0;font-size:15px;line-height:22px;color:#3d4a60;">{{.Subhead}}</p>
 </td>
 </tr>
 
 {{if .Quarters}}
 <tr>
-<td class="pad" style="padding:24px 32px 0;">
-<p style="margin:0 0 6px;font-family:'Barlow',Arial,sans-serif;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#93a0ba;">Winning squares</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<td class="pad" style="padding:18px 28px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+<tr>
+<td width="44" style="padding:0 0 6px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1px;color:#5b677d;border-bottom:1px solid #dde3ec;">&nbsp;</td>
+<td width="52" align="center" style="padding:0 0 6px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#5b677d;border-bottom:1px solid #dde3ec;">{{.AwayLabel}}</td>
+<td width="52" align="center" style="padding:0 0 6px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#5b677d;border-bottom:1px solid #dde3ec;">{{.HomeLabel}}</td>
+<td style="padding:0 0 6px 12px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#5b677d;border-bottom:1px solid #dde3ec;">Winner</td>
+</tr>
 {{range .Quarters}}
 <tr>
-<td width="56" style="padding:12px 0;border-top:1px solid #1e2b47;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:17px;line-height:20px;font-weight:700;text-transform:uppercase;color:#eef2fa;">{{.Label}}</td>
-<td style="padding:12px 8px;border-top:1px solid #1e2b47;font-family:'Barlow',Arial,sans-serif;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap;color:#93a0ba;">{{.Score}}</td>
-<td align="right" style="padding:12px 0;border-top:1px solid #1e2b47;font-family:'Barlow',Arial,sans-serif;font-size:15px;line-height:20px;">
-{{if .Open}}<span style="font-weight:600;color:#93a0ba;">{{.Winner}}</span>{{else}}<span style="display:inline-block;padding:2px 12px;border-radius:999px;background-color:#f7c948;font-weight:700;color:#1d1503;">{{.Winner}}</span>{{end}}
-</td>
+<td style="padding:9px 0;font-size:14px;line-height:20px;font-weight:700;color:#0f172a;border-bottom:1px solid #eef1f6;">{{.Label}}</td>
+<td align="center" style="padding:9px 0;font-size:14px;line-height:20px;color:#3d4a60;border-bottom:1px solid #eef1f6;">{{.AwayScore}}</td>
+<td align="center" style="padding:9px 0;font-size:14px;line-height:20px;color:#3d4a60;border-bottom:1px solid #eef1f6;">{{.HomeScore}}</td>
+<td style="padding:9px 0 9px 12px;font-size:14px;line-height:20px;border-bottom:1px solid #eef1f6;{{if .Open}}color:#7a8599;{{else}}font-weight:700;color:#0f172a;{{end}}">{{.Winner}}</td>
 </tr>
 {{end}}
 </table>
 </td>
 </tr>
-{{end}}
 {{end}}
 
 <tr>
-<td class="pad" style="padding:28px 32px 32px;">
+<td class="pad" style="padding:22px 28px 24px;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0">
 <tr>
-<td bgcolor="#3d9bff" style="background-color:#3d9bff;border-radius:10px;">
-<a class="button" href="{{.CreateURL}}" style="display:inline-block;padding:14px 28px;border-radius:10px;font-family:'Barlow',Arial,sans-serif;font-size:16px;line-height:20px;font-weight:700;color:#03101f;text-decoration:none;">Start your next contest</a>
+<td bgcolor="#1d63c4" style="background-color:#1d63c4;border-radius:8px;mso-padding-alt:11px 22px;">
+<a href="{{.CreateURL}}" style="display:inline-block;padding:11px 22px;border-radius:8px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;">Start your next contest</a>
 </td>
 </tr>
 </table>
-<p style="margin:18px 0 0;font-family:'Barlow',Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;">
-<a href="{{.BoardURL}}" style="color:#3d9bff;text-decoration:none;">See the final board &rarr;</a>
+<p style="margin:14px 0 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;">
+<a href="{{.BoardURL}}" style="color:#1d63c4;font-weight:600;text-decoration:none;">{{if .Started}}See the final board{{else}}Open the contest{{end}} &rarr;</a>
 </p>
 </td>
 </tr>
+
 </table>
 </td>
 </tr>
 
 <tr>
-<td align="center" style="padding:28px 12px 0;font-family:'Barlow',Arial,sans-serif;font-size:13px;line-height:20px;color:#93a0ba;">
-<p style="margin:0;">Feedback or ideas? Email <a href="mailto:{{.FeedbackAddress}}" style="color:#3d9bff;text-decoration:none;">{{.FeedbackAddress}}</a> or just reply.</p>
-<p style="margin:8px 0 0;font-size:12px;line-height:18px;color:#5f6d8a;">You're getting this because you played in {{.ContestName}} on <a href="{{.HomeURL}}" style="color:#5f6d8a;text-decoration:underline;">{{.HomeHost}}</a>.</p>
+<td align="center" style="padding:16px 12px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5b677d;">
+Feedback or ideas? Email <a href="mailto:{{.FeedbackAddress}}" style="color:#1d63c4;text-decoration:none;">{{.FeedbackAddress}}</a>.<br>
+You're getting this because you played in {{.ContestName}} on <a href="{{.HomeURL}}" style="color:#5b677d;">{{.HomeHost}}</a>.
 </td>
 </tr>
 
 </table>
+{{msoClose}}
 </td>
 </tr>
 </table>

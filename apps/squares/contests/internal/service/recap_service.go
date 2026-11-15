@@ -170,7 +170,7 @@ func winnerName(q *model.QuarterResult) string {
 	case "":
 		return ""
 	case model.GhostUser:
-		return "Removed player"
+		return email.RemovedPlayer
 	default:
 		return pseudonym.Public(q.WinnerName)
 	}
