@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/consumer"
-	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/email"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/handler"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/migrations"
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/model"
@@ -18,6 +18,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/contests/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
@@ -55,7 +56,7 @@ func Connect(cfg *model.ContestsConfig) (*server.Infra, error) {
 	})
 }
 
-func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
+func New(cfg *model.ContestsConfig, infra *server.Infra) (*App, error) {
 	db := infra.DB
 	tx := database.NewTransactor(db)
 	relay := streams.NewRelay(db, infra.Redis, outboxLockKey, cfg.Streams.Retention)
@@ -70,7 +71,15 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 	userRepo := repository.NewUserRepository(db)
 
 	playerService := service.NewPlayerService(playerRepo, contestRepo, squareRepo, banRepo, tx, events)
-	recapService := service.NewRecapService(contestRepo, playerRepo, newMailer(&cfg.Email), cfg.Email.WebURL, recapRetryDelay)
+	var mailer mail.Client
+	if cfg.Email.Enabled {
+		m, err := mail.New(&cfg.Email.SMTP)
+		if err != nil {
+			return nil, fmt.Errorf("email: %w", err)
+		}
+		mailer = m
+	}
+	recapService := service.NewRecapService(contestRepo, playerRepo, mailer, cfg.Email.WebURL, recapRetryDelay)
 	contestService := service.NewContestService(contestRepo, gameRepo, tx, events, playerService, recapService)
 	squareService := service.NewSquareService(squareRepo, contestRepo, playerRepo, userRepo, tx, events, playerService)
 	inviteService := service.NewInviteService(contestRepo, playerRepo, banRepo, userRepo, playerService, tx, events)
@@ -112,19 +121,7 @@ func New(cfg *model.ContestsConfig, infra *server.Infra) *App {
 			streams.NewConsumer(db, infra.Redis, consumer.GamesSpec, consumer.GameHandler(gameSyncService)),
 			streams.NewConsumer(db, infra.Redis, consumer.UsersSpec, consumer.UserHandler(userSyncService)),
 		},
-	}
-}
-
-func newMailer(cfg *email.Config) email.Mailer {
-	if !cfg.Enabled {
-		return nil
-	}
-	mailer, err := email.NewMailer(cfg)
-	if err != nil {
-		slog.Error("recap emails are off: invalid email config", "error", err)
-		return nil
-	}
-	return mailer
+	}, nil
 }
 
 func (a *App) Start(ctx context.Context) {

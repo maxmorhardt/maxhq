@@ -38,6 +38,6 @@ packages:
       GameSyncService:
       SnapshotService:
       RecapService:
-  github.com/maxmorhardt/maxhq/apps/squares/contests/internal/email:
+  github.com/maxmorhardt/maxhq/libs/go/platform/mail:
     interfaces:
-      Mailer:
+      Client:

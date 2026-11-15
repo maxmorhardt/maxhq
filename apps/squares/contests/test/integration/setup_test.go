@@ -94,7 +94,11 @@ func run(m *testing.M) int {
 	defer infra.Close()
 	rdb = infra.Redis
 
-	app := bootstrap.New(cfg, infra)
+	app, err := bootstrap.New(cfg, infra)
+	if err != nil {
+		slog.Error("bootstrap", "error", err)
+		return 1
+	}
 	app.Start(ctx)
 	srv := httptest.NewServer(app.Engine)
 	defer srv.Close()

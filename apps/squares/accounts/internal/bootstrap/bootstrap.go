@@ -2,7 +2,10 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
+	netmail "net/mail"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +18,7 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/service"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/cache"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/database"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/middleware"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/server"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/streams"
@@ -26,6 +30,8 @@ const (
 	KeyPrefix           = "squares"
 	outboxLockKey int64 = 910103
 	writeTimeout        = 30 * time.Second
+
+	contactRetryDelay = 5 * time.Second
 )
 
 type App struct {
@@ -47,7 +53,7 @@ func Connect(cfg *model.AccountsConfig) (*server.Infra, error) {
 	})
 }
 
-func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
+func New(cfg *model.AccountsConfig, infra *server.Infra) (*App, error) {
 	db := infra.DB
 	relay := streams.NewRelay(db, infra.Redis, outboxLockKey, cfg.Streams.Retention)
 	revocations := cache.NewRevocationStore(infra.Redis)
@@ -59,7 +65,17 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		clients.NewContestActivityClient(cfg.Contests.URL, cfg.Internal.Token),
 		revocations,
 	)
-	contactService := service.NewContactService(repository.NewContactRepository(db), &cfg.SMTP, cfg.Turnstile)
+	if cfg.SMTP.User == "" || cfg.SMTP.Password == "" {
+		return nil, errors.New("email: SMTP_USER and SMTP_PASSWORD are required")
+	}
+	if _, err := netmail.ParseAddress(cfg.Contact.SupportEmail); err != nil {
+		return nil, fmt.Errorf("email: SUPPORT_EMAIL must be an email address: %w", err)
+	}
+	mailer, err := mail.New(&cfg.SMTP)
+	if err != nil {
+		return nil, fmt.Errorf("email: %w", err)
+	}
+	contactService := service.NewContactService(repository.NewContactRepository(db), mailer, cfg.Contact.SupportEmail, cfg.Turnstile, contactRetryDelay)
 
 	engine := server.NewEngine(&cfg.Server)
 	server.RegisterRootRoutes(engine, server.NewHealthHandler(map[string]server.Check{
@@ -75,7 +91,7 @@ func New(cfg *model.AccountsConfig, infra *server.Infra) *App {
 		Idempotent: middleware.Idempotency(cache.NewIdempotencyStore(infra.Redis), Service),
 	})
 
-	return &App{Engine: engine, cfg: cfg, infra: infra, relay: relay, userService: userService}
+	return &App{Engine: engine, cfg: cfg, infra: infra, relay: relay, userService: userService}, nil
 }
 
 func (a *App) Start(ctx context.Context) {

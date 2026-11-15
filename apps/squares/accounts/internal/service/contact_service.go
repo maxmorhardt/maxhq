@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
-	"net/mail"
-	"net/smtp"
+	netmail "net/mail"
+	"net/textproto"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -14,26 +15,34 @@ import (
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/model"
 	"github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/repository"
 	"github.com/maxmorhardt/maxhq/libs/go/platform/logging"
+	"github.com/maxmorhardt/maxhq/libs/go/platform/mail"
 )
 
-// covers loading the submission and the SMTP exchange
-const notifyTimeout = 30 * time.Second
+// covers loading the submission and every send attempt
+const (
+	notifyTimeout  = 2 * time.Minute
+	notifyAttempts = 3
+)
 
 type ContactService interface {
 	SubmitContact(ctx context.Context, req *model.ContactRequest, ipAddress string) error
 }
 
 type contactService struct {
-	repo      repository.ContactRepository
-	smtp      model.SMTPConfig
-	turnstile model.TurnstileConfig
+	repo         repository.ContactRepository
+	mailer       mail.Client
+	supportEmail string
+	turnstile    model.TurnstileConfig
+	retryDelay   time.Duration
 }
 
-func NewContactService(repo repository.ContactRepository, smtpCfg *model.SMTPConfig, turnstileCfg model.TurnstileConfig) ContactService {
+func NewContactService(repo repository.ContactRepository, mailer mail.Client, supportEmail string, turnstileCfg model.TurnstileConfig, retryDelay time.Duration) ContactService {
 	return &contactService{
-		repo:      repo,
-		smtp:      *smtpCfg,
-		turnstile: turnstileCfg,
+		repo:         repo,
+		mailer:       mailer,
+		supportEmail: supportEmail,
+		turnstile:    turnstileCfg,
+		retryDelay:   retryDelay,
 	}
 }
 
@@ -81,33 +90,46 @@ func (s *contactService) notify(ctx context.Context, submissionID uuid.UUID) {
 		return
 	}
 
-	if err := s.sendEmailNotification(submission); err != nil {
+	if err := s.sendEmailNotification(ctx, submission); err != nil {
 		log.Error("failed to send contact email notification", "error", err)
 		return
 	}
 	log.Info("contact email notification sent")
 }
 
-func (s *contactService) sendEmailNotification(submission *model.ContactSubmission) error {
-	from, err := mail.ParseAddress(s.smtp.Sender())
+func (s *contactService) sendEmailNotification(ctx context.Context, submission *model.ContactSubmission) error {
+	msg, err := BuildContactEmail(submission)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
+	msg.To = s.supportEmail
+	if addr, parseErr := netmail.ParseAddress(submission.Email); parseErr == nil {
+		msg.ReplyTo = addr.String()
+	}
 
-	msg, err := BuildContactEmail(from.String(), s.smtp.SupportEmail, submission)
+	for attempt := 1; ; attempt++ {
+		err = s.mailer.Send(ctx, msg)
+		if err == nil || !worthRetrying(err) || attempt == notifyAttempts {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("%w: %w", errs.ErrEmailNotification, errors.Join(err, ctx.Err()))
+		case <-time.After(s.retryDelay * time.Duration(attempt)):
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
 	}
-
-	auth := smtp.PlainAuth("", s.smtp.User, s.smtp.Password, s.smtp.Host)
-	addr := fmt.Sprintf("%s:%d", s.smtp.Host, s.smtp.Port)
-	to := []string{s.smtp.SupportEmail}
-
-	if err := smtp.SendMail(addr, auth, from.Address, to, msg); err != nil {
-		return fmt.Errorf("%w: %w", errs.ErrEmailNotification, err)
-	}
-
 	return nil
+}
+
+func worthRetrying(err error) bool {
+	if !mail.Retryable(err) || errors.Is(err, mail.ErrNoTLS) {
+		return false
+	}
+	var reply *textproto.Error
+	return !errors.As(err, &reply) || reply.Code < 500
 }
 
 func (s *contactService) validateTurnstile(ctx context.Context, token, remoteIP string) error {

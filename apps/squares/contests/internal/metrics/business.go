@@ -95,7 +95,7 @@ var (
 	recapEmailsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "recap_emails_total",
-			Help: "Total number of contest recap emails by result: sent or failed per player, aborted per contest that could not be prepared",
+			Help: "Contest recap emails by result: sent, unconfirmed (maybe delivered, not retried) or failed per player, aborted per contest that could not be prepared",
 		},
 		[]string{"result"},
 	)
@@ -117,9 +117,9 @@ func init() {
 		squaresClearedTotal,
 		recapEmailsTotal,
 	)
-	recapEmailsTotal.WithLabelValues("sent")
-	recapEmailsTotal.WithLabelValues("failed")
-	recapEmailsTotal.WithLabelValues("aborted")
+	for _, result := range []string{RecapSent, RecapUnconfirmed, RecapFailed, RecapAborted} {
+		recapEmailsTotal.WithLabelValues(result)
+	}
 }
 
 func IncContestCreated() {
@@ -170,16 +170,15 @@ func IncSquareCleared() {
 	squaresClearedTotal.Inc()
 }
 
-func IncRecapEmail(sent bool) {
-	result := "failed"
-	if sent {
-		result = "sent"
-	}
-	recapEmailsTotal.WithLabelValues(result).Inc()
-}
+const (
+	RecapSent        = "sent"
+	RecapUnconfirmed = "unconfirmed"
+	RecapFailed      = "failed"
+	RecapAborted     = "aborted"
+)
 
-func IncRecapAborted() {
-	recapEmailsTotal.WithLabelValues("aborted").Inc()
+func AddRecapEmails(result string, n int) {
+	recapEmailsTotal.WithLabelValues(result).Add(float64(n))
 }
 
 func quarterLabel(q int) string {

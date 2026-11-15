@@ -16,6 +16,9 @@ packages:
   github.com/maxmorhardt/maxhq/libs/go/platform/cache:
     interfaces:
       RevocationStore:
+  github.com/maxmorhardt/maxhq/libs/go/platform/mail:
+    interfaces:
+      Client:
   github.com/maxmorhardt/maxhq/apps/squares/accounts/internal/clients:
     interfaces:
       ContestActivityClient:
