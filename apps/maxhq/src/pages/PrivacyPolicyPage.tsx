@@ -13,6 +13,7 @@ const sections: LegalSection[] = [
       'We collect information that you provide directly to us when using our Services:',
       'Account information (name, email address, authentication details from your sign-in provider)',
       'Contest information (squares you claim, contests and tournaments you create or join)',
+      'Messages you send through a contact form (your name, email address, and message)',
       'Usage data (how you interact with our Services)',
       'Device information (browser type, IP address, device identifiers)',
       'Approximate location (country, region, and city) derived from your IP address',
@@ -37,7 +38,7 @@ const sections: LegalSection[] = [
     content: [
       'We do not sell your personal information. We may share your information with:',
       'Other players in a contest you join, who see your first name and last initial; the contest owner also sees your full name. Your email address is never shown to other users.',
-      'Service providers who assist in operating our platform, including our logging and monitoring provider, which receives server logs and in-app usage and error data that include your email address, and our email delivery provider (Zoho), which receives your email address to send contest results',
+      'Service providers who assist in operating our platform, including our logging and monitoring provider, which receives server logs and in-app usage and error data that include your email address, and our email delivery provider (Zoho), which receives your email address to send contest results and the contents of any message you send through a contact form',
       'Legal authorities when required by law',
       'Business partners with your consent',
     ],

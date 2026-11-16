@@ -29,7 +29,7 @@ const sections: LegalSection[] = [
       'You agree not to:',
       'Violate any applicable laws or regulations',
       'Infringe on the rights of others',
-      'Use the Services for gambling or wagering, including collecting entry fees or awarding money or prizes for a contest',
+      'Use the Services for gambling or wagering, as described in Section 5',
       'Harass, abuse, or harm other users',
       'Distribute spam, viruses, or malicious code',
       'Attempt to gain unauthorized access to the Services',
@@ -40,7 +40,7 @@ const sections: LegalSection[] = [
   {
     title: '5. Contests and Competitions',
     content:
-      'The Services are free and intended for entertainment purposes only. We do not charge entry fees, handle payments, or award prizes, and contests may not be used to collect entry fees, place wagers, or award money or prizes. We may remove any contest or account that does. Users are responsible for complying with all applicable laws regarding contests and games in their jurisdiction.',
+      'The Services are free and intended for entertainment purposes only. We do not charge entry fees, handle payments, or award prizes, and we do not facilitate, endorse, or encourage gambling. You may not use a contest to collect entry fees, place wagers, or award money or prizes of value. We may remove any contest used this way and suspend the accounts involved. Users are responsible for complying with all applicable laws regarding contests and games in their jurisdiction.',
   },
   {
     title: '6. Intellectual Property',
