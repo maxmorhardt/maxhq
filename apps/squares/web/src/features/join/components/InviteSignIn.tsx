@@ -59,6 +59,9 @@ function MiniBoard({ claimed, total }: { claimed: number; total: number }) {
 
 function whatToExpect(preview: InvitePreviewResponse): string {
   const open = preview.totalSquares - preview.claimedSquares;
+  if (preview.status === 'FINISHED') {
+    return 'This contest is finished and isn’t taking new players. If you played, sign in to see the final board.';
+  }
   if (preview.status !== 'ACTIVE') {
     return 'The game is underway, so you can join to follow the board live.';
   }
@@ -83,7 +86,7 @@ function ContestHeading({ preview }: { preview: InvitePreviewResponse }) {
           textTransform: 'uppercase',
         }}
       >
-        You&apos;re invited
+        {preview.status === 'FINISHED' ? 'Contest finished' : 'You’re invited'}
       </Typography>
       <Typography
         component="h1"
@@ -180,6 +183,7 @@ export default function InviteSignIn({ token }: Props) {
   }
 
   const signIn = (provider: OIDCProvider) => signInWithProvider(auth, provider);
+  const finished = preview?.status === 'FINISHED';
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 4, md: 8 }, px: { xs: 2, sm: 3 } }}>
@@ -234,10 +238,12 @@ export default function InviteSignIn({ token }: Props) {
               textTransform: 'uppercase',
             }}
           >
-            Take your seat
+            {finished ? 'Welcome back' : 'Take your seat'}
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1 }}>
-            Sign in and you join the contest straight away.
+            {finished
+              ? 'Sign in to see how the board finished.'
+              : 'Sign in and you join the contest straight away.'}
           </Typography>
 
           <Button

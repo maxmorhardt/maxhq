@@ -45,6 +45,7 @@ var (
 	ErrGamePastFirstQuarter  = errors.New("that game is past the first quarter, pick another one")
 	ErrGameCanceled          = errors.New("that game was canceled, pick another one")
 	ErrInviteNotFound        = errors.New("this invite link doesn't work anymore, ask the owner for a new one")
+	ErrContestFinished       = errors.New("this contest is finished, so it isn't taking new players")
 	ErrBannedFromContest     = errors.New("the owner removed you from this contest")
 	ErrNotEnoughSquares      = errors.New("that would give out more than the board's 100 squares")
 	ErrAlreadyPlayer         = errors.New("you are already a player in this contest")

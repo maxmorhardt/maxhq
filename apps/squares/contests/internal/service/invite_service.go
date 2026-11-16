@@ -168,8 +168,9 @@ func (s *inviteService) Join(ctx context.Context, token, user, displayName strin
 		case errors.Is(err, database.ErrDuplicate):
 			log.Info("user already a player", "contest_id", player.ContestID, "user", user)
 			return nil, errs.ErrAlreadyPlayer
-		case errors.Is(err, errs.ErrInviteNotFound), errors.Is(err, errs.ErrContestFinalized),
-			errors.Is(err, errs.ErrBannedFromContest), errors.Is(err, errs.ErrDatabaseUnavailable):
+		case errors.Is(err, errs.ErrInviteNotFound), errors.Is(err, errs.ErrContestFinished),
+			errors.Is(err, errs.ErrAlreadyPlayer), errors.Is(err, errs.ErrBannedFromContest),
+			errors.Is(err, errs.ErrDatabaseUnavailable):
 			return nil, err
 		}
 		log.Error("failed to join contest", "contest_id", player.ContestID, "user", user, "error", err)
@@ -193,8 +194,7 @@ func (s *inviteService) lockJoinable(ctx context.Context, token, user string) (u
 		return uuid.Nil, errs.ErrDatabaseUnavailable
 	}
 	if contest.Status.IsTerminal() {
-		log.Warn("cannot join a finalized contest", "contest_id", contest.ID, "status", contest.Status)
-		return uuid.Nil, errs.ErrContestFinalized
+		return uuid.Nil, s.finishedJoinError(ctx, contest.ID, user)
 	}
 
 	banned, err := s.banRepo.Exists(ctx, contest.ID, user)
@@ -207,6 +207,23 @@ func (s *inviteService) lockJoinable(ctx context.Context, token, user string) (u
 		return uuid.Nil, errs.ErrBannedFromContest
 	}
 	return contest.ID, nil
+}
+
+// a finished contest takes no new players, but the link still opens it for the ones it has
+func (s *inviteService) finishedJoinError(ctx context.Context, contestID uuid.UUID, user string) error {
+	log := logging.FromContext(ctx)
+
+	_, err := s.playerRepo.GetByContestAndUser(ctx, contestID, user)
+	switch {
+	case err == nil:
+		log.Info("user already a player", "contest_id", contestID, "user", user)
+		return errs.ErrAlreadyPlayer
+	case errors.Is(err, database.ErrNotFound):
+		log.Warn("cannot join a finished contest", "contest_id", contestID, "user", user)
+		return errs.ErrContestFinished
+	}
+	log.Error("failed to check for a player", "contest_id", contestID, "error", err)
+	return errs.ErrDatabaseUnavailable
 }
 
 func (s *inviteService) contestByToken(ctx context.Context, token string) (*model.Contest, error) {

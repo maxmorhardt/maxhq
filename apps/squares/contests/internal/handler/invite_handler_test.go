@@ -128,7 +128,7 @@ func TestJoinContest_Success(t *testing.T) {
 func TestJoinContest_Errors(t *testing.T) {
 	cases := map[error]int{
 		errs.ErrInviteNotFound:      http.StatusNotFound,
-		errs.ErrContestFinalized:    http.StatusForbidden,
+		errs.ErrContestFinished:     http.StatusForbidden,
 		errs.ErrBannedFromContest:   http.StatusForbidden,
 		errs.ErrAlreadyPlayer:       http.StatusConflict,
 		errs.ErrDatabaseUnavailable: http.StatusInternalServerError,

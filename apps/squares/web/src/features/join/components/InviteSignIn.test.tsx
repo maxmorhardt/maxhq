@@ -71,6 +71,17 @@ describe('InviteSignIn', () => {
     expect(screen.queryByText(/ at /)).not.toBeInTheDocument();
   });
 
+  it('welcomes players back to a finished contest instead of inviting them', () => {
+    loaded({ status: 'FINISHED' });
+    renderWithProviders(<InviteSignIn token="tok" />);
+
+    expect(screen.getByText('Contest finished')).toBeInTheDocument();
+    expect(screen.getByText(/isn’t taking new players/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Welcome back' })).toBeInTheDocument();
+    expect(screen.getByText('Sign in to see how the board finished.')).toBeInTheDocument();
+    expect(screen.queryByText(/You’re invited/)).not.toBeInTheDocument();
+  });
+
   it('signs in with any provider and comes back to the invite', () => {
     window.history.pushState({}, '', '/join/tok');
     renderWithProviders(<InviteSignIn token="tok" />);

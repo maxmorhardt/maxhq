@@ -91,13 +91,10 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0">
 <tr>
 <td bgcolor="#1d63c4" style="background-color:#1d63c4;border-radius:8px;mso-padding-alt:11px 22px;">
-<a href="{{.CreateURL}}" style="display:inline-block;padding:11px 22px;border-radius:8px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;">Start your next contest</a>
+<a href="{{.BoardURL}}" style="display:inline-block;padding:11px 22px;border-radius:8px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;">{{if .Started}}See the final board{{else}}Open the contest{{end}}</a>
 </td>
 </tr>
 </table>
-<p style="margin:14px 0 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;">
-<a href="{{.BoardURL}}" style="color:#1d63c4;font-weight:600;text-decoration:none;">{{if .Started}}See the final board{{else}}Open the contest{{end}} &rarr;</a>
-</p>
 </td>
 </tr>
 
@@ -107,6 +104,7 @@
 
 <tr>
 <td align="center" style="padding:16px 12px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5b677d;">
+Running another pool? <a href="{{.CreateURL}}" style="color:#1d63c4;text-decoration:none;">Start a new contest</a>.<br>
 Feedback or ideas? Email <a href="mailto:{{.FeedbackAddress}}" style="color:#1d63c4;text-decoration:none;">{{.FeedbackAddress}}</a>.<br>
 You're getting this because you played in {{.ContestName}} on <a href="{{.HomeURL}}" style="color:#5b677d;">{{.HomeHost}}</a>.
 </td>

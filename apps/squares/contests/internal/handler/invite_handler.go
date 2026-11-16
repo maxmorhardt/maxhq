@@ -154,7 +154,7 @@ func (h *inviteHandler) JoinContest(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrBannedFromContest):
+		case errors.Is(err, errs.ErrContestFinished), errors.Is(err, errs.ErrBannedFromContest):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrAlreadyPlayer):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))

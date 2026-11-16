@@ -230,7 +230,16 @@ func TestJoin_Failures(t *testing.T) {
 		}, errs.ErrDatabaseUnavailable},
 		"finished": {func(d *inviteDeps) {
 			locked(d, model.ContestStatusFinished)
-		}, errs.ErrContestFinalized},
+			d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "pat@x.com").Return(nil, database.ErrNotFound)
+		}, errs.ErrContestFinished},
+		"finished, already in": {func(d *inviteDeps) {
+			locked(d, model.ContestStatusFinished)
+			d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "pat@x.com").Return(&model.ContestPlayer{}, nil)
+		}, errs.ErrAlreadyPlayer},
+		"finished, player lookup": {func(d *inviteDeps) {
+			locked(d, model.ContestStatusFinished)
+			d.players.EXPECT().GetByContestAndUser(mock.Anything, mock.Anything, "pat@x.com").Return(nil, errors.New("db"))
+		}, errs.ErrDatabaseUnavailable},
 		"banned": {func(d *inviteDeps) {
 			locked(d, model.ContestStatusActive)
 			d.bans.EXPECT().Exists(mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
