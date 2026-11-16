@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.13.1...squares/2.14.0) (2026-11-16)
+
+
+### Features
+
+* **squares:** show weekly stats on the landing page ([#262](https://github.com/maxmorhardt/maxhq/issues/262)) ([df420b4](https://github.com/maxmorhardt/maxhq/commit/df420b4f17e4877351aaf90fbb6d4c91b00b7137))
+
 ## [2.13.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.13.0...squares/2.13.1) (2026-11-15)
 
 
