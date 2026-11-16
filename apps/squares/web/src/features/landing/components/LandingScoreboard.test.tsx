@@ -25,6 +25,8 @@ describe('LandingScoreboard', () => {
 
     expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText('1.8K')).toHaveAttribute('title', '1,840');
+    expect(screen.getByText('Contests created this week')).toBeInTheDocument();
+    expect(screen.getByText('Squares claimed this week')).toBeInTheDocument();
     expect(screen.getByText('Active contests')).toBeInTheDocument();
   });
 

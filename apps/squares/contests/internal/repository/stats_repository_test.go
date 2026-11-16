@@ -15,7 +15,7 @@ import (
 
 func TestStatsRepository_GetSiteStats_Success(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`SELECT\s+\(SELECT COUNT\(\*\) FROM contests WHERE created_at >= now\(\) - interval '7 days'`).
+	mock.ExpectQuery(`SELECT\s+\(SELECT COUNT\(\*\) FROM contests WHERE created_at >= now\(\) - interval '7 days'.*WHERE s\.claimed_at >= now\(\) - interval '7 days'`).
 		WillReturnRows(sqlmock.NewRows([]string{"contests_created_this_week", "squares_claimed_this_week", "total_active_contests"}).AddRow(3, 12, 5))
 
 	stats, err := NewStatsRepository(gdb).GetSiteStats(context.Background())
