@@ -29,7 +29,7 @@ const sections: LegalSection[] = [
       'You agree not to:',
       'Violate any applicable laws or regulations',
       'Infringe on the rights of others',
-      'Use the Services for gambling or wagering, as described in Section 5',
+      'Use the Services for gambling or wagering',
       'Harass, abuse, or harm other users',
       'Distribute spam, viruses, or malicious code',
       'Attempt to gain unauthorized access to the Services',
