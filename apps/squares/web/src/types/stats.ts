@@ -1,5 +1,5 @@
 export interface StatsResponse {
-  contestsCreatedToday: number;
-  squaresClaimedToday: number;
+  contestsCreatedThisWeek: number;
+  squaresClaimedThisWeek: number;
   totalActiveContests: number;
 }

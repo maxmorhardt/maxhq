@@ -9,7 +9,7 @@ vi.mock('../api', () => stats);
 describe('LandingScoreboard', () => {
   beforeEach(() => {
     stats.useGetSiteStatsQuery.mockReturnValue({
-      data: { contestsCreatedToday: 12, squaresClaimedToday: 1840, totalActiveContests: 5 },
+      data: { contestsCreatedThisWeek: 12, squaresClaimedThisWeek: 1840, totalActiveContests: 5 },
       isLoading: false,
     });
   });
@@ -17,7 +17,7 @@ describe('LandingScoreboard', () => {
   it('titles the scoreboard', () => {
     renderWithProviders(<LandingScoreboard />);
 
-    expect(screen.getByRole('region', { name: 'Today on Squares' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'This Week on Squares' })).toBeInTheDocument();
   });
 
   it('shows each stat with its label', () => {
@@ -25,6 +25,8 @@ describe('LandingScoreboard', () => {
 
     expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText('1.8K')).toHaveAttribute('title', '1,840');
+    expect(screen.getByText('Contests created this week')).toBeInTheDocument();
+    expect(screen.getByText('Squares claimed this week')).toBeInTheDocument();
     expect(screen.getByText('Active contests')).toBeInTheDocument();
   });
 

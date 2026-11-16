@@ -16,7 +16,7 @@ import (
 
 func TestGetStats_Success(t *testing.T) {
 	svc := mocks.NewStatsService(t)
-	svc.EXPECT().GetSiteStats(mock.Anything).Return(&model.StatsResponse{ContestsCreatedToday: 5, SquaresClaimedToday: 42, TotalActiveContests: 12}, nil)
+	svc.EXPECT().GetSiteStats(mock.Anything).Return(&model.StatsResponse{ContestsCreatedThisWeek: 5, SquaresClaimedThisWeek: 42, TotalActiveContests: 12}, nil)
 
 	r := gin.New()
 	r.GET("/stats", NewStatsHandler(svc).GetStats)
@@ -27,8 +27,8 @@ func TestGetStats_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp model.StatsResponse
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, int64(5), resp.ContestsCreatedToday)
-	assert.Equal(t, int64(42), resp.SquaresClaimedToday)
+	assert.Equal(t, int64(5), resp.ContestsCreatedThisWeek)
+	assert.Equal(t, int64(42), resp.SquaresClaimedThisWeek)
 	assert.Equal(t, int64(12), resp.TotalActiveContests)
 }
 
