@@ -1402,7 +1402,7 @@ const docTemplatecontests = `{
         },
         "/stats": {
             "get": {
-                "description": "Returns public stats including contests created today, squares claimed today, and total active contests",
+                "description": "Returns public stats including contests created this week, squares claimed this week, and total active contests",
                 "produces": [
                     "application/json"
                 ],
@@ -2070,11 +2070,11 @@ const docTemplatecontests = `{
         "model.StatsResponse": {
             "type": "object",
             "properties": {
-                "contestsCreatedToday": {
+                "contestsCreatedThisWeek": {
                     "type": "integer",
                     "example": 5
                 },
-                "squaresClaimedToday": {
+                "squaresClaimedThisWeek": {
                     "type": "integer",
                     "example": 42
                 },

@@ -9,8 +9,8 @@ export default function LandingScoreboard() {
   const { data: stats, isLoading: loading } = useGetSiteStatsQuery();
 
   const tiles = [
-    { label: 'Contests created today', value: stats?.contestsCreatedToday },
-    { label: 'Squares claimed today', value: stats?.squaresClaimedToday },
+    { label: 'Contests created this week', value: stats?.contestsCreatedThisWeek },
+    { label: 'Squares claimed this week', value: stats?.squaresClaimedThisWeek },
     { label: 'Active contests', value: stats?.totalActiveContests },
   ];
 
@@ -52,7 +52,7 @@ export default function LandingScoreboard() {
                   color: 'text.secondary',
                 }}
               >
-                Today on Squares
+                This Week on Squares
               </Typography>
             </Box>
 

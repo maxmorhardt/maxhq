@@ -25,7 +25,7 @@ func NewStatsHandler(statsService service.StatsService) StatsHandler {
 }
 
 // @Summary Get platform stats
-// @Description Returns public stats including contests created today, squares claimed today, and total active contests
+// @Description Returns public stats including contests created this week, squares claimed this week, and total active contests
 // @Tags stats
 // @Produce json
 // @Success 200 {object} model.StatsResponse

@@ -15,14 +15,14 @@ import (
 
 func TestStatsRepository_GetSiteStats_Success(t *testing.T) {
 	gdb, mock := newMockDB(t)
-	mock.ExpectQuery(`SELECT\s+\(SELECT COUNT\(\*\) FROM contests WHERE created_at >= CURRENT_DATE`).
-		WillReturnRows(sqlmock.NewRows([]string{"contests_created_today", "squares_claimed_today", "total_active_contests"}).AddRow(3, 12, 5))
+	mock.ExpectQuery(`SELECT\s+\(SELECT COUNT\(\*\) FROM contests WHERE created_at >= now\(\) - interval '7 days'`).
+		WillReturnRows(sqlmock.NewRows([]string{"contests_created_this_week", "squares_claimed_this_week", "total_active_contests"}).AddRow(3, 12, 5))
 
 	stats, err := NewStatsRepository(gdb).GetSiteStats(context.Background())
 
 	require.NoError(t, err)
-	assert.Equal(t, int64(3), stats.ContestsCreatedToday)
-	assert.Equal(t, int64(12), stats.SquaresClaimedToday)
+	assert.Equal(t, int64(3), stats.ContestsCreatedThisWeek)
+	assert.Equal(t, int64(12), stats.SquaresClaimedThisWeek)
 	assert.Equal(t, int64(5), stats.TotalActiveContests)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

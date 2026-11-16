@@ -7,9 +7,9 @@ import (
 )
 
 type StatsResponse struct {
-	ContestsCreatedToday int64 `json:"contestsCreatedToday" example:"5"`
-	SquaresClaimedToday  int64 `json:"squaresClaimedToday" example:"42"`
-	TotalActiveContests  int64 `json:"totalActiveContests" example:"12"`
+	ContestsCreatedThisWeek int64 `json:"contestsCreatedThisWeek" example:"5"`
+	SquaresClaimedThisWeek  int64 `json:"squaresClaimedThisWeek" example:"42"`
+	TotalActiveContests     int64 `json:"totalActiveContests" example:"12"`
 }
 
 type LeaderboardEntry struct {

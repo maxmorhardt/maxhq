@@ -32,9 +32,9 @@ func (r *statsRepository) GetSiteStats(ctx context.Context) (*model.StatsRespons
 	var stats model.StatsResponse
 	err := database.Conn(ctx, r.db).Raw(`
 		SELECT
-			(SELECT COUNT(*) FROM contests WHERE created_at >= CURRENT_DATE AND status <> @deleted) AS contests_created_today,
+			(SELECT COUNT(*) FROM contests WHERE created_at >= now() - interval '7 days' AND status <> @deleted) AS contests_created_this_week,
 			(SELECT COUNT(*) FROM squares s JOIN contests c ON c.id = s.contest_id AND c.status <> @deleted
-				WHERE s.owner <> '' AND s.updated_at >= CURRENT_DATE) AS squares_claimed_today,
+				WHERE s.owner <> '' AND s.updated_at >= now() - interval '7 days') AS squares_claimed_this_week,
 			(SELECT COUNT(*) FROM contests WHERE status NOT IN (@deleted, @finished)) AS total_active_contests`,
 		sql.Named("deleted", model.ContestStatusDeleted), sql.Named("finished", model.ContestStatusFinished),
 	).Scan(&stats).Error

@@ -418,10 +418,10 @@ definitions:
     type: object
   model.StatsResponse:
     properties:
-      contestsCreatedToday:
+      contestsCreatedThisWeek:
         example: 5
         type: integer
-      squaresClaimedToday:
+      squaresClaimedThisWeek:
         example: 42
         type: integer
       totalActiveContests:
@@ -1383,8 +1383,8 @@ paths:
       - leaderboard
   /stats:
     get:
-      description: Returns public stats including contests created today, squares
-        claimed today, and total active contests
+      description: Returns public stats including contests created this week, squares
+        claimed this week, and total active contests
       produces:
       - application/json
       responses:

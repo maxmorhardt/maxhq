@@ -17,7 +17,7 @@ import (
 )
 
 func TestStatsService_GetSiteStats_Success(t *testing.T) {
-	want := &model.StatsResponse{ContestsCreatedToday: 3, SquaresClaimedToday: 12, TotalActiveContests: 5}
+	want := &model.StatsResponse{ContestsCreatedThisWeek: 3, SquaresClaimedThisWeek: 12, TotalActiveContests: 5}
 	repo := mocks.NewStatsRepository(t)
 	repo.EXPECT().GetSiteStats(mock.Anything).Return(want, nil)
 
@@ -28,7 +28,7 @@ func TestStatsService_GetSiteStats_Success(t *testing.T) {
 }
 
 func TestStatsService_GetSiteStats_CachesResult(t *testing.T) {
-	want := &model.StatsResponse{ContestsCreatedToday: 3}
+	want := &model.StatsResponse{ContestsCreatedThisWeek: 3}
 	repo := mocks.NewStatsRepository(t)
 	repo.EXPECT().GetSiteStats(mock.Anything).Return(want, nil).Once()
 
