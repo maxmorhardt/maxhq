@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.9.0...maxhq/1.9.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **pages:** tighten the terms and privacy policy wording ([#263](https://github.com/maxmorhardt/maxhq/issues/263)) ([03faf33](https://github.com/maxmorhardt/maxhq/commit/03faf3323df32cdbc3f19c571e2241bc9a1d08ce))
+
 ## [1.9.0](https://github.com/maxmorhardt/maxhq/compare/maxhq/1.8.0...maxhq/1.9.0) (2026-11-15)
 
 
