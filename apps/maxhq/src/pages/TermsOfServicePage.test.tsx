@@ -8,7 +8,7 @@ describe('TermsOfServicePage', () => {
     renderWithProviders(<TermsOfServicePage />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Terms of Service' })).toBeInTheDocument();
-    expect(screen.getByText('Last updated: July 12, 2026')).toBeInTheDocument();
+    expect(screen.getByText('Last updated: November 15, 2026')).toBeInTheDocument();
   });
 
   it('renders every numbered section', () => {

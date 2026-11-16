@@ -29,7 +29,7 @@ const sections: LegalSection[] = [
       'You agree not to:',
       'Violate any applicable laws or regulations',
       'Infringe on the rights of others',
-      'Use the Services for illegal gambling or wagering',
+      'Use the Services for gambling or wagering, including collecting entry fees or awarding money or prizes for a contest',
       'Harass, abuse, or harm other users',
       'Distribute spam, viruses, or malicious code',
       'Attempt to gain unauthorized access to the Services',
@@ -40,12 +40,12 @@ const sections: LegalSection[] = [
   {
     title: '5. Contests and Competitions',
     content:
-      'The Services are intended for entertainment purposes only. Users are responsible for complying with all applicable laws regarding contests and games in their jurisdiction. We do not facilitate, endorse, or encourage illegal gambling activities.',
+      'The Services are free and intended for entertainment purposes only. We do not charge entry fees, handle payments, or award prizes, and contests may not be used to collect entry fees, place wagers, or award money or prizes. We may remove any contest or account that does. Users are responsible for complying with all applicable laws regarding contests and games in their jurisdiction.',
   },
   {
     title: '6. Intellectual Property',
     content:
-      'The Services and their original content, features, and functionality are owned by maxhq and are protected by international copyright, trademark, and other intellectual property laws. You may not copy, modify, distribute, or reverse engineer any part of the Services without our permission.',
+      'The Services and their original content, features, and functionality are owned by maxhq and are protected by international copyright, trademark, and other intellectual property laws. You may not copy, modify, distribute, or reverse engineer any part of the Services without our permission. The Services are not affiliated with, endorsed by, or sponsored by the National Football League, its teams, or any other sports league. Team and league names are used only to identify games and belong to their respective owners.',
   },
   {
     title: '7. User Content',
@@ -80,7 +80,7 @@ const sections: LegalSection[] = [
   {
     title: '13. Governing Law',
     content:
-      'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which maxhq operates, without regard to its conflict of law provisions.',
+      'These Terms shall be governed by and construed in accordance with the laws of the Commonwealth of Massachusetts, United States, without regard to its conflict of law provisions.',
   },
   {
     title: '14. Contact Information',
@@ -98,7 +98,7 @@ export default function TermsOfServicePage() {
         canonical="https://maxhq.io/terms-of-service"
       />
 
-      <LegalPage title="Terms of Service" lastUpdated="July 12, 2026" sections={sections} />
+      <LegalPage title="Terms of Service" lastUpdated="November 15, 2026" sections={sections} />
     </>
   );
 }
