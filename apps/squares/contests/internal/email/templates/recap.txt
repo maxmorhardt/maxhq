@@ -10,9 +10,9 @@
 {{- end}}
 {{- end}}
 
-Start your next contest: {{.CreateURL}}
 {{if .Started}}See the final board{{else}}Open the contest{{end}}: {{.BoardURL}}
 
+Running another pool? Start a new contest: {{.CreateURL}}
 Feedback or ideas? Email {{.FeedbackAddress}}.
 
 --

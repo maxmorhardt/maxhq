@@ -1272,7 +1272,7 @@ const docTemplatecontests = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "The signed-in user joins as a player with no squares; the owner gives them squares afterwards",
+                "description": "The signed-in user joins as a player with no squares; the owner gives them squares afterwards. A finished contest takes no new players",
                 "produces": [
                     "application/json"
                 ],
@@ -1297,7 +1297,7 @@ const docTemplatecontests = `{
                         }
                     },
                     "403": {
-                        "description": "The contest is finished, or the owner removed this user",
+                        "description": "The contest finished before this user joined, or the owner removed them",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }
@@ -1309,7 +1309,7 @@ const docTemplatecontests = `{
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "Already a player, in a finished contest too",
                         "schema": {
                             "$ref": "#/definitions/api.APIError"
                         }

@@ -71,6 +71,22 @@ describe('InviteSignIn', () => {
     expect(screen.queryByText(/ at /)).not.toBeInTheDocument();
   });
 
+  it('lets players back into a finished contest without promising a join', () => {
+    loaded({ status: 'FINISHED' });
+    renderWithProviders(<InviteSignIn token="tok" />);
+
+    expect(screen.getByText('Contest finished')).toBeInTheDocument();
+    expect(
+      screen.getByText('This contest is finished and isn’t taking new players.')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Played in this one?' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Sign in to open the contest.')).toBeInTheDocument();
+    expect(screen.queryByText(/You’re invited/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/join the contest straight away/)).not.toBeInTheDocument();
+  });
+
   it('signs in with any provider and comes back to the invite', () => {
     window.history.pushState({}, '', '/join/tok');
     renderWithProviders(<InviteSignIn token="tok" />);
@@ -100,6 +116,7 @@ describe('InviteSignIn', () => {
     });
     renderWithProviders(<InviteSignIn token="tok" />);
     expect(screen.getByTestId('invite-preview-loading')).toBeInTheDocument();
+    expect(screen.queryByText('Take your seat')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
   });
 

@@ -175,6 +175,15 @@ func TestContest_FullLifecycle(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, resp.Status)
 	})
 
+	t.Run("the invite link opens a finished contest for its players and takes no new ones", func(t *testing.T) {
+		resp := call(t, testkit.As(memberUser), http.MethodPost, "/invites/"+token+"/join", nil)
+		assert.Equal(t, http.StatusConflict, resp.Status, string(resp.Body))
+
+		resp = call(t, testkit.As("latecomer@squares.test"), http.MethodPost, "/invites/"+token+"/join", nil)
+		assert.Equal(t, http.StatusForbidden, resp.Status, string(resp.Body))
+		assert.Contains(t, string(resp.Body), "finished")
+	})
+
 	t.Run("the leaderboard counts the winners", func(t *testing.T) {
 		resp := call(t, testkit.Anonymous, http.MethodGet, "/leaderboard", nil)
 		require.Equal(t, http.StatusOK, resp.Status)

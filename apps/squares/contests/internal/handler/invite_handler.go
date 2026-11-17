@@ -130,14 +130,14 @@ func (h *inviteHandler) GetInvitePreview(c *gin.Context) {
 }
 
 // @Summary Join a contest with its invite link
-// @Description The signed-in user joins as a player with no squares; the owner gives them squares afterwards
+// @Description The signed-in user joins as a player with no squares; the owner gives them squares afterwards. A finished contest takes no new players
 // @Tags invites
 // @Produce json
 // @Param token path string true "Invite token"
 // @Success 201 {object} model.ContestPlayer
-// @Failure 403 {object} api.APIError "The contest is finished, or the owner removed this user"
+// @Failure 403 {object} api.APIError "The contest finished before this user joined, or the owner removed them"
 // @Failure 404 {object} api.APIError
-// @Failure 409 {object} api.APIError
+// @Failure 409 {object} api.APIError "Already a player, in a finished contest too"
 // @Failure 500 {object} api.APIError
 // @Security BearerAuth
 // @Router /invites/{token}/join [post]
@@ -154,7 +154,7 @@ func (h *inviteHandler) JoinContest(c *gin.Context) {
 		switch {
 		case errors.Is(err, errs.ErrInviteNotFound):
 			c.JSON(http.StatusNotFound, api.NewAPIError(http.StatusNotFound, api.Message(err), c))
-		case errors.Is(err, errs.ErrContestFinalized), errors.Is(err, errs.ErrBannedFromContest):
+		case errors.Is(err, errs.ErrContestFinished), errors.Is(err, errs.ErrBannedFromContest):
 			c.JSON(http.StatusForbidden, api.NewAPIError(http.StatusForbidden, api.Message(err), c))
 		case errors.Is(err, errs.ErrAlreadyPlayer):
 			c.JSON(http.StatusConflict, api.NewAPIError(http.StatusConflict, api.Message(err), c))

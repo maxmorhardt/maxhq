@@ -60,6 +60,11 @@ export default function JoinInvite({ token }: Props) {
     return <LoadingScreen title="Loading invite..." subtitle="Fetching contest details" />;
   }
 
+  // nobody joins a finished contest: the request only finds out whether they already play in it
+  if (preview.status === 'FINISHED') {
+    return <LoadingScreen title="Opening contest..." subtitle={preview.contestName} />;
+  }
+
   return (
     <LoadingScreen
       title="Joining contest..."
