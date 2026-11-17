@@ -57,11 +57,13 @@ function MiniBoard({ claimed, total }: { claimed: number; total: number }) {
   );
 }
 
+const isFinished = (preview?: InvitePreviewResponse) => preview?.status === 'FINISHED';
+
 function whatToExpect(preview: InvitePreviewResponse): string {
-  const open = preview.totalSquares - preview.claimedSquares;
-  if (preview.status === 'FINISHED') {
-    return 'This contest is finished and isn’t taking new players. If you played, sign in to see the final board.';
+  if (isFinished(preview)) {
+    return 'This contest is finished and isn’t taking new players.';
   }
+  const open = preview.totalSquares - preview.claimedSquares;
   if (preview.status !== 'ACTIVE') {
     return 'The game is underway, so you can join to follow the board live.';
   }
@@ -86,7 +88,7 @@ function ContestHeading({ preview }: { preview: InvitePreviewResponse }) {
           textTransform: 'uppercase',
         }}
       >
-        {preview.status === 'FINISHED' ? 'Contest finished' : 'You’re invited'}
+        {isFinished(preview) ? 'Contest finished' : 'You’re invited'}
       </Typography>
       <Typography
         component="h1"
@@ -183,7 +185,10 @@ export default function InviteSignIn({ token }: Props) {
   }
 
   const signIn = (provider: OIDCProvider) => signInWithProvider(auth, provider);
-  const finished = preview?.status === 'FINISHED';
+  // a finished contest only lets its own players back in, so it never promises a join
+  const prompt = isFinished(preview)
+    ? { title: 'Played in this one?', text: 'Sign in to open the contest.' }
+    : { title: 'Take your seat', text: 'Sign in and you join the contest straight away.' };
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 4, md: 8 }, px: { xs: 2, sm: 3 } }}>
@@ -238,12 +243,10 @@ export default function InviteSignIn({ token }: Props) {
               textTransform: 'uppercase',
             }}
           >
-            {finished ? 'Welcome back' : 'Take your seat'}
+            {preview ? prompt.title : <Skeleton width="70%" />}
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1 }}>
-            {finished
-              ? 'Sign in to see how the board finished.'
-              : 'Sign in and you join the contest straight away.'}
+            {preview ? prompt.text : <Skeleton />}
           </Typography>
 
           <Button

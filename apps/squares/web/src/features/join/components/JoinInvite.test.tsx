@@ -73,6 +73,23 @@ describe('JoinInvite', () => {
     expect(screen.queryByText('Unable to Join')).not.toBeInTheDocument();
   });
 
+  it('opens a finished contest for its players without saying they are joining', async () => {
+    api.usePreviewInviteQuery.mockReturnValue({
+      data: { ...preview, status: 'FINISHED' },
+      error: undefined,
+    });
+    api.useJoinContestMutation.mockReturnValue(
+      mockMutation(
+        { error: { status: 409, message: 'Already joined' } },
+        { error: { status: 409, message: 'Already joined' } }
+      )
+    );
+    renderWithProviders(<JoinInvite token="tok" />);
+    expect(screen.getByText('Opening contest...')).toBeInTheDocument();
+    expect(screen.queryByText('Joining contest...')).not.toBeInTheDocument();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/contests/c-1', { replace: true }));
+  });
+
   it('explains an invalid invite', () => {
     api.usePreviewInviteQuery.mockReturnValue({
       data: undefined,

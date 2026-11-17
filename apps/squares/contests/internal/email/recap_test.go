@@ -45,6 +45,8 @@ func TestRenderRecap_Final(t *testing.T) {
 	} {
 		assert.Contains(t, content.HTML, want)
 	}
+	assert.Regexp(t, `<a href="https://squares\.example\.com/contests/6f2c8c1e-[^"]+"[^>]*>See the final board</a>`, content.HTML)
+	assert.Regexp(t, `<a href="https://squares\.example\.com/contests/create[^"]+"[^>]*>Start a new contest</a>`, content.HTML)
 	for _, want := range []string{
 		"         BUF  KC   Winner",
 		"Q1       7    3    Max M.",
@@ -85,6 +87,8 @@ func TestRenderRecap_Canceled(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, content.HTML, "Buffalo Bills at Kansas City Chiefs was canceled before the numbers were drawn. This board has no winners.")
 	assert.NotContains(t, content.HTML, ">Winner<")
+	assert.Regexp(t, `<a href="https://squares\.example\.com/contests/6f2c8c1e-[^"]+"[^>]*>Open the contest</a>`, content.HTML)
+	assert.Contains(t, content.Text, "Open the contest: https://squares.example.com/contests/6f2c8c1e-")
 }
 
 func TestRenderRecap_RemovedPlayersAreMutedLikeOpenSquares(t *testing.T) {
