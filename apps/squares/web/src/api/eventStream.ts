@@ -33,6 +33,8 @@ const DEFAULT_HEARTBEAT_TIMEOUT_MS = 60_000;
 const DEFAULT_CONNECT_TIMEOUT_MS = 5_000;
 // three quick retries, under two seconds in all, before asking the user
 const RETRY_DELAYS_MS = [250, 500, 1000];
+// a hung connect is retried once, not three times, before asking the user
+const RETRY_WINDOW_MS = 6_000;
 
 export function backoff(attempt: number): number {
   const base = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length) - 1];
@@ -211,9 +213,11 @@ export function openEventStream({
 
   const run = async () => {
     let attempt = 0;
+    let failingSince = 0;
     let refreshToken = false;
 
     while (!closed) {
+      const started = Date.now();
       const outcome = await connect(refreshToken);
       if (closed || outcome === 'rejected') {
         return;
@@ -233,7 +237,10 @@ export function openEventStream({
       }
 
       attempt = outcome === 'dropped' ? 1 : attempt + 1;
-      if (attempt > RETRY_DELAYS_MS.length) {
+      if (attempt === 1) {
+        failingSince = outcome === 'dropped' ? Date.now() : started;
+      }
+      if (attempt > RETRY_DELAYS_MS.length || Date.now() - failingSince >= RETRY_WINDOW_MS) {
         setStatus('failed');
         await pause(Infinity);
         attempt = 0;

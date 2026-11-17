@@ -195,6 +195,28 @@ describe('openEventStream', () => {
     stream.close();
   });
 
+  it('retries a hung request once before asking the user', async () => {
+    fetchMock.mockImplementation(
+      (_url: string, init: RequestInit) =>
+        new Promise((_, reject) =>
+          init.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError'))
+          )
+        )
+    );
+    const { stream, onStatus } = open();
+
+    await flush();
+    await vi.advanceTimersByTimeAsync(5000 + backoff(1) + 5000);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(onStatus).toHaveBeenLastCalledWith('failed');
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    stream.close();
+  });
+
   it('gives up on a stream that opens but never sends anything', async () => {
     fetchMock.mockImplementation(async () => sseResponse().response);
     const { stream, onStatus } = open({ connectTimeoutMs: 1000 });

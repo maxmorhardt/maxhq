@@ -14,9 +14,9 @@
 - `src/app/` - app wiring: `AppLayout` (header, footer, outlet, toasts, session upkeep), `providers.tsx`, `store.ts` (`makeStore`, `RootState`, `AppDispatch`), `hooks.ts` (typed `useAppDispatch`/`useAppSelector`), `theme.ts`, `global.css`.
 - `src/api/` - talking to the backend:
   - `baseApi.ts` - the one RTK Query `createApi`; features add endpoints with `injectEndpoints`.
-  - `baseQuery.ts` - bearer token, an `Idempotency-Key` on every write, retries for network errors and 502/503/504 (and 409 with `Retry-After`) under the same key, one session refresh on a 401.
+  - `baseQuery.ts` - bearer token, an `Idempotency-Key` on every write, retries for network errors and 502/503/504 (and 409 with `Retry-After`) under the same key, one session refresh on a 401. A call gets 8 seconds in all, retries included; a timeout is not retried.
   - `errors.ts` - every failure becomes an `ApiError { status, message }`; use `errorMessage`/`errorStatus` to read one.
-  - `eventStream.ts` - the generic server-sent event client (fetch + `eventsource-parser`): fresh token per connection, `Last-Event-ID` resume, backoff, a heartbeat watchdog, and an immediate retry when the tab becomes visible or the network returns.
+  - `eventStream.ts` - the generic server-sent event client (fetch + `eventsource-parser`): fresh token per connection, `Last-Event-ID` resume, backoff (three quick retries, or one after a hung connect), a heartbeat watchdog, and an immediate retry when the tab becomes visible or the network returns.
 - `src/auth/` - `userManager.ts` (the single oidc-client-ts `UserManager`), `token.ts` (`getIdToken` refreshes a token that is expiring or stale; concurrent callers share one refresh), `useAuthSession.ts`, `RequireAuth.tsx`, `oidc.ts`, `SignInDialog.tsx`.
 - `src/features/<domain>/` - one folder per domain (`contests`, `profile`, `leaderboard`, `landing`, `learn`, `join`, `contact`, `toast`). Each holds its `api.ts` (endpoints and generated hooks) and `components/`.
 - `src/features/contests/live/` - the live contest: `events.ts` (the event union and parser), `liveContestSlice.ts` (snapshot plus one handler per event type, and write responses applied ahead of their events), `activity.ts` (the activity feed), `useContestStream.ts`, `selectors.ts`, `viewer.ts`.

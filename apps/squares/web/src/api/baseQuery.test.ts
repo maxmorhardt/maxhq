@@ -83,6 +83,31 @@ describe('baseQuery', () => {
     expect(result.error).toMatchObject({ status: 502 });
   });
 
+  it('gives a server that never answers one budget, not one per attempt', async () => {
+    fetchMock.mockImplementation(
+      (request: Request) =>
+        new Promise((_, reject) =>
+          request.signal.addEventListener('abort', () => reject(request.signal.reason))
+        )
+    );
+    const pending = setup().read();
+    await vi.advanceTimersByTimeAsync(8000);
+    const result = await pending;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.error).toMatchObject({ message: 'The server took too long to respond' });
+  });
+
+  it('does not retry a failure that used up the budget', async () => {
+    fetchMock.mockImplementation(
+      () => new Promise((_, reject) => setTimeout(() => reject(new TypeError('reset')), 7900))
+    );
+    const pending = setup().read();
+    await vi.advanceTimersByTimeAsync(7900);
+    const result = await pending;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.error).toMatchObject({ status: 0 });
+  });
+
   it('refreshes the session once on a 401 and retries', async () => {
     token.getIdToken
       .mockResolvedValueOnce('stale')
