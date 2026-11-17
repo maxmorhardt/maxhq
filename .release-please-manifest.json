@@ -1,8 +1,8 @@
 {
   "apps/maxhq": "1.9.1",
-  "apps/squares/web": "2.14.0",
+  "apps/squares/web": "2.14.1",
   "apps/squares/games": "2.5.8",
-  "apps/squares/contests": "2.11.0",
+  "apps/squares/contests": "2.11.1",
   "apps/squares/accounts": "1.6.2",
   "apps/squares/realtime": "2.6.6",
   "charts/maxhq": "1.1.2",

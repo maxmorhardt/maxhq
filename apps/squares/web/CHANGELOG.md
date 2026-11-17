@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.14.1](https://github.com/maxmorhardt/maxhq/compare/squares/2.14.0...squares/2.14.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **squares:** cap how long a failing request keeps the page waiting ([#267](https://github.com/maxmorhardt/maxhq/issues/267)) ([2a507be](https://github.com/maxmorhardt/maxhq/commit/2a507bece03341ee730c68bbb4517e0b58fec046))
+* **squares:** open finished contests from the invite link and quiet the recap email ([#265](https://github.com/maxmorhardt/maxhq/issues/265)) ([8690d27](https://github.com/maxmorhardt/maxhq/commit/8690d275b9474868548022868e3aa8ca66c2d7eb))
+
 ## [2.14.0](https://github.com/maxmorhardt/maxhq/compare/squares/2.13.1...squares/2.14.0) (2026-11-16)
 
 
