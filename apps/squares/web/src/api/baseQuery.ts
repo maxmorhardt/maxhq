@@ -14,20 +14,14 @@ export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
 
 const MAX_ATTEMPTS = 3;
 const BASE_DELAY_MS = 300;
+// how long one attempt may wait on the server, and the whole call with its retries
+const ATTEMPT_TIMEOUT_MS = 4_000;
+const REQUEST_BUDGET_MS = 8_000;
+// a retry with less time left than this would only turn the real error into a timeout
+const MIN_ATTEMPT_MS = 1_000;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 
-const fetchQuery = fetchBaseQuery({
-  baseUrl: API_BASE_URL,
-  credentials: 'include',
-  timeout: 10_000,
-  prepareHeaders: async (headers) => {
-    const token = await getIdToken();
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
-    return headers;
-  },
-});
+const fetchQuery = fetchBaseQuery({ baseUrl: API_BASE_URL, credentials: 'include' });
 
 function isRetryable(error: FetchBaseQueryError, meta?: FetchBaseQueryMeta): boolean {
   if (error.status === 'FETCH_ERROR' || error.status === 'TIMEOUT_ERROR') {
@@ -53,22 +47,36 @@ export const baseQuery: BaseQueryFn<string | FetchArgs, unknown, ApiError> = asy
     headers.set(IDEMPOTENCY_HEADER, crypto.randomUUID());
   }
 
+  // the budget is the server's alone: it starts after the token and again after a refresh
+  let token = await getIdToken();
+  let deadline = performance.now() + REQUEST_BUDGET_MS;
   let refreshed = false;
   for (let attempt = 1; ; attempt++) {
-    const result = await fetchQuery({ ...request, headers }, api, extraOptions);
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    const timeout = Math.max(Math.min(ATTEMPT_TIMEOUT_MS, deadline - performance.now()), 1);
+    const result = await fetchQuery({ ...request, headers, timeout }, api, extraOptions);
     if (!result.error) {
       return { data: result.data, meta: result.meta };
     }
 
     if (result.error.status === 401 && !refreshed) {
       refreshed = true;
-      if (await getIdToken({ forceRefresh: true })) {
+      token = await getIdToken({ forceRefresh: true });
+      if (token) {
+        deadline = performance.now() + REQUEST_BUDGET_MS;
         continue;
       }
     }
 
-    if (attempt < MAX_ATTEMPTS && isRetryable(result.error, result.meta)) {
-      await delay(BASE_DELAY_MS * 2 ** (attempt - 1));
+    const wait = BASE_DELAY_MS * 2 ** (attempt - 1);
+    if (
+      attempt < MAX_ATTEMPTS &&
+      performance.now() + wait + MIN_ATTEMPT_MS <= deadline &&
+      isRetryable(result.error, result.meta)
+    ) {
+      await delay(wait);
       continue;
     }
 

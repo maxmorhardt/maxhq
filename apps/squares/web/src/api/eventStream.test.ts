@@ -63,7 +63,7 @@ describe('openEventStream', () => {
     expect(fetchMock).not.toHaveBeenCalled();
 
     // the connect timeout covers the token, then the retry connects
-    await vi.advanceTimersByTimeAsync(1000 + 300);
+    await vi.advanceTimersByTimeAsync(1000 + backoff(2));
     expect(getToken).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     sse.send(': ok\n\n');
@@ -188,10 +188,32 @@ describe('openEventStream', () => {
 
     await flush();
     await vi.advanceTimersByTimeAsync(1000);
-    await vi.advanceTimersByTimeAsync(backoff(1));
+    await vi.advanceTimersByTimeAsync(backoff(2));
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('no response'));
+    stream.close();
+  });
+
+  it('retries a hung request once before asking the user', async () => {
+    fetchMock.mockImplementation(
+      (_url: string, init: RequestInit) =>
+        new Promise((_, reject) =>
+          init.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError'))
+          )
+        )
+    );
+    const { stream, onStatus } = open();
+
+    await flush();
+    await vi.advanceTimersByTimeAsync(5000 + backoff(2) + 5000);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(onStatus).toHaveBeenLastCalledWith('failed');
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     stream.close();
   });
 
@@ -201,7 +223,7 @@ describe('openEventStream', () => {
 
     await flush();
     await vi.advanceTimersByTimeAsync(1000);
-    await vi.advanceTimersByTimeAsync(backoff(1));
+    await vi.advanceTimersByTimeAsync(backoff(2));
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(onStatus).not.toHaveBeenCalledWith('live');

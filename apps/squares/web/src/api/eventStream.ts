@@ -24,7 +24,7 @@ export interface EventStream {
   close: () => void;
 }
 
-type Outcome = 'dropped' | 'failed' | 'unauthorized' | 'rejected';
+type Outcome = 'dropped' | 'failed' | 'hung' | 'unauthorized' | 'rejected';
 
 const REJECTED_STATUSES = new Set([400, 403, 404, 410]);
 // the server pings every 25s, so a silent minute means the connection is dead
@@ -33,6 +33,8 @@ const DEFAULT_HEARTBEAT_TIMEOUT_MS = 60_000;
 const DEFAULT_CONNECT_TIMEOUT_MS = 5_000;
 // three quick retries, under two seconds in all, before asking the user
 const RETRY_DELAYS_MS = [250, 500, 1000];
+// a connect the watchdog had to cut off uses two of those retries, so it is retried once
+const HUNG_COST = 2;
 
 export function backoff(attempt: number): number {
   const base = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length) - 1];
@@ -95,15 +97,18 @@ export function openEventStream({
   // a watchdog that aborts the connection unless it is reset in time
   const startWatchdog = (controller: AbortController) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let fired = false;
     return {
       reset: (ms: number, reason: string) => {
         clearTimeout(timer);
         timer = setTimeout(() => {
+          fired = true;
           warn(reason);
           controller.abort();
         }, ms);
       },
       stop: () => clearTimeout(timer),
+      failure: (): Outcome => (fired ? 'hung' : 'failed'),
     };
   };
 
@@ -167,7 +172,7 @@ export function openEventStream({
       token = await abortable(getToken({ forceRefresh }), controller.signal);
     } catch {
       watchdog.stop();
-      return 'failed';
+      return watchdog.failure();
     }
 
     const headers: Record<string, string> = { Accept: 'text/event-stream' };
@@ -186,7 +191,7 @@ export function openEventStream({
         if (!controller.signal.aborted) {
           warn(`request failed (${err instanceof Error ? err.message : 'network error'})`);
         }
-        return 'failed';
+        return watchdog.failure();
       }
 
       if (response.status === 401) {
@@ -203,7 +208,7 @@ export function openEventStream({
       }
 
       // a stream that delivered data dropped; one that never did failed to connect
-      return (await read(response.body, controller, watchdog)) ? 'dropped' : 'failed';
+      return (await read(response.body, controller, watchdog)) ? 'dropped' : watchdog.failure();
     } finally {
       watchdog.stop();
     }
@@ -232,7 +237,7 @@ export function openEventStream({
         continue;
       }
 
-      attempt = outcome === 'dropped' ? 1 : attempt + 1;
+      attempt = outcome === 'dropped' ? 1 : attempt + (outcome === 'hung' ? HUNG_COST : 1);
       if (attempt > RETRY_DELAYS_MS.length) {
         setStatus('failed');
         await pause(Infinity);

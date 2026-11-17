@@ -34,6 +34,13 @@ function setup() {
   };
 }
 
+// answers after a delay unless the request is aborted first
+const answerAfter = (ms: number) => (request: Request) =>
+  new Promise<Response>((resolve, reject) => {
+    setTimeout(() => resolve(json(200, { ok: true })), ms);
+    request.signal.addEventListener('abort', () => reject(request.signal.reason));
+  });
+
 const fetchMock = vi.fn();
 const sentHeaders = (call: number) => (fetchMock.mock.calls[call][0] as Request).headers;
 
@@ -81,6 +88,42 @@ describe('baseQuery', () => {
     const result = await setup().read();
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(result.error).toMatchObject({ status: 502 });
+  });
+
+  it('retries a server that never answers once, inside one budget', async () => {
+    fetchMock.mockImplementation(answerAfter(60_000));
+    const pending = setup().read();
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(4000);
+    const result = await pending;
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.error).toMatchObject({ message: 'The server took too long to respond' });
+  });
+
+  it('does not retry a failure that left too little of the budget', async () => {
+    fetchMock.mockImplementation(
+      () => new Promise((_, reject) => setTimeout(() => reject(new TypeError('reset')), 7000))
+    );
+    const pending = setup().read();
+    await vi.advanceTimersByTimeAsync(7000);
+    const result = await pending;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.error).toMatchObject({ status: 0, message: expect.stringContaining('Network') });
+  });
+
+  it('does not count a slow session refresh against the budget', async () => {
+    token.getIdToken.mockImplementation((opts?: { forceRefresh?: boolean }) =>
+      opts?.forceRefresh
+        ? new Promise((resolve) => setTimeout(() => resolve('fresh'), 9000))
+        : Promise.resolve('stale')
+    );
+    fetchMock.mockResolvedValueOnce(json(401, {})).mockImplementationOnce(answerAfter(2000));
+    const pending = setup().read();
+    await vi.advanceTimersByTimeAsync(9000 + 2000);
+    const result = await pending;
+    expect(result.data).toEqual({ ok: true });
+    expect(sentHeaders(1).get('Authorization')).toBe('Bearer fresh');
   });
 
   it('refreshes the session once on a 401 and retries', async () => {
