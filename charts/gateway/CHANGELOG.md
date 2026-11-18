@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/maxmorhardt/maxhq/compare/gateway-chart/1.4.0...gateway-chart/1.4.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* pin image tags to digests and move nginx to 1.31.9 ([#270](https://github.com/maxmorhardt/maxhq/issues/270)) ([f7f538a](https://github.com/maxmorhardt/maxhq/commit/f7f538aa528cda0337e6ba2063b26406c0b16a56))
+
 ## [1.4.0](https://github.com/maxmorhardt/maxhq/compare/gateway-chart/1.3.0...gateway-chart/1.4.0) (2026-11-03)
 
 
