@@ -23,7 +23,7 @@ x-env: &env
 
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff
     environment:
       POSTGRES_USER: squares
       POSTGRES_PASSWORD: squares
@@ -39,7 +39,7 @@ services:
       retries: 30
 
   valkey:
-    image: valkey/valkey:9.2-alpine
+    image: valkey/valkey:9.2-alpine@sha256:cdcb7b1c7b6f1c9cb9442c71ac6275e78184657448407b2c1fdde7ee8024f4fb
     command: ["valkey-server", "--appendonly", "yes"]
     ports:
       - "127.0.0.1:6379:6379"
@@ -98,7 +98,7 @@ services:
         condition: service_started
 
   gateway:
-    image: envoyproxy/envoy:distroless-v1.39.1
+    image: envoyproxy/envoy:distroless-v1.39.1@sha256:eb2c01c13125d1629637cb4e4cce7207009fb7cc2c8027f9742758549d15b6f4
     command: ["--config-path", "/etc/envoy/envoy.yaml"]
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml:ro

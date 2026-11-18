@@ -35,7 +35,7 @@
       "description": "track image tags that charts pin in values.yaml",
       "managerFilePatterns": ["/^charts/.+/values\\.ya?ml$/"],
       "matchStrings": [
-        "# renovate: image=(?<depName>\\S+)\\s+tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)"
+        "# renovate: image=(?<depName>\\S+)\\s+tag:\\s*[\"']?(?<currentValue>[^\"'\\s@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?"
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
