@@ -1,4 +1,4 @@
-FROM nginx:1.31.9-alpine@sha256:90b6bd2aec278b16b98221d64deb1d6d35d164567f507ab0716e6053878315aa
+FROM nginx:1.31.9-alpine@sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7
 
 LABEL io.maxhq.image.source="https://github.com/maxmorhardt/maxhq"
 LABEL io.maxhq.image.description="maxhq - Personal portfolio web application"
